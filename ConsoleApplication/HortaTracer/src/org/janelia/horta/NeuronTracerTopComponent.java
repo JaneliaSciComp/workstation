@@ -1667,6 +1667,17 @@ public final class NeuronTracerTopComponent extends TopComponent
                         topMenu.add(redoItem);
                     }
                 }
+
+                // DANGER!
+                if (interactorContext.canDeleteNeuron()) {
+                    topMenu.add(new JPopupMenu.Separator());                
+                    topMenu.add(new AbstractAction("!!! DELETE This Neuron !!!!") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            interactorContext.deleteNeuron();
+                        }
+                    });
+                }
                 
                 // SECTION: Tracing options
                 // menu.add(new JPopupMenu.Separator());

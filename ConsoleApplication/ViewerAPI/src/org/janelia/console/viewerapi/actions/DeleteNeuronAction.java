@@ -47,92 +47,58 @@ import org.slf4j.LoggerFactory;
  * GUI-level Action to create a new neuron rooted at a particular XYZ location.
  */
 
-public final class CreateNeuronAction extends AbstractAction
+public final class DeleteNeuronAction extends AbstractAction
 {
     private final Component parentWidget;
     private final NeuronSet workspace;
-    private final float[] anchorXyz = new float[3];
-    private final float anchorRadius;
+    private final NeuronModel doomedNeuron;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
-    public CreateNeuronAction(
+    public DeleteNeuronAction(
             Component parentWidget,
             NeuronSet workspace,
-            float[] anchorXyz,
-            float anchorRadius)
+            NeuronModel doomedNeuron)
     {
-        super("Create a New Neuron Model Here...");
+        super("Delete This Neuron...");
         this.parentWidget = parentWidget;
         this.workspace = workspace;
-        System.arraycopy(anchorXyz, 0, this.anchorXyz, 0, 3);
-        this.anchorRadius = anchorRadius;
+        this.doomedNeuron = doomedNeuron;
     }
 
     @Override
     public void actionPerformed(ActionEvent ev) 
     {
-        // come up with a unique neuron name
-        String defaultName = getNextNeuronName();
-
-        // ask the user to confirm creation, and to review name
-        Object neuronName = JOptionPane.showInputDialog(
+        String warning = "Really DELETE " +
+                doomedNeuron.getName() + 
+                "?\nContaining " +
+                doomedNeuron.getVertexes().size() +
+                " anchors?" +
+                "\n !!! WARNING !!!" +
+                "\n THIS CANNOT BE UNDONE";
+        int result = JOptionPane.showConfirmDialog(
                 parentWidget,
-                "Create new neuron here?",
-                "Create new neuron",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                null,
-                defaultName); // default button
-        if (neuronName == null) {
-            return; // User pressed "Cancel"
+                warning, 
+                "Really DELETE " + doomedNeuron.getName() + "?",
+                JOptionPane.OK_CANCEL_OPTION, 
+                JOptionPane.WARNING_MESSAGE);
+        
+        if (result != JOptionPane.OK_OPTION)
+            return; // User pressed cancel
+        
+        // Actually delete the neuron
+        if (workspace.remove(doomedNeuron)) {
+            UndoRedo.Manager undoRedo = workspace.getUndoRedo();
+            if (undoRedo != null)
+                undoRedo.discardAllEdits(); // Deleting a neuron screws previous edits.
+            workspace.getMembershipChangeObservable().notifyObservers();
         }
-        String errorMessage = "Failed to create neuron";
-        try {
-            CreateNeuronCommand cmd = new CreateNeuronCommand(
-                    workspace,
-                    neuronName.toString(),
-                    anchorXyz,
-                    anchorRadius);
-            cmd.setNotify(true); // Because it's a top-level Command now
-            if (cmd.execute()) {
-                log.info("Neuron created");
-                UndoRedo.Manager undoRedo = workspace.getUndoRedo();
-                if (undoRedo != null)
-                    undoRedo.undoableEditHappened(new UndoableEditEvent(this, cmd));
-                return;
-            }
+        else {
+            JOptionPane.showMessageDialog(
+                    parentWidget,
+                    "Failed to delete neuron",
+                    "Failed to delete neuron",
+                    JOptionPane.WARNING_MESSAGE);
         }
-        catch (Exception exc) {
-            errorMessage += ":\n" + exc.getMessage();
-        }
-        JOptionPane.showMessageDialog(
-                parentWidget,
-                errorMessage,
-                "Failed to create neuron",
-                JOptionPane.WARNING_MESSAGE);                
-    }    
-    
-    /**
-     * Lifted/modified from LVV AnnotationManager.getNextNeuronName
-     * given a workspace, return a new generic neuron name (probably something
-     * like "Neuron 12", where the integer is based on whatever similarly
-     * named neurons exist already)
-     */
-    private String getNextNeuronName() 
-    {
-        // go through existing neuron names; try to parse against
-        //  standard template; remember largest integer found
-        Pattern pattern = Pattern.compile("Neuron[ _]([0-9]+)");
-        Long maximum = 0L;
-        for (NeuronModel neuron : workspace) {
-            Matcher matcher = pattern.matcher(neuron.getName());
-            if (matcher.matches()) {
-                Long index = Long.parseLong(matcher.group(1));
-                if (index > maximum)
-                    maximum = index;
-            }
-        }
-        return String.format("Neuron %d", maximum + 1);
     }
 
 }

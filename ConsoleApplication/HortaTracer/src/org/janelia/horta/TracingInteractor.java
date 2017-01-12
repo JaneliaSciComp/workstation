@@ -58,6 +58,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.actions.CreateNeuronAction;
+import org.janelia.console.viewerapi.actions.DeleteNeuronAction;
 import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
 import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.commands.CreateNeuronCommand;
@@ -925,6 +926,23 @@ public class TracingInteractor extends MouseAdapter
                     defaultWorkspace,
                     densityVertex.getLocation(),
                     densityVertex.getRadius()).actionPerformed(null);
+        }
+        
+        public boolean canDeleteNeuron() {
+            if (hoveredVertex == null)
+                return false;
+            if (hoveredNeuron == null)
+                return false;
+            return true;
+        }
+        
+        public void deleteNeuron() {
+            if (! canDeleteNeuron())
+                return;
+            new DeleteNeuronAction(
+                    volumeProjection.getMouseableComponent(),
+                    defaultWorkspace,
+                    hoveredNeuron).actionPerformed(null);
         }
         
         public boolean canMergeNeurite() {

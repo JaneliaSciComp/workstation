@@ -157,7 +157,7 @@ implements NeuronSet// , LookupListener
             return null;
         }
         return new NeuronModelAdapter(neuron, this);
-    }  
+    }
     
     public void observe(AnnotationModel annotationModel)
     {
@@ -627,7 +627,7 @@ implements NeuronSet// , LookupListener
             TmNeuronMetadata tmn = neuron.getTmNeuronMetadata();
             TmNeuronMetadata previousNeuron = neuronSet.annotationModel.getCurrentNeuron();
             Long neuronId = tmn.getId();
-            boolean removingCurrentNeuron = (previousNeuron.getId() == neuronId);
+            boolean removingCurrentNeuron = (previousNeuron != null) && (previousNeuron.getId() == neuronId);
 
             if (! removingCurrentNeuron) 
                 neuronSet.annotationModel.selectNeuron(tmn);
