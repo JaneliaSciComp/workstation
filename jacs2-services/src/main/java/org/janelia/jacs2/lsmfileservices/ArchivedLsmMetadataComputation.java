@@ -5,7 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.JacsServiceDataBuilder;
 import org.janelia.jacs2.model.service.ProcessingLocation;
-import org.janelia.jacs2.service.impl.AbstractServiceComputation;
+import org.janelia.jacs2.service.impl.AbstractServiceProcessor;
 import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.JacsService;
 import org.slf4j.Logger;
@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Named("archivedLsmMetadataService")
-public class ArchivedLsmMetadataComputation extends AbstractServiceComputation<File> {
+public class ArchivedLsmMetadataComputation extends AbstractServiceProcessor<File> {
 
     @Inject
     private Logger logger;

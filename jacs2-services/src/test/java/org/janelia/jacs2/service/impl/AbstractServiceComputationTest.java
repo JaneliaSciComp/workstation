@@ -11,8 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
@@ -34,7 +32,7 @@ public class AbstractServiceComputationTest {
 
     private static final Number TEST_ID = 1L;
 
-    static class TestSuccessfulComputation extends AbstractServiceComputation<Void> {
+    static class TestSuccessfulComputation extends AbstractServiceProcessor<Void> {
 
         @Override
         public CompletionStage<JacsService<Void>> processData(JacsService<Void> js) {
@@ -44,7 +42,7 @@ public class AbstractServiceComputationTest {
         }
     }
 
-    static class TestFailedComputation extends AbstractServiceComputation<Void> {
+    static class TestFailedComputation extends AbstractServiceProcessor<Void> {
 
         @Override
         public CompletionStage<JacsService<Void>> processData(JacsService<Void> js) {

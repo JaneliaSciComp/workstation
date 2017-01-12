@@ -21,11 +21,13 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 @Singleton
 public class JacsServiceDispatcher {
@@ -33,14 +35,11 @@ public class JacsServiceDispatcher {
     private static final int MAX_WAITING_SLOTS = 20;
     private static final int MAX_RUNNING_SLOTS = 1000;
 
-    @Inject
-    private Logger logger;
-    @Inject
-    private ExecutorService serviceExecutor;
-    @Inject
-    private JacsServiceDataPersistence jacsServiceDataPersistence;
-    @Inject
-    private Instance<ServiceRegistry> serviceRegistrarSource;
+    private final ExecutorService serviceExecutor;
+    private final JacsServiceDataPersistence jacsServiceDataPersistence;
+    private final Instance<ServiceRegistry> serviceRegistrarSource;
+    private final Logger logger;
+    private final ServiceComputationFactory serviceComputationFactory;
     private final Queue<JacsServiceData> waitingServices;
     private final Set<Number> waitingServicesSet = new ConcurrentSkipListSet<>();
     private final Set<Number> submittedServicesSet = new ConcurrentSkipListSet<>();
@@ -49,7 +48,13 @@ public class JacsServiceDispatcher {
     private final Semaphore availableSlots;
     private boolean noWaitingSpaceAvailable;
 
-    public JacsServiceDispatcher() {
+    @Inject
+    public JacsServiceDispatcher(ExecutorService serviceExecutor, JacsServiceDataPersistence jacsServiceDataPersistence, Instance<ServiceRegistry> serviceRegistrarSource, Logger logger) {
+        this.serviceExecutor = serviceExecutor;
+        this.jacsServiceDataPersistence = jacsServiceDataPersistence;
+        this.serviceRegistrarSource = serviceRegistrarSource;
+        this.logger = logger;
+        serviceComputationFactory = new ServiceComputationFactory(this.serviceExecutor);
         queuePermit = new Semaphore(1, true);
         nAvailableSlots = MAX_RUNNING_SLOTS;
         availableSlots = new Semaphore(nAvailableSlots, true);
@@ -76,10 +81,15 @@ public class JacsServiceDispatcher {
         return serviceData;
     }
 
-    ServiceComputation<?> getServiceComputation(JacsServiceData jacsServiceData) {
+    ServiceProcessor<?> getServiceProcessor(JacsServiceData jacsServiceData) {
         ServiceDescriptor serviceDescriptor = getServiceDescriptor(jacsServiceData.getName());
-        return serviceDescriptor.createComputationInstance();
+        return serviceDescriptor.createServiceProcessor();
     }
+
+//    <S, R> ServiceComputation<S, R> getServiceComputation(JacsServiceData jacsServiceData) {
+//        ServiceDescriptor serviceDescriptor = getServiceDescriptor(jacsServiceData.getName());
+//        return serviceComputationFactory.createServiceComputation(serviceDescriptor.createServiceProcessor(), jacsServiceData);
+//    }
 
     private ServiceDescriptor getServiceDescriptor(String serviceName) {
         ServiceRegistry registrar = serviceRegistrarSource.get();
@@ -128,30 +138,19 @@ public class JacsServiceDispatcher {
                 return;
             }
             logger.info("Dispatch service {}", queuedService);
-            @SuppressWarnings("unchecked")
-            ServiceComputation<Object> serviceComputation = (ServiceComputation<Object>) getServiceComputation(queuedService);
-            // The service lifecycle is: preprocess -> isReadyToProcess -> processData -> isDone -> postProcess
-            CompletableFuture
-                    .supplyAsync(() -> queuedService, serviceExecutor)
-                    .thenApplyAsync(serviceData -> {
-                        logger.debug("Submit {}", serviceData);
-                        serviceData.setState(JacsServiceState.SUBMITTED);
-                        updateServiceInfo(serviceData);
+            ServiceProcessor<Object> serviceProcessor = (ServiceProcessor<Object>) getServiceProcessor(queuedService);
+            serviceComputationFactory.newComputation(null)
+                    .applyFunction(o -> (Function<Void, JacsService>) nothing -> {
+                        JacsServiceData updatedService = queuedService;
+                        logger.debug("Submit {}", updatedService);
+                        updatedService.setState(JacsServiceState.SUBMITTED);
+                        updateServiceInfo(updatedService);
                         availableSlots.release();
-                        return new JacsService<>(this, serviceData);
-                    }, serviceExecutor)
-                    .thenComposeAsync(serviceComputation::preProcessData, serviceExecutor)
-                    .thenComposeAsync(serviceComputation::isReadyToProcess, serviceExecutor)
-                    .thenComposeAsync(serviceComputation::processData, serviceExecutor)
-                    .thenComposeAsync(serviceComputation::isDone, serviceExecutor)
-                    .whenCompleteAsync((js, exc) -> {
-                        JacsServiceData updatedServiceData;
-                        if (js == null) {
-                            updatedServiceData = queuedService;
-                        } else {
-                            updatedServiceData = js.getJacsServiceData();
-                        }
-                        logger.debug("Complete {}", updatedServiceData);
+                        return new JacsService(this, updatedService);
+                    })
+                    .thenCompose(serviceProcessor, (sp, sd) -> sp.process((JacsService) sd))
+                    .whenComplete((r, exc) -> {
+                        JacsServiceData updatedServiceData = queuedService;
                         if (exc == null) {
                             logger.info("Successfully completed {}", updatedServiceData);
                             updatedServiceData.setState(JacsServiceState.SUCCESSFUL);
@@ -164,15 +163,6 @@ public class JacsServiceDispatcher {
                         }
                         updateServiceInfo(updatedServiceData);
                         submittedServicesSet.remove(updatedServiceData.getId());
-                    }, serviceExecutor)
-                    .whenCompleteAsync((js, exc) -> {
-                        JacsService<Object> jacsService;
-                        if (js == null) {
-                            jacsService = new JacsService<>(this, queuedService);
-                        } else {
-                            jacsService = js;
-                        }
-                        serviceComputation.postProcessData(jacsService, exc);
                     });
         }
     }

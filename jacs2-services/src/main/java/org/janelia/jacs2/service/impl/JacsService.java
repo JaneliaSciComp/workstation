@@ -9,6 +9,7 @@ public class JacsService<R> {
     private final JacsServiceData jacsServiceData;
     private final JacsServiceDispatcher serviceDispatcher;
     private R result;
+    private Throwable exception;
 
     public JacsService(JacsServiceDispatcher serviceDispatcher, JacsServiceData jacsServiceData) {
         this.serviceDispatcher = serviceDispatcher;
@@ -35,6 +36,14 @@ public class JacsService<R> {
         } else {
             jacsServiceData.setStringifiedResult(null);
         }
+    }
+
+    public Throwable getException() {
+        return exception;
+    }
+
+    public void setException(Throwable exception) {
+        this.exception = exception;
     }
 
     public Number getId() {

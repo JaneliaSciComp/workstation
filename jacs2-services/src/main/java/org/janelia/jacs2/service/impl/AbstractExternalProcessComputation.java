@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
-public abstract class AbstractExternalProcessComputation<R> extends AbstractServiceComputation<R> {
+public abstract class AbstractExternalProcessComputation<R> extends AbstractServiceProcessor<R> {
 
     protected static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 

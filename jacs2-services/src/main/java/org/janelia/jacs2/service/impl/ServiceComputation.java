@@ -1,46 +1,52 @@
 package org.janelia.jacs2.service.impl;
 
-import java.util.concurrent.CompletionStage;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
- * ServiceComputation represents the actual computation for a specific input that generates a result of type <R>.
+ * ServiceComputationStage represents a certain service computation stage.
  *
- * @param <R> computation result type
+ * @param <S> service type
+ * @param <R> stage result type
  */
-public interface ServiceComputation<R> {
+public interface ServiceComputation<S, R> {
     /**
-     * Pre-processing stage.
-     *
-     * @param jacsService service to be pre-processed.
-     * @return a promise corresponding to the pre-processing stage.
+     * @return the service to which this stage is related.
      */
-    CompletionStage<JacsService<R>> preProcessData(JacsService<R> jacsService);
+    S getService();
 
     /**
-     * Check if the service is ready for processing.
-     * @param jacsService service to be checked if it can be processed.
-     * @return the corresponding completion stage for this check.
+     * @return the result if the stage is completed.
      */
-    CompletionStage<JacsService<R>> isReadyToProcess(JacsService<R> jacsService);
+    R get();
+
+    ServiceComputation<S, R> applyFunction(Function<S, ? extends R> fn);
+
+    ServiceComputation<S, R> applyComputation(ServiceComputation<S, ? extends R> fn);
 
     /**
-     * This is the actual processing method which is performed on the enclosed service data.
-     * @param jacsService service to be processed.
-     * @return a completion stage that could be chained with other computations
+     * Applies function fn after successful completion of this stage.
+     * @param fn
+     * @param <S1>
+     * @param <R1>
+     * @return
      */
-    CompletionStage<JacsService<R>> processData(JacsService<R> jacsService);
+    <S1, R1> ServiceComputation<S1, R1> thenApply(S1 s1, BiFunction<S1, ? super R, ? extends R1> fn);
 
     /**
-     * Check if the service processing is done.
-     * @param jacsService service to be checked if it is done.
-     * @return the corresponding completion stage for this check.
+     * When both this and the fn computation stage complete applyComputation their results
+     * @param fn
+     * @param <S1>
+     * @param <R1>
+     * @return
      */
-    CompletionStage<JacsService<R>> isDone(JacsService<R> jacsService);
+    <S1, R1> ServiceComputation<S1, R1> thenCompose(S1 s1, BiFunction<S1, R, ServiceComputation<S1, R1>> fn);
 
     /**
-     * Post-processing.
-     * @param jacsService service data.
-     * @param exc exception that might have been raised during the computation.
+     * Returns a stage with the same service and result that executes the action after this stage completes with any result.
+     * @param action
+     * @return
      */
-    void postProcessData(JacsService<R> jacsService, Throwable exc);
+    ServiceComputation<S, R> whenComplete(BiConsumer<? super R, ? super Throwable> action);
 }

@@ -3,7 +3,6 @@ package org.janelia.jacs2.sampleprocessing;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import org.janelia.jacs2.model.service.ServiceMetaData;
-import org.janelia.jacs2.service.impl.ServiceComputation;
 import org.janelia.jacs2.service.impl.ServiceDescriptor;
 
 import javax.enterprise.inject.Instance;

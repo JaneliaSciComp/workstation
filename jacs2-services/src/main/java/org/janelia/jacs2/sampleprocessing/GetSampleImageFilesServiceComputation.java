@@ -11,7 +11,7 @@ import org.janelia.jacs2.model.service.JacsServiceDataBuilder;
 import org.janelia.jacs2.model.service.JacsServiceState;
 import org.janelia.jacs2.model.service.ProcessingLocation;
 import org.janelia.jacs2.service.dataservice.sample.SampleDataService;
-import org.janelia.jacs2.service.impl.AbstractServiceComputation;
+import org.janelia.jacs2.service.impl.AbstractServiceProcessor;
 import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.JacsService;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
 @Named("sampleImageFilesService")
-public class GetSampleImageFilesServiceComputation extends AbstractServiceComputation<List<String>> {
+public class GetSampleImageFilesServiceComputation extends AbstractServiceProcessor<List<String>> {
 
     private final SampleDataService sampleDataService;
     private final Logger logger;
