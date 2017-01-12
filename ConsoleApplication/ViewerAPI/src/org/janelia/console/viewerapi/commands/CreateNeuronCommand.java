@@ -30,6 +30,7 @@
 
 package org.janelia.console.viewerapi.commands;
 
+import java.awt.Color;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoableEdit;
 import org.janelia.console.viewerapi.Command;
@@ -56,6 +57,7 @@ implements UndoableEdit, Command, VertexAdder, Notifier
     private NeuronVertex previousParentAnchor = null;
     private boolean doNotify = true;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private Color neuronColor = null;
     
     public CreateNeuronCommand(
             NeuronSet workspace,
@@ -75,6 +77,10 @@ implements UndoableEdit, Command, VertexAdder, Notifier
         newNeuron = workspace.createNeuron(initialNeuronName);
         if (newNeuron == null)
             return false;
+        if (neuronColor == null)
+            neuronColor = newNeuron.getColor(); // store color the first time
+        else 
+            newNeuron.setColor(neuronColor); // restore color after redo
         rootVertex = newNeuron.appendVertex(
                 null, initialCoordinates, initialRadius);
         if (rootVertex == null) {
