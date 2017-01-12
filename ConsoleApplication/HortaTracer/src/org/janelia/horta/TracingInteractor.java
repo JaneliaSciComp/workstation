@@ -621,7 +621,7 @@ public class TracingInteractor extends MouseAdapter
     }
 
     // Show provisional Anchor radius and position for current mouse location
-    private NeuronSet unsupportedSet = null;
+    private NeuronSet unsupportedSet = null; // Cache set lacking spatial index, so we only warn about it one time.
     private Point previousHoverPoint = null;
     public void moveHoverCursor(Point screenPoint) {
         if (screenPoint == previousHoverPoint)
@@ -640,7 +640,7 @@ public class TracingInteractor extends MouseAdapter
         NeuronModel neuronModel = null;
         if (volumeProjection.isNeuronModelAt(hoverPoint)) { // found an existing annotation model under the cursor
             Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
-            NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
+            // NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
 
             if (defaultWorkspace != null) {
                 try {
@@ -649,13 +649,12 @@ public class TracingInteractor extends MouseAdapter
                 }
                 catch (UnsupportedOperationException e) {
                     // TODO: this needs to be fixed so that Horta doesn't need to maintain its own spatial index for every neuron.
-                    if (unsupportedSet!=defaultWorkspace) {
+                    if (unsupportedSet != defaultWorkspace) {
                         log.warn("Workspace does not support spatial queries. Falling back on old Horta spatial index.");
                         unsupportedSet = defaultWorkspace;
                     }
-                    nearestVertex = vix.getNearest(cursorXyz);
                 }
-                if (nearestVertex!=null) {
+                if (nearestVertex != null) {
                     neuronModel = defaultWorkspace.getNeuronForAnchor(nearestVertex);
                 }
             }

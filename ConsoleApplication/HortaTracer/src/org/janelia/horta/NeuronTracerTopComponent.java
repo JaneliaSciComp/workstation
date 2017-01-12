@@ -207,7 +207,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor worldInteractor;
     private HortaMetaWorkspace metaWorkspace;
-    private final NeuronVertexSpatialIndex neuronVertexIndex;
     
     // private MultipassVolumeActor mprActor;
     // private VolumeMipMaterial volumeMipMaterial;
@@ -244,8 +243,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     private final NeuronEditDispatcher neuronEditDispatcher;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    // private UndoRedo.Manager undoRedoManager = new UndoRedo.Manager();
-    
     public static NeuronTracerTopComponent findThisComponent() {
         return (NeuronTracerTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
     }
@@ -274,8 +271,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         initialize3DViewer(); // initializes workspace
 
         neuronEditDispatcher = new NeuronEditDispatcher(metaWorkspace);
-        neuronVertexIndex = new NeuronVertexSpatialIndex(neuronEditDispatcher);
-        
 
         // Change default rotation to Y-down, like large-volume viewer
         sceneWindow.getVantage().setDefaultRotation(new Rotation().setFromAxisAngle(
@@ -1910,12 +1905,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     public boolean isVolumeDensityAt(Point2D xy)
     {
         return neuronMPRenderer.isVolumeDensityAt(xy);
-    }
-
-    @Override
-    public NeuronVertexSpatialIndex getVertexIndex()
-    {
-        return neuronVertexIndex;
     }
 
     void registerLoneDisplayedTile(BrickActor boxMesh) {
