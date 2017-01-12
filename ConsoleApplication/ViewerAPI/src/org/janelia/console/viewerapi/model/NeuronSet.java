@@ -31,7 +31,10 @@
 package org.janelia.console.viewerapi.model;
 
 import java.util.Collection;
+import java.util.List;
+
 import org.janelia.console.viewerapi.ObservableInterface;
+import org.openide.awt.UndoRedo;
 
 /**
  *
@@ -44,7 +47,17 @@ public interface NeuronSet extends Collection<NeuronModel>
     ObservableInterface getNameChangeObservable();
     String getName();
     NeuronModel createNeuron(String initialNeuronName);
+
+    List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n);
+    List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n);
+    NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ);
+    NeuronVertex getAnchorClosestToVoxelLocation(double[] voxelXYZ);
     
-    // NeuronVertex getAnchorClosestTo(float[] micronXYZ);
     NeuronModel getNeuronForAnchor(NeuronVertex anchor);
+
+    public UndoRedo.Manager getUndoRedo(); // Manage edit operations per neuron collection
+    // Sometimes there is one anchor selected for edit operations
+    NeuronVertex getPrimaryAnchor(); // can be null
+    void setPrimaryAnchor(NeuronVertex anchor); // set to null to clear
+    ObservableInterface getPrimaryAnchorObservable();
 }

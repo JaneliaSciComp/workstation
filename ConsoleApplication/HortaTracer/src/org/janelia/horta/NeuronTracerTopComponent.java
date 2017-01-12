@@ -116,6 +116,7 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
@@ -243,7 +244,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private final NeuronEditDispatcher neuronEditDispatcher;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    private UndoRedo.Manager undoRedoManager = new UndoRedo.Manager();
+    // private UndoRedo.Manager undoRedoManager = new UndoRedo.Manager();
     
     public static NeuronTracerTopComponent findThisComponent() {
         return (NeuronTracerTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
@@ -254,6 +255,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     private final HortaMovieSource movieSource = new HortaMovieSource(this);
     
     private final KtxBlockMenuBuilder ktxBlockMenuBuilder = new KtxBlockMenuBuilder();
+    
+    private NeuronSet activeNeuronSet = null;
 
     public static final NeuronTracerTopComponent getInstance() {
         return findThisComponent();
@@ -450,7 +453,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 Collection<NeuronSet> sets = metaWorkspace.getNeuronSets();
                 if (sets.isEmpty()) {} // Do nothing
                 else if (sets.size() == 1) {
-                    tracingInteractor.setDefaultWorkspace(sets.iterator().next());                    
+                    setDefaultWorkspace(sets.iterator().next());                    
                 }
                 else {
                     for (NeuronSet ws : sets) {
@@ -458,7 +461,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         if (ws.getName().equals("Temporary Neurons"))
                             continue;
                         // Assume any other set is probably the LVV workspace
-                        tracingInteractor.setDefaultWorkspace(ws);
+                        setDefaultWorkspace(ws);
                     }
                 }
                 
@@ -483,10 +486,23 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     }
     
+    private void setDefaultWorkspace(NeuronSet workspace) {
+        activeNeuronSet = workspace;
+        tracingInteractor.setDefaultWorkspace(activeNeuronSet);
+    }
+    
     // UNDO
     @Override
     public UndoRedo getUndoRedo() {
-        return undoRedoManager;
+        if (getUndoRedoManager() == null)
+            return super.getUndoRedo();
+        return getUndoRedoManager();
+    }
+    
+    private UndoRedo.Manager getUndoRedoManager() {
+        if (activeNeuronSet == null)
+            return null;
+        return activeNeuronSet.getUndoRedo();
     }
     
     public void setVolumeSource(StaticVolumeBrickSource volumeSource) {
@@ -632,7 +648,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         // during dragging.
         
         // Delegate tracing interaction to customized class
-        tracingInteractor = new TracingInteractor(this, undoRedoManager);
+        tracingInteractor = new TracingInteractor(this, getUndoRedoManager());
         
         // push listening into HortaMouseEventDispatcher
         final boolean bDispatchMouseEvents = true;
@@ -1582,6 +1598,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             interactorContext.updateAnchorRadius();
                         }
                     });
+                }
 
                 if (interactorContext.canClearParent()) {
                     topMenu.add(new AbstractAction("Clear Current Parent Anchor") {
@@ -1591,24 +1608,33 @@ public final class NeuronTracerTopComponent extends TopComponent
                         }
                     });
                 }
-                }
                 
                 if (interactorContext.getCurrentParentAnchor() != null) {
                     topMenu.add(new AbstractAction("Center on Current Parent Anchor") {
                     @Override
-                    public void actionPerformed(ActionEvent e) {
-                        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-                        Vector3 xyz = new Vector3(interactorContext.getCurrentParentAnchor().getLocation());
-                        loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
+                        public void actionPerformed(ActionEvent e) {
+                            PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+                            Vector3 xyz = new Vector3(interactorContext.getCurrentParentAnchor().getLocation());
+                            loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
+                        }
+                    });
+                }
+                
+                if (interactorContext.getHighlightedAnchor() != null) {
+                    // logger.info("Found highlighted anchor");
+                    if (! interactorContext.getHighlightedAnchor().equals(interactorContext.getCurrentParentAnchor())) {
+                        topMenu.add(new SelectParentAnchorAction(
+                                activeNeuronSet,
+                                interactorContext.getHighlightedAnchor()
+                        ));
                     }
-                });
                 }
                 
                 // SECTION: Undo/redo
-                
-                if (undoRedoManager.canUndoOrRedo()) {
+                UndoRedo.Manager undoRedo = getUndoRedoManager();
+                if ((undoRedo != null) && (undoRedo.canUndoOrRedo())) {
                     topMenu.add(new JPopupMenu.Separator());                
-                    if (undoRedoManager.canUndo()) {
+                    if (undoRedo.canUndo()) {
                         UndoAction undoAction = SystemAction.get(UndoAction.class);
                         JMenuItem undoItem = undoAction.getPopupPresenter();
                         KeyStroke shortcut = undoItem.getAccelerator();
@@ -1632,7 +1658,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         }
                         topMenu.add(undoItem);
                     }
-                    if (undoRedoManager.canRedo()) {
+                    if (undoRedo.canRedo()) {
                         RedoAction redoAction = SystemAction.get(RedoAction.class);
                         JMenuItem redoItem = redoAction.getPopupPresenter();
                         // For some reason, getPopupPresenter() does not include a keyboard shortcut

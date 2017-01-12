@@ -7,7 +7,8 @@ import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
@@ -15,32 +16,32 @@ import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.ImageIcon;
 
-import com.google.common.collect.Multiset;
-
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
-import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PathShader;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
+import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Multiset;
 
 /**
  * SkeletonActor is responsible for painting neuron traces in the large volume
  * viewer.
  *
  * @author brunsc
- *
  */
-public class SkeletonActor
-        implements GLActor {
+public class SkeletonActor implements GLActor {
 
+    private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
+    
     private static final String LARGE_PARENT_IMG = "white-ball-icone-6188-32.png";
     private static final String SMALL_PARENT_IMG = "ParentAnchor16.png";
     
@@ -57,8 +58,6 @@ public class SkeletonActor
         }
     }
 
-    private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
-
     private boolean bIsGlInitialized = false;
 
     private int vbo = -1;
@@ -66,51 +65,39 @@ public class SkeletonActor
     private int pointIbo = -1;
     private int colorBo = -1;
 
-    private SkeletonActorModel model=new SkeletonActorModel();
+    private SkeletonActorModel model = new SkeletonActorModel();
     private PathShader lineShader = new PathShader();
     private AnchorShader anchorShader = new AnchorShader();
     private BoundingBox3d bb = new BoundingBox3d();
-    //
+
     private BufferedImage anchorImage;
     private int anchorTextureId = -1;
     private BufferedImage parentAnchorImage;
-    private int discardNonParent = 0; //Emphasize default value.
+    private int discardNonParent = 0; // Emphasize default value.
     private int parentAnchorTextureId = -1;
 
-    // these values are chosen empirically; at low zoom,
-    //  we don't want annotations showing over too many planes;
-    //  at high zoom, too few
-    // note scene units = microns
+    // These values are chosen empirically; at low zoom,we don't want annotations showing 
+    // over too many planes; at high zoom, too few.
+    // Note that scene units = microns
     private float zThicknessInPixels = 80;
     private float minZThicknessSceneUnits = 10.0f;
 
     private String parentAnchorImageName = SMALL_PARENT_IMG;
     private boolean modulateParentImage = true;
 
-    //
     private boolean bIsVisible = true;
-
 
     // note: this initial color is now overridden by other components
     private float neuronColor[] = {0.8f, 1.0f, 0.3f};
     private final float blackColor[] = {0, 0, 0};
 
     private RenderInterpositionMethod rim = RenderInterpositionMethod.MIP;
-
     public enum RenderInterpositionMethod {
         MIP, Occlusion
     }
 
     public SkeletonActor() {
-
     }
-
-    public void setRenderInterpositionMethod(RenderInterpositionMethod rim) {
-        this.rim = rim;
-    }
-
-    public SkeletonActorModel getModel() { return model; }
-
 
     /**
      * Overrides the default parent image name (found among the icons).
@@ -123,6 +110,156 @@ public class SkeletonActor
         parentAnchorImageName = image.toString();
     }
 
+    @Override
+    public void init(GLAutoDrawable glDrawable) {
+        // Required for gl_VertexID to be found in shader compile shader
+        GL2 gl = glDrawable.getGL().getGL2();
+        PassThroughTextureShader.checkGlError(gl, "load anchor texture 000");
+        try {
+            lineShader.init(gl);
+            anchorShader.init(gl);
+        }
+        catch (ShaderCreationException e) {
+            log.error("Shader creation failed", e);
+            return;
+        }
+
+        if (anchorImage == null) {
+            // load anchor texture
+            String imageFileName = "SkeletonAnchor16.png";
+            ImageIcon anchorIcon = Icons.getIcon(imageFileName);
+            Image source = anchorIcon.getImage();
+            int w = source.getWidth(null);
+            int h = source.getHeight(null);
+            anchorImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = (Graphics2D) anchorImage.getGraphics();
+            g2d.drawImage(source, 0, 0, null);
+            g2d.dispose();
+        }
+        
+        if (parentAnchorImage == null) {
+            // load anchor texture
+            ImageIcon anchorIcon = Icons.getIcon(parentAnchorImageName);
+            Image source = anchorIcon.getImage();
+            int w = source.getWidth(null);
+            int h = source.getHeight(null);
+            parentAnchorImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = (Graphics2D) parentAnchorImage.getGraphics();
+            g2d.drawImage(source, 0, 0, null);
+            g2d.dispose();
+        }
+        
+        int ids[] = {0, 0};
+        gl.glGenTextures(2, ids, 0); // count, array, offset
+        anchorTextureId = ids[0];
+        parentAnchorTextureId = ids[1];
+
+        int w = anchorImage.getWidth();
+        int h = anchorImage.getHeight();
+        byte byteArray[] = new byte[w * h * 4];
+        ByteBuffer pixels = ByteBuffer.wrap(byteArray);
+        pixels.order(ByteOrder.nativeOrder());
+        IntBuffer intPixels = pixels.asIntBuffer();
+        
+        // Produce image pixels
+        intPixels.rewind();
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                intPixels.put(anchorImage.getRGB(x, y));
+            }
+        }
+        
+        // Upload anchor texture to video card
+        gl.glEnable(GL2.GL_TEXTURE_2D);
+        gl.glBindTexture(GL2.GL_TEXTURE_2D, anchorTextureId);
+        intPixels.rewind();
+        gl.glTexImage2D(GL2.GL_TEXTURE_2D,
+                0, // mipmap level
+                GL2.GL_RGBA,
+                w,
+                h,
+                0, // border
+                GL2.GL_RGBA,
+                GL2.GL_UNSIGNED_BYTE,
+                pixels);
+        
+        // Parent texture may be like anchor texture, but with a "P" in it.
+        // If not, could be different shape entirely.
+        if (!( w == parentAnchorImage.getWidth() && h == parentAnchorImage.getHeight() ) ) {
+            w = parentAnchorImage.getWidth();
+            h = parentAnchorImage.getHeight();
+            byteArray = new byte[w * h * 4];
+            pixels = ByteBuffer.wrap(byteArray);
+            pixels.order(ByteOrder.nativeOrder());
+            intPixels = pixels.asIntBuffer();
+        }
+        gl.glBindTexture(GL2.GL_TEXTURE_2D, parentAnchorTextureId);
+        intPixels.rewind();
+        
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                intPixels.put(parentAnchorImage.getRGB(x, y));
+            }
+        }
+        pixels.rewind();
+        gl.glTexImage2D(GL2.GL_TEXTURE_2D,
+                0, // mipmap level
+                GL2.GL_RGBA,
+                w,
+                h,
+                0, // border
+                GL2.GL_RGBA,
+                GL2.GL_UNSIGNED_BYTE,
+                pixels);
+        gl.glDisable(GL2.GL_TEXTURE_2D);
+
+        // Create a buffer object for line indices
+        //
+        int ix[] = { 0, 0, 0, 0 };
+        gl.glGenBuffers(4, ix, 0);
+        vbo = ix[0];
+        lineIbo = ix[1];
+        pointIbo = ix[2];
+        colorBo = ix[3];
+        //
+        PassThroughTextureShader.checkGlError(gl, "load anchor texture");
+        transparencyDepthMode(gl, true);
+
+        bIsGlInitialized = true;
+    }
+
+    @Override
+    public void display(GLAutoDrawable glDrawable) {
+        if (!bIsVisible) {
+            return;
+        }
+        
+        Multiset<Long> neuronVertexCount = model.getNeuronVertexCount();
+        if (neuronVertexCount.size() <= 0) {
+            return;
+        }
+        if (!bIsGlInitialized) {
+            init(glDrawable);
+        }
+
+        GL gl = glDrawable.getGL();
+        if (rim == RenderInterpositionMethod.Occlusion) {
+            gl.glEnable(GL2GL3.GL_DEPTH_TEST);
+            gl.glDepthFunc(GL2GL3.GL_LESS);
+        }
+
+        displayLines(glDrawable);
+        displayTracedSegments(glDrawable);
+
+        if (model.isAnchorsVisible()) {
+            displayAnchors(glDrawable);
+        }
+
+        if (rim == RenderInterpositionMethod.Occlusion) {
+            gl.glDisable(GL2GL3.GL_DEPTH_TEST);
+        }
+    }
+    
     private synchronized void displayLines(GLAutoDrawable glDrawable) {
         if (model.getNeuronLineIndices().isEmpty()) {
             return;
@@ -132,9 +269,9 @@ public class SkeletonActor
         GL2 gl2 = gl.getGL2();
         transparencyDepthMode(gl, true);
 
-        int n=0;
+        int n = 0;
 
-        boolean refreshBufferData=model.updateVertices();
+        boolean refreshBufferData = model.updateVertices();
 
         if (refreshBufferData) {
             gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vbo);
@@ -160,11 +297,11 @@ public class SkeletonActor
         gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
         gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
 
-        List<ElementDataOffset> lineOffsets=model.getLineOffsets();
-        List<ElementDataOffset> vertexOffsets=model.getVertexOffsets();
-        List<ElementDataOffset> colorOffsets=model.getColorOffsets();
+        List<ElementDataOffset> lineOffsets = model.getLineOffsets();
+        List<ElementDataOffset> vertexOffsets = model.getVertexOffsets();
+        List<ElementDataOffset> colorOffsets = model.getColorOffsets();
 
-        NeuronStyleModel neuronStyles=model.getNeuronStyles();
+        NeuronStyleModel neuronStyles = model.getNeuronStyles();
 
         n=0;
         for (ElementDataOffset lineElementOffset : lineOffsets) {
@@ -224,9 +361,58 @@ public class SkeletonActor
         }
     }
 
+    private void displayTracedSegments(GLAutoDrawable glDrawable) {
+        GL gl = glDrawable.getGL();
+        GL2 gl2 = gl.getGL2();
+        GL2GL3 gl2gl3 = gl.getGL2GL3();
+        lineShader.load(gl2);
+        lineShader.setUniform(gl2gl3, "zThickness", getZoomedZThicknessInPixels());
+        Camera3d camera = model.getCamera();
+        // used to troubleshoot z-depth problems at high zoom:
+        // log.info("SkeletonActor.displayTracedSegments():");
+        // log.info("    getPixelsPerSceneUnit() = " + camera.getPixelsPerSceneUnit());
+        // log.info("    zThicknessInPixels = " + zThicknessInPixels);
+        // log.info("    using zt = " + getZoomedZThicknessInPixels());
+        // log.info("    focus = " + camera.getFocus());
+        float focus[] = {
+            (float) camera.getFocus().getX(),
+            (float) camera.getFocus().getY(),
+            (float) camera.getFocus().getZ()};
+        lineShader.setUniform3v(gl2gl3, "focus", 1, focus);
+        // black background
+        gl.glLineWidth(5.0f);
+        NeuronStyleModel neuronStyles = model.getNeuronStyles();
+        Map<Long, Map<SegmentIndex, TracedPathActor>> neuronTracedSegments = model.getNeuronTracedSegments();
+
+        for (Long neuronID : neuronTracedSegments.keySet()) {
+            if (neuronStyles.get(neuronID) != null && !neuronStyles.get(neuronID).isVisible()) {
+                continue;
+            }
+
+            lineShader.setUniform3v(gl2gl3, "baseColor", 1, blackColor);
+            for (TracedPathActor segment : neuronTracedSegments.get(neuronID).values()) {
+                segment.display(glDrawable);
+            }
+            gl.glLineWidth(3.0f);
+            NeuronStyle style;
+            if (neuronStyles.containsKey(neuronID)) {
+                style = neuronStyles.get(neuronID);
+            }
+            else {
+                style = NeuronStyle.getStyleForNeuron(neuronID);
+            }
+            for (TracedPathActor segment : neuronTracedSegments.get(neuronID).values()) {
+                // neuron colored foreground
+                lineShader.setUniform3v(gl2gl3, "baseColor", 1, style.getColorAsFloatArray());
+                segment.display(glDrawable);
+            }
+        }
+        lineShader.unload(gl2);
+    }
+
     private synchronized void displayAnchors(GLAutoDrawable glDrawable) {
         // Paint anchors as point sprites
-        Map<Long, IntBuffer> neuronPointIndices=model.getNeuronPointIndices();
+        Map<Long, IntBuffer> neuronPointIndices = model.getNeuronPointIndices();
         if (neuronPointIndices == null) {
             return;
         }
@@ -237,9 +423,7 @@ public class SkeletonActor
         GL2 gl = glDrawable.getGL().getGL2();
         setupAnchorShaders(gl);
 
-        int n=0;
-
-        boolean refreshBufferData=model.updatePoints();
+        boolean refreshBufferData = model.updatePoints();
 
         if (refreshBufferData) {
             gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
@@ -249,52 +433,53 @@ public class SkeletonActor
         gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
         gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
 
-        List<ElementDataOffset> pointOffsets=model.getPointOffsets();
-        Map<Long, ElementDataOffset> vertexOffsetMap=model.getVertexOffsetMap();
-        Map<Long, ElementDataOffset> colorOffsetMap=model.getColorOffsetMap();
+        List<ElementDataOffset> pointOffsets = model.getPointOffsets();
+        Map<Long, ElementDataOffset> vertexOffsetMap = model.getVertexOffsetMap();
+        Map<Long, ElementDataOffset> colorOffsetMap = model.getColorOffsetMap();
 
-
-        Skeleton skeleton=model.getSkeleton();
-        Long hoverAnchorNeuronID=null;
-        Anchor hoverAnchor=skeleton.getHoverAnchor();
-        int tmpIndexForHoverAnchor=-1;
-        if (hoverAnchor!=null) {
-            hoverAnchorNeuronID=hoverAnchor.getNeuronID();
-            tmpIndexForHoverAnchor=model.getIndexForAnchor(hoverAnchor);
+        Skeleton skeleton = model.getSkeleton();
+        Long hoverAnchorNeuronID = null;
+        Anchor hoverAnchor = skeleton.getHoverAnchor();
+        int tmpIndexForHoverAnchor = -1;
+        if (hoverAnchor != null) {
+            hoverAnchorNeuronID = hoverAnchor.getNeuronID();
+            tmpIndexForHoverAnchor = model.getIndexForAnchor(hoverAnchor);
         }
-        Anchor nextParent=skeleton.getNextParent();
-        Long nextParentNeuronID=null;
-        int tmpIndexForNextParent=-1;
-        if (nextParent!=null) {
-            nextParentNeuronID=nextParent.getNeuronID();
-            tmpIndexForNextParent=model.getIndexForAnchor(nextParent);
+        Anchor nextParent = skeleton.getNextParent();
+        Long nextParentNeuronID = null;
+        int tmpIndexForNextParent = -1;
+        if (nextParent != null) {
+            nextParentNeuronID = nextParent.getNeuronID();
+            tmpIndexForNextParent = model.getIndexForAnchor(nextParent);
         }
 
-        long lastNeuronID=-1;
+        long lastNeuronID = -1;
         for (ElementDataOffset pointOffset : pointOffsets) {
 
             Long neuronID = pointOffset.id;
-            ElementDataOffset vertexOffset=null;
-            ElementDataOffset colorOffset=null;
-            if (neuronID!=lastNeuronID) {
+            ElementDataOffset vertexOffset = null;
+            ElementDataOffset colorOffset = null;
+            if (neuronID != lastNeuronID) {
                 vertexOffset = vertexOffsetMap.get(neuronID);
                 colorOffset = colorOffsetMap.get(neuronID);
             }
-            lastNeuronID=neuronID;
+            lastNeuronID = neuronID;
 
-            if (vertexOffset!=null && colorOffset!=null) {
+            if (vertexOffset != null && colorOffset != null) {
 
                 // setup per-neuron anchor shader settings (used to be in setupAnchorShader)
                 int tempIndex;
-                if (hoverAnchorNeuronID!=null && hoverAnchorNeuronID.equals(neuronID)) {
+                if (hoverAnchorNeuronID != null && hoverAnchorNeuronID.equals(neuronID)) {
                     tempIndex = tmpIndexForHoverAnchor;
-                } else {
+                }
+                else {
                     tempIndex = -1;
                 }
                 anchorShader.setUniform(gl, "highlightAnchorIndex", tempIndex);
                 if (nextParentNeuronID != null && nextParentNeuronID.equals(neuronID)) {
                     tempIndex = tmpIndexForNextParent;
-                } else {
+                }
+                else {
                     tempIndex = -1;
                 }
                 anchorShader.setUniform(gl, "parentAnchorIndex", tempIndex);
@@ -307,10 +492,7 @@ public class SkeletonActor
                 gl.glColorPointer(SkeletonActorModel.COLOR_FLOAT_COUNT, GL2.GL_FLOAT, 0, colorOffset.offset);
 
                 gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
-                gl.glDrawElements(GL2.GL_POINTS,
-                        pointOffset.size / SkeletonActorModel.INT_BYTE_COUNT,
-                        GL2.GL_UNSIGNED_INT,
-                        pointOffset.offset);
+                gl.glDrawElements(GL2.GL_POINTS, pointOffset.size / SkeletonActorModel.INT_BYTE_COUNT, GL2.GL_UNSIGNED_INT, pointOffset.offset);
             }
         }
 
@@ -353,7 +535,7 @@ public class SkeletonActor
         anchorShader.setUniform(gl, "anchorTexture", 0);
         anchorShader.setUniform(gl, "parentAnchorTexture", 1);
         anchorShader.setUniform(gl, "modulateParentImage", this.modulateParentImage ? 1 : 0);
-        if (! modulateParentImage) {
+        if (!modulateParentImage) {
             anchorShader.setUniform(gl, "startingPointSize", 20.0f);
             anchorShader.setUniform(gl, "maxPointSize", 6.0f);
         }
@@ -366,254 +548,38 @@ public class SkeletonActor
         transparencyDepthMode(gl, false);
     }
 
-    @Override
-    public void display(GLAutoDrawable glDrawable) {
-        if (!bIsVisible) {
-            return;
-        }
-        Multiset<Long> neuronVertexCount=model.getNeuronVertexCount();
-        if (neuronVertexCount.size() <= 0) {
-            return;
-        }
-        if (!bIsGlInitialized) {
-            init(glDrawable);
-        }
-
-        GL gl = glDrawable.getGL();
-        if (rim == RenderInterpositionMethod.Occlusion) {
-            gl.glEnable(GL2GL3.GL_DEPTH_TEST);
-            gl.glDepthFunc(GL2GL3.GL_LESS);
-        }
-
-        displayLines(glDrawable);
-        displayTracedSegments(glDrawable);
-
-        if (model.isAnchorsVisible()) {
-            displayAnchors(glDrawable);
-        }
-
-        if (rim == RenderInterpositionMethod.Occlusion) {
-            gl.glDisable(GL2GL3.GL_DEPTH_TEST);
-        }
-    }
-
-    private void displayTracedSegments(GLAutoDrawable glDrawable) {
-        GL gl = glDrawable.getGL();
-        GL2 gl2 = gl.getGL2();
-        GL2GL3 gl2gl3 = gl.getGL2GL3();
-        lineShader.load(gl2);
-        lineShader.setUniform(gl2gl3, "zThickness", getZoomedZThicknessInPixels());
-        Camera3d camera=model.getCamera();
-        // used to troubleshoot z-depth problems at high zoom:
-        // log.info("SkeletonActor.displayTracedSegments():");
-        // log.info("    getPixelsPerSceneUnit() = " + camera.getPixelsPerSceneUnit());
-        // log.info("    zThicknessInPixels = " + zThicknessInPixels);
-        // log.info("    using zt = " + getZoomedZThicknessInPixels());
-        // log.info("    focus = " + camera.getFocus());
-        float focus[] = {
-            (float) camera.getFocus().getX(),
-            (float) camera.getFocus().getY(),
-            (float) camera.getFocus().getZ()};
-        lineShader.setUniform3v(gl2gl3, "focus", 1, focus);
-        // black background
-        gl.glLineWidth(5.0f);
-        NeuronStyleModel neuronStyles=model.getNeuronStyles();
-        Map<Long, Map<SegmentIndex, TracedPathActor>> neuronTracedSegments=model.getNeuronTracedSegments();
-
-        for (Long neuronID : neuronTracedSegments.keySet()) {
-            if (neuronStyles.get(neuronID) != null && !neuronStyles.get(neuronID).isVisible()) {
-                continue;
+    protected void transparencyDepthMode(GL2GL3 gl, boolean enable) {
+        if (enable) {
+            if (rim == RenderInterpositionMethod.MIP) {
+                // Apply transparency, even when anchors are not shown
+                gl.glEnable(GL2.GL_BLEND);
+                gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
             }
-
-            lineShader.setUniform3v(gl2gl3, "baseColor", 1, blackColor);
-            for (TracedPathActor segment : neuronTracedSegments.get(neuronID).values()) {
-                segment.display(glDrawable);
-            }
-            gl.glLineWidth(3.0f);
-            NeuronStyle style;
-            if (neuronStyles.containsKey(neuronID)) {
-                style = neuronStyles.get(neuronID);
-            } else {
-                style = NeuronStyle.getStyleForNeuron(neuronID);
-            }
-            for (TracedPathActor segment : neuronTracedSegments.get(neuronID).values()) {
-                // neuron colored foreground
-                lineShader.setUniform3v(gl2gl3, "baseColor", 1, style.getColorAsFloatArray());
-                segment.display(glDrawable);
+            else {
+                gl.glEnable(GL2.GL_DEPTH_TEST);
+                gl.glDepthFunc(GL2.GL_LEQUAL);
             }
         }
-        lineShader.unload(gl2);
-    }
-
-    @Override
-    public BoundingBox3d getBoundingBox3d() {
-        return bb; // TODO actually populate bounding box
-    }
-
-    public float getZThicknessInPixels() {
-        return zThicknessInPixels;
-    }
-
-    /**
-     * returns the z thickness over which we want annotations to be
-     * visible; this version increases that thickness so the
-     * thickness doesn't dip below a limit (expressed in scene
-     * units, which are microns for us)
-     */
-    public float getZoomedZThicknessInPixels() {
-        Camera3d camera=model.getCamera();
-        float zt;
-        if (zThicknessInPixels / camera.getPixelsPerSceneUnit() < minZThicknessSceneUnits) {
-            zt = minZThicknessSceneUnits * (float) camera.getPixelsPerSceneUnit();
-        } else {
-            zt = zThicknessInPixels;
-        }
-        return zt;
-    }
-
-    public void setShowOnlyParentAnchors(boolean showOnlyParent) {
-        this.discardNonParent = showOnlyParent ? 1 : 0;
-    }
-
-    public void setZThicknessInPixels(float zThicknessInPixels) {
-        this.zThicknessInPixels = zThicknessInPixels;
-    }
-
-    public void changeNeuronColor(Color color) {
-        neuronColor[0] = color.getRed() / 255.0f;
-        neuronColor[1] = color.getGreen() / 255.0f;
-        neuronColor[2] = color.getBlue() / 255.0f;
-        // skeletonActorChangedSignal.emit();
-        model.updateAnchors();
-    }
-
-
-
-    @Override
-    public void init(GLAutoDrawable glDrawable) {
-		// Required for gl_VertexID to be found in shader
-        // compile shader
-        GL2 gl = glDrawable.getGL().getGL2();
-        PassThroughTextureShader.checkGlError(gl, "load anchor texture 000");
-        try {
-            lineShader.init(gl);
-            anchorShader.init(gl);
-        } catch (ShaderCreationException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        if (anchorImage == null) {
-            // load anchor texture
-            String imageFileName = "SkeletonAnchor16.png";
-            ImageIcon anchorIcon = Icons.getIcon(imageFileName);
-            Image source = anchorIcon.getImage();
-            int w = source.getWidth(null);
-            int h = source.getHeight(null);
-            anchorImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2d = (Graphics2D) anchorImage.getGraphics();
-            g2d.drawImage(source, 0, 0, null);
-            g2d.dispose();
-        }
-        if (parentAnchorImage == null) {
-            // load anchor texture
-            ImageIcon anchorIcon = Icons.getIcon(parentAnchorImageName);
-            Image source = anchorIcon.getImage();
-            int w = source.getWidth(null);
-            int h = source.getHeight(null);
-            parentAnchorImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2d = (Graphics2D) parentAnchorImage.getGraphics();
-            g2d.drawImage(source, 0, 0, null);
-            g2d.dispose();
-        }
-        
-        int ids[] = {0, 0};
-        gl.glGenTextures(2, ids, 0); // count, array, offset
-        anchorTextureId = ids[0];
-        parentAnchorTextureId = ids[1];
-
-        int w = anchorImage.getWidth();
-        int h = anchorImage.getHeight();
-        byte byteArray[] = new byte[w * h * 4];
-        ByteBuffer pixels = ByteBuffer.wrap(byteArray);
-        pixels.order(ByteOrder.nativeOrder());
-        IntBuffer intPixels = pixels.asIntBuffer();
-        // Produce image pixels
-        intPixels.rewind();
-        for (int y = 0; y < h; ++y) {
-            for (int x = 0; x < w; ++x) {
-                intPixels.put(anchorImage.getRGB(x, y));
+        else {
+            if (rim == RenderInterpositionMethod.MIP) {
+                gl.glDisable(GL2.GL_BLEND);
+            }
+            else {
+                gl.glDisable(GL2.GL_DEPTH_TEST);
             }
         }
-        // Upload anchor texture to video card
-        gl.glEnable(GL2.GL_TEXTURE_2D);
-        gl.glBindTexture(GL2.GL_TEXTURE_2D, anchorTextureId);
-        intPixels.rewind();
-        gl.glTexImage2D(GL2.GL_TEXTURE_2D,
-                0, // mipmap level
-                GL2.GL_RGBA,
-                w,
-                h,
-                0, // border
-                GL2.GL_RGBA,
-                GL2.GL_UNSIGNED_BYTE,
-                pixels);
-        
-        // Parent texture may be like anchor texture, but with a "P" in it.
-        // If not, could be different shape entirely.
-        if (!( w == parentAnchorImage.getWidth() && h == parentAnchorImage.getHeight() ) ) {
-            w = parentAnchorImage.getWidth();
-            h = parentAnchorImage.getHeight();
-            byteArray = new byte[w * h * 4];
-            pixels = ByteBuffer.wrap(byteArray);
-            pixels.order(ByteOrder.nativeOrder());
-            intPixels = pixels.asIntBuffer();
-        }
-        gl.glBindTexture(GL2.GL_TEXTURE_2D, parentAnchorTextureId);
-        intPixels.rewind();
-        
-        for (int y = 0; y < h; ++y) {
-            for (int x = 0; x < w; ++x) {
-                intPixels.put(parentAnchorImage.getRGB(x, y));
-            }
-        }
-        pixels.rewind();
-        gl.glTexImage2D(GL2.GL_TEXTURE_2D,
-                0, // mipmap level
-                GL2.GL_RGBA,
-                w,
-                h,
-                0, // border
-                GL2.GL_RGBA,
-                GL2.GL_UNSIGNED_BYTE,
-                pixels);
-        gl.glDisable(GL2.GL_TEXTURE_2D);
-
-        // Create a buffer object for line indices
-        //
-        int ix[] = {0, 0, 0, 0};
-        gl.glGenBuffers(4, ix, 0);
-        vbo = ix[0];
-        lineIbo = ix[1];
-        pointIbo = ix[2];
-        colorBo = ix[3];
-        //
-        PassThroughTextureShader.checkGlError(gl, "load anchor texture");
-        transparencyDepthMode(gl, true);
-
-        bIsGlInitialized = true;
     }
 
     @Override
     public void dispose(GLAutoDrawable glDrawable) {
         bIsGlInitialized = false;
-        int ix1[] = {anchorTextureId, parentAnchorTextureId};
+        int ix1[] = { anchorTextureId, parentAnchorTextureId };
         GL2 gl = glDrawable.getGL().getGL2();
         gl.glDeleteTextures(2, ix1, 0);
-        int ix2[] = {vbo, lineIbo, pointIbo, colorBo};
+        int ix2[] = { vbo, lineIbo, pointIbo, colorBo };
         gl.glDeleteBuffers(4, ix2, 0);
 
-        Map<Long, Map<SegmentIndex, TracedPathActor>> neuronTracedSegments=model.getNeuronTracedSegments();
+        Map<Long, Map<SegmentIndex, TracedPathActor>> neuronTracedSegments = model.getNeuronTracedSegments();
         for (Long neuronID : neuronTracedSegments.keySet()) {
             for (TracedPathActor path : neuronTracedSegments.get(neuronID).values()) {
                 path.dispose(glDrawable);
@@ -622,7 +588,10 @@ public class SkeletonActor
         model.getUpdater().update();
     }
 
-
+    @Override
+    public BoundingBox3d getBoundingBox3d() {
+        return bb; // TODO actually populate bounding box
+    }
 
     /**
      * is anything visible (ie, to be drawn)?
@@ -639,24 +608,48 @@ public class SkeletonActor
         model.getUpdater().update();
     }
 
-    protected void transparencyDepthMode(GL2GL3 gl, boolean enable) {
-        if (enable) {
-            if (rim == RenderInterpositionMethod.MIP) {
-                // Apply transparency, even when anchors are not shown
-                gl.glEnable(GL2.GL_BLEND);
-                gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
-            } else {
-                gl.glEnable(GL2.GL_DEPTH_TEST);
-                gl.glDepthFunc(GL2.GL_LEQUAL);
-            }
-        } else {
-            if (rim == RenderInterpositionMethod.MIP) {
-                gl.glDisable(GL2.GL_BLEND);
-            } else {
-                gl.glDisable(GL2.GL_DEPTH_TEST);
-            }
-        }
+    public float getZThicknessInPixels() {
+        return zThicknessInPixels;
     }
 
+    public void setZThicknessInPixels(float zThicknessInPixels) {
+        this.zThicknessInPixels = zThicknessInPixels;
+    }
 
+    /**
+     * returns the z thickness over which we want annotations to be visible;
+     * this version increases that thickness so the thickness doesn't dip below
+     * a limit (expressed in scene units, which are microns for us)
+     */
+    public float getZoomedZThicknessInPixels() {
+        Camera3d camera = model.getCamera();
+        float zt;
+        if (zThicknessInPixels / camera.getPixelsPerSceneUnit() < minZThicknessSceneUnits) {
+            zt = minZThicknessSceneUnits * (float) camera.getPixelsPerSceneUnit();
+        }
+        else {
+            zt = zThicknessInPixels;
+        }
+        return zt;
+    }
+
+    public void setShowOnlyParentAnchors(boolean showOnlyParent) {
+        this.discardNonParent = showOnlyParent ? 1 : 0;
+    }
+
+    public void changeNeuronColor(Color color) {
+        neuronColor[0] = color.getRed() / 255.0f;
+        neuronColor[1] = color.getGreen() / 255.0f;
+        neuronColor[2] = color.getBlue() / 255.0f;
+        // skeletonActorChangedSignal.emit();
+        model.updateAnchors();
+    }
+
+    public void setRenderInterpositionMethod(RenderInterpositionMethod rim) {
+        this.rim = rim;
+    }
+
+    public SkeletonActorModel getModel() {
+        return model;
+    }
 }

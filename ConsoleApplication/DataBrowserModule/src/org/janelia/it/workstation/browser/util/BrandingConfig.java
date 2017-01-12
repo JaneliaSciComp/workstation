@@ -94,8 +94,9 @@ public class BrandingConfig {
             final String configFile = "config/app.conf";
             File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, "org.janelia.it.workstation", false);
             log.debug("Trying system config at {}", sysWideConfig);
-                        
+            
             if (sysWideConfig != null && sysWideConfig.canRead()) {
+                upgradeExecutable(sysWideConfig);
                 loadProperties(sysWideConfig, systemSettings);
                 log.info("Loaded {} properties from {}", systemSettings.size(), sysWideConfig);
             }
@@ -106,6 +107,42 @@ public class BrandingConfig {
         catch (IOException e) {
             throw new IllegalStateException("Error loading system configuration", e);
         }
+    }
+    
+    /**
+     * Attempt to upgrade Mac "executable" to use 1.8 when available.
+     * 
+     * @param sysWideConfig
+     */
+    private void upgradeExecutable(File sysWideConfig) {
+//        try {
+//            if (SystemInfo.isMac && SystemInfo.getJavaInfo().contains("1.7")) { 
+//                
+//                File resourceDir = sysWideConfig.getParentFile().getParentFile().getParentFile();
+//                File executable = new File(resourceDir, "bin/"+resourceDir.getName());
+//                
+//                if (!executable.exists()) {
+//                    log.error("Mac executable cannot be found: {}", executable);
+//                    return;
+//                }
+//                
+//                if (!executable.canWrite()) {
+//                    log.error("Mac executable cannot be written: {}", executable);
+//                    return;
+//                }
+//                
+//                log.info("Attempting to upgrade Mac executable: {}", executable);
+//                
+//                String s1 = "/usr/libexec/java_home -v 1.7";
+//                String s2 = "/usr/libexec/java_home -v 1.8";
+//                if (Utils.replaceInFile(executable.getAbsolutePath(), s1, s2)) {
+//                    log.info("Successfully upgraded Mac executable: {}", executable);
+//                }
+//            }
+//        }
+//        catch (Exception e) {
+//            log.error("Error attempting to fix Mac executable given sysConfig="+sysWideConfig, e);
+//        }
     }
     
     /**

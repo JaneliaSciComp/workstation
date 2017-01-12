@@ -38,7 +38,7 @@ import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.util.Utils;
-import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION;
+import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 
 import net.miginfocom.swing.MigLayout;
@@ -194,7 +194,8 @@ public class DataSetDialog extends ModalDialog {
         /* Removing this feature until such time as this level of flexibility has user demand. */
         neuronSeparationCheckbox = new JCheckBox("Support Neuron Separation");
         neuronSeparationCheckbox.setToolTipText("If pipeline does Neuron Separation by default, unchecking avoids it");
-        neuronSeparationCheckbox.setEnabled(SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION);
+        neuronSeparationCheckbox.setSelected(true); // Always support neuron separation.
+        neuronSeparationCheckbox.setEnabled(SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI);
         attrPanel.add(neuronSeparationCheckbox, "gap para, span 2");
 
         JPanel pipelinesPanel = new JPanel();
@@ -223,7 +224,7 @@ public class DataSetDialog extends ModalDialog {
             }
 
             sageSyncCheckbox.setSelected(dataSet.isSageSync());
-            neuronSeparationCheckbox.setSelected(dataSet.isNeuronSeparationSupported());
+            neuronSeparationCheckbox.setSelected(true); //dataSet.isNeuronSeparationSupported());
             if (dataSet.getPipelineProcesses()!=null && !dataSet.getPipelineProcesses().isEmpty()) {
                 applyRadioButtonValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
             }
