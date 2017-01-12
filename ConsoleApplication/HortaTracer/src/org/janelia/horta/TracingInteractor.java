@@ -42,10 +42,8 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
@@ -146,9 +144,11 @@ public class TracingInteractor extends MouseAdapter
                 return;
             NeuronVertex newParent = defaultWorkspace.getPrimaryAnchor();
             if (newParent == null) {
+                log.info("Clearing parent anchor after signal");
                 clearParentVertexAndNotify();
             }
             else {
+                log.info("Setting parent anchor after signal");
                 NeuronModel parentNeuron = defaultWorkspace.getNeuronForAnchor(newParent);
                 selectParentVertex(newParent, parentNeuron);
             }
@@ -338,7 +338,8 @@ public class TracingInteractor extends MouseAdapter
         addedSignal.notifyObservers(new VertexWithNeuron(parentVertex, neuron));
 
         parentVertexModel.getColorChangeObservable().notifyObservers();
-        
+        log.info("Horta parent vertex set");
+
         return true; 
     }
     
@@ -367,6 +368,7 @@ public class TracingInteractor extends MouseAdapter
         parentVertexModel.getVertexesRemovedObservable().setChanged();
         cachedParentVertex = null;
         cachedParentNeuronModel = null;
+        log.info("Horta parent vertex cleared");
         return true;
     }
     

@@ -31,37 +31,35 @@ package org.janelia.console.viewerapi.actions;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.commands.CreateNeuronCommand;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionRegistration;
 import org.openide.awt.UndoRedo;
-import org.openide.util.NbBundle.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@ActionID(
-        category = "Edit",
-        id = "org.janelia.console.viewerapi.actions.CreateNeuronAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_CreateNeuronAction"
-)
-@ActionReference(path = "Menu/Edit", position = 2100, separatorBefore = 2000)
-@Messages("CTL_CreateNeuronAction=Create a New Neuron Model Here...")
-public final class CreateNeuronAction implements ActionListener 
+public final class CreateNeuronAction extends AbstractAction
 {
-    private final NeuronCreationContext creationContext;
+    private final Component parentWidget;
+    private final NeuronSet workspace;
+    private final float[] anchorXyz = new float[3];
+    private final float anchorRadius;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
-    public CreateNeuronAction(NeuronCreationContext context)
+    public CreateNeuronAction(
+            Component parentWidget,
+            NeuronSet workspace,
+            float[] anchorXyz,
+            float anchorRadius)
     {
-        this.creationContext = context;
+        super("Create a New Neuron Model Here...");
+        this.parentWidget = parentWidget;
+        this.workspace = workspace;
+        System.arraycopy(anchorXyz, 0, this.anchorXyz, 0, 3);
+        this.anchorRadius = anchorRadius;
     }
 
     @Override
@@ -72,7 +70,7 @@ public final class CreateNeuronAction implements ActionListener
 
         //  showInputDialog(Component parentComponent, Object message, String title, int messageType, Icon icon, Object[] selectionValues, Object initialSelectionValue)
         Object neuronName = JOptionPane.showInputDialog(
-                creationContext.parentWidget,
+                parentWidget,
                 "Create new neuron here?",
                 "Create new neuron",
                 JOptionPane.QUESTION_MESSAGE,
@@ -83,17 +81,17 @@ public final class CreateNeuronAction implements ActionListener
             return; // User pressed "Cancel"
         }
         CreateNeuronCommand cmd = new CreateNeuronCommand(
-                creationContext.workspace,
+                workspace,
                 neuronName.toString(),
-                creationContext.anchorXyz,
-                creationContext.anchorRadius);
+                anchorXyz,
+                anchorRadius);
         String errorMessage = "Failed to create neuron";
         try {
+            cmd.setNotify(true); // Because it's a top-level Command now
             if (cmd.execute()) {
                 log.info("Neuron created");
                 NeuronVertex addedVertex = cmd.getAddedVertex();
                 if (addedVertex != null) {
-                    NeuronSet workspace = creationContext.workspace;
                     workspace.setPrimaryAnchor(addedVertex);
                     UndoRedo.Manager undoRedo = workspace.getUndoRedo();
                     if (undoRedo != null)
@@ -105,29 +103,9 @@ public final class CreateNeuronAction implements ActionListener
             errorMessage += ":\n" + exc.getMessage();
         }
         JOptionPane.showMessageDialog(
-                creationContext.parentWidget,
+                parentWidget,
                 errorMessage,
                 "Failed to create neuron",
                 JOptionPane.WARNING_MESSAGE);                
-    }
-    
-    public static class NeuronCreationContext
-    {
-        private final Component parentWidget;
-        private final NeuronSet workspace;
-        private final float[] anchorXyz = new float[3];
-        private final float anchorRadius;
-        
-        public NeuronCreationContext(
-                Component parentWidget,
-                NeuronSet workspace,
-                float[] anchorXyz,
-                float anchorRadius)
-        {
-            this.parentWidget = parentWidget;
-            this.workspace = workspace;
-            System.arraycopy(anchorXyz, 0, this.anchorXyz, 0, 3);
-            this.anchorRadius = anchorRadius;
-        }
     }
 }

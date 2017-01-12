@@ -36,6 +36,8 @@ import org.janelia.console.viewerapi.Command;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Seeds a new neuron with a single root anchor
@@ -43,16 +45,17 @@ import org.janelia.console.viewerapi.model.NeuronVertex;
  */
 public class CreateNeuronCommand 
 extends AbstractUndoableEdit
-implements UndoableEdit, Command, VertexAdder
+implements UndoableEdit, Command, VertexAdder, Notifier
 {
+    private final NeuronSet workspace;
     private final String initialNeuronName;
     private final float[] initialCoordinates;
     private final float initialRadius;
-    
     private NeuronModel newNeuron = null;
-    private final NeuronSet workspace;
-    
-    NeuronVertex rootVertex = null;
+    private NeuronVertex rootVertex = null;
+    private NeuronVertex previousParentAnchor = null;
+    private boolean doNotify = false;
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
     
     public CreateNeuronCommand(
             NeuronSet workspace,
@@ -68,6 +71,7 @@ implements UndoableEdit, Command, VertexAdder
 
     @Override
     public boolean execute() {
+        previousParentAnchor = workspace.getPrimaryAnchor();
         newNeuron = workspace.createNeuron(initialNeuronName);
         if (newNeuron == null)
             return false;
@@ -76,7 +80,12 @@ implements UndoableEdit, Command, VertexAdder
         if (rootVertex == null) {
             workspace.remove(newNeuron);
             return false;
-        }        
+        }
+        workspace.setPrimaryAnchor(rootVertex);
+        if (doesNotify()) {
+            workspace.getMembershipChangeObservable().notifyObservers();
+            workspace.getPrimaryAnchorObservable().notifyObservers();
+        }
         return true;
     }
 
@@ -121,6 +130,11 @@ implements UndoableEdit, Command, VertexAdder
                 newNeuron = null;
                 die();
             }
+            workspace.setPrimaryAnchor(previousParentAnchor);
+            if (doesNotify()) {
+                workspace.getMembershipChangeObservable().notifyObservers();
+                workspace.getPrimaryAnchorObservable().notifyObservers();
+            }
         } catch (Exception exc) {
             // Something went wrong. Perhaps this neuron no longer exists
             newNeuron = null;
@@ -140,5 +154,15 @@ implements UndoableEdit, Command, VertexAdder
     
     public NeuronModel getNewNeuron() {
         return newNeuron;
+    }
+
+    @Override
+    public void setNotify(boolean doNotify) {
+        this.doNotify = doNotify;
+    }
+
+    @Override
+    public boolean doesNotify() {
+        return doNotify;
     }
 }

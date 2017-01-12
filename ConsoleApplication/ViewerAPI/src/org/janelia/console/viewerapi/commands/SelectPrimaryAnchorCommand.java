@@ -42,11 +42,12 @@ import org.janelia.console.viewerapi.model.NeuronVertex;
  */
 public class SelectPrimaryAnchorCommand 
 extends AbstractUndoableEdit
-implements UndoableEdit, Command
+implements UndoableEdit, Command, Notifier
 {
     private final NeuronVertex newPrimary;
     private final NeuronSet workspace;
     private NeuronVertex oldPrimary;
+    private boolean doNotify = false;
     
     public SelectPrimaryAnchorCommand(NeuronSet workspace, NeuronVertex primary)
     {
@@ -64,7 +65,9 @@ implements UndoableEdit, Command
         workspace.setPrimaryAnchor(newPrimary);
         if (workspace.getPrimaryAnchor() != newPrimary)
             return false;
-        workspace.getPrimaryAnchorObservable().notifyObservers();
+        if (doesNotify()) {
+            workspace.getPrimaryAnchorObservable().notifyObservers();
+        }
         return true;
     }
 
@@ -96,9 +99,21 @@ implements UndoableEdit, Command
                 die();
                 return;
             }
-            workspace.getPrimaryAnchorObservable().notifyObservers();
+            if (doesNotify()) {
+                workspace.getPrimaryAnchorObservable().notifyObservers();
+            }
         } catch (Exception exc) {
             die(); // This Command object is no longer useful
         }
+    }
+
+    @Override
+    public void setNotify(boolean doNotify) {
+        this.doNotify = doNotify;
+    }
+
+    @Override
+    public boolean doesNotify() {
+        return doNotify;
     }
 }

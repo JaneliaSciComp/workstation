@@ -61,8 +61,10 @@ public final class SelectParentAnchorAction extends AbstractAction implements Ac
         SelectPrimaryAnchorCommand cmd = new SelectPrimaryAnchorCommand(
                 workspace,
                 newParentAnchor);
+        cmd.setNotify(true); // Top-level Commands notify their listeners
         try {
             if (cmd.execute()) {
+                // Actions, like this one, are responsible for the undo/redo stack
                 // log.info("Parent anchor selected");
                 UndoRedo.Manager undoRedo = workspace.getUndoRedo();
                 if (undoRedo != null)

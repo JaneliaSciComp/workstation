@@ -151,6 +151,7 @@ implements NeuronSet// , LookupListener
         TmNeuronMetadata neuron;
         try {
             neuron = annotationModel.createNeuron(neuronName);
+            getMembershipChangeObservable().setChanged();
         } catch (Exception ex) {
             logger.warn("Error creating neuron",ex);
             return null;
