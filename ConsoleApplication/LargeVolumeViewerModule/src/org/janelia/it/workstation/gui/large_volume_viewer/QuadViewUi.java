@@ -382,6 +382,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 //cacheController.focusChanged(camera.getFocus());
                 TileStackCacheController.getInstance().setFocus(camera.getFocus());
                 tileServer.refreshCurrentTileSet();
+                getSkeletonActor().getModel().forceUpdateAnchors();
             }            
         });
 

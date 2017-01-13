@@ -62,7 +62,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	protected SliceRenderer renderer = new SliceRenderer();
 	protected Viewport viewport = renderer.getViewport();
 	protected RubberBand rubberBand = new RubberBand();
-	protected SkeletonActor skeletonActor = new SkeletonActor();
 
 	SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
 	protected TileServer tileServer = new TileServer(sharedVolumeImage);
@@ -70,6 +69,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	protected SliceActor sliceActor;
 	private ImageColorModel imageColorModel;
 	private final BasicMouseMode pointComputer = new BasicMouseMode();
+    protected SkeletonActor skeletonActor = new SkeletonActor();
     private final MicronCoordsFormatter micronCoordsFormatter = new MicronCoordsFormatter( pointComputer );
 	
     private MessageListener messageListener;
@@ -86,7 +86,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                              final GLCapabilitiesChooser chooser,
                              final GLContext sharedContext,
                              ObservableCamera3d camera)
-	{
+	{	    
         // Use GLCanvas on Linux, for better frame rate on EnginFrame
         // But not on Windows, so we could still use Java2D decorations
         // if (false)
@@ -364,7 +364,9 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		mouseMode.setCamera(camera);
 		wheelMode.setCamera(camera);
 		pointComputer.setCamera(camera);
-        skeletonActor.getModel().setCamera(camera);
+        skeletonActor.setCamera(camera);
+        skeletonActor.setViewport(getViewport());
+        skeletonActor.setPointComputer(pointComputer);
 	}
     public CameraListenerAdapter cameraListener;
 	
@@ -450,14 +452,12 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	}
 
     @Override
-    public boolean isShowing()
-    {
+    public boolean isShowing() {
         return glCanvas.getInnerAwtComponent().isShowing();
     }
 
     @Override
-    public void repaint()
-    {
+    public void repaint() {
         glCanvas.repaint();
     }
 

@@ -45,18 +45,21 @@ public class NeuronVertexSpatialIndex {
     }
     
     public NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ) {
+        if (index==null) return null;
         List<NeuronVertex> nbrs = getAnchorClosestToMicronLocation(micronXYZ, 1);
         if (nbrs.isEmpty()) return null;
         return nbrs.get(0);
     }
 
     public NeuronVertex getAnchorClosestToVoxelLocation(double[] voxelXYZ) {
+        if (index==null) return null;
         List<NeuronVertex> nbrs = getAnchorClosestToVoxelLocation(voxelXYZ, 1);
         if (nbrs.isEmpty()) return null;
         return nbrs.get(0);
     }
     
     public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
+        if (index==null) return Collections.emptyList();
         if (micronToVoxMatrix==null) {
             log.warn("No sample loaded in spatial index");
             return Collections.emptyList();
@@ -77,6 +80,7 @@ public class NeuronVertexSpatialIndex {
     }
     
     public List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n) {
+        if (index==null) return Collections.emptyList();
         try {
             return index.nearest(voxelXYZ, n);
         } 
@@ -86,6 +90,24 @@ public class NeuronVertexSpatialIndex {
         }
     }
 
+    /**
+     * Returns all the anchors found in the area given by two corners points.  
+     * @param p1 lower corner
+     * @param p2 higher corner
+     * @return list of anchors 
+     */
+    public List<NeuronVertex> getAnchorsInArea(double[] p1, double[] p2) {
+        if (index==null) return Collections.emptyList();
+        try {
+            log.debug("Finding anchors in area bounded by points: p1=({},{},{}) p2=({},{},{})",p1[0],p1[1],p1[2],p2[0],p2[1],p2[2]);
+            return index.range(p1, p2);
+        } 
+        catch (KeySizeException ex) {
+            log.warn("Exception while anchors in area using spatial index", ex);
+            return null;
+        }
+    }
+    
     /**
      * Return the location of the vertex in micrometers, for indexing within the KD-tree.
      * @param v

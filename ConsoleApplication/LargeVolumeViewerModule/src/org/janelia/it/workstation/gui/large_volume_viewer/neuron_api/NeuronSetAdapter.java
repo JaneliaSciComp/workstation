@@ -66,9 +66,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Expose NeuronSet interface, using in-memory data resident in LVV
  *
  * @author Christopher Bruns
- Expose NeuronSet interface, using in-memory data resident in LVV
  */
 public class NeuronSetAdapter
 extends BasicNeuronSet
@@ -94,9 +94,6 @@ implements NeuronSet// , LookupListener
         this.globalAnnotationListener = new MyGlobalAnnotationListener();
         this.annotationModListener = new MyTmGeoAnnotationModListener();
         this.hortaWorkspaceResult.addLookupListener(new NSALookupListener());
-        spatialIndex.rebuildIndex(innerList);
-        // this.voxToMicronMatrix = MatrixUtilities.deserializeMatrix(sample.getVoxToMicronMatrix(), "voxToMicronMatrix");
-        // this.micronToVoxMatrix = MatrixUtilities.deserializeMatrix(sample.getMicronToVoxMatrix(), "micronToVoxMatrix");
     }
     
     public NeuronSetAdapter()
@@ -136,6 +133,11 @@ implements NeuronSet// , LookupListener
     @Override 
     public NeuronVertex getAnchorClosestToVoxelLocation(double[] micronXYZ) {
         return spatialIndex.getAnchorClosestToVoxelLocation(micronXYZ);
+    }
+
+    @Override
+    public List<NeuronVertex> getAnchorsInArea(double[] p1, double[] p2) {
+        return spatialIndex.getAnchorsInArea(p1, p2);
     }
     
     @Override 
@@ -211,7 +213,7 @@ implements NeuronSet// , LookupListener
         else
             return super.getName();
     }
-    
+        
     private boolean setWorkspace(TmWorkspace workspace) {
         if (this.workspace == workspace)
             return false;
@@ -220,8 +222,6 @@ implements NeuronSet// , LookupListener
         if (! workspace.getName().equals(getName()))
             getNameChangeObservable().setChanged();
         this.workspace = workspace;
-        this.sample = annotationModel.getCurrentSample();
-        spatialIndex.initSample(sample);
         NeuronList nl = (NeuronList) neurons;
         nl.wrap(this);
         getMembershipChangeObservable().setChanged();
@@ -253,7 +253,7 @@ implements NeuronSet// , LookupListener
         @Override
         public void annotationAdded(TmGeoAnnotation annotation)
         {
-            logger.info("annotationAdded");
+            logger.debug("annotationAdded");
             sanityCheckWorkspace(); // beware of shifting sands beneath us...
             // updateEdges(); // Brute force approach reanalyzes all edges            
             // Surgical approach only adds the one new edge
@@ -300,7 +300,7 @@ implements NeuronSet// , LookupListener
         @Override
         public void annotationsDeleted(List<TmGeoAnnotation> annotations)
         {
-            // logger.info("annotationDeleted");
+            logger.debug("annotationDeleted");
             sanityCheckWorkspace(); // beware of shifting sands beneath us...
             
             // TODO - surgically remove only edges related to these particular vertices
@@ -359,7 +359,7 @@ implements NeuronSet// , LookupListener
                     // TODO: - react somehow to the reparenting
                 }
             }
-            logger.info("annotationReparented");
+            logger.debug("annotationReparented");
         }
 
         @Override
@@ -381,14 +381,14 @@ implements NeuronSet// , LookupListener
             NeuronVertexUpdateObservable signal = neuron.getVertexUpdatedObservable();
             signal.setChanged();
             signal.notifyObservers(new VertexWithNeuron(movedVertex, neuron));
-            logger.info("annotationMoved");
+            logger.debug("annotationMoved");
             repaintHorta();
         }
 
         @Override
         public void annotationNotMoved(TmGeoAnnotation annotation)
         {
-            logger.info("annotationNotMoved");
+            logger.debug("annotationNotMoved");
             // updateEdges();
         }
 
@@ -419,7 +419,7 @@ implements NeuronSet// , LookupListener
         @Override
         public void workspaceLoaded(TmWorkspace workspace)
         {
-            logger.debug("Workspace loaded");
+            logger.info("Workspace loaded");
             setWorkspace(workspace);
             spatialIndex.rebuildIndex(innerList);
             // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal

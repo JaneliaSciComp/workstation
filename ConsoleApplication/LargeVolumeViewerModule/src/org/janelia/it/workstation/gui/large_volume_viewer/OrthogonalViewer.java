@@ -237,8 +237,11 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         mouseMode.setCamera(camera);
         wheelMode.setCamera(camera);
         pointComputer.setCamera(camera);
-        if (skeletonActor != null)
-            skeletonActor.getModel().setCamera(camera);
+        if (skeletonActor != null) {
+            skeletonActor.setCamera(camera);
+            skeletonActor.setViewport(getViewport());
+            skeletonActor.setPointComputer(pointComputer);
+	    }
 	}
 	
 	public void setNavigationMenuItemGenerator(MenuItemGenerator navigationMenuItemGenerator) 
@@ -411,7 +414,9 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		if (this.skeletonActor == skeletonActor)
 			return;
 		this.skeletonActor = skeletonActor;
-		skeletonActor.getModel().setCamera(camera);
+		skeletonActor.setCamera(camera);
+        skeletonActor.setViewport(getViewport());
+        skeletonActor.setPointComputer(pointComputer);
         skeletonActor.getModel().getUpdater().addListener(this);
         renderer.addActor(skeletonActor);
 	}

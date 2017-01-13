@@ -52,7 +52,6 @@ public class LargeVolumeViewViewer extends JPanel {
     private DomainObject initialObject;
     private AnnotationModel annotationModel;
     private QuadViewUi viewUI;
-    private final NeuronSetAdapter neuronSetAdapter = new NeuronSetAdapter(); // For communicating annotations to Horta
 
     public LargeVolumeViewViewer() {
         super();
@@ -260,7 +259,6 @@ public class LargeVolumeViewViewer extends JPanel {
                 annotationModel = new AnnotationModel();
                 Events.getInstance().registerOnEventBus(annotationModel);
                 viewUI = new QuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);
-                neuronSetAdapter.observe(annotationModel);
             }
             removeAll();
             viewUI.setVisible(true);
@@ -297,10 +295,6 @@ public class LargeVolumeViewViewer extends JPanel {
             Events.getInstance().unregisterOnEventBus(annotationModel);
             annotationModel = null;
         }
-    }
-
-    public NeuronSet getNeuronSetAdapter() {
-        return neuronSetAdapter;
     }
 
     @Subscribe

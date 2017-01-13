@@ -19,12 +19,15 @@ import javax.swing.ImageIcon;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PathShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.slf4j.Logger;
@@ -65,7 +68,8 @@ public class SkeletonActor implements GLActor {
     private int pointIbo = -1;
     private int colorBo = -1;
 
-    private SkeletonActorModel model = new SkeletonActorModel();
+    private SkeletonActorModel model;
+    private Camera3d camera;
     private PathShader lineShader = new PathShader();
     private AnchorShader anchorShader = new AnchorShader();
     private BoundingBox3d bb = new BoundingBox3d();
@@ -95,8 +99,9 @@ public class SkeletonActor implements GLActor {
     public enum RenderInterpositionMethod {
         MIP, Occlusion
     }
-
+    
     public SkeletonActor() {
+        this.model = new SkeletonActorModel();
     }
 
     /**
@@ -287,7 +292,6 @@ public class SkeletonActor implements GLActor {
         gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
         lineShader.load(gl2);
         lineShader.setUniform(gl, "zThickness", getZoomedZThicknessInPixels());
-        Camera3d camera=model.getCamera();
         float focus[] = {
                 (float) camera.getFocus().getX(),
                 (float) camera.getFocus().getY(),
@@ -367,7 +371,6 @@ public class SkeletonActor implements GLActor {
         GL2GL3 gl2gl3 = gl.getGL2GL3();
         lineShader.load(gl2);
         lineShader.setUniform(gl2gl3, "zThickness", getZoomedZThicknessInPixels());
-        Camera3d camera = model.getCamera();
         // used to troubleshoot z-depth problems at high zoom:
         // log.info("SkeletonActor.displayTracedSegments():");
         // log.info("    getPixelsPerSceneUnit() = " + camera.getPixelsPerSceneUnit());
@@ -526,7 +529,6 @@ public class SkeletonActor implements GLActor {
         // used to set uniforms for hover index and parent index here, but
         //  that's now done in the appropriate update loops
         anchorShader.setUniform(gl, "zThickness", getZoomedZThicknessInPixels());
-        Camera3d camera=model.getCamera();
         float focus[] = {
             (float) camera.getFocus().getX(),
             (float) camera.getFocus().getY(),
@@ -614,6 +616,8 @@ public class SkeletonActor implements GLActor {
 
     public void setZThicknessInPixels(float zThicknessInPixels) {
         this.zThicknessInPixels = zThicknessInPixels;
+        // Update value is the model
+        model.setZoomedZThicknessInPixels(getZoomedZThicknessInPixels());
     }
 
     /**
@@ -622,7 +626,6 @@ public class SkeletonActor implements GLActor {
      * a limit (expressed in scene units, which are microns for us)
      */
     public float getZoomedZThicknessInPixels() {
-        Camera3d camera = model.getCamera();
         float zt;
         if (zThicknessInPixels / camera.getPixelsPerSceneUnit() < minZThicknessSceneUnits) {
             zt = minZThicknessSceneUnits * (float) camera.getPixelsPerSceneUnit();
@@ -652,4 +655,19 @@ public class SkeletonActor implements GLActor {
     public SkeletonActorModel getModel() {
         return model;
     }
+
+    public void setCamera(Camera3d rendererCamera) {
+        this.camera = rendererCamera;
+        model.setCamera(rendererCamera);
+        model.setZoomedZThicknessInPixels(getZoomedZThicknessInPixels());
+    }
+    
+    public void setViewport(Viewport viewport) {
+        model.setViewport(viewport);
+    }
+
+    public void setPointComputer(BasicMouseMode pointComputer) {
+        model.setPointComputer(pointComputer);
+    }
+    
 }

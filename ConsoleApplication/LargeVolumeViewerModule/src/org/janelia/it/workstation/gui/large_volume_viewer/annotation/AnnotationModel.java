@@ -15,6 +15,7 @@ import java.util.Set;
 
 import javax.swing.SwingUtilities;
 
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
@@ -50,6 +51,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredP
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,6 +107,7 @@ called from a  SimpleWorker thread.
     private NotesUpdateListener notesUpdateListener;
 
     private final FilteredAnnotationModel filteredAnnotationModel;
+    private final NeuronSetAdapter neuronSetAdapter; // For communicating annotations to Horta
 
     private final Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
     private final Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
@@ -131,7 +134,9 @@ called from a  SimpleWorker thread.
         this.modelAdapter = new DomainMgrTmModelAdapter();
         this.neuronManager = new TmModelManipulator(modelAdapter);
         this.filteredAnnotationModel = new FilteredAnnotationModel();
-
+        this.neuronSetAdapter = new NeuronSetAdapter();
+        neuronSetAdapter.observe(this);
+        
         // Report performance statistics when program closes
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -1865,5 +1870,9 @@ called from a  SimpleWorker thread.
     }
 
     private void fireWorkspaceChanged() {
+    }
+
+    public NeuronSet getNeuronSet() {
+        return neuronSetAdapter;
     }
 }
