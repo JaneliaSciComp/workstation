@@ -116,6 +116,7 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.console.viewerapi.actions.RenameNeuronAction;
 import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
@@ -1668,25 +1669,39 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 }
 
-                if (interactorContext.canRecolorNeuron()) {
-                    topMenu.add(new JPopupMenu.Separator());                
-                    topMenu.add(new AbstractAction("Change Neuron Color...") {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            interactorContext.recolorNeuron();
-                        }
-                    });
-                }
+                // SECTION: Neuron edits
+                NeuronModel indicatedNeuron = interactorContext.getHighlightedNeuron();
+                if (indicatedNeuron != null) 
+                {
+                    topMenu.add(new JPopupMenu.Separator());
 
-                // DANGER!
-                if (interactorContext.canDeleteNeuron()) {
-                    topMenu.add(new JPopupMenu.Separator());                
-                    topMenu.add(new AbstractAction("!!! DELETE This Neuron... !!!") {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            interactorContext.deleteNeuron();
-                        }
-                    });
+                    // Change Neuron Color
+                    if (interactorContext.canRecolorNeuron()) {
+                        topMenu.add(new AbstractAction("Change Neuron Color...") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.recolorNeuron();
+                            }
+                        });
+                    }
+
+                    // Change Neuron Name
+                    topMenu.add(new RenameNeuronAction(
+                            NeuronTracerTopComponent.this,
+                            activeNeuronSet,
+                            indicatedNeuron));
+
+                    // Delete Neuron DANGER!
+                    if (interactorContext.canDeleteNeuron()) {
+                        // Extra separator due to danger...
+                        topMenu.add(new JPopupMenu.Separator());                
+                        topMenu.add(new AbstractAction("!!! DELETE This Neuron... !!!") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.deleteNeuron();
+                            }
+                        });
+                    }
                 }
                 
                 // SECTION: Tracing options

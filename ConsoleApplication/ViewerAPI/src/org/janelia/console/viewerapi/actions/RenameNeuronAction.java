@@ -33,6 +33,8 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
+import javax.swing.event.UndoableEditEvent;
+import org.janelia.console.viewerapi.commands.RenameNeuronCommand;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.openide.awt.UndoRedo;
@@ -40,61 +42,55 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*
- * GUI-level Action to delete an existing neuron.
+ * GUI-level Action to rename an existing neuron
  */
 
-public final class DeleteNeuronAction extends AbstractAction
+public final class RenameNeuronAction extends AbstractAction
 {
     private final Component parentWidget;
+    private final NeuronModel neuron;
     private final NeuronSet workspace;
-    private final NeuronModel doomedNeuron;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
-    public DeleteNeuronAction(
+    public RenameNeuronAction(
             Component parentWidget,
             NeuronSet workspace,
-            NeuronModel doomedNeuron)
+            NeuronModel neuron)
     {
-        super("Delete This Neuron '" + doomedNeuron.getName() + "'...");
+        super("Rename Neuron '" + neuron.getName() + "'...");
         this.parentWidget = parentWidget;
         this.workspace = workspace;
-        this.doomedNeuron = doomedNeuron;
+        this.neuron = neuron;        
     }
 
     @Override
     public void actionPerformed(ActionEvent ev) 
     {
-        String warning = "Really DELETE '" +
-                doomedNeuron.getName() + 
-                "'?\nContaining " +
-                doomedNeuron.getVertexes().size() +
-                " anchors?" +
-                "\n !!! WARNING !!!" +
-                "\n THIS CANNOT BE UNDONE";
-        int result = JOptionPane.showConfirmDialog(
-                parentWidget,
-                warning, 
-                "Really DELETE '" + doomedNeuron.getName() + "'?",
-                JOptionPane.OK_CANCEL_OPTION, 
-                JOptionPane.WARNING_MESSAGE);
-        
-        if (result != JOptionPane.OK_OPTION)
-            return; // User pressed cancel
-        
-        // Actually delete the neuron
-        if (workspace.remove(doomedNeuron)) {
+        String oldName = neuron.getName();
+        String newName = JOptionPane.showInputDialog(parentWidget, 
+                "Enter new name for Neuron '" + oldName + "':", 
+                oldName);
+        if (newName == null)
+            return; // User pressed "Cancel"
+        if (newName.length() < 1)
+            return; // We don't name things with the empty string
+        if (newName.equals(oldName))
+            return; // Nothing changed
+        RenameNeuronCommand cmd = new RenameNeuronCommand(neuron, newName);        
+        // cmd.setNotify(true); // TODO: add a renaming signal
+        String fromTo =  " from '" + oldName + "' to '" + newName + "'";
+        if (cmd.execute()) {
+            log.info("Neuron name changed" + fromTo);
             UndoRedo.Manager undoRedo = workspace.getUndoRedo();
             if (undoRedo != null)
-                undoRedo.discardAllEdits(); // Deleting a neuron screws previous edits.
-            workspace.getMembershipChangeObservable().notifyObservers();
+                undoRedo.undoableEditHappened(new UndoableEditEvent(this, cmd));
         }
         else {
             JOptionPane.showMessageDialog(
                     parentWidget,
-                    "Failed to delete neuron '" + doomedNeuron.getName() + "'",
-                    "Failed to delete neuron '" + doomedNeuron.getName() + "'",
-                    JOptionPane.WARNING_MESSAGE);
+                    "Failed to change neuron name" + fromTo,
+                    "Failed to change neuron name" + fromTo,
+                    JOptionPane.WARNING_MESSAGE);                
         }
     }
-
 }

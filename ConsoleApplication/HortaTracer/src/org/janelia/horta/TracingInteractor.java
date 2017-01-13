@@ -1062,6 +1062,10 @@ public class TracingInteractor extends MouseAdapter
                 return true;
             }
         }
+
+        NeuronModel getHighlightedNeuron() {
+            return hoveredNeuron;   
+        }
     }
     
     class RadiusDialog extends JOptionPane 

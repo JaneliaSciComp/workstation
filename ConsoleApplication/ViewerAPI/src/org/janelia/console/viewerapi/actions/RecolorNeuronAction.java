@@ -48,7 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*
- * GUI-level Action to create a new neuron rooted at a particular XYZ location.
+ * GUI-level Action to change the color of an existing neuron
  */
 
 public final class RecolorNeuronAction extends AbstractAction
