@@ -384,7 +384,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 TileStackCacheController.getInstance().setFocus(camera.getFocus());
                 tileServer.refreshCurrentTileSet();
                 if (ApplicationPanel.isAnchorsInViewport()) {
-                    log.info("View changed and anchors forced");
                     getSkeletonActor().getModel().forceUpdateAnchors();
                 }
             }            

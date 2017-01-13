@@ -137,7 +137,7 @@ implements NeuronSet// , LookupListener
 
     @Override
     public List<NeuronVertex> getAnchorsInArea(double[] p1, double[] p2) {
-        return spatialIndex.getAnchorsInArea(p1, p2);
+        return spatialIndex.getAnchorsInVoxelArea(p1, p2);
     }
     
     @Override 
