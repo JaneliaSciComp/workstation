@@ -118,6 +118,7 @@ import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.console.viewerapi.actions.RenameNeuronAction;
 import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
+import org.janelia.console.viewerapi.actions.ToggleNeuronVisibilityAction;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
@@ -1675,6 +1676,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                 {
                     topMenu.add(new JPopupMenu.Separator());
 
+                    // Toggle Visiblity (maybe we could only hide from here though...)
+                    topMenu.add(new ToggleNeuronVisibilityAction(
+                            NeuronTracerTopComponent.this,
+                            activeNeuronSet,
+                            indicatedNeuron));
+                    
                     // Change Neuron Color
                     if (interactorContext.canRecolorNeuron()) {
                         topMenu.add(new AbstractAction("Change Neuron Color...") {
