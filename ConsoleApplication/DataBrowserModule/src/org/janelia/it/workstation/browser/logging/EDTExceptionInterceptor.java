@@ -19,7 +19,25 @@ public class EDTExceptionInterceptor extends EventQueue {
             super.dispatchEvent(event);
         } 
         catch (Throwable throwable) {
-            logger.log(CustomLoggingLevel.USER_ERROR, null, throwable);
+            if (isKnownHarmlessIssue(throwable)) {
+                // Known harmless issues are logged with lower logging level so as not to bother the user or spam JIRA tickets
+                logger.log(CustomLoggingLevel.SEVERE, null, throwable);
+            }
+            else {
+                logger.log(CustomLoggingLevel.USER_ERROR, null, throwable);
+            }
         }
+    }
+    
+    private boolean isKnownHarmlessIssue(Throwable e) {
+
+        
+        // JDK bug: http://bugs.java.com/view_bug.do?bug_id=8003398
+        if (e.getClass().equals(IllegalArgumentException.class) && "adding a container to a container on a different GraphicsDevice".equals(e.getMessage())) {
+            return true;
+        }
+
+        
+        return false;
     }
 }
