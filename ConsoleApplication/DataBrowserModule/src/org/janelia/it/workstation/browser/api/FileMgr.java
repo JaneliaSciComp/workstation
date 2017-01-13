@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.api;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -201,6 +202,9 @@ public class FileMgr {
             try {
                 final URL url = client.getWebDavUrl(standardPath);
                 file = cache.getFile(url, forceRefresh);
+            }
+            catch (FileNotFoundException e) {
+                log.warn("File does not exist: " + standardPath, e);
             }
             catch (Exception e) {
                 log.error("Failed to retrieve " + standardPath + " from local cache", e);
