@@ -3,7 +3,6 @@ package org.janelia.it.workstation.browser.gui.editor;
 import static org.janelia.it.workstation.browser.api.DomainMgr.getDomainMgr;
 
 import java.awt.BorderLayout;
-import java.awt.Desktop;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -62,11 +61,13 @@ import org.janelia.it.workstation.browser.gui.dialogs.EditCriteriaDialog;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SmartSearchBox;
+import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
@@ -244,7 +245,15 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             public void actionPerformed(ActionEvent e) {
                 // TODO: make a custom help page later
                 try {
-                    Desktop.getDesktop().browse(new URI("http://lucene.apache.org/core/old_versioned_docs/versions/3_5_0/queryparsersyntax.html"));
+                    if (!DesktopApi.browseDesktop(new URI("http://lucene.apache.org/core/old_versioned_docs/versions/3_5_0/queryparsersyntax.html"))) {
+                        JOptionPane.showMessageDialog(
+                                WindowLocator.getMainFrame(),
+                                "Cannot open URL. Desktop API is not supported on this platform.",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE,
+                                null
+                        );
+                    }
                 }
                 catch (Exception ex) {
                     ConsoleApp.handleException(ex);
