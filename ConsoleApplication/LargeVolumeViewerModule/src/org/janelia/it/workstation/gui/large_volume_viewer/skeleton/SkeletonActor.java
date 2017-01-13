@@ -20,7 +20,7 @@ import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
-import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PathShader;
@@ -83,7 +83,7 @@ public class SkeletonActor implements GLActor {
     // These values are chosen empirically; at low zoom,we don't want annotations showing 
     // over too many planes; at high zoom, too few.
     // Note that scene units = microns
-    private float zThicknessInPixels = 80;
+    private float zThicknessInPixels = ApplicationPanel.getZThickness();
     private float minZThicknessSceneUnits = 10.0f;
 
     private String parentAnchorImageName = SMALL_PARENT_IMG;

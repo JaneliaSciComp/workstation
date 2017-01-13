@@ -27,9 +27,9 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
-import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
@@ -686,8 +686,9 @@ public class SkeletonActorModel {
             return Collections.emptyList();
         }
 
-        if (viewport==null || pointComputer==null) {
-            // If no viewport was provided, fallback on old inefficient behavior which always renders all anchors
+        boolean anchorsInViewport = ApplicationPanel.isAnchorsInViewport();
+        if (viewport==null || pointComputer==null || !anchorsInViewport) {
+            // Fallback on old inefficient behavior which always renders all anchors
             Set<Anchor> anchors = skeleton.getAnchors();
             synchronized (anchors) {
                 return new ArrayList<>(anchors);
@@ -737,7 +738,7 @@ public class SkeletonActorModel {
             }
         }
 
-        log.trace("Found {} anchors in viewport",anchors.size());
+        log.debug("Found {} anchors in viewport",anchors.size());
         return anchors;
     }
     

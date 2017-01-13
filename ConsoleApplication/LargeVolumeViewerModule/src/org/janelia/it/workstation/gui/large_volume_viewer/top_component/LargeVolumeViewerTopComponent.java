@@ -6,6 +6,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
@@ -24,7 +25,6 @@ import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.NbPreferences;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
@@ -212,8 +212,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
 
         if (!restoreStateOnOpen) return;
         
-        String loadLastStr = NbPreferences.forModule(ApplicationPanel.class).get(ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT, ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT_DEFAULT);
-        if (!Boolean.parseBoolean(loadLastStr)) {
+        if (!ApplicationPanel.isLoadLastObject()) {
             return;
         }
         

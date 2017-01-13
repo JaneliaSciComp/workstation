@@ -129,6 +129,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewCon
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
@@ -382,7 +383,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 //cacheController.focusChanged(camera.getFocus());
                 TileStackCacheController.getInstance().setFocus(camera.getFocus());
                 tileServer.refreshCurrentTileSet();
-                getSkeletonActor().getModel().forceUpdateAnchors();
+                if (ApplicationPanel.isAnchorsInViewport()) {
+                    log.info("View changed and anchors forced");
+                    getSkeletonActor().getModel().forceUpdateAnchors();
+                }
             }            
         });
 
