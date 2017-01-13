@@ -1,7 +1,6 @@
 package org.janelia.jacs2.service.impl;
 
 import com.google.common.collect.ImmutableList;
-import org.hamcrest.beans.HasPropertyWithValue;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.service.JacsServiceData;
@@ -12,35 +11,21 @@ import org.janelia.jacs2.service.ServiceRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,24 +34,29 @@ public class JacsServiceDispatcherTest {
 
     private static final Long TEST_ID = 101L;
 
-    @Mock
-    private Logger logger;
-    @Spy
-    private ExecutorService serviceExecutor;
-    @Mock
+    private ServiceComputationFactory serviceComputationFactory;
     private JacsServiceDataPersistence jacsServiceDataPersistence;
-    @Mock
     private Instance<ServiceRegistry> serviceRegistrarSource;
-    @Mock
     private ServiceRegistry serviceRegistry;
-    @InjectMocks
+    private Logger logger;
     private JacsServiceDispatcher testDispatcher;
 
     @Before
     public void setUp() {
-        testDispatcher = new JacsServiceDispatcher();
-        serviceExecutor = Executors.newFixedThreadPool(25);
-        MockitoAnnotations.initMocks(this);
+        ExecutorService executor = mock(ExecutorService.class);
+
+        when(executor.submit(any(Runnable.class))).thenAnswer(invocation -> {
+            Runnable r = invocation.getArgument(0);
+            r.run();
+            return null;
+        });
+
+        serviceComputationFactory = new ServiceComputationFactory(executor);
+        jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
+        serviceRegistrarSource = mock(Instance.class);
+        serviceRegistry = mock(ServiceRegistry.class);
+        logger = mock(Logger.class);
+        testDispatcher = new JacsServiceDispatcher(serviceComputationFactory, jacsServiceDataPersistence, serviceRegistrarSource, logger);
         when(serviceRegistrarSource.get()).thenReturn(serviceRegistry);
         Answer<Void> saveServiceData = invocation -> {
             JacsServiceData ti = invocation.getArgument(0);
@@ -150,99 +140,46 @@ public class JacsServiceDispatcherTest {
     }
 
     private void verifyDispatch(JacsServiceData testServiceData) {
-        CompletionStage<JacsService> process = CompletableFuture.completedFuture(new JacsService(testDispatcher, testServiceData));
-        ServiceSyncer done = new ServiceSyncer();
-        Thread joiner = new Thread(done);
-        joiner.start();
-
-        Answer<Void> doneAnswer = invocation -> {
-            done.done = true;
-            return null;
-        };
-
-        ServiceComputation testComputation = prepareComputations(testServiceData, null, process, doneAnswer);
-
+        ServiceProcessor testProcessor = prepareServiceProcessor(testServiceData, null);
         testDispatcher.dispatchServices();
-        try {
-            joiner.join();
-        } catch (InterruptedException e) {
-            fail(e.getMessage());
-        }
         verify(logger).info("Dequeued service {}", testServiceData);
-        ArgumentCaptor<JacsService> jacsServiceArg = ArgumentCaptor.forClass(JacsService.class);
-        verify(testComputation).preProcessData(jacsServiceArg.capture());
-        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
-
-        verify(testComputation).isReadyToProcess(jacsServiceArg.capture());
-        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
-
-        verify(testComputation).processData(jacsServiceArg.capture());
-        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
-
-        verify(testComputation).isDone(jacsServiceArg.capture());
-        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
+        ArgumentCaptor<JacsServiceData> jacsServiceArg = ArgumentCaptor.forClass(JacsServiceData.class);
+        verify(testProcessor).process(jacsServiceArg.capture());
+        assertSame(testServiceData, jacsServiceArg.getValue());
 
         verify(jacsServiceDataPersistence, atLeast(2)).update(testServiceData);
         assertThat(testServiceData.getState(), equalTo(JacsServiceState.SUCCESSFUL));
     }
 
-    private ServiceComputation prepareComputations(JacsServiceData testServiceData, Throwable exc, CompletionStage<JacsService> processingStage, Answer<Void> doneAnswer) {
+    private ServiceProcessor prepareServiceProcessor(JacsServiceData testServiceData, Exception exc) {
         ServiceDescriptor testDescriptor = mock(ServiceDescriptor.class);
-        ServiceComputation testComputation = mock(ServiceComputation.class);
+        ServiceProcessor testProcessor = mock(ServiceProcessor.class);
 
         when(serviceRegistry.lookupService(testServiceData.getName())).thenReturn(testDescriptor);
-        when(testDescriptor.createComputationInstance()).thenReturn(testComputation);
+        when(testDescriptor.createServiceProcessor()).thenReturn(testProcessor);
 
-        when(testComputation.preProcessData(any(JacsService.class))).then(invocation -> CompletableFuture.completedFuture(invocation.getArgument(0)));
-        when(testComputation.isReadyToProcess(any(JacsService.class))).then(invocation -> CompletableFuture.completedFuture(invocation.getArgument(0)));
-        when(testComputation.processData(any(JacsService.class))).thenReturn(processingStage);
-        when(testComputation.isDone(any(JacsService.class))).then(invocation -> CompletableFuture.completedFuture(invocation.getArgument(0)));
-
-        doAnswer(doneAnswer).when(testComputation).postProcessData(any(JacsService.class), exc != null ? any(Throwable.class) : isNull());
-        return testComputation;
+        if (exc == null) {
+            when(testProcessor.process(any(JacsServiceData.class))).thenReturn(serviceComputationFactory.newCompletedComputation(null));
+        } else {
+            when(testProcessor.process(any(JacsServiceData.class))).thenReturn(serviceComputationFactory.newFailedComputation(exc));
+        }
+        return testProcessor;
     }
 
     @Test
     public void serviceProcessingError() {
         JacsServiceData testServiceData = submitTestService("submittedService");
         when(jacsServiceDataPersistence.findServicesByState(any(Set.class), any(PageRequest.class)))
-                .thenReturn(new PageResult<JacsServiceData>());
-        ServiceSyncer done = new ServiceSyncer();
-        Thread joiner = new Thread(done);
-        joiner.start();
-
-        JacsService processingService = new JacsService(testDispatcher, testServiceData);
-
-        CompletableFuture<JacsService> process = new CompletableFuture<>();
-        ComputationException processException = new ComputationException(processingService, "test exception");
-        process.completeExceptionally(processException);
-
-        Answer<Void> doneAnswer = invocation -> {
-            done.done = true;
-            return null;
-        };
-
-        ServiceComputation testComputation = prepareComputations(testServiceData, processException, process, doneAnswer);
+                .thenReturn(new PageResult<>());
+        ComputationException processException = new ComputationException(testServiceData, "test exception");
+        ServiceProcessor testProcessor = prepareServiceProcessor(testServiceData, processException);
 
         testDispatcher.dispatchServices();
-        try {
-            joiner.join();
-        } catch (InterruptedException e) {
-            fail(e.getMessage());
-        }
         verify(logger).info("Dequeued service {}", testServiceData);
 
-        ArgumentCaptor<JacsService> jacsServiceArg = ArgumentCaptor.forClass(JacsService.class);
-        verify(testComputation).preProcessData(jacsServiceArg.capture());
-        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
-
-        verify(testComputation).isReadyToProcess(jacsServiceArg.capture());
-        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
-
-        verify(testComputation).processData(jacsServiceArg.capture());
-        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
-
-        verify(testComputation, never()).isDone(any(JacsService.class));
+        ArgumentCaptor<JacsServiceData> jacsServiceArg = ArgumentCaptor.forClass(JacsServiceData.class);
+        verify(testProcessor).process(jacsServiceArg.capture());
+        assertSame(testServiceData, jacsServiceArg.getValue());
         verify(jacsServiceDataPersistence, times(3)).update(testServiceData);
         assertThat(testServiceData.getState(), equalTo(JacsServiceState.ERROR));
     }

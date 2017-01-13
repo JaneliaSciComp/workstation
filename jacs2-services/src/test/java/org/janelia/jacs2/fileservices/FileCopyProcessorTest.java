@@ -1,43 +1,76 @@
 package org.janelia.jacs2.fileservices;
 
-import com.google.common.collect.ImmutableMap;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.JacsServiceDataBuilder;
-import org.janelia.jacs2.service.impl.JacsService;
+import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
+import org.janelia.jacs2.service.impl.ExternalProcessRunner;
+import org.janelia.jacs2.service.impl.JacsServiceDispatcher;
+import org.janelia.jacs2.service.impl.ServiceComputation;
+import org.janelia.jacs2.service.impl.ServiceComputationFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
+import javax.enterprise.inject.Instance;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-public class FileCopyComputationTest {
+public class FileCopyProcessorTest {
 
+    private JacsServiceDispatcher jacsServiceDispatcher;
+    private ServiceComputationFactory serviceComputationFactory;
+    private JacsServiceDataPersistence jacsServiceDataPersistence;
+    private Instance<ExternalProcessRunner> serviceRunners;
     private String libraryPath = "testLibrary";
     private String scriptName = "testScript";
-    private FileCopyComputation testComputation;
+    private String defaultWorkingDir = "testWorking";
+    private String executablesBaseDir = "testTools";
+
+    private FileCopyProcessor testProcessor;
     private File testDirectory;
 
     @Before
     public void setUp() throws IOException {
+        ExecutorService executor = mock(ExecutorService.class);
+
+        when(executor.submit(any(Runnable.class))).thenAnswer(invocation -> {
+            Runnable r = invocation.getArgument(0);
+            r.run();
+            return null;
+        });
+
+        serviceComputationFactory = new ServiceComputationFactory(executor);
         Logger logger = mock(Logger.class);
-        testComputation = new FileCopyComputation(libraryPath, scriptName, logger);
+        testProcessor = new FileCopyProcessor(
+                jacsServiceDispatcher,
+                serviceComputationFactory,
+                jacsServiceDataPersistence,
+                defaultWorkingDir,
+                executablesBaseDir,
+                serviceRunners,
+                libraryPath,
+                scriptName,
+                logger);
         testDirectory = Files.createTempDirectory("testFileCopy").toFile();
     }
 
@@ -53,10 +86,9 @@ public class FileCopyComputationTest {
                     .addArg("-src", "/home/testSource")
                     .addArg("-dst", testDestFile.getAbsolutePath())
                     .build();
-        JacsService<File> testService = new JacsService<>(null, testServiceData);
-        CompletableFuture<JacsService<File>> preprocessStage = testComputation.preProcessData(testService).toCompletableFuture();
+        ServiceComputation<File> preprocessStage = testProcessor.preProcessData(testServiceData);
         assertTrue(preprocessStage.isDone());
-        assertThat(preprocessStage.get().getResult().getAbsolutePath(), equalTo(testDestFile.getAbsolutePath()));
+        assertThat(preprocessStage.get().getAbsolutePath(), equalTo(testDestFile.getAbsolutePath()));
     }
 
     @Test
@@ -65,29 +97,27 @@ public class FileCopyComputationTest {
         JacsServiceData testServiceData = new JacsServiceDataBuilder(null)
                 .addArg("-dst", testDestFile.getAbsolutePath())
                 .build();
-        verifyCompletionWithException(new JacsService<>(null, testServiceData));
+        verifyCompletionWithException(testServiceData);
     }
 
     @Test
     public void emptySourceOrTarget() throws ExecutionException, InterruptedException {
         JacsServiceDataBuilder testServiceDataBuilder = new JacsServiceDataBuilder(null);
-        verifyCompletionWithException(new JacsService<>(null,
-                testServiceDataBuilder
+        verifyCompletionWithException(testServiceDataBuilder
                         .addArg("-dst", "dst") // the arg order is important here in order to capture the execution branch
                         .addArg("-src", "")
-                        .build()));
-        verifyCompletionWithException(new JacsService<>(null,
-                testServiceDataBuilder
+                        .build());
+        verifyCompletionWithException(testServiceDataBuilder
                         .clearArgs()
                         .addArg("-src", "src")
                         .addArg("-dst", "")
-                        .build()));
+                        .build());
    }
 
-    private void verifyCompletionWithException(JacsService<File> testService) throws ExecutionException, InterruptedException {
-        CompletableFuture<JacsService<File>> preprocessStage = testComputation.preProcessData(testService).toCompletableFuture();
+    private void verifyCompletionWithException(JacsServiceData testServiceData) throws ExecutionException, InterruptedException {
+        ServiceComputation<File> preprocessStage = testProcessor.preProcessData(testServiceData);
+
         assertTrue(preprocessStage.isCompletedExceptionally());
-        assertNull(testService.getResult());
     }
 
     @Test
@@ -101,7 +131,7 @@ public class FileCopyComputationTest {
                 .addArg("-convert8")
                 .build();
         assertTrue(Files.exists(testSourcePath));
-        CompletableFuture<JacsService<File>> doneStage = testComputation.isDone(new JacsService<>(null, testServiceData)).toCompletableFuture();
+        ServiceComputation<File> doneStage = testProcessor.postProcessData(testSourcePath.toFile(), testServiceData);
         assertTrue(doneStage.isDone());
         assertTrue(Files.notExists(testSourcePath));
     }
@@ -117,8 +147,8 @@ public class FileCopyComputationTest {
                     .addArg("-mv")
                     .addArg("-convert8")
                     .build();
-            CompletableFuture<JacsService<File>> doneStage = testComputation.isDone(new JacsService<>(null, testServiceData)).toCompletableFuture();
-            assertTrue(doneStage.isCompletedExceptionally());
+            ServiceComputation<File> postProcessing = testProcessor.postProcessData(testDestFile, testServiceData);
+            assertTrue(postProcessing.isCompletedExceptionally());
             assertTrue(Files.exists(testSourcePath));
         } finally {
             Files.deleteIfExists(testSourcePath);
@@ -135,8 +165,8 @@ public class FileCopyComputationTest {
                     .addArg("-dst", testDestFile.getAbsolutePath())
                     .addArg("-convert8")
                     .build();
-            CompletableFuture<JacsService<File>> doneStage = testComputation.isDone(new JacsService<>(null, testServiceData)).toCompletableFuture();
-            assertTrue(doneStage.isDone());
+            ServiceComputation<File> postProcessing = testProcessor.postProcessData(testDestFile, testServiceData);
+            assertTrue(postProcessing.isDone());
             assertTrue(Files.exists(testSourcePath));
         } finally {
             Files.deleteIfExists(testSourcePath);
@@ -151,9 +181,8 @@ public class FileCopyComputationTest {
                 .addArg("-src", testSource)
                 .addArg("-dst", testDestFile.getAbsolutePath())
                 .build();
-        JacsService<File> testService = new JacsService<>(null, testServiceData);
-        List<String> args = testComputation.prepareCmdArgs(testService);
-        assertThat(testService.getServiceCmd(), equalTo(scriptName));
+        List<String> args = testProcessor.prepareCmdArgs(testServiceData);
+        assertThat(testServiceData.getServiceCmd(), equalTo(executablesBaseDir + "/" + scriptName));
         assertThat(args, contains(testSource, testDestFile.getAbsolutePath()));
     }
 
@@ -167,9 +196,8 @@ public class FileCopyComputationTest {
                 .addArg("-mv")
                 .addArg("-convert8")
                 .build();
-        JacsService<File> testService = new JacsService<>(null, testServiceData);
-        List<String> args = testComputation.prepareCmdArgs(testService);
-        assertThat(testService.getServiceCmd(), equalTo(scriptName));
+        List<String> args = testProcessor.prepareCmdArgs(testServiceData);
+        assertThat(testServiceData.getServiceCmd(), equalTo(executablesBaseDir + "/" + scriptName));
         assertThat(args, contains(testSource, testDestFile.getAbsolutePath(), "8"));
     }
 
@@ -183,8 +211,7 @@ public class FileCopyComputationTest {
                 .addArg("-mv")
                 .addArg("-convert8")
                 .build();
-        JacsService<File> testService = new JacsService<>(null, testServiceData);
-        Map<String, String> env = testComputation.prepareEnvironment(testService);
+        Map<String, String> env = testProcessor.prepareEnvironment(testServiceData);
         assertThat(env, hasEntry(equalTo("LD_LIBRARY_PATH"), containsString(libraryPath)));
     }
 

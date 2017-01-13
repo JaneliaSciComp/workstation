@@ -11,7 +11,9 @@ import org.janelia.jacs2.utils.MongoNumberBigIntegerDeserializer;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 @MongoMapping(collectionName="jacsService", label="JacsService")
@@ -29,6 +31,8 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     private String outputPath;
     private String errorPath;
     private List<String> args = new ArrayList<>();
+    private Map<String, String> env = new LinkedHashMap<>();
+    private Map<String, String> resources = new LinkedHashMap<>(); // this could/should be used for grid jobs resources
     private String stringifiedResult;
     private String workspace;
     @JsonDeserialize(using = MongoNumberBigIntegerDeserializer.class)
@@ -139,6 +143,19 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         }
     }
 
+    public void addArg(String arg) {
+        if (this.args == null) {
+            this.args = new ArrayList<>();
+        }
+        this.args.add(arg);
+    }
+
+    public void clearArgs() {
+        if (this.args != null) {
+            this.args.clear();
+        }
+    }
+
     public String getWorkspace() {
         return workspace;
     }
@@ -179,17 +196,36 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         this.creationDate = creationDate;
     }
 
-    public void addArg(String arg) {
-        if (this.args == null) {
-            this.args = new ArrayList<>();
-        }
-        this.args.add(arg);
+    public Map<String, String> getEnv() {
+        return env;
     }
 
-    public void clearArgs() {
-        if (this.args != null) {
-            this.args.clear();
-        }
+    public void setEnv(Map<String, String> env) {
+        this.env = env;
+    }
+
+    public void addToEnv(String name, String value) {
+        this.env.put(name, value);
+    }
+
+    public void clearEnv() {
+        this.env.clear();
+    }
+
+    public Map<String, String> getResources() {
+        return resources;
+    }
+
+    public void setResources(Map<String, String> resources) {
+        this.resources = resources;
+    }
+
+    public void addToResources(String name, String value) {
+        this.resources.put(name, value);
+    }
+
+    public void clearResources() {
+        this.resources.clear();
     }
 
     public String getStringifiedResult() {

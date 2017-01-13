@@ -22,59 +22,62 @@ import java.util.concurrent.CompletionStage;
 @ClusterJob
 public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
 
+    private final Session drmaaSession;
+    private final Logger logger;
+
     @Inject
-    private Logger logger;
-    @Inject
-    private Session drmaaSession;
+    public ExternalDrmaaJobRunner(Session drmaaSession, Logger logger) {
+        this.drmaaSession = drmaaSession;
+        this.logger = logger;
+    }
 
     @Override
-    public <R> CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env,
-                                                      String workingDirName,
-                                                      ExternalProcessOutputHandler outStreamHandler,
-                                                      ExternalProcessOutputHandler errStreamHandler,
-                                                      JacsService<R> serviceContext) {
+    public void runCmd(String cmd, List<String> cmdArgs, Map<String, String> env, String workingDirName,
+                       ExternalProcessOutputHandler outStreamHandler, ExternalProcessOutputHandler errStreamHandler, JacsServiceData serviceContext) {
         logger.debug("Begin DRMAA job invocation for {}", serviceContext);
         JobTemplate jt = null;
-        CompletableFuture<JacsService<R>> completableFuture = new CompletableFuture<>();
         File outputFile = null;
         File errorFile = null;
         try {
-            JacsServiceData serviceData = serviceContext.getJacsServiceData();
             jt = drmaaSession.createJobTemplate();
-            jt.setJobName(serviceData.getName());
+            jt.setJobName(serviceContext.getName());
             jt.setRemoteCommand(cmd);
             jt.setArgs(cmdArgs);
             File workingDirectory = setJobWorkingDirectory(jt, workingDirName);
             logger.debug("Using working directory {} for {}", workingDirectory, serviceContext);
             jt.setJobEnvironment(env);
-            if (StringUtils.isNotBlank(serviceData.getInputPath())) {
-                jt.setInputPath(":" + serviceData.getInputPath());
+            if (StringUtils.isNotBlank(serviceContext.getInputPath())) {
+                jt.setInputPath(":" + serviceContext.getInputPath());
             }
-            if (StringUtils.isNotBlank(serviceData.getOutputPath())) {
-                outputFile = new File(serviceData.getOutputPath());
+            if (StringUtils.isNotBlank(serviceContext.getOutputPath())) {
+                outputFile = new File(serviceContext.getOutputPath());
                 Files.createParentDirs(outputFile);
                 jt.setOutputPath(":" + outputFile.getAbsolutePath());
             }
-            if (StringUtils.isNotBlank(serviceData.getErrorPath())) {
-                errorFile = new File(serviceData.getErrorPath());
+            if (StringUtils.isNotBlank(serviceContext.getErrorPath())) {
+                errorFile = new File(serviceContext.getErrorPath());
                 Files.createParentDirs(errorFile);
                 jt.setErrorPath(":" + errorFile.getAbsolutePath());
+            }
+            String nativeSpec = createNativeSpec(serviceContext);
+            if (StringUtils.isNotBlank(nativeSpec)) {
+                jt.setNativeSpecification(nativeSpec);
             }
             String jobId = drmaaSession.runJob(jt);
             logger.info("Submitted job {} for {} with {} {}; env={}", jobId, serviceContext, cmd, cmdArgs, env);
             drmaaSession.deleteJobTemplate(jt);
             jt = null;
             if (outputFile == null) {
-                outputFile = new File(workingDirectory, serviceData.getName() + ".o" + jobId);
+                outputFile = new File(workingDirectory, serviceContext.getName() + ".o" + jobId);
             }
             if (errorFile == null) {
-                errorFile = new File(workingDirectory, serviceData.getName() + ".e" + jobId);
+                errorFile = new File(workingDirectory, serviceContext.getName() + ".e" + jobId);
             }
             JobInfo jobInfo = drmaaSession.wait(jobId, Session.TIMEOUT_WAIT_FOREVER);
 
             if (jobInfo.wasAborted()) {
                 logger.error("Job {} for {} never ran", jobId, serviceContext);
-                completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s never ran", jobId)));
+                throw new ComputationException(serviceContext, String.format("Job %s never ran", jobId));
             } else if (jobInfo.hasExited()) {
                 logger.info("Job {} for {} completed with exist status {}", jobId, serviceContext, jobInfo.getExitStatus());
                 ExternalProcessIOHandler processStdoutHandler = null;
@@ -88,24 +91,22 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
                     processStderrHandler.run();
                 }
                 if (jobInfo.getExitStatus() != 0) {
-                    completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s completed with status %d", jobId, jobInfo.getExitStatus())));
+                    throw new ComputationException(serviceContext, String.format("Job %s completed with status %d", jobId, jobInfo.getExitStatus()));
                 } else if (processStdoutHandler.getResult() != null) {
-                    completableFuture.completeExceptionally(new ComputationException(serviceContext, "Process error: " + processStdoutHandler.getResult()));
+                    throw new ComputationException(serviceContext, "Process error: " + processStdoutHandler.getResult());
                 } else if (processStderrHandler.getResult() != null) {
-                    completableFuture.completeExceptionally(new ComputationException(serviceContext, "Process error: " + processStderrHandler.getResult()));
-                } else {
-                    completableFuture.complete(serviceContext);
+                    throw new ComputationException(serviceContext, "Process error: " + processStderrHandler.getResult());
                 }
             } else if (jobInfo.hasSignaled()) {
                 logger.warn("Job {} for {} terminated due to signal {}", jobId, serviceContext, jobInfo.getTerminatingSignal());
-                completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s completed with status %s", jobId, jobInfo.getTerminatingSignal())));
+                throw new ComputationException(serviceContext, String.format("Job %s completed with status %s", jobId, jobInfo.getTerminatingSignal()));
             } else {
                 logger.warn("Job {} for {} finished with unclear conditions", jobId, serviceContext);
-                completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s completed with unclear conditions", jobId)));
+                throw new ComputationException(serviceContext, String.format("Job %s completed with unclear conditions", jobId));
             }
         } catch (Exception e) {
             logger.error("Error running a DRMAA job for {} with {}", serviceContext, cmdArgs, e);
-            completableFuture.completeExceptionally(new ComputationException(serviceContext, e));
+            throw new ComputationException(serviceContext, e);
         } finally {
             if (jt != null) {
                 try {
@@ -115,7 +116,6 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
                 }
             }
         }
-        return completableFuture;
     }
 
     private File setJobWorkingDirectory(JobTemplate jt, String workingDirName) {
@@ -138,4 +138,28 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
         }
         return workingDirectory;
     }
+
+    private String createNativeSpec(JacsServiceData serviceContext) {
+        StringBuilder nativeSpecBuilder = new StringBuilder();
+        Map<String, String> jobResources = serviceContext.getResources();
+        // append accountID
+        if (StringUtils.isNotBlank(jobResources.get("gridAccountId"))) {
+            nativeSpecBuilder.append("-A ").append(jobResources.get("gridAccountId")).append(' ');
+        }
+        // append processing environment
+        if (StringUtils.isNotBlank(jobResources.get("gridPE"))) {
+            nativeSpecBuilder.append("-pe ").append(jobResources.get("gridPE")).append(' ');
+        }
+        // append grid queue
+        if (StringUtils.isNotBlank(jobResources.get("gridQueue"))) {
+            nativeSpecBuilder.append("-q ").append(jobResources.get("gridQueue")).append(' ');
+        }
+        // append grid resource limits - the resource limits must be specified as a comma delimited list of <name>'='<value>, e.g.
+        // gridResourceLimits: "short=true,scalityr=1,scalityw=1,haswell=true"
+        if (StringUtils.isNotBlank(jobResources.get("gridResourceLimits"))) {
+            nativeSpecBuilder.append("-l ").append(jobResources.get("gridResourceLimits")).append(' ');
+        }
+        return nativeSpecBuilder.toString();
+    }
+
 }

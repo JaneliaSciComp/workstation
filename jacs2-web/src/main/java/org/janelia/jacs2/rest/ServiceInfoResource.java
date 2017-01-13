@@ -9,7 +9,6 @@ import org.janelia.jacs2.model.service.JacsServiceState;
 import org.janelia.jacs2.model.service.ServiceMetaData;
 import org.janelia.jacs2.service.JacsServiceDataManager;
 import org.janelia.jacs2.service.ServiceRegistry;
-import org.janelia.jacs2.service.impl.JacsService;
 import org.slf4j.Logger;
 
 import javax.enterprise.context.ApplicationScoped;

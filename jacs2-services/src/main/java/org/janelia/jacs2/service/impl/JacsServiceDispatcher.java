@@ -22,12 +22,8 @@ import java.util.EnumSet;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 @Singleton
 public class JacsServiceDispatcher {
@@ -35,7 +31,6 @@ public class JacsServiceDispatcher {
     private static final int MAX_WAITING_SLOTS = 20;
     private static final int MAX_RUNNING_SLOTS = 1000;
 
-    private final ExecutorService serviceExecutor;
     private final JacsServiceDataPersistence jacsServiceDataPersistence;
     private final Instance<ServiceRegistry> serviceRegistrarSource;
     private final Logger logger;
@@ -49,12 +44,11 @@ public class JacsServiceDispatcher {
     private boolean noWaitingSpaceAvailable;
 
     @Inject
-    public JacsServiceDispatcher(ExecutorService serviceExecutor, JacsServiceDataPersistence jacsServiceDataPersistence, Instance<ServiceRegistry> serviceRegistrarSource, Logger logger) {
-        this.serviceExecutor = serviceExecutor;
+    public JacsServiceDispatcher(ServiceComputationFactory serviceComputationFactory, JacsServiceDataPersistence jacsServiceDataPersistence, Instance<ServiceRegistry> serviceRegistrarSource, Logger logger) {
         this.jacsServiceDataPersistence = jacsServiceDataPersistence;
         this.serviceRegistrarSource = serviceRegistrarSource;
         this.logger = logger;
-        serviceComputationFactory = new ServiceComputationFactory(this.serviceExecutor);
+        this.serviceComputationFactory = serviceComputationFactory;
         queuePermit = new Semaphore(1, true);
         nAvailableSlots = MAX_RUNNING_SLOTS;
         availableSlots = new Semaphore(nAvailableSlots, true);
@@ -85,11 +79,6 @@ public class JacsServiceDispatcher {
         ServiceDescriptor serviceDescriptor = getServiceDescriptor(jacsServiceData.getName());
         return serviceDescriptor.createServiceProcessor();
     }
-
-//    <S, R> ServiceComputation<S, R> getServiceComputation(JacsServiceData jacsServiceData) {
-//        ServiceDescriptor serviceDescriptor = getServiceDescriptor(jacsServiceData.getName());
-//        return serviceComputationFactory.createServiceComputation(serviceDescriptor.createServiceProcessor(), jacsServiceData);
-//    }
 
     private ServiceDescriptor getServiceDescriptor(String serviceName) {
         ServiceRegistry registrar = serviceRegistrarSource.get();
@@ -138,17 +127,17 @@ public class JacsServiceDispatcher {
                 return;
             }
             logger.info("Dispatch service {}", queuedService);
-            ServiceProcessor<Object> serviceProcessor = (ServiceProcessor<Object>) getServiceProcessor(queuedService);
-            serviceComputationFactory.newComputation(null)
-                    .applyFunction(o -> (Function<Void, JacsService>) nothing -> {
+            ServiceProcessor<?> serviceProcessor = getServiceProcessor(queuedService);
+            serviceComputationFactory.<JacsServiceData>newComputation()
+                    .supply(() -> {
                         JacsServiceData updatedService = queuedService;
                         logger.debug("Submit {}", updatedService);
                         updatedService.setState(JacsServiceState.SUBMITTED);
                         updateServiceInfo(updatedService);
                         availableSlots.release();
-                        return new JacsService(this, updatedService);
+                        return updatedService;
                     })
-                    .thenCompose(serviceProcessor, (sp, sd) -> sp.process((JacsService) sd))
+                    .thenCompose(sd -> serviceProcessor.process(sd))
                     .whenComplete((r, exc) -> {
                         JacsServiceData updatedServiceData = queuedService;
                         if (exc == null) {

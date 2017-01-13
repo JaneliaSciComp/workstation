@@ -1,23 +1,25 @@
 package org.janelia.jacs2.service.impl;
 
+import org.janelia.jacs2.model.service.JacsServiceData;
+
 /**
  * Exception thrown by a service if something goes wrong during computation.
  */
 public class ComputationException extends RuntimeException {
-    private JacsService<?> jacsService;
+    private JacsServiceData jacsServiceData;
 
-    public ComputationException(JacsService jacsService) {
-        this.jacsService = jacsService;
+    public ComputationException(JacsServiceData jacsServiceData) {
+        this.jacsServiceData = jacsServiceData;
     }
 
-    public ComputationException(JacsService jacsService, String message) {
+    public ComputationException(JacsServiceData jacsServiceData, String message) {
         super(message);
-        this.jacsService = jacsService;
+        this.jacsServiceData = jacsServiceData;
     }
 
-    public ComputationException(JacsService jacsService, Throwable cause) {
+    public ComputationException(JacsServiceData jacsServiceData, Throwable cause) {
         super(cause);
-        this.jacsService = jacsService;
+        this.jacsServiceData = jacsServiceData;
     }
 
 }

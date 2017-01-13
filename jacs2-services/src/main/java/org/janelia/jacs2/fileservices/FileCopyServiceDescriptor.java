@@ -5,7 +5,6 @@ import com.beust.jcommander.Parameter;
 import org.janelia.jacs2.model.service.ServiceMetaData;
 import org.janelia.jacs2.service.impl.ServiceDescriptor;
 
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -24,8 +23,12 @@ public class FileCopyServiceDescriptor implements ServiceDescriptor {
         boolean convertTo8Bits = false;
     }
 
+    private final FileCopyProcessor processor;
+
     @Inject
-    private Instance<FileCopyComputation> fileCopyComputationSource;
+    public FileCopyServiceDescriptor(FileCopyProcessor processor) {
+        this.processor = processor;
+    }
 
     @Override
     public ServiceMetaData getMetadata() {
@@ -41,8 +44,7 @@ public class FileCopyServiceDescriptor implements ServiceDescriptor {
     }
 
     @Override
-    public ServiceComputation createComputationInstance() {
-        return fileCopyComputationSource.get();
+    public FileCopyProcessor createServiceProcessor() {
+        return processor;
     }
-
 }

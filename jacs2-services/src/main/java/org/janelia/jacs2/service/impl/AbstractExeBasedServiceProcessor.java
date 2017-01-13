@@ -3,7 +3,9 @@ package org.janelia.jacs2.service.impl;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
+import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.ProcessingLocation;
+import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Any;
@@ -21,17 +23,25 @@ import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
-public abstract class AbstractExternalProcessComputation<R> extends AbstractServiceProcessor<R> {
+public abstract class AbstractExeBasedServiceProcessor<R> extends AbstractServiceProcessor<R> {
 
     protected static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 
-    @Inject
-    private Logger logger;
-    @PropertyValue(name = "Executables.ModuleBase")
-    @Inject
-    private String executablesBaseDir;
-    @Any @Inject
-    private Instance<ExternalProcessRunner> serviceRunners;
+
+    private final String executablesBaseDir;
+    private final Instance<ExternalProcessRunner> serviceRunners;
+
+    public AbstractExeBasedServiceProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+                                            ServiceComputationFactory computationFactory,
+                                            JacsServiceDataPersistence jacsServiceDataPersistence,
+                                            @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                                            @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
+                                            @Any Instance<ExternalProcessRunner> serviceRunners,
+                                            Logger logger) {
+        super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        this.serviceRunners = serviceRunners;
+        this.executablesBaseDir = executablesBaseDir;
+    }
 
     private ExternalProcessRunner getProcessRunner(ProcessingLocation processingLocation) {
         ProcessingLocation location = processingLocation == null ? ProcessingLocation.LOCAL : processingLocation;
@@ -43,8 +53,8 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
         throw new IllegalArgumentException("Unsupported runner: " + processingLocation);
     }
 
-    protected abstract List<String> prepareCmdArgs(JacsService<R> jacsService);
-    protected abstract Map<String, String> prepareEnvironment(JacsService<R> jacsServiceData);
+    protected abstract List<String> prepareCmdArgs(JacsServiceData jacsServiceData);
+    protected abstract Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData);
 
     protected Optional<String> getEnvVar(String varName) {
         return Optional.ofNullable(System.getenv(varName));
@@ -106,17 +116,20 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
         }
     }
 
-    @Override
-    public CompletionStage<JacsService<R>> processData(JacsService<R> jacsService) {
-        List<String> args = prepareCmdArgs(jacsService);
-        Map<String, String> env = prepareEnvironment(jacsService);
-        return getProcessRunner(jacsService.getProcessingLocation()).runCmd(
-                jacsService.getServiceCmd(),
-                args,
-                env,
-                getWorkingDirectory(jacsService).toString(),
-                this::outputStreamHandler,
-                this::errStreamHandler,
-                jacsService);
+    protected ServiceComputation<Void> invokeExternalProcess(JacsServiceData jacsServiceData) {
+        List<String> args = prepareCmdArgs(jacsServiceData);
+        Map<String, String> env = prepareEnvironment(jacsServiceData);
+        return computationFactory.<Void>newComputation()
+                .supply(() -> {
+                    getProcessRunner(jacsServiceData.getProcessingLocation()).runCmd(
+                            jacsServiceData.getServiceCmd(),
+                            args,
+                            env,
+                            getWorkingDirectory(jacsServiceData).toString(),
+                            this::outputStreamHandler,
+                            this::errStreamHandler,
+                            jacsServiceData);
+                    return null;
+                });
     }
 }

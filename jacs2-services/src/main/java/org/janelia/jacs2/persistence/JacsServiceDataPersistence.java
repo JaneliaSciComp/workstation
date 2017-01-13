@@ -27,6 +27,15 @@ public class JacsServiceDataPersistence extends AbstractDataPersistence<JacsServ
         }
     }
 
+    public List<JacsServiceData> findChildServices(Number serviceId) {
+        JacsServiceDataDao jacsServiceDataDao = daoSource.get();
+        try {
+            return jacsServiceDataDao.findChildServices(serviceId);
+        } finally {
+            daoSource.destroy(jacsServiceDataDao);
+        }
+    }
+
     public List<JacsServiceData> findServiceHierarchy(Number serviceId) {
         JacsServiceDataDao jacsServiceDataDao = daoSource.get();
         try {
@@ -40,6 +49,15 @@ public class JacsServiceDataPersistence extends AbstractDataPersistence<JacsServ
         JacsServiceDataDao jacsServiceDataDao = daoSource.get();
         try {
             jacsServiceDataDao.saveServiceHierarchy(jacsServiceData);
+        } finally {
+            daoSource.destroy(jacsServiceDataDao);
+        }
+    }
+
+    public void save(JacsServiceData jacsServiceData) {
+        JacsServiceDataDao jacsServiceDataDao = daoSource.get();
+        try {
+            jacsServiceDataDao.save(jacsServiceData);
         } finally {
             daoSource.destroy(jacsServiceDataDao);
         }
