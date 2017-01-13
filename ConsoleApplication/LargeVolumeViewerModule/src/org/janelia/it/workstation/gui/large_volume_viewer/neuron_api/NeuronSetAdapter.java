@@ -421,7 +421,12 @@ implements NeuronSet// , LookupListener
         {
             logger.info("Workspace loaded");
             setWorkspace(workspace);
-            spatialIndex.rebuildIndex(innerList);
+            if (workspace==null) {
+                spatialIndex.clear();
+            }
+            else {
+                spatialIndex.rebuildIndex(innerList);
+            }
             // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
             getMembershipChangeObservable().setChanged();
             getNameChangeObservable().setChanged();
