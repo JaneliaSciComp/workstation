@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.logging;
 
 import java.awt.AWTEvent;
 import java.awt.EventQueue;
+import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
@@ -30,7 +31,6 @@ public class EDTExceptionInterceptor extends EventQueue {
     }
     
     private boolean isKnownHarmlessIssue(Throwable e) {
-
         
         // JDK bug: http://bugs.java.com/view_bug.do?bug_id=8003398
         if (e.getClass().equals(IllegalArgumentException.class) && "adding a container to a container on a different GraphicsDevice".equals(e.getMessage())) {
@@ -43,6 +43,11 @@ public class EDTExceptionInterceptor extends EventQueue {
             if ("sun.awt.Win32GraphicsEnvironment".equals(ste.getClassName()) && "getDefaultScreenDevice".equals(ste.getMethodName())) {
                 return true;
             }
+        }
+        
+        // NetBeans bug: https://netbeans.org/bugzilla/show_bug.cgi?id=232389
+        if (e.getClass().equals(IOException.class) && "Cyclic reference. Somebody is trying to get value from FolderInstance (org.openide.awt.Toolbar$Folder) from the same thread that is processing the instance".equals(e.getMessage())) {
+            return true;
         }
      
         return false;
