@@ -57,8 +57,8 @@ public final class ToggleNeuronVisibilityAction extends AbstractAction
             NeuronSet workspace,
             NeuronModel neuron)
     {
-        super(neuron.isVisible() ? "Hide" : "Show"
-               + " Neuron '" + neuron.getName() + "'");
+        super((neuron.isVisible() ? "Hide" : "Show")
+               + " Neuron");
         this.parentWidget = parentWidget;
         this.workspace = workspace;
         this.neuron = neuron;        

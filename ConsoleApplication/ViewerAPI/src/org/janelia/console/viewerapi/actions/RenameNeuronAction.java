@@ -57,7 +57,7 @@ public final class RenameNeuronAction extends AbstractAction
             NeuronSet workspace,
             NeuronModel neuron)
     {
-        super("Rename Neuron '" + neuron.getName() + "'...");
+        super("Rename Neuron...");
         this.parentWidget = parentWidget;
         this.workspace = workspace;
         this.neuron = neuron;        

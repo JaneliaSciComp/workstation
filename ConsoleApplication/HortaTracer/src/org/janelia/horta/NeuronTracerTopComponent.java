@@ -149,7 +149,7 @@ import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
-import org.janelia.horta.actions.ResetRotationAction;
+import org.janelia.horta.actions.ResetHortaRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
@@ -1007,7 +1007,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                 metaWorkspace, 
                 frameTracker,
                 movieSource,
-                vp));
+                vp,
+                this));
 
         sceneWindow.setBackgroundColor(Color.DARK_GRAY);
         this.add(sceneWindow.getOuterComponent(), BorderLayout.CENTER);
@@ -1195,12 +1196,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                     topMenu.add(new JPopupMenu.Separator());
                 }
                 
-                Action resetRotationAction = new AbstractAction("Reset Rotation") {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        new ResetRotationAction().actionPerformed(e);
-                    }
-                };
+                Action resetRotationAction = 
+                        new ResetHortaRotationAction(NeuronTracerTopComponent.this);
+
 
                 // Annotators want "Reset Rotation" on the top level menu
                 // Issue JW-25370
@@ -1675,6 +1673,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                 if (indicatedNeuron != null) 
                 {
                     topMenu.add(new JPopupMenu.Separator());
+                    topMenu.add("Neuron '"
+                            + indicatedNeuron.getName()
+                            + "':").setEnabled(false);
 
                     // Toggle Visiblity (maybe we could only hide from here though...)
                     topMenu.add(new ToggleNeuronVisibilityAction(
@@ -1702,7 +1703,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     if (interactorContext.canDeleteNeuron()) {
                         // Extra separator due to danger...
                         topMenu.add(new JPopupMenu.Separator());                
-                        topMenu.add(new AbstractAction("!!! DELETE This Neuron... !!!") {
+                        topMenu.add(new AbstractAction("!!! DELETE Neuron... !!!") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
                                 interactorContext.deleteNeuron();
