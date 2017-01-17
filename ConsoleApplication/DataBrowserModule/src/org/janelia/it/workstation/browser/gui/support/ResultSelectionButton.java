@@ -79,7 +79,7 @@ public class ResultSelectionButton extends DropDownButton {
         populate(Arrays.asList(domainObject));
     }
     
-    public void populate(Collection<DomainObject> domainObjects) {
+    public synchronized void populate(Collection<DomainObject> domainObjects) {
 
         Multiset<ResultDescriptor> countedResultNames = LinkedHashMultiset.create();
             
