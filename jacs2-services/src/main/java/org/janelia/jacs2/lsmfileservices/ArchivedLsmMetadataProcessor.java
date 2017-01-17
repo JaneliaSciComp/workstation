@@ -78,31 +78,6 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
                 });
     }
 
-
-    private File getWorkingLsmFile(JacsServiceData jacsServiceData, File lsmMetadataFile) {
-        return new File(lsmMetadataFile.getParentFile(), jacsServiceData.getName() + "_" + jacsServiceData.getId() + "_working.lsm");
-    }
-
-    private ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs getArgs(JacsServiceData jacsServiceData) {
-        ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs args = new ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs();
-        new JCommander(args).parse(jacsServiceData.getArgsArray());
-        return args;
-    }
-
-    private File getInputFile(ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs args) {
-        return new File(args.archiveLSMFile);
-    }
-
-    private File getOutputFile(ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs args) {
-        try {
-            File outputFile = new File(args.outputLSMMetadata);
-            Files.createDirectories(outputFile.getParentFile().toPath());
-            return outputFile;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
     @Override
     protected ServiceComputation<File> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
         JacsServiceData lsmServiceData = (JacsServiceData) preProcessingResult;
@@ -139,6 +114,30 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
                         throw new ComputationException(jacsServiceData, e);
                     }
                 });
+    }
+
+    private File getWorkingLsmFile(JacsServiceData jacsServiceData, File lsmMetadataFile) {
+        return new File(lsmMetadataFile.getParentFile(), jacsServiceData.getName() + "_" + jacsServiceData.getId() + "_working.lsm");
+    }
+
+    private ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs getArgs(JacsServiceData jacsServiceData) {
+        ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs args = new ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs();
+        new JCommander(args).parse(jacsServiceData.getArgsArray());
+        return args;
+    }
+
+    private File getInputFile(ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs args) {
+        return new File(args.archiveLSMFile);
+    }
+
+    private File getOutputFile(ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs args) {
+        try {
+            File outputFile = new File(args.outputLSMMetadata);
+            Files.createDirectories(outputFile.getParentFile().toPath());
+            return outputFile;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
 }
