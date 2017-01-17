@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.JacsServiceDataBuilder;
+import org.janelia.jacs2.model.service.JacsServiceState;
 import org.janelia.jacs2.model.service.ProcessingLocation;
 import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.service.impl.AbstractServiceProcessor;
@@ -111,6 +112,10 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
                     File localLsmFile = new File(lsmServiceData.getStringifiedResult());
                     setResult(localLsmFile, jacsServiceData);
                     return localLsmFile;
+                })
+                .exceptionally(exc -> {
+                    jacsServiceData.setState(JacsServiceState.CANCELED);
+                    return null;
                 });
     }
 

@@ -1,6 +1,8 @@
 package org.janelia.jacs2.service.impl;
 
+import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -18,4 +20,5 @@ public interface ServiceComputation<T> {
     <U> ServiceComputation<U> thenApply(Function<? super T, ? extends U> fn);
     <U> ServiceComputation<U> thenCompose(Function<? super T, ? extends ServiceComputation<U>> fn);
     ServiceComputation<T> whenComplete(BiConsumer<? super T, ? super Throwable> action);
+    <U> ServiceComputation<U> thenCombineAll(List<ServiceComputation<?>> otherComputations, BiFunction<? super T, List<?>, ? extends U> fn);
 }

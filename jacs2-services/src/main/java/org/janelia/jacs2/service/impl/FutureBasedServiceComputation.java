@@ -1,10 +1,13 @@
 package org.janelia.jacs2.service.impl;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * FutureBasedServiceComputation is an implementation of a ServiceComputation.
@@ -147,6 +150,36 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
             }
             return next.get();
         });
+        return next;
+    }
+
+    @Override
+    public <U> ServiceComputation<U> thenCombineAll(List<ServiceComputation<?>> otherComputations, BiFunction<? super T, List<?>, ? extends U> fn) {
+        FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(executor);
+        try {
+            ComputeResult<T> currentResult = getResult();
+            if (currentResult.exc != null) {
+                next.completeExceptionally(currentResult.exc);
+            } else {
+                List<Object> otherResults = otherComputations.stream()
+                        .map(oc -> {
+                            FutureBasedServiceComputation<Object> ocStage = new FutureBasedServiceComputation<>(executor);
+                            ocStage.execute(oc::get);
+                            return ocStage;
+                        })
+                        .map(FutureBasedServiceComputation::getResult)
+                        .map(r -> {
+                            if (r.exc != null) {
+                                throw new IllegalStateException(r.exc);
+                            }
+                            return r.result;
+                        })
+                        .collect(Collectors.toList());
+                next.complete(fn.apply(currentResult.result, otherResults));
+            }
+        } catch (Throwable e) {
+            next.completeExceptionally(e);
+        }
         return next;
     }
 

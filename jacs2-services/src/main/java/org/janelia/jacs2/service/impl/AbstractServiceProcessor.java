@@ -3,7 +3,6 @@ package org.janelia.jacs2.service.impl;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
-import org.janelia.jacs2.model.service.JacsServiceState;
 import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
 import org.slf4j.Logger;
 
