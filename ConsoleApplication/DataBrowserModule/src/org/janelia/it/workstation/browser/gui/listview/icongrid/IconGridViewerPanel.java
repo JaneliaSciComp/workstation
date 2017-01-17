@@ -26,6 +26,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.KeyBindings;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.prefs.LocalPreferenceChanged;
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.browser.gui.keybind.KeyboardShortcut;
@@ -618,5 +619,4 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     public void sessionChanged(SessionEvent event) {
         IconGridViewerPanel.this.clear();
     }
-        
 }

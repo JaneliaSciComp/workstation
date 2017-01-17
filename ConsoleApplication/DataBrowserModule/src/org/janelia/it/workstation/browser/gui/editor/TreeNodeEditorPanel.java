@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.browser.gui.editor;
 
 import java.awt.BorderLayout;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -53,7 +55,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     // State
     private TreeNodeNode treeNodeNode;
     private TreeNode treeNode;
-    private List<DomainObject> domainObjects;
+    private List<DomainObject> children;
     private List<Annotation> annotations;
     
     // Results
@@ -137,11 +139,11 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
             @Override
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                domainObjects = model.getDomainObjects(treeNode.getChildren());
-                annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));
+                children = model.getDomainObjects(treeNode.getChildren());
+                annotations = model.getAnnotations(DomainUtils.getReferences(children));
                 loadPreferences();
                 prepareResults();
-                log.info("Showing "+domainObjects.size()+" items");
+                log.info("Showing "+children.size()+" items");
             }
 
             @Override
@@ -168,8 +170,8 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     }
 
     private void prepareResults() throws Exception {
-        DomainUtils.sortDomainObjects(domainObjects, sortCriteria);
-        this.searchResults = SearchResults.paginate(domainObjects, annotations);
+        DomainUtils.sortDomainObjects(children, sortCriteria);
+        this.searchResults = SearchResults.paginate(children, annotations);
     }
 
     private void showResults(Callable<Void> success) {
@@ -185,13 +187,18 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
         try {
             if (treeNodeNode==null || treeNode==null) return;
             if (event.isTotalInvalidation()) {
-                log.info("total invalidation, reloading...");
+                log.info("Total invalidation, reloading...");
                 reload();
             }
             else {
+                Set<Long> ids = new HashSet<>();
+                ids.add(treeNode.getId());
+                ids.addAll(DomainUtils.getIds(children));
                 for (DomainObject domainObject : event.getDomainObjects()) {
-                    if (domainObject.getId().equals(treeNode.getId())) {
-                        log.info("tree node invalidated, reloading...");
+                    // TODO: in the future, changes to a child should not result in a full reload. We should instead respond to 
+                    // the DomainObjectChanged event in this and all other descendants which store or represent the children.
+                    if (ids.contains(domainObject.getId())) {
+                        log.info("Tree node or child was invalidated, reloading...");
                         reload();
                         break;
                     }
@@ -218,7 +225,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
         if (treeNode==null) return;
         if (event.getDomainObject().getId().equals(treeNode.getId())) {
             this.treeNode = null;
-            domainObjects.clear();
+            children.clear();
             annotations.clear();
             searchResults = null;
             showNothing();
@@ -245,7 +252,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
             protected void doStuff() throws Exception {
                 loadPreferences();
                 prepareResults();
-                log.info("Showing "+domainObjects.size()+" items");
+                log.info("Showing "+children.size()+" items");
             }
 
             @Override
@@ -266,7 +273,8 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     private void loadPreferences() {
         if (treeNode.getId()==null) return;
         try {
-            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString());
+            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString());
             if (sortCriteriaPref!=null) {
                 log.debug("Loaded sort criteria preference: {}",sortCriteriaPref.getValue());
                 sortCriteria = (String)sortCriteriaPref.getValue();
@@ -283,7 +291,8 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     private void savePreferences() {
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
-            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString(), sortCriteria);
+            DomainMgr.getDomainMgr().setPreference(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString(), sortCriteria);
             log.debug("Saved sort criteria preference: {}",sortCriteria);
         }
         catch (Exception e) {
