@@ -49,15 +49,28 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         return computationFactory.newCompletedComputation(processingResult);
     }
 
-    protected ServiceComputation<?> submitChildService(JacsServiceData jacsServiceData, JacsServiceData childServiceData) {
+    /**
+     * The method submits a child service {@code childServiceData} in the context of the {@code jacsServiceData}
+     *
+     * @param jacsServiceData
+     * @param childServiceData
+     * @return
+     */
+    protected ServiceComputation<JacsServiceData> submitChildService(JacsServiceData jacsServiceData, JacsServiceData childServiceData) {
         childServiceData.updateParentService(jacsServiceData);
-        jacsServiceDispatcher.submitServiceAsync(childServiceData);
-        return waitForCompletion(childServiceData)
-                .exceptionally(exc -> {
-                    jacsServiceData.setState(JacsServiceState.CANCELED);
-                    jacsServiceDataPersistence.save(jacsServiceData);
-                    throw new ComputationException(jacsServiceData, exc);
-                });
+        return computationFactory.newCompletedComputation(jacsServiceDispatcher.submitServiceAsync(childServiceData));
+    }
+
+    /**
+     * The method submits the parent service {@code parentServiceData} in the context of the {@code jacsServiceData}
+     *
+     * @param jacsServiceData
+     * @param childServiceData
+     * @return
+     */
+    protected ServiceComputation<JacsServiceData> submitParentService(JacsServiceData jacsServiceData, JacsServiceData parentServiceData) {
+        jacsServiceData.updateParentService(parentServiceData);
+        return computationFactory.newCompletedComputation(jacsServiceDispatcher.submitServiceAsync(parentServiceData));
     }
 
     protected ServiceComputation<?> waitForCompletion(JacsServiceData jacsServiceData) {
