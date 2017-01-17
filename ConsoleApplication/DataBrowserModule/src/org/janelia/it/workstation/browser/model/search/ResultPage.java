@@ -47,7 +47,7 @@ public class ResultPage implements AnnotatedDomainObjectList {
     }
     
     @Override
-    public List<DomainObject> getDomainObjects() {
+    public synchronized List<DomainObject> getDomainObjects() {
         return domainObjects;
     }
     
@@ -57,7 +57,7 @@ public class ResultPage implements AnnotatedDomainObjectList {
     }
     
     @Override
-    public DomainObject getDomainObject(Long domainObjectId) {
+    public synchronized DomainObject getDomainObject(Long domainObjectId) {
         if (domainObjectById==null) {
             this.domainObjectById = new HashMap<>();
             for(DomainObject domainObject : domainObjects) {
@@ -68,8 +68,16 @@ public class ResultPage implements AnnotatedDomainObjectList {
     }
 
     @Override
-    public void updateAnnotations(Long domainObjectId, List<Annotation> annotations) {
+    public synchronized boolean updateObject(DomainObject updatedObject) {
+        domainObjectById.put(updatedObject.getId(), updatedObject);
+        return DomainUtils.replaceDomainObjectInList(domainObjects, updatedObject);
+    }
+    
+    @Override
+    public boolean updateAnnotations(Long domainObjectId, List<Annotation> annotations) {
+        if (!domainObjectById.containsKey(domainObjectId)) return false;
         annotationsByDomainObjectId.removeAll(domainObjectId);
         annotationsByDomainObjectId.putAll(domainObjectId, annotations);
+        return false;
     }
 }

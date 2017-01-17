@@ -66,18 +66,21 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     private static final String COLUMN_KEY_ANNOTATIONS = "annotations";
 
+    // Configuration
     private IconGridViewerConfiguration config;
     private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,null,true,null,null);
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
+
+    // These members deal with the context and entities within it
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
     private SearchProvider searchProvider;
     private List<DomainObjectAttribute> attrs;
 
+    // UI state
     private String sortField;
     private boolean ascending = true;
 
-    // TODO: this is mostly copy and pasted from DomainObjectIconGridViewer, and should be refactored later
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
 
         @Override
@@ -186,9 +189,9 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public void refreshDomainObject(DomainObject domainObject) {
-        // TODO: refresh the table
-        throw new UnsupportedOperationException("refreshDomainObject is not yet supported");
+    public void refreshDomainObject(DomainObject domainObject) {        
+        domainObjectList.updateObject(domainObject);
+        showDomainObjects(domainObjectList, null);
     }
 
     @Override

@@ -55,6 +55,7 @@ import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.gui.dialogs.EditCriteriaDialog;
@@ -774,36 +775,48 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-        if (filter==null) return;
-        if (event.isTotalInvalidation()) {
-            log.info("total invalidation, reloading...");
-            refreshSearchResults(false);
-        }
-        else {
-            for (DomainObject domainObject : event.getDomainObjects()) {
-                if (domainObject.getId().equals(filter.getId())) {
-                    log.info("filter invalidated, reloading...");
-                    try {
-                        Filter updatedFilter = getDomainMgr().getModel().getDomainObject(filter.getClass(), filter.getId());
-                        if (updatedFilter != null) {
-                            filterNode.update(updatedFilter);
-                            loadDomainObjectNode(filterNode, false, null);
-                        }
-                    } 
-                    catch (Exception e) {
-                        ConsoleApp.handleException(e);
+        try {
+            if (filter==null) return;
+            if (event.isTotalInvalidation()) {
+                log.info("Total invalidation, reloading...");
+                refreshSearchResults(false);
+            }
+            else {
+                for (DomainObject domainObject : event.getDomainObjects()) {
+                    if (domainObject.getId().equals(filter.getId())) {
+                        log.info("Filter invalidated, reloading...");
+                        reload();
+                        break;
                     }
-                    break;
-                }
-                else if (domainObject.getClass().equals(searchConfig.getSearchClass())) {
-                    log.info("some objects of class "+searchConfig.getSearchClass().getSimpleName()+" were invalidated, reloading...");
-                    refreshSearchResults(false);
-                    break;
+                    else if (domainObject.getClass().equals(searchConfig.getSearchClass())) {
+                        log.info("some objects of class "+searchConfig.getSearchClass().getSimpleName()+" were invalidated, reloading...");
+                        refreshSearchResults(false);
+                        break;
+                    }
                 }
             }
+        } 
+        catch (Exception e) {
+            ConsoleApp.handleException(e);
         }
     }
 
+    private void reload() throws Exception {
+        if (filter==null) return;
+        Filter updatedFilter = getDomainMgr().getModel().getDomainObject(filter.getClass(), filter.getId());
+        if (updatedFilter != null) {
+            if (filterNode==null) {
+                loadDomainObject(updatedFilter, false, null);
+            }
+            else {
+                if (!filterNode.getFilter().equals(updatedFilter)) {
+                    filterNode.update(updatedFilter);
+                }
+                loadDomainObjectNode(filterNode, false, null);
+            }
+        }
+    }
+    
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
         if (event.getDomainObject().getId().equals(filter.getId())) {
@@ -811,6 +824,11 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         }
     }
 
+    @Subscribe
+    public void domainObjectChanged(DomainObjectChangeEvent event) {
+        
+    }
+    
     @Override
     public String getSortField() {
         return searchConfig.getSortCriteria();
@@ -830,7 +848,8 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private void loadPreferences() {
         if (filter.getId()==null) return;
         try {
-            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString());
+            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString());
             if (sortCriteriaPref!=null) {
                 log.debug("Loaded sort criteria preference: {}",sortCriteriaPref.getValue());
                 searchConfig.setSortCriteria((String) sortCriteriaPref.getValue());
@@ -847,7 +866,8 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private void savePreferences() {
         if (filter.getId()==null || StringUtils.isEmpty(searchConfig.getSortCriteria())) return;
         try {
-            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), searchConfig.getSortCriteria());
+            DomainMgr.getDomainMgr().setPreference(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), searchConfig.getSortCriteria());
             log.debug("Saved sort criteria preference: {}",searchConfig.getSortCriteria());
         }
         catch (Exception e) {

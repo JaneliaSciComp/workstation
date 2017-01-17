@@ -62,10 +62,14 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
 
+    // UI Components
     private ResultSelectionButton resultButton;
     private ImageTypeSelectionButton typeButton;
 
+    // Configuration
     private IconGridViewerConfiguration config;
+    
+    // These members deal with the context and entities within it
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
     private DomainObjectSelectionModel editSelectionModel;
@@ -73,6 +77,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @SuppressWarnings("unused")
     private SearchProvider searchProvider;
 
+    // UI state
     private boolean editMode;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
