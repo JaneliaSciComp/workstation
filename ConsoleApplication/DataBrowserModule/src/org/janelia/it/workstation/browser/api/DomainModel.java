@@ -807,6 +807,12 @@ public class DomainModel {
         else {
             notifyDomainObjectChanged(canonicalObject);
         }
+
+        TreeNode folder = getDefaultWorkspaceFolder(DomainConstants.NAME_DATA_SETS, false);
+        if (folder != null) {
+            invalidate(folder);
+        }
+        
         return canonicalObject;
     }
 

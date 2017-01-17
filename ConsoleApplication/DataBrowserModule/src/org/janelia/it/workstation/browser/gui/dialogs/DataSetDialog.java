@@ -271,12 +271,10 @@ public class DataSetDialog extends ModalDialog {
 
                 if (dataSet == null) {
                     dataSet = new DataSet();
-                    dataSet.setName(nameInput.getText());
                     dataSet.setIdentifier(identifierInput.getText());
-                } else {
-                    dataSet.setName(nameInput.getText());
-                }
+                } 
 
+                dataSet.setName(nameInput.getText());
                 dataSet.setSampleNamePattern(sampleNamePattern);
                 dataSet.setSampleImageType(SampleImageType.valueOf(sampleImageType));
                 java.util.List<String> pipelineProcesses = new ArrayList<>();
@@ -286,8 +284,7 @@ public class DataSetDialog extends ModalDialog {
                 dataSet.setNeuronSeparationSupported(new Boolean(neuronSeparationCheckbox.isSelected()));
                 dataSet.setSageConfigPath(sageConfigPath);
                 dataSet.setSageGrammarPath(sageGrammarPath);
-                DomainModel model = DomainMgr.getDomainMgr().getModel();
-                model.save(dataSet);
+                DomainMgr.getDomainMgr().getModel().save(dataSet);
             }
 
             @Override
