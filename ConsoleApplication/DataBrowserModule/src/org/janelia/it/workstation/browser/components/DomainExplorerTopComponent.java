@@ -45,7 +45,7 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeView;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.DomainObjectNodeTracker;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.RootNode;
@@ -359,10 +359,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         final List<Long[]> expanded = beanTreeView.getExpandedPaths();
         DomainObject domainObject = event.getDomainObject();
         
-        Set<DomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
+        Set<AbstractDomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
         if (!nodes.isEmpty()) {
             log.info("Updating removed object: {}",domainObject.getName());
-            for(DomainObjectNode<DomainObject> node : nodes) {
+            for(AbstractDomainObjectNode<DomainObject> node : nodes) {
                 try {
                     log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
                     node.destroy();
@@ -391,10 +391,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             final List<Long[]> expanded = beanTreeView.getExpandedPaths();
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             for(DomainObject domainObject : event.getDomainObjects()) {
-                Set<DomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
+                Set<AbstractDomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
                 if (!nodes.isEmpty()) {
                     log.info("Updating invalidated object: {}",domainObject.getName());
-                    for(DomainObjectNode<DomainObject> node : nodes) {
+                    for(AbstractDomainObjectNode<DomainObject> node : nodes) {
                         try {
                             DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
                             if (refreshed==null) {
@@ -573,9 +573,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     private void navigateNode(Node node) {
-        if (node instanceof DomainObjectNode) {
+        if (node instanceof AbstractDomainObjectNode) {
             log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
-            selectionModel.select((DomainObjectNode<?>)node, true, true);
+            selectionModel.select((AbstractDomainObjectNode<?>)node, true, true);
         }
     }
 

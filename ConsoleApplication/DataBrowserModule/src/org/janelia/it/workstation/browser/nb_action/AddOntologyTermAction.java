@@ -59,7 +59,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
         
         assert !selectedNodes.isEmpty() : "No nodes are selected";
         
-        JMenu addMenuPopup = new JMenu("Add...");
+        JMenu addMenuPopup = new JMenu("Add");
         
         if (selectedNodes.size()>1) {
             addMenuPopup.setEnabled(false);

@@ -9,7 +9,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,13 +28,13 @@ public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JP
     
     protected abstract T getDomainObject();
     
-    protected abstract DomainObjectNode<T> getDomainObjectNode();
+    protected abstract AbstractDomainObjectNode<T> getDomainObjectNode();
     
     @Override
     public abstract void loadDomainObject(T domainObject, boolean isUserDriven, Callable<Void> success);
 
     @Override
-    public abstract void loadDomainObjectNode(DomainObjectNode<T> domainObjectNode, boolean isUserDriven, Callable<Void> success);
+    public abstract void loadDomainObjectNode(AbstractDomainObjectNode<T> domainObjectNode, boolean isUserDriven, Callable<Void> success);
 
     @Override
     public DomainObjectEditorState<T> saveState() {

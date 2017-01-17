@@ -39,11 +39,11 @@ public class DomainObjectNodeTracker {
      * Package private method for nodes to use to register themselves.
      * @param node
      */
-    void registerNode(final DomainObjectNode node) {
+    void registerNode(final AbstractDomainObjectNode node) {
         // Clear existing references to similar nodes
         int c = 0;
         for(Iterator<WeakReference> iterator = nodesById.get(node.getId()).iterator(); iterator.hasNext(); ) {
-            WeakReference<DomainObjectNode> ref = iterator.next();
+            WeakReference<AbstractDomainObjectNode> ref = iterator.next();
             if (ref.get()==null) {
                 log.trace("removing expired reference for {}",node.getId());
                 iterator.remove();
@@ -64,11 +64,11 @@ public class DomainObjectNodeTracker {
      * Package private method for nodes to use to deregister themselves.
      * @param node
      */
-    <T extends DomainObject> void deregisterNode(final DomainObjectNode<T> node) {
+    <T extends DomainObject> void deregisterNode(final AbstractDomainObjectNode<T> node) {
         Long id = node.getId();
         for(Iterator<WeakReference> iterator = nodesById.get(id).iterator(); iterator.hasNext(); ) {
-            WeakReference<DomainObjectNode<T>> ref = iterator.next();
-            DomainObjectNode<T> regNode = ref.get();
+            WeakReference<AbstractDomainObjectNode<T>> ref = iterator.next();
+            AbstractDomainObjectNode<T> regNode = ref.get();
             if (regNode==node) {
                 log.debug("unregistered node@{} - {}",System.identityHashCode(regNode),regNode.getDisplayName());
                 iterator.remove();
@@ -76,12 +76,12 @@ public class DomainObjectNodeTracker {
         }    
     }
 
-    public <T extends DomainObject> Set<DomainObjectNode<T>> getNodesByDomainObject(T domainObject) {
+    public <T extends DomainObject> Set<AbstractDomainObjectNode<T>> getNodesByDomainObject(T domainObject) {
         log.debug("getting nodes for {}",domainObject);
-        Set<DomainObjectNode<T>> nodes = new HashSet<>();
+        Set<AbstractDomainObjectNode<T>> nodes = new HashSet<>();
         for(Iterator<WeakReference> iterator = nodesById.get(domainObject.getId()).iterator(); iterator.hasNext(); ) {
-            WeakReference<DomainObjectNode<T>> ref = iterator.next();
-            DomainObjectNode<T> node = ref.get();
+            WeakReference<AbstractDomainObjectNode<T>> ref = iterator.next();
+            AbstractDomainObjectNode<T> node = ref.get();
             if (node==null) {
                 iterator.remove();
             }
@@ -97,12 +97,12 @@ public class DomainObjectNodeTracker {
      * @param id
      * @return
      */
-    public Set<DomainObjectNode> getNodesById(Long id) {
+    public Set<AbstractDomainObjectNode> getNodesById(Long id) {
         log.debug("getting nodes with id {}",id);
-        Set<DomainObjectNode> nodes = new HashSet<>();
+        Set<AbstractDomainObjectNode> nodes = new HashSet<>();
         for(Iterator<WeakReference> iterator = nodesById.get(id).iterator(); iterator.hasNext(); ) {
-            WeakReference<DomainObjectNode> ref = iterator.next();
-            DomainObjectNode node = ref.get();
+            WeakReference<AbstractDomainObjectNode> ref = iterator.next();
+            AbstractDomainObjectNode node = ref.get();
             if (node==null) {
                 iterator.remove();
             }

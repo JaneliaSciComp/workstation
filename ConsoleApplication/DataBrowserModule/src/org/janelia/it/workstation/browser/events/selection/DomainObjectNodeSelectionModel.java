@@ -3,7 +3,7 @@ package org.janelia.it.workstation.browser.events.selection;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.browser.events.Events;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.FilterNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.slf4j.Logger;
@@ -16,15 +16,15 @@ import java.util.List;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectNodeSelectionModel extends SelectionModel<DomainObjectNode<?>,Reference> {
+public class DomainObjectNodeSelectionModel extends SelectionModel<AbstractDomainObjectNode<?>,Reference> {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectNodeSelectionModel.class);
     
     @Override
-    protected void selectionChanged(List<DomainObjectNode<?>> domainObjectNodes, boolean select, boolean clearAll, boolean isUserDriven) {
+    protected void selectionChanged(List<AbstractDomainObjectNode<?>> domainObjectNodes, boolean select, boolean clearAll, boolean isUserDriven) {
         log.debug((select?"select":"deselect")+" {}, clearAll={}",domainObjectNodes,clearAll);
         if (domainObjectNodes.size()==1) {
-            DomainObjectNode<?> domainObjectNode = domainObjectNodes.get(0);
+            AbstractDomainObjectNode<?> domainObjectNode = domainObjectNodes.get(0);
             if (domainObjectNode instanceof TreeNodeNode) {
                 TreeNodeNode treeNodeNode = (TreeNodeNode)domainObjectNode;
                 Events.getInstance().postOnEventBus(new TreeNodeSelectionEvent(getSource(), treeNodeNode, select, clearAll, isUserDriven));
@@ -41,7 +41,7 @@ public class DomainObjectNodeSelectionModel extends SelectionModel<DomainObjectN
     }
     
     @Override
-    public Reference getId(DomainObjectNode<?> domainObjectNode) {
+    public Reference getId(AbstractDomainObjectNode<?> domainObjectNode) {
         DomainObject domainObject = domainObjectNode.getDomainObject();
         return Reference.createFor(domainObject);
     }

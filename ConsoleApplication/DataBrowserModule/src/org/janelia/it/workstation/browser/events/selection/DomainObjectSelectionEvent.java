@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 
 /**
  * Event indicating that a domain object's selection has changed.
@@ -15,13 +15,13 @@ import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 public class DomainObjectSelectionEvent {
 
     private final Object source;
-    private final DomainObjectNode<?> domainObjectNode;
+    private final AbstractDomainObjectNode<?> domainObjectNode;
     private final List<DomainObject> domainObjects;
     private final boolean select;
     private final boolean clearAll;
     private final boolean isUserDriven;
 
-    public DomainObjectSelectionEvent(Object source, DomainObjectNode<?> domainObjectNode, boolean select, boolean clearAll, boolean isUserDriven) {
+    public DomainObjectSelectionEvent(Object source, AbstractDomainObjectNode<?> domainObjectNode, boolean select, boolean clearAll, boolean isUserDriven) {
         this.source = source;
         this.domainObjectNode = domainObjectNode;
         this.domainObjects = Arrays.asList(domainObjectNode.getDomainObject());
@@ -43,7 +43,7 @@ public class DomainObjectSelectionEvent {
         return source;
     }
     
-    public DomainObjectNode<?> getDomainObjectNode() {
+    public AbstractDomainObjectNode<?> getDomainObjectNode() {
         return domainObjectNode;
     }
 

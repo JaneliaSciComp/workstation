@@ -5,13 +5,13 @@ import java.awt.Image;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TmSampleNode extends DomainObjectNode<TmSample> {
+public class TmSampleNode extends AbstractDomainObjectNode<TmSample> {
 
     private final static Logger log = LoggerFactory.getLogger(TmSampleNode.class);
 
