@@ -6,6 +6,7 @@
 	<sequence name="Main">
 
         <input name="SAMPLE_ENTITY_ID"/>                 <!-- The GUID of the Sample to process -->
+        <input name="ORDER_NO"/>                         <!-- The order number of the TMOG/Front-end Sample processing request -->
         <input name="OBJECTIVE"/>                        <!-- The objective to process -->  
         <input name="PIPELINE_NAME"/>                    <!-- The name of the pipeline being run --> 
         <input name="PIPELINE_PROCESS"/>                 <!-- The name of the process file being run  --> 
@@ -128,6 +129,7 @@
             <!-- Set the sample status -->
             <operation name="Set Status" processor="org.janelia.it.jacs.compute.service.domain.sample.SetSampleStatusService">
                 <input name="SAMPLE_ENTITY_ID"/>
+                <input name="ORDER_NO"/>
                 <input name="OBJECTIVE"/>
                 <input name="PIPELINE_NAME"/>
                 <input name="STATUS" value="Processing"/>
@@ -523,6 +525,7 @@
             <!-- Set our status -->
             <operation name="Set Status" processor="org.janelia.it.jacs.compute.service.domain.sample.SetSampleStatusService">
                 <input name="SAMPLE_ENTITY_ID"/>
+                <input name="ORDER_NO"/>
                 <input name="OBJECTIVE"/>
                 <input name="PIPELINE_NAME"/>
                 <input name="STATUS" value="Complete"/>
@@ -541,6 +544,7 @@
             <!-- Set our status -->
             <operation name="Set Status" processor="org.janelia.it.jacs.compute.service.domain.sample.SetSampleStatusService">
                 <input name="SAMPLE_ENTITY_ID"/>
+                <input name="ORDER_NO"/>
                 <input name="OBJECTIVE"/>
                 <input name="PIPELINE_NAME"/>
                 <input name="STATUS" value="Error"/>
@@ -549,6 +553,7 @@
 		    <!-- Log the exception into the Pipeline Run -->
 			<operation name="Handle exceptions" processor="org.janelia.it.jacs.compute.service.domain.sample.CreateErrorEntityService">
                 <input name="SAMPLE_ENTITY_ID"/>
+                <input name="ORDER_NO"/>
                 <input name="OBJECTIVE"/>
 				<input name="PIPELINE_RUN_ENTITY_ID"/>
                 <input name="PIPELINE_NAME"/>

@@ -28,6 +28,7 @@ public class LSMSampleDiscoveryService extends AbstractDomainService {
     private String datasetName;
     private String ownerKey;
     private List<String> lsmNames;
+    private String orderNo;
 
     public void execute() throws Exception {
         captureParameters();
@@ -53,6 +54,7 @@ public class LSMSampleDiscoveryService extends AbstractDomainService {
         // Populate the sample helper.
         SampleHelperNG sampleHelper = new SampleHelperNG(dataset.getOwnerKey(), logger);
         sampleHelper.setProcess("LSM processing");
+        sampleHelper.setOrderNo(orderNo);
         sampleHelper.setDataSetNameFilter(datasetName);
         sampleHelper.getDataSets();
 
@@ -75,6 +77,7 @@ public class LSMSampleDiscoveryService extends AbstractDomainService {
     private void captureParameters() throws MissingDataException {
         datasetName = processData.getString("DATASET_NAME");
         ownerKey = processData.getString("OWNER");
+        orderNo = processData.getString("ORDER_NO");
 
         // Get all LSM names from the process configuration data.
         lsmNames = ImmutableList.copyOf(

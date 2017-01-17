@@ -86,7 +86,6 @@ public class SageDiscoverServiceHelper {
      */
     public void processSageDataSet(DataSet dataSet, Collection<String> includedLsmNames) throws Exception {
         sampleHelper.setProcess(process);
-        sampleHelper.setOrderNo(process);
         boolean includeAllLsms = includedLsmNames == null  ||  includedLsmNames.isEmpty();
         Multimap<String,LSMImage> slideGroups = LinkedListMultimap.create();
 

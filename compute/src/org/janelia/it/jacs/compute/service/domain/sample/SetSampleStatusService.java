@@ -25,6 +25,7 @@ public class SetSampleStatusService extends AbstractDomainService {
     
     public void execute() throws Exception {
         SampleHelperNG sampleHelper = new SampleHelperNG(ownerKey, logger, contextLogger);
+        sampleHelper.setOrderNo(data.getRequiredItemAsString("ORDER_NO"));
         this.sample = sampleHelper.getRequiredSample(data);
         String status = data.getRequiredItemAsString("STATUS");
         sampleHelper.setProcess(data.getRequiredItemAsString("PIPELINE_NAME"));

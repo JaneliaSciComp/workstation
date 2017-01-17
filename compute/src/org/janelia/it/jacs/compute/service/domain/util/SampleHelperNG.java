@@ -407,8 +407,7 @@ public class SampleHelperNG extends DomainHelper {
         
         if (sampleDirty) {
             sample = domainDAL.save(ownerKey, sample);
-            if (sampleNew)
-                logStatusTransition(sample.getId(), PipelineStatus.Intake, PipelineStatus.New);
+            domainDAL.addSampleToIntakeOrder(orderNo, sample.getId());
             logger.info("  Saving sample: "+sample.getName()+" (id="+sample.getId()+")");
             numSamplesUpdated++;
         }

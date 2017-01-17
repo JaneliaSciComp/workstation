@@ -445,9 +445,18 @@ public class DomainDAL {
         IndexingHelper.sendReindexingMessage(domainObj);
     }
 
+
     public void addPipelineStatusTransition(Long sampleId, PipelineStatus source, PipelineStatus target, String orderNo,
                                             String process, Map<String,Object> parameters) throws Exception {
         dao.addPipelineStatusTransition(sampleId, source, target, orderNo, process, parameters);
+    }
+
+    public void addIntakeOrder(String orderNo, String owner) throws Exception {
+        dao.addIntakeOrder(orderNo, owner);
+    }
+
+    public void addSampleToIntakeOrder(String orderNo, Long sampleId) throws Exception {
+        dao.addSampleToOrder(orderNo, sampleId);
     }
 
     public List<StatusTransition> getPipelineStatusTransitionsBySampleId(Long sampleId) throws Exception {
