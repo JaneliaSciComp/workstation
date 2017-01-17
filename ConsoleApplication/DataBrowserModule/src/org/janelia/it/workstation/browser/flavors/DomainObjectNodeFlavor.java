@@ -6,7 +6,7 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.List;
 
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,10 +35,10 @@ public class DomainObjectNodeFlavor extends DataFlavor {
         super(mt, prn);
     }
 
-    public static DomainObjectNode<?> getDomainObjectNode(Transferable t) {
-        DomainObjectNode<?> node = null;
+    public static AbstractDomainObjectNode<?> getDomainObjectNode(Transferable t) {
+        AbstractDomainObjectNode<?> node = null;
         try {
-            node = (DomainObjectNode<?>)t.getTransferData(SINGLE_FLAVOR);
+            node = (AbstractDomainObjectNode<?>)t.getTransferData(SINGLE_FLAVOR);
         }
         catch (UnsupportedFlavorException | IOException e) {
             log.error("Error getting transfer data", e);
@@ -47,10 +47,10 @@ public class DomainObjectNodeFlavor extends DataFlavor {
     }
     
     @SuppressWarnings("unchecked")
-    public static List<DomainObjectNode<?>> getDomainObjectNodeList(Transferable t) {
-        List<DomainObjectNode<?>> node = null;
+    public static List<AbstractDomainObjectNode<?>> getDomainObjectNodeList(Transferable t) {
+        List<AbstractDomainObjectNode<?>> node = null;
         try {
-            node = (List<DomainObjectNode<?>>)t.getTransferData(LIST_FLAVOR);
+            node = (List<AbstractDomainObjectNode<?>>)t.getTransferData(LIST_FLAVOR);
         }
         catch (UnsupportedFlavorException | IOException e) {
             log.error("Error getting transfer data", e);

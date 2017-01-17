@@ -13,11 +13,12 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RemoveAction;
+import org.janelia.it.workstation.browser.nb_action.RenameAction;
 import org.janelia.it.workstation.browser.nb_action.SearchHereAction;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 
-public class FilterNode extends DomainObjectNode<Filtering> {
+public class FilterNode extends AbstractDomainObjectNode<Filtering> {
         
     public FilterNode(ChildFactory<?> parentChildFactory, Filtering filter) throws Exception {
         super(parentChildFactory, Children.LEAF, filter);
@@ -61,7 +62,7 @@ public class FilterNode extends DomainObjectNode<Filtering> {
         actions.add(new ViewDetailsAction());
         actions.add(new ChangePermissionsAction());
         actions.add(AddToFolderAction.get());
-        actions.add(new RenameAction());
+        actions.add(RenameAction.get());
         actions.add(RemoveAction.get());
         actions.add(null);
         actions.add(SearchHereAction.get());

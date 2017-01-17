@@ -1,26 +1,45 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
-import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
-import org.janelia.it.workstation.tracing.SegmentIndex;
-import org.janelia.it.workstation.tracing.VoxelPosition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.awt.Point;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
+import org.janelia.it.workstation.tracing.SegmentIndex;
+import org.janelia.it.workstation.tracing.VoxelPosition;
+import org.perf4j.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 
 /**
  * Created by murphys on 4/14/2016.
@@ -41,6 +60,8 @@ public class SkeletonActorModel {
     private boolean verticesNeedCopy=true;
 
     private Camera3d camera;
+    private Viewport viewport;
+    private BasicMouseMode pointComputer;
 
     public Camera3d getCamera() {
         return camera;
@@ -113,8 +134,9 @@ public class SkeletonActorModel {
     int cummulativeVertexOffset = 0;
     int cummulativeColorOffset = 0;
     int cummulativeLineOffset = 0;
-
     int cummulativePointOffset=0;
+
+    private float zoomedZThicknessInPixels = 0f;
 
     public int getCummulativeVertexOffset() { return cummulativeVertexOffset; }
     public ByteBuffer getVertexBuffer() { return vertexByteBuffer; }
@@ -135,7 +157,7 @@ public class SkeletonActorModel {
     public Map<Long, Map<SegmentIndex, TracedPathActor>> getNeuronTracedSegments() { return neuronTracedSegments; }
 
     public SkeletonActorModel() {
-        updater = new SkeletonActorStateUpdater();
+        this.updater = new SkeletonActorStateUpdater();
     }
 
     public Skeleton getSkeleton() { return skeleton; }
@@ -166,7 +188,8 @@ public class SkeletonActorModel {
 
     public boolean updateVertices() {
         if (verticesNeedCopy) {
-
+            log.trace("updateVertices - running");
+            
             cummulativeVertexOffset=0;
             cummulativeColorOffset=0;
             cummulativeLineOffset=0;
@@ -269,6 +292,7 @@ public class SkeletonActorModel {
 
     public boolean updatePoints() {
         if (pointIndicesNeedCopy) {
+            log.trace("updatePoints - running");
 
             pointOffsets.clear();
 
@@ -319,8 +343,7 @@ public class SkeletonActorModel {
     public void changeNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) {
         if (neuron != null) {
             neuronStyles.put(neuron.getId(), style);
-            mostRecentAnchorVersion--; // trick to trigger update
-            updateAnchors();
+            forceUpdateAnchors();
         }
     }
 
@@ -328,10 +351,14 @@ public class SkeletonActorModel {
         for (TmNeuronMetadata neuron: neuronStyleMap.keySet()) {
             neuronStyles.put(neuron.getId(), neuronStyleMap.get(neuron));
         }
-        mostRecentAnchorVersion--;
-        updateAnchors();
+        forceUpdateAnchors();
     }
 
+    public synchronized void forceUpdateAnchors() {
+        mostRecentAnchorVersion--; // trick to trigger update
+        updateAnchors();
+    }
+    
     /**
      * update the arrays we'll send to OpenGL; this includes the anchors/points
      * (thus the name of the method), the lines between them, and the
@@ -345,13 +372,17 @@ public class SkeletonActorModel {
         if (skeleton == null) {
             return;
         }
+        log.trace("updateAnchors - running");
+        StopWatch w = new StopWatch();
+        w.start();
 
-        if (mostRecentAnchorVersion==skeleton.getAnchorSetVersion()) {
-            // log.info("updateAnchors() skipping redundant update");
+        if (mostRecentAnchorVersion == skeleton.getAnchorSetVersion()) {
+            log.trace("updateAnchors() skipping redundant update");
             return;
-        } else {
-            mostRecentAnchorVersion=skeleton.getAnchorSetVersion();
-            // log.info("updateAnchors() - updating to version="+mostRecentAnchorVersion);
+        }
+        else {
+            mostRecentAnchorVersion = skeleton.getAnchorSetVersion();
+            log.trace("updateAnchors() - updating to version=" + mostRecentAnchorVersion);
         }
 
         // we do the point update in this method, then call out
@@ -444,7 +475,10 @@ public class SkeletonActorModel {
         if (!anchors.contains(getNextParent())) {
             setNextParent(null);
         }
-
+        
+        w.start();
+        log.trace("updateAnchors took {} ms",w.getElapsedTime());
+        
         updater.update();
     }
 
@@ -455,6 +489,7 @@ public class SkeletonActorModel {
         //  lines in exactly the same order (the order skeleton.getAnchors()
         //  returns them in)
 
+        log.trace("updateLines - running");
         if (anchors==null) {
             anchors=getAnchorsSafe();
         }
@@ -513,6 +548,7 @@ public class SkeletonActorModel {
     private void updateTracedPaths(Collection<Anchor> anchors) {
         // Update Traced path actors
 
+        log.trace("updateTracedPaths - running");
         // first, a short-circuit; if there are no anchors, the whole
         //  skeleton was cleared, and we can clear our traced segments as well;
         //  this is necessary because unlike in the old not-per-neuron way of
@@ -603,9 +639,9 @@ public class SkeletonActorModel {
         }
     }
 
-    /*
- * Change visual anchor position without actually changing the Skeleton model
- */
+    /**
+     * Change visual anchor position without actually changing the Skeleton model
+     */
     public void lightweightPlaceAnchor(Anchor dragAnchor, Vec3 location) {
         if (dragAnchor == null) {
             return;
@@ -649,12 +685,63 @@ public class SkeletonActorModel {
         if (skeleton == null || skeleton.getAnchors() == null) {
             return Collections.emptyList();
         }
-        Set<Anchor> anchors = skeleton.getAnchors();
-        synchronized (anchors) {
-            return new ArrayList<>(anchors);
-        }
-    }
 
+        boolean anchorsInViewport = ApplicationPanel.isAnchorsInViewport();
+        if (viewport==null || pointComputer==null || !anchorsInViewport) {
+            // Fallback on old inefficient behavior which always renders all anchors
+            Set<Anchor> anchors = skeleton.getAnchors();
+            synchronized (anchors) {
+                return new ArrayList<>(anchors);
+            }
+        }
+        
+        List<Anchor> anchors = new ArrayList<>();
+        NeuronSet neuronSet = SkeletonController.getInstance().getNeuronSet();
+        if (neuronSet != null) {
+            
+            // Establish the extents of the current view in world coordinates
+            
+            Vec3 p1v = pointComputer.worldFromPixel(
+                    new Point(viewport.getOriginX(), 
+                              viewport.getOriginY()));
+            
+            Vec3 p2v = pointComputer.worldFromPixel(
+                    new Point(viewport.getOriginX()+viewport.getWidth(), 
+                              viewport.getOriginY()+viewport.getHeight()));
+
+            double thickness = zoomedZThicknessInPixels/getCamera().getPixelsPerSceneUnit();
+            
+            // Add in Z thickness and translate into array format
+            
+            double[] p1 = { 
+                    p1v.getX(),
+                    p1v.getY(),
+                    p1v.getZ()-thickness/2
+                    };
+            double[] p2 = { 
+                    p2v.getX(),
+                    p2v.getY(),
+                    p2v.getZ()+thickness/2
+                    };
+            
+            // Find all relevant anchors
+            
+            List<NeuronVertex> vertexList = neuronSet.getAnchorsInArea(p1, p2);
+            if (vertexList != null) {
+                for (NeuronVertex vertex : vertexList) {
+                    TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
+                    Anchor anchor = skeleton.getAnchorByID(annotation.getId());
+                    if (anchor!=null) {
+                        anchors.add(anchor);
+                    }
+                }
+            }
+        }
+
+        log.debug("Found {} anchors in viewport",anchors.size());
+        return anchors;
+    }
+    
     public synchronized void setHoverAnchor(Anchor anchor) {
         if (anchor == skeleton.getHoverAnchor()) {
             return;
@@ -704,4 +791,17 @@ public class SkeletonActorModel {
         return true;
     }
 
-}
+    public void setZoomedZThicknessInPixels(float zoomedZThicknessInPixels) {
+        this.zoomedZThicknessInPixels  = zoomedZThicknessInPixels;
+    }
+
+    public void setViewport(Viewport viewport) {
+        this.viewport = viewport;
+    }
+
+    public void setPointComputer(BasicMouseMode pointComputer) {
+        this.pointComputer = pointComputer;
+    }
+    
+    
+ }

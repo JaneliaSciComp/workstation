@@ -54,7 +54,7 @@ public class OntologyImportAction extends NodePresenterAction   {
 
         assert !selectedNodes.isEmpty() : "No nodes are selected";
 
-        JMenuItem importMenuItem = new JMenuItem("Import Ontology Here");
+        JMenuItem importMenuItem = new JMenuItem("Import Ontology Here...");
         Node selectedNode = selectedNodes.get(0);
         final OntologyTermNode termNode = (OntologyTermNode) selectedNode;
 

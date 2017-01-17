@@ -11,6 +11,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -58,6 +59,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     private SkeletonController() {
     }
 
+    public NeuronSet getNeuronSet() {
+        return annoMgr.getNeuronSet();
+    }
+    
     public void setSkipSkeletonChange(boolean skipSkeletonChange) {
         this.skipSkeletonChange=skipSkeletonChange;
     }

@@ -74,7 +74,7 @@ public class DesktopApi {
 		return false;
 	}
 
-	private static boolean browseDesktop(URI uri) {
+	public static boolean browseDesktop(URI uri) {
 
 		log.info("Trying to use Desktop.getDesktop().browse() with {}", uri);
 		try {
@@ -97,7 +97,7 @@ public class DesktopApi {
 		}
 	}
 
-	private static boolean openDesktop(File file) {
+	public static boolean openDesktop(File file) {
 
 		log.debug("Trying to use Desktop.getDesktop().open() with "
 				+ file.toString());

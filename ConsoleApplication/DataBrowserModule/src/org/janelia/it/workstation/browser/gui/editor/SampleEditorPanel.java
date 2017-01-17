@@ -1012,9 +1012,9 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         if (sample==null) return;
         if (StringUtils.areEqual(event.getDomainObject().getId(), sample.getId())) {
             this.sample = null;
-            currRunMap.clear();
-            lsms.clear();
-            lsmAnnotations.clear();
+            if (currRunMap!=null) currRunMap.clear();
+            if (lsms!=null) lsms.clear();
+            if (lsmAnnotations!=null) lsmAnnotations.clear();
             showNothing();
         }
     }

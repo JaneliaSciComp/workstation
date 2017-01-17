@@ -5,6 +5,7 @@ import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.jacs.shared.lvv.ChannelBrightnessStats;
 import org.janelia.it.jacs.shared.lvv.ImageBrightnessStats;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
@@ -26,6 +27,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.openide.util.NbPreferences;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesChooser;
@@ -42,6 +44,9 @@ import java.awt.Point;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.util.List;
+import java.util.prefs.PreferenceChangeEvent;
+import java.util.prefs.PreferenceChangeListener;
+
 import org.apache.commons.lang.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +67,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	protected SliceRenderer renderer = new SliceRenderer();
 	protected Viewport viewport = renderer.getViewport();
 	protected RubberBand rubberBand = new RubberBand();
-	protected SkeletonActor skeletonActor = new SkeletonActor();
 
 	SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
 	protected TileServer tileServer = new TileServer(sharedVolumeImage);
@@ -70,6 +74,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	protected SliceActor sliceActor;
 	private ImageColorModel imageColorModel;
 	private final BasicMouseMode pointComputer = new BasicMouseMode();
+    protected SkeletonActor skeletonActor = new SkeletonActor();
     private final MicronCoordsFormatter micronCoordsFormatter = new MicronCoordsFormatter( pointComputer );
 	
     private MessageListener messageListener;
@@ -86,7 +91,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                              final GLCapabilitiesChooser chooser,
                              final GLContext sharedContext,
                              ObservableCamera3d camera)
-	{
+	{	    
         // Use GLCanvas on Linux, for better frame rate on EnginFrame
         // But not on Windows, so we could still use Java2D decorations
         // if (false)
@@ -191,7 +196,16 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                 e.consume();
             }
         });
-        //
+        
+        NbPreferences.forModule(ApplicationPanel.class).addPreferenceChangeListener(new PreferenceChangeListener() {
+            @Override
+            public void preferenceChange(PreferenceChangeEvent evt) {
+                if (evt.getKey().equals(ApplicationPanel.PREFERENCE_Z_THICKNESS)) {
+                    skeletonActor.setZThicknessInPixels(ApplicationPanel.getZThickness());
+                    log.info("Z thickness changed: "+skeletonActor.getZoomedZThicknessInPixels());
+                }
+            }
+        });
 	}
 
 	public void autoContrastNow() {
@@ -364,7 +378,9 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		mouseMode.setCamera(camera);
 		wheelMode.setCamera(camera);
 		pointComputer.setCamera(camera);
-        skeletonActor.getModel().setCamera(camera);
+        skeletonActor.setCamera(camera);
+        skeletonActor.setViewport(getViewport());
+        skeletonActor.setPointComputer(pointComputer);
 	}
     public CameraListenerAdapter cameraListener;
 	
@@ -450,14 +466,12 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	}
 
     @Override
-    public boolean isShowing()
-    {
+    public boolean isShowing() {
         return glCanvas.getInnerAwtComponent().isShowing();
     }
 
     @Override
-    public void repaint()
-    {
+    public void repaint() {
         glCanvas.repaint();
     }
 

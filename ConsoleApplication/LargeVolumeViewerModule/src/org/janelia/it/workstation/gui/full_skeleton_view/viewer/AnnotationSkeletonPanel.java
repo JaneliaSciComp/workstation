@@ -139,7 +139,10 @@ public class AnnotationSkeletonPanel extends JPanel {
             final Camera3d rendererCamera = context.getCamera3d();
 
             linesDrawActor.getModel().setSkeleton(dataSource.getSkeleton());
-            linesDrawActor.getModel().setCamera(rendererCamera);
+            linesDrawActor.setCamera(rendererCamera);
+            // TODO: set these in order to get viewport-based anchor rendering
+//            linesDrawActor.setViewport(getViewport());
+//            linesDrawActor.setPointComputer(pointComputer);
             linesDrawActor.getModel().setTileFormat(tileFormat);
             linesDrawActor.setRenderInterpositionMethod(
                     SkeletonActor.RenderInterpositionMethod.Occlusion

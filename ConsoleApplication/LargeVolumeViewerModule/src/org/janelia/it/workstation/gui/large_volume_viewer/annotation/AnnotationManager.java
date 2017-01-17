@@ -21,6 +21,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
@@ -1699,6 +1700,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     public AnnotationModel getAnnotationModel() {
         return annotationModel;
+    }
+
+    public NeuronSet getNeuronSet() {
+        return annotationModel.getNeuronSet();
     }
     
     

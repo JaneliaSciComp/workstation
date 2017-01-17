@@ -1,5 +1,10 @@
 package org.janelia.it.workstation.browser.nodes;
 
+import java.awt.Image;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.io.IOException;
+
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
@@ -9,16 +14,6 @@ import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -83,13 +78,6 @@ public class InternalNode<T> extends AbstractNode {
     }
     
     @Override
-    public Action[] getActions(boolean context) {
-        List<Action> actions = new ArrayList<>();
-        actions.add(new CopyNameAction());
-        return actions.toArray(new Action[actions.size()]);
-    }
-    
-    @Override
     public Image getIcon(int type) {
         return Icons.getIcon("package.png").getImage();
     }
@@ -140,18 +128,5 @@ public class InternalNode<T> extends AbstractNode {
             }
         });
         return added;
-    }
-    
-    protected final class CopyNameAction extends AbstractAction {
-
-        public CopyNameAction() {
-            putValue (NAME, "Copy Name To Clipboard");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            Transferable t = new StringSelection(getDisplayName());
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-        }
     }
 }

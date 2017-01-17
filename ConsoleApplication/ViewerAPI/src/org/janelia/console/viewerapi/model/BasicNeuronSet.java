@@ -226,5 +226,9 @@ implements NeuronSet
     public NeuronVertex getAnchorClosestToVoxelLocation(double[] voxelXYZ) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
+    @Override
+    public List<NeuronVertex> getAnchorsInArea(double[] p1, double[] p2) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

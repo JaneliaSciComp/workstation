@@ -1,4 +1,7 @@
 // 5.8.0
 
 Workstation Browser
-* 
+* Added "Change Permissions" option on Ontologies to allow sharing of ontologies
+
+MouseLight
+* Major improvements in LVV rendering performance for large numbers of neurons 
