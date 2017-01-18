@@ -32,6 +32,7 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
     private final String libraryPath;
     private final String scriptName;
 
+
     @Inject
     public FileCopyProcessor(JacsServiceDispatcher jacsServiceDispatcher,
                              ServiceComputationFactory computationFactory,
@@ -39,7 +40,8 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
                              @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                              @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
                              @Any Instance<ExternalProcessRunner> serviceRunners,
-                             String libraryPath, String scriptName,
+                             @PropertyValue(name = "VAA3D.LibraryPath") String libraryPath,
+                             @PropertyValue(name = "Convert.ScriptPath") String scriptName,
                              Logger logger) {
         super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.libraryPath = libraryPath;
