@@ -329,7 +329,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     public void totalRefresh() {
         DomainMgr.getDomainMgr().getModel().invalidateAll();
     }
-
+    
     private void setObjects(List<T> objectList) {
         log.debug("Setting {} objects", objectList.size());
         this.objectList = objectList;

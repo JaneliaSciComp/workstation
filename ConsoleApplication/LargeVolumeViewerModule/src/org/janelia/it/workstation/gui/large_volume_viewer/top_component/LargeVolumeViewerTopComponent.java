@@ -6,7 +6,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 
-import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
@@ -25,7 +25,6 @@ import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.NbPreferences;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
@@ -213,8 +212,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
 
         if (!restoreStateOnOpen) return;
         
-        String loadLastStr = NbPreferences.forModule(ApplicationPanel.class).get(ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT, ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT_DEFAULT);
-        if (!Boolean.parseBoolean(loadLastStr)) {
+        if (!ApplicationPanel.isLoadLastObject()) {
             return;
         }
         
@@ -270,13 +268,13 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
                 new LargeVolumeViewerLocationProvider(lvvv);
         // Use Lookup to communicate neuron reconstructions.
         // Based on tutorial at https://platform.netbeans.org/tutorials/74/nbm-selection-1.html
-        NeuronSet neurons = lvvv.getNeuronSetAdapter();
+//        NeuronSet neurons = lvvv.getNeuronSetAdapter();
 
         // Using a dynamic lookup now, instead of this fixed one, but the effect should be the same.
         //associateLookup(Lookups.fixed(locProvider, neurons));
         
         content.add(locProvider);
-        content.add(neurons);
+//        content.add(neurons);
         associateLookup(new AbstractLookup(content));
     }
     

@@ -30,81 +30,59 @@
 
 package org.janelia.console.viewerapi.commands;
 
+import org.janelia.console.viewerapi.Command;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoableEdit;
-import org.janelia.console.viewerapi.Command;
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronModel;
 
 /**
- * Seeds a new neuron with a single root anchor
+ * Applies Command design pattern to the act of manually showing or hiding a neuron
  * @author brunsc
  */
-public class SelectPrimaryAnchorCommand 
+public class ToggleNeuronVisibilityCommand 
 extends AbstractUndoableEdit
 implements UndoableEdit, Command, Notifier
 {
-    private final NeuronVertex newPrimary;
-    private final NeuronSet workspace;
-    private NeuronVertex oldPrimary;
+    private final NeuronModel neuron;
+    private final boolean wasVisible;
     private boolean doNotify = true;
     
-    public SelectPrimaryAnchorCommand(NeuronSet workspace, NeuronVertex primary)
+    public ToggleNeuronVisibilityCommand(
+            NeuronModel neuron) 
     {
-        this.workspace = workspace;
-        newPrimary = primary;
+        this.neuron = neuron;
+        this.wasVisible = neuron.isVisible();
     }
-
+    
+    // Command-like semantics execute is almost a synonym for redo()
     @Override
     public boolean execute() {
-        if (workspace == null)
-            return false;
-        oldPrimary = workspace.getPrimaryAnchor();
-        if (oldPrimary == newPrimary)
-            return false;
-        workspace.setPrimaryAnchor(newPrimary);
-        if (workspace.getPrimaryAnchor() != newPrimary)
-            return false;
-        if (doesNotify()) {
-            workspace.getPrimaryAnchorObservable().notifyObservers();
-        }
+        neuron.setVisible(! wasVisible);
+        if (doesNotify())
+            neuron.getVisibilityChangeObservable().notifyObservers();
         return true;
     }
-
+    
     @Override
     public String getPresentationName() {
-        if (newPrimary == null)
-            return "Clear Parent Anchor";
-        else 
-            return "Set Parent Anchor";
+        if (wasVisible)
+            return "Hide Neuron '" + neuron.getName() + "'";
+        else
+            return "Show Neuron '" + neuron.getName() + "'";
     }
     
     @Override
     public void redo() {
         super.redo(); // raises exception if canRedo() is false
-        if (! execute())
-            die(); // Something went wrong. This Command object is no longer useful.
+        execute();
     }
-
+    
     @Override
     public void undo() {
         super.undo(); // raises exception if canUndo() is false
-        if (workspace == null) {
-            die();
-            return;
-        }
-        try {
-            workspace.setPrimaryAnchor(oldPrimary);
-            if (workspace.getPrimaryAnchor() != oldPrimary) {
-                die();
-                return;
-            }
-            if (doesNotify()) {
-                workspace.getPrimaryAnchorObservable().notifyObservers();
-            }
-        } catch (Exception exc) {
-            die(); // This Command object is no longer useful
-        }
+        neuron.setVisible(wasVisible);
+        if (doesNotify())
+            neuron.getVisibilityChangeObservable().notifyObservers();
     }
 
     @Override

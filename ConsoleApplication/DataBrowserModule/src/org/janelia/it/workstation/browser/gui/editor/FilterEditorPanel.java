@@ -3,7 +3,6 @@ package org.janelia.it.workstation.browser.gui.editor;
 import static org.janelia.it.workstation.browser.api.DomainMgr.getDomainMgr;
 
 import java.awt.BorderLayout;
-import java.awt.Desktop;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -56,21 +55,24 @@ import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.gui.dialogs.EditCriteriaDialog;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SmartSearchBox;
+import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.FilterNode;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
@@ -244,7 +246,15 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             public void actionPerformed(ActionEvent e) {
                 // TODO: make a custom help page later
                 try {
-                    Desktop.getDesktop().browse(new URI("http://lucene.apache.org/core/old_versioned_docs/versions/3_5_0/queryparsersyntax.html"));
+                    if (!DesktopApi.browseDesktop(new URI("http://lucene.apache.org/core/old_versioned_docs/versions/3_5_0/queryparsersyntax.html"))) {
+                        JOptionPane.showMessageDialog(
+                                WindowLocator.getMainFrame(),
+                                "Cannot open URL. Desktop API is not supported on this platform.",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE,
+                                null
+                        );
+                    }
                 }
                 catch (Exception ex) {
                     ConsoleApp.handleException(ex);
@@ -299,7 +309,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     }
 
     @Override
-    public void loadDomainObjectNode(DomainObjectNode<Filtering> filterNode, boolean isUserDriven, Callable<Void> success) {
+    public void loadDomainObjectNode(AbstractDomainObjectNode<Filtering> filterNode, boolean isUserDriven, Callable<Void> success) {
         this.filterNode = (FilterNode)filterNode;
         loadDomainObject(filterNode.getDomainObject(), isUserDriven, success);
     }
@@ -363,7 +373,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     }
 
     @Override
-    protected DomainObjectNode<Filtering> getDomainObjectNode() {
+    protected AbstractDomainObjectNode<Filtering> getDomainObjectNode() {
         return filterNode;
     }
     
@@ -765,36 +775,48 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-        if (filter==null) return;
-        if (event.isTotalInvalidation()) {
-            log.info("total invalidation, reloading...");
-            refreshSearchResults(false);
-        }
-        else {
-            for (DomainObject domainObject : event.getDomainObjects()) {
-                if (domainObject.getId().equals(filter.getId())) {
-                    log.info("filter invalidated, reloading...");
-                    try {
-                        Filter updatedFilter = getDomainMgr().getModel().getDomainObject(filter.getClass(), filter.getId());
-                        if (updatedFilter != null) {
-                            filterNode.update(updatedFilter);
-                            loadDomainObjectNode(filterNode, false, null);
-                        }
-                    } 
-                    catch (Exception e) {
-                        ConsoleApp.handleException(e);
+        try {
+            if (filter==null) return;
+            if (event.isTotalInvalidation()) {
+                log.info("Total invalidation, reloading...");
+                refreshSearchResults(false);
+            }
+            else {
+                for (DomainObject domainObject : event.getDomainObjects()) {
+                    if (domainObject.getId().equals(filter.getId())) {
+                        log.info("Filter invalidated, reloading...");
+                        reload();
+                        break;
                     }
-                    break;
-                }
-                else if (domainObject.getClass().equals(searchConfig.getSearchClass())) {
-                    log.info("some objects of class "+searchConfig.getSearchClass().getSimpleName()+" were invalidated, reloading...");
-                    refreshSearchResults(false);
-                    break;
+                    else if (domainObject.getClass().equals(searchConfig.getSearchClass())) {
+                        log.info("some objects of class "+searchConfig.getSearchClass().getSimpleName()+" were invalidated, reloading...");
+                        refreshSearchResults(false);
+                        break;
+                    }
                 }
             }
+        } 
+        catch (Exception e) {
+            ConsoleApp.handleException(e);
         }
     }
 
+    private void reload() throws Exception {
+        if (filter==null) return;
+        Filter updatedFilter = getDomainMgr().getModel().getDomainObject(filter.getClass(), filter.getId());
+        if (updatedFilter != null) {
+            if (filterNode==null) {
+                loadDomainObject(updatedFilter, false, null);
+            }
+            else {
+                if (!filterNode.getFilter().equals(updatedFilter)) {
+                    filterNode.update(updatedFilter);
+                }
+                loadDomainObjectNode(filterNode, false, null);
+            }
+        }
+    }
+    
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
         if (event.getDomainObject().getId().equals(filter.getId())) {
@@ -802,6 +824,11 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         }
     }
 
+    @Subscribe
+    public void domainObjectChanged(DomainObjectChangeEvent event) {
+        
+    }
+    
     @Override
     public String getSortField() {
         return searchConfig.getSortCriteria();
@@ -821,7 +848,8 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private void loadPreferences() {
         if (filter.getId()==null) return;
         try {
-            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString());
+            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString());
             if (sortCriteriaPref!=null) {
                 log.debug("Loaded sort criteria preference: {}",sortCriteriaPref.getValue());
                 searchConfig.setSortCriteria((String) sortCriteriaPref.getValue());
@@ -838,7 +866,8 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private void savePreferences() {
         if (filter.getId()==null || StringUtils.isEmpty(searchConfig.getSortCriteria())) return;
         try {
-            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), searchConfig.getSortCriteria());
+            DomainMgr.getDomainMgr().setPreference(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), searchConfig.getSortCriteria());
             log.debug("Saved sort criteria preference: {}",searchConfig.getSortCriteria());
         }
         catch (Exception e) {

@@ -1,6 +1,8 @@
 package org.janelia.it.jacs.integration.framework.domain;
 
 /**
+ * Access to database-stored properties that are specific to the current user.
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public interface PreferenceHandler {

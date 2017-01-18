@@ -27,6 +27,7 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectAnnotationChangeEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
@@ -275,6 +276,15 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
         if (event.getSource()!=resultsView) return;
         updateStatusBar();
+    }
+
+    @Subscribe
+    public void domainObjectChanged(DomainObjectChangeEvent event) {
+        if (searchResults==null) return;
+        if (searchResults.updateIfFound(event.getDomainObject())) {
+            log.info("Updated search results with changed domain object: {}", event.getDomainObject());
+            resultsView.refreshDomainObject(event.getDomainObject());
+        }
     }
     
     @Subscribe

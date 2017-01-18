@@ -7,7 +7,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 
 /**
  * Snapshot of the state of a list viewer for navigation purposes.
@@ -16,7 +16,7 @@ import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
  */
 public class DomainObjectEditorState<T extends DomainObject> {
 
-    private final DomainObjectNode<T> domainObjectNode;
+    private final AbstractDomainObjectNode<T> domainObjectNode;
     private final T domainObject;
     private final Integer page;
     private final ListViewerState listViewerState;
@@ -32,7 +32,7 @@ public class DomainObjectEditorState<T extends DomainObject> {
         this.selectedIds = new ArrayList<>(selectedIds);
     }
     
-    public DomainObjectEditorState(DomainObjectNode<T> domainObjectNode, Integer page, ListViewerState listViewerState, Collection<Reference> selectedIds) {
+    public DomainObjectEditorState(AbstractDomainObjectNode<T> domainObjectNode, Integer page, ListViewerState listViewerState, Collection<Reference> selectedIds) {
         this.domainObjectNode = domainObjectNode;
         this.domainObject = domainObjectNode.getDomainObject();
         this.page = page;
@@ -40,7 +40,7 @@ public class DomainObjectEditorState<T extends DomainObject> {
         this.selectedIds = new ArrayList<>(selectedIds);
     }
 
-    public DomainObjectNode<T> getDomainObjectNode() {
+    public AbstractDomainObjectNode<T> getDomainObjectNode() {
         return domainObjectNode;
     }
 

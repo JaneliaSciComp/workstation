@@ -47,7 +47,7 @@ import org.janelia.console.viewerapi.model.NeuronVertex;
  */
 public class AppendNeuronVertexCommand 
 extends AbstractUndoableEdit
-implements UndoableEdit, Command // , VertexAdder
+implements UndoableEdit, Command
 {
     private final NeuronSet workspace;
     // private final NeuronModel neuron;

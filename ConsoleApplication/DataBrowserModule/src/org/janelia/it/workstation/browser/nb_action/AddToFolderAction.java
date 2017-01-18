@@ -23,7 +23,7 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.gui.support.TreeNodeChooser;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.UserViewConfiguration;
 import org.janelia.it.workstation.browser.nodes.UserViewRootNode;
@@ -77,9 +77,9 @@ public class AddToFolderAction extends NodePresenterAction {
         // Build list of things to add
         domainObjects.clear();
         for(Node node : selectedNodes) {
-            if (node instanceof DomainObjectNode) {
+            if (node instanceof AbstractDomainObjectNode) {
                 @SuppressWarnings("unchecked")
-                DomainObjectNode<DomainObject> selectedNode = (DomainObjectNode<DomainObject>)node;
+                AbstractDomainObjectNode<DomainObject> selectedNode = (AbstractDomainObjectNode<DomainObject>)node;
                 domainObjects.add(selectedNode.getDomainObject());
             }
         }

@@ -99,6 +99,7 @@ public class NeuronModelAdapter implements NeuronModel
     public NeuronModelAdapter(TmNeuronMetadata neuron, NeuronSetAdapter workspace)
             // AnnotationModel annotationModel, TmWorkspace workspace, TmSample sample)
     {
+        assert neuron != null;
         this.neuron = neuron;
         this.neuronId = neuron.getId();
         this.neuronSet = workspace;
@@ -295,6 +296,7 @@ public class NeuronModelAdapter implements NeuronModel
     public void updateWrapping(TmNeuronMetadata neuron) {
         if (this.neuron == neuron)
             return;
+        assert neuron != null;
         this.neuron = neuron;
         this.vertexes.updateWrapping(neuron.getGeoAnnotationMap());
     }

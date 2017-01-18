@@ -725,6 +725,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(ontologyFacade.reorderTerms(ontologyId, parentTermId, order));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -741,6 +742,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(ontologyFacade.addTerms(ontologyId, parentTermId, terms, index));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -749,6 +751,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(ontologyFacade.removeTerm(ontologyId, parentTermId, termId));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -771,11 +774,17 @@ public class DomainModel {
     }
 
     public Filter save(Filter filter) throws Exception {
+        boolean create = filter.getId()==null;
         Filter canonicalObject;
         synchronized (this) {
-            canonicalObject = putOrUpdate(filter.getId()==null ? workspaceFacade.create(filter) : workspaceFacade.update(filter));
+            canonicalObject = putOrUpdate(create ? workspaceFacade.create(filter) : workspaceFacade.update(filter));
         }
-        notifyDomainObjectCreated(canonicalObject);
+        if (create) { 
+            notifyDomainObjectCreated(canonicalObject);
+        }
+        else {
+            notifyDomainObjectChanged(canonicalObject);
+        }
         return canonicalObject;
     }
 
@@ -788,10 +797,22 @@ public class DomainModel {
 
     public DataSet save(DataSet dataSet) throws Exception {
         DataSet canonicalObject;
+        boolean create = dataSet.getId()==null;
         synchronized (this) {
-            canonicalObject = putOrUpdate(dataSet.getId()==null ? sampleFacade.create(dataSet) : sampleFacade.update(dataSet));
+            canonicalObject = putOrUpdate(create ? sampleFacade.create(dataSet) : sampleFacade.update(dataSet));
         }
-        notifyDomainObjectCreated(canonicalObject);
+        if (create) { 
+            notifyDomainObjectCreated(canonicalObject);
+        }
+        else {
+            notifyDomainObjectChanged(canonicalObject);
+        }
+
+        TreeNode folder = getDefaultWorkspaceFolder(DomainConstants.NAME_DATA_SETS, false);
+        if (folder != null) {
+            invalidate(folder);
+        }
+        
         return canonicalObject;
     }
 
@@ -903,7 +924,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(sampleFacade.update(release));
         }
-        notifyDomainObjectCreated(canonicalObject);
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -917,6 +938,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(domainFacade.save(domainObject));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -925,6 +947,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(domainFacade.updateProperty(domainObject, propName, propValue));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -933,6 +956,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(domainFacade.setPermissions(domainObject, granteeKey, rights), true);
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -964,15 +988,6 @@ public class DomainModel {
         }
         Events.getInstance().postOnEventBus(new DomainObjectAnnotationChangeEvent(domainObject));
     }
-
-    // TODO: This is currently not used because all changes result in invalidated objects. 
-    // In the future we may want to keep the same objects and just update them, in which case this event will be useful.
-//    private void notifyDomainObjectChanged(DomainObject domainObject) {
-//        if (log.isTraceEnabled()) {
-//            log.trace("Generating DomainObjectChangeEvent for {}", DomainUtils.identify(domainObject));
-//        }
-//        Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(domainObject));
-//    }
 
     public void notifyDomainObjectRemoved(DomainObject domainObject) {
         if (log.isTraceEnabled()) {

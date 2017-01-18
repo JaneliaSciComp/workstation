@@ -48,11 +48,12 @@ public interface NeuronSet extends Collection<NeuronModel>
     String getName();
     NeuronModel createNeuron(String initialNeuronName);
 
+    List<NeuronVertex> getAnchorsInArea(double[] p1, double[] p2);
     List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n);
     List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n);
     NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ);
     NeuronVertex getAnchorClosestToVoxelLocation(double[] voxelXYZ);
-    
+
     NeuronModel getNeuronForAnchor(NeuronVertex anchor);
 
     public UndoRedo.Manager getUndoRedo(); // Manage edit operations per neuron collection
@@ -60,4 +61,5 @@ public interface NeuronSet extends Collection<NeuronModel>
     NeuronVertex getPrimaryAnchor(); // can be null
     void setPrimaryAnchor(NeuronVertex anchor); // set to null to clear
     ObservableInterface getPrimaryAnchorObservable();
+
 }

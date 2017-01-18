@@ -32,11 +32,12 @@ import org.slf4j.LoggerFactory;
  * Created by fosterl on 8/15/2016.
  */
 public class RerunSamplesAction extends AbstractAction {
+
+    private static Logger logger = LoggerFactory.getLogger(RerunSamplesAction.class);
+    
     private static final String TASK_LABEL = "GSPS_CompleteSamplePipeline";
     private static final int MAX_SAMPLE_RERUN_COUNT = 10;
     private List<Sample> samples;
-
-    private static Logger logger = LoggerFactory.getLogger(RerunSamplesAction.class);
 
     /**
      * Returns action or null.  Action will be returned, if the selected objects contain one or more samples, the

@@ -50,8 +50,6 @@ import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.perf4j.LoggingStopWatch;
-import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,10 +62,14 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
 
+    // UI Components
     private ResultSelectionButton resultButton;
     private ImageTypeSelectionButton typeButton;
 
+    // Configuration
     private IconGridViewerConfiguration config;
+    
+    // These members deal with the context and entities within it
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
     private DomainObjectSelectionModel editSelectionModel;
@@ -75,6 +77,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @SuppressWarnings("unused")
     private SearchProvider searchProvider;
 
+    // UI state
     private boolean editMode;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {

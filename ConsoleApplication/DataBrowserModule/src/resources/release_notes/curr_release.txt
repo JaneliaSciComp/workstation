@@ -1,4 +1,10 @@
 // 5.8.0
 
 Workstation Browser
-* 
+* Added "Change Permissions" option on Ontologies to allow sharing of ontologies
+
+FlyLight
+* Fixed issue with display not updating after marking a Sample for reprocessing
+
+MouseLight
+* Major improvements in LVV rendering performance for large numbers of neurons 

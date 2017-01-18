@@ -116,7 +116,9 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.console.viewerapi.actions.RenameNeuronAction;
 import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
+import org.janelia.console.viewerapi.actions.ToggleNeuronVisibilityAction;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
@@ -147,7 +149,7 @@ import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
-import org.janelia.horta.actions.ResetRotationAction;
+import org.janelia.horta.actions.ResetHortaRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
@@ -207,7 +209,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor worldInteractor;
     private HortaMetaWorkspace metaWorkspace;
-    private final NeuronVertexSpatialIndex neuronVertexIndex;
     
     // private MultipassVolumeActor mprActor;
     // private VolumeMipMaterial volumeMipMaterial;
@@ -244,8 +245,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     private final NeuronEditDispatcher neuronEditDispatcher;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    // private UndoRedo.Manager undoRedoManager = new UndoRedo.Manager();
-    
     public static NeuronTracerTopComponent findThisComponent() {
         return (NeuronTracerTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
     }
@@ -274,8 +273,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         initialize3DViewer(); // initializes workspace
 
         neuronEditDispatcher = new NeuronEditDispatcher(metaWorkspace);
-        neuronVertexIndex = new NeuronVertexSpatialIndex(neuronEditDispatcher);
-        
 
         // Change default rotation to Y-down, like large-volume viewer
         sceneWindow.getVantage().setDefaultRotation(new Rotation().setFromAxisAngle(
@@ -1010,7 +1007,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                 metaWorkspace, 
                 frameTracker,
                 movieSource,
-                vp));
+                vp,
+                this));
 
         sceneWindow.setBackgroundColor(Color.DARK_GRAY);
         this.add(sceneWindow.getOuterComponent(), BorderLayout.CENTER);
@@ -1198,12 +1196,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                     topMenu.add(new JPopupMenu.Separator());
                 }
                 
-                Action resetRotationAction = new AbstractAction("Reset Rotation") {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        new ResetRotationAction().actionPerformed(e);
-                    }
-                };
+                Action resetRotationAction = 
+                        new ResetHortaRotationAction(NeuronTracerTopComponent.this);
+
 
                 // Annotators want "Reset Rotation" on the top level menu
                 // Issue JW-25370
@@ -1672,6 +1667,50 @@ public final class NeuronTracerTopComponent extends TopComponent
                         topMenu.add(redoItem);
                     }
                 }
+
+                // SECTION: Neuron edits
+                NeuronModel indicatedNeuron = interactorContext.getHighlightedNeuron();
+                if (indicatedNeuron != null) 
+                {
+                    topMenu.add(new JPopupMenu.Separator());
+                    topMenu.add("Neuron '"
+                            + indicatedNeuron.getName()
+                            + "':").setEnabled(false);
+
+                    // Toggle Visiblity (maybe we could only hide from here though...)
+                    topMenu.add(new ToggleNeuronVisibilityAction(
+                            NeuronTracerTopComponent.this,
+                            activeNeuronSet,
+                            indicatedNeuron));
+                    
+                    // Change Neuron Color
+                    if (interactorContext.canRecolorNeuron()) {
+                        topMenu.add(new AbstractAction("Change Neuron Color...") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.recolorNeuron();
+                            }
+                        });
+                    }
+
+                    // Change Neuron Name
+                    topMenu.add(new RenameNeuronAction(
+                            NeuronTracerTopComponent.this,
+                            activeNeuronSet,
+                            indicatedNeuron));
+
+                    // Delete Neuron DANGER!
+                    if (interactorContext.canDeleteNeuron()) {
+                        // Extra separator due to danger...
+                        topMenu.add(new JPopupMenu.Separator());                
+                        topMenu.add(new AbstractAction("!!! DELETE Neuron... !!!") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.deleteNeuron();
+                            }
+                        });
+                    }
+                }
                 
                 // SECTION: Tracing options
                 // menu.add(new JPopupMenu.Separator());
@@ -1910,12 +1949,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     public boolean isVolumeDensityAt(Point2D xy)
     {
         return neuronMPRenderer.isVolumeDensityAt(xy);
-    }
-
-    @Override
-    public NeuronVertexSpatialIndex getVertexIndex()
-    {
-        return neuronVertexIndex;
     }
 
     void registerLoneDisplayedTile(BrickActor boxMesh) {

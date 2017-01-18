@@ -42,10 +42,8 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
@@ -59,6 +57,9 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 import javax.swing.event.UndoableEditEvent;
+import org.janelia.console.viewerapi.actions.CreateNeuronAction;
+import org.janelia.console.viewerapi.actions.DeleteNeuronAction;
+import org.janelia.console.viewerapi.actions.RecolorNeuronAction;
 import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
 import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.commands.CreateNeuronCommand;
@@ -146,9 +147,11 @@ public class TracingInteractor extends MouseAdapter
                 return;
             NeuronVertex newParent = defaultWorkspace.getPrimaryAnchor();
             if (newParent == null) {
+                log.info("Clearing parent anchor after signal");
                 clearParentVertexAndNotify();
             }
             else {
+                log.info("Setting parent anchor after signal");
                 NeuronModel parentNeuron = defaultWorkspace.getNeuronForAnchor(newParent);
                 selectParentVertex(newParent, parentNeuron);
             }
@@ -338,7 +341,8 @@ public class TracingInteractor extends MouseAdapter
         addedSignal.notifyObservers(new VertexWithNeuron(parentVertex, neuron));
 
         parentVertexModel.getColorChangeObservable().notifyObservers();
-        
+        log.info("Horta parent vertex set");
+
         return true; 
     }
     
@@ -367,6 +371,7 @@ public class TracingInteractor extends MouseAdapter
         parentVertexModel.getVertexesRemovedObservable().setChanged();
         cachedParentVertex = null;
         cachedParentNeuronModel = null;
+        log.info("Horta parent vertex cleared");
         return true;
     }
     
@@ -621,7 +626,7 @@ public class TracingInteractor extends MouseAdapter
     }
 
     // Show provisional Anchor radius and position for current mouse location
-    private NeuronSet unsupportedSet = null;
+    private NeuronSet unsupportedSet = null; // Cache set lacking spatial index, so we only warn about it one time.
     private Point previousHoverPoint = null;
     public void moveHoverCursor(Point screenPoint) {
         if (screenPoint == previousHoverPoint)
@@ -640,7 +645,7 @@ public class TracingInteractor extends MouseAdapter
         NeuronModel neuronModel = null;
         if (volumeProjection.isNeuronModelAt(hoverPoint)) { // found an existing annotation model under the cursor
             Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
-            NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
+            // NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
 
             if (defaultWorkspace != null) {
                 try {
@@ -649,13 +654,12 @@ public class TracingInteractor extends MouseAdapter
                 }
                 catch (UnsupportedOperationException e) {
                     // TODO: this needs to be fixed so that Horta doesn't need to maintain its own spatial index for every neuron.
-                    if (unsupportedSet!=defaultWorkspace) {
+                    if (unsupportedSet != defaultWorkspace) {
                         log.warn("Workspace does not support spatial queries. Falling back on old Horta spatial index.");
                         unsupportedSet = defaultWorkspace;
                     }
-                    nearestVertex = vix.getNearest(cursorXyz);
                 }
-                if (nearestVertex!=null) {
+                if (nearestVertex != null) {
                     neuronModel = defaultWorkspace.getNeuronForAnchor(nearestVertex);
                 }
             }
@@ -914,53 +918,32 @@ public class TracingInteractor extends MouseAdapter
             return true;
         }
         
-        public boolean createNeuron() {
+        public void createNeuron() {
             if (! canCreateNeuron())
-                return false;
+                return;
             
-            // TODO: come up with a unique neuron name
-            String defaultName = "Neuron 1";
-            
-            //  showInputDialog(Component parentComponent, Object message, String title, int messageType, Icon icon, Object[] selectionValues, Object initialSelectionValue)
-            Object neuronName = JOptionPane.showInputDialog(
+            new CreateNeuronAction(
                     volumeProjection.getMouseableComponent(),
-                    "Create new neuron here?",
-                    "Create new neuron",
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    null,
-                    defaultName); // default button
-            if (neuronName == null) {
-                return false; // User pressed "Cancel"
-            }
-            CreateNeuronCommand cmd = new CreateNeuronCommand(
                     defaultWorkspace,
-                    neuronName.toString(),
                     densityVertex.getLocation(),
-                    densityVertex.getRadius());
-            String errorMessage = "Failed to create neuron";
-            try {
-                if (cmd.execute()) {
-                    log.info("Neuron created in Horta");
-                    NeuronVertex addedVertex = cmd.getAddedVertex();
-                    if (addedVertex != null) {
-                        selectParentVertex(addedVertex, cmd.getNewNeuron());
-                        if (undoRedoManager != null)
-                            undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
-                        // appendCommandForVertex.put(vtxKey(addedVertex), cmd);
-                    }
-                    return true;
-                }
-            }
-            catch (Exception exc) {
-                errorMessage += ":\n" + exc.getMessage();
-            }
-            JOptionPane.showMessageDialog(
+                    densityVertex.getRadius()).actionPerformed(null);
+        }
+        
+        public boolean canDeleteNeuron() {
+            if (hoveredVertex == null)
+                return false;
+            if (hoveredNeuron == null)
+                return false;
+            return true;
+        }
+        
+        public void deleteNeuron() {
+            if (! canDeleteNeuron())
+                return;
+            new DeleteNeuronAction(
                     volumeProjection.getMouseableComponent(),
-                    errorMessage,
-                    "Failed to create neuron",
-                    JOptionPane.WARNING_MESSAGE);                
-            return false;
+                    defaultWorkspace,
+                    hoveredNeuron).actionPerformed(null);
         }
         
         public boolean canMergeNeurite() {
@@ -1014,6 +997,23 @@ public class TracingInteractor extends MouseAdapter
             }
         }
         
+        public boolean canRecolorNeuron() {
+            if (hoveredVertex == null)
+                return false;
+            if (hoveredNeuron == null)
+                return false;
+            return true;
+        }
+        
+        public void recolorNeuron() {
+            if (! canRecolorNeuron())
+                return;
+            new RecolorNeuronAction(
+                    volumeProjection.getMouseableComponent(),
+                    defaultWorkspace,
+                    hoveredNeuron).actionPerformed(null);
+        }
+        
         public boolean canSelectParent() {
             if (hoveredVertex == null) return false;
             if (hoveredNeuron == null) return false;
@@ -1061,6 +1061,10 @@ public class TracingInteractor extends MouseAdapter
                 radiusDialog.commitRadius();
                 return true;
             }
+        }
+
+        NeuronModel getHighlightedNeuron() {
+            return hoveredNeuron;   
         }
     }
     

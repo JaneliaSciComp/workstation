@@ -618,5 +618,4 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     public void sessionChanged(SessionEvent event) {
         IconGridViewerPanel.this.clear();
     }
-        
 }

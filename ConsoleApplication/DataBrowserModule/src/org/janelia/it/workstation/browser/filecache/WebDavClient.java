@@ -235,7 +235,7 @@ public class WebDavClient {
      *   if the file information cannot be retrieved.
      */
     public WebDavFile findFile(URL url)
-            throws WebDavException {
+            throws WebDavException, FileNotFoundException {
 
         final String href = url.toString();
         MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0, 0);
@@ -274,8 +274,13 @@ public class WebDavClient {
      */
     public boolean isDirectory(URL url)
             throws WebDavException {
+        try {
         final WebDavFile webDavFile = findFile(url);
         return webDavFile.isDirectory();
+        }
+        catch (FileNotFoundException e) {
+            throw new WebDavException("Url not found", e);
+        }
     }
 
     /**
@@ -290,7 +295,7 @@ public class WebDavClient {
      *   if the directory information cannot be retrieved.
      */
     public List<WebDavFile> findImmediateInternalFiles(URL directoryUrl)
-            throws WebDavException {
+            throws WebDavException, FileNotFoundException {
         return findInternalFiles(directoryUrl, DavConstants.DEPTH_1);
     }
 
@@ -306,7 +311,7 @@ public class WebDavClient {
      *   if the directory information cannot be retrieved.
      */
     public List<WebDavFile> findAllInternalFiles(URL directoryUrl)
-            throws WebDavException {
+            throws WebDavException, FileNotFoundException {
         return findInternalFiles(directoryUrl, DavConstants.DEPTH_INFINITY);
     }
 
@@ -320,7 +325,11 @@ public class WebDavClient {
         try {
             findFile(directoryUrl);
             canRead = true;
-        } catch (WebDavException e) {
+        } 
+        catch (FileNotFoundException e) {
+            return false;
+        } 
+        catch (WebDavException e) {
             LOG.error("failed to access " + directoryUrl, e);
         }
         return canRead;
@@ -523,7 +532,7 @@ public class WebDavClient {
 
     private List<WebDavFile> findInternalFiles(URL url,
                                                int depth)
-            throws WebDavException {
+            throws WebDavException, FileNotFoundException {
 
         final String href = url.toString();
         List<WebDavFile> webDavFileList = new ArrayList<WebDavFile>(1024);
@@ -544,7 +553,7 @@ public class WebDavClient {
     private MultiStatusResponse[] getResponses(String href,
                                                int depth,
                                                int callCount)
-            throws WebDavException {
+            throws WebDavException, FileNotFoundException {
 
         MultiStatusResponse[] multiStatusResponses = null;
         PropFindMethod method = null;
@@ -559,7 +568,8 @@ public class WebDavClient {
             if (responseCode == HttpStatus.SC_MULTI_STATUS) {
                 final MultiStatus multiStatus = method.getResponseBodyAsMultiStatus();
                 multiStatusResponses = multiStatus.getResponses();
-            } else if (responseCode == HttpStatus.SC_MOVED_PERMANENTLY) {
+            } 
+            else if (responseCode == HttpStatus.SC_MOVED_PERMANENTLY) {
                 final Header locationHeader = method.getResponseHeader("Location");
                 if (locationHeader != null) {
                     final String movedHref = locationHeader.getValue();
@@ -569,7 +579,11 @@ public class WebDavClient {
                 }
                 throw new WebDavException(responseCode + " response code returned for " + href,
                         responseCode);
-            } else {
+            } 
+            else if (responseCode == HttpStatus.SC_NOT_FOUND) {
+                throw new FileNotFoundException(href);
+            } 
+            else {
                 throw new WebDavException(responseCode + " response code returned for " + href,
                         responseCode);
             }

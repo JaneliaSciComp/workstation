@@ -80,7 +80,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
         populate(Arrays.asList(domainObject));
     }
     
-    public void populate(Collection<? extends Object> sourceList) {
+    public synchronized void populate(Collection<? extends Object> sourceList) {
         
         if (currResult == null) {
             this.currResult = ResultDescriptor.LATEST;

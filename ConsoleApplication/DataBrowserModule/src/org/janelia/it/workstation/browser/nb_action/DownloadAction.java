@@ -6,7 +6,7 @@ import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.workstation.browser.gui.dialogs.DownloadDialog;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.openide.nodes.Node;
 
 /**
@@ -33,8 +33,8 @@ public final class DownloadAction extends NodePresenterAction {
     protected void performAction (Node[] activatedNodes) {
         List<DomainObject> domainObjectList = new ArrayList<>();
         for(Node node : getSelectedNodes()) {
-            if (node instanceof DomainObjectNode) {
-                DomainObjectNode<?> domainObjectNode = (DomainObjectNode<?>)node;
+            if (node instanceof AbstractDomainObjectNode) {
+                AbstractDomainObjectNode<?> domainObjectNode = (AbstractDomainObjectNode<?>)node;
                 domainObjectList.add(domainObjectNode.getDomainObject());
             }
             else {

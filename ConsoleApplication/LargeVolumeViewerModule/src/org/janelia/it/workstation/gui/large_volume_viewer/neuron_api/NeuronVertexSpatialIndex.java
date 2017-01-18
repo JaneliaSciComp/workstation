@@ -44,19 +44,39 @@ public class NeuronVertexSpatialIndex {
         this.micronToVoxMatrix = MatrixUtilities.deserializeMatrix(sample.getMicronToVoxMatrix(), "micronToVoxMatrix");
     }
     
+    /**
+     * Returns the anchor that is closest to the location given in microns.
+     * @param micronXYZ
+     * @return
+     */
     public NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ) {
+        if (index==null) return null;
         List<NeuronVertex> nbrs = getAnchorClosestToMicronLocation(micronXYZ, 1);
         if (nbrs.isEmpty()) return null;
         return nbrs.get(0);
     }
 
+    /**
+     * Returns the anchor that is closest to the location given in voxel units.
+     * @param voxelXYZ
+     * @return
+     */
     public NeuronVertex getAnchorClosestToVoxelLocation(double[] voxelXYZ) {
+        if (index==null) return null;
         List<NeuronVertex> nbrs = getAnchorClosestToVoxelLocation(voxelXYZ, 1);
         if (nbrs.isEmpty()) return null;
         return nbrs.get(0);
     }
     
+    /**
+     * Returns the N closest anchors to the location given in microns. The locations are sorted in 
+     * order from closest to farthest.
+     * @param micronXYZ
+     * @param n
+     * @return
+     */
     public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
+        if (index==null) return Collections.emptyList();
         if (micronToVoxMatrix==null) {
             log.warn("No sample loaded in spatial index");
             return Collections.emptyList();
@@ -76,7 +96,15 @@ public class NeuronVertexSpatialIndex {
         return getAnchorClosestToVoxelLocation(voxelXYZ, n);
     }
     
+    /**
+     * Returns the N closest anchors to the location given in voxel units. The locations are sorted in 
+     * order from closest to farthest.
+     * @param voxelXYZ
+     * @param n
+     * @return
+     */
     public List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n) {
+        if (index==null) return Collections.emptyList();
         try {
             return index.nearest(voxelXYZ, n);
         } 
@@ -86,6 +114,24 @@ public class NeuronVertexSpatialIndex {
         }
     }
 
+    /**
+     * Returns all the anchors found in the area given by two corners points, given in voxel units.  
+     * @param p1 lower corner
+     * @param p2 higher corner
+     * @return list of anchors 
+     */
+    public List<NeuronVertex> getAnchorsInVoxelArea(double[] p1, double[] p2) {
+        if (index==null) return Collections.emptyList();
+        try {
+            log.debug("Finding anchors in area bounded by points: p1=({},{},{}) p2=({},{},{})",p1[0],p1[1],p1[2],p2[0],p2[1],p2[2]);
+            return index.range(p1, p2);
+        } 
+        catch (KeySizeException ex) {
+            log.warn("Exception while anchors in area using spatial index", ex);
+            return null;
+        }
+    }
+    
     /**
      * Return the location of the vertex in micrometers, for indexing within the KD-tree.
      * @param v
@@ -143,13 +189,17 @@ public class NeuronVertexSpatialIndex {
         // TODO: This is called twice whenever a neuron is merged because both mergeNeurite 
         // and deleteNeuron incorrectly call fireWorkspaceLoaded. That should be fixed in those methods.  
         log.info("Rebuilding spatial index");
-        index = new KDTree<>(3);
+        clear();
         for (NeuronModel neuronModel : neuronList) {
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 addToIndex(neuronVertex);
             }
         }
         log.info("Added {} vertices to spatial index with {} cached keys", index.size(), cachedKeys.size());
+    }
+    
+    public void clear() {
+        this.index = new KDTree<>(3);
     }
     
     private class CacheableKey {

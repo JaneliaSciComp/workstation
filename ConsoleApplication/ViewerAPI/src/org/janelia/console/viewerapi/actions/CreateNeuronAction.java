@@ -31,48 +31,52 @@ package org.janelia.console.viewerapi.actions;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.commands.CreateNeuronCommand;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionRegistration;
 import org.openide.awt.UndoRedo;
-import org.openide.util.NbBundle.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@ActionID(
-        category = "Edit",
-        id = "org.janelia.console.viewerapi.actions.CreateNeuronAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_CreateNeuronAction"
-)
-@ActionReference(path = "Menu/Edit", position = 2100, separatorBefore = 2000)
-@Messages("CTL_CreateNeuronAction=Create a New Neuron Model Here...")
-public final class CreateNeuronAction implements ActionListener 
+/*
+ * GUI-level Action to create a new neuron rooted at a particular XYZ location.
+ */
+
+public final class CreateNeuronAction extends AbstractAction
 {
-    private final NeuronCreationContext creationContext;
+    private final Component parentWidget;
+    private final NeuronSet workspace;
+    private final float[] anchorXyz = new float[3];
+    private final float anchorRadius;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
-    public CreateNeuronAction(NeuronCreationContext context)
+    public CreateNeuronAction(
+            Component parentWidget,
+            NeuronSet workspace,
+            float[] anchorXyz,
+            float anchorRadius)
     {
-        this.creationContext = context;
+        super("Create a New Neuron Model Here...");
+        this.parentWidget = parentWidget;
+        this.workspace = workspace;
+        System.arraycopy(anchorXyz, 0, this.anchorXyz, 0, 3);
+        this.anchorRadius = anchorRadius;
     }
 
     @Override
     public void actionPerformed(ActionEvent ev) 
     {
-        // TODO: come up with a unique neuron name
-        String defaultName = "Neuron 1";
+        // come up with a unique neuron name
+        String defaultName = getNextNeuronName();
 
-        //  showInputDialog(Component parentComponent, Object message, String title, int messageType, Icon icon, Object[] selectionValues, Object initialSelectionValue)
+        // ask the user to confirm creation, and to review name
         Object neuronName = JOptionPane.showInputDialog(
-                creationContext.parentWidget,
+                parentWidget,
                 "Create new neuron here?",
                 "Create new neuron",
                 JOptionPane.QUESTION_MESSAGE,
@@ -82,52 +86,53 @@ public final class CreateNeuronAction implements ActionListener
         if (neuronName == null) {
             return; // User pressed "Cancel"
         }
-        CreateNeuronCommand cmd = new CreateNeuronCommand(
-                creationContext.workspace,
-                neuronName.toString(),
-                creationContext.anchorXyz,
-                creationContext.anchorRadius);
         String errorMessage = "Failed to create neuron";
         try {
+            CreateNeuronCommand cmd = new CreateNeuronCommand(
+                    workspace,
+                    neuronName.toString(),
+                    anchorXyz,
+                    anchorRadius);
+            cmd.setNotify(true); // Because it's a top-level Command now
             if (cmd.execute()) {
                 log.info("Neuron created");
-                NeuronVertex addedVertex = cmd.getAddedVertex();
-                if (addedVertex != null) {
-                    NeuronSet workspace = creationContext.workspace;
-                    workspace.setPrimaryAnchor(addedVertex);
-                    UndoRedo.Manager undoRedo = workspace.getUndoRedo();
-                    if (undoRedo != null)
-                        undoRedo.undoableEditHappened(new UndoableEditEvent(this, cmd));
-                }
+                UndoRedo.Manager undoRedo = workspace.getUndoRedo();
+                if (undoRedo != null)
+                    undoRedo.undoableEditHappened(new UndoableEditEvent(this, cmd));
+                return;
             }
         }
         catch (Exception exc) {
             errorMessage += ":\n" + exc.getMessage();
         }
         JOptionPane.showMessageDialog(
-                creationContext.parentWidget,
+                parentWidget,
                 errorMessage,
                 "Failed to create neuron",
                 JOptionPane.WARNING_MESSAGE);                
-    }
+    }    
     
-    public static class NeuronCreationContext
+    /**
+     * Lifted/modified from LVV AnnotationManager.getNextNeuronName
+     * given a workspace, return a new generic neuron name (probably something
+     * like "Neuron 12", where the integer is based on whatever similarly
+     * named neurons exist already)
+     */
+    private String getNextNeuronName() 
     {
-        private final Component parentWidget;
-        private final NeuronSet workspace;
-        private final float[] anchorXyz = new float[3];
-        private final float anchorRadius;
-        
-        public NeuronCreationContext(
-                Component parentWidget,
-                NeuronSet workspace,
-                float[] anchorXyz,
-                float anchorRadius)
-        {
-            this.parentWidget = parentWidget;
-            this.workspace = workspace;
-            System.arraycopy(anchorXyz, 0, this.anchorXyz, 0, 3);
-            this.anchorRadius = anchorRadius;
+        // go through existing neuron names; try to parse against
+        //  standard template; remember largest integer found
+        Pattern pattern = Pattern.compile("Neuron[ _]([0-9]+)");
+        Long maximum = 0L;
+        for (NeuronModel neuron : workspace) {
+            Matcher matcher = pattern.matcher(neuron.getName());
+            if (matcher.matches()) {
+                Long index = Long.parseLong(matcher.group(1));
+                if (index > maximum)
+                    maximum = index;
+            }
         }
+        return String.format("Neuron %d", maximum + 1);
     }
+
 }

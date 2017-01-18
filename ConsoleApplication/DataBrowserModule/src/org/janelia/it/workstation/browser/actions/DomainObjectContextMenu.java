@@ -155,12 +155,13 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getFijiViewerItem());
         add(getDownloadItem());
 
+        // TODO: move these options to a separate "Confocal" module 
+        // along with all other Sample-specific functionality 
         setNextAddRequiresSeparator(true);
-        add(getReportProblemItem());
-        addRerunSamplesAction();
-        // Removing feature to avoid premature release.
-        addPartialSecondaryDataDeletiontItem();
         add(getSampleCompressionTypeItem());
+        add(getReportProblemItem());
+        add(getRerunSamplesAction());
+        add(getPartialSecondaryDataDeletiontItem());
         add(getProcessingBlockItem());
         add(getApplyPublishingNameItem());
         add(getMergeItem());
@@ -628,19 +629,17 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
 
     /** Allows users to rerun their own samples. */
-    protected JMenuItem addRerunSamplesAction() {
-
+    protected JMenuItem getRerunSamplesAction() {
         JMenuItem rtnVal = null;
         Action rerunAction = RerunSamplesAction.createAction(domainObjectList);
         if (rerunAction != null) {
             rtnVal = getNamedActionItem(rerunAction);
-            add(rtnVal);
         }
         return rtnVal;
     }
     
-    protected JMenuItem addPartialSecondaryDataDeletiontItem() {
-        JMenu secondaryDeletionMenu = new JMenu("  Remove secondary data");
+    protected JMenuItem getPartialSecondaryDataDeletiontItem() {
+        JMenu secondaryDeletionMenu = new JMenu("  Remove Secondary Data");
         JMenuItem itm = getPartialSecondaryDataDeletionItem();
         if (itm != null) {
             secondaryDeletionMenu.add(itm);
@@ -657,9 +656,9 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             }
         }
         if (secondaryDeletionMenu.getItemCount() > 0) {
-            add(secondaryDeletionMenu);
+            return secondaryDeletionMenu;
         }
-        return secondaryDeletionMenu;
+        return null;
     }
     
     protected JMenuItem getPartialSecondaryDataDeletionItem() {

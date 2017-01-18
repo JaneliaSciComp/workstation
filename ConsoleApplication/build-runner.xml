@@ -103,21 +103,37 @@ of adapter.
         <!--clean out old Installers -->
         <echo message="Removing remote Installer files" />
         <exec executable="${ssh}" description="Removing Installer files">
-            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation.zip"/>
-            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-windows.zip"/>
-            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-macosx.tgz"/>
-            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-linux.tgz"/>
-            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-windows.exe"/>
+            <arg line="${ssh.common.params} rm -f /var/www/files/JaneliaWorkstation.zip"/>
+            <arg line="${ssh.common.params} rm -f /var/www/files/JaneliaWorkstation-windows.zip"/>
+            <arg line="${ssh.common.params} rm -f /var/www/files/JaneliaWorkstation-macosx.tgz"/>
+            <arg line="${ssh.common.params} rm -f /var/www/files/JaneliaWorkstation-linux.tgz"/>
+            <arg line="${ssh.common.params} rm -f /var/www/files/JaneliaWorkstation-windows.exe"/>
         </exec>
 
-        <!--copy new Installers in -->
-        <echo message="Copying new installers to jacs@workstation.int.janelia.org" />
+        <!--copy new Installers to download dir (links available on website) -->
+        <echo message="Copying new installers to downloads at workstation.int.janelia.org" />
         <echo message="SCP Common Params ${scp.common.params} for ${scp}"/>
-        <exec executable="bash" description="Copying new Installers to $jacs@workstation.int.janelia.org">
-            <arg line="-c '${scp} ${basedir}/dist/* ${ssh.common.params}:/var/www/html/sites/default/files/.'"/>
+        <exec executable="bash" description="Copying new Installers to downloads at workstation.int.janelia.org">
+            <arg line="-c '${scp} ${basedir}/dist/* ${ssh.common.params}:/var/www/files/.'"/>
         </exec>
         <echo message="Done : ${exec.output}"  />
         <echo message="Done : ${exec.error}"  />
+
+        <!--copy new Installers to archive dir -->
+        <echo message="Copying new installers to archive at workstation.int.janelia.org" />
+        <echo message="SCP Common Params ${scp.common.params} for ${scp}"/>
+        <exec executable="bash" description="Copying Windows installer to archive at workstation.int.janelia.org">
+            <arg line="-c '${scp} ${basedir}/dist/JaneliaWorkstation-windows.zip ${ssh.common.params}:/var/www/files/archive/${git.branch}-windows.zip'"/>
+        </exec>
+        <exec executable="bash" description="Copying Mac installer to archive at workstation.int.janelia.org">
+            <arg line="-c '${scp} ${basedir}/dist/JaneliaWorkstation-macosx.tgz ${ssh.common.params}:/var/www/files/archive/${git.branch}-macosx.tgz'"/>
+        </exec>
+        <exec executable="bash" description="Copying Linux installer to archive at workstation.int.janelia.org">
+            <arg line="-c '${scp} ${basedir}/dist/JaneliaWorkstation-linux.tgz ${ssh.common.params}:/var/www/files/archive/${git.branch}-linux.tgz'"/>
+        </exec>
+        <echo message="Done : ${exec.output}"  />
+        <echo message="Done : ${exec.error}"  />
+
     </target>
 
     <target name="create-platform" description="Target to build platform locally">

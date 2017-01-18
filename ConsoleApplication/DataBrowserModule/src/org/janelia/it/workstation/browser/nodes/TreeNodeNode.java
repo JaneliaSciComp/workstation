@@ -24,6 +24,7 @@ import org.janelia.it.workstation.browser.nb_action.DownloadAction;
 import org.janelia.it.workstation.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RemoveAction;
+import org.janelia.it.workstation.browser.nb_action.RenameAction;
 import org.janelia.it.workstation.browser.nb_action.SearchHereAction;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.openide.nodes.ChildFactory;
@@ -43,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TreeNodeNode extends DomainObjectNode<TreeNode> {
+public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
     
     private final static Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
     
@@ -176,7 +177,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
         actions.add(new ChangePermissionsAction());
         actions.add(NewDomainObjectAction.get());
         actions.add(AddToFolderAction.get());
-        actions.add(new RenameAction());
+        actions.add(RenameAction.get());
         actions.add(RemoveAction.get());
         actions.add(null);
         actions.add(SearchHereAction.get());
@@ -199,11 +200,11 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
             return null;
         }
 
-        List<DomainObjectNode<?>> nodes = new ArrayList<>();
+        List<AbstractDomainObjectNode<?>> nodes = new ArrayList<>();
         
         if (t.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
-            DomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(t);
-            if (node==null || !(node instanceof DomainObjectNode)) { 
+            AbstractDomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(t);
+            if (node==null || !(node instanceof AbstractDomainObjectNode)) { 
                 return null;
             }
             log.trace("  Single drop - {} with parent {}",node.getDisplayName(),node.getParentNode().getDisplayName());
@@ -254,8 +255,8 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
             for(int i=0; i<multi.getCount(); i++) {
                 Transferable st = multi.getTransferableAt(i);
                 if (st.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
-                    DomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(st);
-                    if (node==null || !(node instanceof DomainObjectNode)) {
+                    AbstractDomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(st);
+                    if (node==null || !(node instanceof AbstractDomainObjectNode)) {
                         continue;
                     }   
                     log.trace("  Multi drop #{} - {} with parent {}",i,node.getDisplayName(),node.getParentNode().getDisplayName());
@@ -280,11 +281,11 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
 
     private class TreeNodePasteType extends PasteType {
         
-        private final List<DomainObjectNode<?>> nodes;
+        private final List<AbstractDomainObjectNode<?>> nodes;
         private final TreeNodeNode targetNode;
         private final int startingIndex;
         
-        TreeNodePasteType(List<DomainObjectNode<?>> nodes, TreeNodeNode targetNode, int startingIndex) {
+        TreeNodePasteType(List<AbstractDomainObjectNode<?>> nodes, TreeNodeNode targetNode, int startingIndex) {
             log.trace("TreeNodePasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
             this.nodes = nodes;
             this.targetNode = targetNode;
@@ -304,7 +305,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                 // Have to keep track of the original parents before we do anything, 
                 // because once we start moving nodes, the parents will be recreated
                 List<TreeNode> originalParents = new ArrayList<>();
-                for(DomainObjectNode<?> node : nodes) {
+                for(AbstractDomainObjectNode<?> node : nodes) {
                     if (node.getParentNode() instanceof TreeNodeNode) {
                         TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
                         TreeNode originalParent = originalParentNode.getTreeNode();
@@ -316,10 +317,10 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                 }
                 
                 List<DomainObject> toAdd = new ArrayList<>();
-                List<DomainObjectNode<?>> toDestroy = new ArrayList<>();
+                List<AbstractDomainObjectNode<?>> toDestroy = new ArrayList<>();
                 
                 int i = 0;
-                for(DomainObjectNode<?> node : nodes) {
+                for(AbstractDomainObjectNode<?> node : nodes) {
 
                     DomainObject domainObject = node.getDomainObject();
                     
@@ -357,7 +358,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                 }
                 
                 // Remove the originals
-                for(DomainObjectNode<?> node : toDestroy) {
+                for(AbstractDomainObjectNode<?> node : toDestroy) {
                     node.destroy();
                 }
                 
