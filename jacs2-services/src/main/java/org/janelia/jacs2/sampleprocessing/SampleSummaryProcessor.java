@@ -15,6 +15,7 @@ import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.JacsServiceDispatcher;
 import org.janelia.jacs2.service.impl.ServiceComputation;
 import org.janelia.jacs2.service.impl.ServiceComputationFactory;
+import org.janelia.jacs2.service.impl.ServiceDataUtils;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -37,6 +38,22 @@ public class SampleSummaryProcessor extends AbstractServiceProcessor<Void> {
                            Logger logger) {
         super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.sampleDataService = sampleDataService;
+    }
+
+    @Override
+    protected ServiceComputation<List<File>> preProcessData(JacsServiceData jacsServiceData) {
+        SampleSummaryServiceDescriptor.SampleSummaryArgs args = getArgs(jacsServiceData);
+        JacsServiceDataBuilder sampleLSMsServiceDataBuilder = new JacsServiceDataBuilder(jacsServiceData)
+                .setName("sampleImageFiles")
+                .addArg("-sampleId", args.sampleId.toString());
+        if (StringUtils.isNotBlank(args.sampleObjective)) {
+            sampleLSMsServiceDataBuilder.addArg("-objective", args.sampleObjective);
+        }
+        sampleLSMsServiceDataBuilder.addArg("-dest", getWorkingDirectory(jacsServiceData).toString());
+        JacsServiceData sampleLSMsServiceData = sampleLSMsServiceDataBuilder.build();
+        return this.submitChildService(jacsServiceData, sampleLSMsServiceData)
+                .thenCompose(sd -> this.waitForCompletion(sd))
+                .thenApply(r -> ServiceDataUtils.stringToFileList(sampleLSMsServiceData.getStringifiedResult()));
     }
 
     @Override

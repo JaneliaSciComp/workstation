@@ -13,6 +13,7 @@ import org.janelia.jacs2.service.impl.ExternalProcessRunner;
 import org.janelia.jacs2.service.impl.JacsServiceDispatcher;
 import org.janelia.jacs2.service.impl.ServiceComputation;
 import org.janelia.jacs2.service.impl.ServiceComputationFactory;
+import org.janelia.jacs2.service.impl.ServiceDataUtils;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Any;
@@ -50,20 +51,12 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
 
     @Override
     public File getResult(JacsServiceData jacsServiceData) {
-        if (StringUtils.isNotBlank(jacsServiceData.getStringifiedResult())) {
-            return new File(jacsServiceData.getStringifiedResult());
-        } else {
-            return null;
-        }
+        return ServiceDataUtils.stringToFile(jacsServiceData.getStringifiedResult());
     }
 
     @Override
     public void setResult(File result, JacsServiceData jacsServiceData) {
-        if (result != null) {
-            jacsServiceData.setStringifiedResult(result.toString());
-        } else {
-            jacsServiceData.setStringifiedResult(null);
-        }
+        jacsServiceData.setStringifiedResult(ServiceDataUtils.fileToString(result));
     }
 
     @Override

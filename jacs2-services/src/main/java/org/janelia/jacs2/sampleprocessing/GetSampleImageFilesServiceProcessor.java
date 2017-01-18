@@ -1,8 +1,6 @@
 package org.janelia.jacs2.sampleprocessing;
 
 import com.beust.jcommander.JCommander;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
@@ -10,7 +8,6 @@ import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.JacsServiceDataBuilder;
-import org.janelia.jacs2.model.service.JacsServiceState;
 import org.janelia.jacs2.model.service.ProcessingLocation;
 import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.service.dataservice.sample.SampleDataService;
@@ -19,31 +16,18 @@ import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.JacsServiceDispatcher;
 import org.janelia.jacs2.service.impl.ServiceComputation;
 import org.janelia.jacs2.service.impl.ServiceComputationFactory;
+import org.janelia.jacs2.service.impl.ServiceDataUtils;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.StringJoiner;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
 public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcessor<List<File>> {
@@ -63,27 +47,12 @@ public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcesso
 
     @Override
     public List<File> getResult(JacsServiceData jacsServiceData) {
-        if (StringUtils.isNotBlank(jacsServiceData.getStringifiedResult())) {
-            return Splitter.on(",").omitEmptyStrings().trimResults()
-                    .splitToList(jacsServiceData.getStringifiedResult())
-                    .stream()
-                    .map(File::new)
-                    .collect(Collectors.toList());
-        } else {
-            return Collections.emptyList();
-        }
+        return ServiceDataUtils.stringToFileList(jacsServiceData.getStringifiedResult());
     }
 
     @Override
     public void setResult(List<File> result, JacsServiceData jacsServiceData) {
-        if (CollectionUtils.isNotEmpty(result)) {
-            jacsServiceData.setStringifiedResult(result.stream()
-                    .filter(r -> r != null)
-                    .map(File::getAbsolutePath)
-                    .collect(Collectors.joining(",")));
-        } else {
-            jacsServiceData.setStringifiedResult(null);
-        }
+        jacsServiceData.setStringifiedResult(ServiceDataUtils.fileListToString(result));
     }
 
     @Override
