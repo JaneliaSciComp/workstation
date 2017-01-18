@@ -77,7 +77,6 @@ implements NeuronSet// , LookupListener
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     TmWorkspace workspace; // LVV workspace, as opposed to Horta workspace
-    private TmSample sample;
     AnnotationModel annotationModel;
     private final GlobalAnnotationListener globalAnnotationListener;
     private final TmGeoAnnotationModListener annotationModListener;
@@ -106,32 +105,39 @@ implements NeuronSet// , LookupListener
         return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n);
     }
 
-    private void updateVoxToMicronMatrix()
+    private void updateVoxToMicronMatrix(TmSample sample)
     {
         // If we try to get the matrix too early, it comes back null, so populate just-in-time
         if (sample == null) {
             logger.error("Attempt to get voxToMicronMatrix for null sample");
             return;
         }
-        String serialized = sample.getVoxToMicronMatrix();
-        if (serialized == null) {
+        String serializedVoxToMicronMatrix = sample.getVoxToMicronMatrix();
+        if (serializedVoxToMicronMatrix == null) {
             logger.error("Found null voxToMicronMatrix");
             return;
         }
-        voxToMicronMatrix = MatrixUtilities.deserializeMatrix(serialized, "voxToMicronMatrix");
+        voxToMicronMatrix = MatrixUtilities.deserializeMatrix(serializedVoxToMicronMatrix, "voxToMicronMatrix");
+        
+        String serializedMicronToVoxMatrix = sample.getMicronToVoxMatrix();
+        if (serializedMicronToVoxMatrix == null) {
+            logger.error("Found null micronToVoxMatrix");
+            return;
+        }
+        micronToVoxMatrix = MatrixUtilities.deserializeMatrix(serializedMicronToVoxMatrix, "micronToVoxMatrix");
     }
     
     Jama.Matrix getVoxToMicronMatrix() {
         if (voxToMicronMatrix != null)
             return voxToMicronMatrix;
-        updateVoxToMicronMatrix();
+        updateVoxToMicronMatrix(annotationModel.getCurrentSample());
         return voxToMicronMatrix;
     }
     
     Jama.Matrix getMicronToVoxMatrix() {
-        // If we try to get the matrix too early, it comes back null, so populate just-in-time
-        if (micronToVoxMatrix == null)
-            micronToVoxMatrix = MatrixUtilities.deserializeMatrix(sample.getMicronToVoxMatrix(), "micronToVoxMatrix");
+        if (micronToVoxMatrix != null)
+            return micronToVoxMatrix;
+        updateVoxToMicronMatrix(annotationModel.getCurrentSample());
         return micronToVoxMatrix;
     }
 
@@ -237,14 +243,21 @@ implements NeuronSet// , LookupListener
         if (! workspace.getName().equals(getName()))
             getNameChangeObservable().setChanged();
         this.workspace = workspace;
-        this.sample = annotationModel.getCurrentSample();
-        updateVoxToMicronMatrix();
+        TmSample sample = annotationModel.getCurrentSample();
+        updateVoxToMicronMatrix(sample);
+        spatialIndex.initSample(sample);
         NeuronList nl = (NeuronList) neurons;
         nl.wrap(this);
         getMembershipChangeObservable().setChanged();
         return true;
     }
 
+    private void setMetaWorkspace(HortaMetaWorkspace metaWorkspace) {
+        if (this.metaWorkspace == metaWorkspace)
+            return;
+        this.metaWorkspace = metaWorkspace;
+    }
+    
     private HortaMetaWorkspace getMetaWorkspace() {
         return metaWorkspace;
     }
@@ -745,9 +758,7 @@ implements NeuronSet// , LookupListener
             if (allWorkspaces.isEmpty())
                 return;
             HortaMetaWorkspace metaWorkspace = allWorkspaces.iterator().next();
-            if (metaWorkspace != getMetaWorkspace()) {
-                NeuronSetAdapter.this.metaWorkspace = metaWorkspace;
-            }
+            setMetaWorkspace(metaWorkspace);
         }
     }
 }
