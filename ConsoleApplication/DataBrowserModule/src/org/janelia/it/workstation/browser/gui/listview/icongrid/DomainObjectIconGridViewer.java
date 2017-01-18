@@ -228,7 +228,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
     }
 
-
     @Override
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
         log.info("selectDomainObjects(domainObjects={},select={},clearAll={},isUserDriven={})", DomainUtils.abbr(domainObjects), select, clearAll, isUserDriven);
@@ -502,6 +501,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                    int maxImageWidth = tableViewerState.getMaxImageWidth();
                    log.debug("Restoring maxImageWidth={}",maxImageWidth);
                    getToolbar().getImageSizeSlider().setValue(maxImageWidth);
+                   // Wait until slider resizes images, then fix scroll:
+                   SwingUtilities.invokeLater(new Runnable() {
+                       @Override
+                       public void run() {
+                           scrollSelectedObjectsToCenter();
+                       }
+                   });
                }
            }
         );

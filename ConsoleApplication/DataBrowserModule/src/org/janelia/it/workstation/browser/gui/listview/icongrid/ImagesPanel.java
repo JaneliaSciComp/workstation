@@ -580,16 +580,6 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         return selected;
     }
 
-    public void repaintButtons() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                buttonsPanel.revalidate();
-                buttonsPanel.repaint();
-            }
-        });
-    }
-
     /**
      * Set the number of columns in the grid layout based on the width of the parent component and the width of the
      * buttons.
@@ -618,7 +608,8 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         int numCols = (int) Math.max(Math.floor(fullWidth / maxButtonWidth), 1);
         if (buttonsPanel.getColumns() != numCols) {
             buttonsPanel.setColumns(numCols);
-            repaintButtons();
+            buttonsPanel.revalidate();
+            buttonsPanel.repaint();
         }
 
         loadUnloadImages();

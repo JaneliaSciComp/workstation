@@ -186,8 +186,9 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                         // User chose "Cancel"
                         return;
                     }
-                    if ("".equals(newName)) {
+                    if (StringUtils.isBlank(newName)) {
                         JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Filter name cannot be blank");
+                        return;
                     }
                 }
 
@@ -354,83 +355,6 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         ActivityLogHelper.logElapsed("FilterEditorPanel.loadDomainObject", filter, w);
     }
     
-    @Override
-    public String getName() {
-        if (filter==null) {
-            return "Filter Editor";
-        }
-        return "Filter: "+StringUtils.abbreviate(filter.getName(), 15);
-    }
-
-    @Override
-    public PaginatedResultsPanel getResultsPanel() {
-        return resultsPanel;
-    }
-
-    @Override
-    protected Filtering getDomainObject() {
-        return filter;
-    }
-
-    @Override
-    protected AbstractDomainObjectNode<Filtering> getDomainObjectNode() {
-        return filterNode;
-    }
-    
-    @Override
-    public void activate() {
-        resultsPanel.activate();
-    }
-
-    @Override
-    public void deactivate() {
-        resultsPanel.deactivate();
-    }
-
-    public synchronized void performSearch(final boolean isUserDriven, final Callable<Void> success, final Callable<Void> failure) {
-
-        log.debug("Performing search with isUserDriven={}",isUserDriven);
-        if (searchConfig.getSearchClass()==null) return;
-        final StopWatch w = new StopWatch();
-
-        SimpleWorker worker = new SimpleWorker() {
-
-            @Override
-            protected void doStuff() throws Exception {
-                searchResults = searchConfig.performSearch();
-            }
-
-            @Override
-            protected void hadSuccess() {
-                try {
-                    resultsPanel.showSearchResults(searchResults, isUserDriven, new Callable<Void>() {
-                        @Override
-                        public Void call() throws Exception {
-                            updateView();
-                            ConcurrentUtils.invokeAndHandleExceptions(success);
-                            ActivityLogHelper.logElapsed("FilterEditorPanel.performSearch", w);
-                            return null;
-                        }
-                        
-                    });
-                }
-                catch (Exception e) {
-                    hadError(e);
-                }
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                resultsPanel.showNothing();
-                ConcurrentUtils.invokeAndHandleExceptions(failure);
-                ConsoleApp.handleException(error);
-            }
-        };
-
-        resultsPanel.showLoadingIndicator();
-        worker.execute();
-    }
-
     private void refreshSearchResults(boolean isUserDriven) {
         debouncer.queue();
         refreshSearchResults(isUserDriven, new Callable<Void>() {
@@ -461,6 +385,55 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         saveButton.setVisible(dirty && filter.getId()!=null && !filter.getName().equals(DEFAULT_FILTER_NAME));
         
         performSearch(isUserDriven, success, failure);
+    }
+    
+    public synchronized void performSearch(final boolean isUserDriven, final Callable<Void> success, final Callable<Void> failure) {
+
+        if (searchConfig==null || searchConfig.getSearchClass()==null) return;
+        
+        log.debug("Performing search with isUserDriven={}",isUserDriven);
+        final StopWatch w = new StopWatch();
+        resultsPanel.showLoadingIndicator();
+        
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                searchResults = searchConfig.performSearch();
+            }
+
+            @Override
+            protected void hadSuccess() {
+                try {
+                    resultsPanel.showSearchResults(searchResults, isUserDriven, new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                            updateView();
+                            ConcurrentUtils.invokeAndHandleExceptions(success);
+                            ActivityLogHelper.logElapsed("FilterEditorPanel.performSearch", w);
+                            return null;
+                        }
+                        
+                    });
+                }
+                catch (Exception e) {
+                    hadError(e);
+                }
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showNothing();
+                ConcurrentUtils.invokeAndHandleExceptions(failure);
+                ConsoleApp.handleException(error);
+            }
+        };
+
+        worker.execute();
+    }
+
+    public void showNothing() {
+        resultsPanel.showNothing();
     }
     
     private void updateView() {
@@ -506,7 +479,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
         for(DomainObjectAttribute attr : searchConfig.getDomainObjectAttributes()) {
             if (attr.getFacetKey()!=null) {
-                log.debug("Adding facet: {}",attr.getLabel());
+                log.trace("Adding facet: {}",attr.getLabel());
                 StringBuilder label = new StringBuilder();
                 label.append(attr.getLabel());
                 List<String> values = new ArrayList<>(getSelectedFacetValues(attr.getName()));
@@ -779,18 +752,13 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             if (filter==null) return;
             if (event.isTotalInvalidation()) {
                 log.info("Total invalidation, reloading...");
-                refreshSearchResults(false);
+                reload();
             }
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
                     if (domainObject.getId().equals(filter.getId())) {
                         log.info("Filter invalidated, reloading...");
                         reload();
-                        break;
-                    }
-                    else if (domainObject.getClass().equals(searchConfig.getSearchClass())) {
-                        log.info("some objects of class "+searchConfig.getSearchClass().getSimpleName()+" were invalidated, reloading...");
-                        refreshSearchResults(false);
                         break;
                     }
                 }
@@ -804,21 +772,49 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private void reload() throws Exception {
         if (filter==null) return;
         Filter updatedFilter = getDomainMgr().getModel().getDomainObject(filter.getClass(), filter.getId());
-        if (updatedFilter != null) {
-            if (filterNode==null) {
-                loadDomainObject(updatedFilter, false, null);
-            }
-            else {
-                if (!filterNode.getFilter().equals(updatedFilter)) {
-                    filterNode.update(updatedFilter);
-                }
-                loadDomainObjectNode(filterNode, false, null);
-            }
+        this.filter = updatedFilter;
+        if (filterNode!=null && !filterNode.getFilter().equals(updatedFilter)) {
+            filterNode.update(updatedFilter);
         }
+        restoreState(saveState());
+    }
+
+    @Override
+    public String getName() {
+        if (filter==null) {
+            return "Filter Editor";
+        }
+        return "Filter: "+StringUtils.abbreviate(filter.getName(), 15);
+    }
+
+    @Override
+    public PaginatedResultsPanel getResultsPanel() {
+        return resultsPanel;
+    }
+
+    @Override
+    protected Filtering getDomainObject() {
+        return filter;
+    }
+
+    @Override
+    protected AbstractDomainObjectNode<Filtering> getDomainObjectNode() {
+        return filterNode;
     }
     
+    @Override
+    public void activate() {
+        resultsPanel.activate();
+    }
+
+    @Override
+    public void deactivate() {
+        resultsPanel.deactivate();
+    }
+
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
+        if (filter==null) return;
         if (event.getDomainObject().getId().equals(filter.getId())) {
             loadNewFilter();
         }
@@ -826,7 +822,9 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
     @Subscribe
     public void domainObjectChanged(DomainObjectChangeEvent event) {
-        
+        if (searchResults.updateIfFound(event.getDomainObject())) {
+            log.info("Updated search results with changed domain object: {}", event.getDomainObject());
+        }
     }
     
     @Override

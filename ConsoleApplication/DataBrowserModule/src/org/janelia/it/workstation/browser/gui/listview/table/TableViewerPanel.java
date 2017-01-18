@@ -231,7 +231,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
     public void selectObjects(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven) {
 
-        log.trace("selectObjects(objects.size={},select={},clearAll={},isUserDriven={})", objects.size(),select,clearAll,isUserDriven);
+        log.debug("selectObjects(objects.size={},select={},clearAll={},isUserDriven={})", objects.size(),select,clearAll,isUserDriven);
 
         if (objects.isEmpty()) {
             return;
@@ -266,19 +266,29 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
             i++;
         }
 
-        if (start!=null && isUserDriven) {
-            log.debug("scrolling to start of selection at row {}",start);
-            getDynamicTable().scrollCellToCenter(start, 0);
+
+        if (select) {
+            selectionModel.select(objects, clearAll, isUserDriven);
+        }
+        else {
+            selectionModel.deselect(objects, isUserDriven);
         }
 
-        for(T object : objects) {
-            if (select) {
-                selectionModel.select(object, clearAll, isUserDriven);
-            }
-            else {
-                selectionModel.deselect(object, isUserDriven);
-            }
+        if (start!=null) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    scrollSelectedObjectsToCenter();
+                }
+            });
         }
+    }
+    
+    private void scrollSelectedObjectsToCenter() {
+        ListSelectionModel model = getDynamicTable().getTable().getSelectionModel();
+        int start = model.getMinSelectionIndex();
+        log.debug("Scrolling to start of selection at row {}",start);
+        getDynamicTable().scrollCellToCenter(start, 0);   
     }
 
     protected void selectNone() {

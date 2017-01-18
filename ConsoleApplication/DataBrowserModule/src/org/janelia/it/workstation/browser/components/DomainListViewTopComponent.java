@@ -291,7 +291,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             return false;
         }
 
-        // Update the previous editor state. Things may have changed. 
+        // Update the previous editor state. Things may have changed since we saved it. 
         if (editor!=null) {
             DomainObjectEditorState<?> state = editor.saveState();
             if (state!=null) {
@@ -308,6 +308,9 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             setEditorClass(editorClass);
         }
         
+        // Reset the editor state
+        editor.resetState();
+        
         return true;
     }
     
@@ -317,7 +320,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         log.trace("loadState({})", state);
         
         if (!prepareForLoad(state.getDomainObject())) return;
-        editor.loadState(state);
+        editor.restoreState(state);
         
         // TODO: this should run as a callback after loadState is fully complete
         // Update the editor name

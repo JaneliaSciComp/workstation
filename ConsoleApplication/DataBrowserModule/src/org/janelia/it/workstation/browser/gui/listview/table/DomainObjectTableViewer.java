@@ -17,6 +17,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowSorter;
@@ -374,28 +375,27 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     public Object getValue(AnnotatedDomainObjectList domainObjectList, DomainObject object, String columnName) {
-        try {
-            if (COLUMN_KEY_ANNOTATIONS.equals(columnName)) {
-                StringBuilder builder = new StringBuilder();
-                for(Annotation annotation : domainObjectList.getAnnotations(object.getId())) {
-                    if (builder.length()>0) builder.append(", ");
-                    builder.append(annotation.getName());
-                }
-                return builder.toString();
+        if (COLUMN_KEY_ANNOTATIONS.equals(columnName)) {
+            StringBuilder builder = new StringBuilder();
+            for(Annotation annotation : domainObjectList.getAnnotations(object.getId())) {
+                if (builder.length()>0) builder.append(", ");
+                builder.append(annotation.getName());
             }
-            else {
+            return builder.toString();
+        }
+        else {
+            try {
                 DomainObjectAttribute attr = attributeMap.get(columnName);
                 return attr.getGetter().invoke(object);
             }
-        }
-        catch (IllegalArgumentException e) {
-            // This happens if we have mixed objects and we try to get an attribute from one on another
-            log.debug("Cannot get attribute {} for {}",columnName,object.getType());
-            return null;
-        }
-        catch(IllegalAccessException | InvocationTargetException e) {
-            log.error("Cannot get attribute {} for {}",columnName,object.getType(),e);
-            return null;
+            catch (IllegalArgumentException e) {
+                // This happens if we have mixed objects and we try to get an attribute from one on another
+                return null;
+            }
+            catch(IllegalAccessException | InvocationTargetException e) {
+                log.error("Cannot get attribute {} for {}",columnName,object.getType(),e);
+                return null;
+            }
         }
     }
 
@@ -556,20 +556,31 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     public ListViewerState saveState() {
-        int horizontalScrollValue = getDynamicTable().getScrollPane().getHorizontalScrollBar().getModel().getValue();
+        JScrollPane scrollPane = getDynamicTable().getScrollPane();
+        
+        int horizontalScrollValue = scrollPane.getHorizontalScrollBar().getModel().getValue();
         log.debug("Saving horizontalScrollValue={}",horizontalScrollValue);
-        TableViewerState state = new TableViewerState(horizontalScrollValue);
-        return state;
+        
+        int verticalScrollValue = scrollPane.getVerticalScrollBar().getModel().getValue();
+        log.debug("Saving verticalScrollValue={}",verticalScrollValue);
+        
+        return new TableViewerState(horizontalScrollValue, verticalScrollValue);
     }
 
     @Override
     public void restoreState(ListViewerState viewerState) {
+        final JScrollPane scrollPane = getDynamicTable().getScrollPane();
         final TableViewerState tableViewerState = (TableViewerState)viewerState;
         SwingUtilities.invokeLater(new Runnable() {
                public void run() {
+                   
                    int horizontalScrollValue = tableViewerState.getHorizontalScrollValue();
                    log.debug("Restoring horizontalScrollValue={}",horizontalScrollValue);
-                   getDynamicTable().getScrollPane().getHorizontalScrollBar().setValue(horizontalScrollValue);
+                   scrollPane.getHorizontalScrollBar().setValue(horizontalScrollValue);
+                   
+                   int verticalScrollValue = tableViewerState.getVerticalScrollValue();
+                   log.debug("Restoring verticalScrollValue={}",verticalScrollValue);
+                   scrollPane.getVerticalScrollBar().setValue(verticalScrollValue);
                }
            }
         );
@@ -578,14 +589,20 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private class TableViewerState extends ListViewerState {
 
         private int horizontalScrollValue;
+        private int verticalScrollValue;
 
-        public TableViewerState(int horizontalScrollValue) {
+        public TableViewerState(int horizontalScrollValue, int verticalScrollValue) {
             super(ListViewerType.TableViewer);
             this.horizontalScrollValue = horizontalScrollValue;
+            this.verticalScrollValue = verticalScrollValue;
         }
 
         public int getHorizontalScrollValue() {
             return horizontalScrollValue;
+        }
+
+        public int getVerticalScrollValue() {
+            return verticalScrollValue;
         }
 
         @Override
@@ -593,6 +610,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             StringBuilder builder = new StringBuilder();
             builder.append("TableViewerState [horizontalScrollValue=");
             builder.append(horizontalScrollValue);
+            builder.append(", verticalScrollValue=");
+            builder.append(verticalScrollValue);
             builder.append("]");
             return builder.toString();
         }
