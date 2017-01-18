@@ -66,12 +66,12 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
 
     @Override
     protected ServiceComputation<File> preProcessData(JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(jacsServiceData)
-                .thenApply(sd -> {
+        return computationFactory.<File>newComputation()
+                .supply(() -> {
                     try {
-                        FileCopyServiceDescriptor.FileCopyArgs args = getArgs(sd);
+                        FileCopyServiceDescriptor.FileCopyArgs args = getArgs(jacsServiceData);
                         if (StringUtils.isBlank(args.sourceFilename)) {
-                            throw new ComputationException(sd, "Source file name must be specified");
+                            throw new ComputationException(jacsServiceData, "Source file name must be specified");
                         } else if (StringUtils.isBlank(args.targetFilename)) {
                             throw new ComputationException(jacsServiceData, "Target file name must be specified");
                         } else {
@@ -105,15 +105,15 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
 
     @Override
     protected ServiceComputation<File> postProcessData(File processingResult, JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(processingResult)
-                .thenApply(f -> {
+        return computationFactory.<File>newComputation()
+                .supply(() -> {
                     try {
                         FileCopyServiceDescriptor.FileCopyArgs args = getArgs(jacsServiceData);
                         if (args.deleteSourceFile) {
                             File sourceFile = new File(args.sourceFilename);
                             Files.deleteIfExists(sourceFile.toPath());
                         }
-                        return f;
+                        return processingResult;
                     } catch (Exception e) {
                         throw new ComputationException(jacsServiceData, e);
                     }
