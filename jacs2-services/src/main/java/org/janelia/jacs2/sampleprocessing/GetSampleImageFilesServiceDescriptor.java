@@ -18,7 +18,7 @@ public class GetSampleImageFilesServiceDescriptor implements ServiceDescriptor {
         @Parameter(names = "-objective",
                    description = "Optional sample objective. If specified it retrieves all sample image files, otherwise it only retrieves the ones for the given objective", required = false)
         String sampleObjective;
-        @Parameter(names = "-dest", description = "Destination directory or URL", required = true)
+        @Parameter(names = "-dest", description = "Destination directory", required = true)
         String destFolder;
     }
 

@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import javax.inject.Inject;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T> {
 
@@ -42,7 +44,7 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
-    protected abstract ServiceComputation<T> localProcessData(Object preprocessingResults, JacsServiceData jacsServiceData);
+    protected abstract ServiceComputation<T> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData);
 
     protected ServiceComputation<T> postProcessData(T processingResult, JacsServiceData jacsServiceData) {
         return computationFactory.newCompletedComputation(processingResult);
@@ -94,6 +96,14 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                     }
                 })
                 .thenApply(sd -> serviceProcessor.getResult(sd));
+    }
+
+    protected ServiceComputation<List<?>> waitForAllCompletions(List<JacsServiceData> listOfJacsServiceData) {
+        List<?> results = listOfJacsServiceData.stream()
+                .map(sd -> waitForCompletion(sd))
+                .map(sc -> sc.get())
+                .collect(Collectors.toList());
+        return computationFactory.newCompletedComputation(results);
     }
 
     protected Path getWorkingDirectory(JacsServiceData jacsServiceData) {

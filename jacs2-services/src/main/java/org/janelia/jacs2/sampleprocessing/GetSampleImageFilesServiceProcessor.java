@@ -46,11 +46,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
-@Named("sampleImageFilesService")
-public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcessor<List<String>> {
+public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcessor<List<File>> {
 
     private final SampleDataService sampleDataService;
 
+    @Inject
     public GetSampleImageFilesServiceProcessor(JacsServiceDispatcher jacsServiceDispatcher,
                                                ServiceComputationFactory computationFactory,
                                                JacsServiceDataPersistence jacsServiceDataPersistence,
@@ -62,19 +62,24 @@ public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcesso
     }
 
     @Override
-    public List<String> getResult(JacsServiceData jacsServiceData) {
+    public List<File> getResult(JacsServiceData jacsServiceData) {
         if (StringUtils.isNotBlank(jacsServiceData.getStringifiedResult())) {
-            return Splitter.on(",").omitEmptyStrings().trimResults().splitToList(jacsServiceData.getStringifiedResult());
+            return Splitter.on(",").omitEmptyStrings().trimResults()
+                    .splitToList(jacsServiceData.getStringifiedResult())
+                    .stream()
+                    .map(File::new)
+                    .collect(Collectors.toList());
         } else {
             return Collections.emptyList();
         }
     }
 
     @Override
-    public void setResult(List<String> result, JacsServiceData jacsServiceData) {
+    public void setResult(List<File> result, JacsServiceData jacsServiceData) {
         if (CollectionUtils.isNotEmpty(result)) {
             jacsServiceData.setStringifiedResult(result.stream()
-                    .filter(s -> StringUtils.isNotBlank(s))
+                    .filter(r -> r != null)
+                    .map(File::getAbsolutePath)
                     .collect(Collectors.joining(",")));
         } else {
             jacsServiceData.setStringifiedResult(null);
@@ -112,19 +117,17 @@ public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcesso
     }
 
     @Override
-    protected ServiceComputation<List<String>> localProcessData(Object preprocessingResults, JacsServiceData jacsServiceData) {
+    protected ServiceComputation<List<File>> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
         // collect the files and send them to the destination
         GetSampleImageFilesServiceDescriptor.SampleImageFilesArgs args = getArgs(jacsServiceData);
-        List<File> intermediateFiles = (List<File>) preprocessingResults;
-        List<String> results = new ArrayList<>();
-        intermediateFiles.forEach(imageFile -> {
-                results.add(writeToFileOrUrl(imageFile, args.destFolder));
-        });
+        List<File> intermediateFiles = (List<File>) preProcessingResult;
+        List<File> results = new ArrayList<>();
+        intermediateFiles.forEach(imageFile -> results.add(copyFileToFolder(imageFile, Paths.get(args.destFolder))));
         setResult(results, jacsServiceData);
         return computationFactory.newCompletedComputation(results);
     }
 
-    protected ServiceComputation<List<String>> postProcessData(List<String> processingResult, JacsServiceData jacsServiceData) {
+    protected ServiceComputation<List<File>> postProcessData(List<File> processingResult, JacsServiceData jacsServiceData) {
         try {
             GetSampleImageFilesServiceDescriptor.SampleImageFilesArgs args = getArgs(jacsServiceData);
             if (CollectionUtils.isNotEmpty(processingResult)) {
@@ -149,73 +152,13 @@ public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcesso
         }
     }
 
-    private String writeToFileOrUrl(File imageFile, String destFolder) {
-        if (destFolder.startsWith("http://")) { // for now only consider http (no https)
-            // HTTP POST to destination
-            try {
-                return writeToHttpUrl(imageFile, new URL(destFolder));
-            } catch (MalformedURLException e) {
-                throw new IllegalArgumentException("Invalid URL: " + destFolder, e);
-            }
-        } else if (destFolder.startsWith("file://")) {
-            URI destURL;
-            try {
-                destURL = new URL(destFolder).toURI();
-                Path destPath = Paths.get(destURL);
-                return copyFileToFolder(imageFile, destPath);
-            } catch (MalformedURLException | URISyntaxException e) {
-                throw new IllegalArgumentException("Invalid URL: " + destFolder, e);
-            }
-        } else {
-            return copyFileToFolder(imageFile, Paths.get(destFolder));
-        }
-    }
-
-    private String writeToHttpUrl(File imageFile, URL url) {
-        HttpURLConnection conn = null;
-        InputStream is = null;
-        try {
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setDoOutput(true);
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/octet-stream");
-            OutputStream os = conn.getOutputStream();
-            Files.copy(imageFile.toPath(), os);
-            int statusCode = conn.getResponseCode();
-            if (statusCode >= HttpURLConnection.HTTP_BAD_REQUEST) {
-                throw new IllegalStateException("Invalid HTTP request for sending " + imageFile + " to " + url);
-            }
-            is = conn.getInputStream();
-            BufferedReader br = new BufferedReader(new InputStreamReader((is)));
-            // consume the response
-            String serverOutput;
-            while ((serverOutput = br.readLine()) != null) {
-                logger.debug(serverOutput);
-            }
-            return url.toString();
-        } catch (Exception e) {
-            logger.error("Error writing {} to {}", imageFile, url, e);
-            throw new IllegalStateException(e);
-        } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (Exception e) {
-                    logger.warn("Error closing the response stream", e);
-                }
-            }
-            if (conn != null)
-                conn.disconnect();
-        }
-    }
-
-    private String copyFileToFolder(File imageFile, Path destFolder) {
+    private File copyFileToFolder(File imageFile, Path destFolder) {
         String fileName = imageFile.getName();
         Path destFile = destFolder.resolve(fileName);
         try {
             Files.createDirectories(destFolder); // ensure the destination folder exists
             Files.copy(imageFile.toPath(), destFile);
-            return destFile.toString();
+            return destFile.toFile();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
