@@ -9,31 +9,31 @@ import org.janelia.jacs2.service.impl.ServiceProcessor;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-@Named("sampleLsmMetadata")
-public class CreateSampleLsmMetadataServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "sampleLsmMetadata";
+@Named("sampleSummary")
+public class SampleSummaryServiceDescriptor implements ServiceDescriptor {
+    private static String SERVICE_NAME = "sampleSummary";
 
-    static class SampleLsmMetadataArgs {
+    static class SampleSummaryArgs {
         @Parameter(names = "-sampleId", description = "Sample ID", required = true)
         Long sampleId;
         @Parameter(names = "-objective", description = "Sample objective", required = false)
         String sampleObjective;
-        @Parameter(names = "-outputDir", description = "Destination directory", required = true)
-        String outputDir;
+        @Parameter(names = "-channelDyeSpec", description = "Channel dye spec", required = false)
+        String channelDyeSpec;
     }
 
-    private final CreateSampleLsmMetadataProcessor sampleLsmMetadataProcessor;
+    private final SampleSummaryProcessor sampleSummaryProcessor;
 
     @Inject
-    CreateSampleLsmMetadataServiceDescriptor(CreateSampleLsmMetadataProcessor sampleLsmMetadataProcessor) {
-        this.sampleLsmMetadataProcessor = sampleLsmMetadataProcessor;
+    SampleSummaryServiceDescriptor(SampleSummaryProcessor sampleSummaryProcessor) {
+        this.sampleSummaryProcessor = sampleSummaryProcessor;
     }
 
     @Override
     public ServiceMetaData getMetadata() {
         ServiceMetaData smd = new ServiceMetaData();
         smd.setServiceName(SERVICE_NAME);
-        SampleLsmMetadataArgs args = new SampleLsmMetadataArgs();
+        SampleSummaryArgs args = new SampleSummaryArgs();
         StringBuilder usageOutput = new StringBuilder();
         JCommander jc = new JCommander(args);
         jc.setProgramName(SERVICE_NAME);
@@ -43,8 +43,7 @@ public class CreateSampleLsmMetadataServiceDescriptor implements ServiceDescript
     }
 
     @Override
-    public CreateSampleLsmMetadataProcessor createServiceProcessor() {
-        return sampleLsmMetadataProcessor;
+    public SampleSummaryProcessor createServiceProcessor() {
+        return sampleSummaryProcessor;
     }
-
 }

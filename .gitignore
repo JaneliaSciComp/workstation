@@ -15,8 +15,7 @@ bin
 Distribution
 build
 eclipseBuild
-localConfig
-localScripts
+local
 target
 ear
 dist
