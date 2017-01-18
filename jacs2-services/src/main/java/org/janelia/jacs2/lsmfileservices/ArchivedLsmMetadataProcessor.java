@@ -24,11 +24,11 @@ import java.nio.file.Files;
 public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File> {
 
     @Inject
-    public ArchivedLsmMetadataProcessor(JacsServiceDispatcher jacsServiceDispatcher,
-                                        ServiceComputationFactory computationFactory,
-                                        JacsServiceDataPersistence jacsServiceDataPersistence,
-                                        @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                                        Logger logger) {
+    ArchivedLsmMetadataProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+                                 ServiceComputationFactory computationFactory,
+                                 JacsServiceDataPersistence jacsServiceDataPersistence,
+                                 @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                                 Logger logger) {
         super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
     }
 

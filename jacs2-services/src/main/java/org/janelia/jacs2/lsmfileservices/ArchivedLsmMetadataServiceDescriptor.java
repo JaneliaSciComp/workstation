@@ -26,7 +26,7 @@ public class ArchivedLsmMetadataServiceDescriptor implements ServiceDescriptor {
     private final ArchivedLsmMetadataProcessor archivedLsmMetadataProcessor;
 
     @Inject
-    public ArchivedLsmMetadataServiceDescriptor(ArchivedLsmMetadataProcessor archivedLsmMetadataProcessor) {
+    ArchivedLsmMetadataServiceDescriptor(ArchivedLsmMetadataProcessor archivedLsmMetadataProcessor) {
         this.archivedLsmMetadataProcessor = archivedLsmMetadataProcessor;
     }
 

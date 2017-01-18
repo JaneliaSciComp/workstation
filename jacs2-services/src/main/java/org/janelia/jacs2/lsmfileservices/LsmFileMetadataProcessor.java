@@ -40,16 +40,16 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
     private final String scriptName;
 
     @Inject
-    public LsmFileMetadataProcessor(JacsServiceDispatcher jacsServiceDispatcher,
-                                    ServiceComputationFactory computationFactory,
-                                    JacsServiceDataPersistence jacsServiceDataPersistence,
-                                    @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                                    @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-                                    @Any Instance<ExternalProcessRunner> serviceRunners,
-                                    @PropertyValue(name = "Perl.Path") String perlExecutable,
-                                    @PropertyValue(name = "Sage.Perllib") String perlModule,
-                                    @PropertyValue(name = "LSMJSONDump.CMD") String scriptName,
-                                    Logger logger) {
+    LsmFileMetadataProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+                             ServiceComputationFactory computationFactory,
+                             JacsServiceDataPersistence jacsServiceDataPersistence,
+                             @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                             @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
+                             @Any Instance<ExternalProcessRunner> serviceRunners,
+                             @PropertyValue(name = "Perl.Path") String perlExecutable,
+                             @PropertyValue(name = "Sage.Perllib") String perlModule,
+                             @PropertyValue(name = "LSMJSONDump.CMD") String scriptName,
+                             Logger logger) {
         super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.perlExecutable = perlExecutable;
         this.perlModule = perlModule;
@@ -94,23 +94,6 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
     }
 
     @Override
-    protected ServiceComputation<File> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        return invokeExternalProcess(jacsServiceData)
-                .thenApply(r -> {
-                    try {
-                        File lsmMetadataFile = (File) preProcessingResult;
-                        if (!lsmMetadataFile.exists()) {
-                            throw new ComputationException(jacsServiceData, "LSM metadata file " + lsmMetadataFile + " was not created");
-                        }
-                        setResult(lsmMetadataFile, jacsServiceData);
-                        return lsmMetadataFile;
-                    } catch (Exception e) {
-                        throw new ComputationException(jacsServiceData, e);
-                    }
-                });
-    }
-
-    @Override
     protected ServiceComputation<File> postProcessData(File processingResult, JacsServiceData jacsServiceData) {
         return computationFactory.newCompletedComputation(processingResult)
                 .thenApply(f -> {
@@ -122,6 +105,15 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
                         throw new ComputationException(jacsServiceData, e);
                     }
                 });
+    }
+
+    @Override
+    protected File collectResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        File lsmMetadataFile = (File) preProcessingResult;
+        if (!lsmMetadataFile.exists()) {
+            throw new ComputationException(jacsServiceData, "LSM metadata file " + lsmMetadataFile + " was not created");
+        }
+        return lsmMetadataFile;
     }
 
     @Override

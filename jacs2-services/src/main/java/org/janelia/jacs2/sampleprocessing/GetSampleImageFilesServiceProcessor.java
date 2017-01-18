@@ -51,12 +51,12 @@ public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcesso
     private final SampleDataService sampleDataService;
 
     @Inject
-    public GetSampleImageFilesServiceProcessor(JacsServiceDispatcher jacsServiceDispatcher,
-                                               ServiceComputationFactory computationFactory,
-                                               JacsServiceDataPersistence jacsServiceDataPersistence,
-                                               @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                                               SampleDataService sampleDataService,
-                                               Logger logger) {
+    GetSampleImageFilesServiceProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+                                        ServiceComputationFactory computationFactory,
+                                        JacsServiceDataPersistence jacsServiceDataPersistence,
+                                        @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                                        SampleDataService sampleDataService,
+                                        Logger logger) {
         super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.sampleDataService = sampleDataService;
     }

@@ -23,7 +23,7 @@ public class FijiMacroServiceDescriptor implements ServiceDescriptor {
     private final FijiMacroProcessor fijiMacroProcessor;
 
     @Inject
-    public FijiMacroServiceDescriptor(FijiMacroProcessor fijiMacroProcessor) {
+    FijiMacroServiceDescriptor(FijiMacroProcessor fijiMacroProcessor) {
         this.fijiMacroProcessor = fijiMacroProcessor;
     }
 

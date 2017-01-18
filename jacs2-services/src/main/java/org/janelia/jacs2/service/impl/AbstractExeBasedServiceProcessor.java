@@ -43,17 +43,20 @@ public abstract class AbstractExeBasedServiceProcessor<R> extends AbstractServic
         this.executablesBaseDir = executablesBaseDir;
     }
 
-    private ExternalProcessRunner getProcessRunner(ProcessingLocation processingLocation) {
-        ProcessingLocation location = processingLocation == null ? ProcessingLocation.LOCAL : processingLocation;
-        for (ExternalProcessRunner serviceRunner : serviceRunners) {
-            if (serviceRunner.getClass().isAnnotationPresent(location.getProcessingAnnotationClass())) {
-                return serviceRunner;
-            }
-        }
-        throw new IllegalArgumentException("Unsupported runner: " + processingLocation);
+    @Override
+    protected ServiceComputation<R> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        return invokeExternalProcess(jacsServiceData)
+                .thenApply(r -> {
+                    R result = collectResult(preProcessingResult, jacsServiceData);
+                    setResult(result, jacsServiceData);
+                    return result;
+                });
     }
 
+    protected abstract R collectResult(Object preProcessingResult, JacsServiceData jacsServiceData);
+
     protected abstract List<String> prepareCmdArgs(JacsServiceData jacsServiceData);
+
     protected abstract Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData);
 
     protected Optional<String> getEnvVar(String varName) {
@@ -132,4 +135,15 @@ public abstract class AbstractExeBasedServiceProcessor<R> extends AbstractServic
                     return null;
                 });
     }
+
+    private ExternalProcessRunner getProcessRunner(ProcessingLocation processingLocation) {
+        ProcessingLocation location = processingLocation == null ? ProcessingLocation.LOCAL : processingLocation;
+        for (ExternalProcessRunner serviceRunner : serviceRunners) {
+            if (serviceRunner.getClass().isAnnotationPresent(location.getProcessingAnnotationClass())) {
+                return serviceRunner;
+            }
+        }
+        throw new IllegalArgumentException("Unsupported runner: " + processingLocation);
+    }
+
 }

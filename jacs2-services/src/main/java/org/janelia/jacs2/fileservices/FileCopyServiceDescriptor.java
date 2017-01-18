@@ -26,7 +26,7 @@ public class FileCopyServiceDescriptor implements ServiceDescriptor {
     private final FileCopyProcessor processor;
 
     @Inject
-    public FileCopyServiceDescriptor(FileCopyProcessor processor) {
+    FileCopyServiceDescriptor(FileCopyProcessor processor) {
         this.processor = processor;
     }
 

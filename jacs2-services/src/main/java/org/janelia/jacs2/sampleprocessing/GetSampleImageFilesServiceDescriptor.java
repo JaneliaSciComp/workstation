@@ -25,7 +25,7 @@ public class GetSampleImageFilesServiceDescriptor implements ServiceDescriptor {
     private final GetSampleImageFilesServiceProcessor sampleImageFilesProcessor;
 
     @Inject
-    public GetSampleImageFilesServiceDescriptor(GetSampleImageFilesServiceProcessor sampleImageFilesProcessor) {
+    GetSampleImageFilesServiceDescriptor(GetSampleImageFilesServiceProcessor sampleImageFilesProcessor) {
         this.sampleImageFilesProcessor = sampleImageFilesProcessor;
     }
 

@@ -29,12 +29,12 @@ public class CreateSampleLsmMetadataProcessor extends AbstractServiceProcessor<L
     private final SampleDataService sampleDataService;
 
     @Inject
-    public CreateSampleLsmMetadataProcessor(JacsServiceDispatcher jacsServiceDispatcher,
-                                            ServiceComputationFactory computationFactory,
-                                            JacsServiceDataPersistence jacsServiceDataPersistence,
-                                            @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                                            SampleDataService sampleDataService,
-                                            Logger logger) {
+    CreateSampleLsmMetadataProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+                                     ServiceComputationFactory computationFactory,
+                                     JacsServiceDataPersistence jacsServiceDataPersistence,
+                                     @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                                     SampleDataService sampleDataService,
+                                     Logger logger) {
         super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.sampleDataService = sampleDataService;
     }

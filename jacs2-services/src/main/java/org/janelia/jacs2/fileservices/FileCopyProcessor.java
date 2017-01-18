@@ -34,15 +34,15 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
 
 
     @Inject
-    public FileCopyProcessor(JacsServiceDispatcher jacsServiceDispatcher,
-                             ServiceComputationFactory computationFactory,
-                             JacsServiceDataPersistence jacsServiceDataPersistence,
-                             @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                             @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-                             @Any Instance<ExternalProcessRunner> serviceRunners,
-                             @PropertyValue(name = "VAA3D.LibraryPath") String libraryPath,
-                             @PropertyValue(name = "Convert.ScriptPath") String scriptName,
-                             Logger logger) {
+    FileCopyProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+                      ServiceComputationFactory computationFactory,
+                      JacsServiceDataPersistence jacsServiceDataPersistence,
+                      @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                      @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
+                      @Any Instance<ExternalProcessRunner> serviceRunners,
+                      @PropertyValue(name = "VAA3D.LibraryPath") String libraryPath,
+                      @PropertyValue(name = "Convert.ScriptPath") String scriptName,
+                      Logger logger) {
         super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.libraryPath = libraryPath;
         this.scriptName = scriptName;
@@ -89,23 +89,6 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
     }
 
     @Override
-    protected ServiceComputation<File> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        return invokeExternalProcess(jacsServiceData)
-                .thenApply(r -> {
-                    try {
-                        File destFile = (File) preProcessingResult;
-                        if (!destFile.exists()) {
-                            throw new ComputationException(jacsServiceData, "Destination file " + destFile + " was not created");
-                        }
-                        setResult(destFile, jacsServiceData);
-                        return destFile;
-                    } catch (Exception e) {
-                        throw new ComputationException(jacsServiceData, e);
-                    }
-                });
-    }
-
-    @Override
     protected ServiceComputation<File> postProcessData(File processingResult, JacsServiceData jacsServiceData) {
         return computationFactory.<File>newComputation()
                 .supply(() -> {
@@ -120,6 +103,15 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
                         throw new ComputationException(jacsServiceData, e);
                     }
                 });
+    }
+
+    @Override
+    protected File collectResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        File destFile = (File) preProcessingResult;
+        if (!destFile.exists()) {
+            throw new ComputationException(jacsServiceData, "Destination file " + destFile + " was not created");
+        }
+        return destFile;
     }
 
     @Override

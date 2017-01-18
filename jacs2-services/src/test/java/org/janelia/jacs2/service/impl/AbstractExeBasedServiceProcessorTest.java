@@ -39,6 +39,11 @@ public class AbstractExeBasedServiceProcessorTest {
         }
 
         @Override
+        protected Void collectResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+            return null;
+        }
+
+        @Override
         protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
             return Collections.emptyList();
         }

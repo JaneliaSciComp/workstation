@@ -25,7 +25,7 @@ public class CreateSampleLsmMetadataServiceDescriptor implements ServiceDescript
     private final CreateSampleLsmMetadataProcessor sampleLsmMetadataProcessor;
 
     @Inject
-    public CreateSampleLsmMetadataServiceDescriptor(CreateSampleLsmMetadataProcessor sampleLsmMetadataProcessor) {
+    CreateSampleLsmMetadataServiceDescriptor(CreateSampleLsmMetadataProcessor sampleLsmMetadataProcessor) {
         this.sampleLsmMetadataProcessor = sampleLsmMetadataProcessor;
     }
 

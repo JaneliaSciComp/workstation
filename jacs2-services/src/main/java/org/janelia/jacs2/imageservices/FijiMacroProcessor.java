@@ -84,10 +84,6 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
         }
     }
 
-    @Override
-    protected ServiceComputation<Void> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        return invokeExternalProcess(jacsServiceData);
-    }
 
     @Override
     protected ServiceComputation<Void> postProcessData(Void processingResult, JacsServiceData jacsServiceData) {
@@ -102,6 +98,11 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
                         throw new ComputationException(jacsServiceData, e);
                     }
                 });
+    }
+
+    @Override
+    protected Void collectResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        return null;
     }
 
     @Override

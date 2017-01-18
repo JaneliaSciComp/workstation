@@ -23,7 +23,7 @@ public class LsmFileMetadataServiceDescriptor implements ServiceDescriptor {
     private final LsmFileMetadataProcessor lsmMetadataProcessor;
 
     @Inject
-    public LsmFileMetadataServiceDescriptor(LsmFileMetadataProcessor lsmMetadataProcessor) {
+    LsmFileMetadataServiceDescriptor(LsmFileMetadataProcessor lsmMetadataProcessor) {
         this.lsmMetadataProcessor = lsmMetadataProcessor;
     }
 
