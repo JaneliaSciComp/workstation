@@ -2,9 +2,12 @@
 
 Workstation Browser
 * Added "Change Permissions" option on Ontologies to allow sharing of ontologies
+* Fixed issue with viewer state not being properly maintained when using the navigation arrows or refresh button
 
 FlyLight
 * Fixed issue with display not updating after marking a Sample for reprocessing
 
 MouseLight
 * Major improvements in LVV rendering performance for large numbers of neurons 
+* Workspaces created with the "Load Linux SWC Folder" option now keep track of 
+  the SWC Folder that was used to create them.
