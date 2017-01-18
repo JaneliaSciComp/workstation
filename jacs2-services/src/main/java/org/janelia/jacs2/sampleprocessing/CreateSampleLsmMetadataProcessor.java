@@ -100,7 +100,7 @@ public class CreateSampleLsmMetadataProcessor extends AbstractServiceProcessor<L
                                         .build();
                         lsmc.add(this.submitChildService(jacsServiceData, extractLsmMetadataService));
                     });
-                    return computationFactory.newCompletedComputation(lsmc);
+                    return imageFiles;
                 })
                 .thenApply(lr -> {
                     List<AnatomicalArea> anatomicalAreas =
@@ -113,7 +113,7 @@ public class CreateSampleLsmMetadataProcessor extends AbstractServiceProcessor<L
                             sampleDataService.updateLMSMetadata(lf, lsmMetadataFile.getAbsolutePath());
                             metadataFiles.add(lsmMetadataFile);
                     });
-                    return (List<File>) lr;
+                    return lr;
                 });
     }
 
