@@ -121,7 +121,7 @@ implements Runnable
         setChanged();
         long end = System.nanoTime();
         double elapsed = (end - start)/1.0e9;
-        logger.info(String.format("Ktx tile load took %.3f seconds", elapsed));
+        logger.info(String.format("Ktx tile load for "+ blockTileKey.toString() +" took %.3f seconds", elapsed));
         // notify listeners
         notifyObservers();
     }

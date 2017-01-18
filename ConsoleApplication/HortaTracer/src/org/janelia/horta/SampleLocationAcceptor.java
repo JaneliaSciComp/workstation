@@ -260,7 +260,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         double zoom = sampleLocation.getMicrometersPerWindowHeight();
         if (zoom > 0) {
             v.setSceneUnitsPerViewportHeight((float)zoom);
-            logger.info("Set micrometers per view height to " + zoom);
+            // logger.info("Set micrometers per view height to " + zoom);
             v.setDefaultSceneUnitsPerViewportHeight((float)zoom);
         }
 

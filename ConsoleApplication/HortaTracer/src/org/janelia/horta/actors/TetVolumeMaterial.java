@@ -214,7 +214,7 @@ public class TetVolumeMaterial extends BasicMaterial
                     ktxData.header.pixelHeight,
                     ktxData.header.pixelDepth);
             t1 = System.nanoTime();
-            logger.info("Allocating texture storage took "+(t1-t0)/1.0e9+" seconds");
+            // logger.info("Allocating texture storage took "+(t1-t0)/1.0e9+" seconds");
         }
 
         // Phase 2: Initiate loading of texture to GPU (in GL thread)
@@ -268,7 +268,7 @@ public class TetVolumeMaterial extends BasicMaterial
         }
         gl.glBindBuffer(GL3.GL_PIXEL_UNPACK_BUFFER, 0);
         long t2 = System.nanoTime();
-        logger.info("Uploading tetrahedral volume texture to GPU took "+(t2-t1)/1.0e9+" seconds");
+        // logger.info("Uploading tetrahedral volume texture to GPU took "+(t2-t1)/1.0e9+" seconds");
         
         // Phase 3: Use the texture in draw calls, after some delay... TODO:
     }
