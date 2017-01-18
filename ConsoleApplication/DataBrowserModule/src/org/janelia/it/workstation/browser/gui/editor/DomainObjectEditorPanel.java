@@ -61,36 +61,36 @@ public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JP
                     getSelectionModel().getSelectedIds());
         }
     }
-
+    
     @Override
-    public void loadState(final DomainObjectEditorState<T> state) {
+    public void resetState() {
+        getResultsPanel().reset();
+    }
+    
+    @Override
+    public void restoreState(final DomainObjectEditorState<T> state) {
         
-        log.trace("Restoring state: {}", state);
+        log.debug("Restoring state: {}", state);
         getResultsPanel().setViewerType(state.getListViewerState().getType());
 
+        // Prepare to restore the selection
+        List<Reference> selected = getResultsPanel().getViewer().getSelectionModel().getSelectedIds();
+        selected.clear();
+        selected.addAll(state.getSelectedIds());
+        
+        // Prepare to restore the page
+        getResultsPanel().setCurrPage(state.getPage());
+
+        // Prepare to restore viewer state, after the reload
         Callable<Void> success = new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                
-                // Stealthy update to the selection model, so that it gets restored automatically when the page is loaded
-                List<Reference> selected = getResultsPanel().getViewer().getSelectionModel().getSelectedIds();
-                selected.clear();
-                selected.addAll(state.getSelectedIds());
-                
-                // Restore the page
-                log.info("State load completed, restoring page {} and selection {}", state.getPage(), selected);
-                getResultsPanel().goToPage(state.getPage(), new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {                        
-                        getResultsPanel().getViewer().restoreState(state.getListViewerState());
-                        return null;
-                    }
-                });
-                
+                log.info("State load completed, restoring viewer state {}", state.getListViewerState());
+                getResultsPanel().getViewer().restoreState(state.getListViewerState());
                 return null;
             }
         };
-        
+                
         if (state.getDomainObjectNode()==null) {
             loadDomainObject(state.getDomainObject(), true, success);
         }
@@ -107,7 +107,6 @@ public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JP
     @Override
     public void activate() {
         getResultsPanel().activate();
-        
     }
 
     @Override

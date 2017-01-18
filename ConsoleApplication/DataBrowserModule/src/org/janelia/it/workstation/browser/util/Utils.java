@@ -82,7 +82,7 @@ public class Utils {
 
     private static final Logger log = LoggerFactory.getLogger(Utils.class);
 
-    private static final boolean TIMER = log.isDebugEnabled();
+    private static final boolean TIMER = log.isTraceEnabled();
 
     private static final int ONE_KILOBYTE = 1024;
     private static final int ONE_MEGABYTE = 1024 * ONE_KILOBYTE;

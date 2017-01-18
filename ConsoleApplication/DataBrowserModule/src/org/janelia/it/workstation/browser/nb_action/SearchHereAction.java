@@ -74,10 +74,8 @@ public final class SearchHereAction extends NodeAction {
             TreeNodeCriteria criteria = new TreeNodeCriteria();
             criteria.setTreeNodeName(treeNode.getName());
             criteria.setTreeNodeReference(Reference.createFor(treeNode));
-
             filter = new Filter();
             filter.addCriteria(criteria);
-            // TODO: need "all" class
             filter.setSearchClass(FilterEditorPanel.DEFAULT_SEARCH_CLASS.getName());
         }
         else if (selected instanceof FilterNode) {
@@ -91,6 +89,7 @@ public final class SearchHereAction extends NodeAction {
 
         DomainListViewTopComponent browser = initView();
         FilterEditorPanel editor = ((FilterEditorPanel)browser.getEditor());
+        editor.resetState();
         editor.loadDomainObject(filter, true, null);
     }
     

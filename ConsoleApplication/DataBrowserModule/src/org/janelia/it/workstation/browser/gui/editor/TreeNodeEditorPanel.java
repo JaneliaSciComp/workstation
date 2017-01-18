@@ -74,41 +74,6 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     }
 
     @Override
-    public String getName() {
-        if (treeNode==null) {
-            return "Folder Editor";
-        }
-        else {
-            return "Folder: "+StringUtils.abbreviate(treeNode.getName(), 15);
-        }
-    }
-
-    @Override
-    protected PaginatedResultsPanel getResultsPanel() {
-        return resultsPanel;
-    }
-
-    @Override
-    protected TreeNode getDomainObject() {
-        return treeNode;
-    }
-
-    @Override
-    protected AbstractDomainObjectNode<TreeNode> getDomainObjectNode() {
-        return treeNodeNode;
-    }
-    
-    @Override
-    public void activate() {
-        resultsPanel.activate();
-    }
-
-    @Override
-    public void deactivate() {
-        resultsPanel.deactivate();
-    }
-
-    @Override
     public void loadDomainObjectNode(AbstractDomainObjectNode<TreeNode> treeNodeNode, boolean isUserDriven, Callable<Void> success) {
         this.treeNodeNode = (TreeNodeNode)treeNodeNode;
         loadDomainObject(treeNodeNode.getDomainObject(), isUserDriven, success);
@@ -198,20 +163,49 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
 
     private void reload() throws Exception {
         if (treeNode==null) return;
-        TreeNode updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(treeNode.getClass(), treeNode.getId());
-        if (updatedFolder!=null) {
-            if (treeNodeNode==null) {
-                loadDomainObject(updatedFolder, false, null);
-            }
-            else {
-                if (!treeNodeNode.getTreeNode().equals(updatedFolder)) {
-                    treeNodeNode.update(updatedFolder);
-                }
-                loadDomainObjectNode(treeNodeNode, false, null);
-            }
+        TreeNode updatedTreeNode = DomainMgr.getDomainMgr().getModel().getDomainObject(treeNode.getClass(), treeNode.getId());
+        this.treeNode = updatedTreeNode;
+        if (updatedTreeNode!=null && !treeNodeNode.getTreeNode().equals(updatedTreeNode)) {
+            treeNodeNode.update(updatedTreeNode);
+        }
+        restoreState(saveState());
+    }
+
+    @Override
+    public String getName() {
+        if (treeNode==null) {
+            return "Folder Editor";
+        }
+        else {
+            return "Folder: "+StringUtils.abbreviate(treeNode.getName(), 15);
         }
     }
+
+    @Override
+    protected PaginatedResultsPanel getResultsPanel() {
+        return resultsPanel;
+    }
+
+    @Override
+    protected TreeNode getDomainObject() {
+        return treeNode;
+    }
+
+    @Override
+    protected AbstractDomainObjectNode<TreeNode> getDomainObjectNode() {
+        return treeNodeNode;
+    }
     
+    @Override
+    public void activate() {
+        resultsPanel.activate();
+    }
+
+    @Override
+    public void deactivate() {
+        resultsPanel.deactivate();
+    }
+
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
         if (treeNode==null) return;
@@ -242,7 +236,12 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
 
     @Override
     public void search() {
-        loadDomainObjectNode(treeNodeNode, false, null);        
+        if (treeNodeNode==null) {
+            loadDomainObject(treeNode, false, null);
+        }
+        else {
+            loadDomainObjectNode(treeNodeNode, false, null);
+        }
     }
 
     private void loadPreferences() {

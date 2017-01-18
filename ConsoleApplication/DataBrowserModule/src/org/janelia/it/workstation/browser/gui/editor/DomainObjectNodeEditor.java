@@ -12,11 +12,42 @@ import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
  */
 public interface DomainObjectNodeEditor<T extends DomainObject> extends Editor {
 
-    public void loadDomainObject(T domainObject, final boolean isUserDriven, final Callable<Void> success);
+    /**
+     * Reset the viewer state. This is usually done in preparation of loading a novel domain object.
+     */
+    public void resetState();
 
-    public void loadDomainObjectNode(AbstractDomainObjectNode<T> domainObjectNode, final boolean isUserDriven, final Callable<Void> success);
-
+    /**
+     * Save and return a snap shot of the current editor state.
+     * 
+     * @return Editor state
+     */
     public DomainObjectEditorState<T> saveState();
 
-    public void loadState(DomainObjectEditorState<T> state);
+    /**
+     * Restore the given snap shot of the editor state.
+     * 
+     * @param state Saved editor state 
+     */
+    public void restoreState(DomainObjectEditorState<T> state);
+    
+    /**
+     * Load the given domain object node into the editor. 
+     * 
+     * @param domainObjectNode
+     * @param isUserDriven
+     * @param success
+     */
+    public void loadDomainObjectNode(AbstractDomainObjectNode<T> domainObjectNode, final boolean isUserDriven, final Callable<Void> success);
+
+    /**
+     * Load the given domain object into the editor. This bypasses the need for a AbstractDomainObjectNode, 
+     * but prevents some interaction with other viewers which might expect to hear about nodes being loaded.
+     *  
+     * @param domainObject
+     * @param isUserDriven
+     * @param success
+     */
+    public void loadDomainObject(T domainObject, final boolean isUserDriven, final Callable<Void> success);
+
 }
