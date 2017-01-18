@@ -77,7 +77,7 @@ implements NeuronSet// , LookupListener
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     TmWorkspace workspace; // LVV workspace, as opposed to Horta workspace
-    TmSample sample;
+    private TmSample sample;
     AnnotationModel annotationModel;
     private final GlobalAnnotationListener globalAnnotationListener;
     private final TmGeoAnnotationModListener annotationModListener;
@@ -105,11 +105,26 @@ implements NeuronSet// , LookupListener
     public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
         return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n);
     }
+
+    private void updateVoxToMicronMatrix()
+    {
+        // If we try to get the matrix too early, it comes back null, so populate just-in-time
+        if (sample == null) {
+            logger.error("Attempt to get voxToMicronMatrix for null sample");
+            return;
+        }
+        String serialized = sample.getVoxToMicronMatrix();
+        if (serialized == null) {
+            logger.error("Found null voxToMicronMatrix");
+            return;
+        }
+        voxToMicronMatrix = MatrixUtilities.deserializeMatrix(serialized, "voxToMicronMatrix");
+    }
     
     Jama.Matrix getVoxToMicronMatrix() {
-        // If we try to get the matrix too early, it comes back null, so populate just-in-time
-        if (voxToMicronMatrix == null)
-            voxToMicronMatrix = MatrixUtilities.deserializeMatrix(sample.getVoxToMicronMatrix(), "voxToMicronMatrix");
+        if (voxToMicronMatrix != null)
+            return voxToMicronMatrix;
+        updateVoxToMicronMatrix();
         return voxToMicronMatrix;
     }
     
@@ -222,6 +237,8 @@ implements NeuronSet// , LookupListener
         if (! workspace.getName().equals(getName()))
             getNameChangeObservable().setChanged();
         this.workspace = workspace;
+        this.sample = annotationModel.getCurrentSample();
+        updateVoxToMicronMatrix();
         NeuronList nl = (NeuronList) neurons;
         nl.wrap(this);
         getMembershipChangeObservable().setChanged();

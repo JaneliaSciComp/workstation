@@ -62,7 +62,6 @@ import org.janelia.console.viewerapi.actions.DeleteNeuronAction;
 import org.janelia.console.viewerapi.actions.RecolorNeuronAction;
 import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
 import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
-import org.janelia.console.viewerapi.commands.CreateNeuronCommand;
 import org.janelia.console.viewerapi.commands.MoveNeuronAnchorCommand;
 import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
