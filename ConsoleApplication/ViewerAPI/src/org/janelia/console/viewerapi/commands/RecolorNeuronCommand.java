@@ -68,9 +68,14 @@ implements UndoableEdit, Command, Notifier
         return true;
     }
     
+    private static String nameForColor(Color color) {
+        String hex = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+        return hex;
+    }
+    
     @Override
     public String getPresentationName() {
-        return "Recolor Neuron " + newColor.toString();
+        return "Color Neuron " + neuron.getName() + " " + nameForColor(newColor);
     }
     
     @Override

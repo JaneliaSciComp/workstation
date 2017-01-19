@@ -1582,49 +1582,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
                 
-                // SECTION: Anchors
-                topMenu.add(new JPopupMenu.Separator());
-                final TracingInteractor.InteractorContext interactorContext = tracingInteractor.createContext();
-
-                if (interactorContext.canUpdateAnchorRadius()) {
-                    topMenu.add(new AbstractAction("Adjust Anchor Radius") {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            interactorContext.updateAnchorRadius();
-                        }
-                    });
-                }
-
-                if (interactorContext.canClearParent()) {
-                    topMenu.add(new AbstractAction("Clear Current Parent Anchor") {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            interactorContext.clearParent();
-                        }
-                    });
-                }
-                
-                if (interactorContext.getCurrentParentAnchor() != null) {
-                    topMenu.add(new AbstractAction("Center on Current Parent Anchor") {
-                    @Override
-                        public void actionPerformed(ActionEvent e) {
-                            PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-                            Vector3 xyz = new Vector3(interactorContext.getCurrentParentAnchor().getLocation());
-                            loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
-                        }
-                    });
-                }
-                
-                if (interactorContext.getHighlightedAnchor() != null) {
-                    // logger.info("Found highlighted anchor");
-                    if (! interactorContext.getHighlightedAnchor().equals(interactorContext.getCurrentParentAnchor())) {
-                        topMenu.add(new SelectParentAnchorAction(
-                                activeNeuronSet,
-                                interactorContext.getHighlightedAnchor()
-                        ));
-                    }
-                }
-                
                 // SECTION: Undo/redo
                 UndoRedo.Manager undoRedo = getUndoRedoManager();
                 if ((undoRedo != null) && (undoRedo.canUndoOrRedo())) {
@@ -1668,6 +1625,55 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 }
 
+                final TracingInteractor.InteractorContext interactorContext = tracingInteractor.createContext();
+
+                // SECTION: Anchors
+                
+                if ((interactorContext.getCurrentParentAnchor() != null) || (interactorContext.getHighlightedAnchor() != null))
+                {
+                    topMenu.add(new JPopupMenu.Separator());
+                    topMenu.add("Anchor").setEnabled(false);
+
+                    if (interactorContext.canUpdateAnchorRadius()) {
+                        topMenu.add(new AbstractAction("Adjust Anchor Radius") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.updateAnchorRadius();
+                            }
+                        });
+                    }
+
+                    if (interactorContext.canClearParent()) {
+                        topMenu.add(new AbstractAction("Clear Current Parent Anchor") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.clearParent();
+                            }
+                        });
+                    }
+
+                    if (interactorContext.getCurrentParentAnchor() != null) {
+                        topMenu.add(new AbstractAction("Center on Current Parent Anchor") {
+                        @Override
+                            public void actionPerformed(ActionEvent e) {
+                                PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+                                Vector3 xyz = new Vector3(interactorContext.getCurrentParentAnchor().getLocation());
+                                loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
+                            }
+                        });
+                    }
+
+                    if (interactorContext.getHighlightedAnchor() != null) {
+                        // logger.info("Found highlighted anchor");
+                        if (! interactorContext.getHighlightedAnchor().equals(interactorContext.getCurrentParentAnchor())) {
+                            topMenu.add(new SelectParentAnchorAction(
+                                    activeNeuronSet,
+                                    interactorContext.getHighlightedAnchor()
+                            ));
+                        }
+                    }
+                }
+                
                 // SECTION: Neuron edits
                 NeuronModel indicatedNeuron = interactorContext.getHighlightedNeuron();
                 if (indicatedNeuron != null) 
