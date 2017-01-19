@@ -642,7 +642,7 @@ public class SkeletonActorModel {
     /**
      * Change visual anchor position without actually changing the Skeleton model
      */
-    public void lightweightPlaceAnchor(Anchor dragAnchor, Vec3 location) {
+    public synchronized void lightweightPlaceAnchor(Anchor dragAnchor, Vec3 location) {
         if (dragAnchor == null) {
             return;
         }
