@@ -43,6 +43,9 @@ public class SampleSummaryProcessor extends AbstractServiceProcessor<Void> {
     @Override
     protected ServiceComputation<List<File>> preProcessData(JacsServiceData jacsServiceData) {
         SampleSummaryServiceDescriptor.SampleSummaryArgs args = getArgs(jacsServiceData);
+        if (args.sampleId == null) {
+            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "Sample Id is required"));
+        }
         JacsServiceDataBuilder sampleLSMsServiceDataBuilder = new JacsServiceDataBuilder(jacsServiceData)
                 .setName("sampleImageFiles")
                 .addArg("-sampleId", args.sampleId.toString());

@@ -1,16 +1,23 @@
 package org.janelia.jacs2.service.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.model.service.JacsServiceData;
+import org.janelia.jacs2.cdi.ObjectMapperFactory;
+import org.janelia.jacs2.sampleprocessing.SampleImageFile;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ServiceDataUtils {
+
+    private static ObjectMapper MAPPER = ObjectMapperFactory.instance().getDefaultObjectMapper();
 
     public static List<File> stringToFileList(String s) {
         if (StringUtils.isNotBlank(s)) {
@@ -51,4 +58,19 @@ public class ServiceDataUtils {
         }
     }
 
+    public  static <T> T stringToAny(String s, TypeReference typeRef) {
+        try {
+            return MAPPER.readValue(s, typeRef);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public static <T> String anyToString(T any) {
+        try {
+            return MAPPER.writeValueAsString(any);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
 }

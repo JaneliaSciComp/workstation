@@ -82,6 +82,16 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
     }
 
     @Override
+    protected ServiceComputation<File> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        File destFile = (File)preProcessingResult;
+        if (destFile.exists()) {
+            return computationFactory.newCompletedComputation(destFile);
+        } else {
+            return super.localProcessData(preProcessingResult, jacsServiceData);
+        }
+    }
+
+    @Override
     protected ServiceComputation<File> postProcessData(File processingResult, JacsServiceData jacsServiceData) {
         return computationFactory.<File>newComputation()
                 .supply(() -> {
