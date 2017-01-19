@@ -10,7 +10,7 @@ import javax.inject.Named;
 
 @Named("getSampleMIPsAndMovies")
 public class GetSampleMIPsAndMoviesServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "getSampleLsmMetadata";
+    private static String SERVICE_NAME = "getSampleMIPsAndMovies";
 
     static class SampleMIPsAndMoviesArgs extends SampleServiceArgs {
         @Parameter(names = "-options", description = "Options", required = false)
