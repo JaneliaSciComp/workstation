@@ -96,7 +96,11 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                             .addArg("-macro", basicMIPsAndMoviesMacro)
                             .addArg("-macroArgs", getBasicMIPsAndMoviesArgs(f, args, outputDir))
                             .build();
-            fijiComputations.add(this.submitChildService(jacsServiceData, fijiService));
+            fijiComputations.add(
+                    this.submitChildService(jacsServiceData, fijiService)
+                            .thenCompose(sd -> this.waitForCompletion(sd))
+
+            );
         });
         return fijiComputations;
     }

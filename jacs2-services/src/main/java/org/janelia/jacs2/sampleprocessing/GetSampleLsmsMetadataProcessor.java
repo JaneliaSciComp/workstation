@@ -68,7 +68,10 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
                             .addArg("-inputLSM", f.getWorkingFilePath())
                             .addArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())
                             .build();
-            lsmMetadataComputations.add(this.submitChildService(jacsServiceData, extractLsmMetadataService));
+            lsmMetadataComputations.add(
+                    this.submitChildService(jacsServiceData, extractLsmMetadataService)
+                            .thenCompose(sd -> this.waitForCompletion(sd))
+            );
         });
         return lsmMetadataComputations;
     }
