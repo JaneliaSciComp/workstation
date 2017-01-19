@@ -53,6 +53,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateLi
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,8 +135,10 @@ called from a  SimpleWorker thread.
         this.modelAdapter = new DomainMgrTmModelAdapter();
         this.neuronManager = new TmModelManipulator(modelAdapter);
         this.filteredAnnotationModel = new FilteredAnnotationModel();
+        
         this.neuronSetAdapter = new NeuronSetAdapter();
         neuronSetAdapter.observe(this);
+        LargeVolumeViewerTopComponent.getInstance().registerNeurons(neuronSetAdapter);
         
         // Report performance statistics when program closes
         Runtime.getRuntime().addShutdownHook(new Thread() {

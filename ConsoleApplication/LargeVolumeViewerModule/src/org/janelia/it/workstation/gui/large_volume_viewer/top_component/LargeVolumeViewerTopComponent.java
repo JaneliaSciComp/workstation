@@ -6,7 +6,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
@@ -261,21 +261,23 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         }
     }
     
-    protected void establishLookups() {
+    private void establishLookups() {
         // Use Lookup to communicate sample location and camera position
         // TODO: separate data source from current view details
         LargeVolumeViewerLocationProvider locProvider = 
                 new LargeVolumeViewerLocationProvider(lvvv);
-        // Use Lookup to communicate neuron reconstructions.
-        // Based on tutorial at https://platform.netbeans.org/tutorials/74/nbm-selection-1.html
-//        NeuronSet neurons = lvvv.getNeuronSetAdapter();
-
-        // Using a dynamic lookup now, instead of this fixed one, but the effect should be the same.
-        //associateLookup(Lookups.fixed(locProvider, neurons));
-        
         content.add(locProvider);
-//        content.add(neurons);
         associateLookup(new AbstractLookup(content));
     }
     
+    private NeuronSet currNeurons = null;
+    public void registerNeurons(NeuronSet neurons) {
+        // Use Lookup to communicate neuron reconstructions.
+        // Based on tutorial at https://platform.netbeans.org/tutorials/74/nbm-selection-1.html
+        if (currNeurons!=null) {
+            content.remove(currNeurons);
+        }
+        content.add(neurons);
+        this.currNeurons = neurons;
+    }
 }
