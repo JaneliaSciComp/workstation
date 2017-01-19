@@ -3,6 +3,8 @@ package org.janelia.jacs2.sampleprocessing;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
+import org.janelia.jacs2.imageservices.FijiColor;
+import org.janelia.jacs2.imageservices.FijiUtils;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.JacsServiceDataBuilder;
 import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
@@ -24,6 +26,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<File>> {
 
@@ -99,6 +102,9 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
     }
 
     private String getBasicMIPsAndMoviesArgs(SampleImageFile sampleImageFile, GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args, Path outputDir) {
+        List<FijiColor> colors = FijiUtils.getColorSpec(sampleImageFile.getColorSpec(), sampleImageFile.getChanSpec());
+        String colorSpec = colors.stream().map(c -> String.valueOf(c.getCode())).collect(Collectors.joining(","));
+        String divSpec = colors.stream().map(c -> String.valueOf(c.getDivisor())).collect(Collectors.joining(","));
         StringJoiner builder = new StringJoiner(",");
         builder.add(outputDir.toString()); // output directory
         builder.add(com.google.common.io.Files.getNameWithoutExtension(sampleImageFile.getWorkingFilePath())); // output prefix 1
@@ -108,7 +114,8 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         builder.add(sampleImageFile.getLaser() == null ? "" : sampleImageFile.getLaser().toString());
         builder.add(sampleImageFile.getGain() == null ? "" : sampleImageFile.getGain().toString());
         builder.add(StringUtils.defaultString(sampleImageFile.getChanSpec(), ""));
-        builder.add(StringUtils.defaultString(sampleImageFile.getDivSpec(), ""));
+        builder.add(colorSpec);
+        builder.add(divSpec);
         builder.add(StringUtils.defaultIfBlank(args.options, DEFAULT_OPTIONS));
         return builder.toString();
     }
