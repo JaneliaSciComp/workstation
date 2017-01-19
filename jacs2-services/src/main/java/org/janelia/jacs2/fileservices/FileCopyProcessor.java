@@ -113,7 +113,7 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
     @Override
     protected File collectResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
         File destFile = (File) preProcessingResult;
-        if (!destFile.exists()) {
+        if (!Files.exists(destFile.toPath())) {
             throw new ComputationException(jacsServiceData, "Destination file " + destFile + " was not created");
         }
         return destFile;
