@@ -9,6 +9,7 @@ import javax.enterprise.inject.Disposes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -25,6 +26,7 @@ public class ExecutorProducer {
     @Inject
     private Integer threadPoolSize;
 
+    @Singleton
     @Produces
     public ExecutorService createExecutorService() {
         if (threadPoolSize == null || threadPoolSize == 0) {

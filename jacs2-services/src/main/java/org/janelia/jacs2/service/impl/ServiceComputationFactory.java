@@ -1,8 +1,10 @@
 package org.janelia.jacs2.service.impl;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.concurrent.ExecutorService;
 
+@Singleton
 public class ServiceComputationFactory {
 
     private final ExecutorService executor;
