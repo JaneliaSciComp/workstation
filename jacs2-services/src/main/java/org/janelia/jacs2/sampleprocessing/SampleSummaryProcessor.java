@@ -52,7 +52,7 @@ public class SampleSummaryProcessor extends AbstractServiceProcessor<Void> {
         if (StringUtils.isNotBlank(args.sampleObjective)) {
             sampleLSMsServiceDataBuilder.addArg("-objective", args.sampleObjective);
         }
-        sampleLSMsServiceDataBuilder.addArg("-dest", getWorkingDirectory(jacsServiceData).toString());
+        sampleLSMsServiceDataBuilder.addArg("-sampleDataDir", getWorkingDirectory(jacsServiceData).toString());
         JacsServiceData sampleLSMsServiceData = sampleLSMsServiceDataBuilder.build();
         return this.submitChildService(jacsServiceData, sampleLSMsServiceData)
                 .thenCompose(sd -> this.waitForCompletion(sd))
