@@ -85,7 +85,18 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
 
     @Override
     protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        return jacsServiceData.hasCompletedSuccessfully();
+        GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
+        Path outputDir = Paths.get(args.sampleDataDir, args.mipsSubDir);
+        // collect all AVIs and PNGs
+        try {
+            String resultsPattern = "glob:**/*.{png,avi,mp4}";
+            PathMatcher inputFileMatcher =
+                    FileSystems.getDefault().getPathMatcher(resultsPattern);
+            long nFiles = java.nio.file.Files.find(outputDir, 1, (p, a) -> inputFileMatcher.matches(p)).count();
+            return nFiles > 0;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     @Override
@@ -93,9 +104,9 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
         Path outputDir = Paths.get(args.sampleDataDir, args.mipsSubDir);
         // collect all AVIs and PNGs
-        String resultsPattern = "glob:**/*.{png,avi,mp4}";
         List<File> results = new ArrayList<>();
         try {
+            String resultsPattern = "glob:**/*.{png,avi,mp4}";
             PathMatcher inputFileMatcher =
                     FileSystems.getDefault().getPathMatcher(resultsPattern);
             java.nio.file.Files.find(outputDir, 1, (p, a) -> inputFileMatcher.matches(p)).forEach(p -> results.add(p.toFile()));
