@@ -97,6 +97,10 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
     private List<ServiceComputation<?>> submitAllFijiServices(List<SampleImageFile> lsmFiles, GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args, JacsServiceData jacsServiceData, Path outputDir) {
         List<ServiceComputation<?>> fijiComputations = new ArrayList<>();
         lsmFiles.forEach(f -> {
+            if (!f.isChanSpecDefined()) {
+                throw new ComputationException(jacsServiceData,
+                        "No channel spec for LSM " + f.getId() + "-" + f.getArchiveFilePath());
+            }
             JacsServiceData fijiService =
                     new JacsServiceDataBuilder(jacsServiceData)
                             .setName("fijiMacro")
@@ -114,6 +118,9 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
 
     private String getBasicMIPsAndMoviesArgs(SampleImageFile sampleImageFile, GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args, Path outputDir) {
         List<FijiColor> colors = FijiUtils.getColorSpec(sampleImageFile.getColorSpec(), sampleImageFile.getChanSpec());
+        if (colors.isEmpty()) {
+            colors = FijiUtils.getDefaultColorSpec(sampleImageFile.getChanSpec(), "RGB", '1');
+        }
         String colorSpec = colors.stream().map(c -> String.valueOf(c.getCode())).collect(Collectors.joining(","));
         String divSpec = colors.stream().map(c -> String.valueOf(c.getDivisor())).collect(Collectors.joining(","));
         StringJoiner builder = new StringJoiner(",");

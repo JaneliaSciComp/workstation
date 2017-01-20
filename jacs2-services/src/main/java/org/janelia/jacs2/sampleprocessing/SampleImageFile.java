@@ -1,6 +1,9 @@
 package org.janelia.jacs2.sampleprocessing;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class SampleImageFile {
+    private Number id;
     private String archiveFilePath;
     private String workingFilePath;
     private String chanSpec;
@@ -10,6 +13,14 @@ public class SampleImageFile {
     private Integer gain;
     private String area;
     private String objective;
+
+    public Number getId() {
+        return id;
+    }
+
+    public void setId(Number id) {
+        this.id = id;
+    }
 
     public String getArchiveFilePath() {
         return archiveFilePath;
@@ -33,6 +44,10 @@ public class SampleImageFile {
 
     public void setChanSpec(String chanSpec) {
         this.chanSpec = chanSpec;
+    }
+
+    public boolean isChanSpecDefined() {
+        return StringUtils.isNotBlank(chanSpec);
     }
 
     public String getColorSpec() {

@@ -1,5 +1,6 @@
 package org.janelia.jacs2.imageservices;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import org.apache.commons.lang3.StringUtils;
 
@@ -18,11 +19,11 @@ public class FijiUtils {
             return Collections.emptyList();
         }
 
-        Iterator<String> colorsItr = Splitter.on(',').trimResults().splitToList(channelColors).iterator();
+        Iterator<String> colorsIterator = Splitter.on(',').trimResults().splitToList(channelColors).iterator();
         Iterator<Integer> chanIterator = chanSpec.chars().iterator();
         List<FijiColor> colors = new ArrayList<>();
-        for (; colorsItr.hasNext() && chanIterator.hasNext();) {
-            String color = colorsItr.next();
+        for (; colorsIterator.hasNext() && chanIterator.hasNext();) {
+            String color = colorsIterator.next();
             int chanValue = chanIterator.next();
             char chan = (char) chanValue;
             FijiColor fijiColor = getColorCode(color, chan);
@@ -60,4 +61,28 @@ public class FijiUtils {
         return new FijiColor('?',1);
     }
 
+    public static List<FijiColor> getDefaultColorSpec(String chanSpec, String signalColors, char referenceColor) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(chanSpec));
+
+        Iterator<Integer> signalColorsIterator = signalColors.chars().iterator();
+        Iterator<Integer> chanIterator = chanSpec.chars().iterator();
+        List<FijiColor> colors = new ArrayList<>();
+        for (; chanIterator.hasNext();) {
+
+            int chanValue = chanIterator.next();
+            char chan = (char) chanValue;
+            if (chan == 'r') {
+                colors.add(new FijiColor(referenceColor, 2));
+            } else {
+                if (signalColorsIterator.hasNext()) {
+                    int colorValue = signalColorsIterator.next();
+                    char color = (char) colorValue;
+                    colors.add(new FijiColor(color, 1));
+                } else {
+                    colors.add(new FijiColor('?', 1));
+                }
+            }
+        }
+        return colors;
+    }
 }

@@ -71,6 +71,7 @@ public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcesso
                 .flatMap(ar -> ar.getTileLsmPairs().stream().flatMap(lsmp -> lsmp.getLsmFiles().stream()))
                 .map(lf -> {
                     SampleImageFile sif = new SampleImageFile();
+                    sif.setId(lf.getId());
                     sif.setArchiveFilePath(lf.getFilepath());
                     sif.setWorkingFilePath(getTargetImageFile(destinationDirectory, lf).getAbsolutePath());
                     sif.setArea(lf.getAnatomicalArea());
