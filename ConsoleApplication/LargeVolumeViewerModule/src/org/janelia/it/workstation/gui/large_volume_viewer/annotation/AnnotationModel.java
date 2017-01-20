@@ -1784,7 +1784,9 @@ called from a  SimpleWorker thread.
         // update workspace; update and select new neuron; this will draw points as well
         fireWorkspaceLoaded(workspace);
         fireWorkspaceChanged();
-        selectNeuron(neuron);
+        if (neuron!=null) {
+            selectNeuron(neuron);
+        }
     }
 
     private boolean eitherIsNull(Object object1, Object object2) {
@@ -1880,4 +1882,10 @@ called from a  SimpleWorker thread.
     public NeuronSet getNeuronSet() {
         return neuronSetAdapter;
     }
+
+    public TmModelManipulator getNeuronManager() {
+        return neuronManager;
+    }
+    
+    
 }
