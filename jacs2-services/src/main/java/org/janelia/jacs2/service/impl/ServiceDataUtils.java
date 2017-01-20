@@ -60,7 +60,10 @@ public class ServiceDataUtils {
 
     public  static <T> T stringToAny(String s, TypeReference typeRef) {
         try {
-            return MAPPER.readValue(s, typeRef);
+            if (StringUtils.isBlank(s))
+                return null;
+            else
+                return MAPPER.readValue(s, typeRef);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -68,7 +71,7 @@ public class ServiceDataUtils {
 
     public static <T> String anyToString(T any) {
         try {
-            return MAPPER.writeValueAsString(any);
+            return any == null ? null : MAPPER.writeValueAsString(any);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
