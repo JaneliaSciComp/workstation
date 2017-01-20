@@ -456,6 +456,10 @@ public class DomainDAL {
         dao.addIntakeOrder(orderNo, owner);
     }
 
+    public void addIntakeOrder(IntakeOrder order) throws Exception {
+        dao.addIntakeOrder(order);
+    }
+
     public void updateIntakeOrder(IntakeOrder order) throws Exception {
         dao.updateIntakeOrder(order);
     }

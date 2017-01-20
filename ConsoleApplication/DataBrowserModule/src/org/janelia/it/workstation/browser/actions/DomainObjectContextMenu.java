@@ -4,7 +4,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,13 +27,16 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.enums.OrderStatus;
 import org.janelia.it.jacs.model.domain.enums.PipelineStatus;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.StatusTransition;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
@@ -501,11 +506,35 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                     @Override
                     protected void doStuff() throws Exception {
+                        List<Long> sampleIds = new ArrayList<>();
                         for(final Sample sample : samples) {
-                            model.addPipelineStatusTransition(sample, PipelineStatus.Scheduled);
+                            StatusTransition transition = new StatusTransition();
+                            transition.setSource(PipelineStatus.valueOf(sample.getStatus()));
+                            transition.setProcess("Front End Processing");
+                            transition.setSampleId(sample.getId());
+                            transition.setTarget(PipelineStatus.Scheduled);
+                            model.addPipelineStatusTransition(transition);
                             model.updateProperty(sample, "compressionType", targetCompression);
                             model.updateProperty(sample, "status", PipelineStatus.Scheduled.toString());
+                            sampleIds.add(sample.getId());
                         }
+
+                        // add an intake order to track all these Samples
+                        if (samples.size()>0) {
+                            Calendar c = Calendar.getInstance();
+                            SimpleDateFormat format = new SimpleDateFormat("yyyyddMMhh");
+                            Sample sample = samples.get(0);
+                            String orderNo = "Workstation_" + sample.getOwnerName() + "_" +
+                                    sample.getDataSet() + "_" +format.format(Calendar.getInstance().getTime());
+                            IntakeOrder newOrder = new IntakeOrder();
+                            newOrder.setOrderNo(orderNo);
+                            newOrder.setOwner(sample.getOwnerKey());
+                            newOrder.setStartDate(c.getTime());
+                            newOrder.setStatus(OrderStatus.Intake);
+                            newOrder.setSampleIds(sampleIds);
+                            DomainMgr.getDomainMgr().getModel().addIntakeOrder(newOrder);
+                        }
+
                     }
 
                     @Override
