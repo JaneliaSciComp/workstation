@@ -271,11 +271,13 @@ called from a  SimpleWorker thread.
         
         // Clear neuron selection
         log.info("Clearing current neuron for workspace {}", workspace.getId());
-        setCurrentNeuron(null);        
+        setCurrentNeuron(null);   
     }
     
     public void loadComplete() { 
         final TmWorkspace updateWorkspace = getCurrentWorkspace();
+        // Update TC, in case the load bypassed it
+        LargeVolumeViewerTopComponent.getInstance().setCurrent(updateWorkspace);
         fireWorkspaceLoaded(updateWorkspace);
         fireNeuronSelected(null);
         if (updateWorkspace!=null) {
