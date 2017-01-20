@@ -406,6 +406,7 @@ public class SampleHelperNG extends DomainHelper {
         }
         
         if (sampleDirty) {
+            logger.info("ADDING SAMPLEA SAMPLE HELPERNG: AAAAAAAAAA" + orderNo + "--" + sample.getId());
             sample = domainDAL.save(ownerKey, sample);
             domainDAL.addSampleToIntakeOrder(orderNo, sample.getId());
             logger.info("  Saving sample: "+sample.getName()+" (id="+sample.getId()+")");

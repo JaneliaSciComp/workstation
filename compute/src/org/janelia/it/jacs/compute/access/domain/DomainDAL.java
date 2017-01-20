@@ -23,6 +23,7 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
+import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
@@ -453,6 +454,14 @@ public class DomainDAL {
 
     public void addIntakeOrder(String orderNo, String owner) throws Exception {
         dao.addIntakeOrder(orderNo, owner);
+    }
+
+    public void updateIntakeOrder(IntakeOrder order) throws Exception {
+        dao.updateIntakeOrder(order);
+    }
+
+    public List<IntakeOrder> getIntakeOrder(String orderNo) throws Exception {
+        return dao.getIntakeOrder(orderNo);
     }
 
     public void addSampleToIntakeOrder(String orderNo, Long sampleId) throws Exception {

@@ -15,6 +15,8 @@ import org.janelia.it.jacs.compute.engine.data.MissingDataException;
 import org.janelia.it.jacs.compute.service.domain.AbstractDomainService;
 import org.janelia.it.jacs.compute.service.domain.discovery.SageDiscoverServiceHelper;
 import org.janelia.it.jacs.compute.service.domain.util.SampleHelperNG;
+import org.janelia.it.jacs.model.domain.enums.OrderStatus;
+import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 
 import java.util.*;
@@ -64,6 +66,15 @@ public class LSMSampleDiscoveryService extends AbstractDomainService {
         Set<String> sampleIdStrings = new HashSet<>();
         for (Long sampleId: sampleIds) {
             sampleIdStrings.add(sampleId.toString());
+        }
+        if (sampleIds.size()>0) {
+            List<IntakeOrder> orders = DomainDAL.getInstance().getIntakeOrder(orderNo);
+            if (orders.size()==1) {
+                IntakeOrder order = orders.get(0);
+                order.setStatus(OrderStatus.Processing);
+                order.setSampleIds(new ArrayList<Long>(sampleIds));
+                DomainDAL.getInstance().updateIntakeOrder(order);
+            }
         }
 
 //        // Process data from all the slide image codes.  Collect affected samples' ids for downstream processing.

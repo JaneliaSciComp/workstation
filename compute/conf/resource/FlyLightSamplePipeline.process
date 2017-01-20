@@ -39,11 +39,13 @@
                 <entry key="objective" value="OBJECTIVE"/>
                 <entry key="pipeline name" value="PIPELINE_NAME"/>
                 <entry key="pipeline process" value="PIPELINE_PROCESS"/>
+                <entry key="order no" value="ORDER_NO"/>
             </input>
             <output name="SAMPLE_ENTITY_ID"/>
             <output name="OBJECTIVE"/>
             <output name="PIPELINE_NAME"/>
             <output name="PIPELINE_PROCESS"/>
+            <output name="ORDER_NO"/>
         </operation>
             
         <!-- Import variables from the task to override any of the above parameters 
