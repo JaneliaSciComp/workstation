@@ -48,6 +48,11 @@ public final class RunAsMenuAction extends AbstractAction implements Presenter.M
         return null;
     }
 
+    @Override
+    public boolean isEnabled() {
+        return isAccessible();
+    }
+
     public static boolean isAccessible() {
         return AccessManager.authenticatedSubjectIsInGroup(SubjectRole.Admin);
     }
