@@ -63,12 +63,16 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
     }
 
     @Override
-    protected File collectResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
         MontageImagesServiceDescriptor.MontageImagesArgs args = getArgs(jacsServiceData);
         File targetImage = new File(args.target);
-        if (!targetImage.exists()) {
-            throw new ComputationException(jacsServiceData, "Target montage " + targetImage + " was not created");
-        }
+        return targetImage.exists();
+    }
+
+    @Override
+    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        MontageImagesServiceDescriptor.MontageImagesArgs args = getArgs(jacsServiceData);
+        File targetImage = new File(args.target);
         return targetImage;
     }
 

@@ -74,6 +74,16 @@ public class SampleSummaryProcessor extends AbstractServiceProcessor<Void> {
 
     }
 
+    @Override
+    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected Void retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        throw new UnsupportedOperationException();
+    }
+
     private SampleSummaryServiceDescriptor.SampleSummaryArgs getArgs(JacsServiceData jacsServiceData) {
         SampleSummaryServiceDescriptor.SampleSummaryArgs args = new SampleSummaryServiceDescriptor.SampleSummaryArgs();
         new JCommander(args).parse(jacsServiceData.getArgsArray());

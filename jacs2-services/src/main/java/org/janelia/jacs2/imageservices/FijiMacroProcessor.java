@@ -99,7 +99,12 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
     }
 
     @Override
-    protected Void collectResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        return true;
+    }
+
+    @Override
+    protected Void retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
         return null;
     }
 

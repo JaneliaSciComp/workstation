@@ -43,6 +43,16 @@ public class AbstractServiceProcessorTest {
         @Override
         public void setResult(Void result, JacsServiceData jacsServiceData) {
         }
+
+        @Override
+        protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+            return true;
+        }
+
+        @Override
+        protected Void retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+            return null;
+        }
     }
 
     static class TestFailedProcessor extends AbstractServiceProcessor<Void> {
@@ -69,6 +79,15 @@ public class AbstractServiceProcessorTest {
         public void setResult(Void result, JacsServiceData jacsServiceData) {
         }
 
+        @Override
+        protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+            return true;
+        }
+
+        @Override
+        protected Void retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+            return null;
+        }
     }
 
     private JacsServiceDataPersistence jacsServiceDataPersistence;

@@ -94,10 +94,17 @@ public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcesso
                 });
         return computationFactory.newCompletedComputation(jacsServiceData)
                 .thenCombineAll(fcs, (sd, results) -> results.stream().map(r -> indexedSampleImageFiles.get(((File) r).getAbsolutePath())).collect(Collectors.toList()))
-                .thenApply(results -> {
-                    setResult(results, jacsServiceData);
-                    return results;
-                });
+                .thenApply(results -> this.applyResult(results, jacsServiceData));
+    }
+
+    @Override
+    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected List<SampleImageFile> retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        throw new UnsupportedOperationException();
     }
 
     private SampleServiceArgs getArgs(JacsServiceData jacsServiceData) {

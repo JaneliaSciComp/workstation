@@ -101,11 +101,14 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
     }
 
     @Override
-    protected File collectResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
         File lsmMetadataFile = (File) preProcessingResult;
-        if (!lsmMetadataFile.exists()) {
-            throw new ComputationException(jacsServiceData, "LSM metadata file " + lsmMetadataFile + " was not created");
-        }
+        return lsmMetadataFile.exists();
+    }
+
+    @Override
+    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        File lsmMetadataFile = (File) preProcessingResult;
         return lsmMetadataFile;
     }
 

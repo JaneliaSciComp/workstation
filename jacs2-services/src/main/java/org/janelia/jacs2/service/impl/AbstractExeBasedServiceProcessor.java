@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,13 +19,11 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
-public abstract class AbstractExeBasedServiceProcessor<R> extends AbstractServiceProcessor<R> {
+public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServiceProcessor<T> {
 
     protected static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
-
 
     private final String executablesBaseDir;
     private final Instance<ExternalProcessRunner> serviceRunners;
@@ -44,16 +41,10 @@ public abstract class AbstractExeBasedServiceProcessor<R> extends AbstractServic
     }
 
     @Override
-    protected ServiceComputation<R> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected ServiceComputation<T> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
         return invokeExternalProcess(jacsServiceData)
-                .thenApply(r -> {
-                    R result = collectResult(preProcessingResult, jacsServiceData);
-                    setResult(result, jacsServiceData);
-                    return result;
-                });
+                .thenCompose(r -> this.collectResult(preProcessingResult, jacsServiceData));
     }
-
-    protected abstract R collectResult(Object preProcessingResult, JacsServiceData jacsServiceData);
 
     protected abstract List<String> prepareCmdArgs(JacsServiceData jacsServiceData);
 

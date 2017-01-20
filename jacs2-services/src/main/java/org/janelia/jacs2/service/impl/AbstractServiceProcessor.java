@@ -14,6 +14,9 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T> {
 
+    protected static final int N_RETRIES_FOR_RESULT = 60;
+    protected static final long WAIT_BETWEEN_RETRIES_FOR_RESULT = 1000; // 1s
+
     protected final JacsServiceDispatcher jacsServiceDispatcher;
     protected final ServiceComputationFactory computationFactory;
     private final JacsServiceDataPersistence jacsServiceDataPersistence;
@@ -66,7 +69,7 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
      * The method submits the parent service {@code parentServiceData} in the context of the {@code jacsServiceData}
      *
      * @param jacsServiceData
-     * @param childServiceData
+     * @param parentServiceData
      * @return
      */
     protected ServiceComputation<JacsServiceData> submitParentService(JacsServiceData jacsServiceData, JacsServiceData parentServiceData) {
@@ -104,6 +107,34 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                 .map(sc -> sc.get())
                 .collect(Collectors.toList());
         return computationFactory.newCompletedComputation(results);
+    }
+
+    protected abstract boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData);
+
+    protected abstract T retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData);
+
+    protected T applyResult(T result, JacsServiceData jacsServiceData) {
+        setResult(result, jacsServiceData);
+        return result;
+    }
+
+    protected ServiceComputation<T> collectResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        for (int i = 0; i < N_RETRIES_FOR_RESULT; i ++) {
+            if (isResultAvailable(preProcessingResult, jacsServiceData)) {
+                logger.info("Found result on try # {}", i + 1);
+                T result = retrieveResult(preProcessingResult, jacsServiceData);
+                setResult(result, jacsServiceData);
+                return computationFactory.newCompletedComputation(result);
+            }
+            logger.info("Result not found on try # {}", i + 1);
+            try {
+                Thread.sleep(WAIT_BETWEEN_RETRIES_FOR_RESULT);
+            } catch (InterruptedException e) {
+                throw new ComputationException(jacsServiceData, e);
+            }
+        }
+        return computationFactory.newFailedComputation(new ComputationException(jacsServiceData,
+                "Could not retrieve result for " + jacsServiceData.toString()));
     }
 
     protected Path getWorkingDirectory(JacsServiceData jacsServiceData) {

@@ -109,6 +109,20 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
                 });
     }
 
+    @Override
+    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs args = getArgs(jacsServiceData);
+        File lsmMetadataFile = getOutputFile(args);
+        return lsmMetadataFile.exists();
+    }
+
+    @Override
+    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs args = getArgs(jacsServiceData);
+        File lsmMetadataFile = getOutputFile(args);
+        return lsmMetadataFile;
+    }
+
     private File getWorkingLsmFile(JacsServiceData jacsServiceData, File lsmMetadataFile) {
         return new File(lsmMetadataFile.getParentFile(), jacsServiceData.getName() + "_" + jacsServiceData.getId() + "_working.lsm");
     }

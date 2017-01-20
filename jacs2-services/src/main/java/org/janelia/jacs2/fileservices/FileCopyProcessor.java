@@ -26,9 +26,6 @@ import java.util.Map;
 
 public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
 
-    private static final int N_RETRIES_FOR_RESULT = 60;
-    private static final long WAIT_BETWEEN_RETRIES_FOR_RESULT = 1000; // 1s
-
     private final String libraryPath;
     private final String scriptName;
 
@@ -110,23 +107,15 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
     }
 
     @Override
-    protected File collectResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
         File destFile = (File) preProcessingResult;
-        // wait for the file to become visible because of the file system latency
-        // for now the # of tries and the wait is hard-coded
-        for (int i = 0; i < N_RETRIES_FOR_RESULT; i ++) {
-            if (Files.exists(destFile.toPath())) {
-                logger.info("Found {} on try # {}", destFile, i + 1);
-                return destFile;
-            }
-            logger.info("File {} not found on try # {}", destFile, i + 1);
-            try {
-                Thread.sleep(WAIT_BETWEEN_RETRIES_FOR_RESULT);
-            } catch (InterruptedException e) {
-                throw new ComputationException(jacsServiceData, e);
-            }
-        }
-        throw new ComputationException(jacsServiceData, "Destination file " + destFile + " was not created");
+        return Files.exists(destFile.toPath());
+
+    }
+
+    @Override
+    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        return (File) preProcessingResult;
     }
 
     @Override

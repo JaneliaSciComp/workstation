@@ -47,7 +47,6 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
                 .thenApply(r -> ServiceDataUtils.stringToAny(sampleLSMsServiceData.getStringifiedResult(), new TypeReference<List<SampleImageFile>>() {}));
     }
 
-
     @Override
     protected ServiceComputation<List<File>> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
@@ -55,7 +54,18 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
 
         List<ServiceComputation<?>> lsmMetadataComputations = submitAllLSMMetadataServices(sampleLSMs, args.sampleDataDir, jacsServiceData);
         return computationFactory.newCompletedComputation(jacsServiceData)
-                .thenCombineAll(lsmMetadataComputations, (sd, sampleLSMMetadataResults) -> sampleLSMMetadataResults.stream().map(r -> (File)r).collect(Collectors.toList()));
+                .thenCombineAll(lsmMetadataComputations, (sd, sampleLSMMetadataResults) -> sampleLSMMetadataResults.stream().map(r -> (File) r).collect(Collectors.toList()))
+                .thenApply(results -> this.applyResult(results, jacsServiceData));
+    }
+
+    @Override
+    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected List<File> retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        throw new UnsupportedOperationException();
     }
 
     private List<ServiceComputation<?>> submitAllLSMMetadataServices(List<SampleImageFile> lsmFiles, String outputDir, JacsServiceData jacsServiceData) {

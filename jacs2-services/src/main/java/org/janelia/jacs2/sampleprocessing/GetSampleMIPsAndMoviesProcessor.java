@@ -77,21 +77,32 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         } catch (IOException e) {
             throw new ComputationException(jacsServiceData, e);
         }
-        List<ServiceComputation<?>> lsmMetadataComputations = submitAllFijiServices(sampleLSMs, args, jacsServiceData, outputDir);
+        List<ServiceComputation<?>> mipsComputations = submitAllFijiServices(sampleLSMs, args, jacsServiceData, outputDir);
         return computationFactory.newCompletedComputation(jacsServiceData)
-                .thenCombineAll(lsmMetadataComputations, (sd, sampleLSMMetadataResults) -> {
-                    // collect all AVIs and PNGs
-                    String resultsPattern = "glob:**/*.{png,avi,mp4}";
-                    List<File> results = new ArrayList<>();
-                    try {
-                        PathMatcher inputFileMatcher =
-                                FileSystems.getDefault().getPathMatcher(resultsPattern);
-                        java.nio.file.Files.find(outputDir, 1, (p, a) -> inputFileMatcher.matches(p)).forEach(p -> results.add(p.toFile()));
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                    return results;
-                });
+                .thenCombineAll(mipsComputations, (sd, sampleMIPsResults) -> sampleMIPsResults)
+                .thenCompose(r -> this.collectResult(preProcessingResult, jacsServiceData));
+    }
+
+    @Override
+    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        return jacsServiceData.hasCompletedSuccessfully();
+    }
+
+    @Override
+    protected List<File> retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
+        Path outputDir = Paths.get(args.sampleDataDir, args.mipsSubDir);
+        // collect all AVIs and PNGs
+        String resultsPattern = "glob:**/*.{png,avi,mp4}";
+        List<File> results = new ArrayList<>();
+        try {
+            PathMatcher inputFileMatcher =
+                    FileSystems.getDefault().getPathMatcher(resultsPattern);
+            java.nio.file.Files.find(outputDir, 1, (p, a) -> inputFileMatcher.matches(p)).forEach(p -> results.add(p.toFile()));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return results;
     }
 
     private List<ServiceComputation<?>> submitAllFijiServices(List<SampleImageFile> lsmFiles, GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args, JacsServiceData jacsServiceData, Path outputDir) {
