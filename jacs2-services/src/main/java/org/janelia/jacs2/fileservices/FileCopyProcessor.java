@@ -116,8 +116,10 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
         // for now the # of tries and the wait is hard-coded
         for (int i = 0; i < N_RETRIES_FOR_RESULT; i ++) {
             if (Files.exists(destFile.toPath())) {
+                logger.info("Found {} on try # {}", destFile, i + 1);
                 return destFile;
             }
+            logger.info("File {} not found on try # {}", destFile, i + 1);
             try {
                 Thread.sleep(WAIT_BETWEEN_RETRIES_FOR_RESULT);
             } catch (InterruptedException e) {
