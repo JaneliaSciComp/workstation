@@ -24,12 +24,14 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
+import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
+import org.janelia.it.jacs.model.domain.sample.StatusTransition;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.NotCacheable;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -997,8 +999,12 @@ public class DomainModel {
         Events.getInstance().postOnEventBus(new DomainObjectRemoveEvent(domainObject));
     }
 
-    public void addPipelineStatusTransition(Sample sample, PipelineStatus target) throws Exception {
-        sampleFacade.addStatusTransition(sample, target);
+    public void addPipelineStatusTransition(StatusTransition transition) throws Exception {
+        sampleFacade.addStatusTransition(transition);
+    }
+
+    public void addIntakeOrder (IntakeOrder order) throws Exception {
+        sampleFacade.addIntakeOrder(order);
     }
 
     private void notifyDomainObjectsInvalidated(Collection<? extends DomainObject> objects, boolean invalidateTree) {

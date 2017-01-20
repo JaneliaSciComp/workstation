@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.browser.actions;
 
 import java.awt.event.ActionEvent;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -9,11 +11,13 @@ import java.util.Set;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.enums.OrderStatus;
 import org.janelia.it.jacs.model.domain.enums.PipelineStatus;
 import org.janelia.it.jacs.model.domain.enums.SubjectRole;
+import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.StatusTransition;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
@@ -60,11 +64,12 @@ public class RerunSamplesAction extends AbstractAction {
                 if (sample.getStatus() == null) {
                     logger.info("Null sample status in selection Name={}, ID={}.", sample.getName(), sample.getId());
                 }
-                if (!PipelineStatus.Processing.toString().equals(sample.getStatus())  &&
+                /*if (!PipelineStatus.Processing.toString().equals(sample.getStatus())  &&
                     !PipelineStatus.Scheduled.toString().equals(sample.getStatus())  &&
                     ClientDomainUtils.hasWriteAccess(sample)) {
                     samples.add(sample);
-                }
+                }*/
+                samples.add(sample);
             }
         }
         if (samples.size() > 0  &&
@@ -113,6 +118,13 @@ public class RerunSamplesAction extends AbstractAction {
                 // Force fresh pull, next attempt.
                 DomainMgr.getDomainMgr().getModel().invalidate(samples);
 
+                List<Long> sampleIds = new ArrayList<>();
+                Calendar c = Calendar.getInstance();
+                SimpleDateFormat format = new SimpleDateFormat("yyyyddMMhh");
+                Sample sampleInfo = samples.get(0);
+                String orderNo = "Workstation_" + sampleInfo.getOwnerName() + "_" +
+                        sampleInfo.getDataSet() + "_" +format.format(Calendar.getInstance().getTime());
+
                 for (Sample sample : samples) {
                     // Wish to obtain very latest version of the sample.  Avoid letting users step on each other.
                     sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
@@ -126,6 +138,7 @@ public class RerunSamplesAction extends AbstractAction {
                     ActivityLogHelper.logUserAction("DomainObjectContentMenu.markForReprocessing", sample);
                     Set<TaskParameter> taskParameters = new HashSet<>();
                     taskParameters.add(new TaskParameter("sample entity id", sample.getId().toString(), null));
+                    taskParameters.add(new TaskParameter("order no", orderNo, null));
                     taskParameters.add(new TaskParameter("reuse summary", "false", null));
                     taskParameters.add(new TaskParameter("reuse processing", "false", null));
                     taskParameters.add(new TaskParameter("reuse post", "false", null));
@@ -134,14 +147,33 @@ public class RerunSamplesAction extends AbstractAction {
                             taskParameters, TASK_LABEL, TASK_LABEL);
                     try {
                         task = StateMgr.getStateMgr().saveOrUpdateTask(task);
-                        DomainMgr.getDomainMgr().getModel().addPipelineStatusTransition(sample, PipelineStatus.Scheduled);
+                        StatusTransition transition = new StatusTransition();
+                        transition.setOrderNo(orderNo);
+                        transition.setSource(PipelineStatus.valueOf(sample.getStatus()));
+                        transition.setProcess("Front End Processing");
+                        transition.setSampleId(sample.getId());
+                        transition.setTarget(PipelineStatus.Scheduled);
+                        DomainMgr.getDomainMgr().getModel().addPipelineStatusTransition(transition);
                         DomainMgr.getDomainMgr().getModel().updateProperty(sample, "status", PipelineStatus.Scheduled.toString());
                         StateMgr.getStateMgr().dispatchJob(TASK_LABEL, task);
+                        sampleIds.add(sample.getId());
                     } 
                     catch (Exception ex) {
                         throw new RuntimeException(ex);
                     }
                 }
+
+                // add an intake order to track all these Samples
+                if (samples.size()>0) {
+                    IntakeOrder newOrder = new IntakeOrder();
+                    newOrder.setOrderNo(orderNo);
+                    newOrder.setOwner(sampleInfo.getOwnerKey());
+                    newOrder.setStartDate(c.getTime());
+                    newOrder.setStatus(OrderStatus.Intake);
+                    newOrder.setSampleIds(sampleIds);
+                    DomainMgr.getDomainMgr().getModel().addIntakeOrder(newOrder);
+                }
+
             }
 
             @Override
