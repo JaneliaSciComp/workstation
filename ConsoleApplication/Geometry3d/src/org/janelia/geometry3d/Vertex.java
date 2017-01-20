@@ -29,7 +29,7 @@
  */
 package org.janelia.geometry3d;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -37,9 +37,9 @@ import java.util.Map;
  * @author Christopher Bruns <brunsc at janelia.hhmi.org>
  */
 public class Vertex {
-    private final Map<String, ConstVector> vectorAttributes = new HashMap<>();
+    private final Map<String, ConstVector> vectorAttributes = new LinkedHashMap<>();
     // private final Map<String, Vector4> vector4Attributes = new HashMap<String, Vector4>();
-    private final Map<String, Float> floatAttributes = new HashMap<String, Float>();
+    private final Map<String, Float> floatAttributes = new LinkedHashMap<>();
     
     public Vertex(ConstVector3 position) {
         setAttribute("position", position);
