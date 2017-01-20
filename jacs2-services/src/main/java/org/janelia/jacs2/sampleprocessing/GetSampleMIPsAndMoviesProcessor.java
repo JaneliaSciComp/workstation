@@ -9,6 +9,7 @@ import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.JacsServiceDataBuilder;
 import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.service.impl.AbstractServiceProcessor;
+import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.JacsServiceDispatcher;
 import org.janelia.jacs2.service.impl.ServiceComputation;
 import org.janelia.jacs2.service.impl.ServiceComputationFactory;
@@ -20,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
@@ -69,7 +71,12 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         List<SampleImageFile> sampleLSMs = (List<SampleImageFile>) preProcessingResult;
         GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
         Path outputDir = Paths.get(args.sampleDataDir, args.mipsSubDir);
-
+        try {
+            // the output directory must exist
+            Files.createDirectories(outputDir);
+        } catch (IOException e) {
+            throw new ComputationException(jacsServiceData, e);
+        }
         List<ServiceComputation<?>> lsmMetadataComputations = submitAllFijiServices(sampleLSMs, args, jacsServiceData, outputDir);
         return computationFactory.newCompletedComputation(jacsServiceData)
                 .thenCombineAll(lsmMetadataComputations, (sd, sampleLSMMetadataResults) -> {
