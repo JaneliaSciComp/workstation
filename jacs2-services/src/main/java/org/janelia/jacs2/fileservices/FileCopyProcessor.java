@@ -26,7 +26,7 @@ import java.util.Map;
 
 public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
 
-    private static final int N_RETRIES_FOR_RESULT = 3;
+    private static final int N_RETRIES_FOR_RESULT = 10;
     private static final long WAIT_BETWEEN_RETRIES_FOR_RESULT = 500; // 500ms
 
     private final String libraryPath;
