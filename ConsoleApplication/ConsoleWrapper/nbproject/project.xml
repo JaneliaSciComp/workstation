@@ -1574,6 +1574,7 @@
                 <package>org.janelia.it.jacs.model.jobs</package>
                 <package>org.janelia.it.jacs.model.ontology</package>
                 <package>org.janelia.it.jacs.model.ontology.types</package>
+                <package>org.janelia.it.jacs.model.domain.orders</package>
                 <package>org.janelia.it.jacs.model.sage</package>
                 <package>org.janelia.it.jacs.model.search</package>
                 <package>org.janelia.it.jacs.model.status</package>
