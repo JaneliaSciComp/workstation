@@ -1,11 +1,9 @@
 package org.janelia.jacs2.sampleprocessing;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
 import org.janelia.it.jacs.model.domain.sample.Image;
-import org.janelia.jacs2.cdi.ObjectMapperFactory;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.JacsServiceDataBuilder;
@@ -22,8 +20,6 @@ import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;

@@ -19,16 +19,15 @@ import org.slf4j.Logger;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
+
+    private static final int N_RETRIES_FOR_RESULT = 3;
+    private static final long WAIT_BETWEEN_RETRIES_FOR_RESULT = 500; // 500ms
 
     private final String libraryPath;
     private final String scriptName;
@@ -113,10 +112,19 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
     @Override
     protected File collectResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
         File destFile = (File) preProcessingResult;
-        if (!Files.exists(destFile.toPath())) {
-            throw new ComputationException(jacsServiceData, "Destination file " + destFile + " was not created");
+        // wait for the file to become visible because of the file system latency
+        // for now the # of tries and the wait is hard-coded
+        for (int i = 0; i < N_RETRIES_FOR_RESULT; i ++) {
+            if (Files.exists(destFile.toPath())) {
+                return destFile;
+            }
+            try {
+                Thread.sleep(WAIT_BETWEEN_RETRIES_FOR_RESULT);
+            } catch (InterruptedException e) {
+                throw new ComputationException(jacsServiceData, e);
+            }
         }
-        return destFile;
+        throw new ComputationException(jacsServiceData, "Destination file " + destFile + " was not created");
     }
 
     @Override

@@ -4,7 +4,6 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import org.janelia.jacs2.model.service.ServiceMetaData;
 import org.janelia.jacs2.service.impl.ServiceDescriptor;
-import org.janelia.jacs2.service.impl.ServiceProcessor;
 
 import javax.inject.Inject;
 import javax.inject.Named;
