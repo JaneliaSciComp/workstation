@@ -61,7 +61,7 @@ public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcesso
         if (anatomicalAreas.isEmpty()) {
             return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "No anatomical areas found for " +
                     args.sampleId +
-                    (StringUtils.isBlank(args.sampleObjective) ? "" : args.sampleObjective)));
+                    (StringUtils.isBlank(args.sampleObjective) ? "" : "-" + args.sampleObjective)));
         }
         Path destinationDirectory = Paths.get(args.sampleDataDir);
         Map<String, SampleImageFile> indexedSampleImageFiles = new LinkedHashMap<>();
