@@ -10,7 +10,7 @@ import org.janelia.jacs2.service.impl.ServiceDescriptor;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-@Named("fijiMacro")
+@Named("mpegConverter")
 public class VideoFormatConverterServiceDescriptor implements ServiceDescriptor {
     private static String SERVICE_NAME = "fijiMacro";
 
