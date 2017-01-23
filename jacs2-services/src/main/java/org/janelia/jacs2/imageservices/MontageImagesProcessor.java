@@ -7,7 +7,6 @@ import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.service.impl.AbstractExeBasedServiceProcessor;
-import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.ExternalProcessRunner;
 import org.janelia.jacs2.service.impl.JacsServiceDispatcher;
 import org.janelia.jacs2.service.impl.ServiceComputationFactory;

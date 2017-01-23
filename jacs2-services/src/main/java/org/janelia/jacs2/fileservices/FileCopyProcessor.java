@@ -20,6 +20,7 @@ import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
@@ -57,24 +58,26 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
 
     @Override
     protected ServiceComputation<File> preProcessData(JacsServiceData jacsServiceData) {
-        return computationFactory.<File>newComputation()
-                .supply(() -> {
-                    try {
-                        FileCopyServiceDescriptor.FileCopyArgs args = getArgs(jacsServiceData);
-                        if (StringUtils.isBlank(args.sourceFilename)) {
-                            throw new ComputationException(jacsServiceData, "Source file name must be specified");
-                        } else if (StringUtils.isBlank(args.targetFilename)) {
-                            throw new ComputationException(jacsServiceData, "Target file name must be specified");
-                        } else {
-                            File targetFile = new File(args.targetFilename);
-                            Files.createDirectories(targetFile.getParentFile().toPath());
-                            return targetFile;
-                        }
-                    } catch (Exception e) {
-                        logger.error("FileCopy preprocess error", e);
-                        throw new ComputationException(jacsServiceData, e);
-                    }
-                });
+        try {
+            FileCopyServiceDescriptor.FileCopyArgs args = getArgs(jacsServiceData);
+            if (StringUtils.isBlank(args.sourceFilename)) {
+                return computationFactory.newFailedComputation(
+                        new ComputationException(jacsServiceData, "Source file name must be specified"));
+            } else if (StringUtils.isBlank(args.targetFilename)) {
+                return computationFactory.newFailedComputation(
+                        new ComputationException(jacsServiceData, "Target file name must be specified"));
+            } else {
+                File targetFile = new File(args.targetFilename);
+                try {
+                    Files.createDirectories(targetFile.getParentFile().toPath());
+                } catch (IOException e) {
+                    throw new ComputationException(jacsServiceData, e);
+                }
+                return computationFactory.newCompletedComputation(targetFile);
+            }
+        } catch (Exception e) {
+            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, e));
+        }
     }
 
     @Override
@@ -91,19 +94,16 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
 
     @Override
     protected ServiceComputation<File> postProcessData(File processingResult, JacsServiceData jacsServiceData) {
-        return computationFactory.<File>newComputation()
-                .supply(() -> {
-                    try {
-                        FileCopyServiceDescriptor.FileCopyArgs args = getArgs(jacsServiceData);
-                        if (args.deleteSourceFile) {
-                            File sourceFile = new File(args.sourceFilename);
-                            Files.deleteIfExists(sourceFile.toPath());
-                        }
-                        return processingResult;
-                    } catch (Exception e) {
-                        throw new ComputationException(jacsServiceData, e);
-                    }
-                });
+        try {
+            FileCopyServiceDescriptor.FileCopyArgs args = getArgs(jacsServiceData);
+            if (args.deleteSourceFile) {
+                File sourceFile = new File(args.sourceFilename);
+                Files.deleteIfExists(sourceFile.toPath());
+            }
+            return computationFactory.newCompletedComputation(processingResult);
+        } catch (Exception e) {
+            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, e));
+        }
     }
 
     @Override

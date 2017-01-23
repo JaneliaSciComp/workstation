@@ -5,9 +5,11 @@ import org.janelia.jacs2.service.impl.JacsQueueSyncer;
 
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.CDI;
+import javax.inject.Singleton;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+@Singleton
 public class BackgroundJobs implements ServletContextListener {
 
     private JacsQueueSyncer queueSyncer;
