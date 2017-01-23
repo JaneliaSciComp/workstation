@@ -26,8 +26,7 @@ import java.util.List;
 public class SampleDataResource {
     private static final int DEFAULT_PAGE_SIZE = 100;
 
-    @Inject
-    private SampleDataService sampleDataService;
+    @Inject private SampleDataService sampleDataService;
 
     @GET
     public Response getAllSamples(

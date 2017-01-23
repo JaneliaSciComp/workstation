@@ -43,7 +43,7 @@ dependencies {
         UNDERTOW_SERVLET_LIB = "io.undertow:undertow-servlet:${UNDERTOW_VERSION}"
 
         // JSON
-        JACKSON_VERSION = "2.8.5"
+        JACKSON_VERSION = "2.8.6"
         JACKSON_CORE_LIB = "com.fasterxml.jackson.core:jackson-core:${JACKSON_VERSION}"
         JACKSON_ANNOTATIONS_LIB = "com.fasterxml.jackson.core:jackson-annotations:${JACKSON_VERSION}"
         JACKSON_DATABIND_LIB = "com.fasterxml.jackson.core:jackson-databind:${JACKSON_VERSION}"

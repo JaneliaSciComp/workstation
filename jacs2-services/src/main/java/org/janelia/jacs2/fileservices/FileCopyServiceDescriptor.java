@@ -10,8 +10,6 @@ import javax.inject.Named;
 
 @Named("fileCopy")
 public class FileCopyServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "fileCopy";
-
     public static class FileCopyArgs {
         @Parameter(names = "-src", description = "Source file name", required = true)
         String sourceFilename;
@@ -32,12 +30,13 @@ public class FileCopyServiceDescriptor implements ServiceDescriptor {
 
     @Override
     public ServiceMetaData getMetadata() {
+        String serviceName = this.getClass().getAnnotation(Named.class).value();
         ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(SERVICE_NAME);
+        smd.setServiceName(serviceName);
         FileCopyArgs args = new FileCopyArgs();
         StringBuilder usageOutput = new StringBuilder();
         JCommander jc = new JCommander(args);
-        jc.setProgramName(SERVICE_NAME);
+        jc.setProgramName(serviceName);
         jc.usage(usageOutput);
         smd.setUsage(usageOutput.toString());
         return smd;

@@ -21,8 +21,7 @@ import javax.ws.rs.core.UriBuilder;
 @Path("/v2/async-services")
 public class AsyncServiceInfoResource {
 
-    @Inject
-    private JacsServiceDataManager jacsServiceDataManager;
+    @Inject private JacsServiceDataManager jacsServiceDataManager;
 
     @POST
     @Path("/{service-name}")

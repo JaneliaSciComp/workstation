@@ -9,6 +9,7 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class JacsServiceRegistry implements ServiceRegistry {
 
@@ -22,6 +23,11 @@ public class JacsServiceRegistry implements ServiceRegistry {
     public ServiceMetaData getServiceDescriptor(String serviceName) {
         ServiceDescriptor service = lookupService(serviceName);
         return service != null ? service.getMetadata() : null;
+    }
+
+    @Override
+    public List<ServiceMetaData> getAllServiceDescriptors() {
+        return getAllServices(anyServiceSource).stream().map(sd -> sd.getMetadata()).collect(Collectors.toList());
     }
 
     @Override

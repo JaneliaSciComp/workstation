@@ -10,8 +10,6 @@ import javax.inject.Named;
 
 @Named("lsmFileMetadata")
 public class LsmFileMetadataServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "lsmFileMetadata";
-
     static class LsmFileMetadataArgs {
         @Parameter(names = "-inputLSM", description = "LSM Input file name", required = true)
         String inputLSMFile;
@@ -28,12 +26,13 @@ public class LsmFileMetadataServiceDescriptor implements ServiceDescriptor {
 
     @Override
     public ServiceMetaData getMetadata() {
+        String serviceName = this.getClass().getAnnotation(Named.class).value();
         ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(SERVICE_NAME);
+        smd.setServiceName(serviceName);
         LsmFileMetadataArgs args = new LsmFileMetadataArgs();
         StringBuilder usageOutput = new StringBuilder();
         JCommander jc = new JCommander(args);
-        jc.setProgramName(SERVICE_NAME);
+        jc.setProgramName(serviceName);
         jc.usage(usageOutput);
         smd.setUsage(usageOutput.toString());
         return smd;

@@ -8,8 +8,6 @@ import javax.inject.Named;
 
 @Named("getSampleLsmMetadata")
 public class GetSampleLsmsMetadataServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "getSampleLsmMetadata";
-
     private final GetSampleLsmsMetadataProcessor sampleLsmMetadataProcessor;
 
     @Inject
@@ -19,9 +17,10 @@ public class GetSampleLsmsMetadataServiceDescriptor implements ServiceDescriptor
 
     @Override
     public ServiceMetaData getMetadata() {
+        String serviceName = this.getClass().getAnnotation(Named.class).value();
         ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(SERVICE_NAME);
-        smd.setUsage(SampleServiceArgs.usage(SERVICE_NAME, new SampleServiceArgs()));
+        smd.setServiceName(serviceName);
+        smd.setUsage(SampleServiceArgs.usage(serviceName, new SampleServiceArgs()));
         return smd;
     }
 

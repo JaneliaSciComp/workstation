@@ -20,6 +20,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.util.Date;
+import java.util.List;
 
 @ApplicationScoped
 @Produces("application/json")
@@ -27,12 +28,9 @@ import java.util.Date;
 public class ServiceInfoResource {
     private static final int DEFAULT_PAGE_SIZE = 100;
 
-    @Inject
-    private Logger logger;
-    @Inject
-    private JacsServiceDataManager jacsServiceDataManager;
-    @Inject
-    private ServiceRegistry serviceRegistry;
+    @Inject private JacsServiceDataManager jacsServiceDataManager;
+    @Inject private ServiceRegistry serviceRegistry;
+    @Inject private Logger logger;
 
     @GET
     public Response getAllServices(@QueryParam("service-name") String serviceName,
@@ -94,7 +92,17 @@ public class ServiceInfoResource {
     }
 
     @GET
-    @Path("/{service-name}/metadata")
+    @Path("/metadata")
+    public Response getAllServicesMetadata() {
+        List<ServiceMetaData> services = serviceRegistry.getAllServiceDescriptors();
+        return Response
+                .status(Response.Status.OK)
+                .entity(services)
+                .build();
+    }
+
+    @GET
+    @Path("/metadata/{service-name}")
     public Response getServiceMetadata(@PathParam("service-name") String serviceName) {
         ServiceMetaData smd = serviceRegistry.getServiceDescriptor(serviceName);
         if (smd == null) {

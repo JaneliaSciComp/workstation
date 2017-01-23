@@ -13,7 +13,6 @@ import javax.inject.Named;
  */
 @Named("montageImages")
 public class MontageImagesServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "montageImages";
 
     static class MontageImagesArgs {
         @Parameter(names = "-inputFolder", description = "Input folder", required = true)
@@ -35,12 +34,13 @@ public class MontageImagesServiceDescriptor implements ServiceDescriptor {
 
     @Override
     public ServiceMetaData getMetadata() {
+        String serviceName = this.getClass().getAnnotation(Named.class).value();
         ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(SERVICE_NAME);
+        smd.setServiceName(serviceName);
         MontageImagesArgs args = new MontageImagesArgs();
         StringBuilder usageOutput = new StringBuilder();
         JCommander jc = new JCommander(args);
-        jc.setProgramName(SERVICE_NAME);
+        jc.setProgramName(serviceName);
         jc.usage(usageOutput);
         smd.setUsage(usageOutput.toString());
         return smd;

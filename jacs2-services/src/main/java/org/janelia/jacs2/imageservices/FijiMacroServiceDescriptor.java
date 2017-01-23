@@ -10,8 +10,6 @@ import javax.inject.Named;
 
 @Named("fijiMacro")
 public class FijiMacroServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "fijiMacro";
-
     static class FijiMacroArgs {
         @Parameter(names = "-macro", description = "FIJI macro name", required = true)
         String macroName;
@@ -28,12 +26,13 @@ public class FijiMacroServiceDescriptor implements ServiceDescriptor {
 
     @Override
     public ServiceMetaData getMetadata() {
+        String serviceName = this.getClass().getAnnotation(Named.class).value();
         ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(SERVICE_NAME);
+        smd.setServiceName(serviceName);
         FijiMacroArgs args = new FijiMacroArgs();
         StringBuilder usageOutput = new StringBuilder();
         JCommander jc = new JCommander(args);
-        jc.setProgramName(SERVICE_NAME);
+        jc.setProgramName(serviceName);
         jc.usage(usageOutput);
         smd.setUsage(usageOutput.toString());
         return smd;

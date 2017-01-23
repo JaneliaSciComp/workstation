@@ -9,8 +9,6 @@ import javax.inject.Named;
 
 @Named("sampleSummary")
 public class SampleSummaryServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "sampleSummary";
-
     static class SampleSummaryArgs extends SampleServiceArgs {
         @Parameter(names = "-channelDyeSpec", description = "Channel dye spec", required = false)
         String channelDyeSpec;
@@ -25,9 +23,10 @@ public class SampleSummaryServiceDescriptor implements ServiceDescriptor {
 
     @Override
     public ServiceMetaData getMetadata() {
+        String serviceName = this.getClass().getAnnotation(Named.class).value();
         ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(SERVICE_NAME);
-        smd.setUsage(SampleSummaryArgs.usage(SERVICE_NAME, new SampleSummaryArgs()));
+        smd.setServiceName(serviceName);
+        smd.setUsage(SampleSummaryArgs.usage(serviceName, new SampleSummaryArgs()));
         return smd;
     }
 

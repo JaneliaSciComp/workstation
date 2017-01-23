@@ -12,8 +12,6 @@ import javax.inject.Named;
 
 @Named("mpegConverter")
 public class VideoFormatConverterServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "fijiMacro";
-
     static class ConverterArgs {
         @Parameter(names = "-input", description = "Input file name", required = true)
         String input;
@@ -40,12 +38,13 @@ public class VideoFormatConverterServiceDescriptor implements ServiceDescriptor 
 
     @Override
     public ServiceMetaData getMetadata() {
+        String serviceName = this.getClass().getAnnotation(Named.class).value();
         ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(SERVICE_NAME);
+        smd.setServiceName(serviceName);
         ConverterArgs args = new ConverterArgs();
         StringBuilder usageOutput = new StringBuilder();
         JCommander jc = new JCommander(args);
-        jc.setProgramName(SERVICE_NAME);
+        jc.setProgramName(serviceName);
         jc.usage(usageOutput);
         smd.setUsage(usageOutput.toString());
         return smd;

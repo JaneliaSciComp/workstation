@@ -10,8 +10,6 @@ import javax.inject.Named;
 
 @Named("archivedLsmMetadata")
 public class ArchivedLsmMetadataServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "archivedLsmMetadata";
-
     static class ArchivedLsmMetadataArgs {
         @Parameter(names = "-archivedLSM", description = "Archived LSM file name", required = true)
         String archiveLSMFile;
@@ -30,12 +28,13 @@ public class ArchivedLsmMetadataServiceDescriptor implements ServiceDescriptor {
 
     @Override
     public ServiceMetaData getMetadata() {
+        String serviceName = this.getClass().getAnnotation(Named.class).value();
         ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(SERVICE_NAME);
+        smd.setServiceName(serviceName);
         ArchivedLsmMetadataArgs args = new ArchivedLsmMetadataArgs();
         StringBuilder usageOutput = new StringBuilder();
         JCommander jc = new JCommander(args);
-        jc.setProgramName(SERVICE_NAME);
+        jc.setProgramName(serviceName);
         jc.usage(usageOutput);
         smd.setUsage(usageOutput.toString());
         return smd;

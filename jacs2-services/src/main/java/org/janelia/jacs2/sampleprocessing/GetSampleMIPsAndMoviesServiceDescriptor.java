@@ -9,8 +9,6 @@ import javax.inject.Named;
 
 @Named("getSampleMIPsAndMovies")
 public class GetSampleMIPsAndMoviesServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "getSampleMIPsAndMovies";
-
     static class SampleMIPsAndMoviesArgs extends SampleServiceArgs {
         @Parameter(names = "-options", description = "Options", required = false)
         String options = "mips:movies:legends:bcomp";
@@ -27,9 +25,10 @@ public class GetSampleMIPsAndMoviesServiceDescriptor implements ServiceDescripto
 
     @Override
     public ServiceMetaData getMetadata() {
+        String serviceName = this.getClass().getAnnotation(Named.class).value();
         ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(SERVICE_NAME);
-        smd.setUsage(SampleMIPsAndMoviesArgs.usage(SERVICE_NAME, new SampleMIPsAndMoviesArgs()));
+        smd.setServiceName(serviceName);
+        smd.setUsage(SampleMIPsAndMoviesArgs.usage(serviceName, new SampleMIPsAndMoviesArgs()));
         return smd;
     }
 
