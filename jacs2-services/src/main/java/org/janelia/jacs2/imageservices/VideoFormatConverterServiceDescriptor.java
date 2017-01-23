@@ -13,6 +13,8 @@ import javax.inject.Named;
 @Named("mpegConverter")
 public class VideoFormatConverterServiceDescriptor implements ServiceDescriptor {
     static class ConverterArgs {
+        private static final String DEFAULT_OUTPUT_EXT = ".mp4";
+
         @Parameter(names = "-input", description = "Input file name", required = true)
         String input;
         @Parameter(names = "-output", description = "Output file name")
@@ -23,7 +25,7 @@ public class VideoFormatConverterServiceDescriptor implements ServiceDescriptor 
         String getOutputName() {
             if (StringUtils.isBlank(output)) {
                 String extension = Files.getFileExtension(input);
-                return input.replace(extension, ".mp4");
+                return input.replace("." + extension, DEFAULT_OUTPUT_EXT);
             }
             return output;
         }
