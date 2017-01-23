@@ -14,25 +14,16 @@ import org.janelia.jacs2.service.impl.JacsServiceDispatcher;
 import org.janelia.jacs2.service.impl.ServiceComputation;
 import org.janelia.jacs2.service.impl.ServiceComputationFactory;
 import org.janelia.jacs2.service.impl.ServiceDataUtils;
-import org.janelia.jacs2.utils.ScriptingUtils;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProcessor<File> {
 
@@ -100,10 +91,22 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
                 .add("-y")
                 .add("-r").add("7")
                 .add("-i").add(args.input)
-                .add(String.format("-vcodec libx264 -b:v 2000000 -preset slow -tune film -pix_fmt yuv420p %b",
-                                args.truncate))
-                .add(args.getOutputName())
-                ;
+                .add("-vcodec")
+                .add("libx264")
+                .add("-b:v")
+                .add("2000000")
+                .add("-preset")
+                .add("slow")
+                .add("-tune")
+                .add("film")
+                .add("-pix_fmt")
+                .add("yuv420p");
+        if (args.truncate) {
+            cmdLineBuilder
+                    .add("-vf")
+                    .add("scale=trunc(iw/2)*2:trunc(ih/2)*2");
+        }
+        cmdLineBuilder.add(args.getOutputName());
         return cmdLineBuilder.build();
     }
 
