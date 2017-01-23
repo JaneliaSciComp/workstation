@@ -1,7 +1,5 @@
 package org.janelia.jacs2.model.service;
 
-import java.util.List;
-
 public class ServiceMetaData {
 
     private String serviceName;

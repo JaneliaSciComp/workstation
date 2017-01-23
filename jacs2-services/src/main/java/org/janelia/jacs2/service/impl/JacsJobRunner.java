@@ -1,5 +1,6 @@
 package org.janelia.jacs2.service.impl;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
 
 import javax.annotation.PostConstruct;
@@ -8,19 +9,25 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class JacsJobRunner {
 
-    @Inject
-    private Logger logger;
-    @Inject
-    private JacsServiceDispatcher jacsServiceDispatcher;
+    private final JacsServiceDispatcher jacsServiceDispatcher;
     private final ScheduledExecutorService scheduler;
+    private final Logger logger;
 
-    public JacsJobRunner() {
-        this.scheduler = Executors.newScheduledThreadPool(1);
+    @Inject
+    JacsJobRunner(JacsServiceDispatcher jacsServiceDispatcher, Logger logger) {
+        this.jacsServiceDispatcher = jacsServiceDispatcher;
+        this.logger = logger;
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("JACS-DISPATCH-%d")
+                .setDaemon(true)
+                .build();
+        this.scheduler = Executors.newScheduledThreadPool(1, threadFactory);
     }
 
     private void doWork() {
