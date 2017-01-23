@@ -154,12 +154,17 @@ public class GenerateNeuronsDialog extends ModalDialog {
         VoxelXyz max = tileFormat.voxelXyzForMicrometerXyzMatrix(new MicrometerXyz(boundingBox.getMax()));
         boundingBox = new BoundingBox3d(min.asVec3(), max.asVec3());
         
-        // BoundingBox: [Vec3(0.0, 0.0, 0.0), Vec3(35840.0, 29184.0, 10240.0)]
-
-        // Fixed size
+        // Make the box smaller, because most neurons will not show up in 
+        // the periphery (there's probably not even an image there)
         boundingBox = new BoundingBox3d(
-                new Vec3(1000, 1000, 3000), 
-                new Vec3(35840-1000, 29184-2000, 10240-3000));
+                new Vec3(
+                        boundingBox.getMinX()+1000, 
+                        boundingBox.getMinY()+1000, 
+                        boundingBox.getMinZ()+1000), 
+                new Vec3(
+                        boundingBox.getMaxX()-1000, 
+                        boundingBox.getMaxY()-1000, 
+                        boundingBox.getMaxZ()-1000));
 
         log.info("Bounding box (voxels): {}", boundingBox);
         
