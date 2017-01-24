@@ -1,6 +1,7 @@
 package org.janelia.jacs2.sampleprocessing;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.imageservices.FijiColor;
@@ -69,6 +70,9 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
     @Override
     protected ServiceComputation<List<File>> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
         List<SampleImageFile> sampleLSMs = (List<SampleImageFile>) preProcessingResult;
+        if (CollectionUtils.isEmpty(sampleLSMs)) {
+            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "No sample image file was found"));
+        }
         GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
         Path outputDir = Paths.get(args.sampleDataDir, args.mipsSubDir);
         try {

@@ -1,11 +1,13 @@
 package org.janelia.jacs2.sampleprocessing;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.JacsServiceDataBuilder;
 import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.service.impl.AbstractServiceProcessor;
+import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.JacsServiceDispatcher;
 import org.janelia.jacs2.service.impl.ServiceComputation;
 import org.janelia.jacs2.service.impl.ServiceComputationFactory;
@@ -51,7 +53,9 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
     protected ServiceComputation<List<File>> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
         List<SampleImageFile> sampleLSMs = (List<SampleImageFile>) preProcessingResult;
-
+        if (CollectionUtils.isEmpty(sampleLSMs)) {
+            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "No sample image file was found"));
+        }
         List<ServiceComputation<?>> lsmMetadataComputations = submitAllLSMMetadataServices(sampleLSMs, args.sampleDataDir, jacsServiceData);
         return computationFactory.newCompletedComputation(jacsServiceData)
                 .thenCombineAll(lsmMetadataComputations, (sd, sampleLSMMetadataResults) -> sampleLSMMetadataResults.stream().map(r -> (File) r).collect(Collectors.toList()))
