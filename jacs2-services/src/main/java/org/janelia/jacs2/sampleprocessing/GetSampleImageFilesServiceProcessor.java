@@ -88,7 +88,7 @@ public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcesso
                                     .setProcessingLocation(ProcessingLocation.CLUSTER) // fileCopy only works on the cluster for now
                                     .build();
                     indexedSampleImageFiles.put(sif.getWorkingFilePath(), sif);
-                    ServiceComputation<?> fc = this.submitChildService(jacsServiceData, retrieveImageFileServiceData)
+                    ServiceComputation<?> fc = this.submitServiceDependency(jacsServiceData, retrieveImageFileServiceData)
                             .thenCompose(sd -> this.waitForCompletion(sd));
                     fcs.add(fc);
                 });

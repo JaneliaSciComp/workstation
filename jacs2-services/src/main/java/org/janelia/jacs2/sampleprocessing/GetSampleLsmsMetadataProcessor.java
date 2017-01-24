@@ -42,7 +42,7 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
     @Override
     protected ServiceComputation<List<SampleImageFile>> preProcessData(JacsServiceData jacsServiceData) {
         JacsServiceData sampleLSMsServiceData = SampleServicesUtils.createChildSampleServiceData("getSampleImageFiles", getArgs(jacsServiceData), jacsServiceData);
-        return submitChildService(jacsServiceData, sampleLSMsServiceData)
+        return submitServiceDependency(jacsServiceData, sampleLSMsServiceData)
                 .thenCompose(sd -> this.waitForCompletion(sd))
                 .thenApply(r -> ServiceDataUtils.stringToAny(sampleLSMsServiceData.getStringifiedResult(), new TypeReference<List<SampleImageFile>>() {}));
     }
@@ -79,7 +79,7 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
                             .addArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())
                             .build();
             lsmMetadataComputations.add(
-                    this.submitChildService(jacsServiceData, extractLsmMetadataService)
+                    this.submitServiceDependency(jacsServiceData, extractLsmMetadataService)
                             .thenCompose(sd -> this.waitForCompletion(sd))
             );
         });

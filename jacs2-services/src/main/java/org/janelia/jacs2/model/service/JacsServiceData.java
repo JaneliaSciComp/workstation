@@ -2,18 +2,24 @@ package org.janelia.jacs2.model.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.jacs.model.domain.support.MongoMapping;
 import org.janelia.jacs2.model.BaseEntity;
 import org.janelia.jacs2.utils.MongoNumberBigIntegerDeserializer;
+import org.janelia.jacs2.utils.MongoNumberBigIntegerListDeserializer;
 
+import javax.management.ImmutableDescriptor;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @MongoMapping(collectionName="jacsService", label="JacsService")
@@ -44,8 +50,9 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     @JsonIgnore
     private JacsServiceData parentService;
     @JsonIgnore
-    private List<JacsServiceData> childServices = new ArrayList<>();
-
+    private List<JacsServiceData> dependencies = new ArrayList<>();
+    @JsonDeserialize(using = MongoNumberBigIntegerListDeserializer.class)
+    private List<Number> dependeciesIds = new ArrayList<>();
     public Number getId() {
         return id;
     }
@@ -243,13 +250,24 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         this.events.add(se);
     }
 
-    public List<JacsServiceData> getChildServices() {
-        return childServices;
+    public List<JacsServiceData> getDependencies() {
+        return dependencies;
     }
 
-    public void addChildService(JacsServiceData childService) {
-        childServices.add(childService);
-        childService.updateParentService(this);
+    public void addServiceDependency(JacsServiceData dependency) {
+        dependencies.add(dependency);
+        addServiceDependencyId(dependency);
+        dependency.updateParentService(this);
+    }
+
+    public List<Number> getDependeciesIds() {
+        return dependeciesIds;
+    }
+
+    public void addServiceDependencyId(JacsServiceData dependency) {
+        if (dependency.getId() != null && !dependeciesIds.contains(dependency.getId())) {
+            dependeciesIds.add(dependency.getId());
+        }
     }
 
     public JacsServiceData getParentService() {
@@ -258,8 +276,13 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
 
     public void updateParentService(JacsServiceData parentService) {
         if (parentService != null) {
-            this.parentService = parentService;
-            setParentServiceId(parentService.getId());
+            if (this.parentService == null) {
+                this.parentService = parentService;
+                parentService.addServiceDependencyId(this);
+            }
+            if (this.getParentServiceId() == null) {
+                setParentServiceId(parentService.getId());
+            }
             if (parentService.getRootServiceId() == null) {
                 setRootServiceId(parentService.getId());
             } else {
@@ -276,9 +299,18 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     }
 
     public Stream<JacsServiceData> serviceHierarchyStream() {
+        return serviceHierarchyStream(new LinkedHashSet<>());
+    }
+
+    private Stream<JacsServiceData> serviceHierarchyStream(Set<JacsServiceData> collectedDependencies) {
         return Stream.concat(
                 Stream.of(this),
-                childServices.stream().flatMap(JacsServiceData::serviceHierarchyStream)
+                dependencies.stream()
+                        .filter(sd -> !collectedDependencies.contains(sd))
+                        .flatMap(sd -> {
+                            collectedDependencies.add(sd);
+                            return sd.serviceHierarchyStream(collectedDependencies);
+                        })
         );
     }
 
@@ -288,7 +320,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
 
     @Override
     public String toString() {
-        return ReflectionToStringBuilder.toString(this);
+        return ReflectionToStringBuilder.toStringExclude(this, ImmutableList.of("dependencies"));
     }
 
     public boolean hasCompletedUnsuccessfully() {

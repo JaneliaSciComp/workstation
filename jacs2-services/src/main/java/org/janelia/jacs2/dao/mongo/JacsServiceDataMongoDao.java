@@ -18,7 +18,9 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,24 +47,33 @@ public class JacsServiceDataMongoDao extends AbstractMongoDao<JacsServiceData> i
 
     @Override
     public List<JacsServiceData> findServiceHierarchy(Number serviceId) {
+        List<JacsServiceData> serviceHierarchy = new ArrayList<>();
         JacsServiceData jacsServiceData = findById(serviceId);
         Preconditions.checkArgument(jacsServiceData != null, "Invalid service ID - no service found for " + serviceId);
+        serviceHierarchy.add(jacsServiceData);
         Number rootServiceId = jacsServiceData.getRootServiceId();
+        Map<Number, JacsServiceData> fullServiceHierachy = new LinkedHashMap<>();
         if (rootServiceId == null) {
             rootServiceId = serviceId;
+            fullServiceHierachy.put(jacsServiceData.getId(), jacsServiceData);
         }
-        List<JacsServiceData> fullServiceHierachy = find(eq("rootServiceId", rootServiceId), createBsonSortCriteria(ImmutableList.of(new SortCriteria("_id"))), 0, -1, JacsServiceData.class);
-        List<JacsServiceData> serviceHierarchy = new ArrayList<>();
-        Set<Number> serviceHierarchySet = new HashSet<>();
-        serviceHierarchy.add(jacsServiceData);
-        serviceHierarchySet.add(serviceId);
-        fullServiceHierachy.stream().forEach(ti -> {
-            if (serviceHierarchySet.contains(ti.getParentServiceId())) {
-                serviceHierarchy.add(ti);
-                serviceHierarchySet.add(ti.getId());
+        find(eq("rootServiceId", rootServiceId), createBsonSortCriteria(ImmutableList.of(new SortCriteria("_id"))), 0, -1, JacsServiceData.class)
+                .forEach(sd -> {
+                    fullServiceHierachy.put(sd.getId(), sd);
+                });
+        fullServiceHierachy.forEach((k, sd) -> {
+            JacsServiceData parentService = fullServiceHierachy.get(sd.getParentServiceId());
+            if (parentService != null) {
+                sd.updateParentService(parentService);
             }
         });
-        return serviceHierarchy;
+        fullServiceHierachy.forEach((k, sd) -> {
+            sd.getDependeciesIds().forEach(id -> sd.addServiceDependency(fullServiceHierachy.get(id)));
+        });
+
+        jacsServiceData.getDependeciesIds().forEach(id -> jacsServiceData.addServiceDependency(fullServiceHierachy.get(id)));
+
+        return jacsServiceData.serviceHierarchyStream().collect(Collectors.toList());
     }
 
     @Override
@@ -113,6 +124,9 @@ public class JacsServiceDataMongoDao extends AbstractMongoDao<JacsServiceData> i
             s.updateParentService(s.getParentService());
             return s;
         }).collect(Collectors.toList());
+        serviceHierarchy.stream().forEach(sd -> {
+            sd.getDependencies().forEach(dependency -> sd.addServiceDependencyId(dependency));
+        });
         saveAll(serviceHierarchy);
     }
 }

@@ -53,7 +53,7 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
         }
         File lsmMetadataFile = getOutputFile(args);
         File workingLsmFile = getWorkingLsmFile(jacsServiceData, lsmMetadataFile);
-        return submitChildService(jacsServiceData,
+        return submitServiceDependency(jacsServiceData,
                 new JacsServiceDataBuilder(jacsServiceData)
                         .setName("fileCopy")
                         .addArg("-src", getInputFile(args).getAbsolutePath())
@@ -67,7 +67,8 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
                                     .addArg("-inputLSM", workingLsmFile.getAbsolutePath())
                                     .addArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())
                                     .build();
-                    return this.submitParentService(fc, extractLsmMetadataService);
+                    extractLsmMetadataService.addServiceDependency(fc);
+                    return this.submitServiceDependency(jacsServiceData, extractLsmMetadataService);
                 });
     }
 

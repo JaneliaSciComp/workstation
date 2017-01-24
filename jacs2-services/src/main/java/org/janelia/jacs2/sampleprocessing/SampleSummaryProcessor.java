@@ -54,7 +54,7 @@ public class SampleSummaryProcessor extends AbstractServiceProcessor<Void> {
         }
         sampleLSMsServiceDataBuilder.addArg("-sampleDataDir", getWorkingDirectory(jacsServiceData).toString());
         JacsServiceData sampleLSMsServiceData = sampleLSMsServiceDataBuilder.build();
-        return this.submitChildService(jacsServiceData, sampleLSMsServiceData)
+        return this.submitServiceDependency(jacsServiceData, sampleLSMsServiceData)
                 .thenCompose(sd -> this.waitForCompletion(sd))
                 .thenApply(r -> ServiceDataUtils.stringToFileList(sampleLSMsServiceData.getStringifiedResult()));
     }

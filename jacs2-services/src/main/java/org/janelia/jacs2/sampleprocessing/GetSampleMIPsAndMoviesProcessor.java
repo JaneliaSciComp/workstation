@@ -60,7 +60,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
     @Override
     protected ServiceComputation<List<SampleImageFile>> preProcessData(JacsServiceData jacsServiceData) {
         JacsServiceData sampleLSMsServiceData = SampleServicesUtils.createChildSampleServiceData("getSampleImageFiles", getArgs(jacsServiceData), jacsServiceData);
-        return submitChildService(jacsServiceData, sampleLSMsServiceData)
+        return submitServiceDependency(jacsServiceData, sampleLSMsServiceData)
                 .thenCompose(sd -> this.waitForCompletion(sd))
                 .thenApply(r -> ServiceDataUtils.stringToAny(sampleLSMsServiceData.getStringifiedResult(), new TypeReference<List<SampleImageFile>>() {
                 }));
@@ -130,7 +130,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                             .addArg("-macroArgs", getBasicMIPsAndMoviesArgs(f, args, outputDir))
                             .build();
             fijiComputations.add(
-                    this.submitChildService(jacsServiceData, fijiService)
+                    this.submitServiceDependency(jacsServiceData, fijiService)
                             .thenCompose(sd -> this.waitForCompletion(sd))
 
             );

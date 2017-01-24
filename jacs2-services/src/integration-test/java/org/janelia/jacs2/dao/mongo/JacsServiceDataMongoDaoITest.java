@@ -118,20 +118,31 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
         JacsServiceData si1 = createTestService("s1", ProcessingLocation.LOCAL);
         JacsServiceData si1_1 = createTestService("s1.1", ProcessingLocation.LOCAL);
         JacsServiceData si1_2 = createTestService("s1.2", ProcessingLocation.LOCAL);
+        JacsServiceData si1_3 = createTestService("s1.3", ProcessingLocation.LOCAL);
         JacsServiceData si1_2_1 = createTestService("s1.2.1", ProcessingLocation.LOCAL);
-        si1.addChildService(si1_1);
-        si1.addChildService(si1_2);
-        si1_2.addChildService(si1_2_1);
+        si1.addServiceDependency(si1_1);
+        si1.addServiceDependency(si1_2);
+        si1_1.addServiceDependency(si1_2);
+        si1_1.addServiceDependency(si1_3);
+        si1_2.addServiceDependency(si1_2_1);
         testDao.saveServiceHierarchy(si1);
 
         List<JacsServiceData> s1Hierarchy = testDao.findServiceHierarchy(si1.getId());
-        assertThat(s1Hierarchy.size(), equalTo(4));
+        assertThat(s1Hierarchy.size(), equalTo(5));
         assertThat(s1Hierarchy.subList(1, s1Hierarchy.size()), everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
         assertThat(s1Hierarchy.get(0), Matchers.hasProperty("rootServiceId", Matchers.nullValue()));
 
-        List<JacsServiceData> s1_2Hierarchy = testDao.findServiceHierarchy(si1_2.getId());
-        assertThat(s1_2Hierarchy.size(), equalTo(2));
-        assertThat(s1_2Hierarchy, everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
+        List<JacsServiceData> s1_1_Hierarchy = testDao.findServiceHierarchy(si1_1.getId());
+        assertThat(s1_1_Hierarchy.size(), equalTo(4));
+        assertThat(s1_1_Hierarchy, everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
+
+        List<JacsServiceData> s1_2_Hierarchy = testDao.findServiceHierarchy(si1_2.getId());
+        assertThat(s1_2_Hierarchy.size(), equalTo(2));
+        assertThat(s1_2_Hierarchy, everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
+
+        List<JacsServiceData> s1_2_1_Hierarchy = testDao.findServiceHierarchy(si1_2_1.getId());
+        assertThat(s1_2_1_Hierarchy.size(), equalTo(1));
+        assertThat(s1_2_1_Hierarchy, everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
     }
 
     @Test
