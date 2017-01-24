@@ -114,6 +114,7 @@ public class JacsServiceDispatcher {
     }
 
     void dispatchServices() {
+        logger.debug("Dispatch services");
         for (int i = 0; i < MAX_WAITING_SLOTS; i++) {
             if (!availableSlots.tryAcquire()) {
                 logger.info("No available processing slots");
@@ -157,7 +158,7 @@ public class JacsServiceDispatcher {
     }
 
     void syncServiceQueue() {
-        logger.info("Sync the waiting queue");
+        logger.debug("Sync the waiting queue");
         // check for newly created services and queue them based on their priorities
         enqueueAvailableServices(EnumSet.of(JacsServiceState.CREATED));
     }

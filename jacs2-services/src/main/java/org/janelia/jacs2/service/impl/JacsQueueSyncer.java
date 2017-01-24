@@ -32,7 +32,6 @@ public class JacsQueueSyncer {
 
     private void doWork() {
         try {
-            logger.debug("Sync JACS jobs");
             jacsServiceDispatcher.syncServiceQueue();
         } catch (Exception e) {
             logger.error("Critical error - syncing job queue failed", e);

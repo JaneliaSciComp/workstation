@@ -32,7 +32,6 @@ public class JacsJobRunner {
 
     private void doWork() {
         try {
-            logger.debug("Dispatch JACS jobs");
             jacsServiceDispatcher.dispatchServices();
         } catch (Exception e) {
             logger.error("Critical error - job dispatch failed", e);
