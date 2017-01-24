@@ -1,6 +1,5 @@
 package org.janelia.jacs2.cdi;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
@@ -18,6 +17,7 @@ import org.janelia.jacs2.utils.MapOfEnumCodec;
 
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
@@ -30,6 +30,7 @@ public class PersistenceProducer {
     @Inject
     private String mongoDatabase;
 
+    @Singleton
     @Produces
     public MongoClient createMongoClient(ObjectMapperFactory objectMapperFactory) {
         CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
