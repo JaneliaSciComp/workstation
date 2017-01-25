@@ -9,5 +9,6 @@ import java.util.List;
 
 public interface DomainObjectDao<T extends DomainObject> extends Dao<T, Number> {
     List<T> findByIds(Subject subject, List<Number> ids);
+    <U extends T> List<U> findSubtypesByIds(Subject subject, List<Number> ids, Class<U> entityType);
     PageResult<T> findByOwnerKey(Subject subject, String ownerKey, PageRequest pageRequest);
 }

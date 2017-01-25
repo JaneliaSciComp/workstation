@@ -68,6 +68,15 @@ public class SampleDataService {
         }
     }
 
+    public List<LSMImage> getLSMsByIds(String subjectName, List<Number> lsmIds) {
+        Subject subject = null;
+        if (StringUtils.isNotBlank(subjectName)) {
+            subject = subjectDao.findByName(subjectName);
+            Preconditions.checkArgument(subject != null);
+        }
+        return imageDao.findSubtypesByIds(subject, lsmIds, LSMImage.class);
+    }
+
     public List<AnatomicalArea> getAnatomicalAreasBySampleIdAndObjective(String subjectName, Number sampleId, String objective) {
         Preconditions.checkArgument(sampleId != null, "Sample ID must be specified for anatomical area retrieval");
         Subject subject = null;
@@ -151,7 +160,7 @@ public class SampleDataService {
         return lsmPair;
     }
 
-    public void updateLMSMetadata(LSMImage lsmImage, String lsmMetadata) {
+    public void updateLMSMetadataFile(LSMImage lsmImage, String lsmMetadata) {
         DomainModelUtils.setPathForFileType(lsmImage, FileType.LsmMetadata, lsmMetadata);
         imageDao.updateImageFiles(lsmImage);
     }

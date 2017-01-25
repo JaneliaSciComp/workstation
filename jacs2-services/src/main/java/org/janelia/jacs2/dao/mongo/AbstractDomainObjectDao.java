@@ -36,24 +36,29 @@ public abstract class AbstractDomainObjectDao<T extends DomainObject> extends Ab
     }
 
     @Override
-    public List<T> findByIds(Subject subject, List<Number> ids) {
+    public <U extends T> List<U> findSubtypesByIds(Subject subject, List<Number> ids, Class<U> entityType) {
         if (DomainModelUtils.isAdminOrUndefined(subject)) {
             return find(Filters.in("_id", ids),
                     null,
                     0,
                     -1,
-                    getEntityType());
+                    entityType);
         } else {
             return find(
                     Filters.and(
-                        createSubjectPermissionFilter(subject),
-                        Filters.in("_id", ids)
+                            createSubjectPermissionFilter(subject),
+                            Filters.in("_id", ids)
                     ),
                     null,
                     0,
                     -1,
-                    getEntityType());
+                    entityType);
         }
+    }
+
+    @Override
+    public List<T> findByIds(Subject subject, List<Number> ids) {
+        return findSubtypesByIds(subject, ids, getEntityType());
     }
 
     protected Bson createSubjectPermissionFilter(Subject subject) {

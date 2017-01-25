@@ -11,6 +11,7 @@ public class JacsServiceDataBuilder {
             if (serviceContext.getProcessingLocation() != null) {
                 serviceData.setProcessingLocation(serviceContext.getProcessingLocation());
             }
+            serviceData.setWorkspace(serviceContext.getWorkspace());
         }
     }
 

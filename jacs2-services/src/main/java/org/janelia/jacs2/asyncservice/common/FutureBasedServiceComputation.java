@@ -96,10 +96,16 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
         FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(executor);
         next.execute(() -> {
             ComputeResult<T> r = getResult();
-            if (r.exc != null) {
-                next.complete(fn.apply(r.exc));
-            } else {
-                next.complete(r.result);
+            try {
+                if (r.exc != null) {
+                    next.complete(fn.apply(r.exc));
+                } else {
+                    next.complete(r.result);
+                }
+            } catch (Exception e) {
+                if (next.result == null || next.result.exc == null) {
+                    next.completeExceptionally(e);
+                }
             }
             return next.get();
         });
@@ -111,10 +117,16 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
         FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(executor);
         next.execute(() -> {
             ComputeResult<T> r = getResult();
-            if (r.exc == null) {
-                next.complete(fn.apply(r.result));
-            } else {
-                next.completeExceptionally(r.exc);
+            try {
+                if (r.exc == null) {
+                    next.complete(fn.apply(r.result));
+                } else {
+                    next.completeExceptionally(r.exc);
+                }
+            } catch (Exception e) {
+                if (next.result == null || next.result.exc == null) {
+                    next.completeExceptionally(e);
+                }
             }
             return next.get();
         });
@@ -125,12 +137,18 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
     public <U> ServiceComputation<U> thenCompose(Function<? super T, ? extends ServiceComputation<U>> fn) {
         FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(executor);
         next.execute(() -> {
-            ComputeResult<T> r = getResult();
-            if (r.exc == null) {
-                ServiceComputation<U> stage = fn.apply(r.result);
-                next.complete(stage.get());
-            } else {
-                next.completeExceptionally(r.exc);
+            try {
+                ComputeResult<T> r = getResult();
+                if (r.exc == null) {
+                    ServiceComputation<U> stage = fn.apply(r.result);
+                    next.complete(stage.get());
+                } else {
+                    next.completeExceptionally(r.exc);
+                }
+            } catch (Exception e) {
+                if (next.result == null || next.result.exc == null) {
+                    next.completeExceptionally(e);
+                }
             }
             return next.get();
         });
@@ -141,12 +159,18 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
     public ServiceComputation<T> whenComplete(BiConsumer<? super T, ? super Throwable> action) {
         FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(executor);
         next.execute(() -> {
-            ComputeResult<T> r = getResult();
-            action.accept(r.result, r.exc);
-            if (r.exc == null) {
-                next.complete(r.result);
-            } else {
-                next.completeExceptionally(r.exc);
+            try {
+                ComputeResult<T> r = getResult();
+                action.accept(r.result, r.exc);
+                if (r.exc == null) {
+                    next.complete(r.result);
+                } else {
+                    next.completeExceptionally(r.exc);
+                }
+            } catch (Exception e) {
+                if (next.result == null || next.result.exc == null) {
+                    next.completeExceptionally(e);
+                }
             }
             return next.get();
         });
@@ -177,8 +201,10 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
                         .collect(Collectors.toList());
                 next.complete(fn.apply(currentResult.result, otherResults));
             }
-        } catch (Throwable e) {
-            next.completeExceptionally(e);
+        } catch (Exception e) {
+            if (next.result == null || next.result.exc == null) {
+                next.completeExceptionally(e);
+            }
         }
         return next;
     }
