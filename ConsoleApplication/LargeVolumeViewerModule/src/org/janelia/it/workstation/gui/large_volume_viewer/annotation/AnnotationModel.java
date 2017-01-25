@@ -718,7 +718,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             throw e;
         }
 
-        log.info("Moved annotation {} in neuron {}", annotation.getId(), neuron.getId());
+        log.info("Moved annotation {} in neuron {} to {}", annotation.getId(), neuron.getId(), location);
         
         //final TmWorkspace workspace = getCurrentWorkspace();
 

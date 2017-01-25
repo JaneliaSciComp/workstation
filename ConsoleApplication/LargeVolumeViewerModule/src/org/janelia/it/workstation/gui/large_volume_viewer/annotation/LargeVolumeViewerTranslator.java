@@ -358,8 +358,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
     @Override
     public void neuronRenamed(TmNeuronMetadata neuron) {
-        // TODO: need a more granular update
-        workspaceLoaded(annModel.getCurrentWorkspace());   
+        // We don't care
     }
     
     /**

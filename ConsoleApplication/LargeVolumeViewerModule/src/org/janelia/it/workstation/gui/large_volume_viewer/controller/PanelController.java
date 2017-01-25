@@ -88,7 +88,7 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         public void neuronCreated(TmNeuronMetadata neuron) {
             TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
             filteredAnnotationList.loadNeuron(neuron);
-            // TODO: need a more granular update
+            // TODO: could use a more granular update
             wsNeuronList.loadWorkspace(workspace);
         }
 
@@ -96,16 +96,14 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         public void neuronDeleted(TmNeuronMetadata neuron) {
             TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
             filteredAnnotationList.loadNeuron(neuron);
-            // TODO: need a more granular update
+            // TODO: could use a more granular update
             wsNeuronList.loadWorkspace(workspace);
         }
 
         @Override
         public void neuronRenamed(TmNeuronMetadata neuron) {
-            TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
             filteredAnnotationList.loadNeuron(neuron);
-            // TODO: need a more granular update
-            wsNeuronList.loadWorkspace(workspace);
+            wsNeuronList.updateModel(neuron);
         }
         
         @Override
