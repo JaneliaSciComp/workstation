@@ -64,32 +64,34 @@ import com.google.common.base.Stopwatch;
 
 import Jama.Matrix;
 
-public class AnnotationModel implements DomainObjectSelectionSupport
-/*
+/**
+ * This class is responsible for handling requests from the AnnotationManager.  those
+ * requests are ready-to-execute; the AnnotationManager has taken care of validation.
+ * 
+ * Public methods in this class that throw exceptions are the ones that involve db calls, and
+ * they should all be called from worker threads.  the others, typically getters of
+ * various info, do not.  private methods don't necessarily follow that pattern.
+ * 
+ * A note on entities: as of the early 2016 update, we act almost exclusively
+ * on domain objects and then persist them rather than calling through a DAO
+ * to make changes on entities.  be careful that the workspace and neuron objects
+ * are kept up to date locally!
+ * 
+ * This class does not interact directly with the UI.  it observes
+ * UI elements that select, and its events are connected with a variety of UI
+ * elements that need to respond to changing data.  this sometimes makes it hard
+ * to know whether methods are called in the Java EDT (event thread) or not, and
+ * that's important for knowing how you have to call the UI updates.  the answer
+ * is that all the calls that hit the db go through TiledMicroscopeDomainMgr and could throw
+ * exceptions.  so any call that calls TiledMicroscopeDomainMgr must catch Exceptions, and
+ * therefore it should do its updates on the EDT, because it's probably being
+ * called from a  SimpleWorker thread.
+ *
+ */
+public class AnnotationModel implements DomainObjectSelectionSupport {
 
-this class is responsible for handling requests from the AnnotationManager.  those
-requests are ready-to-execute; the AnnotationManager has taken care of validation.
-
-public methods in this class that throw exceptions are the ones that involve db calls, and
-they should all be called from worker threads.  the others, typically getters of
-various info, do not.  private methods don't necessarily follow that pattern.
-
-a note on entities: as of the early 2016 update, we act almost exclusively
-on domain objects and then persist them rather than calling through a DAO
-to make changes on entities.  be careful that the workspace and neuron objects
-are kept up to date locally!
-
-this class does not interact directly with the UI.  it observes
-UI elements that select, and its events are connected with a variety of UI
-elements that need to respond to changing data.  this sometimes makes it hard
-to know whether methods are called in the Java EDT (event thread) or not, and
-that's important for knowing how you have to call the UI updates.  the answer
-is that all the calls that hit the db go through TiledMicroscopeDomainMgr and could throw
-exceptions.  so any call that calls TiledMicroscopeDomainMgr must catch Exceptions, and
-therefore it should do its updates on the EDT, because it's probably being
-called from a  SimpleWorker thread.
-*/
-{
+    private static final Logger log = LoggerFactory.getLogger(AnnotationModel.class);
+    
     public static final String STD_SWC_EXTENSION = SWCData.STD_SWC_EXTENSION;
     private static final String COLOR_FORMAT = "# COLOR %f,%f,%f";
     private static final String NAME_FORMAT = "# NAME %s";
@@ -116,10 +118,9 @@ called from a  SimpleWorker thread.
 
     private final TmModelManipulator neuronManager;
 
-    private LoadTimer addTimer = new LoadTimer();
+    private final LoadTimer addTimer = new LoadTimer();
 
     private final ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
-    private static final Logger log = LoggerFactory.getLogger(AnnotationModel.class);
 
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     
@@ -479,15 +480,10 @@ called from a  SimpleWorker thread.
      */
     public synchronized void renameCurrentNeuron(String name) throws Exception {
         // rename whatever neuron was current at time of start of this call.
-        final TmNeuronMetadata operationCurrentNeuron = getCurrentNeuron();
-        operationCurrentNeuron.setName(name);
-        this.neuronManager.saveNeuronData(operationCurrentNeuron);
-
-        Long currentNeuronID = operationCurrentNeuron.getId();
-
-        // update & notify
-        final TmNeuronMetadata neuron = getNeuronFromNeuronID(currentNeuronID);
+        final TmNeuronMetadata neuron = getCurrentNeuron();
         neuron.setName(name);
+        this.neuronManager.saveNeuronData(neuron);
+        log.info("Neuron was renamed: "+neuron);
 
         final TmWorkspace workspace = getCurrentWorkspace();
         SwingUtilities.invokeLater(new Runnable() {
@@ -637,6 +633,8 @@ called from a  SimpleWorker thread.
                 
         final TmGeoAnnotation annotation = neuronManager.addGeometricAnnotation(
                 neuron, parentAnn.getId(), xyz.x(), xyz.y(), xyz.z());
+
+        log.info("Added annotation {} to neuron {}", annotation.getId(), neuron);
         
         // the parent may lose some predefined notes (finished end, possible branch)
         stripPredefNotes(neuron, parentAnn.getId());
@@ -722,6 +720,8 @@ called from a  SimpleWorker thread.
             throw e;
         }
 
+        log.info("Moved annotation {} in neuron {}", annotation.getId(), neuron.getId());
+        
         final TmWorkspace workspace = getCurrentWorkspace();
 
         if (automatedTracingEnabled()) {
@@ -786,7 +786,9 @@ called from a  SimpleWorker thread.
             });
             throw e;
         }
-
+        
+        log.info("Updated radius for annotation {} in neuron {}", annotation.getId(), neuron);
+        
         final TmWorkspace workspace = getCurrentWorkspace();
 
         if (automatedTracingEnabled()) {
@@ -851,7 +853,8 @@ called from a  SimpleWorker thread.
         // reparent source annotation to dest annotation:
         // log.info("Reparenting annotations.");
         neuronManager.reparentGeometricAnnotation(sourceAnnotation, targetAnnotationID, targetNeuron);
-
+        
+        log.info("Merged source annotation {} into target annotation {} in neuron {}", sourceAnnotationID, targetAnnotationID, targetNeuron);
 
         // Establish p/c linkage between target and source.
         // log.info("Parent/child linkages target and source.");
@@ -1019,6 +1022,8 @@ called from a  SimpleWorker thread.
         }
         neuronManager.saveNeuronData(neuron);
 
+        log.info("Deleted link annotation {} in neuron {}", link.getId(),  neuron);
+        
         final TmWorkspace workspace = getCurrentWorkspace();
 
         final TmGeoAnnotation updateChild;
@@ -1107,6 +1112,8 @@ called from a  SimpleWorker thread.
         // Must serialize the neuron, after having made changes.
         neuronManager.saveNeuronData(neuron);
 
+        log.info("Deleted sub tree rooted at {} in neuron {}", rootAnnotation.getId(),  neuron);
+        
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuronMetadata updateNeuron = getCurrentNeuron();
 
@@ -1186,6 +1193,8 @@ called from a  SimpleWorker thread.
         removeAnchoredPath(neuron, annotation1, annotation2);
         neuronManager.saveNeuronData(neuron);
 
+        log.info("Split at annotation {} in neuron {}", annotation.getId(),  neuron);
+        
         // retrace
         if (automatedTracingEnabled()) {
             if (viewStateListener != null) {
@@ -1224,6 +1233,8 @@ called from a  SimpleWorker thread.
 
         neuronManager.saveNeuronData(neuron);
 
+        log.info("Rerooted at annotation {} in neuron {}", newRootID,  neuron);
+        
         if (neuron.getId().equals(getCurrentNeuron().getId())){
             final TmNeuronMetadata updateNeuron = getCurrentNeuron();
             SwingUtilities.invokeLater(new Runnable() {
@@ -1253,6 +1264,8 @@ called from a  SimpleWorker thread.
         // update domain objects and database, and notify
         neuronManager.saveNeuronData(neuron);
 
+        log.info("Split neuron at annotation {} in neuron {}", newRootID,  neuron);
+        
         final TmNeuronMetadata updateNeuron = getNeuronFromAnnotationID(newRootID);
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -1305,7 +1318,8 @@ called from a  SimpleWorker thread.
         final TmAnchoredPath path = neuronManager.addAnchoredPath(neuron1, endpoints.getFirstAnnotationID(),
                 endpoints.getSecondAnnotationID(), points);
 
-
+        log.info("Added anchored path {} in neuron {}", path.getId(),  neuron1);
+        
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -1432,6 +1446,8 @@ called from a  SimpleWorker thread.
         // Send the data back to the server to save.
         neuronManager.saveNeuronData(neuron);
 
+        log.info("Set note on annotation {} in neuron {}", geoAnnotation.getId(),  neuron);
+        
         final TmWorkspace workspace = getCurrentWorkspace();
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -1452,6 +1468,8 @@ called from a  SimpleWorker thread.
         ann.updateModificationDate();
         neuronManager.saveNeuronData(neuron);
 
+        log.info("Remnoved note on annotation {} in neuron {}", ann.getId(),  neuron);
+        
         // updates
         SwingUtilities.invokeLater(new Runnable() {
             @Override
