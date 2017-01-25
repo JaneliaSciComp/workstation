@@ -121,7 +121,7 @@ public class JacsServiceDispatcher {
                 return; // no slot available
             }
             JacsServiceData queuedService = dequeService();
-            logger.info("Dequeued service {}", queuedService);
+            logger.debug("Dequeued service {}", queuedService);
             if (queuedService == null) {
                 // nothing to do
                 availableSlots.release();

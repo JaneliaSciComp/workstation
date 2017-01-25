@@ -142,7 +142,7 @@ public class JacsServiceDispatcherTest {
     private void verifyDispatch(JacsServiceData testServiceData) {
         ServiceProcessor testProcessor = prepareServiceProcessor(testServiceData, null);
         testDispatcher.dispatchServices();
-        verify(logger).info("Dequeued service {}", testServiceData);
+        verify(logger).debug("Dequeued service {}", testServiceData);
         ArgumentCaptor<JacsServiceData> jacsServiceArg = ArgumentCaptor.forClass(JacsServiceData.class);
         verify(testProcessor).process(jacsServiceArg.capture());
         assertSame(testServiceData, jacsServiceArg.getValue());
@@ -175,7 +175,7 @@ public class JacsServiceDispatcherTest {
         ServiceProcessor testProcessor = prepareServiceProcessor(testServiceData, processException);
 
         testDispatcher.dispatchServices();
-        verify(logger).info("Dequeued service {}", testServiceData);
+        verify(logger).debug("Dequeued service {}", testServiceData);
 
         ArgumentCaptor<JacsServiceData> jacsServiceArg = ArgumentCaptor.forClass(JacsServiceData.class);
         verify(testProcessor).process(jacsServiceArg.capture());
