@@ -84,7 +84,32 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         List<ServiceComputation<?>> mipsComputations = submitAllFijiServices(sampleLSMs, args, jacsServiceData, outputDir);
         return computationFactory.newCompletedComputation(jacsServiceData)
                 .thenCombineAll(mipsComputations, (sd, sampleMIPsResults) -> sampleMIPsResults)
-                .thenCompose(r -> this.collectResult(preProcessingResult, jacsServiceData));
+                .thenCompose(r -> this.collectResult(preProcessingResult, jacsServiceData))
+                .thenCompose(fileResults -> {
+                    // start mpeg conversion for the AVI files
+                    List<ServiceComputation<?>> mpegConverters = fileResults.stream()
+                            .filter(f -> f.getName().endsWith(".avi"))
+                            .map(f -> {
+                                JacsServiceData mpegConverterService =
+                                        new JacsServiceDataBuilder(jacsServiceData)
+                                                .setName("mpegConverter")
+                                                .addArg("-input", f.getAbsolutePath())
+                                                .build();
+
+                                return this.submitServiceDependency(jacsServiceData, mpegConverterService)
+                                        .thenCompose(sd -> this.waitForCompletion(sd));
+                            })
+                            .collect(Collectors.toList());
+                    // collect the results by appending the generated MPEG to the list
+                    return computationFactory.newCompletedComputation(fileResults)
+                            .thenCombineAll(mpegConverters, (previousFileResults, mpegResults) -> {
+                                List<File> finalResults = new ArrayList<>(previousFileResults);
+                                mpegResults.forEach(mpegFile -> {
+                                    previousFileResults.add((File) mpegFile);
+                                });
+                                return finalResults;
+                            });
+                });
     }
 
     @Override
@@ -136,7 +161,6 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
             fijiComputations.add(
                     this.submitServiceDependency(jacsServiceData, fijiService)
                             .thenCompose(sd -> this.waitForCompletion(sd))
-
             );
         });
         return fijiComputations;

@@ -89,14 +89,6 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                 .thenApply(sd -> serviceProcessor.getResult(sd));
     }
 
-    protected ServiceComputation<List<?>> waitForAllCompletions(List<JacsServiceData> listOfJacsServiceData) {
-        List<?> results = listOfJacsServiceData.stream()
-                .map(sd -> waitForCompletion(sd))
-                .map(sc -> sc.get())
-                .collect(Collectors.toList());
-        return computationFactory.newCompletedComputation(results);
-    }
-
     protected abstract boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData);
 
     protected abstract T retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData);
