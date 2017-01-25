@@ -9,6 +9,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelAdapter;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
@@ -47,42 +48,42 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
 
         try {
             progress.setInitialDelay(0);
-            progress.start(2);            
-            progress.progress(0);
+            progress.start();            
             progress.setDisplayName("Loading neuron data...");
+            progress.switchToIndeterminate();
             
             StopWatch stopWatch = new StopWatch();
             List<TmNeuronMetadata> neuronList = tmDomainMgr.getWorkspaceNeurons(workspace.getId());
             log.info("Loading {} neurons took {} ms", neuronList.size(), stopWatch.getElapsedTime());
             
-            progress.progress(1);
-
-            // Await completion.
-            progress.setDisplayName("Verifying neuron data...");
-
             if (ClientDomainUtils.hasWriteAccess(workspace)) {
-                // check neuron consistency and repair (some) problems
-                for (TmNeuronMetadata neuron: neuronList) {
-                    log.debug("Checking neuron data for TmNeuronMetadata#{}", neuron.getId());
-                    List<String> results = neuron.checkRepairNeuron();
-                    // List<String> results = neuron.checkNeuron();
-                    if (results.size() > 0) {
-                        // save results, then output to log; this is unfortunately
-                        //  not visible to the user; we aren't in a place in the
-                        //  code where we can pop a dialog
-                        for (String s: results) {
-                            log.warn(s);
+                if (ApplicationPanel.isVerifyNeurons()) {
+                    progress.setDisplayName("Verifying neuron data...");
+                        
+                    // check neuron consistency and repair (some) problems
+                    for (TmNeuronMetadata neuron: neuronList) {
+                        log.debug("Checking neuron data for TmNeuronMetadata#{}", neuron.getId());
+                        List<String> results = neuron.checkRepairNeuron();
+                        // List<String> results = neuron.checkNeuron();
+                        if (results.size() > 0) {
+                            // save results, then output to log; this is unfortunately
+                            //  not visible to the user; we aren't in a place in the
+                            //  code where we can pop a dialog
+                            for (String s: results) {
+                                log.warn(s);
+                            }
+                        	neuron = tmDomainMgr.save(neuron);
                         }
-                    	neuron = tmDomainMgr.save(neuron);
+                        neurons.add(neuron);
                     }
-                    neurons.add(neuron);
+                }
+                else {
+                    neurons.addAll(neuronList);
                 }
             }
             else {
                 neurons.addAll(neuronList);
             }
-            
-            progress.progress(2);
 
         }
         catch (Exception ex) {
