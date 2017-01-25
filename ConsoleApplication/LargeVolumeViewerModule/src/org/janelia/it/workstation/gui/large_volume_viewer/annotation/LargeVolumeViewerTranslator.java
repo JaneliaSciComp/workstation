@@ -166,9 +166,15 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     /**
      * called by the model when it changes the parent of an annotation
      */
-    public void reparentAnnotation(TmGeoAnnotation annotation) {
-        // pretty much a pass-through to the skeleton
-        fireAnchorReparented(annotation);
+    public void reparentAnnotation(TmGeoAnnotation annotation, Long prevNeuronId) {
+        if (!annotation.getNeuronId().equals(prevNeuronId)) {
+            // Neuron changed, this could be smart, but for now let's just reload everything
+            workspaceLoaded(annModel.getCurrentWorkspace());
+        }
+        else {
+            // pretty much a pass-through to the skeleton
+            fireAnchorReparented(annotation);
+        }
     }
 
     /**
@@ -228,8 +234,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
 
     @Override
-    public void annotationReparented(TmGeoAnnotation annotation) {
-        reparentAnnotation(annotation);
+    public void annotationReparented(TmGeoAnnotation annotation, Long prevNeuronId) {
+        reparentAnnotation(annotation, prevNeuronId);
     }
 
     @Override
@@ -351,7 +357,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
 
     @Override
-    public void neuronChanged(TmNeuronMetadata neuron) {
+    public void neuronRenamed(TmNeuronMetadata neuron) {
         // TODO: need a more granular update
         workspaceLoaded(annModel.getCurrentWorkspace());   
     }

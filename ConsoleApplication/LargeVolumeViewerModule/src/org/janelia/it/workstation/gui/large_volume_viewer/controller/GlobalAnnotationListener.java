@@ -16,7 +16,7 @@ public interface GlobalAnnotationListener {
     void workspaceLoaded(TmWorkspace workspace);
     void neuronCreated(TmNeuronMetadata neuron);
     void neuronDeleted(TmNeuronMetadata neuron);
-    void neuronChanged(TmNeuronMetadata neuron);    
+    void neuronRenamed(TmNeuronMetadata neuron);    
     void neuronSelected(TmNeuronMetadata neuron);
     void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style);
     void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap);

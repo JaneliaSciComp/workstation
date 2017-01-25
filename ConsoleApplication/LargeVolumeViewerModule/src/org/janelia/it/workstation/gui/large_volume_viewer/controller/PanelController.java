@@ -101,7 +101,7 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         }
 
         @Override
-        public void neuronChanged(TmNeuronMetadata neuron) {
+        public void neuronRenamed(TmNeuronMetadata neuron) {
             TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
             filteredAnnotationList.loadNeuron(neuron);
             // TODO: need a more granular update
