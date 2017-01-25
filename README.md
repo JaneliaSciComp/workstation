@@ -77,3 +77,27 @@ The default settings could be overwritten with your own settings in a java prope
 and then use JACS2_CONFIG environment variable to reference the settings file, e.g.
 
 `JACS2_CONFIG=/usr/local/etc/myjacs2-config.properties jacs2-web/build/install/jacs2-web/bin/jacs2-web`
+
+
+### Test the application
+
+Here are a few service invocation examples:
+
+* Generate sample MIPs and movies:
+`
+curl --request POST \
+  --url http://goinac-ws1:8080/jacs/jacs-api/v2/async-services/getSampleMIPsAndMovies \
+  --header 'acc: application/json' \
+  --header 'content-type: application/json' \
+  --data '{"processingLocation": "LOCAL", "args": ["-sampleId", "2230165384508473442" ,"-objective", "20x", "-sampleDataDir", "/home/goinac/Work/jacs-2/tt/missing"]}'
+`
+
+* Generate sample LSM metadata:
+
+`
+curl --request POST \
+  --url http://goinac-ws1:8080/jacs/jacs-api/v2/async-services/getSampleLsmMetadata \
+  --header 'acc: application/json' \
+  --header 'content-type: application/json' \
+  --data '{"processingLocation": "LOCAL", "args": ["-sampleId", "2230165384508473442" , "-objective", "20x", "-sampleDataDir", "/home/goinac/Work/jacs-2/tt/missing"]}'
+`
