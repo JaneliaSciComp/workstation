@@ -1,6 +1,6 @@
 package org.janelia.jacs2.dao;
 
-import org.janelia.jacs2.utils.DomainUtils;
+import org.janelia.jacs2.model.DomainModelUtils;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
@@ -12,9 +12,9 @@ public class DaoFactory {
     private Instance<Dao<?, Number>> daosSource;
 
     public Dao<?, Number> createDao(String entityName) {
-        Class<?> entityClass = DomainUtils.getBasePersistedEntityClass(entityName);
+        Class<?> entityClass = DomainModelUtils.getBasePersistedEntityClass(entityName);
         for (Dao<?, Number> dao : daosSource) {
-            Class<?> daoParameter = DomainUtils.getGenericParameterType(dao.getClass(), 0);
+            Class<?> daoParameter = DomainModelUtils.getGenericParameterType(dao.getClass(), 0);
             if (entityClass.equals(daoParameter)) {
                 return dao;
             }
@@ -23,9 +23,9 @@ public class DaoFactory {
     }
 
     public DomainObjectDao<?> createDomainObjectDao(String entityName) {
-        Class<?> entityClass = DomainUtils.getBasePersistedEntityClass(entityName);
+        Class<?> entityClass = DomainModelUtils.getBasePersistedEntityClass(entityName);
         for (Dao<?, Number> dao : daosSource) {
-            Class<?> daoParameter = DomainUtils.getGenericParameterType(dao.getClass(), 0);
+            Class<?> daoParameter = DomainModelUtils.getGenericParameterType(dao.getClass(), 0);
             if (entityClass.equals(daoParameter) && dao instanceof DomainObjectDao) {
                 return (DomainObjectDao) dao;
             }

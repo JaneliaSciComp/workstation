@@ -10,10 +10,10 @@ import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.model.jacsservice.ProcessingLocation;
-import org.janelia.jacs2.utils.BigIntegerCodec;
-import org.janelia.jacs2.utils.DomainCodecProvider;
-import org.janelia.jacs2.utils.EnumCodec;
-import org.janelia.jacs2.utils.MapOfEnumCodec;
+import org.janelia.jacs2.dao.mongo.utils.BigIntegerCodec;
+import org.janelia.jacs2.dao.mongo.utils.DomainCodecProvider;
+import org.janelia.jacs2.dao.mongo.utils.EnumCodec;
+import org.janelia.jacs2.dao.mongo.utils.MapOfEnumCodec;
 
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;

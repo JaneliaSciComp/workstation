@@ -18,7 +18,7 @@ import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.dataservice.DomainObjectService;
-import org.janelia.jacs2.utils.DomainUtils;
+import org.janelia.jacs2.model.DomainModelUtils;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -152,7 +152,7 @@ public class SampleDataService {
     }
 
     public void updateLMSMetadata(LSMImage lsmImage, String lsmMetadata) {
-        DomainUtils.setFileType(lsmImage, FileType.LsmMetadata, lsmMetadata);
+        DomainModelUtils.setFileType(lsmImage, FileType.LsmMetadata, lsmMetadata);
         imageDao.updateImageFiles(lsmImage);
     }
 

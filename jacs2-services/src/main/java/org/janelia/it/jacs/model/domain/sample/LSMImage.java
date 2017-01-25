@@ -1,8 +1,6 @@
 package org.janelia.it.jacs.model.domain.sample;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.jacs2.utils.MongoNumberLongDeserializer;
 
 import java.util.Date;
 
@@ -31,7 +29,6 @@ public class LSMImage extends Image {
     private String detectionChannel2DetectorGain;
     private String detectionChannel3DetectorGain;
     private String driver;
-    @JsonDeserialize(using = MongoNumberLongDeserializer.class)
     private Long fileSize;
     private String effector;
     private Integer crossBarcode;

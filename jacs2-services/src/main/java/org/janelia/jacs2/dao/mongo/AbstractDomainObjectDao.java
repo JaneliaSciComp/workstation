@@ -8,7 +8,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
-import org.janelia.jacs2.utils.DomainUtils;
+import org.janelia.jacs2.model.DomainModelUtils;
 
 import java.util.List;
 
@@ -37,7 +37,7 @@ public abstract class AbstractDomainObjectDao<T extends DomainObject> extends Ab
 
     @Override
     public List<T> findByIds(Subject subject, List<Number> ids) {
-        if (DomainUtils.isAdminOrUndefined(subject)) {
+        if (DomainModelUtils.isAdminOrUndefined(subject)) {
             return find(Filters.in("_id", ids),
                     null,
                     0,

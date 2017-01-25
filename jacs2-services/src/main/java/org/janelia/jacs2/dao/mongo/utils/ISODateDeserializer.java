@@ -1,4 +1,4 @@
-package org.janelia.jacs2.utils;
+package org.janelia.jacs2.dao.mongo.utils;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -18,7 +18,7 @@ import java.util.Date;
 public class ISODateDeserializer extends JsonDeserializer<Date> {
 
     @Override
-    public Date deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public Date deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
         JsonNode node = jsonParser.readValueAsTree();
         String dateValue;
         if (node.has("$date")) {

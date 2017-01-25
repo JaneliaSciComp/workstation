@@ -1,4 +1,4 @@
-package org.janelia.jacs2.utils;
+package org.janelia.jacs2.model;
 
 import com.google.common.base.Splitter;
 import org.apache.commons.lang3.StringUtils;
@@ -16,7 +16,7 @@ import org.reflections.util.FilterBuilder;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
-public class DomainUtils {
+public class DomainModelUtils {
     /**
      * @param subjectKey
      * @return the subject name part of a given subject key. For example, for "group:flylight", this returns "flylight".

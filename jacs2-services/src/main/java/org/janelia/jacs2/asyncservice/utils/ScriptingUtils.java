@@ -1,4 +1,4 @@
-package org.janelia.jacs2.utils;
+package org.janelia.jacs2.asyncservice.utils;
 
 import java.util.Random;
 

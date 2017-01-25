@@ -17,8 +17,8 @@ import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
 import org.janelia.jacs2.model.page.SortDirection;
-import org.janelia.jacs2.utils.DomainUtils;
-import org.janelia.jacs2.utils.TimebasedIdentifierGenerator;
+import org.janelia.jacs2.model.DomainModelUtils;
+import org.janelia.jacs2.dao.mongo.utils.TimebasedIdentifierGenerator;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ public abstract class AbstractMongoDao<T extends HasIdentifier> extends Abstract
 
     protected String getDomainObjectCollection() {
         Class<T> entityClass = getEntityType();
-        MongoMapping mongoMapping = DomainUtils.getMapping(entityClass);
+        MongoMapping mongoMapping = DomainModelUtils.getMapping(entityClass);
         Preconditions.checkArgument(mongoMapping != null, "Entity class " + entityClass.getName() + " is not annotated with MongoMapping");
         return mongoMapping.collectionName();
     }

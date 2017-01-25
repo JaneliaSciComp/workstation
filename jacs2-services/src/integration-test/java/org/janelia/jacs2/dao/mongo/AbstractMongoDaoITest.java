@@ -12,12 +12,12 @@ import org.janelia.jacs2.AbstractITest;
 import org.janelia.jacs2.cdi.ObjectMapperFactory;
 import org.janelia.jacs2.dao.Dao;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
+import org.janelia.jacs2.dao.mongo.utils.BigIntegerCodec;
+import org.janelia.jacs2.dao.mongo.utils.DomainCodecProvider;
+import org.janelia.jacs2.dao.mongo.utils.EnumCodec;
+import org.janelia.jacs2.dao.mongo.utils.MapOfEnumCodec;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
-import org.janelia.jacs2.utils.BigIntegerCodec;
-import org.janelia.jacs2.utils.DomainCodecProvider;
-import org.janelia.jacs2.utils.EnumCodec;
-import org.janelia.jacs2.utils.MapOfEnumCodec;
-import org.janelia.jacs2.utils.TimebasedIdentifierGenerator;
+import org.janelia.jacs2.dao.mongo.utils.TimebasedIdentifierGenerator;
 import org.junit.Before;
 import org.junit.BeforeClass;
 

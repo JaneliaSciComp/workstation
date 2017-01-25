@@ -3,13 +3,11 @@ package org.janelia.it.jacs.model.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.janelia.jacs2.utils.DomainUtils;
-import org.janelia.jacs2.utils.MongoNumberBigIntegerDeserializer;
+import org.janelia.jacs2.model.DomainModelUtils;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -25,7 +23,6 @@ import java.util.Set;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "class")
 public abstract class AbstractDomainObject implements DomainObject {
     @JsonProperty("_id")
-    @JsonDeserialize(using = MongoNumberBigIntegerDeserializer.class)
     private Number id;
     private String name;
     private String ownerKey;
@@ -48,7 +45,7 @@ public abstract class AbstractDomainObject implements DomainObject {
 
     @JsonIgnore
     public String getOwnerName() {
-        return DomainUtils.getNameFromSubjectKey(ownerKey);
+        return DomainModelUtils.getNameFromSubjectKey(ownerKey);
     }
 
     @Override

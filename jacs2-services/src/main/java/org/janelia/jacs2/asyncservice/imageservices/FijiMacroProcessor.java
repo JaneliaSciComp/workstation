@@ -13,7 +13,7 @@ import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.JacsServiceDispatcher;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.utils.ScriptingUtils;
+import org.janelia.jacs2.asyncservice.utils.ScriptingUtils;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Any;

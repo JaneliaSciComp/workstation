@@ -10,7 +10,7 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
-import org.janelia.jacs2.utils.DomainUtils;
+import org.janelia.jacs2.model.DomainModelUtils;
 
 import javax.inject.Inject;
 import java.util.Date;
@@ -66,7 +66,7 @@ public class SampleMongoDao extends AbstractDomainObjectDao<Sample> implements S
         if (tmogInterval.hasTo()) {
             filtersBuilder.add(lt("tmogDate", tmogInterval.getTo()));
         }
-        if (DomainUtils.isNotAdmin(subject)) {
+        if (DomainModelUtils.isNotAdmin(subject)) {
             filtersBuilder.add(createSubjectPermissionFilter(subject));
         }
 

@@ -1,4 +1,4 @@
-package org.janelia.jacs2.utils;
+package org.janelia.jacs2.dao.mongo.utils;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,15 +9,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.math.BigInteger;
 
-public class MongoNumberLongDeserializer extends JsonDeserializer<Number> {
+public class MongoNumberBigIntegerDeserializer extends JsonDeserializer<Number> {
 
     @Override
-    public Number deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public Number deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
         JsonNode node = jsonParser.readValueAsTree();
         if (node.get("$numberLong") != null) {
-            return Long.valueOf(node.get("$numberLong").asText());
+            return new BigInteger(node.get("$numberLong").asText());
         } else {
-            return Long.valueOf(node.asText());
+            return new BigInteger(node.asText());
         }
     }
 }

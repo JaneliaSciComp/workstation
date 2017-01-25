@@ -1,4 +1,4 @@
-package org.janelia.jacs2.utils;
+package org.janelia.jacs2.dao.mongo.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bson.BsonReader;

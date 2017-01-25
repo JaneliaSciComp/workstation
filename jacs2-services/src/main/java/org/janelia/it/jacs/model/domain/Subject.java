@@ -2,14 +2,11 @@ package org.janelia.it.jacs.model.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.Sets;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.model.BaseEntity;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.jacs.model.domain.support.MongoMapping;
-import org.janelia.jacs2.utils.MongoNumberBigIntegerDeserializer;
-import org.janelia.jacs2.utils.MongoNumberLongDeserializer;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -21,7 +18,6 @@ public class Subject implements BaseEntity, HasIdentifier {
     public static final String USERS_KEY = "group:workstation_users";
 
     @JsonProperty("_id")
-    @JsonDeserialize(using = MongoNumberBigIntegerDeserializer.class)
     private Number id;
     private String key;
     private String name;

@@ -2,14 +2,11 @@ package org.janelia.jacs2.model.jacsservice;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.jacs.model.domain.support.MongoMapping;
 import org.janelia.jacs2.model.BaseEntity;
-import org.janelia.jacs2.utils.MongoNumberBigIntegerDeserializer;
-import org.janelia.jacs2.utils.MongoNumberBigIntegerListDeserializer;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,7 +20,6 @@ import java.util.stream.Stream;
 @MongoMapping(collectionName="jacsService", label="JacsService")
 public class JacsServiceData implements BaseEntity, HasIdentifier {
     @JsonProperty("_id")
-    @JsonDeserialize(using = MongoNumberBigIntegerDeserializer.class)
     private Number id;
     private String name;
     private ProcessingLocation processingLocation;
@@ -39,9 +35,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     private Map<String, String> resources = new LinkedHashMap<>(); // this could/should be used for grid jobs resources
     private String stringifiedResult;
     private String workspace;
-    @JsonDeserialize(using = MongoNumberBigIntegerDeserializer.class)
     private Number parentServiceId;
-    @JsonDeserialize(using = MongoNumberBigIntegerDeserializer.class)
     private Number rootServiceId;
     private List<JacsServiceEvent> events;
     private Date creationDate = new Date();
@@ -49,7 +43,6 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     private JacsServiceData parentService;
     @JsonIgnore
     private List<JacsServiceData> dependencies = new ArrayList<>();
-    @JsonDeserialize(using = MongoNumberBigIntegerListDeserializer.class)
     private List<Number> dependeciesIds = new ArrayList<>();
     public Number getId() {
         return id;

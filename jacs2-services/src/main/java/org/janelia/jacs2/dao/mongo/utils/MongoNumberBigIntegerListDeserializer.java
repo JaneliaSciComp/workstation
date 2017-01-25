@@ -1,4 +1,4 @@
-package org.janelia.jacs2.utils;
+package org.janelia.jacs2.dao.mongo.utils;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,7 +15,7 @@ import java.util.List;
 public class MongoNumberBigIntegerListDeserializer extends JsonDeserializer<List<Number>> {
 
     @Override
-    public List<Number> deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public List<Number> deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
         JsonNode listNode = jsonParser.readValueAsTree();
         List<Number> res = new ArrayList<>();
         listNode.iterator().forEachRemaining(node -> {

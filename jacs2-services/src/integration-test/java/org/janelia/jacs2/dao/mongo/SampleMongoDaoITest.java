@@ -12,7 +12,7 @@ import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
 import org.janelia.jacs2.model.page.SortDirection;
-import org.janelia.jacs2.utils.DomainUtils;
+import org.janelia.jacs2.model.DomainModelUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -222,8 +222,8 @@ public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
     private SampleTile createTile() {
         SampleTile sampleTile = new SampleTile();
         sampleTile.addLsmReference(new Reference("LSMImage", dataGenerator.nextLong()));
-        DomainUtils.setFileType(sampleTile, FileType.ChanFile, "testChanFile");
-        DomainUtils.setFileType(sampleTile, FileType.MaskFile, "testMaskFile");
+        DomainModelUtils.setFileType(sampleTile, FileType.ChanFile, "testChanFile");
+        DomainModelUtils.setFileType(sampleTile, FileType.MaskFile, "testMaskFile");
         return sampleTile;
     }
 

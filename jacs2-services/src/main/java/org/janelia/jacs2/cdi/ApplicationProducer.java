@@ -3,7 +3,7 @@ package org.janelia.jacs2.cdi;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.janelia.jacs2.cdi.qualifier.ApplicationProperties;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
-import org.janelia.jacs2.utils.TimebasedIdentifierGenerator;
+import org.janelia.jacs2.dao.mongo.utils.TimebasedIdentifierGenerator;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;

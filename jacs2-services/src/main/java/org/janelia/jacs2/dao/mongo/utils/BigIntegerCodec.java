@@ -1,4 +1,4 @@
-package org.janelia.jacs2.utils;
+package org.janelia.jacs2.dao.mongo.utils;
 
 import org.bson.BsonReader;
 import org.bson.BsonWriter;
