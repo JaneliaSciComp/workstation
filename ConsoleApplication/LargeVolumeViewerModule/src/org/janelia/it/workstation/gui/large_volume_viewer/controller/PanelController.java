@@ -74,11 +74,6 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         annotationModel.setNotesUpdateListener(null);
         globalListener = null;
     }
-
-    @Override
-    public void anchorRadiusChanged(TmGeoAnnotation anchor) {
-        filteredAnnotationList.annotationChanged(anchor);
-    }
     
     private class PanelGlobalListener extends GlobalAnnotationAdapter {
         @Override
@@ -195,22 +190,28 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
 
     // TmGeoAnnotationAnchorListener methods
     // filtered annotation list, neurite tree list will need to listen
+    
+    @Override
     public void anchorAdded(TmGeoAnnotation annotation) {
         filteredAnnotationList.annotationChanged(annotation);
     }
 
+    @Override
     public void anchorsAdded(List<TmGeoAnnotation> annotationList) {
         filteredAnnotationList.annotationsChanged(annotationList);
     }
 
+    @Override
     public void anchorDeleted(TmGeoAnnotation annotation) {
         filteredAnnotationList.annotationChanged(annotation);
     }
 
+    @Override
     public void anchorReparented(TmGeoAnnotation annotation) {
         filteredAnnotationList.annotationChanged(annotation);
     }
 
+    @Override
     public void anchorMovedBack(TmGeoAnnotation annotation) {
         filteredAnnotationList.annotationChanged(annotation);
     }
@@ -220,6 +221,12 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         filteredAnnotationList.annotationChanged(anchor);
     }
 
+    @Override
+    public void anchorRadiusChanged(TmGeoAnnotation anchor) {
+        filteredAnnotationList.annotationChanged(anchor);
+    }
+
+    @Override
     public void clearAnchors() {
         filteredAnnotationList.annotationsChanged(new ArrayList<TmGeoAnnotation>());
     }
