@@ -1,4 +1,4 @@
-#version 330
+#version 430
 
 /**
  * Truncated cone imposter fragment shader.
@@ -34,7 +34,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-uniform mat4 projectionMatrix; // needed for proper depth calculation
+layout(location = 2) uniform mat4 projectionMatrix; // needed for proper depth calculation
 uniform sampler2D lightProbe; // for image-based-lighting (IBL)
 uniform vec2 screenSize = vec2(1280, 800);
 
@@ -72,7 +72,12 @@ vec3 image_based_lighting(
         sampler2D lightProbe);
 
 
-void main() {
+void main() 
+{
+    // Pure green, for testing only
+    fragColor = vec4(0, 1, 0, 1);
+    return;
+
     vec3 s, normal; // surface and normal
 
     // set up quadratic formula to solve cone ray-casting equation

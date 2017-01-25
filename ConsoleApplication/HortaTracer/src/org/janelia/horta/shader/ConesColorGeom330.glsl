@@ -1,4 +1,4 @@
-#version 330
+#version 430
 #extension GL_EXT_geometry_shader : enable
 
 /**
@@ -36,7 +36,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-uniform mat4 projectionMatrix = mat4(1);
+layout(location = 2) uniform mat4 projectionMatrix = mat4(1);
 
 layout(lines) in; // two ends of cone
 // Create viewer-facing imposter geometry 
@@ -156,8 +156,8 @@ void far_cone_hull(mat3 frame2348, mat3 frame1567) {
 void main() 
 {
     // Do not process invisible vertices
-    if (geomRgbV[0].w <= 0.5) return;
-    if (geomRgbV[1].w <= 0.5) return;
+    // if (geomRgbV[0].w <= 0.5) return;
+    // if (geomRgbV[1].w <= 0.5) return;
 
     // On Mac GL_EXT_geometry_shader4 is unrecognized, so must use later geometry shader syntax
 #ifdef GL_EXT_geometry_shader4

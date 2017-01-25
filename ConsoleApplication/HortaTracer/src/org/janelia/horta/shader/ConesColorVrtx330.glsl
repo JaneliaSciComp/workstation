@@ -1,4 +1,4 @@
-#version 330
+#version 430
 
 /**
  * Vertex shader for truncated cone imposters.
@@ -35,7 +35,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-uniform mat4 modelViewMatrix = mat4(1);
+layout(location = 1) uniform mat4 modelViewMatrix = mat4(1);
 
 layout(location = 1) in vec4 xyzr; // center of truncated cone end, and radius
 layout(location = 2) in vec4 rgbv; // color and visibility

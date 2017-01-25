@@ -29,16 +29,130 @@
  */
 package org.janelia.horta.neuronvbo;
 
+import java.io.IOException;
 import java.util.Collection;
-import java.util.Set;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.TreeSet;
+import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.geometry3d.Matrix4;
+import org.janelia.gltools.BasicShaderProgram;
+import org.janelia.gltools.ShaderProgram;
+import org.janelia.gltools.ShaderStep;
+import org.openide.util.Exceptions;
 
 /**
- *
+ * For improved rendering performance with large numbers of neurons, NeuronVboPool
+ * distributes all the neurons among a finite set of vertex buffer objects. Instead
+ * of using a separate vbo for each neuron, like we were doing before.
  * @author brunsc
  */
 public class NeuronVboPool 
 {
-    private Collection<NeuronVbo> vbos;
-    private Set<NeuronModel> dirtyNeurons; // Track incremental updates
+    private final static int POOL_SIZE = 2;
+    // private Set<NeuronModel> dirtyNeurons; // Track incremental updates
+    // private Map<NeuronModel, NeuronVbo> neuronVbos;
+    // TODO: increase after initial debugging
+    
+    private final Collection<NeuronVbo> vbos;
+    private final ShaderProgram conesShader = new ConesShader();
+
+    public NeuronVboPool() {
+        this.vbos = new TreeSet<>(new VboComparator());
+        for (int i = 0; i < POOL_SIZE; ++i) {
+            vbos.add(new NeuronVbo());
+        }
+    }
+    
+    void display(GL3 gl, AbstractCamera camera) 
+    {
+        Matrix4 modelViewMatrix = camera.getViewMatrix();
+        Matrix4 projectionMatrix = camera.getProjectionMatrix();
+        
+        // First pass: draw all the connections (edges) between adjacent neuron anchor nodes.
+        // These edges are drawn as truncated cones, tapering width between
+        // the radii of the adjacent nodes.
+        conesShader.load(gl);
+        gl.glUniformMatrix4fv(1, 1, false, modelViewMatrix.asArray(), 0);
+        gl.glUniformMatrix4fv(2, 1, false, projectionMatrix.asArray(), 0);        
+        for (NeuronVbo vbo : vbos) {
+            vbo.displayEdges(gl);
+        }
+        // TODO: repeat display loop for spheres/nodes
+    }
+
+    void dispose(GL3 gl) {
+        for (NeuronVbo vbo : vbos) {
+            vbo.dispose(gl);
+        }
+        conesShader.dispose(gl);
+    }
+
+    void init(GL3 gl) {
+        conesShader.init(gl);
+        for (NeuronVbo vbo : vbos) {
+            vbo.init(gl);
+        }
+    }
+
+    void add(NeuronModel neuron) 
+    {
+        // To keep the vbos balanced, always insert into the emptiest vbo
+        NeuronVbo emptiestVbo = vbos.iterator().next();
+        // remove, append, then insert, to maintain sorted order
+        vbos.remove(emptiestVbo);
+        emptiestVbo.add(neuron);
+        vbos.add(emptiestVbo);
+    }
+
+    // Imposes an ordering on the VBOs in the pool, such that the first vbo is
+    // always the one with the most room for more elements.
+    // To maintain this ordering, it is imperative that the TreeSet<NeuronVbo> be updated
+    // after every content change.
+    private static class VboComparator implements Comparator<NeuronVbo> 
+    {
+        @Override
+        public int compare(NeuronVbo o1, NeuronVbo o2) {
+            return o1.getNeuronCount() - o2.getNeuronCount(); // TODO: test whether this is the correct ordering sense...     
+        }
+    }
+    
+    private static class ConesShader extends BasicShaderProgram
+    {
+        public ConesShader()
+        {
+            try {
+                getShaderSteps().add(new ShaderStep(GL3.GL_VERTEX_SHADER,
+                        getClass().getResourceAsStream(
+                                "/org/janelia/horta/shader/"
+                                        + "ConesColorVrtx330.glsl"))
+                );
+                getShaderSteps().add(new ShaderStep(GL3.GL_GEOMETRY_SHADER,
+                        getClass().getResourceAsStream(
+                                "/org/janelia/horta/shader/"
+                                        + "imposter_fns330.glsl"))
+                );
+                getShaderSteps().add(new ShaderStep(GL3.GL_GEOMETRY_SHADER,
+                        getClass().getResourceAsStream(
+                                "/org/janelia/horta/shader/"
+                                        + "ConesColorGeom330.glsl"))
+                );
+                getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
+                        getClass().getResourceAsStream(
+                                "/org/janelia/horta/shader/"
+                                        + "imposter_fns330.glsl"))
+                );
+                getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
+                        getClass().getResourceAsStream(
+                                "/org/janelia/horta/shader/"
+                                        + "ConesColorFrag330.glsl"))
+                );
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }        
+        }
+    }
+
 }
