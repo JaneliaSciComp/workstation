@@ -35,8 +35,8 @@
  */
 
 layout(location = 2) uniform mat4 projectionMatrix; // needed for proper depth calculation
-uniform sampler2D lightProbe; // for image-based-lighting (IBL)
-uniform vec2 screenSize = vec2(1280, 800);
+layout(location = 3) uniform sampler2D lightProbe; // for image-based-lighting (IBL)
+layout(location = 4) uniform vec2 screenSize = vec2(1280, 800);
 
 in float fragRadius; // average radius of cone
 in vec3 center; // center of cone, in camera frame
@@ -74,10 +74,6 @@ vec3 image_based_lighting(
 
 void main() 
 {
-    // Pure green, for testing only
-    fragColor = vec4(0, 1, 0, 1);
-    return;
-
     vec3 s, normal; // surface and normal
 
     // set up quadratic formula to solve cone ray-casting equation
@@ -156,7 +152,8 @@ void main()
     // illuminate the cone surface
     vec3 reflectColor = mix(color.rgb, vec3(1,1,1), 0.5); // midway between metal and plastic.
     fragColor = vec4(
-        image_based_lighting(s, normal, color.rgb, reflectColor, lightProbe),
+        0, 1, 0,
+        // image_based_lighting(s, normal, color.rgb, reflectColor, lightProbe),
         // light_rig(s, normal, color.rgb),
         color.a);
 }

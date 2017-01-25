@@ -56,6 +56,13 @@ public class NeuronVboPool
     // private Map<NeuronModel, NeuronVbo> neuronVbos;
     // TODO: increase after initial debugging
     
+    // Be sure to synchronize these constants with the actual shader source uniform layout
+    private final static int VIEW_UNIFORM = 1;
+    private final static int PROJECTION_UNIFORM = 2;
+    private final static int LIGHTPROBE_UNIFORM = 3;
+    private final static int SCREENSIZE_UNIFORM = 4;
+    
+    
     private final Collection<NeuronVbo> vbos;
     private final ShaderProgram conesShader = new ConesShader();
 
@@ -70,17 +77,23 @@ public class NeuronVboPool
     {
         Matrix4 modelViewMatrix = camera.getViewMatrix();
         Matrix4 projectionMatrix = camera.getProjectionMatrix();
+        float[] screenSize = new float[] {
+            camera.getViewport().getWidthPixels(),
+            camera.getViewport().getHeightPixels()
+        };
         
         // First pass: draw all the connections (edges) between adjacent neuron anchor nodes.
         // These edges are drawn as truncated cones, tapering width between
         // the radii of the adjacent nodes.
         conesShader.load(gl);
-        gl.glUniformMatrix4fv(1, 1, false, modelViewMatrix.asArray(), 0);
-        gl.glUniformMatrix4fv(2, 1, false, projectionMatrix.asArray(), 0);        
+        gl.glUniformMatrix4fv(VIEW_UNIFORM, 1, false, modelViewMatrix.asArray(), 0);
+        gl.glUniformMatrix4fv(PROJECTION_UNIFORM, 1, false, projectionMatrix.asArray(), 0);
+        gl.glUniform2fv(SCREENSIZE_UNIFORM, 1, screenSize, 0);
         for (NeuronVbo vbo : vbos) {
             vbo.displayEdges(gl);
         }
-        // TODO: repeat display loop for spheres/nodes
+        
+        // TODO: Second pass: repeat display loop for spheres/nodes
     }
 
     void dispose(GL3 gl) {

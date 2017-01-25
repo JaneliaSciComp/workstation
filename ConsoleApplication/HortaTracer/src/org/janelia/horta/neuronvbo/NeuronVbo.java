@@ -43,8 +43,6 @@ import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.Matrix4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
