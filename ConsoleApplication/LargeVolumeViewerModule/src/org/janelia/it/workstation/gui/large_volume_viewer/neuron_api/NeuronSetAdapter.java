@@ -105,7 +105,7 @@ implements NeuronSet// , LookupListener
         return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n);
     }
 
-    private void updateVoxToMicronMatrix(TmSample sample)
+    private void updateVoxToMicronMatrices(TmSample sample)
     {
         // If we try to get the matrix too early, it comes back null, so populate just-in-time
         if (sample == null) {
@@ -130,14 +130,14 @@ implements NeuronSet// , LookupListener
     Jama.Matrix getVoxToMicronMatrix() {
         if (voxToMicronMatrix != null)
             return voxToMicronMatrix;
-        updateVoxToMicronMatrix(annotationModel.getCurrentSample());
+        updateVoxToMicronMatrices(annotationModel.getCurrentSample());
         return voxToMicronMatrix;
     }
     
     Jama.Matrix getMicronToVoxMatrix() {
         if (micronToVoxMatrix != null)
             return micronToVoxMatrix;
-        updateVoxToMicronMatrix(annotationModel.getCurrentSample());
+        updateVoxToMicronMatrices(annotationModel.getCurrentSample());
         return micronToVoxMatrix;
     }
 
@@ -244,8 +244,8 @@ implements NeuronSet// , LookupListener
             getNameChangeObservable().setChanged();
         this.workspace = workspace;
         TmSample sample = annotationModel.getCurrentSample();
-        updateVoxToMicronMatrix(sample);
-        spatialIndex.initSample(sample);
+        updateVoxToMicronMatrices(sample);
+        spatialIndex.setMicronToVoxMatrix(getMicronToVoxMatrix());
         NeuronList nl = (NeuronList) neurons;
         nl.wrap(this);
         getMembershipChangeObservable().setChanged();

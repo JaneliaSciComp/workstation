@@ -9,8 +9,6 @@ import java.util.Map;
 
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.util.MatrixUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,11 +35,9 @@ public class NeuronVertexSpatialIndex {
     public NeuronVertexSpatialIndex() {
         log.trace("Creating spatial index");
     }
-            
-    public void initSample(TmSample sample) {
-        log.info("Initializing spatial index with sample={}", sample.getId());
-        // TODO: this matrix should get deserialized once when the sample is loaded, not all over the place
-        this.micronToVoxMatrix = MatrixUtilities.deserializeMatrix(sample.getMicronToVoxMatrix(), "micronToVoxMatrix");
+             
+    public void setMicronToVoxMatrix(Jama.Matrix micronToVoxMatrix) {
+        this.micronToVoxMatrix = micronToVoxMatrix;
     }
     
     /**
@@ -78,8 +74,7 @@ public class NeuronVertexSpatialIndex {
     public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
         if (index==null) return Collections.emptyList();
         if (micronToVoxMatrix==null) {
-            log.warn("No sample loaded in spatial index");
-            return Collections.emptyList();
+            throw new IllegalStateException("No micronToVoxMatrix loaded in spatial index");
         }
 
         // Convert from Cartesian micrometers to image voxel coordinates
