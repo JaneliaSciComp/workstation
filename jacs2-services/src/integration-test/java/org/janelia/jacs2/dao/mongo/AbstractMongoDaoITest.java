@@ -12,7 +12,7 @@ import org.janelia.jacs2.AbstractITest;
 import org.janelia.jacs2.cdi.ObjectMapperFactory;
 import org.janelia.jacs2.dao.Dao;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
-import org.janelia.jacs2.model.service.JacsServiceState;
+import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.utils.BigIntegerCodec;
 import org.janelia.jacs2.utils.DomainCodecProvider;
 import org.janelia.jacs2.utils.EnumCodec;

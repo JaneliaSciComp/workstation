@@ -3,8 +3,8 @@ package org.janelia.jacs2.dao;
 import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
-import org.janelia.jacs2.model.service.JacsServiceData;
-import org.janelia.jacs2.model.service.JacsServiceState;
+import org.janelia.jacs2.model.jacsservice.JacsServiceData;
+import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 
 import java.util.Date;
 import java.util.List;

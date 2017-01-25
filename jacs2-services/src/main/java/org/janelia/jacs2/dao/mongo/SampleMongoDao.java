@@ -2,7 +2,6 @@ package org.janelia.jacs2.dao.mongo;
 
 import com.google.common.collect.ImmutableList;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Filters;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.conversions.Bson;
 import org.janelia.it.jacs.model.domain.Subject;
@@ -11,7 +10,6 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
-import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.utils.DomainUtils;
 
 import javax.inject.Inject;

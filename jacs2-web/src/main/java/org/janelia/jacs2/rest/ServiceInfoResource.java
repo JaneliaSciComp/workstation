@@ -4,11 +4,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
-import org.janelia.jacs2.model.service.JacsServiceData;
-import org.janelia.jacs2.model.service.JacsServiceState;
-import org.janelia.jacs2.model.service.ServiceMetaData;
-import org.janelia.jacs2.service.JacsServiceDataManager;
-import org.janelia.jacs2.service.ServiceRegistry;
+import org.janelia.jacs2.model.jacsservice.JacsServiceData;
+import org.janelia.jacs2.model.jacsservice.JacsServiceState;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
+import org.janelia.jacs2.asyncservice.JacsServiceDataManager;
+import org.janelia.jacs2.asyncservice.ServiceRegistry;
 import org.slf4j.Logger;
 
 import javax.enterprise.context.ApplicationScoped;

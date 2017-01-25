@@ -14,7 +14,6 @@ import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletInfo;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.janelia.jacs2.job.BackgroundJobs;
-import org.janelia.jacs2.service.impl.JacsJobRunner;
 import org.jboss.weld.environment.servlet.Listener;
 
 import javax.servlet.ServletException;

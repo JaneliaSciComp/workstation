@@ -1,7 +1,7 @@
 package org.janelia.jacs2.job;
 
-import org.janelia.jacs2.service.impl.JacsJobRunner;
-import org.janelia.jacs2.service.impl.JacsQueueSyncer;
+import org.janelia.jacs2.asyncservice.common.JacsJobRunner;
+import org.janelia.jacs2.asyncservice.common.JacsQueueSyncer;
 
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.CDI;

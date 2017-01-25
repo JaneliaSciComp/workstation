@@ -12,7 +12,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.jacs2.cdi.ObjectMapperFactory;
-import org.janelia.jacs2.model.service.JacsServiceData;
+import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

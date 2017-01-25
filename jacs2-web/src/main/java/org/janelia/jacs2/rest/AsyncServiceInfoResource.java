@@ -1,8 +1,8 @@
 package org.janelia.jacs2.rest;
 
-import org.janelia.jacs2.model.service.JacsServiceData;
-import org.janelia.jacs2.service.ServerStats;
-import org.janelia.jacs2.service.JacsServiceDataManager;
+import org.janelia.jacs2.model.jacsservice.JacsServiceData;
+import org.janelia.jacs2.asyncservice.ServerStats;
+import org.janelia.jacs2.asyncservice.JacsServiceDataManager;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;

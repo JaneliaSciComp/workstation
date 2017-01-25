@@ -6,7 +6,7 @@ import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.page.ListResult;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
-import org.janelia.jacs2.service.dataservice.sample.SampleDataService;
+import org.janelia.jacs2.dataservice.sample.SampleDataService;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
