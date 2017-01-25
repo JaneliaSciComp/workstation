@@ -152,8 +152,8 @@ void main()
     // illuminate the cone surface
     vec3 reflectColor = mix(color.rgb, vec3(1,1,1), 0.5); // midway between metal and plastic.
     fragColor = vec4(
-        0, 1, 0,
-        // image_based_lighting(s, normal, color.rgb, reflectColor, lightProbe),
+        // 0, 1, 0,
+        image_based_lighting(s, normal, color.rgb, reflectColor, lightProbe),
         // light_rig(s, normal, color.rgb),
         color.a);
 }

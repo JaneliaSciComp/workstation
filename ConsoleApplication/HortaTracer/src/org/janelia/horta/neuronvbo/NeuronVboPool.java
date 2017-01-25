@@ -32,7 +32,6 @@ package org.janelia.horta.neuronvbo;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.TreeSet;
 import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -41,6 +40,7 @@ import org.janelia.geometry3d.Matrix4;
 import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.ShaderStep;
+import org.janelia.gltools.texture.Texture2d;
 import org.openide.util.Exceptions;
 
 /**
@@ -52,24 +52,35 @@ import org.openide.util.Exceptions;
 public class NeuronVboPool 
 {
     private final static int POOL_SIZE = 2;
+    private final Collection<NeuronVbo> vbos;
+
     // private Set<NeuronModel> dirtyNeurons; // Track incremental updates
     // private Map<NeuronModel, NeuronVbo> neuronVbos;
     // TODO: increase after initial debugging
     
+    // Shaders...
     // Be sure to synchronize these constants with the actual shader source uniform layout
+    private final ShaderProgram conesShader = new ConesShader();
     private final static int VIEW_UNIFORM = 1;
     private final static int PROJECTION_UNIFORM = 2;
     private final static int LIGHTPROBE_UNIFORM = 3;
     private final static int SCREENSIZE_UNIFORM = 4;
+    private final Texture2d lightProbeTexture;
     
-    
-    private final Collection<NeuronVbo> vbos;
-    private final ShaderProgram conesShader = new ConesShader();
-
-    public NeuronVboPool() {
+    public NeuronVboPool() 
+    {
         this.vbos = new TreeSet<>(new VboComparator());
         for (int i = 0; i < POOL_SIZE; ++i) {
             vbos.add(new NeuronVbo());
+        }
+        
+        lightProbeTexture = new Texture2d();
+        try {
+            lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
+                    "/org/janelia/gltools/material/lightprobe/"
+                            + "Office1W165Both.ppm"));
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
         }
     }
     
@@ -85,10 +96,12 @@ public class NeuronVboPool
         // First pass: draw all the connections (edges) between adjacent neuron anchor nodes.
         // These edges are drawn as truncated cones, tapering width between
         // the radii of the adjacent nodes.
+        lightProbeTexture.bind(gl, 0);
         conesShader.load(gl);
         gl.glUniformMatrix4fv(VIEW_UNIFORM, 1, false, modelViewMatrix.asArray(), 0);
         gl.glUniformMatrix4fv(PROJECTION_UNIFORM, 1, false, projectionMatrix.asArray(), 0);
         gl.glUniform2fv(SCREENSIZE_UNIFORM, 1, screenSize, 0);
+        gl.glUniform1i(LIGHTPROBE_UNIFORM, 0);
         for (NeuronVbo vbo : vbos) {
             vbo.displayEdges(gl);
         }
@@ -100,11 +113,13 @@ public class NeuronVboPool
         for (NeuronVbo vbo : vbos) {
             vbo.dispose(gl);
         }
+        lightProbeTexture.dispose(gl);
         conesShader.dispose(gl);
     }
 
     void init(GL3 gl) {
         conesShader.init(gl);
+        lightProbeTexture.init(gl);
         for (NeuronVbo vbo : vbos) {
             vbo.init(gl);
         }
