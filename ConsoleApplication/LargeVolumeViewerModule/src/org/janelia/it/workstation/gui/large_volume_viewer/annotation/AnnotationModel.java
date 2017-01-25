@@ -275,13 +275,22 @@ called from a  SimpleWorker thread.
     }
     
     public void loadComplete() { 
-        final TmWorkspace updateWorkspace = getCurrentWorkspace();
+        final TmWorkspace workspace = getCurrentWorkspace();
         // Update TC, in case the load bypassed it
-        LargeVolumeViewerTopComponent.getInstance().setCurrent(updateWorkspace==null ? getCurrentSample() : updateWorkspace);    
-        fireWorkspaceLoaded(updateWorkspace);
+        LargeVolumeViewerTopComponent.getInstance().setCurrent(workspace==null ? getCurrentSample() : workspace);    
+        fireWorkspaceLoaded(workspace);
         fireNeuronSelected(null);
-        if (updateWorkspace!=null) {
-            activityLog.logLoadWorkspace(updateWorkspace.getId());
+        if (workspace!=null) {
+            activityLog.logLoadWorkspace(workspace.getId());
+        }
+    }
+
+    public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
+        final TmWorkspace workspace = getCurrentWorkspace();
+        // update workspace; update and select new neuron; this will draw points as well
+        fireWorkspaceLoaded(workspace);
+        if (neuron!=null) {
+            selectNeuron(neuron);
         }
     }
 
@@ -456,9 +465,8 @@ called from a  SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireWorkspaceLoaded(workspace);
+                fireNeuronCreated(neuron);
                 fireNeuronSelected(neuron);
-                fireWorkspaceChanged();
                 activityLog.logCreateNeuron(workspace.getId(), neuron.getId());
             }
         });
@@ -485,7 +493,7 @@ called from a  SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireWorkspaceLoaded(workspace);
+                fireNeuronChanged(neuron);
                 fireNeuronSelected(neuron);
                 activityLog.logRenameNeuron(workspace.getId(), neuron.getId());
             }
@@ -518,10 +526,10 @@ called from a  SimpleWorker thread.
             @Override
             public void run() {
 
-                final SkeletonController skeletonController=SkeletonController.getInstance();
+                final SkeletonController skeletonController = SkeletonController.getInstance();
                 skeletonController.setSkipSkeletonChange(true);
 
-                final FilteredAnnotationList filteredAnnotationList=FilteredAnnotationList.getInstance();
+                final FilteredAnnotationList filteredAnnotationList = FilteredAnnotationList.getInstance();
                 filteredAnnotationList.setSkipUpdate(true);
 
                 fireNeuronSelected(null);
@@ -538,8 +546,7 @@ called from a  SimpleWorker thread.
 
                     @Override
                     protected void hadSuccess() {
-                        fireWorkspaceLoaded(workspace);
-                        fireWorkspaceChanged();
+                        fireNeuronDeleted(deletedNeuron);
 
                         skeletonController.setSkipSkeletonChange(false);
                         skeletonController.skeletonChanged();
@@ -811,8 +818,6 @@ called from a  SimpleWorker thread.
      */
     public synchronized void mergeNeurite(final Long sourceAnnotationID, final Long targetAnnotationID) throws Exception {
 
-        // temporary logging for Jayaram:
-        // log.info("beginning mergeNeurite()");
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
 
@@ -892,8 +897,8 @@ called from a  SimpleWorker thread.
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.start();
                 fireNotesUpdated(workspace);
+                fireNeuronChanged(updateTargetNeuron);
                 fireNeuronSelected(updateTargetNeuron);
-                fireWorkspaceLoaded(workspace);
                 fireAnnotationReparented(updateSourceAnnotation);
                 // log.info("ending UI update for mergeNeurite(); elapsed = " + stopwatch);
                 activityLog.logEndOfOperation(getWsId(), targetAnnotation);
@@ -909,30 +914,29 @@ called from a  SimpleWorker thread.
     /**
      * move the neurite containing the input annotation to the given neuron
      */
-    public synchronized void moveNeurite(final TmGeoAnnotation annotation, TmNeuronMetadata destNeuron) throws Exception {
+    public synchronized void moveNeurite(final TmGeoAnnotation annotation, final TmNeuronMetadata destNeuron) throws Exception {
         if (eitherIsNull(annotation, destNeuron)) {
             return;
         }
-        TmNeuronMetadata sourceNeuron = getNeuronFromNeuronID(annotation.getNeuronId());
+        final TmNeuronMetadata sourceNeuron = getNeuronFromNeuronID(annotation.getNeuronId());
         neuronManager.moveNeurite(annotation, sourceNeuron, destNeuron);
         neuronManager.saveNeuronData(sourceNeuron);
         neuronManager.saveNeuronData(destNeuron);
 
         final TmWorkspace workspace = getCurrentWorkspace();
-        final TmNeuronMetadata currentNeuron = getCurrentNeuron();
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fireNotesUpdated(workspace);
-                fireNeuronSelected(currentNeuron);
-                fireWorkspaceLoaded(workspace);
+                fireNeuronChanged(sourceNeuron);
+                fireNeuronChanged(destNeuron);
+                fireNeuronSelected(destNeuron);
                 activityLog.logEndOfOperation(getWsId(), annotation);
             }
         });
-
     }
-
+    
 
     /**
      * this method deletes a link, which is defined as an annotation with
@@ -1779,16 +1783,6 @@ called from a  SimpleWorker thread.
         }
     }
 
-    public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
-        final TmWorkspace workspace = getCurrentWorkspace();
-        // update workspace; update and select new neuron; this will draw points as well
-        fireWorkspaceLoaded(workspace);
-        fireWorkspaceChanged();
-        if (neuron!=null) {
-            selectNeuron(neuron);
-        }
-    }
-
     private boolean eitherIsNull(Object object1, Object object2) {
         return object1 == null || object2 == null;
     }
@@ -1843,6 +1837,24 @@ called from a  SimpleWorker thread.
         }
     }
 
+    void fireNeuronCreated(TmNeuronMetadata neuron) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.neuronCreated(neuron);
+        }
+    }
+
+    void fireNeuronDeleted(TmNeuronMetadata neuron) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.neuronDeleted(neuron);
+        }
+    }
+
+    void fireNeuronChanged(TmNeuronMetadata neuron) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.neuronChanged(neuron);
+        }
+    }
+
     void fireNeuronSelected(TmNeuronMetadata neuron) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronSelected(neuron);
@@ -1875,10 +1887,6 @@ called from a  SimpleWorker thread.
             notesUpdateListener.notesUpdated(workspace);
         }
     }
-
-    private void fireWorkspaceChanged() {
-    }
-
     public NeuronSet getNeuronSet() {
         return neuronSetAdapter;
     }

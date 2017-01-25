@@ -465,8 +465,47 @@ implements NeuronSet// , LookupListener
         }
 
         @Override
-        public void neuronSelected(TmNeuronMetadata neuron)
-        {}
+        public void neuronCreated(TmNeuronMetadata neuron) {
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                spatialIndex.addToIndex(neuronVertex);
+            }
+            getMembershipChangeObservable().setChanged();
+            getMembershipChangeObservable().notifyObservers();
+        }
+
+        @Override
+        public void neuronDeleted(TmNeuronMetadata neuron) {
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                spatialIndex.removeFromIndex(neuronVertex);
+            }
+            innerList.removeFromCache(neuron);
+            getMembershipChangeObservable().setChanged();
+            getMembershipChangeObservable().notifyObservers();
+        }
+
+        @Override
+        public void neuronChanged(TmNeuronMetadata neuron) {
+            // Remove vertices
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                spatialIndex.removeFromIndex(neuronVertex);
+            }
+            innerList.removeFromCache(neuron);
+            // Recreate model
+            neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            // Re-add vertices
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                spatialIndex.addToIndex(neuronVertex);
+            }
+            getMembershipChangeObservable().setChanged();
+            getMembershipChangeObservable().notifyObservers();
+        }
+        
+        @Override
+        public void neuronSelected(TmNeuronMetadata neuron) {
+        }
 
         @Override
         public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style)
@@ -549,6 +588,14 @@ implements NeuronSet// , LookupListener
                 cachedNeurons.put(guid, new NeuronModelAdapter(tmNeuron, neuronSet));
             }
             return cachedNeurons.get(guid);
+        }
+        
+        void removeFromCache(TmNeuronMetadata tmNeuron) {
+            if (tmNeuron == null) return;
+            Long guid = tmNeuron.getId();
+            if (cachedNeurons.containsKey(guid)) {
+                cachedNeurons.remove(guid);
+            }
         }
         
         private boolean hasCachedNeuronId(Long neuronId) {

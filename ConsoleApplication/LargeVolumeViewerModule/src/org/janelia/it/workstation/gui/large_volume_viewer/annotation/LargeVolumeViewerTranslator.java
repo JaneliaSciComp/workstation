@@ -337,6 +337,24 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             addAnchoredPaths(annList);
         }
     }
+
+    @Override
+    public void neuronCreated(TmNeuronMetadata neuron) {
+        // TODO: need a more granular update
+        workspaceLoaded(annModel.getCurrentWorkspace());
+    }
+
+    @Override
+    public void neuronDeleted(TmNeuronMetadata neuron) {
+        // TODO: need a more granular update
+        workspaceLoaded(annModel.getCurrentWorkspace());
+    }
+
+    @Override
+    public void neuronChanged(TmNeuronMetadata neuron) {
+        // TODO: need a more granular update
+        workspaceLoaded(annModel.getCurrentWorkspace());   
+    }
     
     /**
      * called when the model changes the current neuron

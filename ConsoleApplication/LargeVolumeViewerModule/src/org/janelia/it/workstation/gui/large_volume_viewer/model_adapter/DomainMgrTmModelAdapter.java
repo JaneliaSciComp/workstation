@@ -44,12 +44,11 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
     public List<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) throws Exception {
         log.info("Checking neurons for workspace: "+workspace);
         List<TmNeuronMetadata> neurons = new ArrayList<>();
-        final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading annotations...");
+        final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading neuron data");
 
         try {
             progress.setInitialDelay(0);
-            progress.start();            
-            progress.setDisplayName("Loading neuron data...");
+            progress.start();
             progress.switchToIndeterminate();
             
             StopWatch stopWatch = new StopWatch();
@@ -58,7 +57,7 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
             
             if (ClientDomainUtils.hasWriteAccess(workspace)) {
                 if (ApplicationPanel.isVerifyNeurons()) {
-                    progress.setDisplayName("Verifying neuron data...");
+                    progress.setDisplayName("Verifying neuron data");
                         
                     // check neuron consistency and repair (some) problems
                     for (TmNeuronMetadata neuron: neuronList) {

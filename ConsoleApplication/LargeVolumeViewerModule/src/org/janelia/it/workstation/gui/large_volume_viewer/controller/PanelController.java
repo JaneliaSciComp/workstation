@@ -88,6 +88,30 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
             wsNeuronList.loadWorkspace(workspace);
             wsInfoPanel.loadWorkspace(workspace);
         }
+
+        @Override
+        public void neuronCreated(TmNeuronMetadata neuron) {
+            TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
+            filteredAnnotationList.loadNeuron(neuron);
+            // TODO: need a more granular update
+            wsNeuronList.loadWorkspace(workspace);
+        }
+
+        @Override
+        public void neuronDeleted(TmNeuronMetadata neuron) {
+            TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
+            filteredAnnotationList.loadNeuron(neuron);
+            // TODO: need a more granular update
+            wsNeuronList.loadWorkspace(workspace);
+        }
+
+        @Override
+        public void neuronChanged(TmNeuronMetadata neuron) {
+            TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
+            filteredAnnotationList.loadNeuron(neuron);
+            // TODO: need a more granular update
+            wsNeuronList.loadWorkspace(workspace);
+        }
         
         @Override
         public void neuronSelected(TmNeuronMetadata neuron) {
