@@ -722,7 +722,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         log.info("Moved annotation {} in neuron {}", annotation.getId(), neuron.getId());
         
-        final TmWorkspace workspace = getCurrentWorkspace();
+        //final TmWorkspace workspace = getCurrentWorkspace();
 
         if (automatedTracingEnabled()) {
             // trace to parent, and each child to this parent:
@@ -735,7 +735,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireNotesUpdated(workspace);
+                // KR: This is inefficient and I don't see any reason for it to be here. 
+                // If it breaks something, we can put it back and try to make the update more granular. 
+                //fireNotesUpdated(workspace);
 
                 if (getCurrentNeuron() != null) {
                     if (neuron.getId().equals(getCurrentNeuron().getId())) {
