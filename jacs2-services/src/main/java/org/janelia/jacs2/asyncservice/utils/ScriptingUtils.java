@@ -1,7 +1,5 @@
 package org.janelia.jacs2.asyncservice.utils;
 
-import java.util.Random;
-
 public class ScriptingUtils {
 
     private static final int DEFAULT_RETRIES = 10;

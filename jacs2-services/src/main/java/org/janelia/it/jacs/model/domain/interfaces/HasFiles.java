@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public interface HasFiles {
     Map<FileType, String> getFiles();
-    void addFileType(FileType fileType, String fileName);
-    void removeFileType(FileType fileType);
     String getFileName(FileType fileType);
+    void setFileName(FileType fileType, String fileName);
+    void removeFileName(FileType fileType);
 }

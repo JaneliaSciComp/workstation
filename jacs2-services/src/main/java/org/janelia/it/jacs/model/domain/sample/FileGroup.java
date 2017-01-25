@@ -54,7 +54,12 @@ public class FileGroup implements HasRelativeFiles {
     }
 
     @Override
-    public void addFileType(FileType fileType, String fileName) {
+    public String getFileName(FileType fileType) {
+        return files.get(fileType);
+    }
+
+    @Override
+    public void setFileName(FileType fileType, String fileName) {
         String existingFile = files.get(fileType);
         if (StringUtils.isNotBlank(existingFile) && !StringUtils.equals(existingFile, fileName)) {
             deprecatedFiles.add(new FileReference(fileType, fileName));
@@ -63,12 +68,7 @@ public class FileGroup implements HasRelativeFiles {
     }
 
     @Override
-    public String getFileName(FileType fileType) {
-        return files.get(fileType);
-    }
-
-    @Override
-    public void removeFileType(FileType fileType) {
+    public void removeFileName(FileType fileType) {
         String existingFile = files.get(fileType);
         if (StringUtils.isNotBlank(existingFile)) {
             deprecatedFiles.add(new FileReference(fileType, existingFile));

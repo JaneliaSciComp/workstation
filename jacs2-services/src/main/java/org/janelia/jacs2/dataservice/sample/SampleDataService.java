@@ -152,7 +152,7 @@ public class SampleDataService {
     }
 
     public void updateLMSMetadata(LSMImage lsmImage, String lsmMetadata) {
-        DomainModelUtils.setFileType(lsmImage, FileType.LsmMetadata, lsmMetadata);
+        DomainModelUtils.setPathForFileType(lsmImage, FileType.LsmMetadata, lsmMetadata);
         imageDao.updateImageFiles(lsmImage);
     }
 

@@ -222,8 +222,8 @@ public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
     private SampleTile createTile() {
         SampleTile sampleTile = new SampleTile();
         sampleTile.addLsmReference(new Reference("LSMImage", dataGenerator.nextLong()));
-        DomainModelUtils.setFileType(sampleTile, FileType.ChanFile, "testChanFile");
-        DomainModelUtils.setFileType(sampleTile, FileType.MaskFile, "testMaskFile");
+        DomainModelUtils.setPathForFileType(sampleTile, FileType.ChanFile, "testChanFile");
+        DomainModelUtils.setPathForFileType(sampleTile, FileType.MaskFile, "testMaskFile");
         return sampleTile;
     }
 
