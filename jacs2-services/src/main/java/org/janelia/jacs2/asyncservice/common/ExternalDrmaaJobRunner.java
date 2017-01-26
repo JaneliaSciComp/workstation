@@ -71,7 +71,7 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
             if (errorFile == null) {
                 errorFile = new File(workingDirectory, serviceContext.getName() + ".e" + jobId);
             }
-            JobInfo jobInfo = drmaaSession.wait(jobId, Session.TIMEOUT_WAIT_FOREVER);
+            JobInfo jobInfo = drmaaSession.wait(jobId, getTimeout(serviceContext));
 
             if (jobInfo.wasAborted()) {
                 logger.error("Job {} for {} never ran", jobId, serviceContext);
@@ -160,4 +160,18 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
         return nativeSpecBuilder.toString();
     }
 
+    private long getTimeout(JacsServiceData serviceContext) {
+        Map<String, String> jobResources = serviceContext.getResources();
+        String jobTimeout = jobResources.get("jobTimeout");
+        if (StringUtils.isNotBlank(jobTimeout)) {
+            try {
+                return Long.parseLong(jobTimeout.trim());
+            } catch (Exception e) {
+                logger.warn("Invalid timeout {} so it will use no wait", jobTimeout);
+                return Session.TIMEOUT_NO_WAIT;
+            }
+        } else {
+            return Session.TIMEOUT_WAIT_FOREVER;
+        }
+    }
 }
