@@ -1,5 +1,6 @@
 package org.janelia.it.jacs.model.domain.sample;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.AbstractDomainObject;
 import org.janelia.it.jacs.model.domain.FileReference;
@@ -20,8 +21,8 @@ public class Image extends AbstractDomainObject implements HasRelativeFiles {
     private String objective;
     private Integer numChannels;
     // files are in fact alternate representations of this image instance
-    private Map<FileType, String> files = new HashMap<>();
-    private List<FileReference> deprecatedFiles = new ArrayList<>();
+    @JsonIgnore
+    private HasFileImpl filesImpl = new HasFileImpl();
 
 
     public String getFilepath() {
@@ -65,42 +66,30 @@ public class Image extends AbstractDomainObject implements HasRelativeFiles {
     }
 
     public Map<FileType, String> getFiles() {
-        return files;
-    }
-
-    public void setFiles(Map<FileType, String> files) {
-        this.files = files;
+        return filesImpl.getFiles();
     }
 
     @Override
     public String getFileName(FileType fileType) {
-        return files.get(fileType);
+        return filesImpl.getFileName(fileType);
     }
 
     @Override
     public void setFileName(FileType fileType, String fileName) {
-        String existingFile = files.get(fileType);
-        if (StringUtils.isNotBlank(existingFile) && !StringUtils.equals(existingFile, fileName)) {
-            deprecatedFiles.add(new FileReference(fileType, fileName));
-        }
-        files.put(fileType, fileName);
+        filesImpl.setFileName(fileType, fileName);
     }
 
     @Override
     public void removeFileName(FileType fileType) {
-        String existingFile = files.get(fileType);
-        if (StringUtils.isNotBlank(existingFile)) {
-            deprecatedFiles.add(new FileReference(fileType, existingFile));
-        }
-        files.remove(fileType);
+        filesImpl.removeFileName(fileType);
     }
 
     public List<FileReference> getDeprecatedFiles() {
-        return deprecatedFiles;
+        return filesImpl.getDeprecatedFiles();
     }
 
     public void setDeprecatedFiles(List<FileReference> deprecatedFiles) {
-        this.deprecatedFiles = deprecatedFiles;
+        this.filesImpl.setDeprecatedFiles(deprecatedFiles);
     }
 
 }

@@ -23,8 +23,8 @@ public class SampleTile implements HasFiles {
     private String name;
     private String anatomicalArea;
     private List<Reference> lsmReferences;
-    private Map<FileType, String> files = new HashMap<>();
-    private List<FileReference> deprecatedFiles = new ArrayList<>();
+    @JsonIgnore
+    private HasFileImpl filesImpl = new HasFileImpl();
     @JsonIgnore
     private transient ObjectiveSample parent;
     private Boolean blockAreaImageCreation = null;
@@ -67,34 +67,23 @@ public class SampleTile implements HasFiles {
 
     @Override
     public Map<FileType, String> getFiles() {
-        return files;
+        return filesImpl.getFiles();
     }
 
-    public void setFiles(Map<FileType, String> files) {
-        this.files = files;
+
+    @Override
+    public String getFileName(FileType fileType) {
+        return filesImpl.getFileName(fileType);
     }
 
     @Override
     public void setFileName(FileType fileType, String fileName) {
-        String existingFile = files.get(fileType);
-        if (StringUtils.isNotBlank(existingFile) && !StringUtils.equals(existingFile, fileName)) {
-            deprecatedFiles.add(new FileReference(fileType, fileName));
-        }
-        files.put(fileType, fileName);
-    }
-
-    @Override
-    public String getFileName(FileType fileType) {
-        return files.get(fileType);
+        filesImpl.setFileName(fileType, fileName);
     }
 
     @Override
     public void removeFileName(FileType fileType) {
-        String existingFile = files.get(fileType);
-        if (StringUtils.isNotBlank(existingFile)) {
-            deprecatedFiles.add(new FileReference(fileType, existingFile));
-        }
-        files.remove(fileType);
+        filesImpl.removeFileName(fileType);
     }
 
     public ObjectiveSample getParent() {

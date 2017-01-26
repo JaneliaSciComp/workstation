@@ -1,5 +1,6 @@
 package org.janelia.it.jacs.model.domain.sample;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.FileReference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
@@ -17,8 +18,8 @@ public class FileGroup implements HasRelativeFiles {
 
     private String key;
     private String filepath;
-    private List<FileReference> deprecatedFiles = new ArrayList<>();
-    private Map<FileType, String> files = new HashMap<>();
+    @JsonIgnore
+    private HasFileImpl filesImpl = new HasFileImpl();
 
     public FileGroup() {
     }
@@ -45,35 +46,22 @@ public class FileGroup implements HasRelativeFiles {
     }
 
     public Map<FileType, String> getFiles() {
-        return files;
-    }
-
-    public void setFiles(Map<FileType, String> files) {
-        if (files==null) throw new IllegalArgumentException("Property cannot be null");
-        this.files = files;
+        return filesImpl.getFiles();
     }
 
     @Override
     public String getFileName(FileType fileType) {
-        return files.get(fileType);
+        return filesImpl.getFileName(fileType);
     }
 
     @Override
     public void setFileName(FileType fileType, String fileName) {
-        String existingFile = files.get(fileType);
-        if (StringUtils.isNotBlank(existingFile) && !StringUtils.equals(existingFile, fileName)) {
-            deprecatedFiles.add(new FileReference(fileType, fileName));
-        }
-        files.put(fileType, fileName);
+        filesImpl.setFileName(fileType, fileName);
     }
 
     @Override
     public void removeFileName(FileType fileType) {
-        String existingFile = files.get(fileType);
-        if (StringUtils.isNotBlank(existingFile)) {
-            deprecatedFiles.add(new FileReference(fileType, existingFile));
-        }
-        files.remove(fileType);
+        filesImpl.removeFileName(fileType);
     }
 
 }
