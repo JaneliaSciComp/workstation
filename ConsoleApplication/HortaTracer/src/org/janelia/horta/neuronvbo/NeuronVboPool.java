@@ -155,7 +155,7 @@ public class NeuronVboPool
                 getShaderSteps().add(new ShaderStep(GL3.GL_VERTEX_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "ConesColorVrtx330.glsl"))
+                                        + "ConesColorVrtx430.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_GEOMETRY_SHADER,
                         getClass().getResourceAsStream(
@@ -165,7 +165,7 @@ public class NeuronVboPool
                 getShaderSteps().add(new ShaderStep(GL3.GL_GEOMETRY_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "ConesColorGeom330.glsl"))
+                                        + "ConesColorGeom430.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
                         getClass().getResourceAsStream(
@@ -175,7 +175,7 @@ public class NeuronVboPool
                 getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "ConesColorFrag330.glsl"))
+                                        + "ConesColorFrag430.glsl"))
                 );
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);
