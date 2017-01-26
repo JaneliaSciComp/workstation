@@ -37,14 +37,16 @@ import static com.mongodb.client.model.Filters.eq;
  */
 public abstract class AbstractMongoDao<T extends HasIdentifier> extends AbstractDao<T, Number> {
 
-    @Inject
-    protected ObjectMapper objectMapper;
-    @Inject
-    protected TimebasedIdentifierGenerator idGenerator;
-    protected MongoCollection<T> mongoCollection;
+    protected final ObjectMapper objectMapper;
+    protected final TimebasedIdentifierGenerator idGenerator;
+    protected final MongoCollection<T> mongoCollection;
 
-    protected AbstractMongoDao(MongoDatabase mongoDatabase) {
+    protected AbstractMongoDao(MongoDatabase mongoDatabase,
+                               TimebasedIdentifierGenerator idGenerator,
+                               ObjectMapper objectMapper) {
         mongoCollection = mongoDatabase.getCollection(getDomainObjectCollection(), getEntityType());
+        this.idGenerator = idGenerator;
+        this.objectMapper = objectMapper;
     }
 
     protected String getDomainObjectCollection() {
@@ -76,7 +78,7 @@ public abstract class AbstractMongoDao<T extends HasIdentifier> extends Abstract
             Map<String, Object> sortCriteriaAsMap = sortCriteria.stream()
                 .filter(sc -> StringUtils.isNotBlank(sc.getField()))
                 .collect(Collectors.toMap(
-                        sc -> sc.getField(),
+                        SortCriteria::getField,
                         sc -> sc.getDirection() == SortDirection.DESC ? -1 : 1,
                         (sc1, sc2) -> sc2,
                         LinkedHashMap::new));
@@ -100,7 +102,7 @@ public abstract class AbstractMongoDao<T extends HasIdentifier> extends Abstract
             results = results.skip((int) offset);
         }
         if (length > 0) {
-            results = results.limit((int) length);
+            results = results.limit(length);
         }
         return results
                 .sort(sortCriteria)

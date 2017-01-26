@@ -1,5 +1,6 @@
 package org.janelia.jacs2.dao.mongo;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.mongodb.client.MongoDatabase;
 import org.apache.commons.lang3.StringUtils;
@@ -7,6 +8,7 @@ import org.bson.conversions.Bson;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.jacs2.dao.SampleDao;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.jacs2.dao.mongo.utils.TimebasedIdentifierGenerator;
 import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
@@ -23,8 +25,8 @@ import static com.mongodb.client.model.Filters.lt;
 
 public class SampleMongoDao extends AbstractDomainObjectDao<Sample> implements SampleDao {
     @Inject
-    public SampleMongoDao(MongoDatabase mongoDatabase) {
-        super(mongoDatabase);
+    public SampleMongoDao(MongoDatabase mongoDatabase, TimebasedIdentifierGenerator idGenerator, ObjectMapper objectMapper) {
+        super(mongoDatabase, idGenerator, objectMapper);
     }
 
     @Override

@@ -160,7 +160,7 @@ public class SampleDataService {
         return lsmPair;
     }
 
-    public void updateLMSMetadataFile(LSMImage lsmImage, String lsmMetadata) {
+    public void updateLSMMetadataFile(LSMImage lsmImage, String lsmMetadata) {
         DomainModelUtils.setPathForFileType(lsmImage, FileType.LsmMetadata, lsmMetadata);
         imageDao.updateImageFiles(lsmImage);
     }
@@ -174,4 +174,8 @@ public class SampleDataService {
         return sampleDao.findMatchingSamples(subject, pattern, tmogInterval, pageRequest);
     }
 
+
+    public void updateLSM(LSMImage lsmImage) {
+        imageDao.update(lsmImage);
+    }
 }

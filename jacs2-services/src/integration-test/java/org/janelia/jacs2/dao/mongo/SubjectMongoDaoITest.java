@@ -34,8 +34,7 @@ public class SubjectMongoDaoITest extends AbstractMongoDaoITest<Subject> {
 
     @Before
     public void setUp() {
-        testDao = new SubjectMongoDao(testMongoDatabase);
-        setIdGeneratorAndObjectMapper((SubjectMongoDao) testDao);
+        testDao = new SubjectMongoDao(testMongoDatabase, idGenerator, objectMapper);
     }
 
     @After

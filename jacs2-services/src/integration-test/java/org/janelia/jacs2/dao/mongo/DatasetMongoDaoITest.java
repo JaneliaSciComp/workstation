@@ -35,8 +35,7 @@ public class DatasetMongoDaoITest extends AbstractDomainObjectDaoITest<DataSet> 
 
     @Before
     public void setUp() {
-        testDao = new DatasetMongoDao(testMongoDatabase);
-        setIdGeneratorAndObjectMapper((DatasetMongoDao) testDao);
+        testDao = new DatasetMongoDao(testMongoDatabase, idGenerator, objectMapper);
     }
 
     @After

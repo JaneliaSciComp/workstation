@@ -30,8 +30,7 @@ public class ImageMongoDaoITest extends AbstractDomainObjectDaoITest<Image> {
 
     @Before
     public void setUp() {
-        testDao = new ImageMongoDao(testMongoDatabase);
-        setIdGeneratorAndObjectMapper((ImageMongoDao) testDao);
+        testDao = new ImageMongoDao(testMongoDatabase, idGenerator, objectMapper);
     }
 
     @After

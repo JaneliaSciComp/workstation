@@ -60,11 +60,6 @@ public abstract class AbstractMongoDaoITest<T extends HasIdentifier> extends Abs
         testMongoDatabase = testMongoClient.getDatabase(integrationTestsConfig.getProperty("MongoDB.Database"));
     }
 
-    protected void setIdGeneratorAndObjectMapper(AbstractMongoDao<T> dao) {
-        dao.idGenerator = idGenerator;
-        dao.objectMapper = objectMapper;
-    }
-
     protected void deleteAll(Dao<T, Number> dao, List<T> es) {
         for (T e : es) {
             delete(dao, e);
