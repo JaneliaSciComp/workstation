@@ -54,6 +54,8 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.util.MatrixUtilities;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
@@ -462,17 +464,33 @@ implements NeuronSet// , LookupListener
         {
             log.info("Workspace loaded");
             setWorkspace(workspace);
+
             if (workspace==null) {
                 spatialIndex.clear();
             }
             else {
-                spatialIndex.rebuildIndex(innerList);
-            }
-            // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
-            getMembershipChangeObservable().setChanged();
-            getNameChangeObservable().setChanged();
-            getNameChangeObservable().notifyObservers();
-            getMembershipChangeObservable().notifyObservers();
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        spatialIndex.rebuildIndex(innerList);
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
+                        getMembershipChangeObservable().setChanged();
+                        getNameChangeObservable().setChanged();
+                        getNameChangeObservable().notifyObservers();
+                        getMembershipChangeObservable().notifyObservers();
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        ConsoleApp.handleException(error);
+                    }
+                };
+                worker.execute();
+            }            
         }
 
         @Override
