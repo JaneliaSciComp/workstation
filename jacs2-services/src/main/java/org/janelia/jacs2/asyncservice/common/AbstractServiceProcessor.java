@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
+import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -67,7 +68,8 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         ServiceProcessor<?> serviceProcessor = jacsServiceDispatcher.getServiceProcessor(jacsServiceData);
         return computationFactory.<JacsServiceData>newComputation()
                 .supply(() -> {
-                    for (;;) {
+                    long startTime = System.currentTimeMillis();
+                    for (; ; ) {
                         JacsServiceData sd = jacsServiceDataPersistence.findById(jacsServiceData.getId());
                         if (sd.hasCompletedSuccessfully()) {
                             return sd;
@@ -81,6 +83,10 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                                 logger.warn("Interrupt {}", jacsServiceData, e);
                                 throw new ComputationException(jacsServiceData, e);
                             }
+                        }
+                        if (sd.timeout() > 0 && System.currentTimeMillis() - startTime > sd.timeout()) {
+                            sd.setState(JacsServiceState.TIMEOUT);
+                            return sd;
                         }
                     }
                 })

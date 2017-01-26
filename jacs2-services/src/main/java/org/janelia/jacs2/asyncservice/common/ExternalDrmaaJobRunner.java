@@ -161,17 +161,11 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
     }
 
     private long getTimeout(JacsServiceData serviceContext) {
-        Map<String, String> jobResources = serviceContext.getResources();
-        String jobTimeout = jobResources.get("jobTimeout");
-        if (StringUtils.isNotBlank(jobTimeout)) {
-            try {
-                return Long.parseLong(jobTimeout.trim());
-            } catch (Exception e) {
-                logger.warn("Invalid timeout {} so it will use no wait", jobTimeout);
-                return Session.TIMEOUT_NO_WAIT;
-            }
-        } else {
+        Long serviceTimeout = serviceContext.getServiceTimeout();
+        if (serviceTimeout == null) {
             return Session.TIMEOUT_WAIT_FOREVER;
+        } else {
+            return serviceTimeout.longValue();
         }
     }
 }

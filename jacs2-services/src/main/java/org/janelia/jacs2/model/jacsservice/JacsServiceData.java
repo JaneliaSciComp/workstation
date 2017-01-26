@@ -44,6 +44,8 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     @JsonIgnore
     private List<JacsServiceData> dependencies = new ArrayList<>();
     private List<Number> dependeciesIds = new ArrayList<>();
+    private Long serviceTimeout;
+
     public Number getId() {
         return id;
     }
@@ -315,11 +317,23 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     }
 
     public boolean hasCompletedUnsuccessfully() {
-        return state == JacsServiceState.CANCELED || state == JacsServiceState.ERROR;
+        return state == JacsServiceState.CANCELED || state == JacsServiceState.ERROR || state == JacsServiceState.TIMEOUT;
     }
 
     public boolean hasCompletedSuccessfully() {
         return state == JacsServiceState.SUCCESSFUL;
     }
 
+    public Long getServiceTimeout() {
+        return serviceTimeout;
+    }
+
+    public void setServiceTimeout(Long serviceTimeout) {
+        this.serviceTimeout = serviceTimeout;
+    }
+
+    @JsonIgnore
+    public long timeout() {
+        return serviceTimeout != null && serviceTimeout > 0L ? serviceTimeout : -1;
+    }
 }
