@@ -31,7 +31,10 @@ package org.janelia.horta.neuronvbo;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.TreeSet;
 import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -48,7 +51,7 @@ import org.openide.util.Exceptions;
  * of using a separate vbo for each neuron, like we were doing before.
  * @author brunsc
  */
-public class NeuronVboPool 
+public class NeuronVboPool implements Iterable<NeuronModel>
 {
     // Use pool size to balance:
     //  a) static rendering performance (more vbos means more draw calls, means slower rendering)
@@ -172,6 +175,26 @@ public class NeuronVboPool
         vbos.add(emptiestVbo);
     }
 
+    void remove(NeuronModel neuron) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    boolean isEmpty() {
+        for (NeuronVbo vbo : vbos)
+            if (! vbo.isEmpty())
+                return false;
+        return true;
+    }
+
+    boolean contains(NeuronModel neuron) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Iterator<NeuronModel> iterator() {
+        return new NeuronIterator(this);
+    }
+
     // Imposes an ordering on the VBOs in the pool, such that the first vbo is
     // always the one with the most room for more elements.
     // To maintain this ordering, it is imperative that the TreeSet<NeuronVbo> be updated
@@ -249,6 +272,45 @@ public class NeuronVboPool
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);
             }        
+        }
+    }
+
+    private static class NeuronIterator implements Iterator<NeuronModel> 
+    {
+        private static final Collection<NeuronModel> EMPTY_LIST = Collections.<NeuronModel>emptyList();
+
+        private final Iterator<NeuronVbo> vboIterator;
+        private Iterator<NeuronModel> neuronIterator = EMPTY_LIST.iterator(); // iterator for one vbo
+        
+        public NeuronIterator(NeuronVboPool pool) {
+            vboIterator = pool.vbos.iterator();
+            if (vboIterator.hasNext()) {
+                NeuronVbo currentVbo = vboIterator.next();
+                neuronIterator = currentVbo.iterator();
+            }
+        }
+        
+        private void advanceToNextNeuron()
+        {
+            // Advance to next actual neuron
+            while ( vboIterator.hasNext() && (! neuronIterator.hasNext()) ) {
+                NeuronVbo currentVbo = vboIterator.next();
+                neuronIterator = currentVbo.iterator();
+            }
+        }
+        
+        @Override
+        public boolean hasNext() 
+        {
+            advanceToNextNeuron();
+            return neuronIterator.hasNext();
+        }
+
+        @Override
+        public NeuronModel next() 
+        {
+            advanceToNextNeuron();
+            return neuronIterator.next();
         }
     }
 }

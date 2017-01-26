@@ -30,14 +30,13 @@
 package org.janelia.horta.neuronvbo;
 
 import java.util.Collection;
+import java.util.Iterator;
 import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Object3d;
 import org.janelia.gltools.GL3Actor;
-import org.janelia.horta.nodes.BasicNeuronModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,9 +45,12 @@ import org.slf4j.LoggerFactory;
  * performance rendering of neuron models using quadric imposters.
  * @author brunsc
  */
-public class NeuronVboActor implements GL3Actor 
+public class NeuronVboActor 
+        implements GL3Actor, Iterable<NeuronModel>
 {
-    private NeuronVboPool vboPool = new NeuronVboPool();
+    private final NeuronVboPool vboPool = new NeuronVboPool();
+    private boolean bDoHideAllNeurons = false; // for short user-oriented all-neuron toggling
+    private boolean bIsVisible = true; // for computational show/hide tricks
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
     public NeuronVboActor() 
@@ -58,9 +60,37 @@ public class NeuronVboActor implements GL3Actor
         vboPool.add(neuron);
     }
 
+    public void removeNeuron(NeuronModel neuron) {
+        vboPool.remove(neuron);
+    }
+    
+    public boolean contains(NeuronModel neuron) {
+        return vboPool.contains(neuron);
+    }
+
+    public boolean isHideAll() {
+        return bDoHideAllNeurons;
+    }
+
+    // Returns true if status changed and there exist hideable items;
+    // i.e. if calling this method might have made a difference
+    public boolean setHideAll(boolean bDoHideAllNeurons) {
+        if (bDoHideAllNeurons == this.bDoHideAllNeurons)
+            return false;
+        this.bDoHideAllNeurons = bDoHideAllNeurons;
+        return ! isEmpty();
+    }
+    
+    public boolean isEmpty() {
+        return vboPool.isEmpty();
+    }
+    
     @Override
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
-        log.info("displaying neurons");
+        if (bDoHideAllNeurons)
+            return;
+        if (! bIsVisible)
+            return;
         vboPool.display(gl, camera);
     }
 
@@ -91,7 +121,7 @@ public class NeuronVboActor implements GL3Actor
 
     @Override
     public boolean isVisible() {
-        return true;
+        return bIsVisible;
     }
 
     @Override
@@ -101,7 +131,8 @@ public class NeuronVboActor implements GL3Actor
 
     @Override
     public Object3d setVisible(boolean isVisible) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        bIsVisible = isVisible;
+        return this;
     }
 
     @Override
@@ -124,6 +155,11 @@ public class NeuronVboActor implements GL3Actor
     public void init(GL3 gl) {
         log.info("initializing neurons");
         vboPool.init(gl);
+    }
+
+    @Override
+    public Iterator<NeuronModel> iterator() {
+        return vboPool.iterator();
     }
     
 }

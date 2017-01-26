@@ -67,6 +67,7 @@ import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.GL3Resource;
+import org.janelia.horta.neuronvbo.NeuronVboActor;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,7 +88,9 @@ extends MultipassRenderer
     private final HortaMetaWorkspace workspace;
     private final Observer neuronListRefresher = new NeuronListRefresher(); // helps with signalling
     private final Observer volumeLayerExpirer = new VolumeLayerExpirer();
-    private final AllSwcActor allSwcActor = new AllSwcActor();
+    
+    // private final AllSwcActor allSwcActor = new AllSwcActor();
+    private final NeuronVboActor allSwcActor = new NeuronVboActor();
     
     private final Collection<GL3Resource> obsoleteGLResources = new java.util.concurrent.ConcurrentLinkedQueue<>();
 
@@ -351,13 +354,13 @@ extends MultipassRenderer
     }
 
     private void addNeuronReconstruction(NeuronModel neuron) {
-        allSwcActor.addNeuronReconstruction(neuron);
+        allSwcActor.addNeuron(neuron);
         
         neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
     }
     
     private void removeNeuronReconstruction(NeuronModel neuron) {
-        allSwcActor.removeNeuronReconstruction(neuron);
+        allSwcActor.removeNeuron(neuron);
         neuron.getVisibilityChangeObservable().deleteObserver(volumeLayerExpirer);
     }
     
@@ -445,10 +448,13 @@ extends MultipassRenderer
     public void addNeuronActors(NeuronModel neuron) {
         if (allSwcActor.contains(neuron)) 
             return;
+        allSwcActor.addNeuron(neuron);
+        /*
         SpheresActor sa = allSwcActor.createSpheresActor(neuron);
         ConesActor ca = allSwcActor.createConesActor(neuron);
         // this next step is synchronized but fast
         allSwcActor.setActors(neuron, sa, ca);
+         */
         neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
     }
     
@@ -470,6 +476,13 @@ extends MultipassRenderer
             }
             // 2 - remove obsolete neurons
             Set<NeuronModel> obsoleteNeurons = new HashSet<>();
+            
+            for (NeuronModel neuron : allSwcActor) {
+                if (! latestNeurons.contains(neuron))
+                    obsoleteNeurons.add(neuron);                
+            }
+            
+            /*
             // Perform two passes, to avoid concurrent modification
             for (NeuronModel neuron : allSwcActor.sphereNeurons()) {
                 if (! latestNeurons.contains(neuron))
@@ -479,6 +492,8 @@ extends MultipassRenderer
                 if (! latestNeurons.contains(neuron))
                     obsoleteNeurons.add(neuron);
             }
+             */
+            
             for (NeuronModel neuron : obsoleteNeurons)
                 removeNeuronReconstruction(neuron);
             // Remove obsolete lists too

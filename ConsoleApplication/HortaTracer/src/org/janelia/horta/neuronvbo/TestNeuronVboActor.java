@@ -29,17 +29,9 @@
  */
 package org.janelia.horta.neuronvbo;
 
-import java.util.Collection;
-import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Object3d;
-import org.janelia.gltools.GL3Actor;
 import org.janelia.horta.nodes.BasicNeuronModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Actor for testing correctness of new NeuronVbo structure for higher 
@@ -48,9 +40,6 @@ import org.slf4j.LoggerFactory;
  */
 public class TestNeuronVboActor extends NeuronVboActor
 {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-    
-    // private final BasicGL3Actor basicActor;
     public TestNeuronVboActor() 
     {
         NeuronModel firstNeuron = new BasicNeuronModel();

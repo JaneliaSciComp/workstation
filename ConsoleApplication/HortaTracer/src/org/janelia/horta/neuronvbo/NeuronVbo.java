@@ -36,6 +36,7 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,19 +52,28 @@ import org.slf4j.LoggerFactory;
  * Multiple NeuronVbos may be held in a NeuronVboPool
  * @author brunsc
  */
-public class NeuronVbo 
+public class NeuronVbo implements Iterable<NeuronModel>
 {
     private final static int FLOATS_PER_VERTEX = 8;
     // Be sure to synchronize these constants with the actual shader vertex attribute (in) layout
     private final static int XYZR_ATTRIB = 1;
     private final static int RGBV_ATTRIB = 2;
 
-    private Set<NeuronModel> neurons = new HashSet<>();
+    private final Set<NeuronModel> neurons = new HashSet<>();
     private int vboVertices = 0;
     private int vboEdgeIndices = 0;
     private int edgeCount = 0;
     private int vertexCount = 0;
-    private boolean buffersAreDirty = false;
+    
+    private boolean buffersNeedRebuild = false;
+    private boolean buffersNeedUpload = false;
+    
+    private IntBuffer edgeBuffer;
+    private FloatBuffer vertexBuffer;
+    
+    // Cached indices
+    private Map<NeuronModel, Integer> neuronOffsets = new HashMap<>(); // for surgically updating buffers
+    private Map<NeuronModel, Integer> neuronVertexCounts = new HashMap<>(); // for sanity checking
     
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
@@ -80,13 +90,14 @@ public class NeuronVbo
         gl.glGenBuffers(2, vbos);
         vboVertices = vbos.get(0);
         vboEdgeIndices = vbos.get(1);
-        refreshBuffers(gl);
     }
     
     // Make sure the cone shader is loaded before calling this method
     synchronized void displayEdges(GL3 gl) 
     {
         init(gl);
+        if (buffersNeedRebuild)
+            rebuildBuffers();
         if (edgeCount < 1) 
             return;
         setUpVbo(gl);
@@ -98,6 +109,8 @@ public class NeuronVbo
     synchronized void displayNodes(GL3 gl) 
     {
         init(gl);
+        if (buffersNeedRebuild)
+            rebuildBuffers();
         if (vertexCount < 1) 
             return;
         setUpVbo(gl);
@@ -105,8 +118,10 @@ public class NeuronVbo
     }
     
     private void setUpVbo(GL3 gl) {
-        if (buffersAreDirty)
-            refreshBuffers(gl);
+        if (buffersNeedRebuild)
+            rebuildBuffers();
+        if (buffersNeedUpload)
+            uploadBuffers(gl);
         gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vboVertices);
         gl.glEnableVertexAttribArray(XYZR_ATTRIB);
         gl.glVertexAttribPointer(
@@ -131,7 +146,7 @@ public class NeuronVbo
     synchronized void dispose(GL3 gl) 
     {
         if (vertexCount > 0)
-            buffersAreDirty = true;
+            buffersNeedUpload = true;
         if (vboVertices == 0)
             return; // never allocated
         int [] vbos = {vboVertices, vboEdgeIndices};
@@ -140,7 +155,39 @@ public class NeuronVbo
         vboEdgeIndices = 0;
     }
     
-    private synchronized void refreshBuffers(GL3 gl) 
+    // lightweight update of just the color field
+    private void updateNeuronColor(NeuronModel neuron) 
+    {
+        int sv = neuron.getVertexes().size();
+        float rgb[] = {0,0,0};
+        neuron.getColor().getComponents(rgb);
+
+        // sanity check
+        // Do we already have most of the information for this neuron tabulated?
+        if ( neuronOffsets.containsKey(neuron)
+                && (neuronVertexCounts.get(neuron) == sv) ) 
+        {
+            // Has the color actually changed?
+            final int COLOR_OFFSET = 4; // red color begins at 5th value
+            int offset = neuronOffsets.get(neuron) + COLOR_OFFSET;
+            if ( (vertexBuffer.get(offset+0) == rgb[0])
+                    && (vertexBuffer.get(offset+1) == rgb[1])
+                    && (vertexBuffer.get(offset+2) == rgb[2]) )
+            {
+                return; // color has not changed
+            }
+            for (int v = 0; v < sv; ++v) {
+                int index = offset + v * FLOATS_PER_VERTEX;
+                vertexBuffer.put(rgb, index, 3);
+            }
+            buffersNeedUpload = true;
+        }
+        else {
+            rebuildBuffers();
+        }
+    }
+    
+    private void rebuildBuffers()
     {
         // count the primitives
         List<Float> vertexAttributes = new ArrayList<>();
@@ -151,6 +198,7 @@ public class NeuronVbo
         for (NeuronModel neuron : neurons) {
             if (! neuron.isVisible())
                 continue;
+            neuronOffsets.put(neuron, vertexCount);
             float visibility = neuron.isVisible() ? 1 : 0;
             Color color = neuron.getColor();
             color.getColorComponents(rgb);
@@ -181,30 +229,22 @@ public class NeuronVbo
         edgeCount = edgeCount / 2;
         
         // allocate storage
-        FloatBuffer vertexBuffer = Buffers.newDirectFloatBuffer(vertexCount * FLOATS_PER_VERTEX);        
+        vertexBuffer = Buffers.newDirectFloatBuffer(vertexCount * FLOATS_PER_VERTEX);        
         vertexBuffer.rewind();
         for (float f : vertexAttributes) {
             vertexBuffer.put(f);
         }
         vertexBuffer.flip();
-        gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vboVertices);
-        gl.glBufferData(GL3.GL_ARRAY_BUFFER, 
-                vertexBuffer.capacity() * Buffers.SIZEOF_FLOAT,
-                vertexBuffer, 
-                GL3.GL_STATIC_DRAW);
         
-        IntBuffer edgeBuffer = Buffers.newDirectIntBuffer(edgeCount * 2);
+        edgeBuffer = Buffers.newDirectIntBuffer(edgeCount * 2);
         edgeBuffer.rewind();
         for (int i : edgeIndexes) {
             edgeBuffer.put(i);
         }
         edgeBuffer.flip();
-        gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboEdgeIndices);        
-        gl.glBufferData(
-                GL3.GL_ELEMENT_ARRAY_BUFFER,
-                edgeBuffer.capacity() * Buffers.SIZEOF_INT,
-                edgeBuffer,
-                GL3.GL_STATIC_DRAW);
+
+        buffersNeedRebuild = false;
+        buffersNeedUpload = true;
 
         final boolean debugVboContents = false;
         if (debugVboContents) {
@@ -216,15 +256,43 @@ public class NeuronVbo
             for (int i = 0; i < edgeBuffer.capacity(); ++i) {
                 log.info(" edge {} : {}", i, edgeBuffer.get(i));            
             }
-        }
-        
-        buffersAreDirty = false;
+        }        
+    }
+
+    private void uploadBuffers(GL3 gl) 
+    {
+        if (buffersNeedRebuild)
+            rebuildBuffers();
+        vertexBuffer.rewind();
+        gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vboVertices);
+        gl.glBufferData(GL3.GL_ARRAY_BUFFER, 
+                vertexBuffer.capacity() * Buffers.SIZEOF_FLOAT,
+                vertexBuffer, 
+                GL3.GL_STATIC_DRAW);
+        edgeBuffer.rewind();
+        gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboEdgeIndices);        
+        gl.glBufferData(
+                GL3.GL_ELEMENT_ARRAY_BUFFER,
+                edgeBuffer.capacity() * Buffers.SIZEOF_INT,
+                edgeBuffer,
+                GL3.GL_STATIC_DRAW);
+
+        buffersNeedUpload = false;
     }
 
     void add(NeuronModel neuron) {
         if (neurons.add(neuron)) {
-            buffersAreDirty = true;
+            buffersNeedRebuild = true;
         }
+    }
+
+    @Override
+    public Iterator<NeuronModel> iterator() {
+        return neurons.iterator();
+    }
+
+    boolean isEmpty() {
+        return neurons.isEmpty();
     }
 
 }
