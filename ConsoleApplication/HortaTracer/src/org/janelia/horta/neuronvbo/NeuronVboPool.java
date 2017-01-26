@@ -36,7 +36,6 @@ import java.util.TreeSet;
 import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.Matrix4;
 import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.ShaderStep;
@@ -51,7 +50,10 @@ import org.openide.util.Exceptions;
  */
 public class NeuronVboPool 
 {
-    private final static int POOL_SIZE = 2;
+    // Use pool size to balance:
+    //  a) static rendering performance (more vbos means more draw calls, means slower rendering)
+    //  b) edit update speed (more vbos means fewer neurons per vbo, means faster edit-to-display time)
+    private final static int POOL_SIZE = 30;
     private final Collection<NeuronVbo> vbos;
 
     // private Set<NeuronModel> dirtyNeurons; // Track incremental updates
@@ -70,6 +72,9 @@ public class NeuronVboPool
     private final static int RADIUS_SCALE_UNIFORM = 6;
     private final Texture2d lightProbeTexture;
     
+    private float radiusOffset = 0.0f; // amount to add to every radius, in micrometers
+    private float radiusScale = 1.0f; // amount to multiply every radius, in micrometers
+    
     public NeuronVboPool() 
     {
         this.vbos = new TreeSet<>(new VboComparator());
@@ -86,35 +91,54 @@ public class NeuronVboPool
             Exceptions.printStackTrace(ex);
         }
     }
+
+    public float getRadiusOffset() {
+        return radiusOffset;
+    }
+
+    public void setRadiusOffset(float radiusOffset) {
+        this.radiusOffset = radiusOffset;
+    }
+
+    public float getRadiusScale() {
+        return radiusScale;
+    }
+
+    public void setRadiusScale(float radiusScale) {
+        this.radiusScale = radiusScale;
+    }
+    
+    private void setUniforms(GL3 gl, float[] modelViewMatrix, float[] projectionMatrix, float[] screenSize) {
+        gl.glUniformMatrix4fv(VIEW_UNIFORM, 1, false, modelViewMatrix, 0);
+        gl.glUniformMatrix4fv(PROJECTION_UNIFORM, 1, false, projectionMatrix, 0);
+        gl.glUniform2fv(SCREENSIZE_UNIFORM, 1, screenSize, 0);
+        gl.glUniform1i(LIGHTPROBE_UNIFORM, 0);
+        gl.glUniform1f(RADIUS_OFFSET_UNIFORM, radiusOffset);
+        gl.glUniform1f(RADIUS_SCALE_UNIFORM, radiusScale);        
+    }
     
     void display(GL3 gl, AbstractCamera camera) 
     {
-        Matrix4 modelViewMatrix = camera.getViewMatrix();
-        Matrix4 projectionMatrix = camera.getProjectionMatrix();
+        float[] modelViewMatrix = camera.getViewMatrix().asArray();
+        float[] projectionMatrix = camera.getProjectionMatrix().asArray();
         float[] screenSize = new float[] {
             camera.getViewport().getWidthPixels(),
             camera.getViewport().getHeightPixels()
         };
+        lightProbeTexture.bind(gl, 0);
         
         // First pass: draw all the connections (edges) between adjacent neuron anchor nodes.
         // These edges are drawn as truncated cones, tapering width between
         // the radii of the adjacent nodes.
-        lightProbeTexture.bind(gl, 0);
         conesShader.load(gl);
-        gl.glUniformMatrix4fv(VIEW_UNIFORM, 1, false, modelViewMatrix.asArray(), 0);
-        gl.glUniformMatrix4fv(PROJECTION_UNIFORM, 1, false, projectionMatrix.asArray(), 0);
-        gl.glUniform2fv(SCREENSIZE_UNIFORM, 1, screenSize, 0);
-        gl.glUniform1i(LIGHTPROBE_UNIFORM, 0);
+        setUniforms(gl, modelViewMatrix, projectionMatrix, screenSize);
         for (NeuronVbo vbo : vbos) {
             vbo.displayEdges(gl);
         }
         
         // TODO: Second pass: repeat display loop for spheres/nodes
         spheresShader.load(gl);
-        gl.glUniformMatrix4fv(VIEW_UNIFORM, 1, false, modelViewMatrix.asArray(), 0);
-        gl.glUniformMatrix4fv(PROJECTION_UNIFORM, 1, false, projectionMatrix.asArray(), 0);
-        gl.glUniform2fv(SCREENSIZE_UNIFORM, 1, screenSize, 0);
-        gl.glUniform1i(LIGHTPROBE_UNIFORM, 0);
+        setUniforms(gl, modelViewMatrix, projectionMatrix, screenSize);
         for (NeuronVbo vbo : vbos) {
             vbo.displayNodes(gl);
         }

@@ -46,9 +46,8 @@ import org.slf4j.LoggerFactory;
  * performance rendering of neuron models using quadric imposters.
  * @author brunsc
  */
-public class TestNeuronVboActor implements GL3Actor 
+public class TestNeuronVboActor extends NeuronVboActor
 {
-    private NeuronVboPool vboPool = new NeuronVboPool();
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
     // private final BasicGL3Actor basicActor;
@@ -57,75 +56,6 @@ public class TestNeuronVboActor implements GL3Actor
         NeuronModel firstNeuron = new BasicNeuronModel();
         NeuronVertex firstVertex = firstNeuron.appendVertex(null, new float[] {0,0,0}, 2.5f);
         firstNeuron.appendVertex(firstVertex, new float[] {5.0f, 0, 0}, 1.0f);
-        vboPool.add(firstNeuron);
+        addNeuron(firstNeuron);
     }
-
-    @Override
-    public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
-        log.info("displaying neurons");
-        vboPool.display(gl, camera);
-    }
-
-    @Override
-    public Object3d addChild(Object3d child) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Collection<? extends Object3d> getChildren() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public String getName() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Matrix4 getTransformInParent() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Matrix4 getTransformInWorld() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean isVisible() {
-        return true;
-    }
-
-    @Override
-    public Object3d setName(String name) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object3d setVisible(boolean isVisible) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object3d getParent() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object3d setParent(Object3d parent) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void dispose(GL3 gl) {
-        log.info("disposing neurons");
-        vboPool.dispose(gl);
-    }
-
-    @Override
-    public void init(GL3 gl) {
-        log.info("initializing neurons");
-        vboPool.init(gl);
-    }
-    
 }
