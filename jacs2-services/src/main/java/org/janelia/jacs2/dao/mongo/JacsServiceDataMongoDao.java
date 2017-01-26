@@ -130,4 +130,10 @@ public class JacsServiceDataMongoDao extends AbstractMongoDao<JacsServiceData> i
         });
         saveAll(serviceHierarchy);
     }
+
+    @Override
+    public void updateServiceHierarchy(JacsServiceData serviceData) {
+        List<JacsServiceData> serviceHierarchy = serviceData.serviceHierarchyStream().collect(Collectors.toList());
+        updateAll(serviceHierarchy);
+    }
 }

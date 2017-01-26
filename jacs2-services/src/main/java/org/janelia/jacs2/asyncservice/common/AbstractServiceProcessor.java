@@ -70,7 +70,7 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                 .supply(() -> {
                     long startTime = System.currentTimeMillis();
                     jacsServiceData.setState(JacsServiceState.WAITING);
-                    jacsServiceDataPersistence.save(jacsServiceData);
+                    jacsServiceDataPersistence.update(jacsServiceData);
                     for (; ; ) {
                         JacsServiceData sd = jacsServiceDataPersistence.findById(jacsServiceData.getId());
                         if (sd.hasCompletedSuccessfully()) {

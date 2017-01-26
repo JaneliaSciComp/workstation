@@ -59,9 +59,9 @@ public class JacsServiceDataManagerImpl implements JacsServiceDataManager {
             existingService.setWorkspace(serviceData.getWorkspace());
         }
         if (updateEntireHierarchy) {
-            jacsServiceDataPersistence.saveHierarchy(existingService);
+            jacsServiceDataPersistence.updateHierarchy(existingService);
         } else {
-            jacsServiceDataPersistence.save(existingService);
+            jacsServiceDataPersistence.update(existingService);
         }
         return null;
     }
