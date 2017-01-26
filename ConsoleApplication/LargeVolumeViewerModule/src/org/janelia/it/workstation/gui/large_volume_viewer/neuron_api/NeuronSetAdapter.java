@@ -175,12 +175,16 @@ implements NeuronSet// , LookupListener
         return spatialIndex.getAnchorClosestToVoxelLocation(micronXYZ);
     }
 
+    public NeuronModel getNeuronForAnnotation(TmGeoAnnotation annotation) {
+        return neuronModelForTmGeoAnnotation(annotation);
+    }
+    
     @Override 
     public NeuronModel getNeuronForAnchor(NeuronVertex anchor) {
         if (! (anchor instanceof NeuronVertexAdapter))
             return null;
         TmGeoAnnotation annotation = ((NeuronVertexAdapter)anchor).getTmGeoAnnotation();
-        return neuronModelForTmGeoAnnotation(annotation);
+        return getNeuronForAnnotation(annotation);
     }
     
     @Override

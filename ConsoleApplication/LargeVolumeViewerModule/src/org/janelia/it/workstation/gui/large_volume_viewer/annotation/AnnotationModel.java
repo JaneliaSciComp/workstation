@@ -359,7 +359,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
 
         TmNeuronMetadata foundNeuron = null;
-        // TODO: this is way too slow
+        // TODO: this is way too slow for how often it's called
         for (TmNeuronMetadata neuron : getNeuronList()) {
             if (neuron.getGeoAnnotationMap().containsKey(annotationID)) {
                 foundNeuron = neuron;
@@ -369,12 +369,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         
         if (foundNeuron==null) {
             log.warn("There is no neuron with annotation: ", annotationID);
-
-            // I don't have time to fix this now. But this "throw" breaks adding annotations in Horta
-            // throw new IllegalStateException("There is no neuron with annotation: "+annotationID);
         }
-        // Perhaps an actual assert could be useful instead?
-        // assert(foundNeuron != null);
         
         log.debug("getNeuronFromAnnotationID({}) = {}",annotationID, foundNeuron);
         return foundNeuron;
@@ -383,7 +378,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public TmNeuronMetadata getNeuronFromNeuronID(Long neuronID) {
         TmNeuronMetadata foundNeuron = neuronManager.getNeuronById(neuronID);
         if (foundNeuron==null) {
-            log.warn("There is no neuron with id: ", neuronID);
+            log.warn("There is no neuron with id: {}", neuronID);
         }
         log.debug("getNeuronFromNeuronID({}) = {}",neuronID,foundNeuron);
         return foundNeuron;
@@ -422,7 +417,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // our valid IDs are positive, so this will never match
         final Long excludedAnnotationID = excludedAnnotation == null ? -1L : excludedAnnotation.getId();
 
-        log.info("getClosestAnnotation to "+excludedAnnotation.getId());
+        log.trace("getClosestAnnotation to {}", excludedAnnotationID);
         
         List<NeuronVertex> vertexList = neuronSetAdapter.getAnchorClosestToMicronLocation(new double[]{x, y, z}, 1, new SpatialFilter() {
             @Override
@@ -433,14 +428,16 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             }
         });
         
-        log.info("Got {} anchors closest to {}", vertexList.size(), micronLocation);
-        
         if (vertexList != null && !vertexList.isEmpty()) {
+            log.trace("Got {} anchors closest to {}", vertexList.size(), micronLocation);
             NeuronVertex vertex = vertexList.get(0);
             closest = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
         }
 
-        log.info("Returning closest anchor: {}", closest.getId());
+        if (closest!=null) {
+            log.trace("Returning closest anchor: {}", closest.getId());
+        }
+        
         return closest;
     }
 
@@ -934,7 +931,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
 
         // check that we can find the neuron
-        TmNeuronMetadata neuron = getNeuronFromAnnotationID(link.getId());
+        TmNeuronMetadata neuron = getNeuronFromNeuronID(link.getNeuronId());
         if (neuron == null) {
             // should this be an error?  it's a sign that the annotation has already
             //  been deleted, or something else that shouldn't happen
@@ -1028,7 +1025,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             return;
         }
 
-        TmNeuronMetadata neuron = getNeuronFromAnnotationID(rootAnnotation.getId());
+        TmNeuronMetadata neuron = getNeuronFromNeuronID(rootAnnotation.getNeuronId());
         if (neuron == null) {
             // should this be an error?  it's a sign that the annotation has already
             //  been deleted, or something else that shouldn't happen
@@ -1102,7 +1099,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         // ann1 is the child of ann2 in both cases; if reverse, place the new point
         //  near ann2 instead of ann1
-        final TmNeuronMetadata neuron = getNeuronFromAnnotationID(annotation.getId());
+        final TmNeuronMetadata neuron = getNeuronFromNeuronID(annotation.getNeuronId());
         TmGeoAnnotation annotation1;
         TmGeoAnnotation annotation2;
         boolean reverse;
@@ -1215,7 +1212,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      */
     public synchronized void splitNeurite(final Long newRootID) throws Exception {
         final TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
-        TmNeuronMetadata neuron = getNeuronFromAnnotationID(newRootID);
+        final TmNeuronMetadata neuron = getNeuronFromNeuronID(newRoot.getNeuronId());
         TmGeoAnnotation newRootParent = neuron.getParentOf(newRoot);
         removeAnchoredPath(neuron, newRoot, newRootParent);
         neuronManager.splitNeurite(neuron, newRoot);
@@ -1225,13 +1222,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         log.info("Split neuron at annotation {} in neuron {}", newRootID,  neuron);
         
-        final TmNeuronMetadata updateNeuron = getNeuronFromAnnotationID(newRootID);
-
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireAnnotationReparented(updateNeuron.getGeoAnnotationMap().get(newRootID), updateNeuron.getId());
-                fireNeuronSelected(updateNeuron);
+                fireAnnotationReparented(neuron.getGeoAnnotationMap().get(newRootID), neuron.getId());
+                fireNeuronSelected(neuron);
                 activityLog.logEndOfOperation(getWsId(), newRoot);
             }
         });
@@ -1356,7 +1351,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * add or update a note on a geometric annotation
      */
     public synchronized void setNote(final TmGeoAnnotation geoAnnotation, final String noteString) throws Exception {
-        TmNeuronMetadata neuron = getNeuronFromAnnotationID(geoAnnotation.getId());
+        TmNeuronMetadata neuron = getNeuronFromNeuronID(geoAnnotation.getNeuronId());
         if (neuron == null) {
             throw new Exception("can't find neuron for annotation with ID " + geoAnnotation.getId());
         }
