@@ -25,6 +25,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> {
 
@@ -64,16 +65,15 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
         if (CollectionUtils.isEmpty(sampleLSMsMetadata)) {
             return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "No sample image file was found"));
         }
-        Map<Number, SampleImageMetadataFile> indexedSampleLSMsMetadata = Maps.uniqueIndex(
+        Map<String, SampleImageMetadataFile> indexedSampleLSMsMetadata = Maps.uniqueIndex(
                 sampleLSMsMetadata,
-                lsmf -> lsmf.getSampleImageFile().getId());
-        Map<Number, LSMImage> lsmImages = Maps.uniqueIndex(
-                sampleDataService.getLSMsByIds(jacsServiceData.getOwner(), ImmutableList.copyOf(indexedSampleLSMsMetadata.keySet())),
-                lsm -> lsm.getId());
-        lsmImages.forEach((id, lsm) -> {
-            SampleImageMetadataFile lsmMetadataFile = indexedSampleLSMsMetadata.get(id);
+                lsmf -> lsmf.getSampleImageFile().getId().toString());
+        List<LSMImage> lsmImages = sampleDataService.getLSMsByIds(jacsServiceData.getOwner(), sampleLSMsMetadata.stream().map(lsmMetadata -> lsmMetadata.getSampleImageFile().getId()).collect(Collectors.toList()));
+        lsmImages.forEach(lsm -> {
+            String lsmId = lsm.getId().toString();
+            SampleImageMetadataFile lsmMetadataFile = indexedSampleLSMsMetadata.get(lsmId);
             if (lsmMetadataFile == null) {
-                throw new ComputationException(jacsServiceData, "Internal error: No LSM metadata found for " + id + " even though the id was used to retrieve the LSM image");
+                throw new ComputationException(jacsServiceData, "Internal error: No LSM metadata found for " + lsmId + " even though the id was used to retrieve the LSM image");
             }
             sampleDataService.updateLSMMetadataFile(lsm, lsmMetadataFile.getMetadataFilePath());
             try {
