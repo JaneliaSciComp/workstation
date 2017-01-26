@@ -39,6 +39,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Set;
 import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.model.NeuronEdge;
@@ -65,15 +67,16 @@ public class NeuronVbo implements Iterable<NeuronModel>
     private int edgeCount = 0;
     private int vertexCount = 0;
     
-    private boolean buffersNeedRebuild = false;
-    private boolean buffersNeedUpload = false;
+    private boolean buffersNeedRebuild = false; // non-gl population of buffer data
+    private boolean buffersNeedAllocation = false; // allocate and upload gl buffers
+    private boolean buffersNeedUpdate = false; // replace contents of existing gl buffers
     
     private IntBuffer edgeBuffer;
     private FloatBuffer vertexBuffer;
     
     // Cached indices
-    private Map<NeuronModel, Integer> neuronOffsets = new HashMap<>(); // for surgically updating buffers
-    private Map<NeuronModel, Integer> neuronVertexCounts = new HashMap<>(); // for sanity checking
+    private final Map<NeuronModel, Integer> neuronOffsets = new HashMap<>(); // for surgically updating buffers
+    private final Map<NeuronModel, Integer> neuronVertexCounts = new HashMap<>(); // for sanity checking
     
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
@@ -120,8 +123,10 @@ public class NeuronVbo implements Iterable<NeuronModel>
     private void setUpVbo(GL3 gl) {
         if (buffersNeedRebuild)
             rebuildBuffers();
-        if (buffersNeedUpload)
-            uploadBuffers(gl);
+        if (buffersNeedAllocation)
+            allocateBuffers(gl);
+        if (buffersNeedUpdate)
+            updateBuffers(gl);
         gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vboVertices);
         gl.glEnableVertexAttribArray(XYZR_ATTRIB);
         gl.glVertexAttribPointer(
@@ -146,7 +151,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
     synchronized void dispose(GL3 gl) 
     {
         if (vertexCount > 0)
-            buffersNeedUpload = true;
+            buffersNeedAllocation = true;
         if (vboVertices == 0)
             return; // never allocated
         int [] vbos = {vboVertices, vboEdgeIndices};
@@ -159,8 +164,8 @@ public class NeuronVbo implements Iterable<NeuronModel>
     private void updateNeuronColor(NeuronModel neuron) 
     {
         int sv = neuron.getVertexes().size();
-        float rgb[] = {0,0,0};
-        neuron.getColor().getComponents(rgb);
+        float rgb[] = {0,0,0,0};
+        neuron.getColor().getRGBComponents(rgb);
 
         // sanity check
         // Do we already have most of the information for this neuron tabulated?
@@ -178,9 +183,12 @@ public class NeuronVbo implements Iterable<NeuronModel>
             }
             for (int v = 0; v < sv; ++v) {
                 int index = offset + v * FLOATS_PER_VERTEX;
-                vertexBuffer.put(rgb, index, 3);
+                for (int r = 0; r < 3; ++r) {
+                    vertexBuffer.put(index + r, rgb[r]);
+                    // assert(vertexBuffer.get(index + r) == rgb[r]);
+                }
             }
-            buffersNeedUpload = true;
+            buffersNeedUpdate = true;
         }
         else {
             rebuildBuffers();
@@ -189,6 +197,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
     
     private void rebuildBuffers()
     {
+        log.info("Rebuilding neuron vbo data");
         // count the primitives
         List<Float> vertexAttributes = new ArrayList<>();
         List<Integer> edgeIndexes = new ArrayList<>();
@@ -199,6 +208,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
             if (! neuron.isVisible())
                 continue;
             neuronOffsets.put(neuron, vertexCount);
+            neuronVertexCounts.put(neuron, neuron.getVertexes().size());
             float visibility = neuron.isVisible() ? 1 : 0;
             Color color = neuron.getColor();
             color.getColorComponents(rgb);
@@ -244,7 +254,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
         edgeBuffer.flip();
 
         buffersNeedRebuild = false;
-        buffersNeedUpload = true;
+        buffersNeedAllocation = true;
 
         final boolean debugVboContents = false;
         if (debugVboContents) {
@@ -259,8 +269,9 @@ public class NeuronVbo implements Iterable<NeuronModel>
         }        
     }
 
-    private void uploadBuffers(GL3 gl) 
+    private void allocateBuffers(GL3 gl)
     {
+        log.info("Uploading neuron vbo data");
         if (buffersNeedRebuild)
             rebuildBuffers();
         vertexBuffer.rewind();
@@ -277,12 +288,45 @@ public class NeuronVbo implements Iterable<NeuronModel>
                 edgeBuffer,
                 GL3.GL_STATIC_DRAW);
 
-        buffersNeedUpload = false;
+        buffersNeedAllocation = false;
+        buffersNeedUpdate = false;
+    }
+    
+    // Reloads the entire buffer
+    // TODO: Incrementally update one neuron at a time.
+    private void updateBuffers(GL3 gl)
+    {
+        log.info("Updating neuron vbo data");
+        if (buffersNeedRebuild)
+            rebuildBuffers();
+        vertexBuffer.rewind();
+        gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vboVertices);
+        gl.glBufferSubData(
+                GL3.GL_ARRAY_BUFFER, 
+                0,
+                vertexBuffer.capacity() * Buffers.SIZEOF_FLOAT,
+                vertexBuffer);
+        edgeBuffer.rewind();
+        gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboEdgeIndices);        
+        gl.glBufferSubData(
+                GL3.GL_ELEMENT_ARRAY_BUFFER,
+                0, 
+                edgeBuffer.capacity() * Buffers.SIZEOF_INT,
+                edgeBuffer);
+
+        buffersNeedUpdate = false;
     }
 
-    void add(NeuronModel neuron) {
+    void add(final NeuronModel neuron) {
         if (neurons.add(neuron)) {
             buffersNeedRebuild = true;
+            neuron.getColorChangeObservable().addObserver(new Observer() {
+                @Override
+                public void update(Observable o, Object arg)
+                {
+                    updateNeuronColor(neuron);
+                }
+            });
         }
     }
 

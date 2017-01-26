@@ -29,12 +29,16 @@
  */
 package org.janelia.horta.neuronvbo;
 
+import com.google.common.collect.TreeMultiset;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -44,6 +48,8 @@ import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.ShaderStep;
 import org.janelia.gltools.texture.Texture2d;
 import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * For improved rendering performance with large numbers of neurons, NeuronVboPool
@@ -57,7 +63,8 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     //  a) static rendering performance (more vbos means more draw calls, means slower rendering)
     //  b) edit update speed (more vbos means fewer neurons per vbo, means faster edit-to-display time)
     private final static int POOL_SIZE = 30;
-    private final Collection<NeuronVbo> vbos;
+    private final List<NeuronVbo> vbos;
+    private int nextVbo = 0;
 
     // private Set<NeuronModel> dirtyNeurons; // Track incremental updates
     // private Map<NeuronModel, NeuronVbo> neuronVbos;
@@ -78,9 +85,11 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     private float radiusOffset = 0.0f; // amount to add to every radius, in micrometers
     private float radiusScale = 1.0f; // amount to multiply every radius, in micrometers
     
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    
     public NeuronVboPool() 
     {
-        this.vbos = new TreeSet<>(new VboComparator());
+        this.vbos = new ArrayList<>();
         for (int i = 0; i < POOL_SIZE; ++i) {
             vbos.add(new NeuronVbo());
         }
@@ -168,11 +177,12 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     void add(NeuronModel neuron) 
     {
         // To keep the vbos balanced, always insert into the emptiest vbo
-        NeuronVbo emptiestVbo = vbos.iterator().next();
-        // remove, append, then insert, to maintain sorted order
-        vbos.remove(emptiestVbo);
+        NeuronVbo emptiestVbo = vbos.get(nextVbo);
+        nextVbo += 1;
+        if (nextVbo >= vbos.size())
+            nextVbo = 0;
+        // log.info("Emptiest vbo ({}) contains {} neurons", emptiestVbo.toString(), emptiestVbo.getNeuronCount());
         emptiestVbo.add(neuron);
-        vbos.add(emptiestVbo);
     }
 
     void remove(NeuronModel neuron) {
@@ -193,18 +203,6 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     @Override
     public Iterator<NeuronModel> iterator() {
         return new NeuronIterator(this);
-    }
-
-    // Imposes an ordering on the VBOs in the pool, such that the first vbo is
-    // always the one with the most room for more elements.
-    // To maintain this ordering, it is imperative that the TreeSet<NeuronVbo> be updated
-    // after every content change.
-    private static class VboComparator implements Comparator<NeuronVbo> 
-    {
-        @Override
-        public int compare(NeuronVbo o1, NeuronVbo o2) {
-            return o1.getNeuronCount() - o2.getNeuronCount(); // TODO: test whether this is the correct ordering sense...     
-        }
     }
     
     private static class ConesShader extends BasicShaderProgram

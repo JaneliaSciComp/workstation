@@ -590,7 +590,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         /* */
         
         // TODO: remove this after testing
-        neuronMPRenderer0.addMeshActor(new TestNeuronVboActor());
+        // neuronMPRenderer0.addMeshActor(new TestNeuronVboActor());
         
         return neuronMPRenderer0;
     }
