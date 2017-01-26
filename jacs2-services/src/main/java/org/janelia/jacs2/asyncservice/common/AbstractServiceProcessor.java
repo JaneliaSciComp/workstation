@@ -76,8 +76,8 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                         if (sd.hasCompletedSuccessfully()) {
                             return sd;
                         } else if (sd.hasCompletedUnsuccessfully()) {
-                            logger.info("Service {} completed unsuccessfully", sd);
-                            return sd;
+                            logger.warn("Service {} completed unsuccessfully", sd);
+                            throw new ComputationException(sd, "Service " + sd + " did not complete successfully");
                         } else {
                             try {
                                 Thread.currentThread().sleep(1000);
@@ -86,9 +86,11 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                                 throw new ComputationException(jacsServiceData, e);
                             }
                         }
-                        if (sd.timeout() > 0 && System.currentTimeMillis() - startTime > sd.timeout()) {
+                        long timeSinceStart = System.currentTimeMillis() - startTime;
+                        if (sd.timeout() > 0 &&  timeSinceStart > sd.timeout()) {
+                            logger.warn("Service {} timed out after {}ms", sd, timeSinceStart);
                             sd.setState(JacsServiceState.TIMEOUT);
-                            return sd;
+                            throw new ComputationException(sd, "Service " + sd + " timed out");
                         }
                     }
                 })

@@ -38,15 +38,6 @@ public class JacsServiceDataPersistence extends AbstractDataPersistence<JacsServ
         }
     }
 
-    public List<JacsServiceData> findChildServices(Number serviceId) {
-        JacsServiceDataDao jacsServiceDataDao = daoSource.get();
-        try {
-            return jacsServiceDataDao.findChildServices(serviceId);
-        } finally {
-            daoSource.destroy(jacsServiceDataDao);
-        }
-    }
-
     public JacsServiceData findServiceHierarchy(Number serviceId) {
         JacsServiceDataDao jacsServiceDataDao = daoSource.get();
         try {

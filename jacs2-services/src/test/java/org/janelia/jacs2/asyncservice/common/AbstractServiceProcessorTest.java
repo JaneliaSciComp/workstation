@@ -2,13 +2,18 @@ package org.janelia.jacs2.asyncservice.common;
 
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
+import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -165,6 +170,83 @@ public class AbstractServiceProcessorTest {
                 });
         verify(successful, never()).accept(any());
         verify(failure).accept(any());
+    }
+
+    @Test
+    public void waitAndCompleteSuccessfully() {
+        Consumer successful = mock(Consumer.class);
+        Consumer failure = mock(Consumer.class);
+
+        when(jacsServiceDataPersistence.findById(TEST_ID))
+                .thenAnswer(invocation -> testJacsServiceData)
+                .thenAnswer(invocation -> {
+                    testJacsServiceData.setState(JacsServiceState.SUCCESSFUL);
+                    return testJacsServiceData;
+                });
+
+        when(jacsServiceDispatcher.getServiceProcessor(testJacsServiceData)).thenReturn((ServiceProcessor) testSuccessfullProcessor);
+
+        testSuccessfullProcessor.waitForCompletion(testJacsServiceData)
+                .whenComplete((r, e) -> {
+                    if (e == null) {
+                        successful.accept(r);
+                    } else {
+                        failure.accept(e);
+                    }
+                });
+        verify(failure, never()).accept(any());
+        verify(successful).accept(any());
+    }
+
+    @Test
+    public void waitAndFail() {
+        Consumer successful = mock(Consumer.class);
+        Consumer failure = mock(Consumer.class);
+
+        when(jacsServiceDataPersistence.findById(TEST_ID))
+                .thenAnswer(invocation -> testJacsServiceData)
+                .thenAnswer(invocation -> {
+                    testJacsServiceData.setState(JacsServiceState.ERROR);
+                    return testJacsServiceData;
+                });
+
+        when(jacsServiceDispatcher.getServiceProcessor(testJacsServiceData)).thenReturn((ServiceProcessor) testSuccessfullProcessor);
+
+        testSuccessfullProcessor.waitForCompletion(testJacsServiceData)
+                .whenComplete((r, e) -> {
+                    if (e == null) {
+                        successful.accept(r);
+                    } else {
+                        failure.accept(e);
+                    }
+                });
+        verify(successful, never()).accept(any());
+        verify(failure).accept(any());
+    }
+
+    @Test
+    public void waitAndTimeout() {
+        Consumer successful = mock(Consumer.class);
+        Consumer failure = mock(Consumer.class);
+
+        testJacsServiceData.setServiceTimeout(100L);
+        when(jacsServiceDataPersistence.findById(TEST_ID))
+                .thenAnswer(invocation -> testJacsServiceData)
+                .thenAnswer(invocation -> testJacsServiceData);
+
+        when(jacsServiceDispatcher.getServiceProcessor(testJacsServiceData)).thenReturn((ServiceProcessor) testSuccessfullProcessor);
+
+        testSuccessfullProcessor.waitForCompletion(testJacsServiceData)
+                .whenComplete((r, e) -> {
+                    if (e == null) {
+                        successful.accept(r);
+                    } else {
+                        failure.accept(e);
+                    }
+                });
+        verify(successful, never()).accept(any());
+        verify(failure).accept(any());
+        assertThat(testJacsServiceData.getState(), equalTo(JacsServiceState.TIMEOUT));
     }
 
 }
