@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import Jama.Matrix;
+
+import org.eclipse.jetty.util.log.Log;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -278,6 +280,9 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
      */
     @Override
     public void workspaceLoaded(TmWorkspace workspace) {
+        
+        logger.info("workspace loaded, rebuilding anchor model");
+        
         // clear existing
         fireClearAnchors();
 
@@ -309,6 +314,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                 updateNeuronStyleMap.put(neuron, style);
             }
             fireNeuronStylesChangedEvent(updateNeuronStyleMap);
+            logger.info("updated {} neuron styles", updateNeuronStyleMap.size());
             // note: we currently don't clean up old styles in the prefs that belong
             //  to deleted neurons; this is the place to do it if/when we put that in
             //  (see FW-3100); you would iterate over the style map and remove
@@ -332,6 +338,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                 }
             }
             fireAnchorsAdded(addedAnchorList);
+            logger.info("added {} anchors", addedAnchorList.size());
 
             // draw anchored paths, too, after all the anchors are drawn
             List<TmAnchoredPath> annList = new ArrayList<>();
@@ -341,6 +348,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                 }
             }
             addAnchoredPaths(annList);
+            logger.info("added {} anchored paths", annList.size());
         }
     }
 

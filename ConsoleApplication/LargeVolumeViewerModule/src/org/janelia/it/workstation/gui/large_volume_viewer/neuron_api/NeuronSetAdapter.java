@@ -96,15 +96,9 @@ implements NeuronSet// , LookupListener
         this.annotationModListener = new MyTmGeoAnnotationModListener();
         this.hortaWorkspaceResult.addLookupListener(new NSALookupListener());
     }
-    
-    public NeuronSetAdapter()
-    {
-        this(new NeuronList());
-    }
 
-    @Override
-    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
-        return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n);
+    public NeuronSetAdapter() {
+        this(new NeuronList());
     }
 
     private void updateVoxToMicronMatrices(TmSample sample)
@@ -144,10 +138,33 @@ implements NeuronSet// , LookupListener
     }
 
     @Override
+    public List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2) {
+        return spatialIndex.getAnchorsInMicronArea(p1, p2);
+    }
+    
+    @Override
+    public List<NeuronVertex> getAnchorsInVoxelArea(double[] p1, double[] p2) {
+        return spatialIndex.getAnchorsInVoxelArea(p1, p2);
+    }
+    
+    @Override
+    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
+        return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n);
+    }
+
+    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n, SpatialFilter filter) {
+        return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n, filter);
+    }
+    
+    @Override
     public List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n) {
         return spatialIndex.getAnchorClosestToVoxelLocation(voxelXYZ, n);
     }
 
+    public List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n, SpatialFilter filter) {
+        return spatialIndex.getAnchorClosestToVoxelLocation(voxelXYZ, n, filter);
+    }
+    
     @Override 
     public NeuronVertex getAnchorClosestToMicronLocation(double[] voxelXYZ) {
         return spatialIndex.getAnchorClosestToMicronLocation(voxelXYZ);
@@ -158,11 +175,6 @@ implements NeuronSet// , LookupListener
         return spatialIndex.getAnchorClosestToVoxelLocation(micronXYZ);
     }
 
-    @Override
-    public List<NeuronVertex> getAnchorsInArea(double[] p1, double[] p2) {
-        return spatialIndex.getAnchorsInVoxelArea(p1, p2);
-    }
-    
     @Override 
     public NeuronModel getNeuronForAnchor(NeuronVertex anchor) {
         if (! (anchor instanceof NeuronVertexAdapter))
@@ -247,7 +259,7 @@ implements NeuronSet// , LookupListener
         this.workspace = workspace;
         TmSample sample = annotationModel.getCurrentSample();
         updateVoxToMicronMatrices(sample);
-        spatialIndex.setMicronToVoxMatrix(getMicronToVoxMatrix());
+        spatialIndex.setVoxToMicronMatrix(getVoxToMicronMatrix());
         NeuronList nl = (NeuronList) neurons;
         nl.wrap(this);
         getMembershipChangeObservable().setChanged();

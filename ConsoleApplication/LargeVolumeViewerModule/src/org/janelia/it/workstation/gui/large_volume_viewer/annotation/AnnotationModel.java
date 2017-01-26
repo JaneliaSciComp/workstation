@@ -16,6 +16,7 @@ import java.util.Set;
 import javax.swing.SwingUtilities;
 
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
@@ -52,6 +53,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnota
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.SpatialFilter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
@@ -356,6 +359,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
 
         TmNeuronMetadata foundNeuron = null;
+        // TODO: this is way too slow
         for (TmNeuronMetadata neuron : getNeuronList()) {
             if (neuron.getGeoAnnotationMap().containsKey(annotationID)) {
                 foundNeuron = neuron;
@@ -394,7 +398,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             return annotation;
         }
 
-        TmNeuronMetadata neuron = getNeuronFromAnnotationID(annotation.getId());        
+        TmNeuronMetadata neuron = getNeuronFromNeuronID(annotation.getNeuronId());   
         TmGeoAnnotation current = annotation;
         TmGeoAnnotation parent = neuron.getParentOf(current);
         while (parent !=null) {
@@ -408,43 +412,35 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * find the annotation closest to the input location, excluding
      * the input annotation (null = don't exclude any)
      */
-    public TmGeoAnnotation getClosestAnnotation(Vec3 location, TmGeoAnnotation excludedAnnotation) {
+    public TmGeoAnnotation getClosestAnnotation(Vec3 micronLocation, TmGeoAnnotation excludedAnnotation) {
 
-        double x = location.getX();
-        double y = location.getY();
-        double z = location.getZ();
+        double x = micronLocation.getX();
+        double y = micronLocation.getY();
+        double z = micronLocation.getZ();
 
         TmGeoAnnotation closest = null;
-        // I hate magic numbers as much as the next programmer, but surely this
-        //  is big enough, right?
-        double closestSquaredDist = 1.0e99;
-
-        double dx, dy, dz, dist;
-
         // our valid IDs are positive, so this will never match
-        Long excludedAnnotationID;
-        if (excludedAnnotation == null) {
-            excludedAnnotationID = -1L;
-        } else {
-            excludedAnnotationID = excludedAnnotation.getId();
-        }
-        for (TmNeuronMetadata neuron: getNeuronList()) {
-            for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
-                for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
-                    if (excludedAnnotationID.equals(ann.getId())) {
-                        continue;
-                    }
-                    dx = ann.getX() - x;
-                    dy = ann.getY() - y;
-                    dz = ann.getZ() - z;
-                    dist = dx * dx + dy * dy + dz * dz;
-                    if (dist < closestSquaredDist) {
-                        closestSquaredDist = dist;
-                        closest = ann;
-                    }
-                }
+        final Long excludedAnnotationID = excludedAnnotation == null ? -1L : excludedAnnotation.getId();
+
+        log.info("getClosestAnnotation to "+excludedAnnotation.getId());
+        
+        List<NeuronVertex> vertexList = neuronSetAdapter.getAnchorClosestToMicronLocation(new double[]{x, y, z}, 1, new SpatialFilter() {
+            @Override
+            public boolean include(NeuronVertex vertex, TmGeoAnnotation annotation) {
+                boolean notItself = !annotation.getId().equals(excludedAnnotationID);
+                boolean visible = getNeuronStyle(getNeuronFromNeuronID(annotation.getNeuronId())).isVisible();
+                return notItself && visible;
             }
+        });
+        
+        log.info("Got {} anchors closest to {}", vertexList.size(), micronLocation);
+        
+        if (vertexList != null && !vertexList.isEmpty()) {
+            NeuronVertex vertex = vertexList.get(0);
+            closest = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
         }
+
+        log.info("Returning closest anchor: {}", closest.getId());
         return closest;
     }
 
@@ -867,9 +863,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                log.info("beginning UI update for mergeNeurite()");
-                Stopwatch stopwatch = new Stopwatch();
-                stopwatch.start();
+//                log.info("beginning UI update for mergeNeurite()");
+//                Stopwatch stopwatch = new Stopwatch();
+//                stopwatch.start();
                 if (notesChangedSource) {
                     fireNotesUpdated(sourceAnnotation);
                 }
@@ -878,9 +874,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 }
                 fireAnnotationReparented(sourceAnnotation, prevNeuronId);
                 fireNeuronSelected(updateTargetNeuron);
-                log.info("ending UI update for mergeNeurite(); elapsed = " + stopwatch);
+//                log.info("ending UI update for mergeNeurite(); elapsed = " + stopwatch);
                 activityLog.logEndOfOperation(getWsId(), targetAnnotation);
-                stopwatch.stop();
+//                stopwatch.stop();
             }
         });
 

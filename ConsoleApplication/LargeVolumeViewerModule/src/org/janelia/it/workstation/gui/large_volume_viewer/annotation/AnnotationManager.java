@@ -167,7 +167,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         Vec3 anchorVoxelLocation = new Vec3(tempLocation.getX(),
                 tempLocation.getY(), tempLocation.getZ());
 
-        TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchorVoxelLocation,
+        // Better to use micron location here, because the spatial index uses microns
+        TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchor.getLocation(),
                 annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
 
         // check distance and other restrictions
@@ -476,31 +477,30 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         // can't merge with itself
         if (anchorID.equals(annotationID)) {
+            log.info("Cant merge with itself");
             return false;
         }
 
         TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(anchorID);
         TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(annotationID);
 
-        // is the target neuron visible?
-        if (!getNeuronStyle(annotationModel.getNeuronFromNeuronID(targetAnnotation.getNeuronId())).isVisible()) {
-            return false;
-        }
-
         // distance: close enough?
         double dx = anchorLocation.getX() - targetAnnotation.getX();
         double dy = anchorLocation.getY() - targetAnnotation.getY();
         double dz = anchorLocation.getZ() - targetAnnotation.getZ();
         if (dx * dx + dy * dy + dz * dz > DRAG_MERGE_THRESHOLD_SQUARED) {
+            log.info("Not close enough; distance: {},{},{}",dx,dy,dz);
             return false;
         }
 
         // can't merge with same neurite (don't create cycles!)
         if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
                 annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
+            log.info("Can't merge with same neurite");
             return false;
         }
 
+        log.info("CAN MERGE");
         return true;
     }
 

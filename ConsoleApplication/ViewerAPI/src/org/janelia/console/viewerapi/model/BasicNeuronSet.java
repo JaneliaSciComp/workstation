@@ -228,7 +228,12 @@ implements NeuronSet
     }
 
     @Override
-    public List<NeuronVertex> getAnchorsInArea(double[] p1, double[] p2) {
+    public List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    @Override
+    public List<NeuronVertex> getAnchorsInVoxelArea(double[] p1, double[] p2) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

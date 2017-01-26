@@ -179,7 +179,7 @@ implements MouseMode, KeyListener
         NeuronSet neuronSet = controller.getNeuronSet();
         if (neuronSet != null) {
                         
-            List<NeuronVertex> vertexList = neuronSet.getAnchorClosestToVoxelLocation(new double[]{xyz.x(), xyz.y(), xyz.z()}, 20);
+            List<NeuronVertex> vertexList = neuronSet.getAnchorClosestToMicronLocation(new double[]{xyz.x(), xyz.y(), xyz.z()}, 20);
             if (vertexList != null) {
                 logger.trace("Got {} closest neurons for mouse position {}", vertexList.size(), xyz);
                 List<Anchor> anchors = new ArrayList<>();
@@ -189,7 +189,7 @@ implements MouseMode, KeyListener
                     if (anchor!=null) {
                         anchors.add(anchor);
                     }
-                }
+                } 
                 spatial = findBestAnchor(anchors, xyz, cutoff);
             }
         }

@@ -9,9 +9,11 @@ import java.util.Map;
 
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.wlu.cs.levy.CG.Checker;
 import edu.wlu.cs.levy.CG.KDTree;
 import edu.wlu.cs.levy.CG.KeyDuplicateException;
 import edu.wlu.cs.levy.CG.KeyMissingException;
@@ -29,29 +31,32 @@ public class NeuronVertexSpatialIndex {
 
     private final Map<NeuronVertex, CacheableKey> cachedKeys = new HashMap<>();
     
-    private Jama.Matrix micronToVoxMatrix;
+    private Jama.Matrix voxToMicronMatrix;
     private KDTree<NeuronVertex> index; // Cannot be final because it doesn't have a clear method
     
     public NeuronVertexSpatialIndex() {
         log.trace("Creating spatial index");
     }
              
-    public void setMicronToVoxMatrix(Jama.Matrix micronToVoxMatrix) {
-        this.micronToVoxMatrix = micronToVoxMatrix;
-    }
-    
-    /**
-     * Returns the anchor that is closest to the location given in microns.
-     * @param micronXYZ
-     * @return
-     */
-    public NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ) {
-        if (index==null) return null;
-        List<NeuronVertex> nbrs = getAnchorClosestToMicronLocation(micronXYZ, 1);
-        if (nbrs.isEmpty()) return null;
-        return nbrs.get(0);
+    public void setVoxToMicronMatrix(Jama.Matrix voxToMicronMatrix) {
+        this.voxToMicronMatrix = voxToMicronMatrix;
     }
 
+    private double[] getMicrons(double[] voxelXYZ) {
+
+        // Convert from image voxel coordinates to Cartesian micrometers
+        // TmGeoAnnotation is in voxel coordinates
+        Jama.Matrix voxLoc = new Jama.Matrix(new double[][] {
+            {voxelXYZ[0], }, 
+            {voxelXYZ[1], }, 
+            {voxelXYZ[2], },
+            {1.0, },
+        });
+        // NeuronVertex API requires coordinates in micrometers
+        Jama.Matrix micLoc = voxToMicronMatrix.times(voxLoc);
+        return new double [] { micLoc.get(0,0), micLoc.get(1,0), micLoc.get(2,0) };
+    }
+    
     /**
      * Returns the anchor that is closest to the location given in voxel units.
      * @param voxelXYZ
@@ -65,6 +70,33 @@ public class NeuronVertexSpatialIndex {
     }
     
     /**
+     * Returns the anchor that is closest to the location given in microns.
+     * @param micronXYZ
+     * @return
+     */
+    public NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ) {
+        if (index==null) return null;
+        List<NeuronVertex> nbrs = getAnchorClosestToMicronLocation(micronXYZ, 1);
+        if (nbrs.isEmpty()) return null;
+        return nbrs.get(0);
+    }
+    
+    /**
+     * Returns the N closest anchors to the location given in voxel units. The locations are sorted in 
+     * order from closest to farthest.
+     * @param voxelXYZ voxel location
+     * @param n number of results to return
+     * @return list of matching anchors
+     */
+    public List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n) {
+        if (index==null) return Collections.emptyList();
+        if (voxToMicronMatrix==null) {
+            throw new IllegalStateException("No voxToMicronMatrix loaded in spatial index");
+        }
+        return getAnchorClosestToMicronLocation(getMicrons(voxelXYZ), n);
+    }
+    
+    /**
      * Returns the N closest anchors to the location given in microns. The locations are sorted in 
      * order from closest to farthest.
      * @param micronXYZ
@@ -73,35 +105,50 @@ public class NeuronVertexSpatialIndex {
      */
     public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
         if (index==null) return Collections.emptyList();
-        if (micronToVoxMatrix==null) {
-            throw new IllegalStateException("No micronToVoxMatrix loaded in spatial index");
+        try {
+            return index.nearest(micronXYZ, n);
+        } 
+        catch (KeySizeException ex) {
+            log.warn("Exception while finding anchor in spatial index", ex);
+            return null;
         }
-
-        // Convert from Cartesian micrometers to image voxel coordinates
-        // NeuronVertex API requires coordinates in micrometers
-        Jama.Matrix micLoc = new Jama.Matrix(new double[][] {
-            {micronXYZ[0], }, 
-            {micronXYZ[1], }, 
-            {micronXYZ[2], },
-            {1.0, },
-        });
-        // TmGeoAnnotation XYZ is in voxel coordinates
-        Jama.Matrix voxLoc = micronToVoxMatrix.times(micLoc);
-        double[] voxelXYZ = new double [] { voxLoc.get(0,0), voxLoc.get(1,0), voxLoc.get(2,0) };
-        return getAnchorClosestToVoxelLocation(voxelXYZ, n);
     }
-    
+
     /**
      * Returns the N closest anchors to the location given in voxel units. The locations are sorted in 
      * order from closest to farthest.
-     * @param voxelXYZ
-     * @param n
-     * @return
+     * @param voxelXYZ voxel location
+     * @param n number of results to return
+     * @param filter filter which anchors to exclude
+     * @return list of matching anchors
      */
-    public List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n) {
+    public List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n, final SpatialFilter filter) {
+        return getAnchorClosestToMicronLocation(getMicrons(voxelXYZ), n);
+    }
+
+    /**
+     * Returns the N closest anchors to the location given in micron units. The locations are sorted in 
+     * order from closest to farthest.
+     * @param micronXYZ micron location
+     * @param n number of results to return
+     * @param filter filter which anchors to exclude
+     * @return list of matching anchors
+     */
+    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n, final SpatialFilter filter) {
         if (index==null) return Collections.emptyList();
         try {
-            return index.nearest(voxelXYZ, n);
+            return index.nearest(micronXYZ, n, new Checker<NeuronVertex>() {
+                @Override
+                public boolean usable(NeuronVertex v) {
+                    if (v instanceof NeuronVertexAdapter) {
+                        TmGeoAnnotation ann = ((NeuronVertexAdapter) v).getTmGeoAnnotation();
+                        return filter.include(v, ann);
+                    }
+                    else {
+                        return filter.include(v, null);
+                    }
+                }
+            });
         } 
         catch (KeySizeException ex) {
             log.warn("Exception while finding anchor in spatial index", ex);
@@ -116,6 +163,16 @@ public class NeuronVertexSpatialIndex {
      * @return list of anchors 
      */
     public List<NeuronVertex> getAnchorsInVoxelArea(double[] p1, double[] p2) {
+        return getAnchorsInMicronArea(getMicrons(p1), getMicrons(p2));
+    }
+    
+    /**
+     * Returns all the anchors found in the area given by two corners points, given in micron units.  
+     * @param p1 lower corner
+     * @param p2 higher corner
+     * @return list of anchors 
+     */
+    public List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2) {
         if (index==null) return Collections.emptyList();
         try {
             log.debug("Finding anchors in area bounded by points: p1=({},{},{}) p2=({},{},{})",p1[0],p1[1],p1[2],p2[0],p2[1],p2[2]);
@@ -137,7 +194,7 @@ public class NeuronVertexSpatialIndex {
             return cachedKeys.get(v).toArray();
         }
         else {
-            float xyz[] = v.getLocation(); // Neuron API returns coordinates in voxels
+            float xyz[] = v.getLocation(); // Neuron API returns coordinates in micrometers
             return new double[] { xyz[0], xyz[1], xyz[2] };
         }
     }

@@ -649,7 +649,7 @@ public class TracingInteractor extends MouseAdapter
             if (defaultWorkspace != null) {
                 try {
                     double[] loc = new double[]{cursorXyz.getX(), cursorXyz.getY(), cursorXyz.getZ()};
-                    nearestVertex = defaultWorkspace.getAnchorClosestToVoxelLocation(loc);
+                    nearestVertex = defaultWorkspace.getAnchorClosestToMicronLocation(loc);
                 }
                 catch (UnsupportedOperationException e) {
                     // TODO: this needs to be fixed so that Horta doesn't need to maintain its own spatial index for every neuron.

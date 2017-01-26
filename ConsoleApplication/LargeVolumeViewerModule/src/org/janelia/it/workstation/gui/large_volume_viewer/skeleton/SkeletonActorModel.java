@@ -726,7 +726,7 @@ public class SkeletonActorModel {
             
             // Find all relevant anchors
             
-            List<NeuronVertex> vertexList = neuronSet.getAnchorsInArea(p1, p2);
+            List<NeuronVertex> vertexList = neuronSet.getAnchorsInMicronArea(p1, p2);
             if (vertexList != null) {
                 for (NeuronVertex vertex : vertexList) {
                     TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
