@@ -181,7 +181,7 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         
         @Override
         public void editNote(TmGeoAnnotation annotation) {
-            mgr.addEditNote(annotation.getId());
+            mgr.addEditNote(annotation.getNeuronId(), annotation.getId());
         }
         
     }

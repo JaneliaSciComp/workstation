@@ -324,7 +324,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         if (neuron != null) {
             Anchor anchor = getSkeletonActor().getModel().getNextParent();
             if (anchor != null) {
-                TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
+                TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
                 if (!ann.isRoot()) {
                     ann = neuron.getParentOf(ann);
                     while (!ann.isRoot() && !ann.isBranch()) {
@@ -536,7 +536,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         loadStatusLabel.setLoadStatus(loadStatus);
     }
 
-    public void pathTraceRequested(Long annotationID) {
+    public void pathTraceRequested(Long neuronId, Long annotationID) {
         // this needs to happen before you draw anchored paths; should
         //  go somewhere else so it only happens once, but not clear where;
         //  not clear we have a trigger for when the image is loaded enough for
@@ -545,7 +545,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 tileServer.getLoadAdapter().getTileFormat());
 
         // construct new request; add image data to anchor and pass it on
-        PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
+        PathTraceToParentRequest request = new PathTraceToParentRequest(neuronId, annotationID);
         request.setImageVolume(volumeImage);
         request.setTextureCache(tileServer.getTextureCache());
         if (pathTraceListener != null) {

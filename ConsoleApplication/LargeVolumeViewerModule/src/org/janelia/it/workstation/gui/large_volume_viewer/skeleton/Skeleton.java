@@ -433,7 +433,7 @@ public class Skeleton {
             // no parent
             return;
 
-        controller.pathTraceRequested(anchor.getGuid());
+        controller.pathTraceRequested(anchor.getNeuronID(), anchor.getGuid());
     }
 
 	public void addTracedSegment(AnchoredVoxelPath path)

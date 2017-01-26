@@ -648,10 +648,10 @@ implements MouseMode, KeyListener
 		case KeyEvent.VK_LEFT:
 			if (nextParent != null) {
 				if (event.isAltDown()) {
-				controller.navigationRelative(nextParent.getGuid(),
+				controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
 						AnnotationNavigationDirection.ROOTWARD_STEP);
 				} else {
-					controller.navigationRelative(nextParent.getGuid(),
+					controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
 							AnnotationNavigationDirection.ROOTWARD_JUMP);
 				}
 			}
@@ -659,23 +659,23 @@ implements MouseMode, KeyListener
 		case KeyEvent.VK_RIGHT:
 			if (nextParent != null) {
 				if (event.isAltDown()) {
-					controller.navigationRelative(nextParent.getGuid(),
+					controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
 							AnnotationNavigationDirection.ENDWARD_STEP);
 				} else {
-					controller.navigationRelative(nextParent.getGuid(),
+					controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
 							AnnotationNavigationDirection.ENDWARD_JUMP);
 				}
 			}
 			break;
 		case KeyEvent.VK_UP:
 			if (nextParent != null) {
-				controller.navigationRelative(nextParent.getGuid(),
+				controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
 						AnnotationNavigationDirection.PREV_PARALLEL);
 			}
 			break;
 		case KeyEvent.VK_DOWN:
 			if (nextParent != null) {
-				controller.navigationRelative(nextParent.getGuid(),
+				controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
 						AnnotationNavigationDirection.NEXT_PARALLEL);
 			}
 			break;

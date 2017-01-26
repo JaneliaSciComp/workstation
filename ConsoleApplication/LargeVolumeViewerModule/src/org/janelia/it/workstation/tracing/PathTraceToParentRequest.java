@@ -21,6 +21,7 @@ public class PathTraceToParentRequest {
 
     private Vec3 xyz1;
     private Vec3 xyz2;
+    private Long neuronGuid;
     private Long anchorGuid1;
     private Long anchorGuid2;
     private SegmentIndex segmentIndex; // for hashing
@@ -29,7 +30,8 @@ public class PathTraceToParentRequest {
     private TextureCache textureCache;
 
 
-    public PathTraceToParentRequest(Long anchorGuid) {
+    public PathTraceToParentRequest(Long neuronGuid, Long anchorGuid) {
+        setNeuronGuid(neuronGuid);
         setAnchorGuid1(anchorGuid);
     }
 
@@ -73,6 +75,14 @@ public class PathTraceToParentRequest {
 
     public void setXyz2(Vec3 xyz2) {
         this.xyz2 = xyz2;
+    }
+
+    public Long getNeuronGuid() {
+        return neuronGuid;
+    }
+
+    public void setNeuronGuid(Long neuronGuid) {
+        this.neuronGuid = neuronGuid;
     }
 
     public Long getAnchorGuid1() {

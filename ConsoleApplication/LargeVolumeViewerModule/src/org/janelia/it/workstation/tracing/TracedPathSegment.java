@@ -15,7 +15,7 @@ implements AnchoredVoxelPath
         this.path = path;
         this.intensities = intensities;
     }
-    
+
     public PathTraceRequest getRequest() {return request;}
     public List<VoxelPosition> getPath() {return path;}
     public List<Integer> getIntensities() {return intensities;}

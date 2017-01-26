@@ -170,20 +170,25 @@ public class NeuronModelAdapter implements NeuronModel
         if (! (target instanceof NeuronVertexAdapter))
             return false;
         NeuronVertexAdapter targetNVA = (NeuronVertexAdapter)target;
-        Long sourceID = sourceNVA.getTmGeoAnnotation().getId();
-        Long targetID = targetNVA.getTmGeoAnnotation().getId();
+        
+        TmGeoAnnotation sourceAnn = sourceNVA.getTmGeoAnnotation();
+        TmGeoAnnotation targetAnn = targetNVA.getTmGeoAnnotation();
+        
+        Long sourceID = sourceAnn.getId();
+        Long targetID = targetAnn.getId();
         
         // Borrow logic from AnnotationManager::canMergeNeurite()::520
         if (sourceID.equals(targetID))
             return false; // cannot merge with itself
-        if (neuronSet.annotationModel.getNeuriteRootAnnotation(sourceNVA.getTmGeoAnnotation()).getId().equals(
-                neuronSet.annotationModel.getNeuriteRootAnnotation(targetNVA.getTmGeoAnnotation()).getId())) {
+        if (neuronSet.annotationModel.getNeuriteRootAnnotation(sourceAnn).getId().equals(
+                neuronSet.annotationModel.getNeuriteRootAnnotation(targetAnn).getId())) {
             return false;
         }
         
         try {
-            neuronSet.annotationModel.mergeNeurite(sourceID, targetID);
-        } catch (Exception ex) {
+            neuronSet.annotationModel.mergeNeurite(sourceAnn.getNeuronId(), sourceID, targetAnn.getNeuronId(), targetID);
+        } 
+        catch (Exception ex) {
             return false;
         }
         return true;
@@ -196,7 +201,7 @@ public class NeuronModelAdapter implements NeuronModel
                 return false;
             NeuronVertexAdapter nva = (NeuronVertexAdapter)vertex;
             TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
-            neuronSet.annotationModel.updateAnnotationRadius(annotation.getId(), micronRadius);
+            neuronSet.annotationModel.updateAnnotationRadius(annotation.getNeuronId(), annotation.getId(), micronRadius);
             return true;
         }
         catch (Exception ex) {
@@ -225,7 +230,7 @@ public class NeuronModelAdapter implements NeuronModel
                     annotation.getX(),
                     annotation.getY(),
                     annotation.getZ());
-            neuronSet.annotationModel.moveAnnotation(annotation.getId(), destination);
+            neuronSet.annotationModel.moveAnnotation(annotation.getNeuronId(), annotation.getId(), destination);
             return true;
         }
         catch (Exception ex) {

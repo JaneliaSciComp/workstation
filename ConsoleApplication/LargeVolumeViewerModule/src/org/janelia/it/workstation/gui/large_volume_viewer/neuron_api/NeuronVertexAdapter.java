@@ -33,7 +33,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 import java.util.Objects;
 
 import org.janelia.console.viewerapi.model.DefaultNeuron;
-import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 
@@ -141,6 +140,11 @@ public class NeuronVertexAdapter implements NeuronVertex
     public TmGeoAnnotation getTmGeoAnnotation()
     {
         return vertex;
+    }
+
+    @Override
+    public String toString() {
+        return "NeuronVertex[neuronId=" + vertex.getNeuronId() + ", id=" + vertex.getId() + "]";
     }
 
 }

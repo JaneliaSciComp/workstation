@@ -334,50 +334,32 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     // convenience methods
-    /**
-     * given the ID of an annotation, return an object wrapping it (or null)
-     */
-    public TmGeoAnnotation getGeoAnnotationFromID(Long annotationID) {
-        if (getCurrentWorkspace() == null) {
-            return null;
-        }
 
-        TmNeuronMetadata foundNeuron = getNeuronFromAnnotationID(annotationID);
-        if (foundNeuron != null) {
-            return foundNeuron.getGeoAnnotationMap().get(annotationID);
-        } else {
-            return null;
+    public TmGeoAnnotation getGeoAnnotationFromID(Long neuronID, Long annotationID) {
+        TmNeuronMetadata foundNeuron = getNeuronFromNeuronID(neuronID);
+        if (foundNeuron == null) {
+            log.warn("There is no neuron with id: {}", neuronID);
         }
+        return getGeoAnnotationFromID(foundNeuron, annotationID);
     }
 
     /**
-     * given the ID of an annotation, return the neuron that contains it (or null)
+     * given the ID of an annotation, return an object wrapping it (or null)
      */
-    public TmNeuronMetadata getNeuronFromAnnotationID(Long annotationID) {
-        if (getCurrentWorkspace() == null) {
+    public TmGeoAnnotation getGeoAnnotationFromID(TmNeuronMetadata foundNeuron, Long annotationID) {
+        if (foundNeuron == null) {
             return null;
         }
-
-        TmNeuronMetadata foundNeuron = null;
-        // TODO: this is way too slow for how often it's called
-        for (TmNeuronMetadata neuron : getNeuronList()) {
-            if (neuron.getGeoAnnotationMap().containsKey(annotationID)) {
-                foundNeuron = neuron;
-                break;
-            }
+        TmGeoAnnotation annotation = foundNeuron.getGeoAnnotationMap().get(annotationID);
+        if (annotation == null) {
+            log.warn("There is no annotation with id {} in neuron {}", annotationID, foundNeuron.getId());
         }
-        
-        if (foundNeuron==null) {
-            log.warn("There is no neuron with annotation: ", annotationID);
-        }
-        
-        log.debug("getNeuronFromAnnotationID({}) = {}",annotationID, foundNeuron);
-        return foundNeuron;
+        return annotation;
     }
     
     public TmNeuronMetadata getNeuronFromNeuronID(Long neuronID) {
         TmNeuronMetadata foundNeuron = neuronManager.getNeuronById(neuronID);
-        if (foundNeuron==null) {
+        if (foundNeuron == null) {
             log.warn("There is no neuron with id: {}", neuronID);
         }
         log.debug("getNeuronFromNeuronID({}) = {}",neuronID,foundNeuron);
@@ -631,7 +613,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         
         if (automatedTracingEnabled()) {
             if (viewStateListener != null)
-                viewStateListener.pathTraceRequested(annotation.getId());
+                viewStateListener.pathTraceRequested(annotation.getNeuronId(), annotation.getId());
         }
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -656,9 +638,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * @param location = new location
      * @throws Exception
      */
-    public synchronized void moveAnnotation(final Long annotationID, final Vec3 location) throws Exception {
-        final TmNeuronMetadata neuron = this.getNeuronFromAnnotationID(annotationID);
-        TmGeoAnnotation annotation = getGeoAnnotationFromID(neuron, annotationID);
+    public synchronized void moveAnnotation(final Long neuronID, final Long annotationID, final Vec3 location) throws Exception {
+        final TmNeuronMetadata neuron = this.getNeuronFromNeuronID(neuronID);
+        final TmGeoAnnotation annotation = getGeoAnnotationFromID(neuron, annotationID);
 
         // find each connecting annotation; if there's a traced path to it,
         //  remove it (refresh annotation!)
@@ -689,7 +671,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    fireAnnotationMoved(annotationID);
+                    fireAnnotationMoved(annotation);
                     activityLog.logEndOfOperation(getWsId(), location);
                 }
             });
@@ -704,7 +686,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    fireAnnotationNotMoved(annotationID);
+                    fireAnnotationNotMoved(annotation);
                     activityLog.logEndOfOperation(getWsId(), location);
                 }
             });
@@ -717,9 +699,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         if (automatedTracingEnabled()) {
             // trace to parent, and each child to this parent:
-            viewStateListener.pathTraceRequested(annotation.getId());
+            viewStateListener.pathTraceRequested(annotation.getNeuronId(), annotation.getId());
             for (TmGeoAnnotation child : neuron.getChildrenOf(annotation)) {
-                viewStateListener.pathTraceRequested(child.getId());
+                viewStateListener.pathTraceRequested(child.getNeuronId(), child.getId());
             }
         }
 
@@ -738,8 +720,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * @param radius = new radius, in units of micrometers
      * @throws Exception
      */
-    public synchronized void updateAnnotationRadius(final Long annotationID, final float radius) throws Exception {
-        final TmNeuronMetadata neuron = this.getNeuronFromAnnotationID(annotationID);
+    public synchronized void updateAnnotationRadius(final Long neuronID, final Long annotationID, final float radius) throws Exception {
+        final TmNeuronMetadata neuron = this.getNeuronFromNeuronID(neuronID);
         final TmGeoAnnotation annotation = getGeoAnnotationFromID(neuron, annotationID);
 
         // update local annotation object
@@ -763,7 +745,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireAnnotationRadiusUpdated(annotationID);
+                fireAnnotationRadiusUpdated(annotation);
             }
         });
         
@@ -771,9 +753,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         if (automatedTracingEnabled()) {
             // trace to parent, and each child to this parent:
-            viewStateListener.pathTraceRequested(annotation.getId());
+            viewStateListener.pathTraceRequested(annotation.getNeuronId(), annotation.getId());
             for (TmGeoAnnotation child : neuron.getChildrenOf(annotation)) {
-                viewStateListener.pathTraceRequested(child.getId());
+                viewStateListener.pathTraceRequested(child.getNeuronId(), child.getId());
             }
         }
     }
@@ -782,18 +764,18 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * merge the neurite that has source Annotation into the neurite containing
      * targetAnnotation
      */
-    public synchronized void mergeNeurite(final Long sourceAnnotationID, final Long targetAnnotationID) throws Exception {
+    public synchronized void mergeNeurite(final Long sourceNeuronID, final Long sourceAnnotationID, final Long targetNeuronID, final Long targetAnnotationID) throws Exception {
 
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
 
-        TmNeuronMetadata targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
+        TmNeuronMetadata targetNeuron = getNeuronFromNeuronID(targetNeuronID);
         final TmGeoAnnotation targetAnnotation = targetNeuron.getGeoAnnotationMap().get(targetAnnotationID);
-        final TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
+        final TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceNeuronID, sourceAnnotationID);
 
         TmNeuronMetadata sourceNeuron = null;
         if (!sourceAnnotation.getNeuronId().equals(targetAnnotation.getNeuronId())) {
-            sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
+            sourceNeuron = getNeuronFromNeuronID(sourceNeuronID);
         }
         else {
             sourceNeuron = targetNeuron;
@@ -823,29 +805,28 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // log.info("Parent/child linkages target and source.");
         sourceAnnotation.setParentId(targetAnnotationID);
 
-        final TmNeuronMetadata updateTargetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
-        setCurrentNeuron(updateTargetNeuron);
+        setCurrentNeuron(targetNeuron);
 
         // trace new path:
         if (automatedTracingEnabled()) {
             // log.info("Tracing paths.");
-            viewStateListener.pathTraceRequested(sourceAnnotationID);
+            viewStateListener.pathTraceRequested(sourceNeuronID, sourceAnnotationID);
         }
 
         // see note in addChildAnnotations re: predef notes
         // for merge, two linked annotations are affected; fortunately, the
         //  neuron has just been refreshed
         // log.info("Stripping predef notes.");
-        final boolean notesChangedSource = stripPredefNotes(updateTargetNeuron, sourceAnnotationID);
-        final boolean notesChangedTarget = stripPredefNotes(updateTargetNeuron, targetAnnotationID);
+        final boolean notesChangedSource = stripPredefNotes(targetNeuron, sourceAnnotationID);
+        final boolean notesChangedTarget = stripPredefNotes(targetNeuron, targetAnnotationID);
         
         // Save the target neuron.
         // log.info("Saving target neuron.");
         neuronManager.removeNeuron(targetNeuron);
-        neuronManager.saveNeuronData(updateTargetNeuron);
-        neuronManager.addNeuron(updateTargetNeuron);
+        neuronManager.saveNeuronData(targetNeuron);
+        neuronManager.addNeuron(targetNeuron);
         // Save the source neuron, empty or not.
-        if (! sourceNeuron.getId().equals(updateTargetNeuron.getId())) {
+        if (! sourceNeuron.getId().equals(targetNeuron.getId())) {
             // log.info("Saving source neuron.");
             neuronManager.saveNeuronData(sourceNeuron);
         }
@@ -860,9 +841,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-//                log.info("beginning UI update for mergeNeurite()");
-//                Stopwatch stopwatch = new Stopwatch();
-//                stopwatch.start();
                 if (notesChangedSource) {
                     fireNotesUpdated(sourceAnnotation);
                 }
@@ -870,10 +848,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     fireNotesUpdated(targetAnnotation);
                 }
                 fireAnnotationReparented(sourceAnnotation, prevNeuronId);
-                fireNeuronSelected(updateTargetNeuron);
-//                log.info("ending UI update for mergeNeurite(); elapsed = " + stopwatch);
                 activityLog.logEndOfOperation(getWsId(), targetAnnotation);
-//                stopwatch.stop();
             }
         });
 
@@ -991,7 +966,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         
         // if we're tracing, retrace if there's a new connection
         if (automatedTracingEnabled() && child != null) {
-            viewStateListener.pathTraceRequested(child.getId());
+            viewStateListener.pathTraceRequested(child.getNeuronId(), child.getId());
         }
 
         final TmGeoAnnotation childFinal = child;
@@ -1154,8 +1129,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // retrace
         if (automatedTracingEnabled()) {
             if (viewStateListener != null) {
-                viewStateListener.pathTraceRequested(newAnnotation.getId());
-                viewStateListener.pathTraceRequested(annotation1.getId());
+                viewStateListener.pathTraceRequested(newAnnotation.getNeuronId(), newAnnotation.getId());
+                viewStateListener.pathTraceRequested(annotation1.getNeuronId(), annotation1.getId());
             }
         }
 
@@ -1178,10 +1153,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * @param newRootID = ID of new root annotation for neurite
      * @throws Exception
      */
-    public synchronized void rerootNeurite(Long newRootID) throws Exception {
+    public synchronized void rerootNeurite(Long neuronId, Long newRootID) throws Exception {
         // do it in the DAO layer
-        final TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
-        TmNeuronMetadata neuron = getNeuronFromAnnotationID(newRoot.getId());
+        final TmGeoAnnotation newRoot = getGeoAnnotationFromID(neuronId, newRootID);
+        TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronId);
         neuronManager.rerootNeurite(neuron, newRoot);
 
         // see notes in addChildAnnotation re: the predef notes
@@ -1210,9 +1185,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * @param newRootID = ID of root of new neurite
      * @throws Exception
      */
-    public synchronized void splitNeurite(final Long newRootID) throws Exception {
-        final TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
-        final TmNeuronMetadata neuron = getNeuronFromNeuronID(newRoot.getNeuronId());
+    public synchronized void splitNeurite(final Long neuronID, final Long newRootID) throws Exception {
+        final TmGeoAnnotation newRoot = getGeoAnnotationFromID(neuronID, newRootID);
+        final TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronID);
         TmGeoAnnotation newRootParent = neuron.getParentOf(newRoot);
         removeAnchoredPath(neuron, newRoot, newRootParent);
         neuronManager.splitNeurite(neuron, newRoot);
@@ -1232,18 +1207,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         });
     }
 
-    public synchronized void addAnchoredPath(final TmAnchoredPathEndpoints endpoints, List<List<Integer>> points) throws Exception{
+    public synchronized void addAnchoredPath(final Long neuronID, final TmAnchoredPathEndpoints endpoints, List<List<Integer>> points) throws Exception{
 
         // check we can find both endpoints in same neuron
         //  don't need to check that they are neighboring; UI gesture already enforces it
-        TmNeuronMetadata neuron1 = getNeuronFromAnnotationID(endpoints.getFirstAnnotationID());
-        TmNeuronMetadata neuron2 = getNeuronFromAnnotationID(endpoints.getSecondAnnotationID());
-        if (eitherIsNull(neuron1, neuron2)) {
+        TmNeuronMetadata neuron1 = getNeuronFromNeuronID(neuronID);
+        if (neuron1==null) {
             // something's been deleted
             return;
-        }
-        if (!neuron1.getId().equals(neuron2.getId())) {
-            throw new Exception("anchored path annotations are in different neurons");
         }
 
         // now verify that endpoints for path are still where they were when path
@@ -1253,7 +1224,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         //  list to be in consistent order vis a vis the ordering of the annotation IDs)
 
         TmGeoAnnotation ann1 = neuron1.getGeoAnnotationMap().get(endpoints.getFirstAnnotationID());
-        TmGeoAnnotation ann2 = neuron2.getGeoAnnotationMap().get(endpoints.getSecondAnnotationID());
+        TmGeoAnnotation ann2 = neuron1.getGeoAnnotationMap().get(endpoints.getSecondAnnotationID());
 
         boolean order1 = annotationAtPoint(ann1, points.get(0)) && annotationAtPoint(ann2, points.get(points.size() - 1));
         boolean order2 = annotationAtPoint(ann2, points.get(0)) && annotationAtPoint(ann1, points.get(points.size() - 1));
@@ -1342,8 +1313,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         return "";
     }
 
-    public String getNote(Long annotationID) {
-        TmNeuronMetadata neuron = getNeuronFromAnnotationID(annotationID);
+    public String getNote(final Long neuronID, Long annotationID) {
+        TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronID);
         return getNote(annotationID, neuron);
     }
 
@@ -1393,9 +1364,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
 
         // update modification date in for the geo annotation whose text annotation
-        //  we changed; get it fresh; the object may have changed
-        final TmGeoAnnotation updatedAnn = getGeoAnnotationFromID(geoAnnotation.getId());
-        updatedAnn.updateModificationDate();
+        geoAnnotation.updateModificationDate();
 
         // Send the data back to the server to save.
         neuronManager.saveNeuronData(neuron);
@@ -1406,19 +1375,19 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireNotesUpdated(updatedAnn);
+                fireNotesUpdated(geoAnnotation);
                 activityLog.logSetNote(workspace.getId(), geoAnnotation.getId(), noteString);
             }
         });
 
     }
 
-    public synchronized void removeNote(final TmStructuredTextAnnotation textAnnotation) throws Exception {
+    public synchronized void removeNote(final Long neuronID, final TmStructuredTextAnnotation textAnnotation) throws Exception {
 
         final TmWorkspace workspace = getCurrentWorkspace();
-        TmNeuronMetadata neuron = getNeuronFromAnnotationID(textAnnotation.getParentId());
+        TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronID);
         neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getParentId());
-        final TmGeoAnnotation ann = getGeoAnnotationFromID(textAnnotation.getParentId());
+        final TmGeoAnnotation ann = getGeoAnnotationFromID(neuron, textAnnotation.getParentId());
         ann.updateModificationDate();
         neuronManager.saveNeuronData(neuron);
 
@@ -1501,7 +1470,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 }
             }
             if (modified) {
-                setNote(getGeoAnnotationFromID(annID), noteText);
+                setNote(getGeoAnnotationFromID(neuron.getId(), annID), noteText);
                 return true;
             }
         }
@@ -1723,17 +1692,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         fireNeuronTagsChanged(Arrays.asList(neuron));
     }
 
-    /**
-     * given the ID of an annotation, return an object wrapping it (or null)
-     */
-    private TmGeoAnnotation getGeoAnnotationFromID(TmNeuronMetadata foundNeuron, Long annotationID) {
-        if (foundNeuron != null) {
-            return foundNeuron.getGeoAnnotationMap().get(annotationID);
-        } else {
-            return null;
-        }
-    }
-
     public List<File> breakOutByRoots(File infile) throws IOException {
         return new SWCData().breakOutByRoots(infile);
     }
@@ -1758,18 +1716,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     private boolean eitherIsNull(Object object1, Object object2) {
         return object1 == null || object2 == null;
-    }
-
-    void fireAnnotationMoved(Long annotationID) {
-        fireAnnotationMoved(getGeoAnnotationFromID(annotationID));
-    }
-
-    void fireAnnotationNotMoved(Long annotationID) {
-        fireAnnotationNotMoved(getGeoAnnotationFromID(annotationID));
-    }
-
-    void fireAnnotationRadiusUpdated(Long annotationID) {
-        fireAnnotationRadiusUpdated(getGeoAnnotationFromID(annotationID));
     }
 
     void fireAnnotationAdded(TmGeoAnnotation annotation) {

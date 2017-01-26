@@ -308,12 +308,12 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         annoMgr.anchorAdded(anchorSeed);
     }
     
-    public void pathTraceRequested(Long id) {
-        qvController.pathTraceRequested(id);
+    public void pathTraceRequested(Long neuronId, Long annotationId) {
+        qvController.pathTraceRequested(neuronId, annotationId);
     }
 
-    public void navigationRelative(Long id, AnnotationNavigationDirection direction) {
-        Anchor anchor = skeleton.getAnchorByID(annoMgr.relativeAnnotation(id, direction));
+    public void navigationRelative(Long neuronId, Long annotationId, AnnotationNavigationDirection direction) {
+        Anchor anchor = skeleton.getAnchorByID(annoMgr.relativeAnnotation(neuronId, annotationId, direction));
         setNextParent(anchor);
         qvController.setCameraFocus(anchor.getLocation());
     }

@@ -114,29 +114,29 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     
     public void deleteSubtreeRequested(Anchor anchor) {
         if (anchor != null) {
-            deleteSubTree(anchor.getGuid());
+            deleteSubTree(anchor.getNeuronID(), anchor.getGuid());
         } 
     }
 
     public void splitAnchorRequested(Anchor anchor) {
-        splitAnchor(anchor.getGuid());
+        splitAnchor(anchor.getNeuronID(), anchor.getGuid());
     }
 
     public void rerootNeuriteRequested(Anchor anchor) {
-        rerootNeurite(anchor.getGuid());
+        rerootNeurite(anchor.getNeuronID(), anchor.getGuid());
     }
 
     public void splitNeuriteRequested(Anchor anchor) {
-        splitNeurite(anchor.getGuid());
+        splitNeurite(anchor.getNeuronID(), anchor.getGuid());
     }
 
     public void deleteLinkRequested(Anchor anchor) {
-        deleteLink(anchor.getGuid());
+        deleteLink(anchor.getNeuronID(), anchor.getGuid());
     }
 
     public void addEditNoteRequested(Anchor anchor) {
         if (anchor != null) {
-            addEditNote(anchor.getGuid());
+            addEditNote(anchor.getNeuronID(), anchor.getGuid());
         }
     }
 
@@ -154,7 +154,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         if (!editsAllowed()) {
             JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "Workspace is read-only", "Cannot edit annotation", JOptionPane.INFORMATION_MESSAGE);
-            annotationModel.fireAnnotationNotMoved(annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
+            annotationModel.fireAnnotationNotMoved(annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid()));
             return;
         }
         
@@ -169,18 +169,18 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         // Better to use micron location here, because the spatial index uses microns
         TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchor.getLocation(),
-                annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
+                annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid()));
 
         // check distance and other restrictions
-        if (closest != null && canMergeNeurite(anchor.getGuid(), anchorVoxelLocation, closest.getId())) {
+        if (closest != null && canMergeNeurite(anchor.getNeuronID(), anchor.getGuid(), anchorVoxelLocation, closest.getNeuronId(), closest.getId())) {
             // check if user wants to merge (expensive to undo) or move (near something that
             //  is valid to merge with), or nothing (undo drag)
             Object[] options = {"Merge", "Move, don't merge", "Cancel"};
             int ans = JOptionPane.showOptionDialog(
                     ComponentUtil.getLVVMainWindow(),
                     String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
-                            annotationModel.getNeuronFromAnnotationID(anchor.getGuid()).getName(),
-                            annotationModel.getNeuronFromAnnotationID(closest.getId()).getName()),
+                            annotationModel.getNeuronFromNeuronID(anchor.getNeuronID()).getName(),
+                            annotationModel.getNeuronFromNeuronID(closest.getNeuronId()).getName()),
                     "Merge neurites?",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE,
@@ -189,19 +189,19 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     options[2]
             );
             if (ans == JOptionPane.CANCEL_OPTION) {
-                annotationModel.fireAnnotationNotMoved(annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
+                annotationModel.fireAnnotationNotMoved(annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid()));
                 return;
             } else if (ans == JOptionPane.YES_OPTION) {
                 activityLog.logMergedNeurite(getSampleID(), getWorkspaceID(), closest);
-                mergeNeurite(anchor.getGuid(), closest.getId());
+                mergeNeurite(anchor.getNeuronID(), anchor.getGuid(), closest.getNeuronId(), closest.getId());
             } else {
                 // move, don't merge
                 activityLog.logMovedNeurite(getSampleID(), getWorkspaceID(), closest);
-                moveAnnotation(anchor.getGuid(), anchorVoxelLocation);
+                moveAnnotation(anchor.getNeuronID(), anchor.getGuid(), anchorVoxelLocation);
             }
         } else {
             activityLog.logMovedNeurite(getSampleID(), getWorkspaceID(), anchorVoxelLocation);
-            moveAnnotation(anchor.getGuid(), anchorVoxelLocation);
+            moveAnnotation(anchor.getNeuronID(), anchor.getGuid(), anchorVoxelLocation);
         }
     }
 
@@ -209,13 +209,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     @Override
     public void update(Anchor anchor) {
         if (anchor != null) {
-            selectNeuronFromAnnotation(anchor.getGuid());
+            selectNeuron(anchor.getNeuronID());
         }
     }
 
     //-----------------------------IMPLEMENTS PathTraceListener
     @Override
-    public void pathTraced(AnchoredVoxelPath voxelPath) {
+    public void pathTraced(Long neuronId, AnchoredVoxelPath voxelPath) {
         if (voxelPath != null) {
             TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(
                     voxelPath.getSegmentIndex().getAnchor1Guid(),
@@ -228,7 +228,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 tempList.add(vp.getZ());
                 pointList.add(tempList);
             }
-            addAnchoredPath(endpoints, pointList);
+            addAnchoredPath(neuronId, endpoints, pointList);
         }
     }
 
@@ -351,14 +351,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * (many children); in other words, it's an end point, or an annotation with
      * a parent and single child that can be connected up unambiguously
      */
-    public void deleteLink(final Long annotationID) {
+    public void deleteLink(final Long neuronID, final Long annotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
             return;
         }
         
         // verify it's a link and not a root or branch:
-        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
+        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(neuronID, annotationID);
         if (annotation == null) {
             presentError(
                     "No annotation to delete.",
@@ -382,7 +382,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             @Override
             protected void doStuff() throws Exception {
                 activityLog.logDeleteLink(getSampleID(), getWorkspaceID(), annotation);
-                annotationModel.deleteLink(annotationModel.getGeoAnnotationFromID(annotationID));
+                annotationModel.deleteLink(annotationModel.getGeoAnnotationFromID(neuronID, annotationID));
             }
 
             @Override
@@ -402,7 +402,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * delete the annotation with the input ID, and delete all of its
      * descendants
      */
-    public void deleteSubTree(final Long annotationID) {
+    public void deleteSubTree(final Long neuronID, final Long annotationID) {
         if (annotationModel.getCurrentWorkspace() == null || annotationID == null) {
             // dialog?
             return;
@@ -410,9 +410,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         // if more than one point, ask the user if they are sure (we have
         //  no undo right now!)
-        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
+        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(neuronID, annotationID);
         activityLog.logDeleteSubTree(getSampleID(), getWorkspaceID(), annotation);
-        int nAnnotations = annotationModel.getNeuronFromAnnotationID(annotationID).getSubTreeList(annotation).size();
+        int nAnnotations = annotationModel.getNeuronFromNeuronID(neuronID).getSubTreeList(annotation).size();
         if (nAnnotations > 1) {
             int ans = JOptionPane.showConfirmDialog(
                     ComponentUtil.getLVVMainWindow(),
@@ -447,7 +447,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * move the annotation with the input ID to the input location.
      * Activity-logged by caller.
      */
-    public void moveAnnotation(final Long annotationID, final Vec3 micronLocation) {
+    public void moveAnnotation(final Long neuronID, final Long annotationID, final Vec3 micronLocation) {
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
             return;
@@ -456,7 +456,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         SimpleWorker mover = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.moveAnnotation(annotationID, micronLocation);
+                annotationModel.moveAnnotation(neuronID, annotationID, micronLocation);
             }
 
             @Override
@@ -472,17 +472,21 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         mover.execute();
     }
 
-    public boolean canMergeNeurite(Long anchorID, Vec3 anchorLocation, Long annotationID) {
+    public boolean canMergeNeurite(Long neuronID, Long anchorID, Vec3 anchorLocation, Long targetNeuronID, Long targetAnnotationID) {
 
         // can't merge with itself
-        if (anchorID.equals(annotationID)) {
+        if (anchorID.equals(targetAnnotationID)) {
             log.info("Can't merge annotation with itself");
             return false;
         }
 
-        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(anchorID);
-        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(annotationID);
+        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(neuronID, anchorID);
+        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(targetNeuronID, targetAnnotationID);
 
+        if (sourceAnnotation==null || targetAnnotation==null) {
+            return false;
+        }
+        
         // distance: close enough?
         double dx = anchorLocation.getX() - targetAnnotation.getX();
         double dy = anchorLocation.getY() - targetAnnotation.getY();
@@ -509,10 +513,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * @param sourceAnnotationID
      * @param targetAnnotationID
      */
-    public void mergeNeurite(final Long sourceAnnotationID, final Long targetAnnotationID) {
+    public void mergeNeurite(final Long sourceNeuronID, final Long sourceAnnotationID, final Long targetNeuronID, final Long targetAnnotationID) {
 
-        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(sourceAnnotationID);
-        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(targetAnnotationID);
+        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(sourceNeuronID, sourceAnnotationID);
+        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(targetNeuronID, targetAnnotationID);
         // System.out.println("merge requested, " + sourceAnnotationID + " to " + targetAnnotationID);
 
         // same neurite = cycle = NO!
@@ -530,7 +534,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         SimpleWorker merger = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.mergeNeurite(sourceAnnotationID, targetAnnotationID);
+                annotationModel.mergeNeurite(sourceNeuronID, sourceAnnotationID, targetNeuronID, targetAnnotationID);
             }
 
             @Override
@@ -569,7 +573,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         // dialog box with list of neurons, not including current neuron; but
         //  throw in a dummy "create new neuron" option at the top
-        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
+        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
         TmNeuronMetadata sourceNeuron = annotationModel.getNeuronFromNeuronID(annotation.getNeuronId());
 
         ArrayList<TmNeuronMetadata> neuronList = new ArrayList<>(annotationModel.getNeuronList());
@@ -678,14 +682,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * instead; if it's a root with many children, it's an error, since there is
      * no unambiguous location to place the new anchor
      */
-    public void splitAnchor(Long annotationID) {
+    public void splitAnchor(final Long neuronID, Long annotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
             return;
         }
 
         // can't split a root if it has multiple children (ambiguous):
-        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
+        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(neuronID, annotationID);
         if (annotation.isRoot() && annotation.getChildIds().size() != 1) {
             presentError(
                     "Cannot split root annotation with multiple children (ambiguous)!",
@@ -715,7 +719,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         splitter.execute();
     }
 
-    public void rerootNeurite(final Long newRootAnnotationID) {
+    public void rerootNeurite(final Long neuronID, final Long newRootAnnotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
@@ -724,7 +728,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             @Override
             protected void doStuff() throws Exception {
                 activityLog.logRerootNeurite(getSampleID(), getWorkspaceID(), newRootAnnotationID);
-                annotationModel.rerootNeurite(newRootAnnotationID);
+                annotationModel.rerootNeurite(neuronID, newRootAnnotationID);
             }
 
             @Override
@@ -742,13 +746,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         rerooter.execute();
     }
 
-    public void splitNeurite(final Long newRootAnnotationID) {
+    public void splitNeurite(final Long neuronID, final Long newRootAnnotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
 
         // if it's already the root, can't split
-        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(newRootAnnotationID);
+        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(neuronID, newRootAnnotationID);
         if (annotation.isRoot()) {
             presentError(
                     "Cannot split neurite at its root annotation!",
@@ -760,7 +764,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             @Override
             protected void doStuff() throws Exception {
                 activityLog.logSplitNeurite(getSampleID(), getWorkspaceID(), annotation);
-                annotationModel.splitNeurite(annotation.getId());
+                annotationModel.splitNeurite(neuronID, annotation.getId());
             }
 
             @Override
@@ -783,7 +787,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * add an anchored path; not much to check, as the UI needs to check it even
      * before the request gets here
      */
-    public void addAnchoredPath(final TmAnchoredPathEndpoints endpoints, final List<List<Integer>> points) {
+    public void addAnchoredPath(final Long neuronID, final TmAnchoredPathEndpoints endpoints, final List<List<Integer>> points) {
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
             return;
@@ -792,7 +796,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         SimpleWorker adder = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.addAnchoredPath(endpoints, points);
+                annotationModel.addAnchoredPath(neuronID, endpoints, points);
             }
 
             @Override
@@ -813,22 +817,22 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     /**
      * pop a dialog to add, edit, or delete note at the given annotation
      */
-    public void addEditNote(final Long annotationID) {
-        String noteText = getNote(annotationID);
+    public void addEditNote(final Long neuronID, final Long annotationID) {
+        String noteText = getNote(neuronID, annotationID);
 
         AddEditNoteDialog testDialog = new AddEditNoteDialog(
                 (Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
                 noteText,
-                annotationModel.getNeuronFromAnnotationID(annotationID),
+                annotationModel.getNeuronFromNeuronID(neuronID),
                 annotationID);
         testDialog.setVisible(true);
         if (testDialog.isSuccess()) {
             String resultText = testDialog.getOutputText().trim();
             if (resultText.length() > 0) {
-                setNote(annotationID, resultText);
+                setNote(neuronID, annotationID, resultText);
             } else {
                 // empty string means delete note
-                clearNote(annotationID);
+                clearNote(neuronID, annotationID);
             }
         } else {
             // canceled
@@ -836,14 +840,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
-    public void clearNote(final Long annotationID) {
-        TmNeuronMetadata neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
+    public void clearNote(final Long neuronID, final Long annotationID) {
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronID);
         final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
         if (textAnnotation != null) {
             SimpleWorker deleter = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annotationModel.removeNote(textAnnotation);
+                    annotationModel.removeNote(neuronID, textAnnotation);
                 }
 
                 @Override
@@ -867,19 +871,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * string if there is no note; you'll get an exception if the
      * annotation ID doesn't exist
      */
-    public String getNote(Long annotationID) {
-        return annotationModel.getNote(annotationID);
+    public String getNote(final Long neuronID, Long annotationID) {
+        return annotationModel.getNote(neuronID, annotationID);
     }
 
-    public String getNote(Long annotationID, TmNeuronMetadata neuron) {
-        return annotationModel.getNote(annotationID, neuron);
-    }
-
-    public void setNote(final Long annotationID, final String noteText) {
+    public void setNote(final Long neuronID, final Long annotationID, final String noteText) {
         SimpleWorker setter = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.setNote(annotationModel.getGeoAnnotationFromID(annotationID), noteText);
+                annotationModel.setNote(annotationModel.getGeoAnnotationFromID(neuronID, annotationID), noteText);
             }
 
             @Override
@@ -1076,13 +1076,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     /**
-     * given an annotation ID, select (make current) the neuron it belongs to
+     * given an neuronId, select (make current) the neuron it belongs to
      */
-    public void selectNeuronFromAnnotation(Long annotationID) {
-        if (annotationID == null) {
+    public void selectNeuron(Long neuronId) {
+        if (neuronId == null) {
             return;
         }
-        TmNeuronMetadata neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
         annotationModel.selectNeuron(neuron);
     }
 
@@ -1212,9 +1212,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * a given direction; to be used in navigation along the skeleton;
      * see code for exact behavior
      */
-    public Long relativeAnnotation(Long annID, AnnotationNavigationDirection direction) {
-        TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(annID);
-        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(ann.getNeuronId());
+    public Long relativeAnnotation(Long neuronId, Long annID, AnnotationNavigationDirection direction) {
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
+        TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(neuron, annID);
         switch (direction) {
             case ROOTWARD_JUMP:
             case ROOTWARD_STEP:
@@ -1543,7 +1543,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void tracePathToParent(PathTraceToParentRequest request) {
-        TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(request.getAnchorGuid1());
+        TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(request.getNeuronGuid(), request.getAnchorGuid1());
         if (annotation.isRoot()) {
             // no parent, no tracing
             return;
