@@ -799,7 +799,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         final TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
 
         TmNeuronMetadata sourceNeuron = null;
-        final TmWorkspace workspace = getCurrentWorkspace();
         if (!sourceAnnotation.getNeuronId().equals(targetAnnotation.getNeuronId())) {
             sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
         }
@@ -844,9 +843,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // for merge, two linked annotations are affected; fortunately, the
         //  neuron has just been refreshed
         // log.info("Stripping predef notes.");
-        stripPredefNotes(updateTargetNeuron, targetAnnotationID);
-        stripPredefNotes(updateTargetNeuron, sourceAnnotationID);
-
+        final boolean notesChangedSource = stripPredefNotes(updateTargetNeuron, sourceAnnotationID);
+        final boolean notesChangedTarget = stripPredefNotes(updateTargetNeuron, targetAnnotationID);
+        
         // Save the target neuron.
         // log.info("Saving target neuron.");
         neuronManager.removeNeuron(targetNeuron);
@@ -864,17 +863,22 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
         
         final Long prevNeuronId = sourceNeuron.getId();
-
+        
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                // log.info("beginning UI update for mergeNeurite()");
+                log.info("beginning UI update for mergeNeurite()");
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.start();
-                fireNotesUpdated(workspace);
+                if (notesChangedSource) {
+                    fireNotesUpdated(sourceAnnotation);
+                }
+                if (notesChangedTarget) {
+                    fireNotesUpdated(targetAnnotation);
+                }
                 fireAnnotationReparented(sourceAnnotation, prevNeuronId);
                 fireNeuronSelected(updateTargetNeuron);
-                // log.info("ending UI update for mergeNeurite(); elapsed = " + stopwatch);
+                log.info("ending UI update for mergeNeurite(); elapsed = " + stopwatch);
                 activityLog.logEndOfOperation(getWsId(), targetAnnotation);
                 stopwatch.stop();
             }
@@ -897,13 +901,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         neuronManager.saveNeuronData(sourceNeuron);
         neuronManager.saveNeuronData(destNeuron);
 
-        final TmWorkspace workspace = getCurrentWorkspace();
         final Long prevNeuronId = sourceNeuron.getId();
         
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireNotesUpdated(workspace);
                 fireAnnotationReparented(annotation, prevNeuronId);
                 fireNeuronSelected(destNeuron);
                 activityLog.logEndOfOperation(getWsId(), annotation);
@@ -968,10 +970,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         removeAnchoredPath(neuron, link, parent);
 
         // if the link had a note, delete it:
-        boolean notesChanged = false;
         if (neuron.getStructuredTextAnnotationMap().containsKey(link.getId())) {
             neuron.getStructuredTextAnnotationMap().remove(link.getId());
-            notesChanged = true;
         }
 
         // if link had a child, remove link
@@ -1001,18 +1001,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             viewStateListener.pathTraceRequested(child.getId());
         }
 
-        final TmWorkspace workspace = getCurrentWorkspace();
         final TmGeoAnnotation childFinal = child;
-        final boolean notesChangedFinal = notesChanged;
         final TmNeuronMetadata neuronFinal = neuron;
         
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                if (notesChangedFinal) {
-                    fireNotesUpdated(workspace);
-                }
-
                 // need to delete an anchor (which does undraw it); but then
                 //  need to redraw the neurite, because we need the link
                 //  from the reparenting to appear
@@ -1048,7 +1042,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // grab the parent of the root before the root disappears:
         TmGeoAnnotation rootParent = neuron.getParentOf(rootAnnotation);
 
-        boolean notesChanged = false;
+        final List<TmGeoAnnotation> notesChanged = new ArrayList<>();
         final List<TmGeoAnnotation> deleteList = neuron.getSubTreeList(rootAnnotation);
         TmStructuredTextAnnotation note;
         for (TmGeoAnnotation annotation: deleteList) {
@@ -1062,7 +1056,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             if (note != null) {
                 // don't use removeNote(); it triggers updates we don't want yet
                 neuron.getStructuredTextAnnotationMap().remove(annotation.getId());
-                notesChanged = true;
+                notesChanged.add(annotation);
             }
             neuron.getGeoAnnotationMap().remove(annotation.getId());
             if (annotation.isRoot()) {
@@ -1082,15 +1076,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         log.info("Deleted sub tree rooted at {} in neuron {}", rootAnnotation.getId(),  neuron);
         
-        final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuronMetadata neuronFinal = getCurrentNeuron();
-        final boolean notesChangedFinal = notesChanged;
         
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                if (notesChangedFinal) {
-                    fireNotesUpdated(workspace);
+                for (TmGeoAnnotation ann : notesChanged) {
+                    fireNotesUpdated(ann);
                 }
                 fireAnnotationsDeleted(deleteList);
                 fireNeuronSelected(neuronFinal);
@@ -1201,8 +1193,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         // see notes in addChildAnnotation re: the predef notes
         // in this case, the new root is the only annotation we need to check
-        stripPredefNotes(neuron, newRootID);
-
+        final boolean notesChangedFinal = stripPredefNotes(neuron, newRootID);
+        
         neuronManager.saveNeuronData(neuron);
 
         log.info("Rerooted at annotation {} in neuron {}", newRootID,  neuron);
@@ -1210,6 +1202,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                if (notesChangedFinal) {
+                    fireNotesUpdated(newRoot);
+                }
                 activityLog.logEndOfOperation(getWsId(), newRoot);
             }
         });
@@ -1408,7 +1403,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         // update modification date in for the geo annotation whose text annotation
         //  we changed; get it fresh; the object may have changed
-        TmGeoAnnotation updatedAnn = getGeoAnnotationFromID(geoAnnotation.getId());
+        final TmGeoAnnotation updatedAnn = getGeoAnnotationFromID(geoAnnotation.getId());
         updatedAnn.updateModificationDate();
 
         // Send the data back to the server to save.
@@ -1420,7 +1415,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireNotesUpdated(workspace);
+                fireNotesUpdated(updatedAnn);
                 activityLog.logSetNote(workspace.getId(), geoAnnotation.getId(), noteString);
             }
         });
@@ -1432,7 +1427,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         final TmWorkspace workspace = getCurrentWorkspace();
         TmNeuronMetadata neuron = getNeuronFromAnnotationID(textAnnotation.getParentId());
         neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getParentId());
-        TmGeoAnnotation ann = getGeoAnnotationFromID(textAnnotation.getParentId());
+        final TmGeoAnnotation ann = getGeoAnnotationFromID(textAnnotation.getParentId());
         ann.updateModificationDate();
         neuronManager.saveNeuronData(neuron);
 
@@ -1442,7 +1437,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireNotesUpdated(workspace);
+                fireNotesUpdated(ann);
                 activityLog.logRemoveNote(workspace.getId(), textAnnotation.getParentId());
             }
         });
@@ -1502,7 +1497,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * examine the input annotation and remove any predefined notes which
      * are no longer valid
      */
-    private synchronized void stripPredefNotes(TmNeuronMetadata neuron, Long annID) throws Exception {
+    private synchronized boolean stripPredefNotes(TmNeuronMetadata neuron, Long annID) throws Exception {
         String noteText = getNote(annID, neuron);
         boolean modified = false;
         if (noteText.length() > 0) {
@@ -1516,9 +1511,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             }
             if (modified) {
                 setNote(getGeoAnnotationFromID(annID), noteText);
+                return true;
             }
         }
-
+        return false;
     }
 
     /**
@@ -1868,9 +1864,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
 
-    void fireNotesUpdated(TmWorkspace workspace) {
+    void fireNotesUpdated(TmGeoAnnotation ann) {
         if (notesUpdateListener != null) {
-            notesUpdateListener.notesUpdated(workspace);
+            notesUpdateListener.notesUpdated(ann);
         }
     }
     public NeuronSet getNeuronSet() {

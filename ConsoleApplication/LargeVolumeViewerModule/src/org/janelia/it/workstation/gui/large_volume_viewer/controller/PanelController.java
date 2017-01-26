@@ -150,8 +150,8 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
     private class PanelNotesUpdateListener implements NotesUpdateListener {
 
         @Override
-        public void notesUpdated(TmWorkspace workspace) {
-            filteredAnnotationList.loadWorkspace(workspace);
+        public void notesUpdated(TmGeoAnnotation ann) {
+            filteredAnnotationList.notesChanged(ann);
         }
         
     }

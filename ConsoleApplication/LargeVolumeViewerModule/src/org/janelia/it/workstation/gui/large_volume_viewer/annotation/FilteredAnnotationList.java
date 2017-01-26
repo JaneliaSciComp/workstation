@@ -157,6 +157,10 @@ public class FilteredAnnotationList extends JPanel {
         updateData();
     }
 
+    public void notesChanged(TmGeoAnnotation ann) {
+        updateData();
+    }
+
     public void annotationChanged(TmGeoAnnotation ann) {
         updateData();
     }
