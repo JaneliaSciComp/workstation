@@ -336,4 +336,16 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     public long timeout() {
         return serviceTimeout != null && serviceTimeout > 0L ? serviceTimeout : -1;
     }
+
+    /**
+     * Updates the priority of the entire service hierarchy
+     * @param newPriority
+     */
+    public void updateServiceHierarchyPriority(int newPriority) {
+        int currentPriority = this.priority();
+        int priorityDiff = currentPriority - newPriority;
+        this.serviceHierarchyStream().forEach(s -> {
+            s.setPriority(s.priority() + priorityDiff);
+        });
+    }
 }

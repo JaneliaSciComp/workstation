@@ -1,6 +1,7 @@
 package org.janelia.jacs2.dataservice.persistence;
 
 import org.janelia.jacs2.dao.JacsServiceDataDao;
+import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.model.page.PageRequest;
@@ -8,6 +9,7 @@ import org.janelia.jacs2.model.page.PageResult;
 
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -27,6 +29,15 @@ public class JacsServiceDataPersistence extends AbstractDataPersistence<JacsServ
         }
     }
 
+    public PageResult<JacsServiceData> findMatchingServices(JacsServiceData pattern, DataInterval<Date> creationInterval, PageRequest pageRequest) {
+        JacsServiceDataDao jacsServiceDataDao = daoSource.get();
+        try {
+            return jacsServiceDataDao.findMatchingServices(pattern, creationInterval, pageRequest);
+        } finally {
+            daoSource.destroy(jacsServiceDataDao);
+        }
+    }
+
     public List<JacsServiceData> findChildServices(Number serviceId) {
         JacsServiceDataDao jacsServiceDataDao = daoSource.get();
         try {
@@ -36,7 +47,7 @@ public class JacsServiceDataPersistence extends AbstractDataPersistence<JacsServ
         }
     }
 
-    public List<JacsServiceData> findServiceHierarchy(Number serviceId) {
+    public JacsServiceData findServiceHierarchy(Number serviceId) {
         JacsServiceDataDao jacsServiceDataDao = daoSource.get();
         try {
             return jacsServiceDataDao.findServiceHierarchy(serviceId);

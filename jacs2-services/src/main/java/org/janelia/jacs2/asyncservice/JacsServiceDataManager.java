@@ -11,6 +11,7 @@ public interface JacsServiceDataManager {
     JacsServiceData retrieveServiceById(Long instanceId);
     PageResult<JacsServiceData> searchServices(JacsServiceData ref, DataInterval<Date> creationInterval, PageRequest pageRequest);
     JacsServiceData submitServiceAsync(JacsServiceData serviceArgs);
+    JacsServiceData updateService(Long instanceId, JacsServiceData serviceData);
     void setProcessingSlotsCount(int nProcessingSlots);
     ServerStats getServerStats();
 }

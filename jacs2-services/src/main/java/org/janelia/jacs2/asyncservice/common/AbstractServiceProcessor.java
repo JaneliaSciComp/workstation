@@ -56,8 +56,8 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
      * The method submits a service dependency {@code serviceDependency} whose result is required by {@code jacsServiceData} computation.
      *
      * @param jacsServiceData
-     * @param childServiceData
-     * @return
+     * @param serviceDependency
+     * @return a computation for the new submitted service.
      */
     protected ServiceComputation<JacsServiceData> submitServiceDependency(JacsServiceData jacsServiceData, JacsServiceData serviceDependency) {
         serviceDependency.updateParentService(jacsServiceData);
@@ -69,6 +69,8 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         return computationFactory.<JacsServiceData>newComputation()
                 .supply(() -> {
                     long startTime = System.currentTimeMillis();
+                    jacsServiceData.setState(JacsServiceState.WAITING);
+                    jacsServiceDataPersistence.save(jacsServiceData);
                     for (; ; ) {
                         JacsServiceData sd = jacsServiceDataPersistence.findById(jacsServiceData.getId());
                         if (sd.hasCompletedSuccessfully()) {

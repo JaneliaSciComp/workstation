@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -106,7 +107,7 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
         assertThat(s1Children.size(), equalTo(2));
         assertThat(s1Children, everyItem(Matchers.hasProperty("parentServiceId", equalTo(si1.getId()))));
 
-        List<JacsServiceData> s1Hierarchy = testDao.findServiceHierarchy(si1.getId());
+        List<JacsServiceData> s1Hierarchy = testDao.findServiceHierarchy(si1.getId()).serviceHierarchyStream().collect(Collectors.toList());
         assertThat(s1Hierarchy.size(), equalTo(4));
         assertThat(s1Hierarchy.subList(1, s1Hierarchy.size()), everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
         assertThat(s1Hierarchy.get(0), Matchers.hasProperty("rootServiceId", Matchers.nullValue()));
@@ -126,20 +127,20 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
         si1_2.addServiceDependency(si1_2_1);
         testDao.saveServiceHierarchy(si1);
 
-        List<JacsServiceData> s1Hierarchy = testDao.findServiceHierarchy(si1.getId());
+        List<JacsServiceData> s1Hierarchy = testDao.findServiceHierarchy(si1.getId()).serviceHierarchyStream().collect(Collectors.toList());;
         assertThat(s1Hierarchy.size(), equalTo(5));
         assertThat(s1Hierarchy.subList(1, s1Hierarchy.size()), everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
         assertThat(s1Hierarchy.get(0), Matchers.hasProperty("rootServiceId", Matchers.nullValue()));
 
-        List<JacsServiceData> s1_1_Hierarchy = testDao.findServiceHierarchy(si1_1.getId());
+        List<JacsServiceData> s1_1_Hierarchy = testDao.findServiceHierarchy(si1_1.getId()).serviceHierarchyStream().collect(Collectors.toList());;
         assertThat(s1_1_Hierarchy.size(), equalTo(4));
         assertThat(s1_1_Hierarchy, everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
 
-        List<JacsServiceData> s1_2_Hierarchy = testDao.findServiceHierarchy(si1_2.getId());
+        List<JacsServiceData> s1_2_Hierarchy = testDao.findServiceHierarchy(si1_2.getId()).serviceHierarchyStream().collect(Collectors.toList());;
         assertThat(s1_2_Hierarchy.size(), equalTo(2));
         assertThat(s1_2_Hierarchy, everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
 
-        List<JacsServiceData> s1_2_1_Hierarchy = testDao.findServiceHierarchy(si1_2_1.getId());
+        List<JacsServiceData> s1_2_1_Hierarchy = testDao.findServiceHierarchy(si1_2_1.getId()).serviceHierarchyStream().collect(Collectors.toList());;
         assertThat(s1_2_1_Hierarchy.size(), equalTo(1));
         assertThat(s1_2_1_Hierarchy, everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
     }
