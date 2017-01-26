@@ -61,10 +61,13 @@ public class NeuronVboPool
     // Shaders...
     // Be sure to synchronize these constants with the actual shader source uniform layout
     private final ShaderProgram conesShader = new ConesShader();
+    private final ShaderProgram spheresShader = new SpheresShader();
     private final static int VIEW_UNIFORM = 1;
     private final static int PROJECTION_UNIFORM = 2;
     private final static int LIGHTPROBE_UNIFORM = 3;
     private final static int SCREENSIZE_UNIFORM = 4;
+    private final static int RADIUS_OFFSET_UNIFORM = 5;
+    private final static int RADIUS_SCALE_UNIFORM = 6;
     private final Texture2d lightProbeTexture;
     
     public NeuronVboPool() 
@@ -107,6 +110,14 @@ public class NeuronVboPool
         }
         
         // TODO: Second pass: repeat display loop for spheres/nodes
+        spheresShader.load(gl);
+        gl.glUniformMatrix4fv(VIEW_UNIFORM, 1, false, modelViewMatrix.asArray(), 0);
+        gl.glUniformMatrix4fv(PROJECTION_UNIFORM, 1, false, projectionMatrix.asArray(), 0);
+        gl.glUniform2fv(SCREENSIZE_UNIFORM, 1, screenSize, 0);
+        gl.glUniform1i(LIGHTPROBE_UNIFORM, 0);
+        for (NeuronVbo vbo : vbos) {
+            vbo.displayNodes(gl);
+        }
     }
 
     void dispose(GL3 gl) {
@@ -115,10 +126,12 @@ public class NeuronVboPool
         }
         lightProbeTexture.dispose(gl);
         conesShader.dispose(gl);
+        spheresShader.dispose(gl);
     }
 
     void init(GL3 gl) {
         conesShader.init(gl);
+        spheresShader.init(gl);
         lightProbeTexture.init(gl);
         for (NeuronVbo vbo : vbos) {
             vbo.init(gl);
@@ -152,10 +165,11 @@ public class NeuronVboPool
         public ConesShader()
         {
             try {
+                // Cones and spheres share a vertex shader
                 getShaderSteps().add(new ShaderStep(GL3.GL_VERTEX_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "ConesColorVrtx430.glsl"))
+                                        + "SpheresColorVrtx430.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_GEOMETRY_SHADER,
                         getClass().getResourceAsStream(
@@ -183,4 +197,34 @@ public class NeuronVboPool
         }
     }
 
+    private static class SpheresShader extends BasicShaderProgram
+    {
+        public SpheresShader()
+        {
+            try {
+                getShaderSteps().add(new ShaderStep(GL3.GL_VERTEX_SHADER,
+                        getClass().getResourceAsStream(
+                                "/org/janelia/horta/shader/"
+                                        + "SpheresColorVrtx430.glsl"))
+                );
+                getShaderSteps().add(new ShaderStep(GL3.GL_GEOMETRY_SHADER,
+                        getClass().getResourceAsStream(
+                                "/org/janelia/horta/shader/"
+                                        + "SpheresColorGeom430.glsl"))
+                );
+                getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
+                        getClass().getResourceAsStream(
+                                "/org/janelia/horta/shader/"
+                                        + "imposter_fns330.glsl"))
+                );
+                getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
+                        getClass().getResourceAsStream(
+                                "/org/janelia/horta/shader/"
+                                        + "SpheresColorFrag430.glsl"))
+                );
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }        
+        }
+    }
 }

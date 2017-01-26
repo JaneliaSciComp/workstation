@@ -1,5 +1,4 @@
 #version 430
-#extension GL_EXT_geometry_shader : enable
 
 /**
  * Geometry shader for cone imposters.
@@ -159,14 +158,8 @@ void main()
     // if (geomRgbV[0].w <= 0.5) return;
     // if (geomRgbV[1].w <= 0.5) return;
 
-    // On Mac GL_EXT_geometry_shader4 is unrecognized, so must use later geometry shader syntax
-#ifdef GL_EXT_geometry_shader4
-    vec4 posIn0 = gl_PositionIn[0]; // extension syntax
-    vec4 posIn1 = gl_PositionIn[1]; // extension syntax
-#else
     vec4 posIn0 = gl_in[0].gl_Position; // modern geometry shader syntax
     vec4 posIn1 = gl_in[1].gl_Position; // modern geometry shader syntax
-#endif
     vec3 c1 = posIn0.xyz/posIn0.w; // center of smaller cone end
     vec3 c2 = posIn1.xyz/posIn1.w; // center of larger cone end
     float r1 = geomRadius[0];

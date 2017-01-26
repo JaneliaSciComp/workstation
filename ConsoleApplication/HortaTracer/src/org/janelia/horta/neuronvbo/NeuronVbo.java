@@ -87,10 +87,24 @@ public class NeuronVbo
     synchronized void displayEdges(GL3 gl) 
     {
         init(gl);
-        
         if (edgeCount < 1) 
             return;
-        
+        setUpVbo(gl);
+        gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboEdgeIndices);        
+        gl.glDrawElements(GL3.GL_LINES, 2 * edgeCount, GL3.GL_UNSIGNED_INT, 0);
+    }
+    
+    // Make sure the sphere shader is loaded before calling this method
+    synchronized void displayNodes(GL3 gl) 
+    {
+        init(gl);
+        if (vertexCount < 1) 
+            return;
+        setUpVbo(gl);
+        gl.glDrawArrays(GL3.GL_POINTS, 0, vertexCount);
+    }
+    
+    private void setUpVbo(GL3 gl) {
         if (buffersAreDirty)
             refreshBuffers(gl);
         gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vboVertices);
@@ -112,8 +126,6 @@ public class NeuronVbo
                 32, // stride in bytes, 2 * 4 * sizeof(float)
                 16 // offset, in bytes = 4 * sizeof(float)
                 );
-        gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboEdgeIndices);        
-        gl.glDrawElements(GL3.GL_LINES, 2 * edgeCount, GL3.GL_UNSIGNED_INT, 0);
     }
     
     synchronized void dispose(GL3 gl) 
@@ -194,7 +206,7 @@ public class NeuronVbo
                 edgeBuffer,
                 GL3.GL_STATIC_DRAW);
 
-        final boolean debugVboContents = true;
+        final boolean debugVboContents = false;
         if (debugVboContents) {
             log.info("Vertex buffer contents:");
             for (int i = 0; i < vertexBuffer.capacity(); ++i) {
