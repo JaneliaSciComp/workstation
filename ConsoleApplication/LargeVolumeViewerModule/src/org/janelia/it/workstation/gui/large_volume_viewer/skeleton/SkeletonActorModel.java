@@ -26,6 +26,8 @@ import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronModelAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -699,7 +701,13 @@ public class SkeletonActorModel {
         NeuronSet neuronSet = SkeletonController.getInstance().getNeuronSet();
         if (neuronSet != null) {
             
-            // Establish the extents of the current view in world coordinates
+            if (!(neuronSet instanceof NeuronSetAdapter)) {
+                throw new IllegalStateException("Neuron set must be a NeuronSetAdapter");
+            }
+            
+            NeuronSetAdapter neuronSetAdapter = (NeuronSetAdapter)neuronSet;
+            
+            // Establish the extents of the current viewport in world coordinates
             
             Vec3 p1v = pointComputer.worldFromPixel(
                     new Point(viewport.getOriginX(), 
@@ -724,17 +732,54 @@ public class SkeletonActorModel {
                     p2v.getZ()+thickness/2
                     };
             
-            // Find all relevant anchors
-            
+            // Find all relevant anchors which are inside the viewport
+
+            List<TmGeoAnnotation> annotations = new ArrayList<>();
             List<NeuronVertex> vertexList = neuronSet.getAnchorsInMicronArea(p1, p2);
             if (vertexList != null) {
                 for (NeuronVertex vertex : vertexList) {
                     TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
-                    Anchor anchor = skeleton.getAnchorByID(annotation.getId());
-                    if (anchor!=null) {
-                        anchors.add(anchor);
-                    }
+                    annotations.add(annotation);
                 }
+            }
+            
+            // Add all parent and child anchors, so that lines are draw even if the linked anchor is outside the viewport
+
+            Set<Long> allAnnotationIds = new HashSet<>();
+            for (TmGeoAnnotation annotation : annotations) {
+
+                NeuronModelAdapter neuronForAnnotation = 
+                        (NeuronModelAdapter) neuronSetAdapter.getNeuronForAnnotation(annotation);
+                if (neuronForAnnotation==null) continue;
+                TmNeuronMetadata neuron = neuronForAnnotation.getTmNeuronMetadata();
+
+                // Add annotation in viewport
+                allAnnotationIds.add(annotation.getId());
+
+                // Add parent
+                Long parentId = annotation.getParentId();
+                if (parentId!=null && !parentId.equals(neuron.getId())) {
+                    allAnnotationIds.add(parentId);
+                }
+                
+                // Add children
+                for(Long childId : annotation.getChildIds()) {
+                    allAnnotationIds.add(childId);
+                }
+            }
+
+            for (Long annotationId : allAnnotationIds) {
+                Anchor anchor = skeleton.getAnchorByID(annotationId);
+                if (anchor != null) {
+                    anchors.add(anchor);
+                }
+            }
+            
+            if (anchors.size()>annotations.size()) {
+                log.info("Adding more anchors ({}) than are visible in viewport ({})", anchors.size(), annotations.size());
+            }
+            else if (anchors.size()<annotations.size()) {
+                log.warn("Adding less anchors ({}) than are in the index ({})", anchors.size(), annotations.size());
             }
         }
 
