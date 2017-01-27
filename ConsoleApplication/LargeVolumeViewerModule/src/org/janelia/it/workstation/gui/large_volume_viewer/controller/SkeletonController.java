@@ -203,6 +203,16 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
 
     @Override
+    public void clearAnchorsByNeuronID(Long neuronId) {
+        for(Anchor anchor : new ArrayList<>(skeleton.getAnchors())) {
+            if (anchor.getNeuronID().equals(neuronId)) {
+                skeleton.delete(anchor);
+            }
+        }
+        skeletonChanged();
+    }
+    
+    @Override
     public void clearAnchors() {
         skeleton.clear();
         for (SkeletonActor actor: actors) {
@@ -247,6 +257,14 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         }
         refreshMeshDrawUpdateTimer();
         fireComponentUpdate();
+    }
+    
+    
+    @Override
+    public void neuronStyleRemoved(TmNeuronMetadata neuron) {
+        for (SkeletonActor actor: actors) {
+            actor.getModel().removeNeuronStyle(neuron);
+        }
     }
 
     public void annotationSelected( Long guid ) {

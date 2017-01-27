@@ -547,6 +547,24 @@ implements NeuronSet// , LookupListener
         }
 
         @Override
+        public void neuronChanged(TmNeuronMetadata neuron) {
+            log.info("Neuron changed: {}", neuron);
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                log.debug("Removing vertex: {}", neuronVertex);
+                spatialIndex.removeFromIndex(neuronVertex);
+            }
+            innerList.removeFromCache(neuron.getId());
+            neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                log.debug("Re-adding vertex: {}", neuronVertex);
+                spatialIndex.addToIndex(neuronVertex);
+            }
+            getMembershipChangeObservable().setChanged();
+            getMembershipChangeObservable().notifyObservers();
+        }
+        
+        @Override
         public void neuronRenamed(TmNeuronMetadata neuron) {
         }
         

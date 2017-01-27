@@ -769,7 +769,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
 
-        TmNeuronMetadata targetNeuron = getNeuronFromNeuronID(targetNeuronID);
+        final TmNeuronMetadata targetNeuron = getNeuronFromNeuronID(targetNeuronID);
         final TmGeoAnnotation targetAnnotation = targetNeuron.getGeoAnnotationMap().get(targetAnnotationID);
         final TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceNeuronID, sourceAnnotationID);
 
@@ -848,6 +848,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     fireNotesUpdated(targetAnnotation);
                 }
                 fireAnnotationReparented(sourceAnnotation, prevNeuronId);
+                fireNeuronChanged(targetNeuron);
                 activityLog.logEndOfOperation(getWsId(), targetAnnotation);
             }
         });
@@ -1768,6 +1769,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
 
+    void fireNeuronChanged(TmNeuronMetadata neuron) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.neuronChanged(neuron);
+        }
+    }
+    
     void fireNeuronRenamed(TmNeuronMetadata neuron) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronRenamed(neuron);

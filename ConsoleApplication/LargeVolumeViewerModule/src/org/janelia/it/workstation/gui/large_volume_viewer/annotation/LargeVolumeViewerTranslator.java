@@ -5,10 +5,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import Jama.Matrix;
-
-import org.eclipse.jetty.util.log.Log;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -39,6 +37,8 @@ import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import Jama.Matrix;
 
 
 /**
@@ -169,14 +169,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
      * called by the model when it changes the parent of an annotation
      */
     public void reparentAnnotation(TmGeoAnnotation annotation, Long prevNeuronId) {
-        if (!annotation.getNeuronId().equals(prevNeuronId)) {
-            // Neuron changed, this could be smart, but for now let's just reload everything
-            workspaceLoaded(annModel.getCurrentWorkspace());
-        }
-        else {
-            // pretty much a pass-through to the skeleton
-            fireAnchorReparented(annotation);
-        }
+        fireAnchorReparented(annotation);
     }
 
     /**
@@ -287,6 +280,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         fireClearAnchors();
 
         if (workspace != null) {
+            
             // See about things to add to the Tile Format.
             // These must be collected from the workspace, because they
             // require knowledge of the sample ID, rather than file path.
@@ -304,49 +298,48 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                 }
             }
             
-            // (we used to retrieve global color here; replaced by styles)
-
-            // set styles for our neurons; if a neuron isn't in the saved map,
-            //  use a default style
-            Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
-            for (TmNeuronMetadata neuron: annModel.getNeuronList()) {
-            	NeuronStyle style = ModelTranslation.translateNeuronStyle(neuron);
-                updateNeuronStyleMap.put(neuron, style);
+            // check for saved image color model
+            if (workspace.getColorModel() != null  &&  viewStateListener != null) {
+                viewStateListener.loadColorModel(workspace.getColorModel());
             }
+
+            Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
+            List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
+            List<TmAnchoredPath> annList = new ArrayList<>();
+            
+            for (TmNeuronMetadata neuron: annModel.getNeuronList()) {
+
+                // (we used to retrieve global color here; replaced by styles)
+                // set styles for our neurons; if a neuron isn't in the saved map,
+                //  use a default style
+                NeuronStyle style = ModelTranslation.translateNeuronStyle(neuron);
+                updateNeuronStyleMap.put(neuron, style);
+                
+                // note that we must add annotations in parent-child sequence
+                //  so lines get drawn correctly; we must send this as one big
+                //  list so the anchor update routine is run once will all anchors
+                //  present rather than piecemeal (which will cause problems in
+                //  some cases on workspace reloads)
+                for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+                    addedAnchorList.addAll(neuron.getSubTreeList(root));
+                }
+
+                // draw anchored paths, too, after all the anchors are drawn
+                for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
+                    annList.add(path);
+                }
+            }
+
             fireNeuronStylesChangedEvent(updateNeuronStyleMap);
             logger.info("updated {} neuron styles", updateNeuronStyleMap.size());
             // note: we currently don't clean up old styles in the prefs that belong
             //  to deleted neurons; this is the place to do it if/when we put that in
             //  (see FW-3100); you would iterate over the style map and remove
             //  any neurons not in the workspace, then save the map back
-
-
-            // check for saved image color model
-            if (workspace.getColorModel() != null  &&  viewStateListener != null) {
-                viewStateListener.loadColorModel(workspace.getColorModel());
-            }
-
-            // note that we must add annotations in parent-child sequence
-            //  so lines get drawn correctly; we must send this as one big
-            //  list so the anchor update routine is run once will all anchors
-            //  present rather than piecemeal (which will cause problems in
-            //  some cases on workspace reloads)
-            List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
-            for (TmNeuronMetadata neuron: annModel.getNeuronList()) {
-                for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
-                    addedAnchorList.addAll(neuron.getSubTreeList(root));
-                }
-            }
+            
             fireAnchorsAdded(addedAnchorList);
             logger.info("added {} anchors", addedAnchorList.size());
 
-            // draw anchored paths, too, after all the anchors are drawn
-            List<TmAnchoredPath> annList = new ArrayList<>();
-            for (TmNeuronMetadata neuron: annModel.getNeuronList()) {
-                for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
-                    annList.add(path);
-                }
-            }
             addAnchoredPaths(annList);
             logger.info("added {} anchored paths", annList.size());
         }
@@ -354,16 +347,49 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
     @Override
     public void neuronCreated(TmNeuronMetadata neuron) {
-        // TODO: need a more granular update
-        workspaceLoaded(annModel.getCurrentWorkspace());
+        
+        Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
+        List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
+        List<TmAnchoredPath> annList = new ArrayList<>();
+        
+        NeuronStyle style = ModelTranslation.translateNeuronStyle(neuron);
+        updateNeuronStyleMap.put(neuron, style);
+        
+        for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+            addedAnchorList.addAll(neuron.getSubTreeList(root));
+        }
+
+        for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
+            annList.add(path);
+        }
+
+        fireNeuronStylesChangedEvent(updateNeuronStyleMap);
+        logger.info("updated {} neuron styles", updateNeuronStyleMap.size());
+        
+        fireAnchorsAdded(addedAnchorList);
+        logger.info("added {} anchors", addedAnchorList.size());
+
+        addAnchoredPaths(annList);
+        logger.info("added {} anchored paths", annList.size());
     }
 
     @Override
     public void neuronDeleted(TmNeuronMetadata neuron) {
-        // TODO: need a more granular update
-        workspaceLoaded(annModel.getCurrentWorkspace());
+
+        logger.info("neuronDeleted: {}", neuron);
+        fireNeuronStyleRemovedEvent(neuron);
+        
+        fireClearAnchorsByNeuronID(neuron.getId());
+        
+        removeAnchoredPaths(new ArrayList<>(neuron.getAnchoredPathMap().values()));
     }
 
+    @Override
+    public void neuronChanged(TmNeuronMetadata neuron) {
+        neuronDeleted(neuron);
+        neuronCreated(neuron);
+    }
+    
     @Override
     public void neuronRenamed(TmNeuronMetadata neuron) {
         // We don't care
@@ -448,6 +474,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             l.anchorRadiusChanged(anchor);
         }
     }
+    private void fireClearAnchorsByNeuronID(Long neuronID) {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.clearAnchorsByNeuronID(neuronID);
+        }
+    }
     private void fireClearAnchors() {
         for (TmGeoAnnotationAnchorListener l: anchorListeners) {
             l.clearAnchors();
@@ -461,6 +492,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private void fireNeuronStylesChangedEvent(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
         for (NeuronStyleChangeListener l: neuronStyleChangeListeners) {
             l.neuronStylesChanged(neuronStyleMap);
+        }
+    }
+    private void fireNeuronStyleRemovedEvent(TmNeuronMetadata neuron) {
+        for (NeuronStyleChangeListener l: neuronStyleChangeListeners) {
+            l.neuronStyleRemoved(neuron);
         }
     }
     

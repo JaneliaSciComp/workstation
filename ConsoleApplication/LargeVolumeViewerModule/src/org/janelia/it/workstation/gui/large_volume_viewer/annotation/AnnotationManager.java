@@ -476,7 +476,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         // can't merge with itself
         if (anchorID.equals(targetAnnotationID)) {
-            log.info("Can't merge annotation with itself");
+            log.warn("Can't merge annotation with itself");
             return false;
         }
 
@@ -492,14 +492,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         double dy = anchorLocation.getY() - targetAnnotation.getY();
         double dz = anchorLocation.getZ() - targetAnnotation.getZ();
         if (dx * dx + dy * dy + dz * dz > DRAG_MERGE_THRESHOLD_SQUARED) {
-            log.info("Not close enough for merge. Distance: {},{},{}",dx,dy,dz);
+            log.debug("Not close enough for merge. Distance: {},{},{}",dx,dy,dz);
             return false;
         }
 
         // can't merge with same neurite (don't create cycles!)
         if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
                 annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
-            log.info("Can't merge with same neurite");
+            log.debug("Can't merge with same neurite");
             return false;
         }
 

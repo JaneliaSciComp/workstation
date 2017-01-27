@@ -356,6 +356,10 @@ public class SkeletonActorModel {
         forceUpdateAnchors();
     }
 
+    public void removeNeuronStyle(TmNeuronMetadata neuron) {
+        neuronStyles.remove(neuron.getId());
+    }
+
     public synchronized void forceUpdateAnchors() {
         mostRecentAnchorVersion--; // trick to trigger update
         updateAnchors();
@@ -778,7 +782,7 @@ public class SkeletonActorModel {
             if (anchors.size()>annotations.size()) {
                 log.debug("Adding more anchors ({}) than are visible in viewport ({})", anchors.size(), annotations.size());
             }
-            else if (anchors.size()<annotations.size()) {
+            else if (!anchors.isEmpty() && anchors.size()<annotations.size()) {
                 log.warn("Adding less anchors ({}) than are in the index ({}). This probably means the index is stale.", anchors.size(), annotations.size());
             }
         }

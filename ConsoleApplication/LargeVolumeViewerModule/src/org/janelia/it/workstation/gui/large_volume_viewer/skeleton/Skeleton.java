@@ -330,6 +330,7 @@ public class Skeleton {
     
     public void reparentTmGeoAnchor(TmGeoAnnotation annotation) {
         Anchor anchor = anchorsByGuid.get(annotation.getId());
+        
         HashSet<Long> annotationNeighbors = new HashSet<Long>(annotation.getChildIds().size() + 1);
         for (Long childId : annotation.getChildIds()) {
             annotationNeighbors.add(childId);
@@ -339,6 +340,9 @@ public class Skeleton {
             annotationNeighbors.add(annotation.getParentId());
         }
 
+        // Update neuron id, in case the anchor was moved to another neuron
+        anchor.setNeuronID(annotation.getNeuronId());
+        
         updateNeighbors(anchor, annotationNeighbors);
     }
     

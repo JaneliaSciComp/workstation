@@ -13,4 +13,5 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 public interface NeuronStyleChangeListener {
     void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style);
     void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap);
+    void neuronStyleRemoved(TmNeuronMetadata neuron);
 }
