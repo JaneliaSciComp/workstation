@@ -319,6 +319,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
 
     void add(final NeuronModel neuron) {
         if (neurons.add(neuron)) {
+            vertexCount += neuron.getVertexes().size();
             buffersNeedRebuild = true;
             neuron.getColorChangeObservable().addObserver(new Observer() {
                 @Override
@@ -337,6 +338,10 @@ public class NeuronVbo implements Iterable<NeuronModel>
 
     boolean isEmpty() {
         return neurons.isEmpty();
+    }
+
+    int getVertexCount() {
+        return vertexCount;
     }
 
 }

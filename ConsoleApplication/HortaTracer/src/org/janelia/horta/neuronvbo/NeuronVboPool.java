@@ -29,17 +29,15 @@
  */
 package org.janelia.horta.neuronvbo;
 
-import com.google.common.collect.TreeMultiset;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.Deque;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.geometry3d.AbstractCamera;
@@ -63,8 +61,11 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     //  a) static rendering performance (more vbos means more draw calls, means slower rendering)
     //  b) edit update speed (more vbos means fewer neurons per vbo, means faster edit-to-display time)
     private final static int POOL_SIZE = 30;
-    private final List<NeuronVbo> vbos;
-    private int nextVbo = 0;
+    
+    // Maintain vbos in a structure sorted by how much stuff is in each one.
+    private final NavigableMap<Integer, Deque<NeuronVbo>> vbos = new TreeMap<>();
+    // private final List<NeuronVbo> vbos;
+    // private int nextVbo = 0;
 
     // private Set<NeuronModel> dirtyNeurons; // Track incremental updates
     // private Map<NeuronModel, NeuronVbo> neuronVbos;
@@ -89,9 +90,9 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     
     public NeuronVboPool() 
     {
-        this.vbos = new ArrayList<>();
+        // this.vbos = new ArrayList<>();
         for (int i = 0; i < POOL_SIZE; ++i) {
-            vbos.add(new NeuronVbo());
+            insertVbo(new NeuronVbo());
         }
         
         lightProbeTexture = new Texture2d();
@@ -104,6 +105,30 @@ public class NeuronVboPool implements Iterable<NeuronModel>
         }
     }
 
+    private void insertVbo(NeuronVbo vbo) {
+        Integer vboSize = vboSize(vbo);
+        if (! vbos.containsKey(vboSize))
+            vbos.put(vboSize, new ConcurrentLinkedDeque<NeuronVbo>());
+        Collection<NeuronVbo> subList = vbos.get(vboSize);
+        subList.add(vbo);
+    }
+    
+    // Method vboSize is used to determine whether one vbo has more stuff in
+    // it than another
+    private static Integer vboSize(NeuronVbo vbo) {
+        return vbo.getVertexCount();
+    }
+    
+    private NeuronVbo popEmptiestVbo() {
+        Map.Entry<Integer, Deque<NeuronVbo>> entry = vbos.firstEntry();
+        Integer vboSize = entry.getKey();
+        Deque<NeuronVbo> vboDeque = entry.getValue();
+        NeuronVbo vbo = vboDeque.removeFirst();
+        if (vboDeque.isEmpty())
+            vbos.remove(vboSize); // That was the last of its kind
+        return vbo;
+    }
+    
     public float getRadiusOffset() {
         return radiusOffset;
     }
@@ -144,20 +169,20 @@ public class NeuronVboPool implements Iterable<NeuronModel>
         // the radii of the adjacent nodes.
         conesShader.load(gl);
         setUniforms(gl, modelViewMatrix, projectionMatrix, screenSize);
-        for (NeuronVbo vbo : vbos) {
+        for (NeuronVbo vbo : new VboIterable()) {
             vbo.displayEdges(gl);
         }
         
         // TODO: Second pass: repeat display loop for spheres/nodes
         spheresShader.load(gl);
         setUniforms(gl, modelViewMatrix, projectionMatrix, screenSize);
-        for (NeuronVbo vbo : vbos) {
+        for (NeuronVbo vbo : new VboIterable()) {
             vbo.displayNodes(gl);
         }
     }
 
     void dispose(GL3 gl) {
-        for (NeuronVbo vbo : vbos) {
+        for (NeuronVbo vbo : new VboIterable()) {
             vbo.dispose(gl);
         }
         lightProbeTexture.dispose(gl);
@@ -169,7 +194,7 @@ public class NeuronVboPool implements Iterable<NeuronModel>
         conesShader.init(gl);
         spheresShader.init(gl);
         lightProbeTexture.init(gl);
-        for (NeuronVbo vbo : vbos) {
+        for (NeuronVbo vbo : new VboIterable()) {
             vbo.init(gl);
         }
     }
@@ -177,12 +202,22 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     void add(NeuronModel neuron) 
     {
         // To keep the vbos balanced, always insert into the emptiest vbo
-        NeuronVbo emptiestVbo = vbos.get(nextVbo);
-        nextVbo += 1;
-        if (nextVbo >= vbos.size())
-            nextVbo = 0;
-        // log.info("Emptiest vbo ({}) contains {} neurons", emptiestVbo.toString(), emptiestVbo.getNeuronCount());
+        NeuronVbo emptiestVbo = popEmptiestVbo();
+        final boolean doLogStats = false;
+        if (doLogStats) {
+            log.info("Emptiest vbo ({}) contains {} neurons and {} vertices", 
+                    emptiestVbo.toString(), 
+                    emptiestVbo.getNeuronCount(),
+                    emptiestVbo.getVertexCount());
+        }
         emptiestVbo.add(neuron);
+        if (doLogStats) {
+            log.info("Emptiest vbo ({}) now contains {} neurons and {} vertices after insersion", 
+                    emptiestVbo.toString(), 
+                    emptiestVbo.getNeuronCount(),
+                    emptiestVbo.getVertexCount());
+        }
+        insertVbo(emptiestVbo); // Reinsert into its new sorted location
     }
 
     void remove(NeuronModel neuron) {
@@ -190,7 +225,7 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     }
 
     boolean isEmpty() {
-        for (NeuronVbo vbo : vbos)
+        for (NeuronVbo vbo : new VboIterable())
             if (! vbo.isEmpty())
                 return false;
         return true;
@@ -202,7 +237,7 @@ public class NeuronVboPool implements Iterable<NeuronModel>
 
     @Override
     public Iterator<NeuronModel> iterator() {
-        return new NeuronIterator(this);
+        return new NeuronIterator();
     }
     
     private static class ConesShader extends BasicShaderProgram
@@ -273,15 +308,61 @@ public class NeuronVboPool implements Iterable<NeuronModel>
         }
     }
 
-    private static class NeuronIterator implements Iterator<NeuronModel> 
+    private class VboIterable implements Iterable<NeuronVbo>
     {
-        private static final Collection<NeuronModel> EMPTY_LIST = Collections.<NeuronModel>emptyList();
+        @Override
+        public Iterator<NeuronVbo> iterator() {
+            return new VboIterator();
+        }   
+    }
+    
+    private class VboIterator implements Iterator<NeuronVbo>
+    {
+        private final Collection<NeuronVbo> EMPTY_LIST = Collections.<NeuronVbo>emptyList();
+
+        private final Iterator<Integer> sizeIterator;
+        private Iterator<NeuronVbo> vboIterator = EMPTY_LIST.iterator();
+
+        public VboIterator() {
+            sizeIterator = vbos.keySet().iterator();
+            if (sizeIterator.hasNext()) {
+                Integer currentSize = sizeIterator.next();
+                vboIterator = vbos.get(currentSize).iterator();
+            }
+        }
+        
+        private void advanceToNextVbo()
+        {
+            // Advance to next actual neuron
+            while ( sizeIterator.hasNext() && (! vboIterator.hasNext()) ) {
+                Integer currentSize = sizeIterator.next();
+                vboIterator = vbos.get(currentSize).iterator();
+            }
+        }
+        
+        @Override
+        public boolean hasNext() {
+            advanceToNextVbo();
+            return vboIterator.hasNext();
+        }
+
+        @Override
+        public NeuronVbo next() {
+            advanceToNextVbo();
+            return vboIterator.next();
+        }
+        
+    }
+    
+    private class NeuronIterator implements Iterator<NeuronModel> 
+    {
+        private final Collection<NeuronModel> EMPTY_LIST = Collections.<NeuronModel>emptyList();
 
         private final Iterator<NeuronVbo> vboIterator;
         private Iterator<NeuronModel> neuronIterator = EMPTY_LIST.iterator(); // iterator for one vbo
         
-        public NeuronIterator(NeuronVboPool pool) {
-            vboIterator = pool.vbos.iterator();
+        public NeuronIterator() {
+            vboIterator = new VboIterator();
             if (vboIterator.hasNext()) {
                 NeuronVbo currentVbo = vboIterator.next();
                 neuronIterator = currentVbo.iterator();
