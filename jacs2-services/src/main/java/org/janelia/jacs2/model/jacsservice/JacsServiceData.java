@@ -343,7 +343,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
      */
     public void updateServiceHierarchyPriority(int newPriority) {
         int currentPriority = this.priority();
-        int priorityDiff = currentPriority - newPriority;
+        int priorityDiff = newPriority - currentPriority;
         this.serviceHierarchyStream().forEach(s -> {
             s.setPriority(s.priority() + priorityDiff);
         });
