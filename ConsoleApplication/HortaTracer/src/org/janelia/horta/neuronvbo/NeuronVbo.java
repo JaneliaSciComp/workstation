@@ -53,6 +53,10 @@ import org.slf4j.LoggerFactory;
  * Holds one OpenGL vertex buffer object for rendering groups of neuron models.
  * Multiple NeuronVbos may be held in a NeuronVboPool
  * @author brunsc
+ * 
+ * TODO: Respond to everything that ConeActor does
+ * TODO: Perform full clear when workspace changes
+ * TODO: Test all edit operations, from both LVV and Horta
  */
 public class NeuronVbo implements Iterable<NeuronModel>
 {
@@ -200,6 +204,34 @@ public class NeuronVbo implements Iterable<NeuronModel>
         }
     }
     
+    // lightweight update of just the visibility field
+    private void updateNeuronVisibility(NeuronModel neuron) 
+    {
+        int sv = neuron.getVertexes().size();
+        boolean bIsVisible = neuron.isVisible();
+        float visFloat = bIsVisible ? 1.0f : 0.0f;
+
+        // sanity check
+        // Do we already have most of the information for this neuron tabulated?
+        if ( neuronOffsets.containsKey(neuron)
+                && (neuronVertexCounts.get(neuron) == sv) ) 
+        {
+            // Has the visibility actually changed?
+            final int VISIBILITY_OFFSET = 7; // visibility is the 8th attribute value
+            int offset = neuronOffsets.get(neuron) * FLOATS_PER_VERTEX + VISIBILITY_OFFSET;
+            if (vertexBuffer.get(offset) == visFloat)
+                return; // visibility has not changed
+            for (int v = 0; v < sv; ++v) {
+                int index = offset + v * FLOATS_PER_VERTEX;
+                vertexBuffer.put(index, visFloat);
+            }
+            buffersNeedUpdate = true;
+        }
+        else {
+            rebuildBuffers();
+        }
+    }
+    
     private void rebuildBuffers()
     {
         log.info("Rebuilding neuron vbo data");
@@ -210,8 +242,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
         edgeCount = 0;
         float rgb[] = {0,0,0};
         for (NeuronModel neuron : neurons) {
-            if (! neuron.isVisible())
-                continue;
+            // if (! neuron.isVisible()) continue;
             neuronOffsets.put(neuron, vertexCount);
             neuronVertexCounts.put(neuron, neuron.getVertexes().size());
             float visibility = neuron.isVisible() ? 1 : 0;
@@ -322,18 +353,67 @@ public class NeuronVbo implements Iterable<NeuronModel>
         buffersNeedUpdate = false;
     }
 
-    void add(final NeuronModel neuron) {
-        if (neurons.add(neuron)) {
-            vertexCount += neuron.getVertexes().size();
-            buffersNeedRebuild = true;
-            neuron.getColorChangeObservable().addObserver(new Observer() {
-                @Override
-                public void update(Observable o, Object arg)
-                {
-                    updateNeuronColor(neuron);
-                }
-            });
-        }
+    boolean add(final NeuronModel neuron) 
+    {
+        if (neuron == null)
+            return false;
+        if (neurons.contains(neuron))
+            return false;
+        if (! neurons.add(neuron))
+            return false;
+
+        vertexCount += neuron.getVertexes().size();
+        buffersNeedRebuild = true;
+
+        neuron.getColorChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                updateNeuronColor(neuron);
+            }
+        });
+
+        neuron.getVisibilityChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                updateNeuronVisibility(neuron);
+            }
+        });
+
+        // TODO: other per-neuron responses, a la SpheresActor
+
+        /*
+        neuron.getGeometryChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                updateGeometry();
+            }
+        });
+        neuron.getVertexCreatedObservable().addObserver(new NeuronVertexCreationObserver() {
+            @Override
+            public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg)
+            {
+                updateGeometry();
+            }
+        });
+        neuron.getVertexUpdatedObservable().addObserver(new NeuronVertexUpdateObserver() {
+            @Override
+            public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg)
+            {
+                updateGeometry();
+            }
+        });
+        neuron.getVertexesRemovedObservable().addObserver(new NeuronVertexDeletionObserver() {
+            @Override
+            public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
+                updateGeometry();
+            }
+        });
+         */
+            
+        return true;
     }
 
     @Override
