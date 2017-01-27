@@ -2,13 +2,11 @@ package org.janelia.jacs2.asyncservice.common;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.ProcessingLocation;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.slf4j.Logger;
 
-import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,9 +29,9 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
     public AbstractExeBasedServiceProcessor(JacsServiceDispatcher jacsServiceDispatcher,
                                             ServiceComputationFactory computationFactory,
                                             JacsServiceDataPersistence jacsServiceDataPersistence,
-                                            @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                                            @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-                                            @Any Instance<ExternalProcessRunner> serviceRunners,
+                                            String defaultWorkingDir,
+                                            String executablesBaseDir,
+                                            Instance<ExternalProcessRunner> serviceRunners,
                                             Logger logger) {
         super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.serviceRunners = serviceRunners;

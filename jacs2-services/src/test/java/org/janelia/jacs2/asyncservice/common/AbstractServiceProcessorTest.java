@@ -86,7 +86,7 @@ public class AbstractServiceProcessorTest {
 
         @Override
         protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
-            return true;
+            return false;
         }
 
         @Override
@@ -249,4 +249,40 @@ public class AbstractServiceProcessorTest {
         assertThat(testJacsServiceData.getState(), equalTo(JacsServiceState.TIMEOUT));
     }
 
+    @Test
+    public void collectResultSuccessfully() {
+        Consumer successful = mock(Consumer.class);
+        Consumer failure = mock(Consumer.class);
+
+        testSuccessfullProcessor.collectResult(null, testJacsServiceData)
+                .whenComplete((r, e) -> {
+                    if (e == null) {
+                        successful.accept(r);
+                    } else {
+                        failure.accept(e);
+                    }
+                });
+        verify(failure, never()).accept(any());
+        verify(successful).accept(any());
+    }
+
+    @Test
+    public void collectResultTimeout() {
+        Consumer successful = mock(Consumer.class);
+        Consumer failure = mock(Consumer.class);
+
+        testJacsServiceData.setServiceTimeout(100L);
+
+        testFailedProcessor.collectResult(null, testJacsServiceData)
+                .whenComplete((r, e) -> {
+                    if (e == null) {
+                        successful.accept(r);
+                    } else {
+                        failure.accept(e);
+                    }
+                });
+        verify(successful, never()).accept(any());
+        verify(failure).accept(any());
+        assertThat(testJacsServiceData.getState(), equalTo(JacsServiceState.TIMEOUT));
+    }
 }

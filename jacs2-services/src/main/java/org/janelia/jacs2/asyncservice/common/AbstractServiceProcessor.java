@@ -1,13 +1,11 @@
 package org.janelia.jacs2.asyncservice.common;
 
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.slf4j.Logger;
 
-import javax.inject.Inject;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -22,11 +20,10 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
     private final String defaultWorkingDir;
     protected final Logger logger;
 
-    @Inject
     public AbstractServiceProcessor(JacsServiceDispatcher jacsServiceDispatcher,
                                     ServiceComputationFactory computationFactory,
                                     JacsServiceDataPersistence jacsServiceDataPersistence,
-                                    @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                                    String defaultWorkingDir,
                                     Logger logger) {
         this.jacsServiceDispatcher = jacsServiceDispatcher;
         this.computationFactory= computationFactory;
@@ -107,6 +104,7 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
     }
 
     protected ServiceComputation<T> collectResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        long startTime = System.currentTimeMillis();
         for (int i = 0; i < N_RETRIES_FOR_RESULT; i ++) {
             if (isResultAvailable(preProcessingResult, jacsServiceData)) {
                 logger.info("Found result on try # {}", i + 1);
@@ -119,6 +117,13 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                 Thread.sleep(WAIT_BETWEEN_RETRIES_FOR_RESULT);
             } catch (InterruptedException e) {
                 throw new ComputationException(jacsServiceData, e);
+            }
+            long timeSinceStart = System.currentTimeMillis() - startTime;
+            if (jacsServiceData.timeout() > 0 &&  timeSinceStart > jacsServiceData.timeout()) {
+                logger.warn("Service {} timed out after {}ms while collecting the results", jacsServiceData, timeSinceStart);
+                jacsServiceData.setState(JacsServiceState.TIMEOUT);
+                return computationFactory.newFailedComputation(
+                        new ComputationException(jacsServiceData, "Service " + jacsServiceData + " timed out"));
             }
         }
         return computationFactory.newFailedComputation(new ComputationException(jacsServiceData,
