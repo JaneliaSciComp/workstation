@@ -234,7 +234,12 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     }
 
     boolean contains(NeuronModel neuron) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        for (Iterator<NeuronVbo> it = new VboIterator(); it.hasNext();) {
+            NeuronVbo vbo = it.next();
+            if (vbo.contains(neuron))
+                return true;
+        }
+        return false;
     }
 
     @Override

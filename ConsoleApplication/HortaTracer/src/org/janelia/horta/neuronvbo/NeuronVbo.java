@@ -43,9 +43,12 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
 import javax.media.opengl.GL3;
+import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronVertexCreationObserver;
+import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -219,13 +222,13 @@ public class NeuronVbo implements Iterable<NeuronModel>
             // Has the visibility actually changed?
             final int VISIBILITY_OFFSET = 7; // visibility is the 8th attribute value
             int offset = neuronOffsets.get(neuron) * FLOATS_PER_VERTEX + VISIBILITY_OFFSET;
-            if (vertexBuffer.get(offset) == visFloat)
-                return; // visibility has not changed
-            for (int v = 0; v < sv; ++v) {
-                int index = offset + v * FLOATS_PER_VERTEX;
-                vertexBuffer.put(index, visFloat);
+            if (vertexBuffer.get(offset) != visFloat) { // visibility actually changed
+                for (int v = 0; v < sv; ++v) {
+                    int index = offset + v * FLOATS_PER_VERTEX;
+                    vertexBuffer.put(index, visFloat);
+                }
+                buffersNeedUpdate = true;
             }
-            buffersNeedUpdate = true;
         }
         else {
             rebuildBuffers();
@@ -365,6 +368,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
         vertexCount += neuron.getVertexes().size();
         buffersNeedRebuild = true;
 
+        // Surgical update after color change
         neuron.getColorChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
@@ -373,11 +377,20 @@ public class NeuronVbo implements Iterable<NeuronModel>
             }
         });
 
+        // Surgical update after visibility change
         neuron.getVisibilityChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
             {
                 updateNeuronVisibility(neuron);
+            }
+        });
+
+        // Full update after adding a vertex: the total number of vertices changed
+        neuron.getVertexCreatedObservable().addObserver(new NeuronVertexCreationObserver() {
+            @Override
+            public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
+                buffersNeedRebuild = true;
             }
         });
 
@@ -387,13 +400,6 @@ public class NeuronVbo implements Iterable<NeuronModel>
         neuron.getGeometryChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
-            {
-                updateGeometry();
-            }
-        });
-        neuron.getVertexCreatedObservable().addObserver(new NeuronVertexCreationObserver() {
-            @Override
-            public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg)
             {
                 updateGeometry();
             }
@@ -427,6 +433,10 @@ public class NeuronVbo implements Iterable<NeuronModel>
 
     int getVertexCount() {
         return vertexCount;
+    }
+
+    boolean contains(NeuronModel neuron) {
+        return neurons.contains(neuron);
     }
 
 }
