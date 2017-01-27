@@ -57,6 +57,7 @@ public class NeuronVboActor
     {}
     
     public void addNeuron(NeuronModel neuron) {
+        // if (contains(neuron)) return;
         vboPool.add(neuron);
     }
 

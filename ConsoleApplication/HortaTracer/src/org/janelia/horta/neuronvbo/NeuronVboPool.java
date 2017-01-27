@@ -60,6 +60,8 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     // Use pool size to balance:
     //  a) static rendering performance (more vbos means more draw calls, means slower rendering)
     //  b) edit update speed (more vbos means fewer neurons per vbo, means faster edit-to-display time)
+    // Weird: POOL_SIZE=30 animates much faster than POOL_SIZE=5 with about 120 neurons / 300,000 vertices
+    // (smaller blocks for the win...)
     private final static int POOL_SIZE = 30;
     
     // Maintain vbos in a structure sorted by how much stuff is in each one.

@@ -164,7 +164,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
     private void updateNeuronColor(NeuronModel neuron) 
     {
         int sv = neuron.getVertexes().size();
-        float rgb[] = {0,0,0,0};
+        float rgb[] = {0,0,0,1};
         neuron.getColor().getRGBComponents(rgb);
 
         // sanity check
@@ -174,13 +174,18 @@ public class NeuronVbo implements Iterable<NeuronModel>
         {
             // Has the color actually changed?
             final int COLOR_OFFSET = 4; // red color begins at 5th value
-            int offset = neuronOffsets.get(neuron) + COLOR_OFFSET;
+            int offset = neuronOffsets.get(neuron) * FLOATS_PER_VERTEX + COLOR_OFFSET;
             if ( (vertexBuffer.get(offset+0) == rgb[0])
                     && (vertexBuffer.get(offset+1) == rgb[1])
                     && (vertexBuffer.get(offset+2) == rgb[2]) )
             {
                 return; // color has not changed
             }
+            log.info("old neuron color was [{},{},{}]", 
+                    vertexBuffer.get(offset+0), 
+                    vertexBuffer.get(offset+1), 
+                    vertexBuffer.get(offset+2));
+            log.info("new neuron color = [{},{},{}]", rgb[0], rgb[1], rgb[2]);
             for (int v = 0; v < sv; ++v) {
                 int index = offset + v * FLOATS_PER_VERTEX;
                 for (int r = 0; r < 3; ++r) {
