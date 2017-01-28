@@ -125,7 +125,7 @@ public class Skeleton {
 	
 	private final Map<Long, Anchor> anchorsByGuid = new HashMap<>();
 	// TODO - anchor browsing history should maybe move farther back
-	private final HistoryStack<Anchor> anchorHistory = new HistoryStack<>();
+//	private final HistoryStack<Anchor> anchorHistory = new HistoryStack<>();
 
     public void setController(SkeletonController controller) {
         this.controller = controller;
@@ -140,7 +140,7 @@ public class Skeleton {
 		Long guid = anchor.getGuid();
 		if (guid != null)
 			anchorsByGuid.put(guid, anchor);
-		anchorHistory.push(anchor);
+//		anchorHistory.push(anchor);
 		return anchor;
 	}
 
@@ -274,7 +274,7 @@ public class Skeleton {
 		if (guid != null)
 			anchorsByGuid.remove(guid);
 		//
-		anchorHistory.remove(anchor);
+//		anchorHistory.remove(anchor);
 		return true;
 	}
 
@@ -370,7 +370,7 @@ public class Skeleton {
 		}
 		anchors.clear();
 		anchorsByGuid.clear();
-		anchorHistory.clear();
+//		anchorHistory.clear();
 	}
 	
     /** given an anchor, update its neighbors to match the input set of
@@ -423,9 +423,9 @@ public class Skeleton {
         return anchorsByGuid.get(anchorID);
     }
 
-	public HistoryStack<Anchor> getHistory() {
-		return anchorHistory;
-	}
+//	public HistoryStack<Anchor> getHistory() {
+//		return anchorHistory;
+//	}
 
     /**
      * request trace path to parent

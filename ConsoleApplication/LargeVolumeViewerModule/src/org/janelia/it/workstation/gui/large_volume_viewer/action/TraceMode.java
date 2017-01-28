@@ -102,7 +102,7 @@ implements MouseMode, KeyListener
         if (event.getClickCount() == 2) {
             if (hoverAnchor != null) {
                 camera.setFocus(hoverAnchor.getLocation());
-                skeleton.getHistory().push(hoverAnchor);
+//                skeleton.getHistory().push(hoverAnchor);
             } else {
                 // center on slice point
                 camera.setFocus(worldFromPixel(event.getPoint()));
@@ -300,7 +300,7 @@ implements MouseMode, KeyListener
 					}
 					Vec3 newLoc = oldLoc.plus(dLoc);
 					dragAnchor.setLocation(newLoc);
-					skeleton.getHistory().push(dragAnchor);
+//					skeleton.getHistory().push(dragAnchor);
 				}
 			}
 			dragAnchor = null;
@@ -392,7 +392,7 @@ implements MouseMode, KeyListener
                             	Anchor h = getHoverAnchor();
                             	if (h == null)
                             		return;
-                            	skeleton.getHistory().push(h);
+//                            	skeleton.getHistory().push(h);
                                 camera.setFocus(h.getLocation());
                             }
                         }));
