@@ -204,6 +204,11 @@ implements NeuronSet
     }
 
     @Override
+    public boolean isSpatialIndexValid() {
+        return false;
+    }
+    
+    @Override
     public NeuronModel getNeuronForAnchor(NeuronVertex anchor) {
         throw new UnsupportedOperationException("Not supported yet.");
     }

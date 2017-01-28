@@ -22,13 +22,16 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
  * control feeds from external events.
  * @author fosterl
  */
-public class PanelController implements TmGeoAnnotationAnchorListener {
+public class PanelController {
+    
     private PanelGlobalListener globalListener;
     private AnnotationPanel annotationPanel;
     private WorkspaceNeuronList wsNeuronList;
     private WorkspaceInfoPanel wsInfoPanel;
     private LargeVolumeViewerTranslator lvvTranslator;
     private FilteredAnnotationList filteredAnnotationList;
+    private PanelNotesUpdateListener notesListener;
+    private PanelAnnotationListener annotationListener;
     
     public PanelController(
             AnnotationPanel annoPanel,
@@ -47,17 +50,22 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         
         PanelTmGeoSelectListener ptgsl = new PanelTmGeoSelectListener();
         this.filteredAnnotationList.setAnnoSelectListener(ptgsl);
-
-        this.lvvTranslator.addTmGeoAnchorListener(this);
     }
     
     public void registerForEvents(AnnotationModel annotationModel) {
+        
         globalListener = new PanelGlobalListener();
         annotationModel.addGlobalAnnotationListener(globalListener);
-        PanelNotesUpdateListener pnul = new PanelNotesUpdateListener();
-        annotationModel.setNotesUpdateListener(pnul);
+        
+        notesListener = new PanelNotesUpdateListener();
+        annotationModel.setNotesUpdateListener(notesListener);
+
+        annotationListener = new PanelAnnotationListener();
+        annotationModel.addTmGeoAnnotationModListener(annotationListener);
+        
         PanelNeuronSelectedListener pnsl = new PanelNeuronSelectedListener(annotationModel);
         wsNeuronList.setNeuronSelectedListener(pnsl);
+        
     }
     
     public void registerForEvents(AnnotationManager annotationManager) {
@@ -71,8 +79,11 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
     
     public void unregisterForEvents(AnnotationModel annotationModel) {
         annotationModel.removeGlobalAnnotationListener(globalListener);
+        annotationModel.removeTmGeoAnnotationModListener(annotationListener);
         annotationModel.setNotesUpdateListener(null);
-        globalListener = null;
+        this.globalListener = null;
+        this.notesListener = null;
+        this.annotationListener = null;
     }
     
     private class PanelGlobalListener extends GlobalAnnotationAdapter {
@@ -84,6 +95,10 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
             wsInfoPanel.loadWorkspace(workspace);
         }
 
+        @Override
+        public void spatialIndexReady(TmWorkspace workspace) {
+        }
+        
         @Override
         public void neuronCreated(TmNeuronMetadata neuron) {
             TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
@@ -135,6 +150,40 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
             wsNeuronList.neuronTagsChanged(neuronList);
         }
 
+    }
+    
+    private class PanelAnnotationListener implements TmGeoAnnotationModListener {
+
+        @Override
+        public void annotationAdded(TmGeoAnnotation annotation) {
+            filteredAnnotationList.annotationChanged(annotation);
+        }
+
+        @Override
+        public void annotationsDeleted(List<TmGeoAnnotation> annotations) {   
+            filteredAnnotationList.annotationsChanged(annotations);         
+        }
+
+        @Override
+        public void annotationReparented(TmGeoAnnotation annotation, Long prevNeuronId) {
+            filteredAnnotationList.annotationChanged(annotation);
+        }
+
+        @Override
+        public void annotationNotMoved(TmGeoAnnotation annotation) {
+            filteredAnnotationList.annotationChanged(annotation);
+        }
+
+        @Override
+        public void annotationMoved(TmGeoAnnotation annotation) {
+            filteredAnnotationList.annotationChanged(annotation);   
+        }
+
+        @Override
+        public void annotationRadiusUpdated(TmGeoAnnotation annotation) {
+            filteredAnnotationList.annotationChanged(annotation);
+               
+        }    
     }
     
     private class PanelPanListener implements CameraPanToListener {
@@ -192,53 +241,5 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
             mgr.addEditNote(annotation.getNeuronId(), annotation.getId());
         }
         
-    }
-
-    // TmGeoAnnotationAnchorListener methods
-    // filtered annotation list, neurite tree list will need to listen
-    
-    @Override
-    public void anchorAdded(TmGeoAnnotation annotation) {
-        filteredAnnotationList.annotationChanged(annotation);
-    }
-
-    @Override
-    public void anchorsAdded(List<TmGeoAnnotation> annotationList) {
-        filteredAnnotationList.annotationsChanged(annotationList);
-    }
-
-    @Override
-    public void anchorDeleted(TmGeoAnnotation annotation) {
-        filteredAnnotationList.annotationChanged(annotation);
-    }
-
-    @Override
-    public void anchorReparented(TmGeoAnnotation annotation) {
-        filteredAnnotationList.annotationChanged(annotation);
-    }
-
-    @Override
-    public void anchorMovedBack(TmGeoAnnotation annotation) {
-        filteredAnnotationList.annotationChanged(annotation);
-    }
-
-    @Override
-    public void anchorMoved(TmGeoAnnotation anchor) {
-        filteredAnnotationList.annotationChanged(anchor);
-    }
-
-    @Override
-    public void anchorRadiusChanged(TmGeoAnnotation anchor) {
-        filteredAnnotationList.annotationChanged(anchor);
-    }
-
-    @Override
-    public void clearAnchorsByNeuronID(Long neuronId) {
-        filteredAnnotationList.annotationsChanged(new ArrayList<TmGeoAnnotation>());
-    }
-    
-    @Override
-    public void clearAnchors() {
-        filteredAnnotationList.annotationsChanged(new ArrayList<TmGeoAnnotation>());
     }
 }

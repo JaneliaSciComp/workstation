@@ -82,7 +82,17 @@ public class FilteredAnnotationList extends JPanel {
     }
 
     public void setSkipUpdate(boolean skipUpdate) {
-        this.skipUpdate=skipUpdate;
+        this.skipUpdate = skipUpdate;
+    }
+    
+    public void beganTransaction() {
+        this.skipUpdate = true;
+        updateData();
+    }
+    
+    public void endTransaction() {
+        this.skipUpdate = false;
+        updateData();
     }
 
     private FilteredAnnotationList(final AnnotationManager annotationMgr, final AnnotationModel annotationModel, int width) {

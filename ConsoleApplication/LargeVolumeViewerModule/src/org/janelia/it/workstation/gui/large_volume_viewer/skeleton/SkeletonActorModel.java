@@ -674,19 +674,14 @@ public class SkeletonActorModel {
             return neuronStyles.get(anchor.getNeuronID()).isVisible();
         }
     }
-
-    protected Anchor findAnchor(Long annotationID) {
-        Anchor foundAnchor = null;
-        for (Anchor testAnchor : getAnchorsSafe()) {
-            if (testAnchor.getGuid().equals(annotationID)) {
-                foundAnchor = testAnchor;
-                break;
-            }
+    
+    private Collection<Anchor> getAllAnchors() {
+        Set<Anchor> anchors = skeleton.getAnchors();
+        synchronized (anchors) {
+            return new ArrayList<>(anchors);
         }
-        return foundAnchor;
     }
-
-    /** Avoid concurrent modification exceptions, during import. */
+    
     private Collection<Anchor> getAnchorsSafe() {
         if (skeleton == null || skeleton.getAnchors() == null) {
             return Collections.emptyList();
@@ -695,10 +690,7 @@ public class SkeletonActorModel {
         boolean anchorsInViewport = ApplicationPanel.isAnchorsInViewport();
         if (viewport==null || pointComputer==null || !anchorsInViewport) {
             // Fallback on old inefficient behavior which always renders all anchors
-            Set<Anchor> anchors = skeleton.getAnchors();
-            synchronized (anchors) {
-                return new ArrayList<>(anchors);
-            }
+            return getAllAnchors();
         }
         
         List<Anchor> anchors = new ArrayList<>();
@@ -709,37 +701,41 @@ public class SkeletonActorModel {
                 throw new IllegalStateException("Neuron set must be a NeuronSetAdapter");
             }
             
+            if (!neuronSet.isSpatialIndexValid()) {
+                log.trace("Spatial index is not ready yet");
+                return Collections.emptyList();
+            }
+            
             NeuronSetAdapter neuronSetAdapter = (NeuronSetAdapter)neuronSet;
             
             // Establish the extents of the current viewport in world coordinates
             
-            Vec3 p1v = pointComputer.worldFromPixel(
-                    new Point(viewport.getOriginX(), 
-                              viewport.getOriginY()));
-            
-            Vec3 p2v = pointComputer.worldFromPixel(
-                    new Point(viewport.getOriginX()+viewport.getWidth(), 
-                              viewport.getOriginY()+viewport.getHeight()));
-
+            Point p1 = new Point(viewport.getOriginX(), 
+                                 viewport.getOriginY());
+            Point p2 = new Point(viewport.getOriginX()+viewport.getWidth(), 
+                                 viewport.getOriginY()+viewport.getHeight());
+                        
+            Vec3 wp1v = pointComputer.worldFromPixel(p1);
+            Vec3 wp2v = pointComputer.worldFromPixel(p2);
             double thickness = zoomedZThicknessInPixels/getCamera().getPixelsPerSceneUnit();
             
             // Add in Z thickness and translate into array format
             
-            double[] p1 = { 
-                    p1v.getX(),
-                    p1v.getY(),
-                    p1v.getZ()-thickness/2
+            double[] wp1 = { 
+                    wp1v.getX(),
+                    wp1v.getY(),
+                    wp1v.getZ()-thickness/2
                     };
-            double[] p2 = { 
-                    p2v.getX(),
-                    p2v.getY(),
-                    p2v.getZ()+thickness/2
+            double[] wp2 = { 
+                    wp2v.getX(),
+                    wp2v.getY(),
+                    wp2v.getZ()+thickness/2
                     };
             
             // Find all relevant anchors which are inside the viewport
 
             List<TmGeoAnnotation> annotations = new ArrayList<>();
-            List<NeuronVertex> vertexList = neuronSet.getAnchorsInMicronArea(p1, p2);
+            List<NeuronVertex> vertexList = neuronSet.getAnchorsInMicronArea(wp1, wp2);
             if (vertexList != null) {
                 for (NeuronVertex vertex : vertexList) {
                     TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
@@ -749,33 +745,15 @@ public class SkeletonActorModel {
             
             // Add all parent and child anchors, so that lines are draw even if the linked anchor is outside the viewport
 
-            Set<Long> allAnnotationIds = new HashSet<>();
-            for (TmGeoAnnotation annotation : annotations) {
-
-                NeuronModelAdapter neuronForAnnotation = 
-                        (NeuronModelAdapter) neuronSetAdapter.getNeuronForAnnotation(annotation);
-                if (neuronForAnnotation==null) continue;
-                TmNeuronMetadata neuron = neuronForAnnotation.getTmNeuronMetadata();
-
-                // Add annotation in viewport
-                allAnnotationIds.add(annotation.getId());
-
-                // Add parent
-                Long parentId = annotation.getParentId();
-                if (parentId!=null && !parentId.equals(neuron.getId())) {
-                    allAnnotationIds.add(parentId);
-                }
-                
-                // Add children
-                for(Long childId : annotation.getChildIds()) {
-                    allAnnotationIds.add(childId);
-                }
-            }
-
-            for (Long annotationId : allAnnotationIds) {
+            for (Long annotationId : getRelevantAnchorIds(neuronSetAdapter, annotations)) {
                 Anchor anchor = skeleton.getAnchorByID(annotationId);
                 if (anchor != null) {
                     anchors.add(anchor);
+                }
+                else {
+                    // This is probably ok: it just means that the spatial index returned some anchors which are no longer in the 
+                    // skeleton. The spatial index should get updated separately, and then this will stop. 
+                    log.trace("Cannot find anchor for annotation: "+annotationId);
                 }
             }
             
@@ -787,8 +765,39 @@ public class SkeletonActorModel {
             }
         }
 
-        log.debug("Found {} anchors in viewport",anchors.size());
+        log.info("Found {} anchors in viewport",anchors.size());
         return anchors;
+    }
+    
+    private Set<Long> getRelevantAnchorIds(NeuronSetAdapter neuronSetAdapter, List<TmGeoAnnotation> annotations) {
+
+        Set<Long> anchorIds = new HashSet<>();
+        for (TmGeoAnnotation annotation : annotations) {
+
+            NeuronModelAdapter neuronForAnnotation = 
+                    (NeuronModelAdapter) neuronSetAdapter.getNeuronForAnnotation(annotation);
+            if (neuronForAnnotation==null) {
+                log.warn("Cannot get neuron model for annotation: "+annotation.getId());
+                continue;
+            }
+            TmNeuronMetadata neuron = neuronForAnnotation.getTmNeuronMetadata();
+
+            // Add annotation in viewport
+            anchorIds.add(annotation.getId());
+
+            // Add parent
+            Long parentId = annotation.getParentId();
+            if (parentId!=null && !parentId.equals(neuron.getId())) {
+                anchorIds.add(parentId);
+            }
+            
+            // Add children
+            for(Long childId : annotation.getChildIds()) {
+                anchorIds.add(childId);
+            }
+        }
+        
+        return anchorIds;
     }
     
     public synchronized void setHoverAnchor(Anchor anchor) {
@@ -808,7 +817,7 @@ public class SkeletonActorModel {
         if (getSkeleton() == null) {
             return false;
         }
-        Anchor foundAnchor = findAnchor(annotationID);
+        Anchor foundAnchor = annotationID == null ? null : skeleton.getAnchorByID(annotationID);
 
         // it's OK if we set a null (it's a deselect)
         return updateParent(foundAnchor);

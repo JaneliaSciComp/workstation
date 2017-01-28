@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
@@ -33,6 +34,9 @@ public class NeuronVertexSpatialIndex {
     
     private Jama.Matrix voxToMicronMatrix;
     private KDTree<NeuronVertex> index; // Cannot be final because it doesn't have a clear method
+
+    // Is the index currently in a valid, usable state?
+    private AtomicBoolean valid = new AtomicBoolean(false);
     
     public NeuronVertexSpatialIndex() {
         log.trace("Creating spatial index");
@@ -235,16 +239,22 @@ public class NeuronVertexSpatialIndex {
     private CacheableKey cacheableKey(double[] key) {
         return new CacheableKey(key);
     }
-
-    public void rebuildIndex(Collection<NeuronModel> neuronList) {
+    
+    public boolean isValid() {
+        return valid.get();
+    }
+    
+    public synchronized void rebuildIndex(Collection<NeuronModel> neuronList) {
         log.info("Rebuilding spatial index");
+        valid.set(false);
         clear();
         for (NeuronModel neuronModel : neuronList) {
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 addToIndex(neuronVertex);
             }
         }
-        log.info("Added {} vertices to spatial index with {} cached keys", index.size(), cachedKeys.size());
+        valid.set(true);
+        log.info("Added {} vertices to spatial index", index.size());
     }
     
     public void clear() {

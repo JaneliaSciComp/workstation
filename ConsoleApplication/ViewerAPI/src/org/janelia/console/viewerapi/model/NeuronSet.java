@@ -48,6 +48,7 @@ public interface NeuronSet extends Collection<NeuronModel>
     String getName();
     NeuronModel createNeuron(String initialNeuronName);
 
+    public boolean isSpatialIndexValid();
     List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2);
     List<NeuronVertex> getAnchorsInVoxelArea(double[] p1, double[] p2);
     List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n);

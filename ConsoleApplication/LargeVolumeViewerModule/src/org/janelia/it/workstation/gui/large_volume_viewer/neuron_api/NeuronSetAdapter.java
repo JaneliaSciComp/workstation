@@ -60,6 +60,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationM
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -173,6 +175,11 @@ implements NeuronSet// , LookupListener
     @Override 
     public NeuronVertex getAnchorClosestToVoxelLocation(double[] micronXYZ) {
         return spatialIndex.getAnchorClosestToVoxelLocation(micronXYZ);
+    }
+    
+    @Override 
+    public boolean isSpatialIndexValid() {
+        return spatialIndex.isValid();
     }
 
     public NeuronModel getNeuronForAnnotation(TmGeoAnnotation annotation) {
@@ -488,7 +495,7 @@ implements NeuronSet// , LookupListener
     private class MyGlobalAnnotationListener implements GlobalAnnotationListener {
         
         @Override
-        public void workspaceLoaded(TmWorkspace workspace)
+        public void workspaceLoaded(final TmWorkspace workspace)
         {
             log.info("Workspace loaded");
             setWorkspace(workspace);
@@ -497,6 +504,11 @@ implements NeuronSet// , LookupListener
                 spatialIndex.clear();
             }
             else {
+                final ProgressHandle progress = ProgressHandleFactory.createHandle("Building spatial index");
+                progress.setInitialDelay(0);
+                progress.start();
+                progress.switchToIndeterminate();
+                
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
@@ -505,20 +517,28 @@ implements NeuronSet// , LookupListener
 
                     @Override
                     protected void hadSuccess() {
-                        // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
-                        getMembershipChangeObservable().setChanged();
-                        getNameChangeObservable().setChanged();
-                        getNameChangeObservable().notifyObservers();
-                        getMembershipChangeObservable().notifyObservers();
+                        progress.finish();
+                        // Let LVV know that index is done  
+                        annotationModel.fireSpatialIndexReady(workspace);
                     }
 
                     @Override
                     protected void hadError(Throwable error) {
+                        progress.finish();
                         ConsoleApp.handleException(error);
                     }
                 };
                 worker.execute();
             }            
+        }
+
+        @Override
+        public void spatialIndexReady(TmWorkspace workspace) {
+            // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
+            getMembershipChangeObservable().setChanged();
+            getNameChangeObservable().setChanged();
+            getNameChangeObservable().notifyObservers();
+            getMembershipChangeObservable().notifyObservers();
         }
 
         @Override
@@ -550,11 +570,12 @@ implements NeuronSet// , LookupListener
         public void neuronChanged(TmNeuronMetadata neuron) {
             log.info("Neuron changed: {}", neuron);
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
-            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
-                log.debug("Removing vertex: {}", neuronVertex);
+            for (NeuronVertex neuronVertex : neuronModel.getCachedVertexes()) {
+                log.debug("Removing cached vertex: {}", neuronVertex);
                 spatialIndex.removeFromIndex(neuronVertex);
             }
-            innerList.removeFromCache(neuron.getId());
+            neuronModel.clearCachedVertices();
+            innerList.removeFromCache(neuron.getId()); // Probably not needed but let's be sure the old stuff is cleared.
             neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 log.debug("Re-adding vertex: {}", neuronVertex);
@@ -643,16 +664,15 @@ implements NeuronSet// , LookupListener
         // private AnnotationModel annotationModel;
         private final Logger logger = LoggerFactory.getLogger(this.getClass());
         
-        NeuronModelAdapter neuronModelForTmNeuron(TmNeuronMetadata tmNeuron) 
-        {
-            if (tmNeuron == null)
-                return null;
+        NeuronModelAdapter neuronModelForTmNeuron(TmNeuronMetadata tmNeuron) {
+            if (tmNeuron == null) return null;
             Long guid = tmNeuron.getId();
-            if (! cachedNeurons.containsKey(guid)) {
-                // NeuronStyle neuronStyle = neuronStyleMap.get(guid);
-                cachedNeurons.put(guid, new NeuronModelAdapter(tmNeuron, neuronSet));
+            NeuronModelAdapter neuronModelAdapter = cachedNeurons.get(guid);
+            if (neuronModelAdapter == null) {
+                neuronModelAdapter = new NeuronModelAdapter(tmNeuron, neuronSet);
+                cachedNeurons.put(guid, neuronModelAdapter);
             }
-            return cachedNeurons.get(guid);
+            return neuronModelAdapter;
         }
         
         void removeFromCache(Long guid) {

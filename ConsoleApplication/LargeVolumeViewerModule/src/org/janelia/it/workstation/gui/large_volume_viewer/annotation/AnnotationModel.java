@@ -232,6 +232,23 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
 
+    /**
+     * In order to avoid doing things twice (or more) unnecessarily, we stop any piecemeal UI updates from being made 
+     * and wait until the transaction to end before doing everything in bulk.
+     */
+    private void beganTransaction() {
+        SkeletonController.getInstance().beganTransaction();
+        FilteredAnnotationList.getInstance().beganTransaction();
+    }
+
+    /**
+     * Commit everything that changed into UI changes.
+     */
+    private void endTransaction() {
+        SkeletonController.getInstance().endTransaction();
+        FilteredAnnotationList.getInstance().endTransaction();
+    }
+    
     public synchronized void clear() {
         log.info("Clearing annotation model");
         currentWorkspace = null;
@@ -480,8 +497,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     public synchronized void deleteNeuron(final TmNeuronMetadata deletedNeuron) throws Exception {
 
-        final boolean hadAnnotations = deletedNeuron.getGeoAnnotationMap().size() > 0;
-
         // delete
         neuronManager.deleteNeuron(currentWorkspace, deletedNeuron);
         log.info("Neuron was deleted: "+deletedNeuron);
@@ -489,51 +504,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // updates
         final TmWorkspace workspace = getCurrentWorkspace();
 
-        final ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<>(deletedNeuron.getGeoAnnotationMap().values());
-        final ArrayList<TmAnchoredPath> tempPathList = new ArrayList<>(deletedNeuron.getAnchoredPathMap().values());
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-
-                final SkeletonController skeletonController = SkeletonController.getInstance();
-                skeletonController.setSkipSkeletonChange(true);
-
-                final FilteredAnnotationList filteredAnnotationList = FilteredAnnotationList.getInstance();
-                filteredAnnotationList.setSkipUpdate(true);
-
+                beganTransaction();
                 fireNeuronSelected(null);
-
-                SimpleWorker worker = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        // This takes a long time, and doesn't need to be run on the EDT because updates are disabled
-                        if (hadAnnotations) {
-                            fireAnnotationsDeleted(tempAnnotationList);
-                            fireAnchoredPathsRemoved(tempPathList);
-                        }
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        fireNeuronDeleted(deletedNeuron);
-
-                        skeletonController.setSkipSkeletonChange(false);
-                        skeletonController.skeletonChanged();
-
-                        filteredAnnotationList.setSkipUpdate(false);
-                        if (hadAnnotations) {
-                            filteredAnnotationList.updateData();
-                        }
-                        activityLog.logDeleteNeuron(workspace.getId(), deletedNeuron.getId());
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
-                    }
-                };
-                worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Deleting neuron...", "", false));
-                worker.execute();
+                fireNeuronDeleted(deletedNeuron);
+                endTransaction();
+                activityLog.logDeleteNeuron(workspace.getId(), deletedNeuron.getId());
             }
         });
     }
@@ -764,7 +742,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * merge the neurite that has source Annotation into the neurite containing
      * targetAnnotation
      */
-    public synchronized void mergeNeurite(final Long sourceNeuronID, final Long sourceAnnotationID, final Long targetNeuronID, final Long targetAnnotationID) throws Exception {
+    public synchronized void mergeNeurite(
+            final Long sourceNeuronID, final Long sourceAnnotationID, 
+            final Long targetNeuronID, final Long targetAnnotationID) throws Exception {
 
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
@@ -773,13 +753,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         final TmGeoAnnotation targetAnnotation = targetNeuron.getGeoAnnotationMap().get(targetAnnotationID);
         final TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceNeuronID, sourceAnnotationID);
 
-        TmNeuronMetadata sourceNeuron = null;
-        if (!sourceAnnotation.getNeuronId().equals(targetAnnotation.getNeuronId())) {
-            sourceNeuron = getNeuronFromNeuronID(sourceNeuronID);
-        }
-        else {
-            sourceNeuron = targetNeuron;
-        }
+        final TmNeuronMetadata sourceNeuron = 
+                !sourceNeuronID.equals(targetNeuronID) ? 
+                getNeuronFromNeuronID(sourceNeuronID) :  targetNeuron;
 
         // reroot source neurite to source ann
         if (!sourceAnnotation.isRoot()) {
@@ -821,34 +797,40 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         final boolean notesChangedTarget = stripPredefNotes(targetNeuron, targetAnnotationID);
         
         // Save the target neuron.
-        // log.info("Saving target neuron.");
-        neuronManager.removeNeuron(targetNeuron);
         neuronManager.saveNeuronData(targetNeuron);
-        neuronManager.addNeuron(targetNeuron);
-        // Save the source neuron, empty or not.
-        if (! sourceNeuron.getId().equals(targetNeuron.getId())) {
-            // log.info("Saving source neuron.");
+        
+        // If source neuron is now empty, delete it, otherwise save it.
+        final boolean sourceDeleted = sourceNeuron.getGeoAnnotationMap().isEmpty();
+        if (sourceDeleted) {
+            neuronManager.deleteNeuron(currentWorkspace, sourceNeuron);
+            log.info("Source neuron was deleted: "+sourceNeuron);
+        }
+        else {
             neuronManager.saveNeuronData(sourceNeuron);
         }
 
-        // if source neuron is now empty, delete it
-        if (sourceNeuron.getGeoAnnotationMap().size() == 0) {
-            deleteNeuron(sourceNeuron);
-        }
-        
-        final Long prevNeuronId = sourceNeuron.getId();
-        
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+
+                beganTransaction();
+
                 if (notesChangedSource) {
                     fireNotesUpdated(sourceAnnotation);
                 }
                 if (notesChangedTarget) {
                     fireNotesUpdated(targetAnnotation);
                 }
-                fireAnnotationReparented(sourceAnnotation, prevNeuronId);
+                if (sourceDeleted) {
+                    fireNeuronDeleted(sourceNeuron);
+                }
+                else {
+                    fireNeuronChanged(sourceNeuron);
+                }
                 fireNeuronChanged(targetNeuron);
+                
+                endTransaction();
+                
                 activityLog.logEndOfOperation(getWsId(), targetAnnotation);
             }
         });
@@ -856,8 +838,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // log.info("ending mergeNeurite(); elapsed = " + stopwatch);
         stopwatch.stop();
     }
-
-
+    
     /**
      * move the neurite containing the input annotation to the given neuron
      */
@@ -871,12 +852,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         neuronManager.saveNeuronData(destNeuron);
 
         final Long prevNeuronId = sourceNeuron.getId();
-        
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                beganTransaction();
                 fireAnnotationReparented(annotation, prevNeuronId);
                 fireNeuronSelected(destNeuron);
+                endTransaction();
                 activityLog.logEndOfOperation(getWsId(), annotation);
             }
         });
@@ -907,7 +890,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
 
         // check that we can find the neuron
-        TmNeuronMetadata neuron = getNeuronFromNeuronID(link.getNeuronId());
+        final TmNeuronMetadata neuron = getNeuronFromNeuronID(link.getNeuronId());
         if (neuron == null) {
             // should this be an error?  it's a sign that the annotation has already
             //  been deleted, or something else that shouldn't happen
@@ -970,19 +953,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             viewStateListener.pathTraceRequested(child.getNeuronId(), child.getId());
         }
 
-        final TmGeoAnnotation childFinal = child;
-        final TmNeuronMetadata neuronFinal = neuron;
-        
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                // need to delete an anchor (which does undraw it); but then
-                //  need to redraw the neurite, because we need the link
-                //  from the reparenting to appear
-                fireAnnotationsDeleted(Arrays.asList(link));
-                if (childFinal != null) {
-                    fireAnnotationReparented(childFinal, neuronFinal.getId());
-                }
+                fireNeuronChanged(neuron);
+
                 activityLog.logEndOfOperation(getWsId(), link);
 
             }
@@ -1001,7 +976,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             return;
         }
 
-        TmNeuronMetadata neuron = getNeuronFromNeuronID(rootAnnotation.getNeuronId());
+        final TmNeuronMetadata neuron = getNeuronFromNeuronID(rootAnnotation.getNeuronId());
         if (neuron == null) {
             // should this be an error?  it's a sign that the annotation has already
             //  been deleted, or something else that shouldn't happen
@@ -1045,16 +1020,16 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         log.info("Deleted sub tree rooted at {} in neuron {}", rootAnnotation.getId(),  neuron);
         
-        final TmNeuronMetadata neuronFinal = getCurrentNeuron();
-        
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                beganTransaction();
                 for (TmGeoAnnotation ann : notesChanged) {
                     fireNotesUpdated(ann);
                 }
-                fireAnnotationsDeleted(deleteList);
-                fireNeuronSelected(neuronFinal);
+                fireNeuronChanged(neuron);
+                fireNeuronSelected(neuron);
+                endTransaction();
                 activityLog.logEndOfOperation(getWsId(), rootAnnotation);
             }
         });
@@ -1136,12 +1111,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
 
         final TmGeoAnnotation updateAnnotation = neuron.getGeoAnnotationMap().get(annotation1.getId());
-        
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                beganTransaction();
                 fireAnnotationAdded(newAnnotation);
                 fireAnnotationReparented(updateAnnotation, neuron.getId());
+                endTransaction();
                 activityLog.logEndOfOperation(getWsId(), annotation);
             }
         });
@@ -1201,8 +1178,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                beganTransaction();
                 fireAnnotationReparented(neuron.getGeoAnnotationMap().get(newRootID), neuron.getId());
                 fireNeuronSelected(neuron);
+                endTransaction();
                 activityLog.logEndOfOperation(getWsId(), newRoot);
             }
         });
@@ -1249,7 +1228,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireAnchoredPathAdded(path);
+                fireAnchoredPathAdded(neuronID, path);
                 activityLog.logAddAnchoredPath(getCurrentWorkspace().getId(), path.getId());
             }
         });
@@ -1271,7 +1250,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * should only be called within AnnotationModel, and it does not
      * persist neuron or do any other cleanup
      */
-    private void removeAnchoredPath(TmNeuronMetadata neuron, final TmAnchoredPath path) throws  Exception {
+    private void removeAnchoredPath(final TmNeuronMetadata neuron, final TmAnchoredPath path) throws  Exception {
         // Remove the anchor path from its containing neuron
         neuron.getAnchoredPathMap().remove(path.getEndpoints());
 
@@ -1281,7 +1260,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireAnchoredPathsRemoved(pathList);
+                fireAnchoredPathsRemoved(neuron.getId(), pathList);
                 activityLog.logRemoveAnchoredPath(getCurrentWorkspace().getId(), path.getId());
             }
         });
@@ -1295,8 +1274,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         // we assume second annotation is in same neuron; if it's not, there's no path
         //  to remove anyway
-        TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(annotation1.getId(),
-                annotation2.getId());
+        TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(annotation1.getId(), annotation2.getId());
         if (neuron.getAnchoredPathMap().containsKey(endpoints)) {
             removeAnchoredPath(neuron, neuron.getAnchoredPathMap().get(endpoints));
         }
@@ -1738,16 +1716,16 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
 
-    void fireAnchoredPathsRemoved(List<TmAnchoredPath> deleteList) {
+    void fireAnchoredPathsRemoved(Long neuronID, List<TmAnchoredPath> deleteList) {
         // undraw deleted annotation
         for (TmAnchoredPathListener l : tmAnchoredPathListeners) {
-            l.removeAnchoredPaths(deleteList);
+            l.removeAnchoredPaths(neuronID, deleteList);
         }
     }
 
-    void fireAnchoredPathAdded(TmAnchoredPath path) {
+    void fireAnchoredPathAdded(Long neuronID, TmAnchoredPath path) {
         for (TmAnchoredPathListener l : tmAnchoredPathListeners) {
-            l.addAnchoredPath(path);
+            l.addAnchoredPath(neuronID, path);
         }
     }
 
@@ -1757,6 +1735,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
 
+    public void fireSpatialIndexReady(TmWorkspace workspace) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.spatialIndexReady(workspace);
+        }
+    }
+    
     void fireNeuronCreated(TmNeuronMetadata neuron) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronCreated(neuron);

@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -64,7 +65,17 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
     
     public void setSkipSkeletonChange(boolean skipSkeletonChange) {
-        this.skipSkeletonChange=skipSkeletonChange;
+        this.skipSkeletonChange = skipSkeletonChange;
+    }
+
+    public void beganTransaction() {
+        this.skipSkeletonChange = true;
+        skeletonChanged();
+    }
+    
+    public void endTransaction() {
+        this.skipSkeletonChange = false;
+        skeletonChanged();
     }
 
     public static SkeletonController getInstance() {
@@ -87,7 +98,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         lvvTranslator = null;
         qvController = null;
     }
-
+    
     public void registerForEvents(SkeletonActor actor) {
         this.actors.add(actor);
         actor.getModel().setNextParentByID(nextParentId);
@@ -163,6 +174,12 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         skeletonChanged();
     }
 
+    @Override
+    public void removeAnchoredVoxelPaths(Long neuronID) {
+        skeleton.removeTracedSegments(neuronID);
+        skeletonChanged();
+    }
+    
     //--------------------------------IMPLEMENTS TmGeoAnnotationAnchorListener
     @Override
     public void anchorAdded(TmGeoAnnotation tmAnchor) {
@@ -203,9 +220,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
 
     @Override
-    public void clearAnchorsByNeuronID(Long neuronId) {
-        for(Anchor anchor : new ArrayList<>(skeleton.getAnchors())) {
-            if (anchor.getNeuronID().equals(neuronId)) {
+    public void clearAnchors(Collection<TmGeoAnnotation> annotations) {
+        for(TmGeoAnnotation annotation : annotations) {
+            Anchor anchor = skeleton.getAnchorByID(annotation.getId());
+            if (anchor!=null) {
                 skeleton.delete(anchor);
             }
         }

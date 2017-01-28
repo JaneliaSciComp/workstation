@@ -31,10 +31,12 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -376,6 +378,16 @@ public class NeuronModelAdapter implements NeuronModel
         return vertexes;
     }
 
+    public Collection<NeuronVertex> getCachedVertexes()
+    {
+        return vertexes.getCachedVertices();
+    }
+
+    public void clearCachedVertices()
+    {
+        vertexes.clearCachedVertices();
+    }
+    
     @Override
     public Collection<NeuronEdge> getEdges()
     {
@@ -772,6 +784,13 @@ public class NeuronModelAdapter implements NeuronModel
             return cachedVertices.get(vertexId);
         }
 
+        public List<NeuronVertex> getCachedVertices() {
+            return new ArrayList<>(cachedVertices.values());
+        }
+        
+        public void clearCachedVertices() {
+            cachedVertices.clear();
+        }
     }
 
 }

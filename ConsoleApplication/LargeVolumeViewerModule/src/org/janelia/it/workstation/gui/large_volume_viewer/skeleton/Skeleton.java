@@ -459,6 +459,18 @@ public class Skeleton {
         tracedSegments.remove(ix);
     }
 
+    public void removeTracedSegments(Long neuronID) {
+        List<SegmentIndex> toDelete = new ArrayList<>();
+        for(AnchoredVoxelPath path : tracedSegments.values()) {
+            if (path.getNeuronID().equals(neuronID)) {
+                toDelete.add(path.getSegmentIndex());
+            }
+        }
+        for (SegmentIndex segmentIndex : toDelete) {
+            tracedSegments.remove(segmentIndex);
+        }
+    }   
+    
 	public Collection<AnchoredVoxelPath> getTracedSegments() {
 		// log.info("tracedSegments.size() [305] = "+tracedSegments.size());
 		Collection<AnchoredVoxelPath> result = tracedSegments.values();
