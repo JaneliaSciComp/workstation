@@ -311,11 +311,24 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             getSkeletonActor().getModel().setAnchorsVisible(false);
         }
     }
-    
-    public void setCameraFocus( Vec3 focus ) {
+
+    public void setCameraFocus(Vec3 focus) {
+        log.info("Setting camera focus: {}", focus);
         camera.setFocus(focus);
     }
 
+    public Vec3 getCameraFocus() {
+        return camera.getFocus();
+    }
+
+    public boolean setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
+        return camera.setPixelsPerSceneUnit(pixelsPerSceneUnit);
+    }
+    
+    public double getPixelsPerSceneUnit() {
+        return camera.getPixelsPerSceneUnit();
+    }
+    
     /**
      * move toward the neuron root to the next branch or the root
      */
@@ -1153,7 +1166,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		double maxZ = volumeImage.getBoundingBox3d().getMax().getZ() - halfVoxel;
 		newZ = Math.max(newZ, minZ);
 		newZ = Math.min(newZ, maxZ);
-		camera.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+                if (!Double.isNaN(newZ)) {
+                    camera.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+                }
 		return true;
 	}
 

@@ -9,6 +9,8 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BasicObservableCamera3d
         extends Observable

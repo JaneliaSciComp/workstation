@@ -757,15 +757,12 @@ public class SkeletonActorModel {
                 }
             }
             
-            if (anchors.size()>annotations.size()) {
-                log.debug("Adding more anchors ({}) than are visible in viewport ({})", anchors.size(), annotations.size());
-            }
-            else if (!anchors.isEmpty() && anchors.size()<annotations.size()) {
+            if (!anchors.isEmpty() && anchors.size()<annotations.size()) {
                 log.warn("Adding less anchors ({}) than are in the index ({}). This probably means the index is stale.", anchors.size(), annotations.size());
             }
         }
 
-        log.info("Found {} anchors in viewport",anchors.size());
+        log.debug("Found {} anchors in viewport",anchors.size());
         return anchors;
     }
     
