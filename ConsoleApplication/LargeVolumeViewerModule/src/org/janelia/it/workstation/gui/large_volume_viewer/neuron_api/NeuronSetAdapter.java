@@ -512,7 +512,7 @@ implements NeuronSet// , LookupListener
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        spatialIndex.rebuildIndex(innerList);
+                        spatialIndex.rebuildIndex(innerList); 
                     }
 
                     @Override
@@ -549,40 +549,55 @@ implements NeuronSet// , LookupListener
                 log.debug("Adding vertex: {}", neuronVertex);
                 spatialIndex.addToIndex(neuronVertex);
             }
+            neuronModel.getGeometryChangeObservable().setChanged();
             getMembershipChangeObservable().setChanged();
             getMembershipChangeObservable().notifyObservers();
+            repaintHorta();
         }
 
         @Override
         public void neuronDeleted(TmNeuronMetadata neuron) {
             log.info("Neuron deleted: {}", neuron);
+            Collection<NeuronVertex> deletedVertices = new ArrayList<>();
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 log.debug("Removing vertex: {}", neuronVertex);
                 spatialIndex.removeFromIndex(neuronVertex);
+                deletedVertices.add(neuronVertex);
             }
+            neuronModel.getVertexesRemovedObservable().setChanged();
+            neuronModel.getVertexesRemovedObservable().notifyObservers(
+                    new VertexCollectionWithNeuron(deletedVertices, neuronModel));
+            
+            neuronModel.getGeometryChangeObservable().setChanged();
             innerList.removeFromCache(neuron.getId());
             getMembershipChangeObservable().setChanged();
             getMembershipChangeObservable().notifyObservers();
+            repaintHorta();
         }
 
         @Override
         public void neuronChanged(TmNeuronMetadata neuron) {
+            
             log.info("Neuron changed: {}", neuron);
+            
+            // Remove all the existing cached vertices for this neuron
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getCachedVertexes()) {
                 log.debug("Removing cached vertex: {}", neuronVertex);
                 spatialIndex.removeFromIndex(neuronVertex);
             }
-            neuronModel.clearCachedVertices();
-            innerList.removeFromCache(neuron.getId()); // Probably not needed but let's be sure the old stuff is cleared.
-            neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            
+            // Re-create all the vertices for the neuron, and re-add them to the spatial index
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 log.debug("Re-adding vertex: {}", neuronVertex);
                 spatialIndex.addToIndex(neuronVertex);
             }
-            getMembershipChangeObservable().setChanged();
-            getMembershipChangeObservable().notifyObservers();
+            
+            // Recreate edges from the updated vertex list
+            neuronModel.updateEdges();
+            
+            repaintHorta();
         }
         
         @Override
