@@ -48,6 +48,9 @@ import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObserver;
+import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
+import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
+import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +60,6 @@ import org.slf4j.LoggerFactory;
  * Multiple NeuronVbos may be held in a NeuronVboPool
  * @author brunsc
  * 
- * TODO: Respond to everything that ConeActor does
  * TODO: Perform full clear when workspace changes
  * TODO: Test all edit operations, from both LVV and Horta
  */
@@ -89,6 +91,81 @@ public class NeuronVbo implements Iterable<NeuronModel>
     
     int getNeuronCount() {
         return neurons.size();
+    }
+    
+    public void clear() {
+        // TODO: first disconnect all signals
+        for (NeuronModel neuron : this) {
+            disconnectSignals(neuron);
+        }
+        if (edgeCount > 0)
+            buffersNeedRebuild = true;
+        if (vertexCount > 0)
+            buffersNeedRebuild = true;
+        neurons.clear();
+        neuronOffsets.clear();
+        neuronVertexCounts.clear();
+        edgeCount = 0;
+        vertexCount = 0;
+    }
+    
+    private void connectSignals(final NeuronModel neuron) {
+        // Surgical update after color change
+        neuron.getColorChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                updateNeuronColor(neuron);
+            }
+        });
+
+        // Surgical update after visibility change
+        neuron.getVisibilityChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                updateNeuronVisibility(neuron);
+            }
+        });
+
+        // Full update after adding a vertex: the total number of vertices changed
+        neuron.getVertexCreatedObservable().addObserver(new NeuronVertexCreationObserver() {
+            @Override
+            public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
+                buffersNeedRebuild = true;
+            }
+        });
+
+        /* Maybe not necessary...
+        neuron.getGeometryChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                buffersNeedRebuild = true;
+            }
+        });
+         */
+        
+        neuron.getVertexUpdatedObservable().addObserver(new NeuronVertexUpdateObserver() {
+            @Override
+            public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg)
+            {
+                // TODO: Surgical update -- while you are at it, you should probably investigate and
+                // refactor usages of "geometryChangeObservable".
+                buffersNeedRebuild = true;
+            }
+        });
+        
+        neuron.getVertexesRemovedObservable().addObserver(new NeuronVertexDeletionObserver() {
+            @Override
+            public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
+                buffersNeedRebuild = true;
+            }
+        });        
+    }
+    
+    private void disconnectSignals(NeuronModel neuron) {
+        // TODO:
     }
     
     void init(GL3 gl)
@@ -368,57 +445,8 @@ public class NeuronVbo implements Iterable<NeuronModel>
         vertexCount += neuron.getVertexes().size();
         buffersNeedRebuild = true;
 
-        // Surgical update after color change
-        neuron.getColorChangeObservable().addObserver(new Observer() {
-            @Override
-            public void update(Observable o, Object arg)
-            {
-                updateNeuronColor(neuron);
-            }
-        });
-
-        // Surgical update after visibility change
-        neuron.getVisibilityChangeObservable().addObserver(new Observer() {
-            @Override
-            public void update(Observable o, Object arg)
-            {
-                updateNeuronVisibility(neuron);
-            }
-        });
-
-        // Full update after adding a vertex: the total number of vertices changed
-        neuron.getVertexCreatedObservable().addObserver(new NeuronVertexCreationObserver() {
-            @Override
-            public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
-                buffersNeedRebuild = true;
-            }
-        });
-
-        // TODO: other per-neuron responses, a la SpheresActor
-
-        /*
-        neuron.getGeometryChangeObservable().addObserver(new Observer() {
-            @Override
-            public void update(Observable o, Object arg)
-            {
-                updateGeometry();
-            }
-        });
-        neuron.getVertexUpdatedObservable().addObserver(new NeuronVertexUpdateObserver() {
-            @Override
-            public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg)
-            {
-                updateGeometry();
-            }
-        });
-        neuron.getVertexesRemovedObservable().addObserver(new NeuronVertexDeletionObserver() {
-            @Override
-            public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
-                updateGeometry();
-            }
-        });
-         */
-            
+        connectSignals(neuron);
+        
         return true;
     }
 
