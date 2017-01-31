@@ -160,7 +160,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getVaa3d3dViewItem());
         add(getFijiViewerItem());
 
-        add(getFijiViewerItem());
         add(getDownloadItem());
 
         // TODO: move these options to a separate "Confocal" module 
