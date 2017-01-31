@@ -215,8 +215,7 @@ public class OpaqueRenderPass extends RenderPass
             // and I'm in a hurry [CMB]
             GL3Actor swcActor = null;
             for (GL3Actor actor : getActors()) {
-                if ( (actor instanceof NeuronMPRenderer.AllSwcActor) 
-                        || (actor instanceof NeuronVboActor) )
+                if (actor instanceof NeuronVboActor)
                 {
                     swcActor = actor;
                     break;

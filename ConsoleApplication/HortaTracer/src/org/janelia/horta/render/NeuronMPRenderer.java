@@ -518,7 +518,7 @@ extends MultipassRenderer
     }
     
     // One primitive-type at a time renderer for performance efficiency
-    public static class AllSwcActor extends BasicGL3Actor 
+    public static class AllSwcActorDeprecated extends BasicGL3Actor 
     {
         // For performance efficiency, render similar primitives all at once
         // private final Map<NeuronModel, GL3Actor> currentNeuronActors = new HashMap<>();
@@ -534,7 +534,7 @@ extends MultipassRenderer
         
         private boolean bHideAll = false;
 
-        public AllSwcActor()
+        public AllSwcActorDeprecated()
         {
             super(null);
             

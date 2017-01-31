@@ -173,12 +173,16 @@ void mid_hull() {
 }
 
 
-void main() {
+void main() 
+{
+    color = geomRgbV[0];
+    // Don't process invisible vertices
+    if (color.w < 0.5) 
+        return;
     vec4 posIn = gl_in[0].gl_Position; // modern geometry shader syntax
     center = posIn.xyz/posIn.w; // sphere center is constant for all vertices
     fragRadius = geomRadius[0]; // sphere radius is constant for all vertices
     c2 = dot(center, center) - fragRadius*fragRadius; // 2*c coefficient is constant for all vertices
-    color = geomRgbV[0];
 
     // Choice of imposter hull strategies below
     // NOTE: modify the above "layout(..., max_vertices=...) out;" statement to match your chosen hull strategy

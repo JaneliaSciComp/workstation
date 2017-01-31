@@ -85,6 +85,7 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     private final static int RADIUS_SCALE_UNIFORM = 6;
     private final Texture2d lightProbeTexture;
     
+    private float minPixelRadius = 0.8f; // TODO: expose as adjustable parameter
     private float radiusOffset = 0.0f; // amount to add to every radius, in micrometers
     private float radiusScale = 1.0f; // amount to multiply every radius, in micrometers
     
@@ -147,7 +148,12 @@ public class NeuronVboPool implements Iterable<NeuronModel>
         this.radiusScale = radiusScale;
     }
     
-    private void setUniforms(GL3 gl, float[] modelViewMatrix, float[] projectionMatrix, float[] screenSize) {
+    private void setUniforms(
+            GL3 gl, 
+            float[] modelViewMatrix, 
+            float[] projectionMatrix, 
+            float[] screenSize) 
+    {
         gl.glUniformMatrix4fv(VIEW_UNIFORM, 1, false, modelViewMatrix, 0);
         gl.glUniformMatrix4fv(PROJECTION_UNIFORM, 1, false, projectionMatrix, 0);
         gl.glUniform2fv(SCREENSIZE_UNIFORM, 1, screenSize, 0);
@@ -165,6 +171,11 @@ public class NeuronVboPool implements Iterable<NeuronModel>
             camera.getViewport().getHeightPixels()
         };
         lightProbeTexture.bind(gl, 0);
+        
+        float micrometersPerPixel = 
+                camera.getVantage().getSceneUnitsPerViewportHeight()
+                    / camera.getViewport().getHeightPixels();
+        radiusOffset = minPixelRadius * micrometersPerPixel;
         
         // First pass: draw all the connections (edges) between adjacent neuron anchor nodes.
         // These edges are drawn as truncated cones, tapering width between
@@ -222,8 +233,12 @@ public class NeuronVboPool implements Iterable<NeuronModel>
         insertVbo(emptiestVbo); // Reinsert into its new sorted location
     }
 
-    void remove(NeuronModel neuron) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    boolean remove(NeuronModel neuron) {
+        for (NeuronVbo vbo : new VboIterable()) {
+            if (vbo.remove(neuron))
+                return true;
+        }
+        return false;
     }
 
     boolean isEmpty() {

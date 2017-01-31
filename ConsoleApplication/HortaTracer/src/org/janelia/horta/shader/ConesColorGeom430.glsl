@@ -155,8 +155,8 @@ void far_cone_hull(mat3 frame2348, mat3 frame1567) {
 void main() 
 {
     // Do not process invisible vertices
-    // if (geomRgbV[0].w <= 0.5) return;
-    // if (geomRgbV[1].w <= 0.5) return;
+    if (geomRgbV[0].w <= 0.5) return;
+    if (geomRgbV[1].w <= 0.5) return;
 
     vec4 posIn0 = gl_in[0].gl_Position; // modern geometry shader syntax
     vec4 posIn1 = gl_in[1].gl_Position; // modern geometry shader syntax
