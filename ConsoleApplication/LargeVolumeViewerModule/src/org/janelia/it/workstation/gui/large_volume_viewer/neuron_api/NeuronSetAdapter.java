@@ -387,6 +387,9 @@ implements NeuronSet// , LookupListener
                     if (parentVertex == null) 
                         return;
                     // TODO: - react somehow to the reparenting
+                    // Make sure Horta gets the message, in case the graph structure changed.
+                    // (especially after a "merge" operation)
+                    neuron.getGeometryChangeObservable().notifyObservers();
                 }
             }
             logger.debug("annotationReparented");

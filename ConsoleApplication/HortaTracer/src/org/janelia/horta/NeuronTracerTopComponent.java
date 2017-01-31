@@ -150,7 +150,6 @@ import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
 import org.janelia.horta.actions.ResetHortaRotationAction;
-import org.janelia.horta.neuronvbo.TestNeuronVboActor;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
@@ -588,9 +587,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         crossHairActor = new CenterCrossHairActor();
         sceneWindow.getRenderer().addActor(crossHairActor);
         /* */
-        
-        // TODO: remove this after testing
-        // neuronMPRenderer0.addMeshActor(new TestNeuronVboActor());
         
         return neuronMPRenderer0;
     }
