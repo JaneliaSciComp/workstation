@@ -51,7 +51,7 @@ public class FilteredAnnotationList extends JPanel {
     private JTable filteredTable;
     private JTextField filterField;
     private TableRowSorter<FilteredAnnotationModel> sorter;
-    private JCheckBox neuronCheckbox;
+    private JCheckBox currentNeuronCheckbox;
 
     // data stuff
     private AnnotationManager annotationMgr;
@@ -182,39 +182,55 @@ public class FilteredAnnotationList extends JPanel {
         if (currentWorkspace == null) {
             return;
         }
-
-        // loop over neurons, roots in neuron, annotations per root;
-        //  put all the "interesting" annotations in a list
+        
         model.clear();
-        AnnotationFilter filter = getCurrentFilter();
-        String note;
-        for (TmNeuronMetadata neuron: new ArrayList<>(annotationModel.getNeuronList())) {
-            for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
-                for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
-                    note = annotationMgr.getNote(ann.getId(), neuron);
-                    if (note.length() == 0) {
-                        note = "";
-                    }
-                    InterestingAnnotation maybeInteresting =
-                        new InterestingAnnotation(ann.getId(),
-                            neuron.getId(),
-                            ann.getCreationDate(),
-                            ann.getModificationDate(),
-                            getAnnotationGeometry(ann),
-                            note);
-                    if (filter.isInteresting(maybeInteresting)) {
-                        model.addAnnotation(maybeInteresting);
-                    }
-                }
+
+        if (currentNeuronCheckbox.isSelected()) {
+            // Necessary optimization: only consider current neuron
+            TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
+            if (currentNeuron!=null) {
+                updateData(currentNeuron);
             }
         }
-
+        else {
+            // Consider all neurons
+            for (TmNeuronMetadata neuron: new ArrayList<>(annotationModel.getNeuronList())) {
+                updateData(neuron);
+            }
+        }
 
         model.fireTableDataChanged();
 
         // stopwatch.stop();
         // System.out.println("updated filtered annotation list; elapsed time = " + stopwatch.toString());
+    }
+    
+    public void updateData(TmNeuronMetadata neuron) {
 
+        // loop over roots in neuron, annotations per root;
+        //  put all the "interesting" annotations in a list
+        
+        AnnotationFilter filter = getCurrentFilter();
+        String note;
+        
+        for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+            for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
+                note = annotationMgr.getNote(ann.getId(), neuron);
+                if (note.length() == 0) {
+                    note = "";
+                }
+                InterestingAnnotation maybeInteresting =
+                    new InterestingAnnotation(ann.getId(),
+                        neuron.getId(),
+                        ann.getCreationDate(),
+                        ann.getModificationDate(),
+                        getAnnotationGeometry(ann),
+                        note);
+                if (filter.isInteresting(maybeInteresting)) {
+                    model.addAnnotation(maybeInteresting);
+                }
+            }
+        }
     }
 
     private void setupFilters() {
@@ -402,9 +418,9 @@ public class FilteredAnnotationList extends JPanel {
         });
 
         // checkbox for current neuron only
-        neuronCheckbox = new JCheckBox("Current neuron only");
-        neuronCheckbox.setSelected(true);
-        neuronCheckbox.addActionListener(new ActionListener() {
+        currentNeuronCheckbox = new JCheckBox("Current neuron only");
+        currentNeuronCheckbox.setSelected(true);
+        currentNeuronCheckbox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 updateData();
@@ -417,7 +433,7 @@ public class FilteredAnnotationList extends JPanel {
         c5.weighty = 0.0;
         c5.anchor = GridBagConstraints.PAGE_START;
         c5.fill = GridBagConstraints.HORIZONTAL;
-        add(neuronCheckbox, c5);
+        add(currentNeuronCheckbox, c5);
 
 
         // text field for filter
@@ -502,7 +518,7 @@ public class FilteredAnnotationList extends JPanel {
      */
     public AnnotationFilter getCurrentFilter() {
         TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
-        if (neuronCheckbox.isSelected() && currentNeuron != null) {
+        if (currentNeuronCheckbox.isSelected() && currentNeuron != null) {
             return new AndFilter(new NeuronFilter(currentNeuron), currentFilter);
         } else {
             return currentFilter;

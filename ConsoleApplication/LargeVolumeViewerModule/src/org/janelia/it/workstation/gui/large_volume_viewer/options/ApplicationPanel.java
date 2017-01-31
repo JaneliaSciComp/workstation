@@ -23,6 +23,8 @@ public class ApplicationPanel extends javax.swing.JPanel {
     
     public static final String PREFERENCE_LOAD_LAST_OBJECT = "LoadLastObject";
     public static final String PREFERENCE_LOAD_LAST_OBJECT_DEFAULT = "true";
+    public static final String PREFERENCE_VERIFY_NEURONS = "VerifyNeurons";
+    public static final String PREFERENCE_VERIFY_NEURONS_DEFAULT = "false";
     public static final String PREFERENCE_ANCHORS_IN_VIEWPORT = "AnchorsInViewport";
     public static final String PREFERENCE_ANCHORS_IN_VIEWPORT_DEFAULT = "true";
     public static final String PREFERENCE_Z_THICKNESS = "ZThickness";
@@ -30,6 +32,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
     
     private final ApplicationOptionsPanelController controller;
     private JCheckBox loadLastCheckbox; 
+    private JCheckBox verifyNeuronsCheckbox; 
     private JCheckBox anchorsInViewportCheckbox; 
     private JTextField zThicknessField;
     private JLabel errorLabel;
@@ -51,6 +54,19 @@ public class ApplicationPanel extends javax.swing.JPanel {
         titleLabel.setLabelFor(loadLastCheckbox);
         attrPanel.add(titleLabel,"gap para");
         attrPanel.add(loadLastCheckbox,"gap para");
+
+        
+        this.verifyNeuronsCheckbox = new JCheckBox();
+        verifyNeuronsCheckbox.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                controller.changed();
+            }
+        });
+        JLabel titleLabel4 = new JLabel("Verify neurons on workspace load: ");
+        titleLabel4.setLabelFor(verifyNeuronsCheckbox);
+        attrPanel.add(titleLabel4,"gap para");
+        attrPanel.add(verifyNeuronsCheckbox,"gap para");
         
 
         this.anchorsInViewportCheckbox = new JCheckBox();
@@ -116,6 +132,11 @@ public class ApplicationPanel extends javax.swing.JPanel {
                 ApplicationPanel.class, 
                 PREFERENCE_LOAD_LAST_OBJECT, 
                 loadLastCheckbox.isSelected()+"");
+
+        FrameworkImplProvider.setLocalPreferenceValue(
+                ApplicationPanel.class, 
+                PREFERENCE_VERIFY_NEURONS, 
+                loadLastCheckbox.isSelected()+"");
         
         FrameworkImplProvider.setLocalPreferenceValue(
                 ApplicationPanel.class, 
@@ -161,6 +182,14 @@ public class ApplicationPanel extends javax.swing.JPanel {
         return Boolean.parseBoolean(loadLastStr);
     }
 
+    public static boolean isVerifyNeurons() {
+        String loadLastStr = FrameworkImplProvider.getLocalPreferenceValue(
+                ApplicationPanel.class, 
+                ApplicationPanel.PREFERENCE_VERIFY_NEURONS, 
+                ApplicationPanel.PREFERENCE_VERIFY_NEURONS_DEFAULT);
+        return Boolean.parseBoolean(loadLastStr);
+    }
+    
     public static boolean isAnchorsInViewport() {
         String anchorsInViewportStr = FrameworkImplProvider.getLocalPreferenceValue(
                 ApplicationPanel.class, 

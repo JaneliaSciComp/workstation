@@ -569,6 +569,14 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		tileServer.clearCache();
 	}
 	
+	public BoundingBox3d getBoundingBox() {
+	    return volumeImage.getBoundingBox3d();
+	}
+	
+    public TileFormat getTileFormat() {
+        return tileFormat;
+    }
+
     // TODO update zoom range too?
     private void updateRanges() {
         // Z range

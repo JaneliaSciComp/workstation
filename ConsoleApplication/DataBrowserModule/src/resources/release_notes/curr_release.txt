@@ -11,3 +11,7 @@ MouseLight
 * Major improvements in LVV rendering performance for large numbers of neurons 
 * Workspaces created with the "Load Linux SWC Folder" option now keep track of 
   the SWC Folder that was used to create them.
+* Adjusted rendering of Ktx tiles to better resemble rendering of legacy raw tiles.
+* Fixed occasional non-display of OBJ meshes in Horta (brain compartments).
+* Fixed occasionally missing Horta "clear current parent anchor" context menu option.
+* Improve suggested new neuron name when creating neurons in Horta (was always "Neuron 1").
