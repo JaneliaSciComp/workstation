@@ -69,7 +69,6 @@ public class RerunSamplesAction extends AbstractAction {
                     ClientDomainUtils.hasWriteAccess(sample)) {
                     samples.add(sample);
                 }
-                samples.add(sample);
             }
         }
         if (samples.size() > 0  &&
