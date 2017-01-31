@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.Action;
 
 import org.janelia.it.workstation.browser.components.OntologyExplorerTopComponent;
+import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.OntologyTermNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,10 @@ public class RunNodeDefaultAction extends OntologyElementAction {
         Long[] path = getPath();
         OntologyExplorerTopComponent explorer = OntologyExplorerTopComponent.getInstance();
         OntologyTermNode node = explorer.select(path);
+        if (node==null) {
+            log.error("Problem finding ontology term with path {}", NodeUtils.createPathString(path));
+            throw new IllegalStateException("Could not find ontology term");
+        }
         
         Action a = node.getPreferredAction();
         log.debug("Executing default node action for: {}",getUniqueId());

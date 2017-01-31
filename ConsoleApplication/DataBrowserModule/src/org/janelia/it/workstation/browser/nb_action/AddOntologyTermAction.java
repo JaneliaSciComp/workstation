@@ -175,6 +175,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
                 Ontology ontology = parentNode.getOntology();
                 OntologyTerm parentTerm = parentNode.getOntologyTerm();
                 model.addOntologyTerm(ontology.getId(), parentTerm.getId(), ontologyTerm);
+                log.info("Added term {} to ontology {}", ontologyTerm.getName(), ontology.getId());
             }
             
             @Override
