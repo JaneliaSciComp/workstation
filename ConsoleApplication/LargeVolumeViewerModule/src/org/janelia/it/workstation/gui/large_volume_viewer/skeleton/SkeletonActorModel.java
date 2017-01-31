@@ -26,6 +26,8 @@ import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronModelAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -699,6 +701,12 @@ public class SkeletonActorModel {
         NeuronSet neuronSet = SkeletonController.getInstance().getNeuronSet();
         if (neuronSet != null) {
             
+            if (!(neuronSet instanceof NeuronSetAdapter)) {
+                throw new IllegalStateException("Neuron set must be a NeuronSetAdapter");
+            }
+
+            NeuronSetAdapter neuronSetAdapter = (NeuronSetAdapter)neuronSet;
+            
             // Establish the extents of the current view in world coordinates
             
             Vec3 p1v = pointComputer.worldFromPixel(
@@ -724,18 +732,44 @@ public class SkeletonActorModel {
                     p2v.getZ()+thickness/2
                     };
             
-            // Find all relevant anchors
-            
+            // Find all relevant anchors which are inside the viewport
+
+            Set<Long> allAnnotationIds = new HashSet<>();
             List<NeuronVertex> vertexList = neuronSet.getAnchorsInArea(p1, p2);
             if (vertexList != null) {
                 for (NeuronVertex vertex : vertexList) {
                     TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
-                    Anchor anchor = skeleton.getAnchorByID(annotation.getId());
-                    if (anchor!=null) {
-                        anchors.add(anchor);
+                    
+                    NeuronModelAdapter neuronForAnnotation =
+                            (NeuronModelAdapter) neuronSetAdapter.getNeuronForAnchor(vertex);
+                    if (neuronForAnnotation==null) continue;
+                    TmNeuronMetadata neuron = neuronForAnnotation.getTmNeuronMetadata();
+
+                    // Add annotation in viewport
+                    allAnnotationIds.add(annotation.getId());
+
+                    // Add parent
+                    Long parentId = annotation.getParentId();
+                    if (parentId!=null && !parentId.equals(neuron.getId())) {
+                        allAnnotationIds.add(parentId);
+                    }
+
+                    // Add children
+                    for(Long childId : annotation.getChildIds()) {
+                        allAnnotationIds.add(childId);
                     }
                 }
             }
+
+            // Add all parent and child anchors, so that lines are draw even if the linked anchor is outside the viewport
+
+            for (Long annotationId : allAnnotationIds) {
+                Anchor anchor = skeleton.getAnchorByID(annotationId);
+                if (anchor != null) {
+                    anchors.add(anchor);
+                }
+            }
+
         }
 
         log.debug("Found {} anchors in viewport",anchors.size());
