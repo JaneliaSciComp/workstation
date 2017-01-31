@@ -97,15 +97,17 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         return getLookup().lookup(DomainObject.class);
     }
 
-    private boolean setCurrent(DomainObject domainObject) {
+    public boolean setCurrent(DomainObject domainObject) {
         DomainObject curr = getCurrent();
-        if (domainObject.equals(curr)) {
-            return false;
-        }
         if (curr!=null) {
+            if (domainObject!=null && domainObject.equals(curr)) {
+                return false;
+            }
             content.remove(curr);
         }
-        content.add(domainObject);
+        if (domainObject!=null) {
+            content.add(domainObject);
+        }
         return true;
     }
     

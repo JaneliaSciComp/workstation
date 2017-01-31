@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.nb_action;
+package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
 
@@ -7,7 +7,7 @@ import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.model.domain.enums.SubjectRole;
 import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.gui.dialogs.RunAsUserDialog;
+import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.GenerateNeuronsDialog;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -16,24 +16,24 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.util.actions.Presenter;
 
 @ActionID(
-        category = "File",
-        id = "RunAsMenuAction"
+        category = "Tools",
+        id = "GenerateNeuronsAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_RunAsMenuAction",
+        displayName = "#CTL_GenerateNeuronsAction",
         lazy = false
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/File", position = 1451),
-    @ActionReference(path = "Shortcuts", name = "A-r")
+    @ActionReference(path = "Menu/Tools", position = 6000),
+    @ActionReference(path = "Shortcuts", name = "A-g")
 })
-@Messages("CTL_RunAsMenuAction=Run As")
-public final class RunAsMenuAction extends AbstractAction implements Presenter.Menu {
-    
+@Messages("CTL_GenerateNeuronsAction=Generate Neurons...")
+public final class GenerateNeuronsAction extends AbstractAction implements Presenter.Menu {
+        
     @Override
     public void actionPerformed(ActionEvent e) {
         if (isAccessible()) {
-            RunAsUserDialog dialog = new RunAsUserDialog();
+            GenerateNeuronsDialog dialog = new GenerateNeuronsDialog();
             dialog.showDialog();
         }
     }
@@ -41,7 +41,7 @@ public final class RunAsMenuAction extends AbstractAction implements Presenter.M
     @Override
     public JMenuItem getMenuPresenter() {
         if (isAccessible()) {
-            JMenuItem menuItem = new JMenuItem("Run As");
+            JMenuItem menuItem = new JMenuItem("Generate Neurons...");
             menuItem.addActionListener(this);
             return menuItem;
         }

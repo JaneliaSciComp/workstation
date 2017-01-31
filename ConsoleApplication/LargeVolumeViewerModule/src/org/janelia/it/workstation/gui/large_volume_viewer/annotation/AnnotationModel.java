@@ -23,10 +23,10 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
 import org.janelia.it.jacs.model.util.MatrixUtilities;
 import org.janelia.it.jacs.shared.geom.ParametrizedLine;
@@ -271,11 +271,13 @@ called from a  SimpleWorker thread.
         
         // Clear neuron selection
         log.info("Clearing current neuron for workspace {}", workspace.getId());
-        setCurrentNeuron(null);        
+        setCurrentNeuron(null);   
     }
     
     public void loadComplete() { 
         final TmWorkspace updateWorkspace = getCurrentWorkspace();
+        // Update TC, in case the load bypassed it
+        LargeVolumeViewerTopComponent.getInstance().setCurrent(updateWorkspace==null ? getCurrentSample() : updateWorkspace);    
         fireWorkspaceLoaded(updateWorkspace);
         fireNeuronSelected(null);
         if (updateWorkspace!=null) {
@@ -1782,7 +1784,9 @@ called from a  SimpleWorker thread.
         // update workspace; update and select new neuron; this will draw points as well
         fireWorkspaceLoaded(workspace);
         fireWorkspaceChanged();
-        selectNeuron(neuron);
+        if (neuron!=null) {
+            selectNeuron(neuron);
+        }
     }
 
     private boolean eitherIsNull(Object object1, Object object2) {
@@ -1878,4 +1882,10 @@ called from a  SimpleWorker thread.
     public NeuronSet getNeuronSet() {
         return neuronSetAdapter;
     }
+
+    public TmModelManipulator getNeuronManager() {
+        return neuronManager;
+    }
+    
+    
 }

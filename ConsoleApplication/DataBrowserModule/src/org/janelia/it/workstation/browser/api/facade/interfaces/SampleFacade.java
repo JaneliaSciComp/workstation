@@ -4,9 +4,13 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.janelia.it.jacs.model.domain.enums.PipelineStatus;
+import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.StatusTransition;
 
 /**
  * Implementations provide access to Samples, Data Sets, and related concepts. 
@@ -81,5 +85,19 @@ public interface SampleFacade {
      * @throws Exception
      */
     public void remove(LineRelease release) throws Exception;
+
+    /**
+     * Adds a status transition for front-end actions that mess with a Sample directly.
+     * @param transition information about a sample's status transition
+     * @throws Exception
+     */
+    public void addStatusTransition(StatusTransition transition) throws Exception;
+
+    /**
+     * Creates an intake order to track all the reprocessing requests made by a user from the Workstation
+     * @param order order information with samples that need to be reprocessed.
+     * @throws Exception
+     */
+    public void addIntakeOrder(IntakeOrder order) throws Exception;
     
 }
