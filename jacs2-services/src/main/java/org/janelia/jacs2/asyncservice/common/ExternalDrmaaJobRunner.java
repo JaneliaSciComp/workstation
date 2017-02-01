@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Map;
 
 @ClusterJob
@@ -49,6 +50,7 @@ public class ExternalDrmaaJobRunner extends AbstractExternalProcessRunner {
             jt = drmaaSession.createJobTemplate();
             jt.setJobName(serviceContext.getName());
             jt.setRemoteCommand(processingScript);
+            jt.setArgs(Collections.emptyList());
             File workingDirectory = setJobWorkingDirectory(jt, workingDirName);
             logger.debug("Using working directory {} for {}", workingDirectory, serviceContext);
             jt.setJobEnvironment(env);
