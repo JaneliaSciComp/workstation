@@ -135,6 +135,19 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
         return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
     }
 
+    protected boolean checkForErrors(String l) {
+        if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(error|exception).*)")) {
+            if (l.contains("Cannot write XdndAware property")) {
+                logger.warn(l);
+                return false;
+            }
+            logger.error(l);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private FijiMacroServiceDescriptor.FijiMacroArgs getArgs(JacsServiceData jacsServiceData) {
         FijiMacroServiceDescriptor.FijiMacroArgs args = new FijiMacroServiceDescriptor.FijiMacroArgs();
         new JCommander(args).parse(jacsServiceData.getArgsArray());
