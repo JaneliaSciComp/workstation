@@ -1,7 +1,7 @@
 // 5.8.0
 
 Workstation Browser
-* Added "Change Permissions" option on Ontologies to allow sharing of ontologies
+* Added "Change Permissions" right-click option on Ontologies to allow sharing of ontologies
 * Fixed issue with viewer state not being properly maintained when using the navigation arrows or refresh button
 
 FlyLight
