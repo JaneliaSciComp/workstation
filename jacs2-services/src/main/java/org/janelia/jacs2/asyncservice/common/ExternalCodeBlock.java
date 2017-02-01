@@ -9,7 +9,7 @@ public class ExternalCodeBlock {
     private final StringBuilder cmdsBuffer = new StringBuilder();
 
     public boolean isEmpty() {
-        return cmdsBuffer.length() > 0;
+        return cmdsBuffer.length() == 0;
     }
 
     public ScriptWriter getCodeWriter() {
