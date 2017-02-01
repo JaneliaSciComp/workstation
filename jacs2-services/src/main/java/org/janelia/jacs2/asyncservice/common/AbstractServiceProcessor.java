@@ -139,7 +139,11 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         } else {
             workingDir = System.getProperty("java.io.tmpdir");
         }
-        return Paths.get(workingDir, jacsServiceData.getName() + "_" + jacsServiceData.getId().toString()).toAbsolutePath();
+        return getServicePath(workingDir, jacsServiceData);
     }
 
+    protected Path getServicePath(String baseDir, JacsServiceData jacsServiceData) {
+        return Paths.get(baseDir, jacsServiceData.getName() + "_" + jacsServiceData.getId().toString()).toAbsolutePath();
+
+    }
 }

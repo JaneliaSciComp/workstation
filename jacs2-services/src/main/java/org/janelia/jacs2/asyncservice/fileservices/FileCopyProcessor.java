@@ -1,9 +1,10 @@
 package org.janelia.jacs2.asyncservice.fileservices;
 
 import com.beust.jcommander.JCommander;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
+import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -22,7 +23,6 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.List;
 import java.util.Map;
 
 public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
@@ -119,16 +119,19 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
     }
 
     @Override
-    protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
+    protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
         FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsServiceData);
-        jacsServiceData.setServiceCmd(getFullExecutableName(scriptName));
-        ImmutableList.Builder<String> cmdLineBuilder = new ImmutableList.Builder<>();
-        cmdLineBuilder.add(fileCopyArgs.sourceFilename);
-        cmdLineBuilder.add(fileCopyArgs.targetFilename);
+        ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
+        ScriptWriter codeWriter = externalScriptCode.getCodeWriter();
+        codeWriter
+                .addWithArgs(getFullExecutableName(scriptName))
+                .addArg(fileCopyArgs.sourceFilename)
+                .addArg(fileCopyArgs.targetFilename);
         if (fileCopyArgs.convertTo8Bits) {
-            cmdLineBuilder.add("8");
+            codeWriter.addArg("8");
         }
-        return cmdLineBuilder.build();
+        codeWriter.endArgs("");
+        return externalScriptCode;
     }
 
     @Override

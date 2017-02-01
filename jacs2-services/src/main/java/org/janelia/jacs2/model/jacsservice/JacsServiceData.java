@@ -23,7 +23,6 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     private Number id;
     private String name;
     private ProcessingLocation processingLocation;
-    private String serviceCmd;
     private JacsServiceState state = JacsServiceState.CREATED;
     private Integer priority = 0;
     private String owner;
@@ -68,14 +67,6 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
 
     public void setProcessingLocation(ProcessingLocation processingLocation) {
         this.processingLocation = processingLocation;
-    }
-
-    public String getServiceCmd() {
-        return serviceCmd;
-    }
-
-    public void setServiceCmd(String serviceCmd) {
-        this.serviceCmd = serviceCmd;
     }
 
     public JacsServiceState getState() {

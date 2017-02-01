@@ -44,8 +44,8 @@ public class AbstractExeBasedServiceProcessorTest {
         }
 
         @Override
-        protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
-            return Collections.emptyList();
+        protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
+            return new ExternalCodeBlock();
         }
 
         @Override

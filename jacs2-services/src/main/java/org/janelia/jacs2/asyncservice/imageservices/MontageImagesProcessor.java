@@ -1,8 +1,8 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.JCommander;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -76,17 +76,14 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
     }
 
     @Override
-    protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
+    protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
         MontageImagesServiceDescriptor.MontageImagesArgs args = getArgs(jacsServiceData);
-        jacsServiceData.setServiceCmd(getExecutable());
         Path inputPath = Paths.get(args.inputFolder);
         List<String> inputFiles = new ArrayList<>();
         try {
             PathMatcher inputFileMatcher =
                     FileSystems.getDefault().getPathMatcher(args.imageFilePattern);
-            Files.find(inputPath, 1, (p, a) -> inputFileMatcher.matches(p)).forEach(p -> {
-                inputFiles.add(p.toString());
-            });
+            Files.find(inputPath, 1, (p, a) -> inputFileMatcher.matches(p)).forEach(p -> inputFiles.add(p.toString()));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -94,16 +91,18 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
             throw new IllegalArgumentException("No image file found in " + args.inputFolder + " that matches the given pattern: " + args.imageFilePattern);
         }
         logger.info("Montage {}", inputFiles);
-        return new ImmutableList.Builder<String>()
-                .add("-background")
-                .add("'#000000'")
-                .add("-geometry")
-                .add("'300x300>'")
-                .add("-tile")
-                .add(String.format("%dx%d", args.size, args.size))
-                .addAll(inputFiles)
-                .add(args.target)
-                .build();
+        ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
+        externalScriptCode.getCodeWriter()
+                .addWithArgs(getExecutable())
+                .addArg("-background")
+                .addArg("'#000000'")
+                .addArg("-geometry")
+                .addArg("'300x300>'")
+                .addArg("-tile")
+                .addArg(String.format("%dx%d", args.size, args.size))
+                .addArgs(inputFiles)
+                .endArgs(args.target);
+        return externalScriptCode;
     }
 
     @Override

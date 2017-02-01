@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -44,7 +43,7 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
                 .thenCompose(r -> this.collectResult(preProcessingResult, jacsServiceData));
     }
 
-    protected abstract List<String> prepareCmdArgs(JacsServiceData jacsServiceData);
+    protected abstract ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData);
 
     protected abstract Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData);
 
@@ -109,13 +108,12 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
     }
 
     protected ServiceComputation<Void> invokeExternalProcess(JacsServiceData jacsServiceData) {
-        List<String> args = prepareCmdArgs(jacsServiceData);
+        ExternalCodeBlock script = prepareExternalScript(jacsServiceData);
         Map<String, String> env = prepareEnvironment(jacsServiceData);
         return computationFactory.<Void>newComputation()
                 .supply(() -> {
-                    getProcessRunner(jacsServiceData.getProcessingLocation()).runCmd(
-                            jacsServiceData.getServiceCmd(),
-                            args,
+                    getProcessRunner(jacsServiceData.getProcessingLocation()).runCmds(
+                            script,
                             env,
                             getWorkingDirectory(jacsServiceData).toString(),
                             this::outputStreamHandler,

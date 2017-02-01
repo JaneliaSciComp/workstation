@@ -36,6 +36,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
     private static final String DEFAULT_OPTIONS = "mips:movies";
 
     private final String basicMIPsAndMoviesMacro;
+    private final String scratchLocation;
 
     @Inject
     GetSampleMIPsAndMoviesProcessor(JacsServiceDispatcher jacsServiceDispatcher,
@@ -43,9 +44,11 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                                     JacsServiceDataPersistence jacsServiceDataPersistence,
                                     @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                     @PropertyValue(name = "Fiji.BasicMIPsAndMovies") String basicMIPsAndMoviesMacro,
+                                    @PropertyValue(name = "service.DefaultScratchDir") String scratchLocation,
                                     Logger logger) {
         super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.basicMIPsAndMoviesMacro = basicMIPsAndMoviesMacro;
+        this.scratchLocation =scratchLocation;
     }
 
     @Override
@@ -112,16 +115,19 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                 });
     }
 
+    private Path getResultsDir(GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args) {
+        return Paths.get(args.sampleDataDir, args.mipsSubDir);
+    }
+
     @Override
     protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
         GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
-        Path outputDir = Paths.get(args.sampleDataDir, args.mipsSubDir);
         // collect all AVIs and PNGs
         try {
             String resultsPattern = "glob:**/*.{png,avi,mp4}";
             PathMatcher inputFileMatcher =
                     FileSystems.getDefault().getPathMatcher(resultsPattern);
-            long nFiles = java.nio.file.Files.find(outputDir, 1, (p, a) -> inputFileMatcher.matches(p)).count();
+            long nFiles = java.nio.file.Files.find(getResultsDir(args), 1, (p, a) -> inputFileMatcher.matches(p)).count();
             return nFiles > 0;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -131,14 +137,13 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
     @Override
     protected List<File> retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
         GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
-        Path outputDir = Paths.get(args.sampleDataDir, args.mipsSubDir);
         // collect all AVIs and PNGs
         List<File> results = new ArrayList<>();
         try {
             String resultsPattern = "glob:**/*.{png,avi,mp4}";
             PathMatcher inputFileMatcher =
                     FileSystems.getDefault().getPathMatcher(resultsPattern);
-            java.nio.file.Files.find(outputDir, 1, (p, a) -> inputFileMatcher.matches(p)).forEach(p -> results.add(p.toFile()));
+            java.nio.file.Files.find(getResultsDir(args), 1, (p, a) -> inputFileMatcher.matches(p)).forEach(p -> results.add(p.toFile()));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -157,6 +162,8 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                             .setName("fijiMacro")
                             .addArg("-macro", basicMIPsAndMoviesMacro)
                             .addArg("-macroArgs", getBasicMIPsAndMoviesArgs(f, args, outputDir))
+                            .addArg("-temporaryOutput", getServicePath(scratchLocation, jacsServiceData).toString())
+                            .addArg("-finalOutput", getResultsDir(args).toString())
                             .build();
             fijiComputations.add(
                     this.submitServiceDependency(jacsServiceData, fijiService)

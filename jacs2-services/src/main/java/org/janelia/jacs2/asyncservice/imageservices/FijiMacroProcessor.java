@@ -1,9 +1,12 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.JCommander;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
+import org.janelia.jacs2.asyncservice.utils.ScriptUtils;
+import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
+import org.janelia.jacs2.asyncservice.utils.X11Utils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -13,35 +16,23 @@ import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.JacsServiceDispatcher;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.asyncservice.utils.ScriptingUtils;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
-
-    protected static final int START_DISPLAY_PORT = 890;
-    protected static final int TIMEOUT_SECONDS = 3600;  // 60 minutes
 
     private final String fijiExecutable;
     private final String fijiMacrosPath;
     private final String libraryPath;
-    private final String scratchLocation;
 
     @Inject
     FijiMacroProcessor(JacsServiceDispatcher jacsServiceDispatcher,
@@ -53,13 +44,11 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
                        @PropertyValue(name = "Fiji.Bin.Path") String fijiExecutable,
                        @PropertyValue(name = "Fiji.Macro.Path") String fijiMacrosPath,
                        @PropertyValue(name = "VAA3D.LibraryPath") String libraryPath,
-                       @PropertyValue(name = "service.DefaultScratchDir") String scratchLocation,
                        Logger logger) {
         super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.fijiExecutable = fijiExecutable;
         this.fijiMacrosPath = fijiMacrosPath;
         this.libraryPath = libraryPath;
-        this.scratchLocation = scratchLocation;
     }
 
     @Override
@@ -81,22 +70,6 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
         }
     }
 
-
-    @Override
-    protected ServiceComputation<Void> postProcessData(Void processingResult, JacsServiceData jacsServiceData) {
-        return computationFactory.<Void>newComputation()
-                .supply(() -> {
-                    try {
-                        FijiMacroServiceDescriptor.FijiMacroArgs args = getArgs(jacsServiceData);
-                        logger.debug("Delete temporary service script: {}", jacsServiceData.getServiceCmd());
-                        Files.deleteIfExists(new File(jacsServiceData.getServiceCmd()).toPath());
-                        return processingResult;
-                    } catch (Exception e) {
-                        throw new ComputationException(jacsServiceData, e);
-                    }
-                });
-    }
-
     @Override
     protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
         return true;
@@ -108,59 +81,46 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
     }
 
     @Override
-    protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
+    protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
         FijiMacroServiceDescriptor.FijiMacroArgs args = getArgs(jacsServiceData);
-        File scriptFile = createScript(jacsServiceData, args);
-        jacsServiceData.setServiceCmd(scriptFile.getAbsolutePath());
-        return ImmutableList.of();
-    }
-
-    private File createScript(JacsServiceData jacsServiceData, FijiMacroServiceDescriptor.FijiMacroArgs args) {
-        Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwx------");
-        BufferedWriter scriptStream = null;
-        File scriptFile = null;
-        try {
-            Path scratchDir = Paths.get(scratchLocation, jacsServiceData.getName(), jacsServiceData.getName() + "_" + jacsServiceData.getId());
-            Path workingDir = getWorkingDirectory(jacsServiceData);
-            Files.createDirectories(workingDir);
-            scriptFile = Files.createFile(
-                    Paths.get(workingDir.toString(), jacsServiceData.getName() + "_" + jacsServiceData.getId() + ".sh"),
-                    PosixFilePermissions.asFileAttribute(perms)).toFile();
-            scriptStream = new BufferedWriter(new FileWriter(scriptFile));
-            scriptStream.append("DISPLAY_PORT=").append(Integer.toString(ScriptingUtils.getRandomPort(START_DISPLAY_PORT))).append('\n');
-            scriptStream.append(ScriptingUtils.startScreenCapture("$DISPLAY_PORT", "1280x1024x24")).append('\n');
-            // Create temp dir so that large temporary avis are not created on the network drive
-            scriptStream.append("export TMPDIR=").append(scratchDir.toString()).append("\n");
-            scriptStream.append("mkdir -p $TMPDIR\n");
-            scriptStream.append("TEMP_DIR=`mktemp -d`\n");
-            scriptStream.append("function cleanTemp {\n");
-            scriptStream.append("    rm -rf $TEMP_DIR\n");
-            scriptStream.append("    echo \"Cleaned up $TEMP_DIR\"\n");
-            scriptStream.append("}\n");
-
-            // Two EXIT handlers
-            scriptStream.append("function exitHandler() { cleanXvfb; cleanTemp; }\n");
-            scriptStream.append("trap exitHandler EXIT\n");
-
-            String fijiCmd = String.format("%s -macro %s %s", getFijiExecutable(), getFullFijiMacro(args), args.macroArgs);
-            scriptStream.append(fijiCmd).append('&').append('\n');
-            // Monitor Fiji and take periodic screenshots, killing it eventually
-            scriptStream.append("fpid=$!\n");
-            scriptStream.append(ScriptingUtils.screenCaptureLoop(scratchDir + "/xvfb-" + jacsServiceData.getId() + ".${PORT}", "PORT", "fpid", 30, TIMEOUT_SECONDS));
-
-            scriptStream.flush();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        } finally {
-            if (scriptStream != null) {
-                try {
-                    scriptStream.close();
-                } catch (IOException ignore) {
-                    logger.warn("Error closing the FIJI script stream");
-                }
+        ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
+        ScriptWriter externalScriptWriter = externalScriptCode.getCodeWriter();
+        createScript(jacsServiceData, args, externalScriptWriter);
+        if (StringUtils.isNotBlank(args.finalOutput) && StringUtils.isNotBlank(args.temporaryOutput) &&
+                !args.finalOutput.equals(args.temporaryOutput)) {
+            if (args.resultsPatterns.isEmpty()) {
+                externalScriptWriter.add(String.format("cp -a %s/* %s", args.temporaryOutput, args.finalOutput));
+            } else {
+                args.resultsPatterns.forEach(resultPattern -> externalScriptWriter.add(String.format("cp %s/%s %s", args.temporaryOutput, resultPattern, args.finalOutput)));
             }
         }
-        return scriptFile;
+        externalScriptWriter.close();
+        return externalScriptCode;
+    }
+
+    private void createScript(JacsServiceData jacsServiceData, FijiMacroServiceDescriptor.FijiMacroArgs args,
+                              ScriptWriter scriptWriter) {
+        try {
+            Path workingDir = getWorkingDirectory(jacsServiceData);
+            X11Utils.setDisplayPort(workingDir.toString(), scriptWriter);
+            // Create temp dir so that large temporary avis are not created on the network drive
+            String scratchFolder = StringUtils.defaultIfBlank(args.temporaryOutput, workingDir.toString());
+            Path scratchDir = Paths.get(scratchFolder, jacsServiceData.getName(), jacsServiceData.getName() + "_" + jacsServiceData.getId());
+            Files.createDirectories(scratchDir);
+            ScriptUtils.createTempDir("cleanTemp", scratchDir.toString(), scriptWriter);
+            // define the exit handlers
+            scriptWriter
+                    .add("function exitHandler() { cleanXvfb; cleanTemp; }")
+                    .add("trap exitHandler EXIT\n");
+
+            scriptWriter.addBackground(String.format("%s -macro %s %s", getFijiExecutable(), getFullFijiMacro(args), args.macroArgs));
+            // Monitor Fiji and take periodic screenshots, killing it eventually
+            scriptWriter.setVar("fpid","$!");
+            X11Utils.startScreenCaptureLoop(scratchDir + "/xvfb-" + jacsServiceData.getId() + ".${PORT}",
+                    "PORT", "fpid", 30, getTimeoutInSeconds(jacsServiceData), scriptWriter);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     @Override
@@ -183,6 +143,15 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
             return args.macroName;
         } else {
             return getFullExecutableName(fijiMacrosPath, args.macroName);
+        }
+    }
+
+    private int getTimeoutInSeconds(JacsServiceData sd) {
+        long timeoutInMillis = sd.timeout();
+        if (timeoutInMillis > 0) {
+            return (int) timeoutInMillis / 1000;
+        } else {
+            return X11Utils.DEFAULT_TIMEOUT_SECONDS;
         }
     }
 }

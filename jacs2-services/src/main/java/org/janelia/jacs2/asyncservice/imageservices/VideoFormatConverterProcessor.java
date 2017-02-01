@@ -4,6 +4,8 @@ import com.beust.jcommander.JCommander;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
+import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -83,31 +85,32 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
     }
 
     @Override
-    protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
+    protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
         VideoFormatConverterServiceDescriptor.ConverterArgs args = getArgs(jacsServiceData);
-        jacsServiceData.setServiceCmd(getFFMPEGExecutable());
-        ImmutableList.Builder<String> cmdLineBuilder = new ImmutableList.Builder<>();
-        cmdLineBuilder
-                .add("-y")
-                .add("-r").add("7")
-                .add("-i").add(args.input)
-                .add("-vcodec")
-                .add("libx264")
-                .add("-b:v")
-                .add("2000000")
-                .add("-preset")
-                .add("slow")
-                .add("-tune")
-                .add("film")
-                .add("-pix_fmt")
-                .add("yuv420p");
+        ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
+        ScriptWriter externalScriptWriter = externalScriptCode.getCodeWriter();
+        externalScriptWriter.addWithArgs(getFFMPEGExecutable())
+                .addArg("-y")
+                .addArg("-r").add("7")
+                .addArg("-i").addArg(args.input)
+                .addArg("-vcodec")
+                .addArg("libx264")
+                .addArg("-b:v")
+                .addArg("2000000")
+                .addArg("-preset")
+                .addArg("slow")
+                .addArg("-tune")
+                .addArg("film")
+                .addArg("-pix_fmt")
+                .addArg("yuv420p");
         if (args.truncate) {
-            cmdLineBuilder
-                    .add("-vf")
-                    .add("scale=trunc(iw/2)*2:trunc(ih/2)*2");
+            externalScriptWriter
+                    .addArg("-vf")
+                    .addArg("scale=trunc(iw/2)*2:trunc(ih/2)*2");
         }
-        cmdLineBuilder.add(args.getOutputName());
-        return cmdLineBuilder.build();
+        externalScriptWriter.addArg(args.getOutputName());
+        externalScriptWriter.close();
+        return externalScriptCode;
     }
 
     @Override

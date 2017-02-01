@@ -14,33 +14,41 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
 
 @ClusterJob
-public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
+public class ExternalDrmaaJobRunner extends AbstractExternalProcessRunner {
 
     private final Session drmaaSession;
-    private final Logger logger;
 
     @Inject
     public ExternalDrmaaJobRunner(Session drmaaSession, Logger logger) {
+        super(logger);
         this.drmaaSession = drmaaSession;
-        this.logger = logger;
     }
 
     @Override
-    public void runCmd(String cmd, List<String> cmdArgs, Map<String, String> env, String workingDirName,
-                       ExternalProcessOutputHandler outStreamHandler, ExternalProcessOutputHandler errStreamHandler, JacsServiceData serviceContext) {
+    public void runCmds(ExternalCodeBlock externalCode,
+                        Map<String, String> env,
+                        String workingDirName,
+                        ExternalProcessOutputHandler outStreamHandler,
+                        ExternalProcessOutputHandler errStreamHandler,
+                        JacsServiceData serviceContext) {
         logger.debug("Begin DRMAA job invocation for {}", serviceContext);
+        String processingScript;
+        try {
+            processingScript = createProcessingScript(externalCode, workingDirName, serviceContext);
+        } catch (Exception e) {
+            logger.error("Error creating the processing script with {} for {}", externalCode, serviceContext, e);
+            throw new ComputationException(serviceContext, e);
+        }
         JobTemplate jt = null;
         File outputFile = null;
         File errorFile = null;
         try {
             jt = drmaaSession.createJobTemplate();
             jt.setJobName(serviceContext.getName());
-            jt.setRemoteCommand(cmd);
-            jt.setArgs(cmdArgs);
+            jt.setRemoteCommand(processingScript);
             File workingDirectory = setJobWorkingDirectory(jt, workingDirName);
             logger.debug("Using working directory {} for {}", workingDirectory, serviceContext);
             jt.setJobEnvironment(env);
@@ -62,7 +70,7 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
                 jt.setNativeSpecification(nativeSpec);
             }
             String jobId = drmaaSession.runJob(jt);
-            logger.info("Submitted job {} for {} with {} {}; env={}", jobId, serviceContext, cmd, cmdArgs, env);
+            logger.info("Submitted job {} - {} using {} with content={}; env={}", jobId, serviceContext, processingScript, externalCode, env);
             drmaaSession.deleteJobTemplate(jt);
             jt = null;
             if (outputFile == null) {
@@ -78,12 +86,12 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
                 throw new ComputationException(serviceContext, String.format("Job %s never ran", jobId));
             } else if (jobInfo.hasExited()) {
                 logger.info("Job {} for {} completed with exist status {}", jobId, serviceContext, jobInfo.getExitStatus());
-                ExternalProcessIOHandler processStdoutHandler = null;
+                ExternalProcessIOHandler processStdoutHandler;
                 try (InputStream outputStream = new FileInputStream(outputFile)) {
                     processStdoutHandler = new ExternalProcessIOHandler(outStreamHandler, outputStream);
                     processStdoutHandler.run();
                 }
-                ExternalProcessIOHandler processStderrHandler = null;
+                ExternalProcessIOHandler processStderrHandler;
                 try (InputStream errorStream = new FileInputStream(errorFile)) {
                     processStderrHandler = new ExternalProcessIOHandler(errStreamHandler, errorStream);
                     processStderrHandler.run();
@@ -102,15 +110,16 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
                 logger.warn("Job {} for {} finished with unclear conditions", jobId, serviceContext);
                 throw new ComputationException(serviceContext, String.format("Job %s completed with unclear conditions", jobId));
             }
+            deleteProcessingScript(processingScript);
         } catch (Exception e) {
-            logger.error("Error running a DRMAA job for {} with {}", serviceContext, cmdArgs, e);
+            logger.error("Error running a DRMAA job {} for {}", processingScript, serviceContext, e);
             throw new ComputationException(serviceContext, e);
         } finally {
             if (jt != null) {
                 try {
                     drmaaSession.deleteJobTemplate(jt);
                 } catch (DrmaaException e) {
-                    logger.warn("Error deleting the DRMAA job template for {} with {}", serviceContext, cmdArgs, e);
+                    logger.error("Error deleting a DRMAA job {} for {}", processingScript, serviceContext, e);
                 }
             }
         }
@@ -165,7 +174,7 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
         if (serviceTimeout == null) {
             return Session.TIMEOUT_WAIT_FOREVER;
         } else {
-            return serviceTimeout.longValue();
+            return serviceTimeout;
         }
     }
 }

@@ -1,5 +1,6 @@
 package org.janelia.jacs2.asyncservice.fileservices;
 
+import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -178,9 +179,9 @@ public class FileCopyProcessorTest {
                 .addArg("-src", testSource)
                 .addArg("-dst", testDestFile.getAbsolutePath())
                 .build();
-        List<String> args = testProcessor.prepareCmdArgs(testServiceData);
-        assertThat(testServiceData.getServiceCmd(), equalTo(executablesBaseDir + "/" + scriptName));
-        assertThat(args, contains(testSource, testDestFile.getAbsolutePath()));
+        ExternalCodeBlock copyScript = testProcessor.prepareExternalScript(testServiceData);
+        assertThat(copyScript.toString(),
+                equalTo(executablesBaseDir + "/" + scriptName + " " + testSource + " " + testDestFile.getAbsolutePath() + " \n"));
     }
 
     @Test
@@ -193,9 +194,9 @@ public class FileCopyProcessorTest {
                 .addArg("-mv")
                 .addArg("-convert8")
                 .build();
-        List<String> args = testProcessor.prepareCmdArgs(testServiceData);
-        assertThat(testServiceData.getServiceCmd(), equalTo(executablesBaseDir + "/" + scriptName));
-        assertThat(args, contains(testSource, testDestFile.getAbsolutePath(), "8"));
+        ExternalCodeBlock copyScript = testProcessor.prepareExternalScript(testServiceData);
+        assertThat(copyScript.toString(),
+                equalTo(executablesBaseDir + "/" + scriptName + " " + testSource + " " + testDestFile.getAbsolutePath() + " 8 \n"));
     }
 
     @Test

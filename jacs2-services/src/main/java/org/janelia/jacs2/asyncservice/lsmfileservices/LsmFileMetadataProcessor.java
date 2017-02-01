@@ -1,9 +1,10 @@
 package org.janelia.jacs2.asyncservice.lsmfileservices;
 
 import com.beust.jcommander.JCommander;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
+import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -19,18 +20,11 @@ import org.slf4j.Logger;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<File> {
 
@@ -87,20 +81,6 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
     }
 
     @Override
-    protected ServiceComputation<File> postProcessData(File processingResult, JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(processingResult)
-                .thenApply(f -> {
-                    try {
-                        logger.debug("Delete temporary service script: {}", jacsServiceData.getServiceCmd());
-                        Files.deleteIfExists(new File(jacsServiceData.getServiceCmd()).toPath());
-                        return f;
-                    } catch (Exception e) {
-                        throw new ComputationException(jacsServiceData, e);
-                    }
-                });
-    }
-
-    @Override
     protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
         File lsmMetadataFile = (File) preProcessingResult;
         return lsmMetadataFile.exists();
@@ -108,43 +88,25 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
 
     @Override
     protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        File lsmMetadataFile = (File) preProcessingResult;
-        return lsmMetadataFile;
+        return (File) preProcessingResult;
     }
 
     @Override
-    protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
+    protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
         LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args = getArgs(jacsServiceData);
-        File scriptFile = createScript(jacsServiceData, args);
-        jacsServiceData.setServiceCmd(scriptFile.getAbsolutePath());
-        return ImmutableList.of();
+        ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
+        createScript(args, externalScriptCode.getCodeWriter());
+        return externalScriptCode;
     }
 
-    private File createScript(JacsServiceData jacsServiceData, LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args) {
-        File inputFile = getInputFile(args);
-        File outputFile = getOutputFile(args);
-        File workingDir = outputFile.getParentFile();
-        Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwx------");
-        BufferedWriter outputStream = null;
-        File scriptFile = null;
-        try {
-            scriptFile = Files.createFile(
-                    Paths.get(workingDir.getAbsolutePath(), jacsServiceData.getName() + "_" + jacsServiceData.getId() + ".sh"),
-                    PosixFilePermissions.asFileAttribute(perms)).toFile();
-            outputStream = new BufferedWriter(new FileWriter(scriptFile));
-            outputStream.append(String.format("%s %s %s > %s\n", perlExecutable, getFullExecutableName(scriptName), inputFile.getAbsoluteFile(), outputFile.getAbsoluteFile()));
-            outputStream.flush();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        } finally {
-            if (outputStream != null) {
-                try {
-                    outputStream.close();
-                } catch (IOException ignore) {
-                }
-            }
-        }
-        return scriptFile;
+    private void createScript(LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args, ScriptWriter scriptWriter) {
+        scriptWriter
+                .addWithArgs(perlExecutable)
+                .addArg(getFullExecutableName(scriptName))
+                .addArg(getInputFile(args).getAbsolutePath())
+                .addArg(">")
+                .addArg(getOutputFile(args).getAbsolutePath())
+                .endArgs("");
     }
 
     @Override
