@@ -13,6 +13,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Set;
 
 abstract class AbstractExternalProcessRunner implements ExternalProcessRunner {
     protected final Logger logger;
@@ -26,8 +29,10 @@ abstract class AbstractExternalProcessRunner implements ExternalProcessRunner {
         Preconditions.checkArgument(StringUtils.isNotBlank(workingDirName));
         Path workingDirectory = Paths.get(workingDirName);
         Files.createDirectories(workingDirectory);
+        Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwxrwx---");
         String scriptFileName = sd.getName() + "_" + sd.getId().toString() + ".sh";
-        File scriptFile = new File(workingDirectory.toFile(), scriptFileName);
+        File scriptFile = Files.createFile(workingDirectory.resolve(scriptFileName), PosixFilePermissions.asFileAttribute(perms)).toFile();
+
         ScriptWriter scriptWriter = new ScriptWriter(new BufferedWriter(new FileWriter(scriptFile)));
         try {
             scriptWriter.add(externalCode.toString());
