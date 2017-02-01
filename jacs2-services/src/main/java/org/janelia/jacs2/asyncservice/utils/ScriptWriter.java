@@ -90,6 +90,11 @@ public class ScriptWriter {
         return this;
     }
 
+    public ScriptWriter exportVar(String var, String value) throws IOException {
+        w.append(indent).append("export ").append(var).append('=').append(value).append('\n');
+        return this;
+    }
+
     public ScriptWriter echo(String line) throws IOException {
         w.append(indent).append("echo ").append('"').append(line).append('"').append('\n');
         return this;

@@ -1,5 +1,7 @@
 package org.janelia.jacs2.asyncservice.utils;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
@@ -81,7 +83,7 @@ public class X11Utils {
                 .echo("Started Xvfb on port $PORT")
                 // Save the PID so that we can kill it when we're done
                 .setVar("MYPID", "$!")
-                .setVar("DISPLAY", "localhost:${PORT}.0")
+                .exportVar("DISPLAY", StringUtils.wrap("localhost:${PORT}.0", '"'))
                 // Wait some time and check to make sure Xvfb is actually running, and retry if not.
                 .add("sleep 3")
                 .add("if kill -0 $MYPID >/dev/null 2>&1; then")
