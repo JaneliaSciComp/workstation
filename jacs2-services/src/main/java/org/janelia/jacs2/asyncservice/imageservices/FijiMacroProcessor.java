@@ -86,14 +86,6 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
         ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
         ScriptWriter externalScriptWriter = externalScriptCode.getCodeWriter();
         createScript(jacsServiceData, args, externalScriptWriter);
-        if (StringUtils.isNotBlank(args.finalOutput) && StringUtils.isNotBlank(args.temporaryOutput) &&
-                !args.finalOutput.equals(args.temporaryOutput)) {
-            if (args.resultsPatterns.isEmpty()) {
-                externalScriptWriter.add(String.format("cp -a %s/* %s", args.temporaryOutput, args.finalOutput));
-            } else {
-                args.resultsPatterns.forEach(resultPattern -> externalScriptWriter.add(String.format("cp %s/%s %s", args.temporaryOutput, resultPattern, args.finalOutput)));
-            }
-        }
         externalScriptWriter.close();
         return externalScriptCode;
     }
@@ -101,6 +93,12 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
     private void createScript(JacsServiceData jacsServiceData, FijiMacroServiceDescriptor.FijiMacroArgs args,
                               ScriptWriter scriptWriter) {
         try {
+            if (StringUtils.isNotBlank(args.temporaryOutput)) {
+                Files.createDirectories(Paths.get(args.temporaryOutput));
+            }
+            if (StringUtils.isNotBlank(args.finalOutput)) {
+                Files.createDirectories(Paths.get(args.finalOutput));
+            }
             Path workingDir = getWorkingDirectory(jacsServiceData);
             X11Utils.setDisplayPort(workingDir.toString(), scriptWriter);
             // Create temp dir so that large temporary avis are not created on the network drive
@@ -118,6 +116,14 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
             scriptWriter.setVar("fpid","$!");
             X11Utils.startScreenCaptureLoop(scratchDir + "/xvfb-" + jacsServiceData.getId() + ".${PORT}",
                     "PORT", "fpid", 30, getTimeoutInSeconds(jacsServiceData), scriptWriter);
+            if (StringUtils.isNotBlank(args.finalOutput) && StringUtils.isNotBlank(args.temporaryOutput) &&
+                    !args.finalOutput.equals(args.temporaryOutput)) {
+                if (args.resultsPatterns.isEmpty()) {
+                    scriptWriter.add(String.format("cp -a %s/* %s", args.temporaryOutput, args.finalOutput));
+                } else {
+                    args.resultsPatterns.forEach(resultPattern -> scriptWriter.add(String.format("cp %s/%s %s", args.temporaryOutput, resultPattern, args.finalOutput)));
+                }
+            }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
