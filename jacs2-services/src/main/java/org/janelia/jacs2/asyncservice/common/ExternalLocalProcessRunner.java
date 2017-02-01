@@ -33,7 +33,6 @@ public class ExternalLocalProcessRunner extends AbstractExternalProcessRunner {
             throw new ComputationException(serviceContext, e);
         }
         ProcessBuilder processBuilder = new ProcessBuilder(ImmutableList.<String>builder()
-                .add("/bin/sh")
                 .add(processingScript).build());
         if (MapUtils.isNotEmpty(env)) {
             processBuilder.environment().putAll(env);
