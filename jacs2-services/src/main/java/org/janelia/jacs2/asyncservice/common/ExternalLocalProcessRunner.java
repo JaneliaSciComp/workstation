@@ -7,9 +7,6 @@ import org.janelia.jacs2.asyncservice.qualifier.LocalJob;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Map;
 
 @LocalJob
@@ -35,7 +32,9 @@ public class ExternalLocalProcessRunner extends AbstractExternalProcessRunner {
             logger.error("Error creating the processing script with {} for {}", externalCode, serviceContext, e);
             throw new ComputationException(serviceContext, e);
         }
-        ProcessBuilder processBuilder = new ProcessBuilder(ImmutableList.<String>builder().add(processingScript).build());
+        ProcessBuilder processBuilder = new ProcessBuilder(ImmutableList.<String>builder()
+                .add("/bin/sh")
+                .add(processingScript).build());
         if (MapUtils.isNotEmpty(env)) {
             processBuilder.environment().putAll(env);
         }

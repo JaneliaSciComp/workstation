@@ -86,12 +86,7 @@ public class ScriptWriter {
     }
 
     public ScriptWriter setVar(String var, String value) throws IOException {
-        w.append(indent).append(var).append('=').append('"').append(value).append('"').append('\n');
-        return this;
-    }
-
-    public ScriptWriter exportVar(String var, String value) throws IOException {
-        w.append(indent).append("EXPORT ").append(var).append('=').append('"').append(value).append('"').append('\n');
+        w.append(indent).append(var).append('=').append(value).append('\n');
         return this;
     }
 
