@@ -24,6 +24,8 @@ import org.janelia.it.workstation.browser.components.OntologyExplorerTopComponen
 import org.janelia.it.workstation.browser.gui.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.browser.gui.keybind.ShortcutTextField;
 import org.janelia.it.workstation.browser.nodes.OntologyNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A dialog for setting a key binding to an action. THe dialog should be shown with showForAction.
@@ -32,6 +34,8 @@ import org.janelia.it.workstation.browser.nodes.OntologyNode;
  */
 public class KeyBindDialog extends ModalDialog {
 
+    private final static Logger log = LoggerFactory.getLogger(KeyBindDialog.class);
+    
     private JTextArea conflictInfoArea;
     private ShortcutTextField shortcutField;
     private Action actionToBind;
@@ -90,6 +94,7 @@ public class KeyBindDialog extends ModalDialog {
                 KeyBindings.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
                 OntologyNode ontologyNode = OntologyExplorerTopComponent.getInstance().getOntologyNode();
                 KeyBindings.getKeyBindings().saveOntologyKeybinds(ontologyNode.getId());
+                log.info("Assigned key bind {} to action {}", keyboardShortcut, actionToBind.getName());
                 setVisible(false);
             }
         });
