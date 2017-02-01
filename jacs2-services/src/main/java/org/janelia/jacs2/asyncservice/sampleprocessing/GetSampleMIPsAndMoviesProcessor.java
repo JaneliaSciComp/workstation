@@ -164,6 +164,8 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                             .addArg("-macroArgs", getBasicMIPsAndMoviesArgs(f, args, temporaryOutputDir))
                             .addArg("-temporaryOutput", temporaryOutputDir.toString())
                             .addArg("-finalOutput", getResultsDir(args).toString())
+                            .addArg("-resultsPatterns", "*.png")
+                            .addArg("-resultsPatterns", "*.avi")
                             .build();
             fijiComputations.add(
                     this.submitServiceDependency(jacsServiceData, fijiService)
