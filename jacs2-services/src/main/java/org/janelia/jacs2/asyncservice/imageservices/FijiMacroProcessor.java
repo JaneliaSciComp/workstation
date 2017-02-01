@@ -118,10 +118,11 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
                     "PORT", "fpid", 30, getTimeoutInSeconds(jacsServiceData), scriptWriter);
             if (StringUtils.isNotBlank(args.finalOutput) && StringUtils.isNotBlank(args.temporaryOutput) &&
                     !args.finalOutput.equals(args.temporaryOutput)) {
+                // the copy should not fail if the file exists
                 if (args.resultsPatterns.isEmpty()) {
-                    scriptWriter.add(String.format("cp -a %s/* %s", args.temporaryOutput, args.finalOutput));
+                    scriptWriter.add(String.format("cp -a %s/* %s || true", args.temporaryOutput, args.finalOutput));
                 } else {
-                    args.resultsPatterns.forEach(resultPattern -> scriptWriter.add(String.format("cp %s/%s %s", args.temporaryOutput, resultPattern, args.finalOutput)));
+                    args.resultsPatterns.forEach(resultPattern -> scriptWriter.add(String.format("cp %s/%s %s || true", args.temporaryOutput, resultPattern, args.finalOutput)));
                 }
             }
         } catch (IOException e) {
