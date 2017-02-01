@@ -77,14 +77,13 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
             return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "No sample image file was found"));
         }
         GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
-        Path outputDir = Paths.get(args.sampleDataDir, args.mipsSubDir);
         try {
             // the output directory must exist
-            Files.createDirectories(outputDir);
+            Files.createDirectories(getResultsDir(args));
         } catch (IOException e) {
             throw new ComputationException(jacsServiceData, e);
         }
-        List<ServiceComputation<?>> mipsComputations = submitAllFijiServices(sampleLSMs, args, jacsServiceData, outputDir);
+        List<ServiceComputation<?>> mipsComputations = submitAllFijiServices(sampleLSMs, args, jacsServiceData);
         return computationFactory.newCompletedComputation(jacsServiceData)
                 .thenCombineAll(mipsComputations, (sd, sampleMIPsResults) -> sampleMIPsResults)
                 .thenCompose(r -> this.collectResult(preProcessingResult, jacsServiceData))
@@ -150,19 +149,20 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         return results;
     }
 
-    private List<ServiceComputation<?>> submitAllFijiServices(List<SampleImageFile> lsmFiles, GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args, JacsServiceData jacsServiceData, Path outputDir) {
+    private List<ServiceComputation<?>> submitAllFijiServices(List<SampleImageFile> lsmFiles, GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args, JacsServiceData jacsServiceData) {
         List<ServiceComputation<?>> fijiComputations = new ArrayList<>();
         lsmFiles.forEach(f -> {
             if (!f.isChanSpecDefined()) {
                 throw new ComputationException(jacsServiceData,
                         "No channel spec for LSM " + f.getId() + "-" + f.getArchiveFilePath());
             }
+            Path temporaryOutputDir = getServicePath(scratchLocation, jacsServiceData);
             JacsServiceData fijiService =
                     new JacsServiceDataBuilder(jacsServiceData)
                             .setName("fijiMacro")
                             .addArg("-macro", basicMIPsAndMoviesMacro)
-                            .addArg("-macroArgs", getBasicMIPsAndMoviesArgs(f, args, outputDir))
-                            .addArg("-temporaryOutput", getServicePath(scratchLocation, jacsServiceData).toString())
+                            .addArg("-macroArgs", getBasicMIPsAndMoviesArgs(f, args, temporaryOutputDir))
+                            .addArg("-temporaryOutput", temporaryOutputDir.toString())
                             .addArg("-finalOutput", getResultsDir(args).toString())
                             .build();
             fijiComputations.add(
