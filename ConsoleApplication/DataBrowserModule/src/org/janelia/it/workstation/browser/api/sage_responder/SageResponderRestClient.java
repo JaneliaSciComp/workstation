@@ -33,10 +33,10 @@ public class SageResponderRestClient extends RESTClientImpl {
 
     public Collection<String> getPublishingNames(String lineName) throws Exception {
         Set<String> names = new LinkedHashSet<>();
-        Response response = manager.getPublishingInfoLineEndpoint().path(lineName)
+        Response response = manager.getPublishingInfoLineEndpoint().queryParam("line", lineName)
                 .request("application/json")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request getPublishingNames from server")) {
+        if (checkBadResponse(response.getStatus(), "problem making request getPublishingNames for line "+lineName)) {
             throw new WebApplicationException(response);
         }
         
@@ -58,15 +58,19 @@ public class SageResponderRestClient extends RESTClientImpl {
         Response response = manager.getImageInfoLineEndpoint().path(sageImageId.toString())
                 .request("application/json")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request getImagePublishingName from server")) {
+        if (checkBadResponse(response.getStatus(), "problem making request getImageProperties for image "+sageImageId)) {
             throw new WebApplicationException(response);
         }
 
         JsonNode data = response.readEntity(new GenericType<JsonNode>() {});
         if (data!=null) {
             JsonNode imageData = data.get("image_data");
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.convertValue(imageData, Map.class);
+            if (imageData.isArray()) {
+                for (final JsonNode objNode : imageData) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    return mapper.convertValue(objNode, Map.class);
+                }
+            }
         }
         
         return null;
