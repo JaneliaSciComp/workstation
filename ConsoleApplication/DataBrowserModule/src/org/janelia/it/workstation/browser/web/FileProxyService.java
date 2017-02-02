@@ -14,7 +14,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.eclipse.osgi.framework.internal.core.Framework;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.util.WorkstationFile;
