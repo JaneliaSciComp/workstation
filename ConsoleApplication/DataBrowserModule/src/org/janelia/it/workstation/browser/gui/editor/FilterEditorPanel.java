@@ -770,7 +770,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     }
 
     private void reload() throws Exception {
-        if (filter==null) return;
+        if (filter==null || filter.getId()==null) return;
         Filter updatedFilter = getDomainMgr().getModel().getDomainObject(filter.getClass(), filter.getId());
         this.filter = updatedFilter;
         if (filterNode!=null && !filterNode.getFilter().equals(updatedFilter)) {
