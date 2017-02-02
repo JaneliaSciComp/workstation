@@ -50,11 +50,8 @@ public interface NeuronSet extends Collection<NeuronModel>
 
     public boolean isSpatialIndexValid();
     List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2);
-    List<NeuronVertex> getAnchorsInVoxelArea(double[] p1, double[] p2);
     List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n);
-    List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n);
     NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ);
-    NeuronVertex getAnchorClosestToVoxelLocation(double[] voxelXYZ);
 
     NeuronModel getNeuronForAnchor(NeuronVertex anchor);
 

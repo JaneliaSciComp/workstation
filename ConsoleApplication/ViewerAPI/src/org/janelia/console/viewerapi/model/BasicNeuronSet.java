@@ -219,26 +219,12 @@ implements NeuronSet
     }
     
     @Override
-    public List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    @Override
-    public NeuronVertex getAnchorClosestToVoxelLocation(double[] voxelXYZ) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    
-    @Override
-    public List<NeuronVertex> getAnchorsInVoxelArea(double[] p1, double[] p2) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
