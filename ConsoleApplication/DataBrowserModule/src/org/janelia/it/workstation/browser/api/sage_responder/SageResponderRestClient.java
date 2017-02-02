@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.browser.api.sage_responder;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
