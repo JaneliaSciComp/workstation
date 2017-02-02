@@ -961,8 +961,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireNeuronChanged(neuron);
-
+                beginTransaction();
+                try {
+                    fireNeuronChanged(neuron);
+                }
+                finally {
+                    endTransaction();
+                }
                 activityLog.logEndOfOperation(getWsId(), link);
 
             }
