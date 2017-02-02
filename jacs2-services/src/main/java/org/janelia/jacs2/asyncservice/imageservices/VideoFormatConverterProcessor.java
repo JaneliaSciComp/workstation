@@ -91,7 +91,7 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
         ScriptWriter externalScriptWriter = externalScriptCode.getCodeWriter();
         externalScriptWriter.addWithArgs(getFFMPEGExecutable())
                 .addArg("-y")
-                .addArg("-r").add("7")
+                .addArg("-r").addArg("7")
                 .addArg("-i").addArg(args.input)
                 .addArg("-vcodec")
                 .addArg("libx264")
