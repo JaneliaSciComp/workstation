@@ -34,6 +34,10 @@ public class GlobalDomainObjectSelectionModel extends SelectionModel<DomainObjec
 
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
+        if (!event.isUserDriven()) {
+            // Events that are automatic should not change the global selection
+            return;
+        }
         log.trace("Applying to global: {}",event);
         if (event.isSelect()) {
             select(event.getDomainObjects(), event.isClearAll(), event.isUserDriven());
