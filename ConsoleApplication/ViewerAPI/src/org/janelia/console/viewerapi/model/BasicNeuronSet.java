@@ -241,4 +241,9 @@ implements NeuronSet
     public List<NeuronVertex> getAnchorsInVoxelArea(double[] p1, double[] p2) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    
+    @Override 
+    public NeuronModel getNeuronByGuid(Long guid) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

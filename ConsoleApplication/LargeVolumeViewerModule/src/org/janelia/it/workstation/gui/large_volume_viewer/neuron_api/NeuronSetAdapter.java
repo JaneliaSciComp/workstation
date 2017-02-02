@@ -182,6 +182,12 @@ implements NeuronSet// , LookupListener
         return spatialIndex.isValid();
     }
 
+    @Override 
+    public NeuronModel getNeuronByGuid(Long guid) {
+        TmNeuronMetadata neuronMetadata = annotationModel.getNeuronFromNeuronID(guid);
+        return innerList.neuronModelForTmNeuron(neuronMetadata);
+    }
+    
     public NeuronModel getNeuronForAnnotation(TmGeoAnnotation annotation) {
         return neuronModelForTmGeoAnnotation(annotation);
     }

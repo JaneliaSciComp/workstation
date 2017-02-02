@@ -117,6 +117,11 @@ public class NeuronModelAdapter implements NeuronModel
         return vertexes.getVertexByGuid(annotation.getId());
     }
     
+    @Override
+    public NeuronVertex getVertexByGuid(Long guid) {
+        return vertexes.getVertexByGuid(guid);
+    }
+    
     // Special method for adding annotation anchors from the Horta side
     @Override
     public NeuronVertex appendVertex(NeuronVertex parent, float[] micronXyz, float radius) 

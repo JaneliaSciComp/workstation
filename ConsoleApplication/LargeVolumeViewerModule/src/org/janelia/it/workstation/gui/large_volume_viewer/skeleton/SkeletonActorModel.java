@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -733,13 +734,29 @@ public class SkeletonActorModel {
                     };
             
             // Find all relevant anchors which are inside the viewport
-
+            
             List<TmGeoAnnotation> annotations = new ArrayList<>();
             List<NeuronVertex> vertexList = neuronSet.getAnchorsInMicronArea(wp1, wp2);
             if (vertexList != null) {
                 for (NeuronVertex vertex : vertexList) {
-                    TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
-                    annotations.add(annotation);
+                    if (vertex instanceof NeuronVertexAdapter) {
+                        TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
+                        annotations.add(annotation);
+                    }
+                }
+            }
+            
+            // Add next parent, even if it's not in the current viewport
+            Anchor nextParent = getNextParent();
+            if (nextParent != null) {
+                // Serious gymnastics required to get a TmGeoAnnotation by id 
+                NeuronModel nextNeuron = neuronSet.getNeuronByGuid(nextParent.getNeuronID());
+                if (nextNeuron!=null) {
+                    NeuronVertex nextVertex = nextNeuron.getVertexByGuid(nextParent.getGuid());
+                    if (nextVertex instanceof NeuronVertexAdapter) {
+                        TmGeoAnnotation nextAnnotation = ((NeuronVertexAdapter) nextVertex).getTmGeoAnnotation();
+                        annotations.add(nextAnnotation);
+                    }
                 }
             }
             

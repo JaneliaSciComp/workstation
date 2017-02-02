@@ -63,5 +63,6 @@ public interface NeuronSet extends Collection<NeuronModel>
     NeuronVertex getPrimaryAnchor(); // can be null
     void setPrimaryAnchor(NeuronVertex anchor); // set to null to clear
     ObservableInterface getPrimaryAnchorObservable();
-
+    
+    public NeuronModel getNeuronByGuid(Long guid);
 }
