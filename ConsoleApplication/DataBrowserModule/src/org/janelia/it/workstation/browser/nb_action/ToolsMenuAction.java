@@ -78,19 +78,7 @@ public final class ToolsMenuAction extends AbstractAction implements Presenter.M
                 tmpMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        try {
-                            ToolMgr.runTool(o);
-                        }
-                        catch (Exception e1) {
-                            log.error("Could launch tool: "+o,e1);
-                            JOptionPane.showMessageDialog(
-                                    ConsoleApp.getMainFrame(),
-                                    "Could not launch this tool. "
-                                    + "Please choose the appropriate file path from the Tools->Configure Tools area",
-                                    "ToolInfo Launch ERROR",
-                                    JOptionPane.ERROR_MESSAGE
-                            );
-                        }
+                        ToolMgr.runToolSafely(o);
                     }
                 });
 

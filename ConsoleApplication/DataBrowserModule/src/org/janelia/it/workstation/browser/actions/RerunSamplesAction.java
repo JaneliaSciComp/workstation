@@ -64,12 +64,11 @@ public class RerunSamplesAction extends AbstractAction {
                 if (sample.getStatus() == null) {
                     logger.info("Null sample status in selection Name={}, ID={}.", sample.getName(), sample.getId());
                 }
-                /*if (!PipelineStatus.Processing.toString().equals(sample.getStatus())  &&
+                if (!PipelineStatus.Processing.toString().equals(sample.getStatus())  &&
                     !PipelineStatus.Scheduled.toString().equals(sample.getStatus())  &&
                     ClientDomainUtils.hasWriteAccess(sample)) {
                     samples.add(sample);
-                }*/
-                samples.add(sample);
+                }
             }
         }
         if (samples.size() > 0  &&

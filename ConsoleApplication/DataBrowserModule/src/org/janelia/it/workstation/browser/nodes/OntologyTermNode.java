@@ -292,9 +292,11 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 if (getOntologyTerm() instanceof Ontology) {
                     model.removeOntology(getOntology().getId());   
+                    log.info("Removed ontology {}", getOntology().getId());
                 }
                 else {
-                    model.removeOntologyTerm(getOntology().getId(), getParent().getId(), getOntologyTerm().getId());    
+                    model.removeOntologyTerm(getOntology().getId(), getParent().getId(), getOntologyTerm().getId());
+                    log.info("Removed ontology term {} from ontology {}", getOntologyTerm().getId(), getOntology().getId());
                 }
             }
             catch (Exception ex) {
@@ -344,27 +346,27 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
 //        }
 //    }
 
-    @Override
-    public void destroy() throws IOException {
-        if (!ClientDomainUtils.hasWriteAccess(getOntology())) {
-            return;
-        }
-        if (parentChildFactory==null) {
-            throw new IllegalStateException("Cannot destroy node without parent");
-        }
-        if (parentChildFactory instanceof OntologyChildFactory) {
-            OntologyChildFactory ontologyChildFactory = parentChildFactory;
-            try {
-                ontologyChildFactory.removeChild(getOntologyTerm());
-            }
-            catch (Exception e) {
-                throw new IOException("Error destroying node",e);
-            }
-        }
-        else {
-            throw new IllegalStateException("Cannot destroy term without parent");
-        }
-    }
+//    @Override
+//    public void destroy() throws IOException {
+//        if (!ClientDomainUtils.hasWriteAccess(getOntology())) {
+//            return;
+//        }
+//        if (parentChildFactory==null) {
+//            throw new IllegalStateException("Cannot destroy node without parent");
+//        }
+//        if (parentChildFactory instanceof OntologyChildFactory) {
+//            OntologyChildFactory ontologyChildFactory = parentChildFactory;
+//            try {
+//                ontologyChildFactory.removeChild(getOntologyTerm());
+//            }
+//            catch (Exception e) {
+//                throw new IOException("Error destroying node",e);
+//            }
+//        }
+//        else {
+//            throw new IllegalStateException("Cannot destroy term without parent");
+//        }
+//    }
     
     @Override
     public Transferable clipboardCopy() throws IOException {

@@ -763,6 +763,7 @@ public class SkeletonActorModel {
             // Add all parent and child anchors, so that lines are draw even if the linked anchor is outside the viewport
 
             for (Long annotationId : getRelevantAnchorIds(neuronSetAdapter, annotations)) {
+
                 Anchor anchor = skeleton.getAnchorByID(annotationId);
                 if (anchor != null) {
                     anchors.add(anchor);

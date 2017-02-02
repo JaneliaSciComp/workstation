@@ -18,7 +18,6 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.Subject;
-import org.janelia.it.jacs.model.domain.enums.PipelineStatus;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
@@ -694,11 +693,17 @@ public class DomainModel {
      * @return the ontology term 
      */
     public OntologyTerm getOntologyTermByReference(OntologyTermReference reference) throws Exception {
+        if (reference==null) {
+            return null;
+        }
         Ontology ontology = getDomainObject(Ontology.class, reference.getOntologyId());
         return findTerm(ontology, reference.getOntologyTermId());
     }
 
     private OntologyTerm findTerm(OntologyTerm term, Long termId) {
+        if (term==null) {
+            return null;
+        }
         if (term.getId().equals(termId)) {
             return term;
         }

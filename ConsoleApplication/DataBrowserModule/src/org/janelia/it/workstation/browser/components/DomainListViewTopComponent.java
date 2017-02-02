@@ -140,7 +140,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     void writeProperties(java.util.Properties p) {
         p.setProperty("version", TC_VERSION);
         DomainObject current = getCurrent();
-        if (current!=null) {
+        if (current!=null && current.getId()!=null) {
             String objectRef = Reference.createFor(current).toString();
             log.info("Writing state: {}",objectRef);
             p.setProperty("objectRef", objectRef);
