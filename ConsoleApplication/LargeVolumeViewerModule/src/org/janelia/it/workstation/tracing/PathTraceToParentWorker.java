@@ -111,10 +111,10 @@ public class PathTraceToParentWorker extends BackgroundWorker {
 
             // launder the request down to a more generic request
             PathTraceRequest simpleRequest = new PathTraceRequest(request.getXyz1(),
-                    request.getXyz2(), request.getAnchorGuid1(), request.getAnchorGuid2());
+                    request.getXyz2(), request.getNeuronGuid(), request.getAnchorGuid1(), request.getAnchorGuid2());
             TracedPathSegment result = new TracedPathSegment(simpleRequest, reducedPath, intensities);
             if (pathTraceListener != null) {
-                pathTraceListener.pathTraced(result);
+                pathTraceListener.pathTraced(request.getNeuronGuid(), result);
             }
 
             setStatus("Done");

@@ -31,10 +31,12 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -43,27 +45,23 @@ import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.BasicNeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.BasicNeuronVertexDeletionObservable;
+import org.janelia.console.viewerapi.model.BasicNeuronVertexUpdateObservable;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
+import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import Jama.Matrix;
-import org.janelia.console.viewerapi.model.BasicNeuronVertexUpdateObservable;
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 
 /**
  *
@@ -117,6 +115,11 @@ public class NeuronModelAdapter implements NeuronModel
         
     public NeuronVertex getVertexForAnnotation(TmGeoAnnotation annotation) {
         return vertexes.getVertexByGuid(annotation.getId());
+    }
+    
+    @Override
+    public NeuronVertex getVertexByGuid(Long guid) {
+        return vertexes.getVertexByGuid(guid);
     }
     
     // Special method for adding annotation anchors from the Horta side
@@ -174,20 +177,25 @@ public class NeuronModelAdapter implements NeuronModel
         if (! (target instanceof NeuronVertexAdapter))
             return false;
         NeuronVertexAdapter targetNVA = (NeuronVertexAdapter)target;
-        Long sourceID = sourceNVA.getTmGeoAnnotation().getId();
-        Long targetID = targetNVA.getTmGeoAnnotation().getId();
+        
+        TmGeoAnnotation sourceAnn = sourceNVA.getTmGeoAnnotation();
+        TmGeoAnnotation targetAnn = targetNVA.getTmGeoAnnotation();
+        
+        Long sourceID = sourceAnn.getId();
+        Long targetID = targetAnn.getId();
         
         // Borrow logic from AnnotationManager::canMergeNeurite()::520
         if (sourceID.equals(targetID))
             return false; // cannot merge with itself
-        if (neuronSet.annotationModel.getNeuriteRootAnnotation(sourceNVA.getTmGeoAnnotation()).getId().equals(
-                neuronSet.annotationModel.getNeuriteRootAnnotation(targetNVA.getTmGeoAnnotation()).getId())) {
+        if (neuronSet.annotationModel.getNeuriteRootAnnotation(sourceAnn).getId().equals(
+                neuronSet.annotationModel.getNeuriteRootAnnotation(targetAnn).getId())) {
             return false;
         }
         
         try {
-            neuronSet.annotationModel.mergeNeurite(sourceID, targetID);
-        } catch (Exception ex) {
+            neuronSet.annotationModel.mergeNeurite(sourceAnn.getNeuronId(), sourceID, targetAnn.getNeuronId(), targetID);
+        } 
+        catch (Exception ex) {
             return false;
         }
         return true;
@@ -200,7 +208,7 @@ public class NeuronModelAdapter implements NeuronModel
                 return false;
             NeuronVertexAdapter nva = (NeuronVertexAdapter)vertex;
             TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
-            neuronSet.annotationModel.updateAnnotationRadius(annotation.getId(), micronRadius);
+            neuronSet.annotationModel.updateAnnotationRadius(annotation.getNeuronId(), annotation.getId(), micronRadius);
             return true;
         }
         catch (Exception ex) {
@@ -229,7 +237,7 @@ public class NeuronModelAdapter implements NeuronModel
                     annotation.getX(),
                     annotation.getY(),
                     annotation.getZ());
-            neuronSet.annotationModel.moveAnnotation(annotation.getId(), destination);
+            neuronSet.annotationModel.moveAnnotation(annotation.getNeuronId(), annotation.getId(), destination);
             return true;
         }
         catch (Exception ex) {
@@ -375,6 +383,16 @@ public class NeuronModelAdapter implements NeuronModel
         return vertexes;
     }
 
+    public Collection<NeuronVertex> getCachedVertexes()
+    {
+        return vertexes.getCachedVertices();
+    }
+
+    public void clearCachedVertices()
+    {
+        vertexes.clearCachedVertices();
+    }
+    
     @Override
     public Collection<NeuronEdge> getEdges()
     {
@@ -771,6 +789,13 @@ public class NeuronModelAdapter implements NeuronModel
             return cachedVertices.get(vertexId);
         }
 
+        public List<NeuronVertex> getCachedVertices() {
+            return new ArrayList<>(cachedVertices.values());
+        }
+        
+        public void clearCachedVertices() {
+            cachedVertices.clear();
+        }
     }
 
 }

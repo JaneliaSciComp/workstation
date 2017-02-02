@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
 import java.awt.BorderLayout;
+import java.util.List;
 
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
@@ -12,8 +13,8 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
@@ -32,6 +33,10 @@ import org.openide.windows.TopComponentGroup;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Top component which displays the Large Volume Viewer.
@@ -198,16 +203,36 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     }
 
     void writeProperties(java.util.Properties p) {
+        
         p.setProperty("version", TC_VERSION);
+        
+        // Save currently open object
+        
         DomainObject current = getCurrent();
         if (current!=null) {
             String objectRef = Reference.createFor(current).toString();
-            log.info("Writing state: {}",objectRef);
+            log.info("Writing state: objectRef={}",objectRef);
             p.setProperty("objectRef", objectRef);
         }
         else {
             p.remove("objectRef");
         }
+        
+        // Save view focus
+        
+        Vec3 focus = lvvv.getQuadViewUi().getCameraFocus();
+        if (focus != null) {
+            String viewFocus = focus.x()+","+focus.y()+","+focus.z();
+            log.info("Writing state: viewFocus={}",viewFocus);
+            p.setProperty("viewFocus", viewFocus);
+        }
+        
+        // Save view zoom
+        double zoom = lvvv.getQuadViewUi().getPixelsPerSceneUnit();
+        log.info("Writing state: viewZoom={}",zoom);
+        p.setProperty("viewZoom", ""+zoom);
+        
+        
     }
 
     void readProperties(java.util.Properties p) {
@@ -219,31 +244,40 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         }
         
         String version = p.getProperty("version");
-        final String objectStrRef = p.getProperty("objectRef");
-        log.info("Reading state: {}",objectStrRef);
-        if (TC_VERSION.equals(version) && !StringUtils.isEmpty(objectStrRef)) {
+        if (!TC_VERSION.equals(version)) return;
+        
+        String objectStrRef = p.getProperty("objectRef");
+        log.info("Reading state: objectRef={}",objectStrRef);
+        
+        if (!StringUtils.isEmpty(objectStrRef)) {
+            final Reference ref = Reference.createFor(objectStrRef);
 
+            String viewFocusStr = p.getProperty("viewFocus");
+            log.info("Reading state: viewFocus={}",viewFocusStr);
+            final Vec3 viewFocus = parseVec3(viewFocusStr);
+
+            String viewZoomStr = p.getProperty("viewZoom");
+            log.info("Reading state: viewZoom={}",viewZoomStr);
+            final Double viewZoom = parseDouble(viewZoomStr);
+            
+            if (viewFocus!=null && viewZoom!=null) {
+                getLvvv().setInitialViewFocus(viewFocus, viewZoom);
+            }
+            
             SimpleWorker worker = new SimpleWorker() {
                 DomainObject domainObject = null;
                 
                 @Override
                 protected void doStuff() throws Exception {
-                    try {
-                        Reference ref = Reference.createFor(objectStrRef);
-                        TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-                        if (TmSample.class.getSimpleName().equals(ref.getTargetClassName())) {
-                            domainObject = tmDomainMgr.getSample(ref.getTargetId());
-                        }
-                        else if (TmWorkspace.class.getSimpleName().equals(ref.getTargetClassName())) {
-                            domainObject = tmDomainMgr.getWorkspace(ref.getTargetId());
-                        }
-                        else {
-                            log.error("State object is unsupported by the LVV: "+ref);
-                        }
+                    TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+                    if (TmSample.class.getSimpleName().equals(ref.getTargetClassName())) {
+                        domainObject = tmDomainMgr.getSample(ref.getTargetId());
                     }
-                    catch (Exception e) {
-                        // Squelch this error because the user does not need to know this failed. They can just re-open the sample manually. 
-                        log.error("Error loading last open object: "+objectStrRef, e);
+                    else if (TmWorkspace.class.getSimpleName().equals(ref.getTargetClassName())) {
+                        domainObject = tmDomainMgr.getWorkspace(ref.getTargetId());
+                    }
+                    else {
+                        log.error("State object is unsupported by the LVV: "+ref);
                     }
                 }
 
@@ -256,11 +290,40 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    ConsoleApp.handleException(error);
+                    // Squelch this error because the user does not need to know this failed. They can just re-open the sample manually. 
+                    log.error("Error loading last open object: "+ref, error);
                 }
             };
             worker.execute();
         }
+    }
+    
+    private Vec3 parseVec3(String vecStr) {
+        try {
+            if (!StringUtils.isBlank(vecStr)) {
+                String[] vecArr = vecStr.split(",");
+                Double x = new Double(vecArr[0]);
+                Double y = new Double(vecArr[1]);
+                Double z = new Double(vecArr[2]);
+                return new Vec3(x, y, z);
+            }
+        }
+        catch (Exception e) {
+            log.warn("Could not parse vector: "+vecStr);
+        }
+        return null;
+    }
+    
+    private Double parseDouble(String doubleStr) {
+        try {
+            if (doubleStr!=null) {
+                return new Double(doubleStr);
+            }
+        }
+        catch (NumberFormatException e) {
+            log.warn("Could not parse double: "+doubleStr);
+        }
+        return null;
     }
     
     private void establishLookups() {

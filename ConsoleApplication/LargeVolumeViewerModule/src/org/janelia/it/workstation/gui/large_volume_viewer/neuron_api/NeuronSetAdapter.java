@@ -54,10 +54,14 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.util.MatrixUtilities;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -74,7 +78,7 @@ public class NeuronSetAdapter
 extends BasicNeuronSet
 implements NeuronSet// , LookupListener
 {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
     
     TmWorkspace workspace; // LVV workspace, as opposed to Horta workspace
     AnnotationModel annotationModel;
@@ -94,34 +98,28 @@ implements NeuronSet// , LookupListener
         this.annotationModListener = new MyTmGeoAnnotationModListener();
         this.hortaWorkspaceResult.addLookupListener(new NSALookupListener());
     }
-    
-    public NeuronSetAdapter()
-    {
+
+    public NeuronSetAdapter() {
         this(new NeuronList());
     }
 
-    @Override
-    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
-        return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n);
-    }
-
-    private void updateVoxToMicronMatrix(TmSample sample)
+    private void updateVoxToMicronMatrices(TmSample sample)
     {
         // If we try to get the matrix too early, it comes back null, so populate just-in-time
         if (sample == null) {
-            logger.error("Attempt to get voxToMicronMatrix for null sample");
+            log.error("Attempt to get voxToMicronMatrix for null sample");
             return;
         }
         String serializedVoxToMicronMatrix = sample.getVoxToMicronMatrix();
         if (serializedVoxToMicronMatrix == null) {
-            logger.error("Found null voxToMicronMatrix");
+            log.error("Found null voxToMicronMatrix");
             return;
         }
         voxToMicronMatrix = MatrixUtilities.deserializeMatrix(serializedVoxToMicronMatrix, "voxToMicronMatrix");
         
         String serializedMicronToVoxMatrix = sample.getMicronToVoxMatrix();
         if (serializedMicronToVoxMatrix == null) {
-            logger.error("Found null micronToVoxMatrix");
+            log.error("Found null micronToVoxMatrix");
             return;
         }
         micronToVoxMatrix = MatrixUtilities.deserializeMatrix(serializedMicronToVoxMatrix, "micronToVoxMatrix");
@@ -130,35 +128,49 @@ implements NeuronSet// , LookupListener
     Jama.Matrix getVoxToMicronMatrix() {
         if (voxToMicronMatrix != null)
             return voxToMicronMatrix;
-        updateVoxToMicronMatrix(annotationModel.getCurrentSample());
+        updateVoxToMicronMatrices(annotationModel.getCurrentSample());
         return voxToMicronMatrix;
     }
     
     Jama.Matrix getMicronToVoxMatrix() {
         if (micronToVoxMatrix != null)
             return micronToVoxMatrix;
-        updateVoxToMicronMatrix(annotationModel.getCurrentSample());
+        updateVoxToMicronMatrices(annotationModel.getCurrentSample());
         return micronToVoxMatrix;
     }
 
     @Override
-    public List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n) {
-        return spatialIndex.getAnchorClosestToVoxelLocation(voxelXYZ, n);
+    public List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2) {
+        return spatialIndex.getAnchorsInMicronArea(p1, p2);
+    }
+        
+    @Override
+    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
+        return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n);
     }
 
+    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n, SpatialFilter filter) {
+        return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n, filter);
+    }
+    
     @Override 
     public NeuronVertex getAnchorClosestToMicronLocation(double[] voxelXYZ) {
         return spatialIndex.getAnchorClosestToMicronLocation(voxelXYZ);
     }
-
+    
     @Override 
-    public NeuronVertex getAnchorClosestToVoxelLocation(double[] micronXYZ) {
-        return spatialIndex.getAnchorClosestToVoxelLocation(micronXYZ);
+    public boolean isSpatialIndexValid() {
+        return spatialIndex.isValid();
     }
 
-    @Override
-    public List<NeuronVertex> getAnchorsInArea(double[] p1, double[] p2) {
-        return spatialIndex.getAnchorsInVoxelArea(p1, p2);
+    @Override 
+    public NeuronModel getNeuronByGuid(Long guid) {
+        TmNeuronMetadata neuronMetadata = annotationModel.getNeuronFromNeuronID(guid);
+        return innerList.neuronModelForTmNeuron(neuronMetadata);
+    }
+    
+    public NeuronModel getNeuronForAnnotation(TmGeoAnnotation annotation) {
+        return neuronModelForTmGeoAnnotation(annotation);
     }
     
     @Override 
@@ -166,7 +178,7 @@ implements NeuronSet// , LookupListener
         if (! (anchor instanceof NeuronVertexAdapter))
             return null;
         TmGeoAnnotation annotation = ((NeuronVertexAdapter)anchor).getTmGeoAnnotation();
-        return neuronModelForTmGeoAnnotation(annotation);
+        return getNeuronForAnnotation(annotation);
     }
     
     @Override
@@ -176,7 +188,7 @@ implements NeuronSet// , LookupListener
             neuron = annotationModel.createNeuron(neuronName);
             getMembershipChangeObservable().setChanged();
         } catch (Exception ex) {
-            logger.warn("Error creating neuron",ex);
+            log.warn("Error creating neuron",ex);
             return null;
         }
         return new NeuronModelAdapter(neuron, this);
@@ -199,7 +211,7 @@ implements NeuronSet// , LookupListener
         annotationModel.addGlobalAnnotationListener(globalAnnotationListener);
         annotationModel.addTmGeoAnnotationModListener(annotationModListener);
         getMembershipChangeObservable().notifyObservers();
-        logger.info("Observing new Annotation Model {}", annotationModel);
+        log.info("Observing new Annotation Model {}", annotationModel);
     }
     
     // Sometimes the TmWorkspace instance changes, even though the semantic workspace has not changed.
@@ -208,7 +220,7 @@ implements NeuronSet// , LookupListener
     private void sanityCheckWorkspace() {
         TmWorkspace w = this.annotationModel.getCurrentWorkspace();
         if (w == workspace) return; // unchanged
-        logger.info("Workspace changed");
+        log.info("Workspace changed");
         setWorkspace(w);
     }
     
@@ -244,8 +256,7 @@ implements NeuronSet// , LookupListener
             getNameChangeObservable().setChanged();
         this.workspace = workspace;
         TmSample sample = annotationModel.getCurrentSample();
-        updateVoxToMicronMatrix(sample);
-        spatialIndex.initSample(sample);
+        updateVoxToMicronMatrices(sample);
         NeuronList nl = (NeuronList) neurons;
         nl.wrap(this);
         getMembershipChangeObservable().setChanged();
@@ -281,9 +292,10 @@ implements NeuronSet// , LookupListener
     {
         
         @Override
-        public void annotationAdded(TmGeoAnnotation annotation)
-        {
-            logger.debug("annotationAdded");
+        public void annotationAdded(TmGeoAnnotation annotation) {
+            
+            log.debug("annotationAdded");
+            
             sanityCheckWorkspace(); // beware of shifting sands beneath us...
             // updateEdges(); // Brute force approach reanalyzes all edges            
             // Surgical approach only adds the one new edge
@@ -291,13 +303,13 @@ implements NeuronSet// , LookupListener
                         
             NeuronModelAdapter neuron = neuronModelForTmGeoAnnotation(annotation);
             if (neuron == null) {
-                logger.error("could not find NeuronModel for newly added TmGeoAnnotation");
+                log.error("could not find NeuronModel for newly added TmGeoAnnotation");
                 return;
             }
             
             NeuronVertex newVertex = neuron.addVertex(annotation);
             if (newVertex == null) {
-                logger.error("NeuronModelAdapter.addVertex() returned null");
+                log.error("NeuronModelAdapter.addVertex() returned null");
                 return;
             }
             neuron.getGeometryChangeObservable().setChanged(); // set here because its hard to detect otherwise
@@ -323,122 +335,144 @@ implements NeuronSet// , LookupListener
                 addedSignal.setChanged();
                 addedSignal.notifyObservers(new VertexWithNeuron(newVertex, neuron));
             }
-            
+
+            log.debug("Adding vertex: {}", newVertex);
             spatialIndex.addToIndex(newVertex);
         }
         
         @Override
-        public void annotationsDeleted(List<TmGeoAnnotation> annotations)
-        {
-            logger.debug("annotationDeleted");
+        public void annotationsDeleted(List<TmGeoAnnotation> annotations) {
+            
+            log.debug("annotationDeleted");
+            
             sanityCheckWorkspace(); // beware of shifting sands beneath us...
             
             // TODO - surgically remove only edges related to these particular vertices
             updateEdges(); // Brute force approach reanalyzes all edges
             
-            if (getMetaWorkspace() != null) 
+            // Create an optimized container of deleted vertices
+            Map<NeuronModel, Collection<NeuronVertex>> deletedVerticesByNeuron =
+                    new HashMap<>();
+            for (TmGeoAnnotation deletedAnnotation : annotations) 
             {
-                // Create an optimized container of deleted vertices
-                Map<NeuronModel, Collection<NeuronVertex>> deletedVerticesByNeuron =
-                        new HashMap<>();
-                for (TmGeoAnnotation deletedAnnotation : annotations) 
-                {
-                    NeuronList nl = (NeuronList) neurons;
-                    Long neuronId = deletedAnnotation.getNeuronId();
-                    if (! nl.hasCachedNeuronId(neuronId))
-                        continue; // Never had that neuron instantiated, so ignore
-                    NeuronModelAdapter neuron = nl.getCachedNeuron(neuronId);
-                    Long vertexId = deletedAnnotation.getId();
-                    if (! neuron.hasCachedVertex(vertexId))
-                        continue; // Optimization to ignore vertices that were never instantiated
-                    NeuronVertex vertex = neuron.getVertexForAnnotation(deletedAnnotation);
-                    // Create container for this neuron vertices, if necessary
-                    if (! deletedVerticesByNeuron.containsKey(neuron))
-                        deletedVerticesByNeuron.put(neuron, new ArrayList<NeuronVertex>());
-                    deletedVerticesByNeuron.get(neuron).add(vertex);
-                    
-                    spatialIndex.removeFromIndex(vertex);
-                }
-                // Send out one signal per neuron
-                for (NeuronModel neuron : deletedVerticesByNeuron.keySet()) {
-                    neuron.getVertexesRemovedObservable().setChanged();
-                    Collection<NeuronVertex> deletedVertices = deletedVerticesByNeuron.get(neuron);
-                    neuron.getVertexesRemovedObservable().notifyObservers(
-                            new VertexCollectionWithNeuron(deletedVertices, neuron));
-                }
-                
-                // Repaint Horta now, to update view without further user interaction
-                // (but do not recenter, as LVV does not recenter in this situation either)
-                repaintHorta();
+                NeuronList nl = (NeuronList) neurons;
+                Long neuronId = deletedAnnotation.getNeuronId();
+                if (! nl.hasCachedNeuronId(neuronId))
+                    continue; // Never had that neuron instantiated, so ignore
+                NeuronModelAdapter neuron = nl.getCachedNeuron(neuronId);
+                Long vertexId = deletedAnnotation.getId();
+                if (! neuron.hasCachedVertex(vertexId))
+                    continue; // Optimization to ignore vertices that were never instantiated
+                NeuronVertex vertex = neuron.getVertexForAnnotation(deletedAnnotation);
+                // Create container for this neuron vertices, if necessary
+                if (! deletedVerticesByNeuron.containsKey(neuron))
+                    deletedVerticesByNeuron.put(neuron, new ArrayList<NeuronVertex>());
+                deletedVerticesByNeuron.get(neuron).add(vertex);
+
+                log.debug("Removing vertex: {}", vertex);
+                spatialIndex.removeFromIndex(vertex);
             }
+            
+            // Send out one signal per neuron
+            for (NeuronModel neuron : deletedVerticesByNeuron.keySet()) {
+                neuron.getVertexesRemovedObservable().setChanged();
+                Collection<NeuronVertex> deletedVertices = deletedVerticesByNeuron.get(neuron);
+                neuron.getVertexesRemovedObservable().notifyObservers(
+                        new VertexCollectionWithNeuron(deletedVertices, neuron));
+            }
+
+            // Repaint Horta now, to update view without further user interaction
+            // (but do not recenter, as LVV does not recenter in this situation either)
+            repaintHorta();
         }
 
         @Override
-        public void annotationReparented(TmGeoAnnotation annotation)
-        {
+        public void annotationReparented(TmGeoAnnotation annotation, Long prevNeuronId) {
+            
+            log.debug("annotationReparented");
+            
             sanityCheckWorkspace(); // beware of shifting sands beneath us...
-            Long neuronId = annotation.getNeuronId();
             updateEdges(); // updateEdges() is required for post-merge update in Horta. TODO: is performance optimization needed here?
-            // TODO: is this linear search really the best way to get the neuron that goes with this annotation?
-            for (NeuronModel neuron0 : NeuronSetAdapter.this) {
-                NeuronModelAdapter neuron = (NeuronModelAdapter)neuron0;
-                if (neuron.getTmNeuronMetadata().getId().equals(neuronId)) {
-                    NeuronVertex parentVertex = neuron.getVertexForAnnotation(annotation);
-                    if (parentVertex == null) 
-                        return;
-                    // TODO: - react somehow to the reparenting
-                }
+
+            if (innerList.hasCachedNeuronId(prevNeuronId)) {
+                NeuronModelAdapter oldNeuronModel = innerList.getCachedNeuron(prevNeuronId);
+                NeuronVertex oldVertex = oldNeuronModel.getVertexForAnnotation(annotation);
+                log.debug("Removing vertex: {}", oldVertex);
+                spatialIndex.removeFromIndex(oldVertex);
             }
-            logger.debug("annotationReparented");
+            
+            NeuronModelAdapter neuronModel = neuronModelForTmGeoAnnotation(annotation);
+            if (neuronModel == null) {
+                log.error("could not find NeuronModel for newly added TmGeoAnnotation");
+                return;
+            }
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                log.debug("Adding vertex: {}", neuronVertex);
+                spatialIndex.addToIndex(neuronVertex);
+            }
+
+            NeuronVertex reparentedVertex = neuronModel.getVertexForAnnotation(annotation);
+            
+            NeuronVertexUpdateObservable signal = neuronModel.getVertexUpdatedObservable();
+            signal.setChanged();
+            signal.notifyObservers(new VertexWithNeuron(reparentedVertex, neuronModel));
+            
+            repaintHorta();
         }
 
         @Override
         public void annotationMoved(TmGeoAnnotation movedAnnotation) {
+            
+            log.debug("annotationMoved");
+            
             sanityCheckWorkspace();
             NeuronModelAdapter neuron = neuronModelForTmGeoAnnotation(movedAnnotation);
             if (neuron == null) {
-                logger.warn("Could not find neuron for moved anchor");
+                log.warn("Could not find neuron for moved anchor");
                 return;
             }
             NeuronVertex movedVertex = neuron.getVertexForAnnotation(movedAnnotation);
             if (movedVertex == null) {
-                logger.info("Skipping moved anchor not yet instantiated in Horta");
+                log.info("Skipping moved anchor not yet instantiated in Horta");
                 return;
             }
-            
+
+            log.debug("Updating vertex: {}", movedVertex);
             spatialIndex.updateIndex(movedVertex);
             
             NeuronVertexUpdateObservable signal = neuron.getVertexUpdatedObservable();
             signal.setChanged();
             signal.notifyObservers(new VertexWithNeuron(movedVertex, neuron));
-            logger.debug("annotationMoved");
+
             repaintHorta();
         }
 
         @Override
         public void annotationNotMoved(TmGeoAnnotation annotation)
         {
-            logger.debug("annotationNotMoved");
+            log.debug("annotationNotMoved");
             // updateEdges();
         }
 
         @Override
         public void annotationRadiusUpdated(TmGeoAnnotation annotation) {
+            
+            log.debug("annotationRadiusUpdated");
+            
             sanityCheckWorkspace();
             NeuronModelAdapter neuron = neuronModelForTmGeoAnnotation(annotation);
             if (neuron == null) {
-                logger.warn("Could not find neuron for reradiused anchor");
+                log.warn("Could not find neuron for reradiused anchor");
                 return;
             }
             NeuronVertex movedVertex = neuron.getVertexForAnnotation(annotation);
             if (movedVertex == null) {
-                logger.info("Skipping reradiused anchor not yet instantiated in Horta");
+                log.info("Skipping reradiused anchor not yet instantiated in Horta");
                 return;
             }
             NeuronVertexUpdateObservable signal = neuron.getVertexUpdatedObservable();
             signal.setChanged();
             signal.notifyObservers(new VertexWithNeuron(movedVertex, neuron));
-            logger.info("annotationRadiusUpdated");
             repaintHorta();
         }
     }
@@ -447,16 +481,45 @@ implements NeuronSet// , LookupListener
     private class MyGlobalAnnotationListener implements GlobalAnnotationListener {
         
         @Override
-        public void workspaceLoaded(TmWorkspace workspace)
+        public void workspaceLoaded(final TmWorkspace workspace)
         {
-            logger.info("Workspace loaded");
+            log.info("Workspace loaded");
             setWorkspace(workspace);
+
             if (workspace==null) {
                 spatialIndex.clear();
             }
             else {
-                spatialIndex.rebuildIndex(innerList);
-            }
+                final ProgressHandle progress = ProgressHandleFactory.createHandle("Building spatial index");
+                progress.setInitialDelay(0);
+                progress.start();
+                progress.switchToIndeterminate();
+                
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        spatialIndex.rebuildIndex(innerList); 
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        progress.finish();
+                        // Let LVV know that index is done  
+                        annotationModel.fireSpatialIndexReady(workspace);
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        progress.finish();
+                        ConsoleApp.handleException(error);
+                    }
+                };
+                worker.execute();
+            }            
+        }
+
+        @Override
+        public void spatialIndexReady(TmWorkspace workspace) {
             // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
             getMembershipChangeObservable().setChanged();
             getNameChangeObservable().setChanged();
@@ -465,8 +528,71 @@ implements NeuronSet// , LookupListener
         }
 
         @Override
-        public void neuronSelected(TmNeuronMetadata neuron)
-        {}
+        public void neuronCreated(TmNeuronMetadata neuron) {
+            log.info("Neuron created: {}", neuron);
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                log.debug("Adding vertex: {}", neuronVertex);
+                spatialIndex.addToIndex(neuronVertex);
+            }
+            neuronModel.getGeometryChangeObservable().setChanged();
+            getMembershipChangeObservable().setChanged();
+            getMembershipChangeObservable().notifyObservers();
+            repaintHorta();
+        }
+
+        @Override
+        public void neuronDeleted(TmNeuronMetadata neuron) {
+            log.info("Neuron deleted: {}", neuron);
+            Collection<NeuronVertex> deletedVertices = new ArrayList<>();
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                log.debug("Removing vertex: {}", neuronVertex);
+                spatialIndex.removeFromIndex(neuronVertex);
+                deletedVertices.add(neuronVertex);
+            }
+            neuronModel.getVertexesRemovedObservable().setChanged();
+            neuronModel.getVertexesRemovedObservable().notifyObservers(
+                    new VertexCollectionWithNeuron(deletedVertices, neuronModel));
+            
+            neuronModel.getGeometryChangeObservable().setChanged();
+            innerList.removeFromCache(neuron.getId());
+            getMembershipChangeObservable().setChanged();
+            getMembershipChangeObservable().notifyObservers();
+            repaintHorta();
+        }
+
+        @Override
+        public void neuronChanged(TmNeuronMetadata neuron) {
+            
+            log.info("Neuron changed: {}", neuron);
+            
+            // Remove all the existing cached vertices for this neuron
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getCachedVertexes()) {
+                log.debug("Removing cached vertex: {}", neuronVertex);
+                spatialIndex.removeFromIndex(neuronVertex);
+            }
+            
+            // Re-create all the vertices for the neuron, and re-add them to the spatial index
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                log.debug("Re-adding vertex: {}", neuronVertex);
+                spatialIndex.addToIndex(neuronVertex);
+            }
+            
+            // Recreate edges from the updated vertex list
+            neuronModel.updateEdges();
+            
+            repaintHorta();
+        }
+        
+        @Override
+        public void neuronRenamed(TmNeuronMetadata neuron) {
+        }
+        
+        @Override
+        public void neuronSelected(TmNeuronMetadata neuron) {
+        }
 
         @Override
         public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style)
@@ -539,23 +665,29 @@ implements NeuronSet// , LookupListener
         // private AnnotationModel annotationModel;
         private final Logger logger = LoggerFactory.getLogger(this.getClass());
         
-        NeuronModelAdapter neuronModelForTmNeuron(TmNeuronMetadata tmNeuron) 
-        {
-            if (tmNeuron == null)
-                return null;
+        NeuronModelAdapter neuronModelForTmNeuron(TmNeuronMetadata tmNeuron) {
+            if (tmNeuron == null) return null;
             Long guid = tmNeuron.getId();
-            if (! cachedNeurons.containsKey(guid)) {
-                // NeuronStyle neuronStyle = neuronStyleMap.get(guid);
-                cachedNeurons.put(guid, new NeuronModelAdapter(tmNeuron, neuronSet));
+            NeuronModelAdapter neuronModelAdapter = cachedNeurons.get(guid);
+            if (neuronModelAdapter == null) {
+                neuronModelAdapter = new NeuronModelAdapter(tmNeuron, neuronSet);
+                cachedNeurons.put(guid, neuronModelAdapter);
             }
-            return cachedNeurons.get(guid);
+            return neuronModelAdapter;
         }
         
-        private boolean hasCachedNeuronId(Long neuronId) {
+        void removeFromCache(Long guid) {
+            if (guid == null) return;
+            if (cachedNeurons.containsKey(guid)) {
+                cachedNeurons.remove(guid);
+            }
+        }
+        
+        boolean hasCachedNeuronId(Long neuronId) {
             return cachedNeurons.containsKey(neuronId);
         }
         
-        public NeuronModelAdapter getCachedNeuron(Long neuronId) {
+        NeuronModelAdapter getCachedNeuron(Long neuronId) {
             return cachedNeurons.get(neuronId);
         }
         

@@ -125,7 +125,7 @@ public class Skeleton {
 	
 	private final Map<Long, Anchor> anchorsByGuid = new HashMap<>();
 	// TODO - anchor browsing history should maybe move farther back
-	private final HistoryStack<Anchor> anchorHistory = new HistoryStack<>();
+//	private final HistoryStack<Anchor> anchorHistory = new HistoryStack<>();
 
     public void setController(SkeletonController controller) {
         this.controller = controller;
@@ -140,7 +140,7 @@ public class Skeleton {
 		Long guid = anchor.getGuid();
 		if (guid != null)
 			anchorsByGuid.put(guid, anchor);
-		anchorHistory.push(anchor);
+//		anchorHistory.push(anchor);
 		return anchor;
 	}
 
@@ -274,7 +274,7 @@ public class Skeleton {
 		if (guid != null)
 			anchorsByGuid.remove(guid);
 		//
-		anchorHistory.remove(anchor);
+//		anchorHistory.remove(anchor);
 		return true;
 	}
 
@@ -330,6 +330,7 @@ public class Skeleton {
     
     public void reparentTmGeoAnchor(TmGeoAnnotation annotation) {
         Anchor anchor = anchorsByGuid.get(annotation.getId());
+        
         HashSet<Long> annotationNeighbors = new HashSet<Long>(annotation.getChildIds().size() + 1);
         for (Long childId : annotation.getChildIds()) {
             annotationNeighbors.add(childId);
@@ -339,6 +340,9 @@ public class Skeleton {
             annotationNeighbors.add(annotation.getParentId());
         }
 
+        // Update neuron id, in case the anchor was moved to another neuron
+        anchor.setNeuronID(annotation.getNeuronId());
+        
         updateNeighbors(anchor, annotationNeighbors);
     }
     
@@ -366,7 +370,7 @@ public class Skeleton {
 		}
 		anchors.clear();
 		anchorsByGuid.clear();
-		anchorHistory.clear();
+//		anchorHistory.clear();
 	}
 	
     /** given an anchor, update its neighbors to match the input set of
@@ -419,9 +423,9 @@ public class Skeleton {
         return anchorsByGuid.get(anchorID);
     }
 
-	public HistoryStack<Anchor> getHistory() {
-		return anchorHistory;
-	}
+//	public HistoryStack<Anchor> getHistory() {
+//		return anchorHistory;
+//	}
 
     /**
      * request trace path to parent
@@ -433,7 +437,7 @@ public class Skeleton {
             // no parent
             return;
 
-        controller.pathTraceRequested(anchor.getGuid());
+        controller.pathTraceRequested(anchor.getNeuronID(), anchor.getGuid());
     }
 
 	public void addTracedSegment(AnchoredVoxelPath path)
@@ -455,6 +459,18 @@ public class Skeleton {
         tracedSegments.remove(ix);
     }
 
+    public void removeTracedSegments(Long neuronID) {
+        List<SegmentIndex> toDelete = new ArrayList<>();
+        for(AnchoredVoxelPath path : tracedSegments.values()) {
+            if (path.getNeuronID().equals(neuronID)) {
+                toDelete.add(path.getSegmentIndex());
+            }
+        }
+        for (SegmentIndex segmentIndex : toDelete) {
+            tracedSegments.remove(segmentIndex);
+        }
+    }   
+    
 	public Collection<AnchoredVoxelPath> getTracedSegments() {
 		// log.info("tracedSegments.size() [305] = "+tracedSegments.size());
 		Collection<AnchoredVoxelPath> result = tracedSegments.values();
