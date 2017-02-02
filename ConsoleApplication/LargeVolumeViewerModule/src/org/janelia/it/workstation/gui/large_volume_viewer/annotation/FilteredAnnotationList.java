@@ -85,7 +85,7 @@ public class FilteredAnnotationList extends JPanel {
         this.skipUpdate = skipUpdate;
     }
     
-    public void beganTransaction() {
+    public void beginTransaction() {
         this.skipUpdate = true;
         updateData();
     }

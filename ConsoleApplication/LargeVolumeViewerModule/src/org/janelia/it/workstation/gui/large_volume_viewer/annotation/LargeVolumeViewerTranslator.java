@@ -354,7 +354,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                 updateNeuronStyleMap.put(neuron, style);
             }
 
-            skeletonController.beganTransaction();
+            skeletonController.beginTransaction();
             
             fireAnchorsAdded(addedAnchorList);
             logger.debug("added {} anchors", addedAnchorList.size());
