@@ -3,6 +3,7 @@ package org.janelia.it.workstation.browser.api.state;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
@@ -69,6 +70,10 @@ public class NavigationHistory {
     
     private void pushHistory(DomainObjectEditorState<?> state, boolean clearForward) {
         
+        if (state==null) {
+            throw new IllegalStateException("Null state");
+        }
+        
         if (state.getDomainObject()==null) {
             throw new IllegalStateException("State with null domain object");
         }
@@ -82,8 +87,10 @@ public class NavigationHistory {
         
         if (!history.isEmpty()) {
             DomainObjectEditorState<?> currState = history.get(historyPosition);
-            if (state.getDomainObject().getId().equals(currState.getDomainObject().getId())) {
-                log.warn("We already have this state. This shouldn't happen.");
+            if (currState!=null) {
+                if (currState.getDomainObject()!=null && state.getDomainObject().getId().equals(currState.getDomainObject().getId())) {
+                    log.warn("We already have this state. This shouldn't happen.");
+                }
             }
         }
         // Add the new state to the end of the list
@@ -95,6 +102,15 @@ public class NavigationHistory {
     }
 
     public void updateCurrentState(DomainObjectEditorState<?> state) {
+
+        if (state==null) {
+            throw new IllegalStateException("Null state");
+        }
+        
+        if (state.getDomainObject()==null) {
+            throw new IllegalStateException("State with null domain object");
+        }
+        
         if (historyPosition<0 || historyPosition>=history.size()) return;
         log.debug("Updating current state: "+state);
         history.set(historyPosition, state);
@@ -125,8 +141,9 @@ public class NavigationHistory {
         if (!log.isTraceEnabled()) return;
         log.trace("History: ");
         int i = 0 ;
-        for(DomainObjectEditorState<?> state2 : history) {
-            log.trace("  "+i+" "+state2.getDomainObject().getName()+" "+(historyPosition==i?"<-CURR":""));
+        for(DomainObjectEditorState<?> state : history) {
+            String domainObjectName = state.getDomainObject()==null ? "null" : state.getDomainObject().getName();
+            log.trace("  "+i+" "+domainObjectName+" "+(historyPosition==i?"<-CURR":""));
             i++;
         }
         log.trace("------------------------");
