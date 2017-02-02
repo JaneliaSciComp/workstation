@@ -87,7 +87,9 @@ public class TaskMonitoringWorker extends BackgroundWorker {
         
         }
         catch (Exception e) {
-            handle.finish();
+            if (handle!=null) {
+                handle.finish();
+            }
             throw e;
         }
     }
