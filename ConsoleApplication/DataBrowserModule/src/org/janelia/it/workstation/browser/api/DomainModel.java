@@ -698,6 +698,9 @@ public class DomainModel {
     }
 
     private OntologyTerm findTerm(OntologyTerm term, Long termId) {
+        if (term==null) {
+            return null;
+        }
         if (term.getId().equals(termId)) {
             return term;
         }
