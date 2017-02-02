@@ -963,6 +963,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             public void run() {
                 beginTransaction();
                 try {
+                    // Need to delete the anchor to undraw it
+                    fireAnnotationsDeleted(Arrays.asList(link));
+                    // Also need to redraw the neurite, because we need the link from the reparenting to appear
                     fireNeuronChanged(neuron);
                 }
                 finally {
@@ -1038,7 +1041,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     for (TmGeoAnnotation ann : notesChanged) {
                         fireNotesUpdated(ann);
                     }
-                    fireNeuronChanged(neuron);
+                    fireAnnotationsDeleted(deleteList);
                     fireNeuronSelected(neuron);
                 }
                 finally {
