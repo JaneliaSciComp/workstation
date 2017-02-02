@@ -261,6 +261,13 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     public Iterator<NeuronModel> iterator() {
         return new NeuronIterator();
     }
+
+    void checkForChanges() {
+        for (Iterator<NeuronVbo> it = new VboIterator(); it.hasNext();) {
+            NeuronVbo vbo = it.next();
+            vbo.checkForChanges();
+        }
+    }
     
     private static class ConesShader extends BasicShaderProgram
     {

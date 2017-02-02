@@ -163,5 +163,9 @@ public class NeuronVboActor
     public Iterator<NeuronModel> iterator() {
         return vboPool.iterator();
     }
+
+    public void checkForChanges() {
+        vboPool.checkForChanges();
+    }
     
 }

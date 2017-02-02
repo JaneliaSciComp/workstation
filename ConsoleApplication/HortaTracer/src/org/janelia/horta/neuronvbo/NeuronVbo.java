@@ -302,14 +302,20 @@ public class NeuronVbo implements Iterable<NeuronModel>
                 vertexCount += 1;
             }
             for (NeuronEdge edge : neuron.getEdges()) {
-                for (NeuronVertex v : edge) {
-                    int index = vertexIndices.get(v);
-                    edgeIndexes.add(index);
-                    edgeCount += 1;
+                Iterator<NeuronVertex> eit = edge.iterator();
+                NeuronVertex v1 = eit.next();
+                NeuronVertex v2 = eit.next();
+                Integer i1 = vertexIndices.get(v1);
+                Integer i2 = vertexIndices.get(v2);
+                if ( (i1 == null) || (i2 == null) ) {
+                    log.error("Found neuron edge with unknown vertices {} and {} in neuron '{}'", v1, v2, neuron.getName());
+                    continue;
                 }
+                edgeIndexes.add(i1);
+                edgeIndexes.add(i2);
+                edgeCount += 1;
             }
         }
-        edgeCount = edgeCount / 2;
         
         // allocate storage
         vertexBuffer = Buffers.newDirectFloatBuffer(vertexCount * FLOATS_PER_VERTEX);        
@@ -430,6 +436,18 @@ public class NeuronVbo implements Iterable<NeuronModel>
         disconnectSignals(neuron);
         buffersNeedRebuild = true;
         return true;
+    }
+
+    void checkForChanges() 
+    {
+        if (buffersNeedRebuild)
+            return; // no need to check counts, if we will be rebuilding anyway
+        for (NeuronModel neuron : this) {
+            if (neuron.getVertexes().size() != neuronVertexCounts.get(neuron)) {
+                buffersNeedRebuild = true;
+                return;
+            }
+        }
     }
     
     private class NeuronObserver

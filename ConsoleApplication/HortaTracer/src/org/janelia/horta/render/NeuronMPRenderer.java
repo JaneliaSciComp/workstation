@@ -514,6 +514,9 @@ extends MultipassRenderer
                     addNeuronReconstruction(neuron);
                 }
             }
+            
+            // 4 - double check for changes in neuron size (e.g. after transfer neurite)
+            allSwcActor.checkForChanges();
         }
     }
 

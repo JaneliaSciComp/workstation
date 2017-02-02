@@ -459,6 +459,8 @@ implements NeuronSet// , LookupListener
             }
             else {
                 spatialIndex.rebuildIndex(innerList);
+                innerList.wrap(NeuronSetAdapter.this); // check for added/deleted neurons
+                updateEdges(); // refreshed cached geometry
             }
             // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
             getMembershipChangeObservable().setChanged();
