@@ -141,24 +141,14 @@ implements NeuronSet// , LookupListener
         return micronToVoxMatrix;
     }
 
-    @Override
-    public List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n) {
-        return spatialIndex.getAnchorClosestToVoxelLocation(voxelXYZ, n);
-    }
-
     @Override 
     public NeuronVertex getAnchorClosestToMicronLocation(double[] voxelXYZ) {
         return spatialIndex.getAnchorClosestToMicronLocation(voxelXYZ);
     }
 
-    @Override 
-    public NeuronVertex getAnchorClosestToVoxelLocation(double[] micronXYZ) {
-        return spatialIndex.getAnchorClosestToVoxelLocation(micronXYZ);
-    }
-
     @Override
     public List<NeuronVertex> getAnchorsInArea(double[] p1, double[] p2) {
-        return spatialIndex.getAnchorsInVoxelArea(p1, p2);
+        return spatialIndex.getAnchorsInMicronArea(p1, p2);
     }
     
     @Override 
@@ -245,7 +235,6 @@ implements NeuronSet// , LookupListener
         this.workspace = workspace;
         TmSample sample = annotationModel.getCurrentSample();
         updateVoxToMicronMatrix(sample);
-        spatialIndex.initSample(sample);
         NeuronList nl = (NeuronList) neurons;
         nl.wrap(this);
         getMembershipChangeObservable().setChanged();
