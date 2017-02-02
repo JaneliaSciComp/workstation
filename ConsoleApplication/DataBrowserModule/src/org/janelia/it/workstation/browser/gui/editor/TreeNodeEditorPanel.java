@@ -162,13 +162,25 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     }
 
     private void reload() throws Exception {
-        if (treeNode==null) return;
-        TreeNode updatedTreeNode = DomainMgr.getDomainMgr().getModel().getDomainObject(treeNode.getClass(), treeNode.getId());
-        this.treeNode = updatedTreeNode;
-        if (updatedTreeNode!=null && treeNodeNode!=null && !treeNodeNode.getTreeNode().equals(updatedTreeNode)) {
-            treeNodeNode.update(updatedTreeNode);
+        
+        if (treeNode==null) {
+            // Nothing to reload
+            return;
         }
-        restoreState(saveState());
+        
+        TreeNode updatedTreeNode = DomainMgr.getDomainMgr().getModel().getDomainObject(treeNode.getClass(), treeNode.getId());
+        if (updatedTreeNode!=null) {
+            if (treeNodeNode!=null && !treeNodeNode.getTreeNode().equals(updatedTreeNode)) {
+                treeNodeNode.update(updatedTreeNode);
+            }
+            this.treeNode = updatedTreeNode;
+            restoreState(saveState());
+        }
+        else {
+            // The folder no longer exists, or we no longer have access to it (perhaps running as a different user?) 
+            // Either way, there's nothing to show. 
+            showNothing();
+        }
     }
 
     @Override
