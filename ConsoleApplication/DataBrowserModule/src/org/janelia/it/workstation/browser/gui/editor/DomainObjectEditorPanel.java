@@ -70,8 +70,15 @@ public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JP
     @Override
     public void restoreState(final DomainObjectEditorState<T> state) {
         
-        log.debug("Restoring state: {}", state);
-        getResultsPanel().setViewerType(state.getListViewerState().getType());
+        if (state==null) {
+            log.warn("Cannot restore null state");
+            return;
+        }
+        
+        log.info("Restoring state: {}", state);
+        if (state.getListViewerState()!=null) {
+            getResultsPanel().setViewerType(state.getListViewerState().getType());
+        }
 
         // Prepare to restore the selection
         List<Reference> selected = getResultsPanel().getViewer().getSelectionModel().getSelectedIds();
@@ -85,8 +92,10 @@ public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JP
         Callable<Void> success = new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                log.info("State load completed, restoring viewer state {}", state.getListViewerState());
-                getResultsPanel().getViewer().restoreState(state.getListViewerState());
+                if (state.getListViewerState()!=null) {
+                    log.info("State load completed, restoring viewer state {}", state.getListViewerState());
+                    getResultsPanel().getViewer().restoreState(state.getListViewerState());
+                }
                 return null;
             }
         };
