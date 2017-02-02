@@ -165,7 +165,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
         if (treeNode==null) return;
         TreeNode updatedTreeNode = DomainMgr.getDomainMgr().getModel().getDomainObject(treeNode.getClass(), treeNode.getId());
         this.treeNode = updatedTreeNode;
-        if (updatedTreeNode!=null && !treeNodeNode.getTreeNode().equals(updatedTreeNode)) {
+        if (updatedTreeNode!=null && treeNodeNode!=null && !treeNodeNode.getTreeNode().equals(updatedTreeNode)) {
             treeNodeNode.update(updatedTreeNode);
         }
         restoreState(saveState());
