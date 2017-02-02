@@ -37,10 +37,11 @@ public class ExternalLocalProcessRunner extends AbstractExternalProcessRunner {
         if (MapUtils.isNotEmpty(env)) {
             processBuilder.environment().putAll(env);
         }
-        logger.info("Start {} using {} with content={}; env={}", serviceContext, processingScript, externalCode, processBuilder.environment());
         Process localProcess;
         try {
+            logger.debug("Start {} using {} with content={}; env={}", serviceContext, processingScript, externalCode, env);
             localProcess = processBuilder.start();
+            logger.info("Started process {} for {}", localProcess, serviceContext);
         } catch (Exception e) {
             logger.error("Error starting the computation process {} for {}", processingScript, serviceContext, e);
             throw new ComputationException(serviceContext, e);

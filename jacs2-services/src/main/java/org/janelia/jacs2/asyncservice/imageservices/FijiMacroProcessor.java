@@ -32,7 +32,6 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
     private final String fijiExecutable;
     private final String fijiMacrosPath;
-    private final String libraryPath;
 
     @Inject
     FijiMacroProcessor(JacsServiceDispatcher jacsServiceDispatcher,
@@ -43,12 +42,10 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
                        @Any Instance<ExternalProcessRunner> serviceRunners,
                        @PropertyValue(name = "Fiji.Bin.Path") String fijiExecutable,
                        @PropertyValue(name = "Fiji.Macro.Path") String fijiMacrosPath,
-                       @PropertyValue(name = "VAA3D.LibraryPath") String libraryPath,
                        Logger logger) {
         super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.fijiExecutable = fijiExecutable;
         this.fijiMacrosPath = fijiMacrosPath;
-        this.libraryPath = libraryPath;
     }
 
     @Override
@@ -132,7 +129,7 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
     @Override
     protected Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData) {
-        return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
+        return ImmutableMap.of();
     }
 
     protected boolean checkForErrors(String l) {

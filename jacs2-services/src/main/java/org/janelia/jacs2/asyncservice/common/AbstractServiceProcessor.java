@@ -1,5 +1,6 @@
 package org.janelia.jacs2.asyncservice.common;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -8,6 +9,8 @@ import org.slf4j.Logger;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 
 public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T> {
 
@@ -142,8 +145,11 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         return getServicePath(workingDir, jacsServiceData);
     }
 
-    protected Path getServicePath(String baseDir, JacsServiceData jacsServiceData) {
-        return Paths.get(baseDir, jacsServiceData.getName() + "_" + jacsServiceData.getId().toString()).toAbsolutePath();
-
+    protected Path getServicePath(String baseDir, JacsServiceData jacsServiceData, String... more) {
+        List<String> pathElems = new ImmutableList.Builder<String>()
+                .add(jacsServiceData.getName() + "_" + jacsServiceData.getId().toString())
+                .addAll(Arrays.asList(more))
+                .build();
+        return Paths.get(baseDir, pathElems.toArray(new String[0])).toAbsolutePath();
     }
 }

@@ -3,6 +3,7 @@ package org.janelia.jacs2.asyncservice.sampleprocessing;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.utils.FileUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.asyncservice.imageservices.FijiColor;
 import org.janelia.jacs2.asyncservice.imageservices.FijiUtils;
@@ -22,10 +23,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
@@ -156,7 +160,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                 throw new ComputationException(jacsServiceData,
                         "No channel spec for LSM " + f.getId() + "-" + f.getArchiveFilePath());
             }
-            Path temporaryOutputDir = getServicePath(scratchLocation, jacsServiceData);
+            Path temporaryOutputDir = getServicePath(scratchLocation, jacsServiceData, com.google.common.io.Files.getNameWithoutExtension(f.getWorkingFilePath()));
             JacsServiceData fijiService =
                     new JacsServiceDataBuilder(jacsServiceData)
                             .setName("fijiMacro")
@@ -195,6 +199,20 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         builder.add(divSpec);
         builder.add(StringUtils.defaultIfBlank(args.options, DEFAULT_OPTIONS));
         return builder.toString();
+    }
+
+    @Override
+    protected ServiceComputation<List<File>> postProcessData(List<File> processingResult, JacsServiceData jacsServiceData) {
+        return computationFactory.<List<File>>newComputation()
+                .supply(() -> {
+                    try {
+                        Path temporaryOutputDir = getServicePath(scratchLocation, jacsServiceData);
+                        FileUtils.deletePath(temporaryOutputDir);
+                        return processingResult;
+                    } catch (Exception e) {
+                        throw new ComputationException(jacsServiceData, e);
+                    }
+                });
     }
 
     private GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs getArgs(JacsServiceData jacsServiceData) {
