@@ -773,10 +773,14 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         if (filter==null || filter.getId()==null) return;
         Filter updatedFilter = getDomainMgr().getModel().getDomainObject(filter.getClass(), filter.getId());
         this.filter = updatedFilter;
-        if (filterNode!=null && !filterNode.getFilter().equals(updatedFilter)) {
+        if (updatedFilter!=null && filterNode!=null && !filterNode.getFilter().equals(updatedFilter)) {
             filterNode.update(updatedFilter);
+            restoreState(saveState());
         }
-        restoreState(saveState());
+        else {
+            this.filterNode = null;
+            loadNewFilter();
+        }
     }
 
     @Override
