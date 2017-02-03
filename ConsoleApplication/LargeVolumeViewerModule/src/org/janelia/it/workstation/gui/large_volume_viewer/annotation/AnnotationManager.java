@@ -24,6 +24,7 @@ import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -35,6 +36,7 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
@@ -1145,6 +1147,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         SimpleWorker creator = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
+                
                 // now we can create the workspace
                 TmWorkspace workspace = annotationModel.createWorkspace(ID, workspaceName);
                 annotationModel.loadWorkspace(workspace);
@@ -1155,6 +1158,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 if (existingWorkspace) {
                     saveQuadViewColorModel();
                 }
+
+                // Update "Recently Opened" history
+                String strRef = Reference.createFor(workspace).toString();
+                StateMgr.getStateMgr().updateRecentlyOpenedHistory(strRef);
             }
 
             @Override
