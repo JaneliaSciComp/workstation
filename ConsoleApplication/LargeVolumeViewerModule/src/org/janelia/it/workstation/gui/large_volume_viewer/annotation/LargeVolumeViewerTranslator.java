@@ -333,6 +333,12 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             
             for (TmNeuronMetadata neuron: annModel.getNeuronList()) {
 
+                // (we used to retrieve global color here; replaced by styles)
+                // set styles for our neurons; if a neuron isn't in the saved map,
+                //  use a default style
+                NeuronStyle style = ModelTranslation.translateNeuronStyle(neuron);
+                updateNeuronStyleMap.put(neuron, style);
+                
                 // note that we must add annotations in parent-child sequence
                 //  so lines get drawn correctly; we must send this as one big
                 //  list so the anchor update routine is run once will all anchors
@@ -345,25 +351,19 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                 // draw anchored paths, too, after all the anchors are drawn
                 for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
                     voxelPathList.add(TAP2AVP(neuron.getId(), path));
-                }
-                
-                // (we used to retrieve global color here; replaced by styles)
-                // set styles for our neurons; if a neuron isn't in the saved map,
-                //  use a default style
-                NeuronStyle style = ModelTranslation.translateNeuronStyle(neuron);
-                updateNeuronStyleMap.put(neuron, style);
+                }   
             }
 
             skeletonController.beginTransaction();
+
+            fireNeuronStylesChangedEvent(updateNeuronStyleMap);
+            logger.debug("updated {} neuron styles", updateNeuronStyleMap.size());
             
             fireAnchorsAdded(addedAnchorList);
-            logger.debug("added {} anchors", addedAnchorList.size());
+            logger.info("added {} anchors", addedAnchorList.size());
 
             fireAnchoredVoxelPathsAdded(voxelPathList);
             logger.debug("added {} anchored paths", voxelPathList.size());
-            
-            fireNeuronStylesChangedEvent(updateNeuronStyleMap);
-            logger.debug("updated {} neuron styles", updateNeuronStyleMap.size());
             
             skeletonController.endTransaction();
         }
