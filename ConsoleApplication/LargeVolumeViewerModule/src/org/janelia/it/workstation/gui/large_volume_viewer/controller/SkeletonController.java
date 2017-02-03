@@ -70,7 +70,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     public void beginTransaction() {
         this.skipSkeletonChange = true;
-        skeletonChanged();
     }
     
     public void endTransaction() {

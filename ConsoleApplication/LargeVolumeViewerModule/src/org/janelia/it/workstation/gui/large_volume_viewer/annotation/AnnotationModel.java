@@ -373,6 +373,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public TmNeuronMetadata getNeuronFromNeuronID(Long neuronID) {
         TmNeuronMetadata foundNeuron = neuronManager.getNeuronById(neuronID);
         if (foundNeuron == null) {
+            // This happens, for example, when a new workspace is loaded and we try to find the previous nextParent anchor.
             log.warn("There is no neuron with id: {}", neuronID);
         }
         log.debug("getNeuronFromNeuronID({}) = {}",neuronID,foundNeuron);
