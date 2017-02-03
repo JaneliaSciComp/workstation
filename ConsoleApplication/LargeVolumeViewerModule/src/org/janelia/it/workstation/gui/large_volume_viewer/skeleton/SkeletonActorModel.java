@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -735,13 +736,13 @@ public class SkeletonActorModel {
             
             // Find all relevant anchors which are inside the viewport
             
-            List<TmGeoAnnotation> annotations = new ArrayList<>();
+            Map<Long,TmGeoAnnotation> annotations = new LinkedHashMap<>();
             List<NeuronVertex> vertexList = neuronSet.getAnchorsInMicronArea(wp1, wp2);
             if (vertexList != null) {
                 for (NeuronVertex vertex : vertexList) {
                     if (vertex instanceof NeuronVertexAdapter) {
                         TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
-                        annotations.add(annotation);
+                        annotations.put(annotation.getId(), annotation);
                     }
                 }
             }
@@ -755,14 +756,14 @@ public class SkeletonActorModel {
                     NeuronVertex nextVertex = nextNeuron.getVertexByGuid(nextParent.getGuid());
                     if (nextVertex instanceof NeuronVertexAdapter) {
                         TmGeoAnnotation nextAnnotation = ((NeuronVertexAdapter) nextVertex).getTmGeoAnnotation();
-                        annotations.add(nextAnnotation);
+                        annotations.put(nextAnnotation.getId(), nextAnnotation);
                     }
                 }
             }
             
             // Add all parent and child anchors, so that lines are draw even if the linked anchor is outside the viewport
 
-            for (Long annotationId : getRelevantAnchorIds(neuronSetAdapter, annotations)) {
+            for (Long annotationId : getRelevantAnchorIds(neuronSetAdapter, annotations.values())) {
 
                 Anchor anchor = skeleton.getAnchorByID(annotationId);
                 if (anchor != null) {
@@ -784,7 +785,7 @@ public class SkeletonActorModel {
         return anchors;
     }
     
-    private Set<Long> getRelevantAnchorIds(NeuronSetAdapter neuronSetAdapter, List<TmGeoAnnotation> annotations) {
+    private Set<Long> getRelevantAnchorIds(NeuronSetAdapter neuronSetAdapter, Collection<TmGeoAnnotation> annotations) {
 
         Set<Long> anchorIds = new HashSet<>();
         for (TmGeoAnnotation annotation : annotations) {
