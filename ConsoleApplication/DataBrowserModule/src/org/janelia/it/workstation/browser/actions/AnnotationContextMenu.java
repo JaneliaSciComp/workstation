@@ -51,7 +51,6 @@ public class AnnotationContextMenu extends PopupContextMenu {
         }
 
         try {
-            OntologyTerm keyTerm = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(annotation.getKeyTerm());
             add(getTitleItem());
             add(getCopyNameToClipboardItem());
             add(getCopyIdToClipboardItem());
@@ -59,8 +58,12 @@ public class AnnotationContextMenu extends PopupContextMenu {
             add(getViewDetailsItem());
             addSeparator();
             add(getRemoveAnnotationItem());
-            add(getEditAnnotationItem(keyTerm));
-        }  catch (Exception ex) {
+            OntologyTerm keyTerm = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(annotation.getKeyTerm());
+            if (keyTerm!=null) {
+                add(getEditAnnotationItem(keyTerm));
+            }
+        }  
+        catch (Exception ex) {
             ConsoleApp.handleException(ex);
         }
     }

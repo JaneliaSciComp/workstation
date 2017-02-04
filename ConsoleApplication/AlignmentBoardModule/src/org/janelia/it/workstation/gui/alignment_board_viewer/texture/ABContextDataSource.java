@@ -7,6 +7,7 @@ import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI;
@@ -25,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.io.File;
 import java.util.*;
+
+import javax.swing.JOptionPane;
 
 /**
  * Implements the data source against the context of the alignment board.  New read pass each call.
@@ -125,7 +128,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
             if (liveFileCount == 0 && context.getAlignmentBoardItems().size() > 0) {
                 String message = "No mask or channel file sets found.  Nothing to display.";
                 logger.error(message);
-                throw new RuntimeException(message);
+                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), message, "Error", JOptionPane.ERROR_MESSAGE);
             }
 
             return rtnVal;

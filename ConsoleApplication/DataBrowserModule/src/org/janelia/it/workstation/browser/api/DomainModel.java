@@ -693,11 +693,17 @@ public class DomainModel {
      * @return the ontology term 
      */
     public OntologyTerm getOntologyTermByReference(OntologyTermReference reference) throws Exception {
+        if (reference==null) {
+            return null;
+        }
         Ontology ontology = getDomainObject(Ontology.class, reference.getOntologyId());
         return findTerm(ontology, reference.getOntologyTermId());
     }
 
     private OntologyTerm findTerm(OntologyTerm term, Long termId) {
+        if (term==null) {
+            return null;
+        }
         if (term.getId().equals(termId)) {
             return term;
         }
