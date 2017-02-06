@@ -48,8 +48,11 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.model.DomainObjectAnnotationChangeEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
@@ -1017,5 +1020,30 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             if (lsmAnnotations!=null) lsmAnnotations.clear();
             showNothing();
         }
+    }
+        
+    @Subscribe
+    public void domainObjectSelected(DomainObjectSelectionEvent event) {
+        // Forward to LSM panel
+        if (lsmPanel!=null) {
+            lsmPanel.domainObjectSelected(event);
+        }
+    }
+
+    @Subscribe
+    public void domainObjectChanged(DomainObjectChangeEvent event) {
+        // Forward to LSM panel
+        if (lsmPanel!=null) {
+            lsmPanel.domainObjectChanged(event);
+        }
+    }
+    
+    @Subscribe
+    public void annotationsChanged(DomainObjectAnnotationChangeEvent event) {
+        // Forward to LSM panel
+        if (lsmPanel!=null) {
+            lsmPanel.annotationsChanged(event);
+        }
+    
     }
 }

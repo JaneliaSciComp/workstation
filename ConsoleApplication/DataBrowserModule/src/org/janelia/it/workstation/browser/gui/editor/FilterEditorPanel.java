@@ -770,13 +770,25 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     }
 
     private void reload() throws Exception {
-        if (filter==null) return;
-        Filter updatedFilter = getDomainMgr().getModel().getDomainObject(filter.getClass(), filter.getId());
-        this.filter = updatedFilter;
-        if (filterNode!=null && !filterNode.getFilter().equals(updatedFilter)) {
-            filterNode.update(updatedFilter);
+        
+        if (filter==null || filter.getId()==null) {
+            // Nothing to reload
+            return;
         }
-        restoreState(saveState());
+        
+        Filter updatedFilter = getDomainMgr().getModel().getDomainObject(filter.getClass(), filter.getId());
+        if (updatedFilter!=null) {
+            if (filterNode!=null && !filterNode.getFilter().equals(updatedFilter)) {
+                filterNode.update(updatedFilter);
+            }
+            this.filter = updatedFilter;
+            restoreState(saveState());
+        }
+        else {
+            // The filter no longer exists, or we no longer have access to it (perhaps running as a different user?) 
+            // Either way, there's nothing to show. 
+            showNothing();
+        }
     }
 
     @Override

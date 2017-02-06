@@ -323,6 +323,22 @@ public class ToolMgr extends PreferenceManager {
 //            }
         }
     }
+    
+    public static void runToolSafely(String toolName) {
+        try {
+            runTool(toolName);
+        }
+        catch (Exception e1) {
+            log.error("Could launch tool: "+toolName,e1);
+            JOptionPane.showMessageDialog(
+                    ConsoleApp.getMainFrame(),
+                    "Could not launch this tool. "
+                    + "Please choose the appropriate file path from the Tools->Configure Tools area",
+                    "ToolInfo Launch ERROR",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
 
     public static void openFile(final String tool, final String standardFilepath, final String mode) throws Exception {
         
@@ -384,7 +400,7 @@ public class ToolMgr extends PreferenceManager {
                     log.info("Running command: {}", exeCmd);
 
                     if (exeCmd.endsWith(".app")) {
-                        runTool(tool);
+                        runToolSafely(tool);
                     } 
                     else {
                         Runtime.getRuntime().exec(exeCmd);

@@ -1,3 +1,21 @@
+// 5.8.0
+
+Workstation Browser
+* Added "Change Permissions" right-click option on Ontologies to allow sharing of ontologies
+* Fixed issue with viewer state not being properly maintained when using the navigation arrows or refresh button
+
+FlyLight
+* Fixed issue with display not updating after marking a Sample for reprocessing
+
+MouseLight
+* Major improvements in LVV rendering performance for large numbers of neurons 
+* Workspaces created with the "Load Linux SWC Folder" option now keep track of 
+  the SWC Folder that was used to create them.
+* Adjusted rendering of Ktx tiles to better resemble rendering of legacy raw tiles.
+* Fixed occasional non-display of OBJ meshes in Horta (brain compartments).
+* Fixed occasionally missing Horta "clear current parent anchor" context menu option.
+* Improve suggested new neuron name when creating neurons in Horta (was always "Neuron 1").
+
 // 5.7.0
 
 Workstation Browser
