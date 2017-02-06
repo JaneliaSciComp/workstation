@@ -164,13 +164,21 @@ public class RerunSamplesAction extends AbstractAction {
 
                 // add an intake order to track all these Samples
                 if (samples.size()>0) {
-                    IntakeOrder newOrder = new IntakeOrder();
-                    newOrder.setOrderNo(orderNo);
-                    newOrder.setOwner(sampleInfo.getOwnerKey());
-                    newOrder.setStartDate(c.getTime());
-                    newOrder.setStatus(OrderStatus.Intake);
-                    newOrder.setSampleIds(sampleIds);
-                    DomainMgr.getDomainMgr().getModel().addIntakeOrder(newOrder);
+                    // check if there is an existing order no
+                    IntakeOrder order = DomainMgr.getDomainMgr().getModel().getIntakeOrder(orderNo);
+                    if (order==null) {
+                        order = new IntakeOrder();
+                        order.setOrderNo(orderNo);
+                        order.setOwner(sampleInfo.getOwnerKey());
+                        order.setStartDate(c.getTime());
+                        order.setStatus(OrderStatus.Intake);
+                        order.setSampleIds(sampleIds);
+                    } else {
+                        List<Long> currIds = order.getSampleIds();
+                        currIds.addAll(sampleIds);
+                        order.setSampleIds(currIds);
+                    }
+                    DomainMgr.getDomainMgr().getModel().putOrUpdateIntakeOrder(order);
                 }
 
             }
