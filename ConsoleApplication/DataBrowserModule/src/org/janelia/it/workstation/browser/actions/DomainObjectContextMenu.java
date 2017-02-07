@@ -538,7 +538,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                             newOrder.setStartDate(c.getTime());
                             newOrder.setStatus(OrderStatus.Intake);
                             newOrder.setSampleIds(sampleIds);
-                            DomainMgr.getDomainMgr().getModel().addIntakeOrder(newOrder);
+                            DomainMgr.getDomainMgr().getModel().putOrUpdateIntakeOrder(newOrder);
                         }
 
                     }
