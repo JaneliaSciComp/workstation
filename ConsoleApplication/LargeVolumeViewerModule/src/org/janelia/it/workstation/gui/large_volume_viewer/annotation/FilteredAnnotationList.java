@@ -82,7 +82,17 @@ public class FilteredAnnotationList extends JPanel {
     }
 
     public void setSkipUpdate(boolean skipUpdate) {
-        this.skipUpdate=skipUpdate;
+        this.skipUpdate = skipUpdate;
+    }
+    
+    public void beganTransaction() {
+        this.skipUpdate = true;
+        updateData();
+    }
+    
+    public void endTransaction() {
+        this.skipUpdate = false;
+        updateData();
     }
 
     private FilteredAnnotationList(final AnnotationManager annotationMgr, final AnnotationModel annotationModel, int width) {
@@ -124,7 +134,7 @@ public class FilteredAnnotationList extends JPanel {
                         int viewColumn = table.columnAtPoint(me.getPoint());
                         int modelColumn = table.convertColumnIndexToModel(viewColumn);
                         InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
-                        TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(interestingAnnotation.getAnnotationID());
+                        TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(interestingAnnotation.getNeuronID(), interestingAnnotation.getAnnotationID());
                         if (modelColumn == 2) {
                             // double-click note: edit note dialog
                             editNoteRequestedListener.editNote(ann);
@@ -154,6 +164,10 @@ public class FilteredAnnotationList extends JPanel {
     }
 
     public void loadWorkspace(TmWorkspace workspace) {
+        updateData();
+    }
+
+    public void notesChanged(TmGeoAnnotation ann) {
         updateData();
     }
 
@@ -215,7 +229,7 @@ public class FilteredAnnotationList extends JPanel {
         
         for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
             for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
-                note = annotationMgr.getNote(ann.getId(), neuron);
+                note = annotationMgr.getNote(neuron.getId(), ann.getId());
                 if (note.length() == 0) {
                     note = "";
                 }

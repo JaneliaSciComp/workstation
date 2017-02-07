@@ -13,7 +13,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 public interface TmGeoAnnotationModListener {
     void annotationAdded(TmGeoAnnotation annotation);
     void annotationsDeleted(List<TmGeoAnnotation> annotations);
-    void annotationReparented(TmGeoAnnotation annotation);
+    void annotationReparented(TmGeoAnnotation annotation, Long prevNeuronId);
     void annotationNotMoved(TmGeoAnnotation annotation);
     void annotationMoved(TmGeoAnnotation annotation);
     void annotationRadiusUpdated(TmGeoAnnotation annotation);

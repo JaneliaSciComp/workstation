@@ -6,14 +6,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.util.MatrixUtilities;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.wlu.cs.levy.CG.Checker;
 import edu.wlu.cs.levy.CG.KDTree;
 import edu.wlu.cs.levy.CG.KeyDuplicateException;
 import edu.wlu.cs.levy.CG.KeyMissingException;
@@ -30,8 +31,11 @@ public class NeuronVertexSpatialIndex {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final Map<NeuronVertex, CacheableKey> cachedKeys = new HashMap<>();
-
+    
     private KDTree<NeuronVertex> index; // Cannot be final because it doesn't have a clear method
+
+    // Is the index currently in a valid, usable state?
+    private AtomicBoolean valid = new AtomicBoolean(false);
     
     public NeuronVertexSpatialIndex() {
         log.trace("Creating spatial index");
@@ -68,6 +72,36 @@ public class NeuronVertexSpatialIndex {
     }
 
     /**
+     * Returns the N closest anchors to the location given in micron units. The locations are sorted in 
+     * order from closest to farthest.
+     * @param micronXYZ micron location
+     * @param n number of results to return
+     * @param filter filter which anchors to exclude
+     * @return list of matching anchors
+     */
+    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n, final SpatialFilter filter) {
+        if (index==null) return Collections.emptyList();
+        try {
+            return index.nearest(micronXYZ, n, new Checker<NeuronVertex>() {
+                @Override
+                public boolean usable(NeuronVertex v) {
+                    if (v instanceof NeuronVertexAdapter) {
+                        TmGeoAnnotation ann = ((NeuronVertexAdapter) v).getTmGeoAnnotation();
+                        return filter.include(v, ann);
+                    }
+                    else {
+                        return filter.include(v, null);
+                    }
+                }
+            });
+        } 
+        catch (KeySizeException ex) {
+            log.warn("Exception while finding anchor in spatial index", ex);
+            return null;
+        }
+    }
+
+    /**
      * Returns all the anchors found in the area given by two corners points, given in micron units.  
      * @param p1 lower corner
      * @param p2 higher corner
@@ -95,7 +129,7 @@ public class NeuronVertexSpatialIndex {
             return cachedKeys.get(v).toArray();
         }
         else {
-            float xyz[] = v.getLocation(); // Neuron API returns coordinates in microns
+            float xyz[] = v.getLocation(); // Neuron API returns coordinates in micrometers
             return new double[] { xyz[0], xyz[1], xyz[2] };
         }
     }
@@ -136,19 +170,22 @@ public class NeuronVertexSpatialIndex {
     private CacheableKey cacheableKey(double[] key) {
         return new CacheableKey(key);
     }
-
-    public void rebuildIndex(Collection<NeuronModel> neuronList) {
-        
-        // TODO: This is called twice whenever a neuron is merged because both mergeNeurite 
-        // and deleteNeuron incorrectly call fireWorkspaceLoaded. That should be fixed in those methods.  
+    
+    public boolean isValid() {
+        return valid.get();
+    }
+    
+    public synchronized void rebuildIndex(Collection<NeuronModel> neuronList) {
         log.info("Rebuilding spatial index");
+        valid.set(false);
         clear();
         for (NeuronModel neuronModel : neuronList) {
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 addToIndex(neuronVertex);
             }
         }
-        log.info("Added {} vertices to spatial index with {} cached keys", index.size(), cachedKeys.size());
+        valid.set(true);
+        log.info("Added {} vertices to spatial index", index.size());
     }
     
     public void clear() {

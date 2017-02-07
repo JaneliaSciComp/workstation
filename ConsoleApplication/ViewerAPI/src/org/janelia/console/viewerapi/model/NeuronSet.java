@@ -48,7 +48,8 @@ public interface NeuronSet extends Collection<NeuronModel>
     String getName();
     NeuronModel createNeuron(String initialNeuronName);
 
-    List<NeuronVertex> getAnchorsInArea(double[] p1, double[] p2);
+    public boolean isSpatialIndexValid();
+    List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2);
     List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n);
     NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ);
 
@@ -59,5 +60,6 @@ public interface NeuronSet extends Collection<NeuronModel>
     NeuronVertex getPrimaryAnchor(); // can be null
     void setPrimaryAnchor(NeuronVertex anchor); // set to null to clear
     ObservableInterface getPrimaryAnchorObservable();
-
+    
+    public NeuronModel getNeuronByGuid(Long guid);
 }

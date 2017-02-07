@@ -311,11 +311,24 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             getSkeletonActor().getModel().setAnchorsVisible(false);
         }
     }
-    
-    public void setCameraFocus( Vec3 focus ) {
+
+    public void setCameraFocus(Vec3 focus) {
+        log.info("Setting camera focus: {}", focus);
         camera.setFocus(focus);
     }
 
+    public Vec3 getCameraFocus() {
+        return camera.getFocus();
+    }
+
+    public boolean setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
+        return camera.setPixelsPerSceneUnit(pixelsPerSceneUnit);
+    }
+    
+    public double getPixelsPerSceneUnit() {
+        return camera.getPixelsPerSceneUnit();
+    }
+    
     /**
      * move toward the neuron root to the next branch or the root
      */
@@ -324,7 +337,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         if (neuron != null) {
             Anchor anchor = getSkeletonActor().getModel().getNextParent();
             if (anchor != null) {
-                TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
+                TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
                 if (!ann.isRoot()) {
                     ann = neuron.getParentOf(ann);
                     while (!ann.isRoot() && !ann.isBranch()) {
@@ -536,7 +549,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         loadStatusLabel.setLoadStatus(loadStatus);
     }
 
-    public void pathTraceRequested(Long annotationID) {
+    public void pathTraceRequested(Long neuronId, Long annotationID) {
         // this needs to happen before you draw anchored paths; should
         //  go somewhere else so it only happens once, but not clear where;
         //  not clear we have a trigger for when the image is loaded enough for
@@ -545,7 +558,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 tileServer.getLoadAdapter().getTileFormat());
 
         // construct new request; add image data to anchor and pass it on
-        PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
+        PathTraceToParentRequest request = new PathTraceToParentRequest(neuronId, annotationID);
         request.setImageVolume(volumeImage);
         request.setTextureCache(tileServer.getTextureCache());
         if (pathTraceListener != null) {
@@ -1153,7 +1166,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		double maxZ = volumeImage.getBoundingBox3d().getMax().getZ() - halfVoxel;
 		newZ = Math.max(newZ, minZ);
 		newZ = Math.min(newZ, maxZ);
-		camera.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+                if (!Double.isNaN(newZ)) {
+                    camera.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+                }
 		return true;
 	}
 

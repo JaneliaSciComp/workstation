@@ -71,4 +71,6 @@ extends Hideable
     boolean updateVertexRadius(NeuronVertex vertex, float micronRadius);
     
     boolean deleteVertex(NeuronVertex doomedVertex);
+
+    NeuronVertex getVertexByGuid(Long guid);
 }

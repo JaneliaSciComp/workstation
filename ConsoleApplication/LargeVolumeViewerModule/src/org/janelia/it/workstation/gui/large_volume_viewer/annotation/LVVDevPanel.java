@@ -120,7 +120,7 @@ public class LVVDevPanel extends JPanel {
                     @Override
                     protected void doStuff() throws Exception {
                         TmGeoAnnotation ann1 = currentNeuron.getFirstRoot();
-                        TmGeoAnnotation ann2 = annotationModel.getGeoAnnotationFromID(ann1.getChildIds().get(0));
+                        TmGeoAnnotation ann2 = annotationModel.getGeoAnnotationFromID(ann1.getNeuronId(), ann1.getChildIds().get(0));
 
                         // I wonder if you can get away with not having any points except the endpoints?
                         TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(ann1, ann2);
@@ -146,7 +146,7 @@ public class LVVDevPanel extends JPanel {
                         pointList.add(lastPoint);
 
 
-                        annotationModel.addAnchoredPath(endpoints, pointList);
+                        annotationModel.addAnchoredPath(ann1.getNeuronId(), endpoints, pointList);
                     }
 
                     @Override

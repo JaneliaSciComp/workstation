@@ -102,7 +102,7 @@ implements MouseMode, KeyListener
         if (event.getClickCount() == 2) {
             if (hoverAnchor != null) {
                 camera.setFocus(hoverAnchor.getLocation());
-                skeleton.getHistory().push(hoverAnchor);
+//                skeleton.getHistory().push(hoverAnchor);
             } else {
                 // center on slice point
                 camera.setFocus(worldFromPixel(event.getPoint()));
@@ -189,7 +189,7 @@ implements MouseMode, KeyListener
                     if (anchor!=null) {
                         anchors.add(anchor);
                     }
-                }
+                } 
                 spatial = findBestAnchor(anchors, xyz, cutoff);
             }
         }
@@ -300,7 +300,7 @@ implements MouseMode, KeyListener
 					}
 					Vec3 newLoc = oldLoc.plus(dLoc);
 					dragAnchor.setLocation(newLoc);
-					skeleton.getHistory().push(dragAnchor);
+//					skeleton.getHistory().push(dragAnchor);
 				}
 			}
 			dragAnchor = null;
@@ -392,7 +392,7 @@ implements MouseMode, KeyListener
                             	Anchor h = getHoverAnchor();
                             	if (h == null)
                             		return;
-                            	skeleton.getHistory().push(h);
+//                            	skeleton.getHistory().push(h);
                                 camera.setFocus(h.getLocation());
                             }
                         }));
@@ -648,10 +648,10 @@ implements MouseMode, KeyListener
 		case KeyEvent.VK_LEFT:
 			if (nextParent != null) {
 				if (event.isAltDown()) {
-				controller.navigationRelative(nextParent.getGuid(),
+				controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
 						AnnotationNavigationDirection.ROOTWARD_STEP);
 				} else {
-					controller.navigationRelative(nextParent.getGuid(),
+					controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
 							AnnotationNavigationDirection.ROOTWARD_JUMP);
 				}
 			}
@@ -659,23 +659,23 @@ implements MouseMode, KeyListener
 		case KeyEvent.VK_RIGHT:
 			if (nextParent != null) {
 				if (event.isAltDown()) {
-					controller.navigationRelative(nextParent.getGuid(),
+					controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
 							AnnotationNavigationDirection.ENDWARD_STEP);
 				} else {
-					controller.navigationRelative(nextParent.getGuid(),
+					controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
 							AnnotationNavigationDirection.ENDWARD_JUMP);
 				}
 			}
 			break;
 		case KeyEvent.VK_UP:
 			if (nextParent != null) {
-				controller.navigationRelative(nextParent.getGuid(),
+				controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
 						AnnotationNavigationDirection.PREV_PARALLEL);
 			}
 			break;
 		case KeyEvent.VK_DOWN:
 			if (nextParent != null) {
-				controller.navigationRelative(nextParent.getGuid(),
+				controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
 						AnnotationNavigationDirection.NEXT_PARALLEL);
 			}
 			break;

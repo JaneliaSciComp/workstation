@@ -13,6 +13,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.Events;
@@ -48,6 +49,8 @@ public class LargeVolumeViewViewer extends JPanel {
 
     private TmSample sliceSample;
     private DomainObject initialObject;
+    private Vec3 initialViewFocus;
+    private Double initialZoom;
     private AnnotationModel annotationModel;
     private QuadViewUi viewUI;
 
@@ -73,7 +76,7 @@ public class LargeVolumeViewViewer extends JPanel {
         //  I have found that with very large numbers of
         //  neurons in the neurons table, not reloading
         //  causes GUI lockup.
-        deleteAll();
+        close();
     	
         SimpleWorker worker = new SimpleWorker() {
 
@@ -133,6 +136,18 @@ public class LargeVolumeViewViewer extends JPanel {
                     protected void hadSuccess() {
                         if (success) {
                             logger.info("Image data loading completed");
+                            synchronized(this) {
+                                if (initialViewFocus!=null) {
+                                    logger.info("Setting intial camera focus: {}", initialViewFocus);
+                                    viewUI.setCameraFocus(initialViewFocus);
+                                    initialViewFocus = null;
+                                }
+                                if (initialZoom!=null) {
+                                    logger.info("Setting intial zoom: {}", initialZoom);
+                                    viewUI.setPixelsPerSceneUnit(initialZoom);
+                                    initialZoom = null;
+                                }
+                            }
                         }
                         else {
                             logger.info("Image data loading failed");
@@ -222,6 +237,11 @@ public class LargeVolumeViewViewer extends JPanel {
         worker.execute();
 
     }
+    
+    public void setInitialViewFocus(Vec3 initialViewFocus, Double initialZoom) {
+        this.initialViewFocus = initialViewFocus;
+        this.initialZoom = initialZoom;
+    }
 
     public SampleLocation getSampleLocation() {
         return viewUI.getSampleLocation();
@@ -244,9 +264,22 @@ public class LargeVolumeViewViewer extends JPanel {
     
     public void close() {
         logger.info("Closing");
-        deleteAll();
+        sliceSample = null;
+        initialObject = null;
+        removeAll();
+        if (viewUI != null)
+            viewUI.clearCache();
+        viewUI = null;
+        if (annotationModel!=null) {
+            Events.getInstance().unregisterOnEventBus(annotationModel);
+            annotationModel = null;
+        }
     }
 
+    public void totalRefresh() {
+        refresh();
+    }
+    
     public void refresh() {
         logger.info("Refreshing");
 
@@ -258,6 +291,7 @@ public class LargeVolumeViewViewer extends JPanel {
                 Events.getInstance().registerOnEventBus(annotationModel);
                 viewUI = new QuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);
             }
+            
             removeAll();
             viewUI.setVisible(true);
             add(viewUI);
@@ -275,25 +309,8 @@ public class LargeVolumeViewViewer extends JPanel {
             }
         }
     }    
-
-    public void totalRefresh() {
-        refresh();
-    }
     
     //------------------------------Private Methods
-
-    private void deleteAll() {
-        sliceSample = null;
-        initialObject = null;
-        removeAll();
-        if (viewUI != null)
-        	viewUI.clearCache();
-        viewUI = null;
-        if (annotationModel!=null) {
-            Events.getInstance().unregisterOnEventBus(annotationModel);
-            annotationModel = null;
-        }
-    }
 
     @Subscribe
     public void objectsInvalidated(DomainObjectInvalidationEvent event) {

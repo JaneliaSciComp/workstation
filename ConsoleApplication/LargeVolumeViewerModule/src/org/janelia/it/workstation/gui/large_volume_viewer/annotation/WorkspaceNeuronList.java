@@ -505,12 +505,12 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         }
         updateNeuronLabel();
     }
-
+    
     /**
      * update the table neuron with a new version of an
      * existing neuron (replaces in place)
      */
-    private void updateModel(TmNeuronMetadata neuron) {
+    public void updateModel(TmNeuronMetadata neuron) {
         neuronTableModel.updateNeuron(neuron);
     }
 
