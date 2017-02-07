@@ -1008,8 +1008,12 @@ public class DomainModel {
         sampleFacade.addStatusTransition(transition);
     }
 
-    public void addIntakeOrder (IntakeOrder order) throws Exception {
-        sampleFacade.addIntakeOrder(order);
+    public void putOrUpdateIntakeOrder (IntakeOrder order) throws Exception {
+        sampleFacade.putOrUpdateIntakeOrder(order);
+    }
+
+    public IntakeOrder getIntakeOrder (String orderNo) throws Exception {
+        return sampleFacade.getIntakeOrder(orderNo);
     }
 
     private void notifyDomainObjectsInvalidated(Collection<? extends DomainObject> objects, boolean invalidateTree) {

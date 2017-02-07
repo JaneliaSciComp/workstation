@@ -98,6 +98,13 @@ public interface SampleFacade {
      * @param order order information with samples that need to be reprocessed.
      * @throws Exception
      */
-    public void addIntakeOrder(IntakeOrder order) throws Exception;
+    public void putOrUpdateIntakeOrder(IntakeOrder order) throws Exception;
+
+    /**
+     * Retrieves an intake order given the order no
+     * @param ordeNo The order number
+     * @throws Exception
+     */
+    public IntakeOrder getIntakeOrder(String ordeNo) throws Exception;
     
 }
