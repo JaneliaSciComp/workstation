@@ -168,13 +168,26 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
     }
 
 
-    public void addIntakeOrder(IntakeOrder order) throws Exception {
+    public void putOrUpdateIntakeOrder(IntakeOrder order) throws Exception {
         Response response = manager.getSampleEndpoint()
                 .path("intakeorder")
                 .request("application/json")
                 .put(Entity.json(order));
-        if (checkBadResponse(response.getStatus(), "problem making request to create an intake order for reprocessing pipelines: " + order.getOrderNo())) {
+        if (checkBadResponse(response.getStatus(), "problem making request to update/create an intake order for reprocessing pipelines: " + order.getOrderNo())) {
             throw new WebApplicationException(response);
         }
+    }
+
+
+    public IntakeOrder getIntakeOrder(String orderNo) throws Exception {
+        Response response = manager.getSampleEndpoint()
+                .path("intakeorder")
+                .queryParam("releaseId", orderNo)
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request to retrieve an intake order: " + orderNo)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(IntakeOrder.class);
     }
 }
