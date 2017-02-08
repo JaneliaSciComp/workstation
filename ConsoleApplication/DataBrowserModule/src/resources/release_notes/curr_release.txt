@@ -1,10 +1,13 @@
 // 5.9.0
 
 Workstation Browser
-* Many minor bug fixes
+* Shared annotations can now be searched for
+* Many other minor bug fixes (see JIRA)
 
 FlyLight
 * Fixed usability issue with LSMs being annotated instead of sample
 
 MouseLight
-* 
+* Greatly improved neuron operation performance, supporting millions of anchors 
+* Newly created workspaces are now added to the Recently Opened folder
+* Reopening last workspace on startup now also restores viewer position

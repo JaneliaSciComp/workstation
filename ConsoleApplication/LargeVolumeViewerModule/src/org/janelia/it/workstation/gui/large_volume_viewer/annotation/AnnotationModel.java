@@ -232,9 +232,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * In order to avoid doing things twice (or more) unnecessarily, we stop any piecemeal UI updates from being made 
      * and wait until the transaction to end before doing everything in bulk.
      */
-    private void beganTransaction() {
-        SkeletonController.getInstance().beganTransaction();
-        FilteredAnnotationList.getInstance().beganTransaction();
+    private void beginTransaction() {
+        SkeletonController.getInstance().beginTransaction();
+        FilteredAnnotationList.getInstance().beginTransaction();
     }
 
     /**
@@ -373,6 +373,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public TmNeuronMetadata getNeuronFromNeuronID(Long neuronID) {
         TmNeuronMetadata foundNeuron = neuronManager.getNeuronById(neuronID);
         if (foundNeuron == null) {
+            // This happens, for example, when a new workspace is loaded and we try to find the previous nextParent anchor.
             log.warn("There is no neuron with id: {}", neuronID);
         }
         log.debug("getNeuronFromNeuronID({}) = {}",neuronID,foundNeuron);
@@ -503,10 +504,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                beganTransaction();
-                fireNeuronSelected(null);
-                fireNeuronDeleted(deletedNeuron);
-                endTransaction();
+                beginTransaction();
+                try {
+                    fireNeuronSelected(null);
+                    fireNeuronDeleted(deletedNeuron);
+                }
+                finally {
+                    endTransaction();
+                }
                 activityLog.logDeleteNeuron(workspace.getId(), deletedNeuron.getId());
             }
         });
@@ -809,23 +814,25 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             @Override
             public void run() {
 
-                beganTransaction();
-
-                if (notesChangedSource) {
-                    fireNotesUpdated(sourceAnnotation);
+                beginTransaction();
+                try {
+                    if (notesChangedSource) {
+                        fireNotesUpdated(sourceAnnotation);
+                    }
+                    if (notesChangedTarget) {
+                        fireNotesUpdated(targetAnnotation);
+                    }
+                    if (sourceDeleted) {
+                        fireNeuronDeleted(sourceNeuron);
+                    }
+                    else {
+                        fireNeuronChanged(sourceNeuron);
+                    }
+                    fireNeuronChanged(targetNeuron);
                 }
-                if (notesChangedTarget) {
-                    fireNotesUpdated(targetAnnotation);
+                finally {
+                    endTransaction();
                 }
-                if (sourceDeleted) {
-                    fireNeuronDeleted(sourceNeuron);
-                }
-                else {
-                    fireNeuronChanged(sourceNeuron);
-                }
-                fireNeuronChanged(targetNeuron);
-                
-                endTransaction();
                 
                 activityLog.logEndOfOperation(getWsId(), targetAnnotation);
             }
@@ -850,11 +857,15 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                beganTransaction();
-                fireNeuronChanged(sourceNeuron);
-                fireNeuronChanged(destNeuron);
-                fireNeuronSelected(destNeuron);
-                endTransaction();
+                beginTransaction();
+                try {
+                    fireNeuronChanged(sourceNeuron);
+                    fireNeuronChanged(destNeuron);
+                    fireNeuronSelected(destNeuron);
+                }
+                finally {
+                    endTransaction();
+                }
                 activityLog.logEndOfOperation(getWsId(), annotation);
             }
         });
@@ -951,8 +962,16 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireNeuronChanged(neuron);
-
+                beginTransaction();
+                try {
+                    // Need to delete the anchor to undraw it
+                    fireAnnotationsDeleted(Arrays.asList(link));
+                    // Also need to redraw the neurite, because we need the link from the reparenting to appear
+                    fireNeuronChanged(neuron);
+                }
+                finally {
+                    endTransaction();
+                }
                 activityLog.logEndOfOperation(getWsId(), link);
 
             }
@@ -1018,13 +1037,17 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                beganTransaction();
-                for (TmGeoAnnotation ann : notesChanged) {
-                    fireNotesUpdated(ann);
+                beginTransaction();
+                try {
+                    for (TmGeoAnnotation ann : notesChanged) {
+                        fireNotesUpdated(ann);
+                    }
+                    fireAnnotationsDeleted(deleteList);
+                    fireNeuronSelected(neuron);
                 }
-                fireNeuronChanged(neuron);
-                fireNeuronSelected(neuron);
-                endTransaction();
+                finally {
+                    endTransaction();
+                }
                 activityLog.logEndOfOperation(getWsId(), rootAnnotation);
             }
         });
@@ -1110,10 +1133,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                beganTransaction();
-                fireAnnotationAdded(newAnnotation);
-                fireAnnotationReparented(updateAnnotation, neuron.getId());
-                endTransaction();
+                beginTransaction();
+                try {
+                    fireAnnotationAdded(newAnnotation);
+                    fireAnnotationReparented(updateAnnotation, neuron.getId());
+                }
+                finally {
+                    endTransaction();
+                }
                 activityLog.logEndOfOperation(getWsId(), annotation);
             }
         });
@@ -1173,10 +1200,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                beganTransaction();
-                fireAnnotationReparented(neuron.getGeoAnnotationMap().get(newRootID), neuron.getId());
-                fireNeuronSelected(neuron);
-                endTransaction();
+                beginTransaction();
+                try {
+                    fireAnnotationReparented(neuron.getGeoAnnotationMap().get(newRootID), neuron.getId());
+                    fireNeuronSelected(neuron);
+                }
+                finally {
+                    endTransaction();
+                }
                 activityLog.logEndOfOperation(getWsId(), newRoot);
             }
         });
