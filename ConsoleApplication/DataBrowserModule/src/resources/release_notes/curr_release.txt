@@ -11,3 +11,7 @@ MouseLight
 * Greatly improved neuron operation performance, supporting millions of anchors 
 * Newly created workspaces are now added to the Recently Opened folder
 * Reopening last workspace on startup now also restores viewer position
+* Improved Horta rendering performance to support up to a million anchors
+* Improve Horta model clearing when loading subsequent workspaces
+* Update Horta display after "transfer neurite" in LVV
+* Restore ability to drag and drop Ktx tiles in Horta
