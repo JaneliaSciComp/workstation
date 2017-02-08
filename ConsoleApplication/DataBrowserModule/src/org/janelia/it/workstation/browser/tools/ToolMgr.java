@@ -353,27 +353,44 @@ public class ToolMgr extends PreferenceManager {
         }
         
         String path = tool.getPath();
-
-        final File exeFile = new File(path);
-        if (!exeFile.exists()) {
-            String msg = "Tool " + toolName + " (" + exeFile.getAbsolutePath() + ") does not exist.";
-            log.error(msg);
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        } 
-        else if (!exeFile.canExecute()) {
-            String msg = "Tool " + toolName + " (" + exeFile.getAbsolutePath() + ") cannot be executed.";
-            log.error(msg);
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
         
         if (SystemInfo.isMac && tool.getPath().endsWith(".app")) {
             Desktop.getDesktop().open(new File(path));
         } 
         else {
             List<String> command = new ArrayList<>();
-            command.add(path);
+            
+            boolean foundArg = false;
+            StringBuilder toolPathSb = new StringBuilder();
+            List<String> toolArgs = new ArrayList<>();
+            for(String pathComponent : path.split(" ")) {
+                if (!foundArg && !pathComponent.startsWith("-")) {
+                    toolPathSb.append(pathComponent);
+                }
+                else {
+                    toolArgs.add(pathComponent);
+                    foundArg = true;
+                }
+            }
+
+            String toolPath = toolPathSb.toString();
+            
+            final File exeFile = new File(toolPath);
+            if (!exeFile.exists()) {
+                String msg = "Tool " + toolName + " (" + exeFile.getAbsolutePath() + ") does not exist.";
+                log.error(msg);
+                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            } 
+            else if (!exeFile.canExecute()) {
+                String msg = "Tool " + toolName + " (" + exeFile.getAbsolutePath() + ") cannot be executed.";
+                log.error(msg);
+                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            command.add(toolPath);
+            command.addAll(toolArgs);
             command.addAll(arguments);
             
             ProcessBuilder pb = new ProcessBuilder(command);
