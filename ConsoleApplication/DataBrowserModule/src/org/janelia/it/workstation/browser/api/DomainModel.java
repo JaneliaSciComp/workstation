@@ -976,34 +976,6 @@ public class DomainModel {
         return subjectFacade.loginSubject(username, password);
     }
 
-    public void notifyDomainObjectCreated(DomainObject domainObject) {
-        if (log.isTraceEnabled()) {
-            log.trace("Generating DomainObjectCreateEvent for {}", DomainUtils.identify(domainObject));
-        }
-        Events.getInstance().postOnEventBus(new DomainObjectCreateEvent(domainObject));
-    }
-
-    public void notifyDomainObjectChanged(DomainObject domainObject) {
-        if (log.isTraceEnabled()) {
-            log.trace("Generating DomainObjectChangeEvent for {}", DomainUtils.identify(domainObject));
-        }
-        Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(domainObject));
-    }
-
-    public void notifyAnnotationsChanged(DomainObject domainObject) {
-        if (log.isTraceEnabled()) {
-            log.trace("Generating DomainObjectAnnotationChangeEvent for {}", DomainUtils.identify(domainObject));
-        }
-        Events.getInstance().postOnEventBus(new DomainObjectAnnotationChangeEvent(domainObject));
-    }
-
-    public void notifyDomainObjectRemoved(DomainObject domainObject) {
-        if (log.isTraceEnabled()) {
-            log.trace("Generating DomainObjectRemoveEvent for {}", DomainUtils.identify(domainObject));
-        }
-        Events.getInstance().postOnEventBus(new DomainObjectRemoveEvent(domainObject));
-    }
-
     public void addPipelineStatusTransition(StatusTransition transition) throws Exception {
         sampleFacade.addStatusTransition(transition);
     }
@@ -1016,6 +988,50 @@ public class DomainModel {
         return sampleFacade.getIntakeOrder(orderNo);
     }
 
+    // EVENT HANDLING
+    
+    public void notifyDomainObjectCreated(DomainObject domainObject) {
+        if (log.isTraceEnabled()) {
+            log.trace("Generating DomainObjectCreateEvent for {}", DomainUtils.identify(domainObject));
+        }
+        if (domainObject==null) {
+            throw new IllegalStateException("Cannot notify creation of null object");
+        }
+        Events.getInstance().postOnEventBus(new DomainObjectCreateEvent(domainObject));
+    }
+
+    public void notifyDomainObjectChanged(DomainObject domainObject) {
+        if (log.isTraceEnabled()) {
+            log.trace("Generating DomainObjectChangeEvent for {}", DomainUtils.identify(domainObject));
+        }
+        if (domainObject==null) {
+            throw new IllegalStateException("Cannot notify change of null object");
+        }
+        else {
+            Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(domainObject));
+        }
+    }
+
+    public void notifyAnnotationsChanged(DomainObject domainObject) {
+        if (log.isTraceEnabled()) {
+            log.trace("Generating DomainObjectAnnotationChangeEvent for {}", DomainUtils.identify(domainObject));
+        }
+        if (domainObject==null) {
+            throw new IllegalStateException("Cannot notify annotation change of null object");
+        }
+        Events.getInstance().postOnEventBus(new DomainObjectAnnotationChangeEvent(domainObject));
+    }
+
+    public void notifyDomainObjectRemoved(DomainObject domainObject) {
+        if (log.isTraceEnabled()) {
+            log.trace("Generating DomainObjectRemoveEvent for {}", DomainUtils.identify(domainObject));
+        }
+        if (domainObject==null) {
+            throw new IllegalStateException("Cannot notify removal of null object");
+        }
+        Events.getInstance().postOnEventBus(new DomainObjectRemoveEvent(domainObject));
+    }
+    
     private void notifyDomainObjectsInvalidated(Collection<? extends DomainObject> objects, boolean invalidateTree) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectInvalidationEvent with {} entities", objects.size());
