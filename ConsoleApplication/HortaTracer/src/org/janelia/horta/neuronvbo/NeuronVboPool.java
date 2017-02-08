@@ -380,7 +380,11 @@ public class NeuronVboPool implements Iterable<NeuronModel>
             advanceToNextVbo();
             return vboIterator.next();
         }
-        
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();   
+        }
     }
     
     private class NeuronIterator implements Iterator<NeuronModel> 
@@ -419,6 +423,11 @@ public class NeuronVboPool implements Iterable<NeuronModel>
         {
             advanceToNextNeuron();
             return neuronIterator.next();
+        }
+        
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();   
         }
     }
 }
