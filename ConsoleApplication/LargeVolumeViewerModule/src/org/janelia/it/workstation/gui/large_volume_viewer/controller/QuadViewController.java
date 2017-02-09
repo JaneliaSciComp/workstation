@@ -69,8 +69,8 @@ public class QuadViewController implements ViewStateListener {
     }
     
     @Override
-    public void pathTraceRequested(Long id) {
-        ui.pathTraceRequested(id);
+    public void pathTraceRequested(Long neuronId, Long annotationId) {
+        ui.pathTraceRequested(neuronId, annotationId);
     }
     
     @Override

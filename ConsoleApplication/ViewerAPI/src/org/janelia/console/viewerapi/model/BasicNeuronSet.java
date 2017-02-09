@@ -204,6 +204,11 @@ implements NeuronSet
     }
 
     @Override
+    public boolean isSpatialIndexValid() {
+        return false;
+    }
+    
+    @Override
     public NeuronModel getNeuronForAnchor(NeuronVertex anchor) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -214,21 +219,17 @@ implements NeuronSet
     }
     
     @Override
-    public List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    @Override
-    public NeuronVertex getAnchorClosestToVoxelLocation(double[] voxelXYZ) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 
     @Override
-    public List<NeuronVertex> getAnchorsInArea(double[] p1, double[] p2) {
+    public List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    @Override 
+    public NeuronModel getNeuronByGuid(Long guid) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

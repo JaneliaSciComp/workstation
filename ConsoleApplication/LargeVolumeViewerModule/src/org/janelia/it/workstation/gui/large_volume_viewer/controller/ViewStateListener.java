@@ -12,5 +12,5 @@ public interface ViewStateListener {
     void setCameraFocus(Vec3 focus);
     void centerNextParent();
     void loadColorModel(TmColorModel colorModel);
-    void pathTraceRequested(Long id);
+    void pathTraceRequested(Long neuronID, Long annotationId);
 }

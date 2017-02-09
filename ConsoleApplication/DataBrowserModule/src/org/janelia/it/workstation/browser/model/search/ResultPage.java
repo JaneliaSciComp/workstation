@@ -69,6 +69,7 @@ public class ResultPage implements AnnotatedDomainObjectList {
 
     @Override
     public synchronized boolean updateObject(DomainObject updatedObject) {
+        if (updatedObject==null) return false;
         domainObjectById.put(updatedObject.getId(), updatedObject);
         return DomainUtils.replaceDomainObjectInList(domainObjects, updatedObject);
     }

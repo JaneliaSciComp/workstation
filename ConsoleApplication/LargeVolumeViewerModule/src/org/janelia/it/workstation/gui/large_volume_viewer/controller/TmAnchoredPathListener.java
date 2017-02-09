@@ -9,6 +9,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
  * @author fosterl
  */
 public interface TmAnchoredPathListener {
-    void addAnchoredPath(TmAnchoredPath path);
-    void removeAnchoredPaths(List<TmAnchoredPath> paths);
+    void addAnchoredPath(Long neuronID, TmAnchoredPath path);
+    void removeAnchoredPaths(Long neuronID, List<TmAnchoredPath> paths);
+    void removeAnchoredPathsByNeuronID(Long neuronID);
 }

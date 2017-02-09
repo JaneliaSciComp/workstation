@@ -649,7 +649,29 @@ public class TracingInteractor extends MouseAdapter
             if (defaultWorkspace != null) {
                 try {
                     double[] loc = new double[]{cursorXyz.getX(), cursorXyz.getY(), cursorXyz.getZ()};
-                    nearestVertex = defaultWorkspace.getAnchorClosestToVoxelLocation(loc);
+                    final boolean bSearchMultipleAnchors = true;
+                    if (bSearchMultipleAnchors) {
+                        // Skip hidden neurons
+                        List<NeuronVertex> nearestVertexes = defaultWorkspace.getAnchorClosestToMicronLocation(loc, 3);
+                        float minDistSquared = Float.MAX_VALUE;
+                        for (NeuronVertex v : nearestVertexes) {
+                            NeuronModel neuron = defaultWorkspace.getNeuronForAnchor(v);
+                            if (! neuron.isVisible()) {
+                                // log.info("skipping invisible neuron");
+                                continue;
+                            }
+                            Vector3 xyz = new Vector3(v.getLocation()).minus(cursorXyz);
+                            float d2 = xyz.dot(xyz);
+                            // log.info("vertex distance = {} um", Math.sqrt(d2));
+                            if (d2 < minDistSquared) {
+                                nearestVertex = v;
+                                minDistSquared = d2;
+                            }
+                        }
+                    }
+                    else {
+                        nearestVertex = defaultWorkspace.getAnchorClosestToMicronLocation(loc);
+                    }
                 }
                 catch (UnsupportedOperationException e) {
                     // TODO: this needs to be fixed so that Horta doesn't need to maintain its own spatial index for every neuron.

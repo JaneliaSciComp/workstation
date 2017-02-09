@@ -97,6 +97,10 @@ public class BasicNeuronModel implements NeuronModel
         this.parentSet = parentSet;
     }
     
+    public BasicNeuronModel() {
+        this("Unnamed Neuron", null);
+    }
+    
     public BasicNeuronModel(File swcFile, NeuronSet parentSet) throws FileNotFoundException, IOException
     {
         this(new BufferedInputStream(new FileInputStream(swcFile)), swcFile.getName(), parentSet);
@@ -289,7 +293,14 @@ public class BasicNeuronModel implements NeuronModel
 
     @Override
     public NeuronVertex appendVertex(NeuronVertex parentVertex, float[] micronXyz, float radius) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        NeuronVertex newVertex = new BasicSwcVertex(micronXyz[0], micronXyz[1], micronXyz[2]);
+        newVertex.setRadius(radius);
+        nodes.add(newVertex);
+        if (parentVertex != null) {
+            edges.add(new BasicNeuronEdge(parentVertex, newVertex));
+        }
+        getVertexCreatedObservable().setChanged();
+        return newVertex;
     }
 
     @Override
@@ -315,6 +326,11 @@ public class BasicNeuronModel implements NeuronModel
     @Override
     public boolean updateVertexRadius(NeuronVertex vertex, float micronRadius) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    @Override
+    public NeuronVertex getVertexByGuid(Long guid) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
 }

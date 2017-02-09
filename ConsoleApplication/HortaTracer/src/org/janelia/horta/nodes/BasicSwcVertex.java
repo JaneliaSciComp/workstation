@@ -30,7 +30,6 @@
 
 package org.janelia.horta.nodes;
 
-import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.modelapi.SwcVertex;
 

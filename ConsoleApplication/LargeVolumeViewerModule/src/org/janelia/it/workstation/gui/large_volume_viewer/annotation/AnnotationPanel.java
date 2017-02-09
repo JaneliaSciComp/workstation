@@ -119,6 +119,10 @@ public class AnnotationPanel extends JPanel
 
     }
 
+    public AnnotationModel getAnnotationModel() {
+        return annotationModel;
+    }
+
     public void setViewStateListener(ViewStateListener listener) {
         this.viewStateListener = listener;        
     }

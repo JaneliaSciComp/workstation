@@ -306,7 +306,9 @@ public class StateMgr {
 
         if (changed) {
             Ontology ontology = DomainMgr.getDomainMgr().getModel().getDomainObject(Ontology.class, ontologyKeyBindings.getOntologyId());
-            Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(ontology));
+            if (ontology!=null) {
+                Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(ontology));
+            }
         }
     }
 

@@ -505,6 +505,10 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void setVolumeSource(StaticVolumeBrickSource volumeSource) {
         this.volumeSource = volumeSource;
         this.volumeCache.setSource(volumeSource);
+        // Don't load both ktx and raw tiles...
+        if (volumeSource != null) {
+            setKtxSource(null);
+        }
     }
     
     /** Tells caller what source we are examining. */
@@ -2029,6 +2033,10 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void setKtxSource(BlockTileSource ktxSource) {
         this.ktxSource = ktxSource;
         TetVolumeActor.getInstance().setKtxTileSource(ktxSource);
+        // Don't load both ktx and raw tiles at the same time
+        if (ktxSource != null) {
+            setVolumeSource(null);
+        }
     }
     
     public void loadTileAtFocus() throws IOException

@@ -1,7 +1,23 @@
 package org.janelia.it.workstation.browser.tools.preferences;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+
+import org.eclipse.jetty.util.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is the Generic class constructed to provide support to developers who
@@ -17,6 +33,8 @@ import java.util.*;
  */
 public abstract class PreferenceManager {
 
+    private static final Logger log = LoggerFactory.getLogger(PreferenceManager.class);
+    
     protected final int DEFAULT = 0;
     private final int GROUP = 1;
     private final int USER = 2;
@@ -139,8 +157,9 @@ public abstract class PreferenceManager {
             }
             else
                 targetFile = new FileInputStream(new File(filename));
-            if (DEBUG)
-                System.out.println("Loading Preferences from " + filename);
+            
+            log.info("Reading from file {}", filename);
+            
             targetProperties.load(targetFile);
             if (mode == USER)
                 userFileDescription = targetProperties.getProperty(DESCRIPTION);
@@ -237,7 +256,7 @@ public abstract class PreferenceManager {
     public void resetWorkingCollections() {
         if (DEBUG)
             System.out.println("Resetting the working collections.");
-        deletedInfos = new TreeMap<String, InfoObject>(new MyStringComparator());
+        deletedInfos = new TreeMap<>(new MyStringComparator());
         if (DEBUG)
             System.out.println("Merging the collections.");
         mergeIntoWorkingCollections(defaultMasterCollection);
@@ -429,8 +448,9 @@ public abstract class PreferenceManager {
      * destination file old and new.
      */
     protected void writeOutToDestinationFile(String destinationFile) {
-        if (DEBUG)
-            System.out.println("Writing out to file: " + destinationFile);
+        
+        log.info("Writing to file {}", destinationFile);
+        
         File outputFile = new File(destinationFile);
         FileWriter writer;
         if (!outputFile.canWrite()) {
