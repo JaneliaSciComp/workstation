@@ -287,11 +287,20 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void annotationSelected( Long guid ) {
         lvvTranslator.annotationSelected(guid);
     }
-    
+
     public void skeletonChanged() {
+        skeletonChanged(false);
+    }
+    
+    public void skeletonChanged(boolean forceUpdate) {
         if (!skipSkeletonChange) {
             for (SkeletonActor actor : actors) {
-                actor.getModel().updateAnchors();
+                if (forceUpdate) {
+                    actor.getModel().forceUpdateAnchors();    
+                }
+                else {
+                    actor.getModel().updateAnchors();
+                }
             }
             refreshMeshDrawUpdateTimer();
             fireComponentUpdate();
