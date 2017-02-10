@@ -220,19 +220,19 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         
         // Save view focus
         
-        Vec3 focus = lvvv.getQuadViewUi().getCameraFocus();
-        if (focus != null) {
-            String viewFocus = focus.x()+","+focus.y()+","+focus.z();
-            log.info("Writing state: viewFocus={}",viewFocus);
-            p.setProperty("viewFocus", viewFocus);
+        if (lvvv != null && lvvv.getQuadViewUi()!=null) {
+            Vec3 focus = lvvv.getQuadViewUi().getCameraFocus();
+            if (focus != null) {
+                String viewFocus = focus.x()+","+focus.y()+","+focus.z();
+                log.info("Writing state: viewFocus={}",viewFocus);
+                p.setProperty("viewFocus", viewFocus);
+            }
+            
+            // Save view zoom
+            double zoom = lvvv.getQuadViewUi().getPixelsPerSceneUnit();
+            log.info("Writing state: viewZoom={}",zoom);
+            p.setProperty("viewZoom", ""+zoom);
         }
-        
-        // Save view zoom
-        double zoom = lvvv.getQuadViewUi().getPixelsPerSceneUnit();
-        log.info("Writing state: viewZoom={}",zoom);
-        p.setProperty("viewZoom", ""+zoom);
-        
-        
     }
 
     void readProperties(java.util.Properties p) {
