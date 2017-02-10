@@ -655,7 +655,11 @@ public class TracingInteractor extends MouseAdapter
                         List<NeuronVertex> nearestVertexes = defaultWorkspace.getAnchorClosestToMicronLocation(loc, 3);
                         float minDistSquared = Float.MAX_VALUE;
                         for (NeuronVertex v : nearestVertexes) {
+                            if (v == null)
+                                continue;
                             NeuronModel neuron = defaultWorkspace.getNeuronForAnchor(v);
+                            if (neuron == null) 
+                                continue;
                             if (! neuron.isVisible()) {
                                 // log.info("skipping invisible neuron");
                                 continue;
