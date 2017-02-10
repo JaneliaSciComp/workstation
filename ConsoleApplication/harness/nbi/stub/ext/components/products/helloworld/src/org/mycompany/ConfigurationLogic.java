@@ -440,6 +440,14 @@ public class ConfigurationLogic extends ProductConfigurationLogic {
 
         return shortcut;
     }
+    // KR 2/10/2017: modified to use 64 bit exe as per https://stackoverflow.com/questions/26774879/generated-installer-creates-shortcut-that-points-to-wrong-executable
+    private static String get64BitSuffix() {
+        if (SystemUtils.isCurrentJava64Bit()) {
+            return "64";
+        } else {
+            return "";
+        }
+    }
     public static final String SHORTCUT_FILENAME =
             ResourceUtils.getString(ConfigurationLogic.class, "CL.app.name") + ".desktop"; // NOI18N
     public static final String[] SHORTCUT_CATEGORIES = new String[]{
@@ -449,7 +457,7 @@ public class ConfigurationLogic extends ProductConfigurationLogic {
             "bin/";
     public static final String EXECUTABLE_WINDOWS =
             BIN_SUBDIR
-            + ResourceUtils.getString(ConfigurationLogic.class, "CL.app.name") + ".exe"; // NOI18N
+            + ResourceUtils.getString(ConfigurationLogic.class, "CL.app.name") + get64BitSuffix() + ".exe"; // NOI18N
     public static final String EXECUTABLE_UNIX =
             BIN_SUBDIR
             + ResourceUtils.getString(ConfigurationLogic.class, "CL.app.name"); // NOI18N
