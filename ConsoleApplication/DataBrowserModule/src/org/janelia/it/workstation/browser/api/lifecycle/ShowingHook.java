@@ -66,15 +66,6 @@ public class ShowingHook implements Runnable {
                     null
             );
         }
-        else if (BrandingConfig.getBrandingConfig().isNeedsRestart()) {
-            JOptionPane.showMessageDialog(
-                    WindowLocator.getMainFrame(),
-                    "Configuration has been updated. Please restart the application.",
-                    "Configuration updated",
-                    JOptionPane.WARNING_MESSAGE,
-                    null
-            );
-        }
         
         if (frame.getExtendedState()==JFrame.MAXIMIZED_BOTH) {
             // Workaround for a framework bug. Ensure the window doesn't cover the Windows toolbar. 
@@ -133,5 +124,25 @@ public class ShowingHook implements Runnable {
 //                
 //            }
 //        }
+
+        AutoUpdater updater = new AutoUpdater() {
+            @Override
+            protected void hadSuccess() {
+                super.hadSuccess();
+                if (!isRestarting()) {
+                    if (BrandingConfig.getBrandingConfig().isNeedsRestart()) {
+                        JOptionPane.showMessageDialog(
+                                WindowLocator.getMainFrame(),
+                                "Configuration has been updated. Please restart the application.",
+                                "Configuration updated",
+                                JOptionPane.WARNING_MESSAGE,
+                                null
+                        );
+                    }
+                }
+            }  
+        };
+        updater.execute();
     }
+    
 }
