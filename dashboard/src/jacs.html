@@ -40,13 +40,13 @@
 
     <p><span ng-bind="serverUrl"/></p>
 
-    <div ng-show="isMode('initialize')">
-        <h1>Loading...</h1>
-    </div>
+    <!--<div ng-show="isMode('initialize')">-->
+        <!--<h1>Loading...</h1>-->
+    <!--</div>-->
 
-    <button ng-click="modeStateSummary()">State Summary</button>
+    <!--<button ng-click="modeStateSummary()">State Summary</button>-->
 
-    <button ng-click="getCurrentServices()">Current Services</button>
+    <!--<button ng-click="getCurrentServices()">Current Services</button>-->
 
     <div ng-show="isMode('stateSummary')">
         <span id="state_summary">
@@ -64,33 +64,33 @@
         </span>
     </div>
 
-    <div ng-show="isMode('currentServices')">
-        <h1>Current Services {{stateCount}}</h1>
-        <p>count={{currentServices.length}}</p>
-        <table>
-            <tr ng-repeat="x in currentServices | orderBy:'id'">
-                <td>{{x.id}}</td>
-                <td>{{x.name}}</td>
-                <td>{{x.jacsServiceClassName}}</td>
-                <td>{{x.owner}}</td>
-                <td>{{x.rootServiceId}}</td>
-                <td>{{x.parentServiceId}}</td>
-                <td>{{x.state}}</td>
-                <td><button ng-click="getEventsForService(x)">Event History</button></form></td>
-            </tr>
-        </table>
-    </div>
+    <!--<div ng-show="isMode('currentServices')">-->
+        <!--<h1>Current Services {{stateCount}}</h1>-->
+        <!--<p>count={{currentServices.length}}</p>-->
+        <!--<table>-->
+            <!--<tr ng-repeat="x in currentServices | orderBy:'id'">-->
+                <!--<td>{{x.id}}</td>-->
+                <!--<td>{{x.name}}</td>-->
+                <!--<td>{{x.jacsServiceClassName}}</td>-->
+                <!--<td>{{x.owner}}</td>-->
+                <!--<td>{{x.rootServiceId}}</td>-->
+                <!--<td>{{x.parentServiceId}}</td>-->
+                <!--<td>{{x.state}}</td>-->
+                <!--<td><button ng-click="getEventsForService(x)">Event History</button></form></td>-->
+            <!--</tr>-->
+        <!--</table>-->
+    <!--</div>-->
 
-    <div ng-show="isMode('eventsForService')">
-        <h1>Event History</h1>
-        <table>
-            <tr ng-repeat="x in eventsForService | orderBy:'timestamp'">
-                <td>{{x.timestamp}}</td>
-                <td>{{x.type}}</td>
-                <td>{{x.value}}</td>
-            </tr>
-        </table>
-    </div>
+    <!--<div ng-show="isMode('eventsForService')">-->
+        <!--<h1>Event History</h1>-->
+        <!--<table>-->
+            <!--<tr ng-repeat="x in eventsForService | orderBy:'timestamp'">-->
+                <!--<td>{{x.timestamp}}</td>-->
+                <!--<td>{{x.type}}</td>-->
+                <!--<td>{{x.value}}</td>-->
+            <!--</tr>-->
+        <!--</table>-->
+    <!--</div>-->
 
 </div>
 
@@ -105,6 +105,18 @@
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3(10, 10, 10);
+
+    // We want to compare the currentServices polling result
+    // with the previous list of ids, and then populate the
+    // new and removed ids, which we can then use to add or
+    // remove geometry objects from the scene.
+    // NOTE: after we get this working, we should make the
+    // polling more efficient by using the checkpoint API
+    // rather than getting all currentServices each time.
+
+    var serviceIdMap = new Map();
+    var serviceMapNewIds = new Map();
+    var serviceMapRemovedIds = new Map();
 
     initThreeJs();
     animateThreeJs();
@@ -155,32 +167,36 @@
         var matrix=new THREE.Matrix4();
         var quaternion= new THREE.Quaternion();
 
-        for (var i=0;i<5000;i++) {
-            var position = new THREE.Vector3();
-            position.x=Math.random()*10000 - 5000;
-            position.y=Math.random()*6000 - 3000;
-            position.z=Math.random()*8000 - 4000;
+        // We want this to be updated every time the number of services changes - in this original version,
+        // it is presumably only called during setup
+        if (currentServices.length>0) {
+            for (var i = 0; i < currentServices.length; i++) {
+                var position = new THREE.Vector3();
+                position.x = Math.random() * 10000 - 5000;
+                position.y = Math.random() * 6000 - 3000;
+                position.z = Math.random() * 8000 - 4000;
 
-            var rotation = new THREE.Euler();
-            rotation.x=Math.random() * 2 * Math.PI;
-            rotation.y=Math.random() * 2 * Math.PI;
-            rotation.z=Math.random() * 2 * Math.PI;
+                var rotation = new THREE.Euler();
+                rotation.x = Math.random() * 2 * Math.PI;
+                rotation.y = Math.random() * 2 * Math.PI;
+                rotation.z = Math.random() * 2 * Math.PI;
 
-            var scale = new THREE.Vector3();
-            scale.x=Math.random()*200+100;
-            scale.y=Math.random()*200+100;
-            scale.z=Math.random()*200+100;
+                var scale = new THREE.Vector3();
+                scale.x = Math.random() * 200 + 100;
+                scale.y = Math.random() * 200 + 100;
+                scale.z = Math.random() * 200 + 100;
 
-            quaternion.setFromEuler(rotation, false);
-            matrix.compose(position, quaternion, scale);
+                quaternion.setFromEuler(rotation, false);
+                matrix.compose(position, quaternion, scale);
 
-            applyVertexColors(geom, color.setHex(Math.random() * 0xffffff));
-            geometry.merge(geom, matrix);
+                applyVertexColors(geom, color.setHex(Math.random() * 0xffffff));
+                geometry.merge(geom, matrix);
 
-            applyVertexColors(geom, color.setHex(i));
-            pickingGeometry.merge(geom, matrix);
+                applyVertexColors(geom, color.setHex(i));
+                pickingGeometry.merge(geom, matrix);
 
-            pickingData[i] = { position: position, rotation: rotation, scale: scale };
+                pickingData[i] = {position: position, rotation: rotation, scale: scale};
+            }
         }
 
         var drawnObject = new THREE.Mesh(geometry, defaultMaterial);
@@ -283,6 +299,7 @@
                     $scope.currentServices = response.data;
                     $scope.retrieveOn=false;
                     $scope.mode="currentServices";
+                    // We want to iterate over
                 });
         }
 
@@ -292,8 +309,11 @@
             $scope.mode="eventsForService";
         }
 
-        var intervalFunction;
-        intervalFunction=$interval( $scope.getStateSummary, 1000);
+        var stateSummaryIntervalFunction;
+        stateSummaryIntervalFunction=$interval( $scope.getStateSummary, 10000);
+
+        var currentServicesIntervalFunction;
+        stateSummaryIntervalFunction=$interval( $scope.getCurrentServices, 10000);
 
         $scope.modeStateSummary();
 
