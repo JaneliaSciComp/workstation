@@ -8,7 +8,6 @@ import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.JacsServiceDispatcher;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
-import org.janelia.jacs2.asyncservice.imageservices.MontageImagesServiceDescriptor;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.asyncservice.utils.X11Utils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
@@ -22,10 +21,13 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
 public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File> {
+
+    private static final String DEFAULT_MERGE_RESULT_FILE_NAME = "merged.v3draw";
 
     private final String lsmMergeScript;
     private final String libraryPath;
@@ -70,8 +72,10 @@ public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File
         try {
             Path workingDir = getWorkingDirectory(jacsServiceData);
             X11Utils.setDisplayPort(workingDir.toString(), scriptWriter);
+            File resultDir = new File(args.resultDir);
+            Files.createDirectories(resultDir.toPath());
             scriptWriter.addWithArgs(getExecutable())
-                    .addArgs("-o", args.outputLsmFile);
+                    .addArgs("-o", resultDir.getAbsolutePath());
             if (StringUtils.isNotBlank(args.multiscanBlendVersion)) {
                 scriptWriter.addArgs("-m", args.multiscanBlendVersion);
             }
@@ -88,19 +92,15 @@ public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File
         return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
     }
 
-
     @Override
     protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        MergeLsmPairServiceDescriptor.MergeLsmPairArgs args = getArgs(jacsServiceData);
-        File outputLsmFile = new File(args.outputLsmFile);
-        return outputLsmFile.exists();
+        File mergedLsmResultFile = getMergedLsmResultFile(jacsServiceData);
+        return mergedLsmResultFile.exists();
     }
 
     @Override
     protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        MergeLsmPairServiceDescriptor.MergeLsmPairArgs args = getArgs(jacsServiceData);
-        File outputLsmFile = new File(args.outputLsmFile);
-        return outputLsmFile;
+        return getMergedLsmResultFile(jacsServiceData);
     }
 
     private MergeLsmPairServiceDescriptor.MergeLsmPairArgs getArgs(JacsServiceData jacsServiceData) {
@@ -110,4 +110,10 @@ public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File
     private String getExecutable() {
         return getFullExecutableName(lsmMergeScript);
     }
+
+    private File getMergedLsmResultFile(JacsServiceData jacsServiceData) {
+        MergeLsmPairServiceDescriptor.MergeLsmPairArgs args = getArgs(jacsServiceData);
+        return new File(args.resultDir, DEFAULT_MERGE_RESULT_FILE_NAME);
+    }
+
 }

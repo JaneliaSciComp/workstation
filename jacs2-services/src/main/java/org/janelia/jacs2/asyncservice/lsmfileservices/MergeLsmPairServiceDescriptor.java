@@ -17,8 +17,8 @@ public class MergeLsmPairServiceDescriptor implements ServiceDescriptor {
         String lsm2File;
         @Parameter(names = "-multiscanVersion", description = "Multiscan blend version", required = false)
         String multiscanBlendVersion;
-        @Parameter(names = "-outputLsm", description = "Destination LSM", required = true)
-        String outputLsmFile;
+        @Parameter(names = "-resultDir", description = "Result directory", required = true)
+        String resultDir;
     }
 
     private final MergeLsmPairProcessor mergeLsmPairProcessor;
