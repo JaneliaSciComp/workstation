@@ -1,5 +1,6 @@
 package org.janelia.jacs2.asyncservice.sampleprocessing;
 
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.janelia.jacs2.asyncservice.common.ServiceDescriptor;
 
@@ -17,11 +18,7 @@ public class GetSampleLsmsMetadataServiceDescriptor implements ServiceDescriptor
 
     @Override
     public ServiceMetaData getMetadata() {
-        String serviceName = this.getClass().getAnnotation(Named.class).value();
-        ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(serviceName);
-        smd.setUsage(SampleServiceArgs.usage(serviceName, new SampleServiceArgs()));
-        return smd;
+        return ServiceArgs.getMetadata(this.getClass(), new SampleServiceArgs());
     }
 
     @Override

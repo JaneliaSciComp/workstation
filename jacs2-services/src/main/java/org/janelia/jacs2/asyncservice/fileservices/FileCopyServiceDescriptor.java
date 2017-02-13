@@ -1,7 +1,7 @@
 package org.janelia.jacs2.asyncservice.fileservices;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.janelia.jacs2.asyncservice.common.ServiceDescriptor;
 
@@ -10,7 +10,7 @@ import javax.inject.Named;
 
 @Named("fileCopy")
 public class FileCopyServiceDescriptor implements ServiceDescriptor {
-    public static class FileCopyArgs {
+    public static class FileCopyArgs extends ServiceArgs {
         @Parameter(names = "-src", description = "Source file name", required = true)
         String sourceFilename;
         @Parameter(names = "-dst", description = "Destination file name or location", required = true)
@@ -30,16 +30,7 @@ public class FileCopyServiceDescriptor implements ServiceDescriptor {
 
     @Override
     public ServiceMetaData getMetadata() {
-        String serviceName = this.getClass().getAnnotation(Named.class).value();
-        ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(serviceName);
-        FileCopyArgs args = new FileCopyArgs();
-        StringBuilder usageOutput = new StringBuilder();
-        JCommander jc = new JCommander(args);
-        jc.setProgramName(serviceName);
-        jc.usage(usageOutput);
-        smd.setUsage(usageOutput.toString());
-        return smd;
+        return ServiceArgs.getMetadata(this.getClass(), new FileCopyArgs());
     }
 
     @Override

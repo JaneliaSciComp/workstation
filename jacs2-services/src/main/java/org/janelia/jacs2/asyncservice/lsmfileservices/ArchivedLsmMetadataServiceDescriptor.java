@@ -1,7 +1,7 @@
 package org.janelia.jacs2.asyncservice.lsmfileservices;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.janelia.jacs2.asyncservice.common.ServiceDescriptor;
 
@@ -10,7 +10,7 @@ import javax.inject.Named;
 
 @Named("archivedLsmMetadata")
 public class ArchivedLsmMetadataServiceDescriptor implements ServiceDescriptor {
-    static class ArchivedLsmMetadataArgs {
+    static class ArchivedLsmMetadataArgs extends ServiceArgs {
         @Parameter(names = "-archivedLSM", description = "Archived LSM file name", required = true)
         String archiveLSMFile;
         @Parameter(names = "-outputLSMMetadata", description = "Destination directory", required = true)
@@ -28,16 +28,7 @@ public class ArchivedLsmMetadataServiceDescriptor implements ServiceDescriptor {
 
     @Override
     public ServiceMetaData getMetadata() {
-        String serviceName = this.getClass().getAnnotation(Named.class).value();
-        ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(serviceName);
-        ArchivedLsmMetadataArgs args = new ArchivedLsmMetadataArgs();
-        StringBuilder usageOutput = new StringBuilder();
-        JCommander jc = new JCommander(args);
-        jc.setProgramName(serviceName);
-        jc.usage(usageOutput);
-        smd.setUsage(usageOutput.toString());
-        return smd;
+        return ServiceArgs.getMetadata(this.getClass(), new ArchivedLsmMetadataArgs());
     }
 
     @Override

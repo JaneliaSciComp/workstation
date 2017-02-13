@@ -1,8 +1,11 @@
 package org.janelia.jacs2.asyncservice.utils;
 
+import com.google.common.collect.Iterables;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
+import java.util.Arrays;
 
 public class ScriptWriter {
 
@@ -54,6 +57,11 @@ public class ScriptWriter {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+        return this;
+    }
+
+    public ScriptWriter addArgs(String... args) {
+        addArgs(Arrays.asList(args));
         return this;
     }
 

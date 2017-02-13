@@ -1,7 +1,7 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.janelia.jacs2.asyncservice.common.ServiceDescriptor;
 
@@ -14,7 +14,7 @@ import javax.inject.Named;
 @Named("montageImages")
 public class MontageImagesServiceDescriptor implements ServiceDescriptor {
 
-    static class MontageImagesArgs {
+    static class MontageImagesArgs extends ServiceArgs {
         @Parameter(names = "-inputFolder", description = "Input folder", required = true)
         String inputFolder;
         @Parameter(names = "-size", description = "The size of the montage", required = true)
@@ -34,16 +34,7 @@ public class MontageImagesServiceDescriptor implements ServiceDescriptor {
 
     @Override
     public ServiceMetaData getMetadata() {
-        String serviceName = this.getClass().getAnnotation(Named.class).value();
-        ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(serviceName);
-        MontageImagesArgs args = new MontageImagesArgs();
-        StringBuilder usageOutput = new StringBuilder();
-        JCommander jc = new JCommander(args);
-        jc.setProgramName(serviceName);
-        jc.usage(usageOutput);
-        smd.setUsage(usageOutput.toString());
-        return smd;
+        return ServiceArgs.getMetadata(this.getClass(), new MontageImagesArgs());
     }
 
     @Override
