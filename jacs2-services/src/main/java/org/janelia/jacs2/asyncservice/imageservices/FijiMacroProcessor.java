@@ -132,7 +132,7 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
         return ImmutableMap.of();
     }
 
-    protected boolean checkForErrors(String l) {
+    protected boolean hasErrors(String l) {
         if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(error|exception).*)")) {
             if (l.contains("Cannot write XdndAware property")) {
                 logger.warn(l);

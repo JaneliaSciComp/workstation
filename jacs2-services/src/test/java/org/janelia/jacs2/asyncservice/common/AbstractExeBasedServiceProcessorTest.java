@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.equalTo;
@@ -99,7 +98,7 @@ public class AbstractExeBasedServiceProcessorTest {
                         .put("OK here", false)
                         .put("\n", false)
                         .build();
-        testData.forEach((l, r) -> assertThat(testProcessor.checkForErrors(l), equalTo(r)));
+        testData.forEach((l, r) -> assertThat(testProcessor.hasErrors(l), equalTo(r)));
     }
 
 }

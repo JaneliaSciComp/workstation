@@ -103,6 +103,20 @@ public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File
         return getMergedLsmResultFile(jacsServiceData);
     }
 
+    @Override
+    protected boolean hasErrors(String l) {
+        boolean result = super.hasErrors(l);
+        if (result) {
+            return true;
+        }
+        if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(fail to call the plugin).*)")) {
+            logger.error(l);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private MergeLsmPairServiceDescriptor.MergeLsmPairArgs getArgs(JacsServiceData jacsServiceData) {
         return MergeLsmPairServiceDescriptor.MergeLsmPairArgs.parse(jacsServiceData.getArgsArray(), new MergeLsmPairServiceDescriptor.MergeLsmPairArgs());
     }

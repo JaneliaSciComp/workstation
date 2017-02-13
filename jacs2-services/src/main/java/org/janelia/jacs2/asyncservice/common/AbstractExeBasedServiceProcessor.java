@@ -87,7 +87,7 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
                 String l = outputReader.readLine();
                 if (l == null) break;
                 logWriter.accept(l);
-                if (checkForErrors(l)) {
+                if (hasErrors(l)) {
                     error = l;
                 }
             } catch (IOException re) {
@@ -98,7 +98,7 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
         return error;
     }
 
-    protected boolean checkForErrors(String l) {
+    protected boolean hasErrors(String l) {
         if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(error|exception).*)")) {
             logger.error(l);
             return true;
