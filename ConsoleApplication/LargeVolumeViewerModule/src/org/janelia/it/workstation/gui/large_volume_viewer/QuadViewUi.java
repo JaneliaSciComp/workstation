@@ -10,6 +10,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
@@ -396,6 +398,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 //cacheController.focusChanged(camera.getFocus());
                 TileStackCacheController.getInstance().setFocus(camera.getFocus());
                 tileServer.refreshCurrentTileSet();
+                // If we are using this optimization, the anchor set needs to be updated whenever the view is changed
                 if (ApplicationPanel.isAnchorsInViewport()) {
                     getSkeletonActor().getModel().forceUpdateAnchors();
                 }
@@ -405,6 +408,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         setupUi(parentFrame, overrideFrameMenuBar);
         interceptModifierKeyPresses();
         interceptModeChangeGestures();
+        interceptResizeEvents();
         setupAnnotationGestures();
 
         // connect up text UI and model with graphic UI(s):
@@ -1042,6 +1046,19 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         }
 	}
 
+	private void interceptResizeEvents() {
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                log.info("componentResized "+e);
+                // If we are using this optimization, the anchor set needs to be updated whenever the view is resized
+                if (ApplicationPanel.isAnchorsInViewport()) {
+                    getSkeletonActor().getModel().forceUpdateAnchors();
+                }
+            }
+        });
+	}
+	
     private void setupAnnotationGestures() {
         // like the two "intercept" routines, but annotation-related;
         //  broken out for clarity and organization more than anything

@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
 import java.awt.BorderLayout;
-import java.util.List;
 
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
@@ -33,10 +32,6 @@ import org.openide.windows.TopComponentGroup;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Top component which displays the Large Volume Viewer.

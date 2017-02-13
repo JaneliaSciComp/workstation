@@ -53,7 +53,7 @@ public class GenerateNeuronsDialog extends ModalDialog {
     private static final Logger log = LoggerFactory.getLogger(GenerateNeuronsDialog.class);
     
     private final AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-    private final AnnotationModel annotationModel = annotationMgr.getAnnotationModel();
+    private AnnotationModel annotationModel;
     
     private final JButton cancelButton;
     private final JButton okButton;
@@ -72,6 +72,13 @@ public class GenerateNeuronsDialog extends ModalDialog {
        
     public GenerateNeuronsDialog() {
     	super(ConsoleApp.getMainFrame());
+    	
+    	if (annotationMgr==null) {
+    	    throw new IllegalStateException("LVV needs to be opened before this dialog is opened");
+    	}
+    	
+    	this.annotationModel = annotationMgr.getAnnotationModel();
+    	
         setTitle("Generate Neurons");
 
         attrPanel = new GroupedKeyValuePanel();

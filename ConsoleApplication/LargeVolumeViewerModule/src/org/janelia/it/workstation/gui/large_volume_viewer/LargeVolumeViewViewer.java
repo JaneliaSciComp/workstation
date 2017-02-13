@@ -25,6 +25,7 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.slf4j.Logger;
@@ -295,6 +296,10 @@ public class LargeVolumeViewViewer extends JPanel {
             removeAll();
             viewUI.setVisible(true);
             add(viewUI);
+
+            // Repaint the skeleton
+            SkeletonController.getInstance().skeletonChanged(true);
+            
             revalidate();
             repaint();
             

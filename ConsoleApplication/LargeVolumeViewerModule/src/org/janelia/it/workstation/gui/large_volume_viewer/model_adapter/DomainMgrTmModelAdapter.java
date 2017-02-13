@@ -51,6 +51,7 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
             
             if (ClientDomainUtils.hasWriteAccess(workspace)) {
                 if (ApplicationPanel.isVerifyNeurons()) {
+                    log.debug("Checking neuron data consistency");
                         
                     // check neuron consistency and repair (some) problems
                     for (TmNeuronMetadata neuron: neuronList) {
