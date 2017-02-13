@@ -8,6 +8,7 @@ import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.JacsServiceDispatcher;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
+import org.janelia.jacs2.asyncservice.imageservices.MontageImagesServiceDescriptor;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.asyncservice.utils.X11Utils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
@@ -90,12 +91,16 @@ public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File
 
     @Override
     protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        throw new UnsupportedOperationException();
+        MergeLsmPairServiceDescriptor.MergeLsmPairArgs args = getArgs(jacsServiceData);
+        File outputLsmFile = new File(args.outputLsmFile);
+        return outputLsmFile.exists();
     }
 
     @Override
     protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        throw new UnsupportedOperationException();
+        MergeLsmPairServiceDescriptor.MergeLsmPairArgs args = getArgs(jacsServiceData);
+        File outputLsmFile = new File(args.outputLsmFile);
+        return outputLsmFile;
     }
 
     private MergeLsmPairServiceDescriptor.MergeLsmPairArgs getArgs(JacsServiceData jacsServiceData) {
