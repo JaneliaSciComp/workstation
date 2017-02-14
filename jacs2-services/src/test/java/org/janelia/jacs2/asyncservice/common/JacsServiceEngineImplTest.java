@@ -47,7 +47,7 @@ public class JacsServiceEngineImplTest {
             sd.setId(idSequence++);
             return null;
         }).when(jacsServiceDataPersistence).saveHierarchy(any(JacsServiceData.class));
-        jacsServiceEngine = new JacsServiceEngineImpl(jacsServiceQueue, serviceRegistrarSource, logger);
+        jacsServiceEngine = new JacsServiceEngineImpl(jacsServiceDataPersistence, jacsServiceQueue, serviceRegistrarSource, logger);
         when(serviceRegistrarSource.get()).thenReturn(serviceRegistry);
     }
 

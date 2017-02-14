@@ -159,6 +159,10 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         return parentServiceId;
     }
 
+    public boolean hasParentServiceId() {
+        return parentServiceId != null;
+    }
+
     public void setParentServiceId(Number parentServiceId) {
         this.parentServiceId = parentServiceId;
     }

@@ -4,6 +4,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.ServerStats;
 import org.janelia.jacs2.asyncservice.ServiceRegistry;
+import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.slf4j.Logger;
 
@@ -12,11 +13,13 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Optional;
 import java.util.concurrent.Semaphore;
 
 public class JacsServiceEngineImpl implements JacsServiceEngine {
     private static final int MAX_RUNNING_SLOTS = 1000;
 
+    private final JacsServiceDataPersistence jacsServiceDataPersistence;
     private final JacsServiceQueue jacsServiceQueue;
     private final Instance<ServiceRegistry> serviceRegistrarSource;
     private final Logger logger;
@@ -24,9 +27,11 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
     private final Semaphore availableSlots;
 
     @Inject
-    JacsServiceEngineImpl(JacsServiceQueue jacsServiceQueue,
+    JacsServiceEngineImpl(JacsServiceDataPersistence jacsServiceDataPersistence,
+                          JacsServiceQueue jacsServiceQueue,
                           Instance<ServiceRegistry> serviceRegistrarSource,
                           Logger logger) {
+        this.jacsServiceDataPersistence = jacsServiceDataPersistence;
         this.jacsServiceQueue = jacsServiceQueue;
         this.serviceRegistrarSource = serviceRegistrarSource;
         this.logger = logger;
@@ -89,6 +94,17 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
 
     @Override
     public JacsServiceData submitSingleService(JacsServiceData serviceArgs) {
+        if (serviceArgs.hasParentServiceId()) {
+            List<JacsServiceData> childServices = jacsServiceDataPersistence.findChildServices(serviceArgs.getParentServiceId());
+            Optional<JacsServiceData> existingChildService =
+                    childServices.stream()
+                            .filter(s -> s.getName().equals(serviceArgs.getName()))
+                            .filter(s -> s.getArgs().equals(serviceArgs.getArgs()))
+                            .findFirst();
+            if (existingChildService.isPresent()) {
+                return existingChildService.get(); // do not resubmit
+            }
+        }
         return jacsServiceQueue.enqueueService(serviceArgs);
     }
 
@@ -118,7 +134,7 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
             if (prevService != null) {
                 currentService.addServiceDependency(prevService);
             }
-            JacsServiceData submitted = jacsServiceQueue.enqueueService(currentService);
+            JacsServiceData submitted = submitSingleService(currentService);
             results.add(submitted);
             prevService = submitted;
         }
