@@ -94,8 +94,41 @@
 
 </div>
 
-
 <script>
+
+    // DESIGN OF 3D SERVICE STATE RENDERING
+    //
+    // Initially, we will poll for the complete "currentServices" state of the JACS system. Later, this will need
+    // to be an incremental polling for states which have changed (i.e., had events) within a certain time bounds.
+    //
+    // The two main mechanisms that need to be implemented are:
+    //
+    // (1) The ongoing maintenance of currentServices state in a client-side model
+    //
+    // (2) The ongoing rendering of this state (e.g., keep the camera at 0 but move everything backward in time).
+    //
+    //  I. CURRENT SERVICES STATE
+    //
+    //  (a) The client model for current services state will consist of a Map of object.
+    //
+    //  (b) Each object in the service Map will be inserted with a key for the services' instance id
+    //
+    //  (c) The service map object contains:
+    //        (c.1) the geometric object rendered for this service
+    //        (c.2) an up-to-date copy of the state of the service, including a list of events
+    //
+    // NOTE: only new events will be added to the model, although in theory with the initial version all could
+    //       be replaced at each polling cycle.
+    //
+    // The operational question is, how does the rendering system know which action to take when the model is
+    // updated?
+    //
+    // To answer, when the new events (or all events, as with the initial system) are processed during a polling update,
+    // a "renderingOperation" flag is set a Map dedicated to specifying the updates required on the current step.
+    // We will call this map the serviceUpdateMap. For services which need to be added, this map will contain the
+    // required service metadata. The serviceUpdateObject will contain (a) renderingOperationFlag, (b) a reference to
+    // the updated service information.
+    //
 
     var container, stats;
     var camera, controls, scene, renderer;
@@ -114,12 +147,22 @@
     // polling more efficient by using the checkpoint API
     // rather than getting all currentServices each time.
 
-    var serviceIdMap = new Map();
-    var serviceMapNewIds = new Map();
-    var serviceMapRemovedIds = new Map();
+    var serviceModel = new Map();
+    var serviceUpdates = new Map();
 
     initThreeJs();
     animateThreeJs();
+
+    var defaultMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff, shading: THREE.FlatShading, vertexColors: THREE.VertexColors, shininess: 0 });
+
+    function applyVertexColors(g,c) {
+        g.faces.forEach(function(f) {
+            var n = (f instanceof THREE.Face3) ? 3 : 4;
+            for (var j=0;j<n;j++) {
+                f.vertexColors[j]=c;
+            }
+        });
+    }
 
     // based on 'interactive / cubes / gpu' WebGL example
     function initThreeJs() {
@@ -150,53 +193,43 @@
         var geometry = new THREE.Geometry();
         var pickingGeometry = new THREE.Geometry();
         var pickingMaterial = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } );
-        var defaultMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff, shading: THREE.FlatShading, vertexColors: THREE.VertexColors, shininess: 0 });
-
-        function applyVertexColors(g,c) {
-            g.faces.forEach(function(f) {
-                var n = (f instanceof THREE.Face3) ? 3 : 4;
-                for (var j=0;j<n;j++) {
-                    f.vertexColors[j]=c;
-                }
-            });
-        }
 
         var geom = new THREE.BoxGeometry(1,1,1);
-        var color = new THREE.Color();
+        var color = new THREE.Color(0x55ff55);
+        var pickingColor = new THREE.Color();
 
         var matrix=new THREE.Matrix4();
         var quaternion= new THREE.Quaternion();
 
         // We want this to be updated every time the number of services changes - in this original version,
         // it is presumably only called during setup
-        if (currentServices.length>0) {
-            for (var i = 0; i < currentServices.length; i++) {
-                var position = new THREE.Vector3();
-                position.x = Math.random() * 10000 - 5000;
-                position.y = Math.random() * 6000 - 3000;
-                position.z = Math.random() * 8000 - 4000;
+        for (var i = 0; i < 10; i++) {
+            var position = new THREE.Vector3();
+            position.x = Math.random() * 10000 - 5000;
+            position.y = Math.random() * 6000 - 3000;
+            position.z = Math.random() * 8000 - 4000;
 
-                var rotation = new THREE.Euler();
-                rotation.x = Math.random() * 2 * Math.PI;
-                rotation.y = Math.random() * 2 * Math.PI;
-                rotation.z = Math.random() * 2 * Math.PI;
+            var rotation = new THREE.Euler();
+            rotation.x = Math.random() * 2 * Math.PI;
+            rotation.y = Math.random() * 2 * Math.PI;
+            rotation.z = Math.random() * 2 * Math.PI;
 
-                var scale = new THREE.Vector3();
-                scale.x = Math.random() * 200 + 100;
-                scale.y = Math.random() * 200 + 100;
-                scale.z = Math.random() * 200 + 100;
+            var scale = new THREE.Vector3();
+            scale.x = 300;
+            scale.y = 300;
+            scale.z = 300;
 
-                quaternion.setFromEuler(rotation, false);
-                matrix.compose(position, quaternion, scale);
+            quaternion.setFromEuler(rotation, false);
+            matrix.compose(position, quaternion, scale);
 
-                applyVertexColors(geom, color.setHex(Math.random() * 0xffffff));
-                geometry.merge(geom, matrix);
+//            applyVertexColors(geom, color.setHex(Math.random() * 0xffffff));
+            applyVertexColors(geom, color);
+            geometry.merge(geom, matrix);
 
-                applyVertexColors(geom, color.setHex(i));
-                pickingGeometry.merge(geom, matrix);
+            applyVertexColors(geom, pickingColor.setHex(i));
+            pickingGeometry.merge(geom, matrix);
 
-                pickingData[i] = {position: position, rotation: rotation, scale: scale};
-            }
+            pickingData[i] = {position: position, rotation: rotation, scale: scale};
         }
 
         var drawnObject = new THREE.Mesh(geometry, defaultMaterial);
@@ -255,7 +288,75 @@
         renderer.render(scene, camera);
     }
 
+    function determineServiceUpdates() {
+        // PHASE I: determine updates
+        //
+        // Iterate through currentServices and populate serviceUpdates()
+        serviceUpdates.clear();
+
+        var geometry = new THREE.Geometry();
+        var geom = new THREE.BoxGeometry(1,1,1);
+        var color = new THREE.Color();
+        var matrix=new THREE.Matrix4();
+        var quaternion= new THREE.Quaternion();
+
+        var position = new THREE.Vector3();
+        position.x = Math.random() * 10000 - 5000;
+        position.y = Math.random() * 6000 - 3000;
+        position.z = Math.random() * 8000 - 4000;
+
+        var rotation = new THREE.Euler();
+        rotation.x = Math.random() * 2 * Math.PI;
+        rotation.y = Math.random() * 2 * Math.PI;
+        rotation.z = Math.random() * 2 * Math.PI;
+
+        var scale = new THREE.Vector3();
+        scale.x = 100;
+        scale.y = 100;
+        scale.z = 100;
+
+        quaternion.setFromEuler(rotation, false);
+        matrix.compose(position, quaternion, scale);
+
+        applyVertexColors(geom, color.setHex(0xff0000));
+        geometry.merge(geom, matrix);
+
+        for (var s=0;s<$scope.currentServices.length;s++) {
+            var service=$scope.currentServices[s];
+            serviceUpdates.set(service.id, s);
+
+            var position = new THREE.Vector3();
+            position.x = Math.random() * 10000 - 5000;
+            position.y = Math.random() * 6000 - 3000;
+            position.z = Math.random() * 8000 - 4000;
+
+            var rotation = new THREE.Euler();
+            rotation.x = Math.random() * 2 * Math.PI;
+            rotation.y = Math.random() * 2 * Math.PI;
+            rotation.z = Math.random() * 2 * Math.PI;
+
+            var scale = new THREE.Vector3();
+            scale.x = 100;
+            scale.y = 100;
+            scale.z = 100;
+
+            quaternion.setFromEuler(rotation, false);
+            matrix.compose(position, quaternion, scale);
+
+            applyVertexColors(geom, color.setHex(0xff5555));
+            geometry.merge(geom, matrix);
+
+        }
+        var drawnObject = new THREE.Mesh(geometry, defaultMaterial);
+        scene.add(drawnObject);
+    }
+
+    function updateServiceModel() {
+
+    }
+
     var app = angular.module('myApp', []);
+
     app.controller('myCtrl', function($scope, $http, $location, $interval) {
 
         $scope.serverUrl = "http://" + $location.host() + ":" + $location.port();
@@ -293,14 +394,49 @@
             }
         }
 
+        $scope.threeJsTest = function() {
+
+            var geometry = new THREE.Geometry();
+            var geom = new THREE.BoxGeometry(1,1,1);
+            var color = new THREE.Color();
+            var matrix=new THREE.Matrix4();
+            var quaternion= new THREE.Quaternion();
+
+            var position = new THREE.Vector3();
+            position.x = Math.random() * 10000 - 5000;
+            position.y = Math.random() * 6000 - 3000;
+            position.z = Math.random() * 8000 - 4000;
+
+            var rotation = new THREE.Euler();
+            rotation.x = Math.random() * 2 * Math.PI;
+            rotation.y = Math.random() * 2 * Math.PI;
+            rotation.z = Math.random() * 2 * Math.PI;
+
+            var scale = new THREE.Vector3();
+            scale.x = 300;
+            scale.y = 300;
+            scale.z = 300;
+
+            quaternion.setFromEuler(rotation, false);
+            matrix.compose(position, quaternion, scale);
+
+            applyVertexColors(geom, color.setHex(0xff0000));
+            geometry.merge(geom, matrix);
+
+            var drawnObject = new THREE.Mesh(geometry, defaultMaterial);
+            scene.add(drawnObject);
+        }
+
         $scope.getCurrentServices = function() {
             $http.get($scope.serverUrl+"/rest-v1/jacsv2/currentServices")
                 .then(function(response) {
                     $scope.currentServices = response.data;
                     $scope.retrieveOn=false;
                     $scope.mode="currentServices";
-                    // We want to iterate over
                 });
+            $scope.threeJsTest();
+            determineServiceUpdates();
+            updateServiceModel();
         }
 
         $scope.getEventsForService = function(x) {
