@@ -1,7 +1,10 @@
 package org.janelia.jacs2.asyncservice.lsmfileservices;
 
 import com.beust.jcommander.JCommander;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
@@ -10,7 +13,6 @@ import org.janelia.jacs2.model.jacsservice.ProcessingLocation;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
-import org.janelia.jacs2.asyncservice.common.JacsServiceDispatcher;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
@@ -21,16 +23,17 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.util.List;
 
 public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File> {
 
     @Inject
-    ArchivedLsmMetadataProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+    ArchivedLsmMetadataProcessor(JacsServiceEngine jacsServiceEngine,
                                  ServiceComputationFactory computationFactory,
                                  JacsServiceDataPersistence jacsServiceDataPersistence,
                                  @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                  Logger logger) {
-        super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
     }
 
     @Override
@@ -53,23 +56,22 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
         }
         File lsmMetadataFile = getOutputFile(args);
         File workingLsmFile = getWorkingLsmFile(jacsServiceData, lsmMetadataFile);
-        return submitServiceDependency(jacsServiceData,
-                new JacsServiceDataBuilder(jacsServiceData)
-                        .setName("fileCopy")
-                        .addArg("-src", getInputFile(args).getAbsolutePath())
-                        .addArg("-dst", workingLsmFile.getAbsolutePath())
-                        .setProcessingLocation(ProcessingLocation.CLUSTER) // fileCopy only works on the cluster for now
-                        .build())
-                .thenCompose(fc -> {
-                    JacsServiceData extractLsmMetadataService =
-                            new JacsServiceDataBuilder(jacsServiceData)
-                                    .setName("lsmFileMetadata")
-                                    .addArg("-inputLSM", workingLsmFile.getAbsolutePath())
-                                    .addArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())
-                                    .build();
-                    extractLsmMetadataService.addServiceDependency(fc);
-                    return this.submitServiceDependency(jacsServiceData, extractLsmMetadataService);
-                });
+        List<JacsServiceData> childServices = jacsServiceEngine.submitMultipleServices(
+                ImmutableList.of(
+                        new JacsServiceDataBuilder(jacsServiceData)
+                                .setName("fileCopy")
+                                .addArg("-src", getInputFile(args).getAbsolutePath())
+                                .addArg("-dst", workingLsmFile.getAbsolutePath())
+                                .setProcessingLocation(ProcessingLocation.CLUSTER) // fileCopy only works on the cluster for now
+                                .build(),
+                        new JacsServiceDataBuilder(jacsServiceData)
+                                .setName("lsmFileMetadata")
+                                .addArg("-inputLSM", workingLsmFile.getAbsolutePath())
+                                .addArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())
+                                .build()
+                        )
+        );
+        return createServiceComputation(Iterables.getLast(childServices));
     }
 
     @Override

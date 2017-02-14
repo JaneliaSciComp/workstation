@@ -1,6 +1,7 @@
 package org.janelia.jacs2.asyncservice.common;
 
 import com.google.common.collect.ImmutableMap;
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.junit.Before;
@@ -22,14 +23,14 @@ public class AbstractExeBasedServiceProcessorTest {
 
     private static class TestExternalProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
-        public TestExternalProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+        public TestExternalProcessor(JacsServiceEngine jacsServiceEngine,
                                      ServiceComputationFactory computationFactory,
                                      JacsServiceDataPersistence jacsServiceDataPersistence,
                                      Instance<ExternalProcessRunner> serviceRunners,
                                      String defaultWorkingDir,
                                      String executablesBaseDir,
                                      Logger logger) {
-            super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+            super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         }
 
         @Override
@@ -64,7 +65,6 @@ public class AbstractExeBasedServiceProcessorTest {
 
         @Override
         public void setResult(Void result, JacsServiceData jacsServiceData) {
-
         }
     }
 
@@ -72,13 +72,13 @@ public class AbstractExeBasedServiceProcessorTest {
 
     @Before
     public void setUp() {
-        JacsServiceDispatcher jacsServiceDispatcher = mock(JacsServiceDispatcher.class);
+        JacsServiceEngine jacsServiceEngine = mock(JacsServiceEngine.class);
         ServiceComputationFactory serviceComputationFactory = mock(ServiceComputationFactory.class);
         JacsServiceDataPersistence jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
         Instance<ExternalProcessRunner> serviceRunners = mock(Instance.class);
         Logger logger = mock(Logger.class);
         testProcessor = new TestExternalProcessor(
-                            jacsServiceDispatcher,
+                            jacsServiceEngine,
                             serviceComputationFactory,
                             jacsServiceDataPersistence,
                             serviceRunners,

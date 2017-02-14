@@ -15,13 +15,13 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class JacsQueueSyncer {
 
-    private final JacsServiceDispatcher jacsServiceDispatcher;
+    private final JacsServiceQueue jacsServiceQueue;
     private final ScheduledExecutorService scheduler;
     private final Logger logger;
 
     @Inject
-    JacsQueueSyncer(JacsServiceDispatcher jacsServiceDispatcher, Logger logger) {
-        this.jacsServiceDispatcher = jacsServiceDispatcher;
+    JacsQueueSyncer(JacsServiceQueue jacsServiceQueue, Logger logger) {
+        this.jacsServiceQueue = jacsServiceQueue;
         this.logger = logger;
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("JACS-SYNC-%d")
@@ -32,7 +32,7 @@ public class JacsQueueSyncer {
 
     private void doWork() {
         try {
-            jacsServiceDispatcher.syncServiceQueue();
+            jacsServiceQueue.refreshServiceQueue();
         } catch (Exception e) {
             logger.error("Critical error - syncing job queue failed", e);
         }

@@ -3,7 +3,6 @@ package org.janelia.jacs2.rest;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.asyncservice.ServerStats;
-import org.janelia.jacs2.asyncservice.JacsServiceDataManager;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -23,13 +22,12 @@ import java.util.List;
 @Path("/v2/async-services")
 public class AsyncServiceInfoResource {
 
-    @Inject private JacsServiceDataManager jacsServiceDataManager;
     @Inject private JacsServiceEngine jacsServiceEngine;
 
     @POST
     @Consumes("application/json")
     public Response createAsyncServices(List<JacsServiceData> services) {
-        List<JacsServiceData> newServices = jacsServiceDataManager.createMultipleServices(services);
+        List<JacsServiceData> newServices = jacsServiceEngine.submitMultipleServices(services);
         return Response
                 .status(Response.Status.CREATED)
                 .entity(newServices)
@@ -41,7 +39,7 @@ public class AsyncServiceInfoResource {
     @Consumes("application/json")
     public Response createAsyncService(@PathParam("service-name") String serviceName, JacsServiceData si) {
         si.setName(serviceName);
-        JacsServiceData newJacsServiceData = jacsServiceDataManager.createSingleService(si);
+        JacsServiceData newJacsServiceData = jacsServiceEngine.submitSingleService(si);
         UriBuilder locationURIBuilder = UriBuilder.fromResource(ServiceInfoResource.class);
         locationURIBuilder.path(newJacsServiceData.getId().toString());
         return Response

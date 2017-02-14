@@ -1,12 +1,12 @@
 package org.janelia.jacs2.asyncservice.common;
 
 import com.google.common.collect.ImmutableList;
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
-import org.janelia.jacs2.asyncservice.ServerStats;
 import org.janelia.jacs2.asyncservice.ServiceRegistry;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,7 +15,6 @@ import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
@@ -36,6 +35,8 @@ public class JacsServiceDispatcherTest {
 
     private ServiceComputationFactory serviceComputationFactory;
     private JacsServiceDataPersistence jacsServiceDataPersistence;
+    private JacsServiceQueue jacsServiceQueue;
+    private JacsServiceEngine jacsServiceEngine;
     private Instance<ServiceRegistry> serviceRegistrarSource;
     private ServiceRegistry serviceRegistry;
     private Logger logger;
@@ -56,7 +57,13 @@ public class JacsServiceDispatcherTest {
         serviceRegistrarSource = mock(Instance.class);
         serviceRegistry = mock(ServiceRegistry.class);
         logger = mock(Logger.class);
-        testDispatcher = new JacsServiceDispatcher(serviceComputationFactory, jacsServiceDataPersistence, serviceRegistrarSource, logger);
+        jacsServiceQueue = new InMemoryJacsServiceQueue(jacsServiceDataPersistence, logger);
+        jacsServiceEngine = new JacsServiceEngineImpl(jacsServiceQueue, serviceRegistrarSource, logger);
+        testDispatcher = new JacsServiceDispatcher(serviceComputationFactory,
+                jacsServiceQueue,
+                jacsServiceDataPersistence,
+                jacsServiceEngine,
+                logger);
         when(serviceRegistrarSource.get()).thenReturn(serviceRegistry);
         Answer<Void> saveServiceData = invocation -> {
             JacsServiceData ti = invocation.getArgument(0);
@@ -82,24 +89,15 @@ public class JacsServiceDispatcherTest {
 
     private JacsServiceData submitTestService(String serviceName) {
         JacsServiceData testService = createTestService(null, serviceName);
-        return testDispatcher.submitServiceAsync(testService);
+        return jacsServiceEngine.submitSingleService(testService);
     }
 
     @Test
     public void dispatchServiceWhenNoSlotsAreAvailable() {
-        testDispatcher.setAvailableSlots(0);
+        jacsServiceEngine.setProcessingSlotsCount(0);
         submitTestService("test");
         testDispatcher.dispatchServices();
         verify(logger).info("No available processing slots");
-    }
-
-    @Test
-    public void increaseNumberOfSlots() {
-        int nSlots = 110;
-        testDispatcher.setAvailableSlots(0);
-        testDispatcher.setAvailableSlots(nSlots);
-        ServerStats stats = testDispatcher.getServerStats();
-        assertThat(stats.getAvailableSlots(), equalTo(nSlots));
     }
 
     @Test
@@ -184,22 +182,4 @@ public class JacsServiceDispatcherTest {
         assertThat(testServiceData.getState(), equalTo(JacsServiceState.ERROR));
     }
 
-    @Test
-    public void syncServiceQueue() {
-        PageResult<JacsServiceData> serviceDataPageResult = new PageResult<>();
-        List<JacsServiceData> serviceResults = ImmutableList.<JacsServiceData>builder()
-                .add(createTestService(1L, "t1"))
-                .add(createTestService(2L, "t2"))
-                .add(createTestService(3L, "t3"))
-                .add(createTestService(4L, "t4"))
-                .add(createTestService(5L, "t5"))
-                .add(createTestService(6L, "t6"))
-                .add(createTestService(7L, "t7"))
-                .build();
-        serviceDataPageResult.setResultList(serviceResults);
-        when(jacsServiceDataPersistence.findServicesByState(any(Set.class), any(PageRequest.class))).thenReturn(serviceDataPageResult);
-        testDispatcher.syncServiceQueue();
-        ServerStats stats = testDispatcher.getServerStats();
-        assertThat(stats.getWaitingServices(), equalTo(serviceResults.size()));
-    }
 }

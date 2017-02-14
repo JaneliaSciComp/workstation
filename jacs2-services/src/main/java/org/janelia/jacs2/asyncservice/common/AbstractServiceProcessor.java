@@ -2,6 +2,7 @@ package org.janelia.jacs2.asyncservice.common;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
@@ -17,18 +18,18 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
     protected static final int N_RETRIES_FOR_RESULT = 60;
     protected static final long WAIT_BETWEEN_RETRIES_FOR_RESULT = 1000; // 1s
 
-    protected final JacsServiceDispatcher jacsServiceDispatcher;
+    protected final JacsServiceEngine jacsServiceEngine;
     protected final ServiceComputationFactory computationFactory;
     private final JacsServiceDataPersistence jacsServiceDataPersistence;
     private final String defaultWorkingDir;
     protected final Logger logger;
 
-    public AbstractServiceProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+    public AbstractServiceProcessor(JacsServiceEngine jacsServiceEngine,
                                     ServiceComputationFactory computationFactory,
                                     JacsServiceDataPersistence jacsServiceDataPersistence,
                                     String defaultWorkingDir,
                                     Logger logger) {
-        this.jacsServiceDispatcher = jacsServiceDispatcher;
+        this.jacsServiceEngine = jacsServiceEngine;
         this.computationFactory= computationFactory;
         this.jacsServiceDataPersistence = jacsServiceDataPersistence;
         this.defaultWorkingDir = defaultWorkingDir;
@@ -52,20 +53,12 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         return computationFactory.newCompletedComputation(processingResult);
     }
 
-    /**
-     * The method submits a service dependency {@code serviceDependency} whose result is required by {@code jacsServiceData} computation.
-     *
-     * @param jacsServiceData
-     * @param serviceDependency
-     * @return a computation for the new submitted service.
-     */
-    protected ServiceComputation<JacsServiceData> submitServiceDependency(JacsServiceData jacsServiceData, JacsServiceData serviceDependency) {
-        serviceDependency.updateParentService(jacsServiceData);
-        return computationFactory.newCompletedComputation(jacsServiceDispatcher.submitServiceAsync(serviceDependency));
+    protected ServiceComputation<JacsServiceData> createServiceComputation(JacsServiceData jacsServiceData) {
+        return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
     protected ServiceComputation<?> waitForCompletion(JacsServiceData jacsServiceData) {
-        ServiceProcessor<?> serviceProcessor = jacsServiceDispatcher.getServiceProcessor(jacsServiceData);
+        ServiceProcessor<?> serviceProcessor = jacsServiceEngine.getServiceProcessor(jacsServiceData);
         return computationFactory.<JacsServiceData>newComputation()
                 .supply(() -> {
                     long startTime = System.currentTimeMillis();

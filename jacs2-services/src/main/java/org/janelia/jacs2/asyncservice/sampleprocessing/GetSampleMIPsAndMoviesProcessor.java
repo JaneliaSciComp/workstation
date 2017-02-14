@@ -3,6 +3,7 @@ package org.janelia.jacs2.asyncservice.sampleprocessing;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.utils.FileUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.asyncservice.imageservices.FijiColor;
@@ -12,7 +13,6 @@ import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
-import org.janelia.jacs2.asyncservice.common.JacsServiceDispatcher;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
@@ -23,13 +23,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
@@ -43,14 +40,14 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
     private final String scratchLocation;
 
     @Inject
-    GetSampleMIPsAndMoviesProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+    GetSampleMIPsAndMoviesProcessor(JacsServiceEngine jacsServiceEngine,
                                     ServiceComputationFactory computationFactory,
                                     JacsServiceDataPersistence jacsServiceDataPersistence,
                                     @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                     @PropertyValue(name = "Fiji.BasicMIPsAndMovies") String basicMIPsAndMoviesMacro,
                                     @PropertyValue(name = "service.DefaultScratchDir") String scratchLocation,
                                     Logger logger) {
-        super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.basicMIPsAndMoviesMacro = basicMIPsAndMoviesMacro;
         this.scratchLocation =scratchLocation;
     }
@@ -68,7 +65,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
     @Override
     protected ServiceComputation<List<SampleImageFile>> preProcessData(JacsServiceData jacsServiceData) {
         JacsServiceData sampleLSMsServiceData = SampleServicesUtils.createChildSampleServiceData("getSampleImageFiles", getArgs(jacsServiceData), jacsServiceData);
-        return submitServiceDependency(jacsServiceData, sampleLSMsServiceData)
+        return createServiceComputation(jacsServiceEngine.submitSingleService(sampleLSMsServiceData))
                 .thenCompose(sd -> this.waitForCompletion(sd))
                 .thenApply(r -> ServiceDataUtils.stringToAny(sampleLSMsServiceData.getStringifiedResult(), new TypeReference<List<SampleImageFile>>() {
                 }));
@@ -101,8 +98,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                                                 .setName("mpegConverter")
                                                 .addArg("-input", f.getAbsolutePath())
                                                 .build();
-
-                                return this.submitServiceDependency(jacsServiceData, mpegConverterService)
+                                return createServiceComputation(jacsServiceEngine.submitSingleService(mpegConverterService))
                                         .thenCompose(sd -> this.waitForCompletion(sd));
                             })
                             .collect(Collectors.toList());
@@ -172,7 +168,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                             .addArg("-resultsPatterns", "*.avi")
                             .build();
             fijiComputations.add(
-                    this.submitServiceDependency(jacsServiceData, fijiService)
+                    createServiceComputation(jacsServiceEngine.submitSingleService(fijiService))
                             .thenCompose(sd -> this.waitForCompletion(sd))
             );
         });

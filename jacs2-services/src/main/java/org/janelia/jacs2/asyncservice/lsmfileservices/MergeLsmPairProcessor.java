@@ -2,10 +2,10 @@ package org.janelia.jacs2.asyncservice.lsmfileservices;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
-import org.janelia.jacs2.asyncservice.common.JacsServiceDispatcher;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
@@ -33,7 +33,7 @@ public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File
     private final String libraryPath;
 
     @Inject
-    MergeLsmPairProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+    MergeLsmPairProcessor(JacsServiceEngine jacsServiceEngine,
                           ServiceComputationFactory computationFactory,
                           JacsServiceDataPersistence jacsServiceDataPersistence,
                           @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
@@ -42,7 +42,7 @@ public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File
                           @PropertyValue(name = "LSMMerge.ScriptPath") String lsmMergeScript,
                           @PropertyValue(name = "VAA3D.LibraryPath") String libraryPath,
                           Logger logger) {
-        super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.lsmMergeScript = lsmMergeScript;
         this.libraryPath = libraryPath;
     }

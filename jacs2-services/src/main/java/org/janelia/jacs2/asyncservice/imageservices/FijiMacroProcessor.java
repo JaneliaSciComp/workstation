@@ -3,6 +3,7 @@ package org.janelia.jacs2.asyncservice.imageservices;
 import com.beust.jcommander.JCommander;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.utils.ScriptUtils;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
@@ -13,7 +14,6 @@ import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
-import org.janelia.jacs2.asyncservice.common.JacsServiceDispatcher;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.slf4j.Logger;
@@ -34,7 +34,7 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
     private final String fijiMacrosPath;
 
     @Inject
-    FijiMacroProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+    FijiMacroProcessor(JacsServiceEngine jacsServiceEngine,
                        ServiceComputationFactory computationFactory,
                        JacsServiceDataPersistence jacsServiceDataPersistence,
                        @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
@@ -43,7 +43,7 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
                        @PropertyValue(name = "Fiji.Bin.Path") String fijiExecutable,
                        @PropertyValue(name = "Fiji.Macro.Path") String fijiMacrosPath,
                        Logger logger) {
-        super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.fijiExecutable = fijiExecutable;
         this.fijiMacrosPath = fijiMacrosPath;
     }

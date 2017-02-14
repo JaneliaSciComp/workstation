@@ -1,12 +1,11 @@
 package org.janelia.jacs2.asyncservice.common;
 
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
 import java.util.concurrent.ExecutorService;
@@ -27,12 +26,12 @@ public class AbstractServiceProcessorTest {
 
     static class TestSuccessfulProcessor extends AbstractServiceProcessor<Void> {
 
-        public TestSuccessfulProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+        public TestSuccessfulProcessor(JacsServiceEngine jacsServiceEngine,
                                        ServiceComputationFactory computationFactory,
                                        JacsServiceDataPersistence jacsServiceDataPersistence,
                                        String defaultWorkingDir,
                                        Logger logger) {
-            super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+            super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         }
 
         @Override
@@ -62,12 +61,12 @@ public class AbstractServiceProcessorTest {
 
     static class TestFailedProcessor extends AbstractServiceProcessor<Void> {
 
-        public TestFailedProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+        public TestFailedProcessor(JacsServiceEngine jacsServiceEngine,
                                    ServiceComputationFactory computationFactory,
                                    JacsServiceDataPersistence jacsServiceDataPersistence,
                                    String defaultWorkingDir,
                                    Logger logger) {
-            super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+            super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         }
 
         @Override
@@ -96,7 +95,7 @@ public class AbstractServiceProcessorTest {
     }
 
     private JacsServiceDataPersistence jacsServiceDataPersistence;
-    private JacsServiceDispatcher jacsServiceDispatcher;
+    private JacsServiceEngine jacsServiceEngine;
     private ServiceComputationFactory serviceComputationFactory;
     private Logger logger;
 
@@ -119,19 +118,19 @@ public class AbstractServiceProcessorTest {
 
         testJacsServiceData = new JacsServiceData();
         testJacsServiceData.setId(TEST_ID);
-        jacsServiceDispatcher = mock(JacsServiceDispatcher.class);
+        jacsServiceEngine = mock(JacsServiceEngine.class);
         serviceComputationFactory = new ServiceComputationFactory(executor);
         jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
 
         logger = mock(Logger.class);
         testSuccessfullProcessor = new TestSuccessfulProcessor(
-                jacsServiceDispatcher,
+                jacsServiceEngine,
                 serviceComputationFactory,
                 jacsServiceDataPersistence,
                 TEST_WORKING_DIR,
                 logger);
         testFailedProcessor = new TestFailedProcessor(
-            jacsServiceDispatcher,
+            jacsServiceEngine,
                 serviceComputationFactory,
                 jacsServiceDataPersistence,
                 TEST_WORKING_DIR,
@@ -184,7 +183,7 @@ public class AbstractServiceProcessorTest {
                     return testJacsServiceData;
                 });
 
-        when(jacsServiceDispatcher.getServiceProcessor(testJacsServiceData)).thenReturn((ServiceProcessor) testSuccessfullProcessor);
+        when(jacsServiceEngine.getServiceProcessor(testJacsServiceData)).thenReturn((ServiceProcessor) testSuccessfullProcessor);
 
         testSuccessfullProcessor.waitForCompletion(testJacsServiceData)
                 .whenComplete((r, e) -> {
@@ -210,7 +209,7 @@ public class AbstractServiceProcessorTest {
                     return testJacsServiceData;
                 });
 
-        when(jacsServiceDispatcher.getServiceProcessor(testJacsServiceData)).thenReturn((ServiceProcessor) testSuccessfullProcessor);
+        when(jacsServiceEngine.getServiceProcessor(testJacsServiceData)).thenReturn((ServiceProcessor) testSuccessfullProcessor);
 
         testSuccessfullProcessor.waitForCompletion(testJacsServiceData)
                 .whenComplete((r, e) -> {
@@ -234,7 +233,7 @@ public class AbstractServiceProcessorTest {
                 .thenAnswer(invocation -> testJacsServiceData)
                 .thenAnswer(invocation -> testJacsServiceData);
 
-        when(jacsServiceDispatcher.getServiceProcessor(testJacsServiceData)).thenReturn((ServiceProcessor) testSuccessfullProcessor);
+        when(jacsServiceEngine.getServiceProcessor(testJacsServiceData)).thenReturn((ServiceProcessor) testSuccessfullProcessor);
 
         testSuccessfullProcessor.waitForCompletion(testJacsServiceData)
                 .whenComplete((r, e) -> {
