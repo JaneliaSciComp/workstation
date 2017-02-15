@@ -1,6 +1,9 @@
 package org.janelia.jacs2.model;
 
 import com.google.common.base.Splitter;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
@@ -16,6 +19,15 @@ import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
 public class DomainModelUtils {
+    private static LoadingCache<String, Class<? extends BaseEntity>> ENTITY_CLASS_CACHE = CacheBuilder.newBuilder()
+            .maximumSize(1024)
+            .build(new CacheLoader<String, Class<? extends BaseEntity>>() {
+                @Override
+                public Class<? extends BaseEntity> load(String entityType) throws Exception {
+                    return findEntityClass(entityType);
+                }
+            });
+
     /**
      * @param subjectKey
      * @return the subject name part of a given subject key. For example, for "group:flylight", this returns "flylight".
@@ -62,6 +74,10 @@ public class DomainModelUtils {
     }
 
     public static Class<? extends BaseEntity> getEntityClass(String entityType) {
+        return ENTITY_CLASS_CACHE.getUnchecked(entityType);
+    }
+
+    private static Class<? extends BaseEntity> findEntityClass(String entityType) {
         Reflections entityReflections = new Reflections(new ConfigurationBuilder()
                 .setUrls(ClasspathHelper.forPackage("org.janelia"))
                 .filterInputsBy(new FilterBuilder().includePackage(BaseEntity.class).includePackage(DomainObject.class)));
