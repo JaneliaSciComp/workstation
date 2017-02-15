@@ -231,6 +231,13 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         this.stringifiedResult = stringifiedResult;
     }
 
+    public void addEvent(JacsServiceEventTypes name, String value) {
+        JacsServiceEvent se = new JacsServiceEvent();
+        se.setName(name.name());
+        se.setValue(value);
+        addEvent(se);
+    }
+
     public void addEvent(JacsServiceEvent se) {
         if (this.events == null) {
             this.events = new ArrayList<>();

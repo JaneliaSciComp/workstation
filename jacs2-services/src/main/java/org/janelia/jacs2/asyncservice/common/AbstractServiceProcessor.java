@@ -20,7 +20,7 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
 
     protected final JacsServiceEngine jacsServiceEngine;
     protected final ServiceComputationFactory computationFactory;
-    private final JacsServiceDataPersistence jacsServiceDataPersistence;
+    protected final JacsServiceDataPersistence jacsServiceDataPersistence;
     private final String defaultWorkingDir;
     protected final Logger logger;
 
