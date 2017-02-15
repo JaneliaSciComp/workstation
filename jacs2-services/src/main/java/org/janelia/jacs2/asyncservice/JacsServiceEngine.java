@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface JacsServiceEngine {
     void setProcessingSlotsCount(int nProcessingSlots);
+    void setMaxWaitingSlots(int maxWaitingSlots);
     ServerStats getServerStats();
     ServiceProcessor<?> getServiceProcessor(JacsServiceData jacsServiceData);
     JacsServiceData submitSingleService(JacsServiceData serviceArgs);

@@ -17,6 +17,7 @@ import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
+import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -55,7 +56,8 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
         JacsServiceData sampleLSMsMetadataServiceData = SampleServicesUtils.createChildSampleServiceData("getSampleLsmMetadata", getArgs(jacsServiceData), jacsServiceData);
         return createServiceComputation(jacsServiceEngine.submitSingleService(sampleLSMsMetadataServiceData))
                 .thenCompose(sd -> this.waitForCompletion(sd))
-                .thenApply(r -> ServiceDataUtils.stringToAny(sampleLSMsMetadataServiceData.getStringifiedResult(), new TypeReference<List<SampleImageMetadataFile>>() {}));
+                .thenApply(r -> ServiceDataUtils.stringToAny(sampleLSMsMetadataServiceData.getStringifiedResult(), new TypeReference<List<SampleImageMetadataFile>>() {
+                }));
     }
 
     @Override
@@ -64,6 +66,8 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
         if (CollectionUtils.isEmpty(sampleLSMsMetadata)) {
             return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "No sample image file was found"));
         }
+        jacsServiceData.setState(JacsServiceState.RUNNING);
+        jacsServiceDataPersistence.update(jacsServiceData);
         Map<String, SampleImageMetadataFile> indexedSampleLSMsMetadata = Maps.uniqueIndex(
                 sampleLSMsMetadata,
                 lsmf -> lsmf.getSampleImageFile().getId().toString());

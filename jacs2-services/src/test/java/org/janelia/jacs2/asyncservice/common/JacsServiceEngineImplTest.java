@@ -41,13 +41,13 @@ public class JacsServiceEngineImplTest {
         serviceRegistrarSource = mock(Instance.class);
         serviceRegistry = mock(ServiceRegistry.class);
         logger = mock(Logger.class);
-        jacsServiceQueue = new InMemoryJacsServiceQueue(jacsServiceDataPersistence, logger);
+        jacsServiceQueue = new InMemoryJacsServiceQueue(jacsServiceDataPersistence, 10, logger);
         doAnswer(invocation -> {
             JacsServiceData sd = invocation.getArgument(0);
             sd.setId(idSequence++);
             return null;
         }).when(jacsServiceDataPersistence).saveHierarchy(any(JacsServiceData.class));
-        jacsServiceEngine = new JacsServiceEngineImpl(jacsServiceDataPersistence, jacsServiceQueue, serviceRegistrarSource, logger);
+        jacsServiceEngine = new JacsServiceEngineImpl(jacsServiceDataPersistence, jacsServiceQueue, serviceRegistrarSource, 10, logger);
         when(serviceRegistrarSource.get()).thenReturn(serviceRegistry);
     }
 

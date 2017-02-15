@@ -4,6 +4,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.ServerStats;
 import org.janelia.jacs2.asyncservice.ServiceRegistry;
+import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
@@ -18,7 +19,7 @@ import java.util.Optional;
 import java.util.concurrent.Semaphore;
 
 public class JacsServiceEngineImpl implements JacsServiceEngine {
-    private static final int MAX_RUNNING_SLOTS = 1000;
+    private static final int DEFAULT_MAX_RUNNING_SLOTS = 1000;
 
     private final JacsServiceDataPersistence jacsServiceDataPersistence;
     private final JacsServiceQueue jacsServiceQueue;
@@ -31,18 +32,20 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
     JacsServiceEngineImpl(JacsServiceDataPersistence jacsServiceDataPersistence,
                           JacsServiceQueue jacsServiceQueue,
                           Instance<ServiceRegistry> serviceRegistrarSource,
+                          @PropertyValue(name = "service.engine.ProcessingSlots") int nAvailableSlots,
                           Logger logger) {
         this.jacsServiceDataPersistence = jacsServiceDataPersistence;
         this.jacsServiceQueue = jacsServiceQueue;
         this.serviceRegistrarSource = serviceRegistrarSource;
         this.logger = logger;
-        nAvailableSlots = MAX_RUNNING_SLOTS;
-        availableSlots = new Semaphore(nAvailableSlots, true);
+        this.nAvailableSlots = nAvailableSlots <= 0 ? DEFAULT_MAX_RUNNING_SLOTS : nAvailableSlots;
+        availableSlots = new Semaphore(this.nAvailableSlots, true);
     }
 
     @Override
     public ServerStats getServerStats() {
         ServerStats stats = new ServerStats();
+        stats.setWaitingCapacity(jacsServiceQueue.getMaxReadyCapacity());
         stats.setWaitingServices(jacsServiceQueue.getReadyServicesSize());
         stats.setAvailableSlots(getAvailableSlots());
         stats.setRunningServicesCount(jacsServiceQueue.getPendingServicesSize());
@@ -68,6 +71,11 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
     }
 
     @Override
+    public void setMaxWaitingSlots(int maxWaitingSlots) {
+        jacsServiceQueue.setMaxReadyCapacity(maxWaitingSlots);
+    }
+
+    @Override
     public ServiceProcessor<?> getServiceProcessor(JacsServiceData jacsServiceData) {
         ServiceDescriptor serviceDescriptor = getServiceDescriptor(jacsServiceData.getName());
         return serviceDescriptor.createServiceProcessor();
@@ -80,7 +88,6 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
 
     @Override
     public void releaseSlot() {
-
     }
 
     private ServiceDescriptor getServiceDescriptor(String serviceName) {
@@ -107,8 +114,9 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
                 return existingChildService.get(); // do not resubmit
             }
             serviceArgs.addEvent(JacsServiceEventTypes.ENQUEUE_SERVICE, String.format("Enqueue child service %s %s for %d", serviceArgs.getName(), serviceArgs.getArgs(), serviceArgs.getParentServiceId()));
+        } else {
+            serviceArgs.addEvent(JacsServiceEventTypes.ENQUEUE_SERVICE, String.format("Enqueue service %s %s", serviceArgs.getName(), serviceArgs.getArgs()));
         }
-        serviceArgs.addEvent(JacsServiceEventTypes.ENQUEUE_SERVICE, String.format("Enqueue service %s %s", serviceArgs.getName(), serviceArgs.getArgs()));
         return jacsServiceQueue.enqueueService(serviceArgs);
     }
 

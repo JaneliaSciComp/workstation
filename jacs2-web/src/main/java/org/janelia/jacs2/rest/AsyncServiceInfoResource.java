@@ -67,4 +67,13 @@ public class AsyncServiceInfoResource {
                 .status(Response.Status.OK)
                 .build();
     }
+
+    @PUT
+    @Path("/waiting-slots-count/{slots-count}")
+    public Response setWaitingSlotsCount(@PathParam("slots-count") int nWaitingSlots) {
+        jacsServiceEngine.setMaxWaitingSlots(nWaitingSlots);
+        return Response
+                .status(Response.Status.OK)
+                .build();
+    }
 }

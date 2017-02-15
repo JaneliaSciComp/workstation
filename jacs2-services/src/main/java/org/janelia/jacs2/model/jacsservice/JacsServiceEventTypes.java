@@ -1,12 +1,15 @@
 package org.janelia.jacs2.model.jacsservice;
 
 public enum JacsServiceEventTypes {
+    COMPLETED,
     CREATE_CHILD_SERVICE,
     DRMAA_SUBMIT,
     DRMAA_JOB_ABORTED,
     DRMAA_JOB_ERROR,
     DRMAA_JOB_COMPLETED,
+    DEQUEUE_SERVICE,
     ENQUEUE_SERVICE,
+    FAILED,
     REQUEUE_SERVICE,
     CREATED_RUNNING_SCRIPT,
     SCRIPT_CREATION_ERROR,

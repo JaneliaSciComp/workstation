@@ -2,6 +2,7 @@ package org.janelia.jacs2.asyncservice.common;
 
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
+import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.slf4j.Logger;
@@ -53,6 +54,7 @@ public class JacsServiceDispatcher {
                     .supply(() -> {
                         JacsServiceData updatedService = queuedService;
                         logger.debug("Submit {}", updatedService);
+                        updatedService.addEvent(JacsServiceEventTypes.DEQUEUE_SERVICE, "Dequeued");
                         updatedService.setState(JacsServiceState.SUBMITTED);
                         updateServiceInfo(updatedService);
                         jacsServiceEngine.releaseSlot();
@@ -60,19 +62,21 @@ public class JacsServiceDispatcher {
                     })
                     .thenCompose(sd -> serviceProcessor.process(sd))
                     .whenComplete((r, exc) -> {
-                        JacsServiceData updatedServiceData = queuedService;
+                        JacsServiceData updatedService = queuedService;
                         if (exc == null) {
-                            logger.info("Successfully completed {}", updatedServiceData);
-                            updatedServiceData.setState(JacsServiceState.SUCCESSFUL);
+                            logger.info("Successfully completed {}", updatedService);
+                            updatedService.addEvent(JacsServiceEventTypes.COMPLETED, "Completed successfully");
+                            updatedService.setState(JacsServiceState.SUCCESSFUL);
                         } else {
                             // if the service data state has already been marked as cancelled or error leave it as is
-                            if (!updatedServiceData.hasCompletedUnsuccessfully()) {
-                                logger.error("Error executing {}", updatedServiceData, exc);
-                                updatedServiceData.setState(JacsServiceState.ERROR);
+                            if (!updatedService.hasCompletedUnsuccessfully()) {
+                                logger.error("Error executing {}", updatedService, exc);
+                                updatedService.addEvent(JacsServiceEventTypes.FAILED, String.format("Failed: %s", exc.getMessage()));
+                                updatedService.setState(JacsServiceState.ERROR);
                             }
                         }
-                        updateServiceInfo(updatedServiceData);
-                        jacsServiceQueue.completeService(updatedServiceData);
+                        updateServiceInfo(updatedService);
+                        jacsServiceQueue.completeService(updatedService);
                     });
         }
     }

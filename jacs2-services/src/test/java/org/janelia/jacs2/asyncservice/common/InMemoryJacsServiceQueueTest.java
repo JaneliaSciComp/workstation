@@ -32,7 +32,7 @@ public class InMemoryJacsServiceQueueTest {
     public void setUp() {
         jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
         logger = mock(Logger.class);
-        jacsServiceQueue = new InMemoryJacsServiceQueue(jacsServiceDataPersistence, logger);
+        jacsServiceQueue = new InMemoryJacsServiceQueue(jacsServiceDataPersistence, 10, logger);
         Answer<Void> saveServiceData = invocation -> {
             JacsServiceData ti = invocation.getArgument(0);
             ti.setId(TEST_ID);

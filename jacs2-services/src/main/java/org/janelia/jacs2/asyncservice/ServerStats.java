@@ -6,6 +6,7 @@ public class ServerStats {
     private int runningServicesCount;
     private int waitingServices;
     private int availableSlots;
+    private int waitingCapacity;
     private List<Number> runningServices;
 
     public int getRunningServicesCount() {
@@ -30,6 +31,14 @@ public class ServerStats {
 
     public void setAvailableSlots(int availableSlots) {
         this.availableSlots = availableSlots;
+    }
+
+    public int getWaitingCapacity() {
+        return waitingCapacity;
+    }
+
+    public void setWaitingCapacity(int waitingCapacity) {
+        this.waitingCapacity = waitingCapacity;
     }
 
     public List<Number> getRunningServices() {

@@ -3,6 +3,7 @@ package org.janelia.jacs2.asyncservice.common;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
+import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
@@ -25,7 +26,7 @@ import java.util.concurrent.Semaphore;
 
 @Singleton
 public class InMemoryJacsServiceQueue implements JacsServiceQueue {
-    private static final int MAX_WAITING_SLOTS = 20;
+    private static final int DEFAULT_MAX_READY_CAPACITY = 20;
 
     private final JacsServiceDataPersistence jacsServiceDataPersistence;
     private final Queue<JacsServiceData> waitingServices;
@@ -33,12 +34,16 @@ public class InMemoryJacsServiceQueue implements JacsServiceQueue {
     private final Set<Number> submittedServicesSet = new ConcurrentSkipListSet<>();
     private final Semaphore queuePermit;
     private final Logger logger;
+    private int maxReadyCapacity;
     private boolean noWaitingSpaceAvailable;
 
     @Inject
-    public InMemoryJacsServiceQueue(JacsServiceDataPersistence jacsServiceDataPersistence, Logger logger) {
+    public InMemoryJacsServiceQueue(JacsServiceDataPersistence jacsServiceDataPersistence,
+                                    @PropertyValue(name = "service.queue.MaxCapacity") int maxReadyCapacity,
+                                    Logger logger) {
+        this.maxReadyCapacity = maxReadyCapacity == 0 ? DEFAULT_MAX_READY_CAPACITY : maxReadyCapacity;
         this.jacsServiceDataPersistence = jacsServiceDataPersistence;
-        this.waitingServices = new PriorityBlockingQueue<>(MAX_WAITING_SLOTS, new DefaultServiceInfoComparator());
+        this.waitingServices = new PriorityBlockingQueue<>(this.maxReadyCapacity, new DefaultServiceInfoComparator());
         this.queuePermit = new Semaphore(1, true);
         this.logger = logger;
         noWaitingSpaceAvailable = false;
@@ -97,6 +102,16 @@ public class InMemoryJacsServiceQueue implements JacsServiceQueue {
         return ImmutableList.copyOf(submittedServicesSet);
     }
 
+    @Override
+    public int getMaxReadyCapacity() {
+        return maxReadyCapacity;
+    }
+
+    @Override
+    public void setMaxReadyCapacity(int maxReadyCapacity) {
+        this.maxReadyCapacity = maxReadyCapacity <= 0 ? DEFAULT_MAX_READY_CAPACITY : maxReadyCapacity;
+    }
+
     private void persistServiceInfo(JacsServiceData jacsServiceData) {
         jacsServiceData.setState(JacsServiceState.CREATED);
         jacsServiceDataPersistence.saveHierarchy(jacsServiceData);
@@ -126,7 +141,7 @@ public class InMemoryJacsServiceQueue implements JacsServiceQueue {
     }
 
     private boolean enqueueAvailableServices(Set<JacsServiceState> jacsServiceStates) {
-        int availableSpaces = MAX_WAITING_SLOTS;
+        int availableSpaces = maxReadyCapacity;
         PageRequest servicePageRequest = new PageRequest();
         servicePageRequest.setPageSize(availableSpaces);
         servicePageRequest.setSortCriteria(new ArrayList<>(ImmutableList.of(
@@ -167,7 +182,8 @@ public class InMemoryJacsServiceQueue implements JacsServiceQueue {
     }
 
     private int waitingCapacity() {
-        return MAX_WAITING_SLOTS - waitingServices.size();
+        int remainingCapacity = maxReadyCapacity - waitingServices.size();
+        return remainingCapacity < 0 ? 0 : remainingCapacity;
     }
 
 }

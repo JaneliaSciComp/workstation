@@ -57,8 +57,8 @@ public class JacsServiceDispatcherTest {
         serviceRegistrarSource = mock(Instance.class);
         serviceRegistry = mock(ServiceRegistry.class);
         logger = mock(Logger.class);
-        jacsServiceQueue = new InMemoryJacsServiceQueue(jacsServiceDataPersistence, logger);
-        jacsServiceEngine = new JacsServiceEngineImpl(jacsServiceDataPersistence, jacsServiceQueue, serviceRegistrarSource, logger);
+        jacsServiceQueue = new InMemoryJacsServiceQueue(jacsServiceDataPersistence, 10, logger);
+        jacsServiceEngine = new JacsServiceEngineImpl(jacsServiceDataPersistence, jacsServiceQueue, serviceRegistrarSource, 10, logger);
         testDispatcher = new JacsServiceDispatcher(serviceComputationFactory,
                 jacsServiceQueue,
                 jacsServiceDataPersistence,
