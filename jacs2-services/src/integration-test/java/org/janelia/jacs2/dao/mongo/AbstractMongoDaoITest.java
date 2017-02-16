@@ -1,6 +1,5 @@
 package org.janelia.jacs2.dao.mongo;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
@@ -31,10 +30,10 @@ public abstract class AbstractMongoDaoITest<T extends HasIdentifier> extends Abs
     protected static final String TEST_OWNER_KEY = "user:test";
 
     private static MongoClient testMongoClient;
-    private static ObjectMapperFactory testObjectMapperFactory = ObjectMapperFactory.instance();
+    protected static ObjectMapperFactory testObjectMapperFactory = ObjectMapperFactory.instance();
 
     protected MongoDatabase testMongoDatabase;
-    protected ObjectMapper objectMapper = testObjectMapperFactory.getDefaultObjectMapper();
+//    protected ObjectMapper objectMapper = testObjectMapperFactory.newObjectMapper().setSerializationInclusion(JsonInclude.Include.ALWAYS);
     protected TimebasedIdentifierGenerator idGenerator = new TimebasedIdentifierGenerator(0);
     protected Random dataGenerator = new Random();
 

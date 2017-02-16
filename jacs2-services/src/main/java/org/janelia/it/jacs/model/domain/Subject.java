@@ -15,6 +15,7 @@ import java.util.Set;
 @MongoMapping(collectionName="subject", label="Subject")
 public class Subject implements BaseEntity, HasIdentifier {
     public static final String ADMIN_KEY = "group:admin";
+    public static final String ALL_KEY = "group:all";
     public static final String USERS_KEY = "group:workstation_users";
 
     @JsonProperty("_id")
@@ -91,6 +92,7 @@ public class Subject implements BaseEntity, HasIdentifier {
     public Set<String> getSubjectClaims() {
         Set<String> claims = new LinkedHashSet<>();
         claims.add(key);
+        claims.add(ALL_KEY);
         for (String group : groups) {
             claims.add(group);
         }

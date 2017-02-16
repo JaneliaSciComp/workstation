@@ -113,7 +113,6 @@ public class InMemoryJacsServiceQueue implements JacsServiceQueue {
     }
 
     private void persistServiceInfo(JacsServiceData jacsServiceData) {
-        jacsServiceData.setState(JacsServiceState.CREATED);
         jacsServiceDataPersistence.saveHierarchy(jacsServiceData);
     }
 

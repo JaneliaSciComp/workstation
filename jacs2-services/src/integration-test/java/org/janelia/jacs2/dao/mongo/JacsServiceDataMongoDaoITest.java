@@ -37,7 +37,7 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
 
     @Before
     public void setUp() {
-        testDao = new JacsServiceDataMongoDao(testMongoDatabase, idGenerator, objectMapper);
+        testDao = new JacsServiceDataMongoDao(testMongoDatabase, idGenerator, testObjectMapperFactory);
     }
 
     @After
