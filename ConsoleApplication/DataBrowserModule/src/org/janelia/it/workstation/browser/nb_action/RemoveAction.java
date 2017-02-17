@@ -7,7 +7,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
@@ -20,7 +20,6 @@ import org.openide.util.actions.NodeAction;
  */
 public final class RemoveAction extends NodeAction {
 
-    
     private final static RemoveAction singleton = new RemoveAction();
     public static RemoveAction get() {
         return singleton;
@@ -79,8 +78,8 @@ public final class RemoveAction extends NodeAction {
                 included = false;
             }
             
-            if (node instanceof DomainObjectNode) {
-                DomainObjectNode<?> domainObjectNode = (DomainObjectNode<?>)node;
+            if (node instanceof AbstractDomainObjectNode) {
+                AbstractDomainObjectNode<?> domainObjectNode = (AbstractDomainObjectNode<?>)node;
                 DomainObject domainObject = domainObjectNode.getDomainObject();
                 if (included) {
                     toRemove.add(domainObject);

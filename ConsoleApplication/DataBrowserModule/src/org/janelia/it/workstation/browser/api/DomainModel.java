@@ -23,12 +23,14 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
+import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
+import org.janelia.it.jacs.model.domain.sample.StatusTransition;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.NotCacheable;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -691,11 +693,17 @@ public class DomainModel {
      * @return the ontology term 
      */
     public OntologyTerm getOntologyTermByReference(OntologyTermReference reference) throws Exception {
+        if (reference==null) {
+            return null;
+        }
         Ontology ontology = getDomainObject(Ontology.class, reference.getOntologyId());
         return findTerm(ontology, reference.getOntologyTermId());
     }
 
     private OntologyTerm findTerm(OntologyTerm term, Long termId) {
+        if (term==null) {
+            return null;
+        }
         if (term.getId().equals(termId)) {
             return term;
         }
@@ -725,6 +733,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(ontologyFacade.reorderTerms(ontologyId, parentTermId, order));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -741,6 +750,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(ontologyFacade.addTerms(ontologyId, parentTermId, terms, index));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -749,6 +759,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(ontologyFacade.removeTerm(ontologyId, parentTermId, termId));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -771,11 +782,17 @@ public class DomainModel {
     }
 
     public Filter save(Filter filter) throws Exception {
+        boolean create = filter.getId()==null;
         Filter canonicalObject;
         synchronized (this) {
-            canonicalObject = putOrUpdate(filter.getId()==null ? workspaceFacade.create(filter) : workspaceFacade.update(filter));
+            canonicalObject = putOrUpdate(create ? workspaceFacade.create(filter) : workspaceFacade.update(filter));
         }
-        notifyDomainObjectCreated(canonicalObject);
+        if (create) { 
+            notifyDomainObjectCreated(canonicalObject);
+        }
+        else {
+            notifyDomainObjectChanged(canonicalObject);
+        }
         return canonicalObject;
     }
 
@@ -788,10 +805,22 @@ public class DomainModel {
 
     public DataSet save(DataSet dataSet) throws Exception {
         DataSet canonicalObject;
+        boolean create = dataSet.getId()==null;
         synchronized (this) {
-            canonicalObject = putOrUpdate(dataSet.getId()==null ? sampleFacade.create(dataSet) : sampleFacade.update(dataSet));
+            canonicalObject = putOrUpdate(create ? sampleFacade.create(dataSet) : sampleFacade.update(dataSet));
         }
-        notifyDomainObjectCreated(canonicalObject);
+        if (create) { 
+            notifyDomainObjectCreated(canonicalObject);
+        }
+        else {
+            notifyDomainObjectChanged(canonicalObject);
+        }
+
+        TreeNode folder = getDefaultWorkspaceFolder(DomainConstants.NAME_DATA_SETS, false);
+        if (folder != null) {
+            invalidate(folder);
+        }
+        
         return canonicalObject;
     }
 
@@ -903,7 +932,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(sampleFacade.update(release));
         }
-        notifyDomainObjectCreated(canonicalObject);
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -917,6 +946,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(domainFacade.save(domainObject));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -925,6 +955,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(domainFacade.updateProperty(domainObject, propName, propValue));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -933,6 +964,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(domainFacade.setPermissions(domainObject, granteeKey, rights), true);
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -944,9 +976,26 @@ public class DomainModel {
         return subjectFacade.loginSubject(username, password);
     }
 
+    public void addPipelineStatusTransition(StatusTransition transition) throws Exception {
+        sampleFacade.addStatusTransition(transition);
+    }
+
+    public void putOrUpdateIntakeOrder (IntakeOrder order) throws Exception {
+        sampleFacade.putOrUpdateIntakeOrder(order);
+    }
+
+    public IntakeOrder getIntakeOrder (String orderNo) throws Exception {
+        return sampleFacade.getIntakeOrder(orderNo);
+    }
+
+    // EVENT HANDLING
+    
     public void notifyDomainObjectCreated(DomainObject domainObject) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectCreateEvent for {}", DomainUtils.identify(domainObject));
+        }
+        if (domainObject==null) {
+            throw new IllegalStateException("Cannot notify creation of null object");
         }
         Events.getInstance().postOnEventBus(new DomainObjectCreateEvent(domainObject));
     }
@@ -955,32 +1004,34 @@ public class DomainModel {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectChangeEvent for {}", DomainUtils.identify(domainObject));
         }
-        Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(domainObject));
+        if (domainObject==null) {
+            throw new IllegalStateException("Cannot notify change of null object");
+        }
+        else {
+            Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(domainObject));
+        }
     }
 
     public void notifyAnnotationsChanged(DomainObject domainObject) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectAnnotationChangeEvent for {}", DomainUtils.identify(domainObject));
         }
+        if (domainObject==null) {
+            throw new IllegalStateException("Cannot notify annotation change of null object");
+        }
         Events.getInstance().postOnEventBus(new DomainObjectAnnotationChangeEvent(domainObject));
     }
-
-    // TODO: This is currently not used because all changes result in invalidated objects. 
-    // In the future we may want to keep the same objects and just update them, in which case this event will be useful.
-//    private void notifyDomainObjectChanged(DomainObject domainObject) {
-//        if (log.isTraceEnabled()) {
-//            log.trace("Generating DomainObjectChangeEvent for {}", DomainUtils.identify(domainObject));
-//        }
-//        Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(domainObject));
-//    }
 
     public void notifyDomainObjectRemoved(DomainObject domainObject) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectRemoveEvent for {}", DomainUtils.identify(domainObject));
         }
+        if (domainObject==null) {
+            throw new IllegalStateException("Cannot notify removal of null object");
+        }
         Events.getInstance().postOnEventBus(new DomainObjectRemoveEvent(domainObject));
     }
-
+    
     private void notifyDomainObjectsInvalidated(Collection<? extends DomainObject> objects, boolean invalidateTree) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectInvalidationEvent with {} entities", objects.size());

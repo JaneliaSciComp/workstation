@@ -1,9 +1,7 @@
 package org.janelia.it.workstation.browser.nodes;
 
 import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
@@ -27,6 +25,7 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.Tag;
 import org.janelia.it.jacs.model.domain.ontology.Text;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -64,7 +63,6 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
 
     private final OntologyChildFactory parentChildFactory;
     private final OntologyChildFactory childFactory;
-    private final Ontology ontology;
     
     public OntologyTermNode(OntologyChildFactory parentChildFactory, Ontology ontology, OntologyTerm ontologyTerm) {
         this(parentChildFactory, new OntologyChildFactory(ontology, ontologyTerm), ontology, ontologyTerm);    
@@ -74,7 +72,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         super(parentChildFactory, childFactory.hasNodeChildren()?Children.create(childFactory, false):Children.LEAF, ontologyTerm);
         this.parentChildFactory = parentChildFactory;
         this.childFactory = childFactory;
-        this.ontology = ontology;
+        getLookupContents().add(ontology);
         getLookupContents().add(new Index.Support() {
 
             @Override
@@ -118,6 +116,10 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         Node parent = getParentNode();
         return parent instanceof OntologyTermNode ? (OntologyTermNode)parent : null;
     }
+
+    public OntologyTerm getObject() {
+        return (OntologyTerm)getLookup().lookup(OntologyTerm.class);
+    }
     
     public OntologyNode getOntologyNode() {
         Node node = this;
@@ -131,13 +133,18 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     }
     
     public Ontology getOntology() {
-        return ontology;
+        return (Ontology) getLookup().lookup(Ontology.class);
     }
     
     public OntologyTerm getOntologyTerm() {
         return getObject();
     }
 
+    @Override
+    public String getName() {
+        return getObject().getName();
+    }
+    
     @Override
     public Long getId() {
         return getOntologyTerm().getId();
@@ -221,15 +228,16 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         List<Action> actions = new ArrayList<>();
         actions.add(PopupLabelAction.get());
         actions.add(null);
-        actions.add(new CopyNameAction());
-        actions.add(new CopyGUIDAction());
+        actions.add(new CopyToClipboardAction("Name", getName()));
+        actions.add(new CopyToClipboardAction("GUID", getId()+""));
+        actions.add(null);
+        actions.add(new RemoveAction());
         actions.add(null);
         actions.add(OntologyImportAction.get());
         actions.add(OntologyExportAction.get());
         actions.add(null);
         actions.add(new AssignShortcutAction());
         actions.add(AddOntologyTermAction.get());
-        actions.add(new RemoveAction());
         actions.add(null);
         actions.add(ApplyAnnotationAction.get());
         return actions.toArray(new Action[actions.size()]);
@@ -238,23 +246,6 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     @Override
     public Action getPreferredAction() {
         return ApplyAnnotationAction.get();
-    }
-    
-    protected final class CopyGUIDAction extends AbstractAction {
-
-        public CopyGUIDAction() {
-            putValue(NAME, "Copy GUID To Clipboard");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            HasIdentifier ontologyTerm = getLookup().lookup(HasIdentifier.class);
-            if (ontologyTerm==null) {
-                return;
-            }
-            Transferable t = new StringSelection(ontologyTerm.getId()+"");
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-        }
     }
     
     protected final class AssignShortcutAction extends AbstractAction {
@@ -301,9 +292,11 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 if (getOntologyTerm() instanceof Ontology) {
                     model.removeOntology(getOntology().getId());   
+                    log.info("Removed ontology {}", getOntology().getId());
                 }
                 else {
-                    model.removeOntologyTerm(getOntology().getId(), getParent().getId(), getOntologyTerm().getId());    
+                    model.removeOntologyTerm(getOntology().getId(), getParent().getId(), getOntologyTerm().getId());
+                    log.info("Removed ontology term {} from ontology {}", getOntologyTerm().getId(), getOntology().getId());
                 }
             }
             catch (Exception ex) {
@@ -353,27 +346,27 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
 //        }
 //    }
 
-    @Override
-    public void destroy() throws IOException {
-        if (!ClientDomainUtils.hasWriteAccess(getOntology())) {
-            return;
-        }
-        if (parentChildFactory==null) {
-            throw new IllegalStateException("Cannot destroy node without parent");
-        }
-        if (parentChildFactory instanceof OntologyChildFactory) {
-            OntologyChildFactory ontologyChildFactory = parentChildFactory;
-            try {
-                ontologyChildFactory.removeChild(getOntologyTerm());
-            }
-            catch (Exception e) {
-                throw new IOException("Error destroying node",e);
-            }
-        }
-        else {
-            throw new IllegalStateException("Cannot destroy term without parent");
-        }
-    }
+//    @Override
+//    public void destroy() throws IOException {
+//        if (!ClientDomainUtils.hasWriteAccess(getOntology())) {
+//            return;
+//        }
+//        if (parentChildFactory==null) {
+//            throw new IllegalStateException("Cannot destroy node without parent");
+//        }
+//        if (parentChildFactory instanceof OntologyChildFactory) {
+//            OntologyChildFactory ontologyChildFactory = parentChildFactory;
+//            try {
+//                ontologyChildFactory.removeChild(getOntologyTerm());
+//            }
+//            catch (Exception e) {
+//                throw new IOException("Error destroying node",e);
+//            }
+//        }
+//        else {
+//            throw new IllegalStateException("Cannot destroy term without parent");
+//        }
+//    }
     
     @Override
     public Transferable clipboardCopy() throws IOException {

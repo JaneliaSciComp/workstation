@@ -1,16 +1,15 @@
 package org.janelia.it.workstation.browser.gui.support;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import javax.swing.tree.TreeSelectionModel;
 
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeView;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
-import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.view.BeanTreeView;
 import org.openide.nodes.Node;
+
 
 /**
  * An node chooser that can display a node tree and allows the user to select 
@@ -20,10 +19,10 @@ import org.openide.nodes.Node;
  */
 public class NodeChooser extends AbstractChooser<Node> implements ExplorerManager.Provider {
 
-    private final ExplorerManager mgr = new ExplorerManager();  
+    protected final ExplorerManager mgr = new ExplorerManager();
+    
     private final Node root;
     private final BeanTreeView beanTreeView;
-    private final List<String> selectedPaths = new ArrayList<>();
 
     public NodeChooser(Node rootNode, String title) {
         setTitle(title);
@@ -61,17 +60,6 @@ public class NodeChooser extends AbstractChooser<Node> implements ExplorerManage
     @Override
     protected List<Node> choosePressed() {
         Node[] selectedNodes = mgr.getSelectedNodes();
-        
-        for(Node selectedNode : selectedNodes) {
-            if (selectedNode instanceof DomainObjectNode) {
-                selectedPaths.add(NodeUtils.createPathString((DomainObjectNode<?>)selectedNode));
-            }
-        }
-        
         return Arrays.asList(selectedNodes);
-    }
-
-    public List<String> getSelectedPaths() {
-    	return selectedPaths;
     }
 }

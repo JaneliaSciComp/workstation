@@ -51,7 +51,7 @@ public abstract class BasicShaderProgram implements ShaderProgram {
     }
 
     // Derived classes should insert shaders in list returned by getShaderSteps()
-    public List<ShaderStep> getShaderSteps() {
+    public final List<ShaderStep> getShaderSteps() {
         return shaderSteps;
     }
     

@@ -9,7 +9,7 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
@@ -39,11 +39,13 @@ public class MoveToFolderAction extends AddToFolderAction {
         menu.setText("Move To Folder");
 
         for(Node node : getSelectedNodes()) {
-            DomainObjectNode<?> selectedNode = (DomainObjectNode<?>)node;
-            DomainObject domainObject = selectedNode.getDomainObject();
-            if (!ClientDomainUtils.isOwner(domainObject)) {
-                menu.setEnabled(false);
-                break;
+            if (node instanceof AbstractDomainObjectNode) {
+                AbstractDomainObjectNode<?> selectedNode = (AbstractDomainObjectNode<?>)node;
+                DomainObject domainObject = selectedNode.getDomainObject();
+                if (!ClientDomainUtils.isOwner(domainObject)) {
+                    menu.setEnabled(false);
+                    break;
+                }
             }
         }
 

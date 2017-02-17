@@ -28,58 +28,55 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.console.viewerapi.model;
+package org.janelia.console.viewerapi.commands;
 
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoableEdit;
 import org.janelia.console.viewerapi.Command;
+import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 
 /**
  * Seeds a new neuron with a single root anchor
  * @author brunsc
  */
-public class CreateNeuronCommand 
+public class SelectPrimaryAnchorCommand 
 extends AbstractUndoableEdit
-implements UndoableEdit, Command, VertexAdder
+implements UndoableEdit, Command, Notifier
 {
-    private final String initialNeuronName;
-    private final float[] initialCoordinates;
-    private final float initialRadius;
-    
-    private NeuronModel newNeuron = null;
+    private final NeuronVertex newPrimary;
     private final NeuronSet workspace;
+    private NeuronVertex oldPrimary;
+    private boolean doNotify = true;
     
-    NeuronVertex rootVertex = null;
-    
-    public CreateNeuronCommand(
-            NeuronSet workspace,
-            String neuronName,
-            float[] anchorXyz,
-            float anchorRadius)
+    public SelectPrimaryAnchorCommand(NeuronSet workspace, NeuronVertex primary)
     {
-        this.initialNeuronName = neuronName;
-        this.initialCoordinates = anchorXyz;
-        this.initialRadius = anchorRadius;
         this.workspace = workspace;
+        newPrimary = primary;
     }
 
     @Override
     public boolean execute() {
-        newNeuron = workspace.createNeuron(initialNeuronName);
-        if (newNeuron == null)
+        if (workspace == null)
             return false;
-        rootVertex = newNeuron.appendVertex(
-                null, initialCoordinates, initialRadius);
-        if (rootVertex == null) {
-            workspace.remove(newNeuron);
+        oldPrimary = workspace.getPrimaryAnchor();
+        if (oldPrimary == newPrimary)
             return false;
-        }        
+        workspace.setPrimaryAnchor(newPrimary);
+        if (workspace.getPrimaryAnchor() != newPrimary)
+            return false;
+        if (doesNotify()) {
+            workspace.getPrimaryAnchorObservable().notifyObservers();
+        }
         return true;
     }
 
     @Override
     public String getPresentationName() {
-        return "Create Neuron '" + initialNeuronName + "'";
+        if (newPrimary == null)
+            return "Clear Parent Anchor";
+        else 
+            return "Set Parent Anchor";
     }
     
     @Override
@@ -92,50 +89,31 @@ implements UndoableEdit, Command, VertexAdder
     @Override
     public void undo() {
         super.undo(); // raises exception if canUndo() is false
-        if (newNeuron == null) {
+        if (workspace == null) {
             die();
-            return;
-        }
-        // Sanity check that neuron remains embryonic
-        if (newNeuron.getVertexes().size() > 1) {
-            die();
-            newNeuron = null;
             return;
         }
         try {
-            // First remove the root vertex
-            if (rootVertex != null) {
-                try {
-                    if (! newNeuron.deleteVertex(rootVertex))
-                        die();
-                } catch (Exception exc) {
-                    // Something went wrong. Perhaps this anchor no longer exists
-                    die(); // This Command object is no longer useful
-                }
-                rootVertex = null;
-            }
-            if (! workspace.remove(newNeuron)) {
-                newNeuron = null;
+            workspace.setPrimaryAnchor(oldPrimary);
+            if (workspace.getPrimaryAnchor() != oldPrimary) {
                 die();
+                return;
+            }
+            if (doesNotify()) {
+                workspace.getPrimaryAnchorObservable().notifyObservers();
             }
         } catch (Exception exc) {
-            // Something went wrong. Perhaps this neuron no longer exists
-            newNeuron = null;
             die(); // This Command object is no longer useful
         }
     }
 
     @Override
-    public NeuronVertex getAddedVertex() {
-        return rootVertex;
+    public void setNotify(boolean doNotify) {
+        this.doNotify = doNotify;
     }
 
     @Override
-    public NeuronVertex getParentVertex() {
-        return null; // root vertex has no parent
-    }
-    
-    public NeuronModel getNewNeuron() {
-        return newNeuron;
+    public boolean doesNotify() {
+        return doNotify;
     }
 }

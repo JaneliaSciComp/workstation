@@ -24,9 +24,13 @@ import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.MenuItemGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.MouseModalWidget;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BasicMouseMode implements MouseMode
 {
+    private static final Logger log = LoggerFactory.getLogger(BasicMouseMode.class);
+    
 	public Cursor getAltCursor() {
 		return altCursor;
 	}
@@ -196,20 +200,27 @@ public class BasicMouseMode implements MouseMode
     }
 
     public Vec3 worldFromPixel(Point pixel) {
+        boolean debug = false;
 		// Initialize to screen space position
 		Vec3 result = new Vec3(pixel.getX(), pixel.getY(), 0);
+		if (debug) log.info("Mouse: "+result);
 		// Normalize to screen viewport center
 		Viewport vp = getWidget().getViewport();
 		// TODO - test non-zero origins
 		result = result.minus(new Vec3(vp.getOriginX(), vp.getOriginY(), 0)); // origin
+		if (debug) log.info("After subtracting VP origin: "+result);
 		result = result.minus(new Vec3(vp.getWidth()/2.0, vp.getHeight()/2.0, 0)); // center
+		if (debug) log.info("After subtracting VP center: "+result);
 		// Convert from pixel units to world units
 		result = result.times(1.0/getCamera().getPixelsPerSceneUnit());
+		if (debug) log.info("After converting to world units: "+result);
 		// Apply viewer orientation, e.g. X/Y/Z orthogonal viewers
 		result = viewerInGround.times(result);
+		if (debug) log.info("After viewer in ground: "+result);
 		// TODO - apply rotation, but only for rotatable viewers, UNLIKE large volume viewer
 		// Apply camera focus
 		result = result.plus(getCamera().getFocus());
+		if (debug) log.info("After adding focus: "+result);
 		// System.out.println(pixel + ", " + getCamera().getFocus() + ", " + result);
 		return result;
 	}

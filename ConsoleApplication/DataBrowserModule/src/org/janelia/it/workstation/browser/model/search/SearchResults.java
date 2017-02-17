@@ -136,4 +136,19 @@ public class SearchResults {
         log.debug("Updated numLoaded to {}", numLoadedResults);
         log.debug("Updated numFound to {}", numTotalResults);
     }
+
+    public boolean updateIfFound(DomainObject domainObject) {
+
+        boolean updated = false;
+        for(final ResultPage page : getPages()) {
+            if (page==null) continue; // Page not yet loaded
+            final DomainObject pageObject = page.getDomainObject(domainObject.getId());
+            if (pageObject!=null) {
+                page.updateObject(domainObject);
+                updated = true;
+            }
+        }
+        
+        return updated;
+    }
 }

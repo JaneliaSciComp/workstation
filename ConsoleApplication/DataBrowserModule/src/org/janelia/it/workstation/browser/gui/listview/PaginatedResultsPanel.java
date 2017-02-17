@@ -27,6 +27,7 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectAnnotationChangeEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
@@ -265,16 +266,25 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     }
 
     private void updatePagingStatus() {
-        startPageButton.setEnabled(currPage != 0);
-        prevPageButton.setEnabled(currPage > 0);
-        nextPageButton.setEnabled(currPage < numPages - 1);
-        endPageButton.setEnabled(currPage != numPages - 1);
+        startPageButton.setEnabled(numPages>0 && currPage != 0);
+        prevPageButton.setEnabled(numPages>0 && currPage > 0);
+        nextPageButton.setEnabled(numPages>0 && currPage < numPages - 1);
+        endPageButton.setEnabled(numPages>0 && currPage != numPages - 1);
     }
     
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
         if (event.getSource()!=resultsView) return;
         updateStatusBar();
+    }
+
+    @Subscribe
+    public void domainObjectChanged(DomainObjectChangeEvent event) {
+        if (searchResults==null) return;
+        if (searchResults.updateIfFound(event.getDomainObject())) {
+            log.info("Updated search results with changed domain object: {}", event.getDomainObject());
+            resultsView.refreshDomainObject(event.getDomainObject());
+        }
     }
     
     @Subscribe
@@ -371,6 +381,10 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         }
     }
 
+    public void setCurrPage(int currPage) {
+        this.currPage = currPage;
+    }
+
     public int getCurrPage() {
         return currPage;
     }
@@ -449,14 +463,16 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         }
 
         this.searchResults = searchResults;
-        numPages = searchResults.getNumTotalPages();
-        if (isUserDriven) {
-            // If the refresh is not user driven, don't jump back to the first page
-            this.currPage = 0;
-        }
+        this.numPages = searchResults.getNumTotalPages();
+        
         showCurrPage(isUserDriven, success);
     }
 
+    public void reset() {
+        selectionModel.reset();
+        this.currPage = 0;
+    }
+    
     protected void showCurrPage() {
         showCurrPage(true, null);
     }
@@ -496,25 +512,16 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                     @Override
                     public Void call() throws Exception {
                         log.info("updateResultsView complete, restoring selection");
-                        if (isUserDriven) {
-                            //
-                            // If and only if this is a user driven selection, we should automatically select the first item.
-                            //
-                            // This behavior is disabled for auto-generated events, in order to enable the browsing behavior where a user 
-                            // walks through a list of domain objects (e.g. Samples) with the object set viewer, and each one triggers a 
-                            // load in the domain object viewer, which automatically selects its first result, which in turn triggers another 
-                            // load (of, say, Neuron Fragments). If we selected the first Neuron Fragment, then it would generate a selection 
-                            // event that would overwrite the Sample in the Data Inspector.
-                            //
+                        if (selectedRefs.isEmpty()) {
+                            // If the selection model is empty, just select the first item to make it appear in the inspector
                             List<DomainObject> objects = resultPage.getDomainObjects();
                             if (!objects.isEmpty()) {
-                                // This selection is NOT user driven though, it's automatic.
                                 log.debug("Auto-selecting first object");
                                 resultsView.selectDomainObjects(Arrays.asList(objects.get(0)), true, true, false);
                             }
                         }
                         else {
-                            // Attempt to reselect the previously selected items
+                            // There's already something in the selection model, so we should attempt to reselect it
                             log.debug("Reselecting {} objects",selectedRefs.size());
                             List<DomainObject> domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectedRefs);
                             resultsView.selectDomainObjects(domainObjects, true, true, false);

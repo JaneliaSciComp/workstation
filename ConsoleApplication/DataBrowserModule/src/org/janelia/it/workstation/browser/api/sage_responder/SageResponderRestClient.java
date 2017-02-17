@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.api.sage_responder;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
@@ -13,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * RESTful client for getting data from the SAGE Responder web service. 
@@ -31,10 +33,10 @@ public class SageResponderRestClient extends RESTClientImpl {
 
     public Collection<String> getPublishingNames(String lineName) throws Exception {
         Set<String> names = new LinkedHashSet<>();
-        Response response = manager.getPublishingInfoLineEndpoint().path(lineName)
+        Response response = manager.getPublishingInfoLineEndpoint().queryParam("line", lineName)
                 .request("application/json")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request getPublishingNames from server")) {
+        if (checkBadResponse(response.getStatus(), "problem making request getPublishingNames for line "+lineName)) {
             throw new WebApplicationException(response);
         }
         
@@ -49,5 +51,28 @@ public class SageResponderRestClient extends RESTClientImpl {
             }
         }
         return names;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getImageProperties(Integer sageImageId) throws Exception {
+        Response response = manager.getImageInfoLineEndpoint().path(sageImageId.toString())
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request getImageProperties for image "+sageImageId)) {
+            throw new WebApplicationException(response);
+        }
+
+        JsonNode data = response.readEntity(new GenericType<JsonNode>() {});
+        if (data!=null) {
+            JsonNode imageData = data.get("image_data");
+            if (imageData.isArray()) {
+                for (final JsonNode objNode : imageData) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    return mapper.convertValue(objNode, Map.class);
+                }
+            }
+        }
+        
+        return null;
     }
 }

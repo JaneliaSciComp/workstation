@@ -56,6 +56,7 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.horta.modelapi.SwcVertex;
 import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
@@ -81,26 +82,33 @@ public class BasicNeuronModel implements NeuronModel
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private boolean visible = true;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final NeuronSet parentSet;
 
     
     /*
      * Creates an empty neuron model
     */
-    public BasicNeuronModel(String modelName)    
+    public BasicNeuronModel(String modelName, NeuronSet parentSet)    
     {
         this.membersAddedObservable = new BasicNeuronVertexCreationObservable();
         this.membersRemovedObservable = new BasicNeuronVertexDeletionObservable();
         this.vertexUpdatedObservable = new BasicNeuronVertexUpdateObservable();
         this.name = modelName;
+        this.parentSet = parentSet;
     }
     
-    public BasicNeuronModel(File swcFile) throws FileNotFoundException, IOException
-    {
-        this(new BufferedInputStream(new FileInputStream(swcFile)), swcFile.getName());
+    public BasicNeuronModel() {
+        this("Unnamed Neuron", null);
     }
     
-    public BasicNeuronModel(InputStream swcStream, String fileName) throws IOException
+    public BasicNeuronModel(File swcFile, NeuronSet parentSet) throws FileNotFoundException, IOException
     {
+        this(new BufferedInputStream(new FileInputStream(swcFile)), swcFile.getName(), parentSet);
+    }
+    
+    public BasicNeuronModel(InputStream swcStream, String fileName, NeuronSet parentSet) throws IOException
+    {
+        this.parentSet = parentSet;
         this.membersAddedObservable = new BasicNeuronVertexCreationObservable();
         this.membersRemovedObservable = new BasicNeuronVertexDeletionObservable();
         this.vertexUpdatedObservable = new BasicNeuronVertexUpdateObservable();
@@ -285,7 +293,14 @@ public class BasicNeuronModel implements NeuronModel
 
     @Override
     public NeuronVertex appendVertex(NeuronVertex parentVertex, float[] micronXyz, float radius) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        NeuronVertex newVertex = new BasicSwcVertex(micronXyz[0], micronXyz[1], micronXyz[2]);
+        newVertex.setRadius(radius);
+        nodes.add(newVertex);
+        if (parentVertex != null) {
+            edges.add(new BasicNeuronEdge(parentVertex, newVertex));
+        }
+        getVertexCreatedObservable().setChanged();
+        return newVertex;
     }
 
     @Override
@@ -311,6 +326,11 @@ public class BasicNeuronModel implements NeuronModel
     @Override
     public boolean updateVertexRadius(NeuronVertex vertex, float micronRadius) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    @Override
+    public NeuronVertex getVertexByGuid(Long guid) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
 }

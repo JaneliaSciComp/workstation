@@ -196,7 +196,7 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
         Runnable loadTask = new Runnable() {
             @Override
             public void run() {
-                log.info("Beginning load for tile {}", key.toString());
+                // log.info("Beginning load for tile {}", key.toString());
 
                 if (Thread.currentThread().isInterrupted()) {
                     log.info("loadTask was interrupted before it began");

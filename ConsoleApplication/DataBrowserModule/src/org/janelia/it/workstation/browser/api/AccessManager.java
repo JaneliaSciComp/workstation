@@ -405,12 +405,12 @@ public final class AccessManager {
         return false;
     }
 
-    public static boolean currentUserIsInGroup(String groupName) {
+    public static boolean currentUserIsInGroup(SubjectRole role) {
         Subject subject = AccessManager.getAccessManager().getSubject();
         if (subject==null) return false;
         if (subject instanceof User) {
             User user = (User)subject;
-            return user.hasGroupRead(groupName);
+            return user.hasGroupRead(role.getRole());
         }
         return false;
     }

@@ -56,13 +56,13 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
         SimpleWorker worker = new SimpleWorker() {
             
             private String userInput;
+            private Task task;
             
             @Override
             protected void doStuff() throws Exception {
 
                 EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
-                final String workspaceName = dialog.showForSample(sample);
-                
+                String workspaceName = dialog.showForSample(sample);
                 if (workspaceName==null) {
                     log.info("Aborting workspace creation: no valid name was provided by the user");
                     return;
@@ -142,8 +142,10 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
                 inputDialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 inputDialog.setVisible(true);
                 
+                workspaceName = workspaceNameTextField.getText().trim();
+
                 log.info("Processing " + userInput);
-                                
+                
                 if (userInput != null) {
                     String ownerKey = AccessManager.getSubjectKey();
                     // Expect the sample to be the 'main entity' of the LVV, since there is
@@ -152,37 +154,30 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
                     HashSet<TaskParameter> taskParameters = new HashSet<>();
                     taskParameters.add(new TaskParameter(SwcImportTask.PARAM_sampleId, sampleId.toString(), null));
                     taskParameters.add(new TaskParameter(SwcImportTask.PARAM_userName, ownerKey, null));
-                    taskParameters.add(new TaskParameter(SwcImportTask.PARAM_workspaceName, workspaceNameTextField.getText().trim(), null));
+                    taskParameters.add(new TaskParameter(SwcImportTask.PARAM_workspaceName, workspaceName, null));
                     taskParameters.add(new TaskParameter(SwcImportTask.PARAM_topLevelFolderName, userInput, null));
 
                     String taskName = new File(userInput).getName();
                     String displayName = taskName + " for 3D tiled microscope sample " + sampleId;
-                    final Task task = StateMgr.getStateMgr().submitJob(SwcImportTask.PROCESS_NAME, displayName, taskParameters);
-
-                    // Launch another thread/worker to monitor the 
-                    // remote-running task.
-                    TaskMonitoringWorker tmw = new TaskMonitoringWorker(task.getObjectId()) {
-                        @Override
-                        public void doStuff() throws Exception {
-                            super.doStuff();
-                        }
-                        @Override
-                        public String getName() {
-                            if (userInput != null) {
-                                File uiFile = new File(userInput);
-                                return "import all SWCs in " + uiFile.getName();
-                            } else {
-                                return "import SWC for sample";
-                            }
-                        }
-                        
-                    };
-                    tmw.executeWithEvents();
+                    task = StateMgr.getStateMgr().submitJob(SwcImportTask.PROCESS_NAME, displayName, taskParameters);
                 }
             }                         
 
             @Override
             protected void hadSuccess() {
+                if (task!=null) {
+                    // Launch another thread/worker to monitor the 
+                    // remote-running task.
+                    TaskMonitoringWorker tmw = new TaskMonitoringWorker(task.getObjectId()) {
+                        @Override
+                        public String getName() {
+                            File uiFile = new File(userInput);
+                            return "Importing all SWCs in " + uiFile.getName();
+                        }
+                        
+                    };
+                    tmw.executeWithEvents();
+                }
             }
             
             @Override

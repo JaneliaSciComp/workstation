@@ -71,7 +71,8 @@ public class TaskMonitoringWorker extends BackgroundWorker {
                     handle.finish();
                     // Check for errors
                     if (task.getLastEvent().getEventType().equals(Event.ERROR_EVENT)) {
-                        throw new ServiceException(task.getLastEvent().getDescription());
+                        String msg = "Task "+task.getObjectId()+" had error: "+task.getLastEvent().getDescription();
+                        throw new ServiceException(msg);
                     }
                     return;
                 }
@@ -87,7 +88,9 @@ public class TaskMonitoringWorker extends BackgroundWorker {
         
         }
         catch (Exception e) {
-            handle.finish();
+            if (handle!=null) {
+                handle.finish();
+            }
             throw e;
         }
     }

@@ -7,14 +7,13 @@ import java.util.List;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
 import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.Events;
@@ -26,7 +25,7 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.slf4j.Logger;
@@ -51,9 +50,10 @@ public class LargeVolumeViewViewer extends JPanel {
 
     private TmSample sliceSample;
     private DomainObject initialObject;
+    private Vec3 initialViewFocus;
+    private Double initialZoom;
     private AnnotationModel annotationModel;
     private QuadViewUi viewUI;
-    private final NeuronSetAdapter neuronSetAdapter = new NeuronSetAdapter(); // For communicating annotations to Horta
 
     public LargeVolumeViewViewer() {
         super();
@@ -77,7 +77,7 @@ public class LargeVolumeViewViewer extends JPanel {
         //  I have found that with very large numbers of
         //  neurons in the neurons table, not reloading
         //  causes GUI lockup.
-        deleteAll();
+        close();
     	
         SimpleWorker worker = new SimpleWorker() {
 
@@ -137,6 +137,18 @@ public class LargeVolumeViewViewer extends JPanel {
                     protected void hadSuccess() {
                         if (success) {
                             logger.info("Image data loading completed");
+                            synchronized(this) {
+                                if (initialViewFocus!=null) {
+                                    logger.info("Setting intial camera focus: {}", initialViewFocus);
+                                    viewUI.setCameraFocus(initialViewFocus);
+                                    initialViewFocus = null;
+                                }
+                                if (initialZoom!=null) {
+                                    logger.info("Setting intial zoom: {}", initialZoom);
+                                    viewUI.setPixelsPerSceneUnit(initialZoom);
+                                    initialZoom = null;
+                                }
+                            }
                         }
                         else {
                             logger.info("Image data loading failed");
@@ -226,6 +238,11 @@ public class LargeVolumeViewViewer extends JPanel {
         worker.execute();
 
     }
+    
+    public void setInitialViewFocus(Vec3 initialViewFocus, Double initialZoom) {
+        this.initialViewFocus = initialViewFocus;
+        this.initialZoom = initialZoom;
+    }
 
     public SampleLocation getSampleLocation() {
         return viewUI.getSampleLocation();
@@ -248,9 +265,22 @@ public class LargeVolumeViewViewer extends JPanel {
     
     public void close() {
         logger.info("Closing");
-        deleteAll();
+        sliceSample = null;
+        initialObject = null;
+        removeAll();
+        if (viewUI != null)
+            viewUI.clearCache();
+        viewUI = null;
+        if (annotationModel!=null) {
+            Events.getInstance().unregisterOnEventBus(annotationModel);
+            annotationModel = null;
+        }
     }
 
+    public void totalRefresh() {
+        refresh();
+    }
+    
     public void refresh() {
         logger.info("Refreshing");
 
@@ -261,11 +291,15 @@ public class LargeVolumeViewViewer extends JPanel {
                 annotationModel = new AnnotationModel();
                 Events.getInstance().registerOnEventBus(annotationModel);
                 viewUI = new QuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);
-                neuronSetAdapter.observe(annotationModel);
             }
+            
             removeAll();
             viewUI.setVisible(true);
             add(viewUI);
+
+            // Repaint the skeleton
+            SkeletonController.getInstance().skeletonChanged(true);
+            
             revalidate();
             repaint();
             
@@ -280,29 +314,8 @@ public class LargeVolumeViewViewer extends JPanel {
             }
         }
     }    
-
-    public void totalRefresh() {
-        refresh();
-    }
     
     //------------------------------Private Methods
-
-    private void deleteAll() {
-        sliceSample = null;
-        initialObject = null;
-        removeAll();
-        if (viewUI != null)
-        	viewUI.clearCache();
-        viewUI = null;
-        if (annotationModel!=null) {
-            Events.getInstance().unregisterOnEventBus(annotationModel);
-            annotationModel = null;
-        }
-    }
-
-    public NeuronSet getNeuronSetAdapter() {
-        return neuronSetAdapter;
-    }
 
     @Subscribe
     public void objectsInvalidated(DomainObjectInvalidationEvent event) {

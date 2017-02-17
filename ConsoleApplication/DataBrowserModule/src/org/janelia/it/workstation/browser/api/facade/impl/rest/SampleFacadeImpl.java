@@ -9,9 +9,13 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+import org.janelia.it.jacs.model.domain.enums.PipelineStatus;
+import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
+import org.janelia.it.jacs.model.domain.sample.StatusTransition;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SampleFacade;
@@ -151,5 +155,39 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         if (checkBadResponse(response.getStatus(), "problem making request removeRelease from server: " + release)) {
             throw new WebApplicationException(response);
         }
+    }
+
+    public void addStatusTransition(StatusTransition transition) throws Exception {
+        Response response = manager.getSampleEndpoint()
+                .path("transitions")
+                .request("application/json")
+                .put(Entity.json(transition));
+        if (checkBadResponse(response.getStatus(), "problem making request to add a pipeline status transition: " + transition.getSampleId())) {
+            throw new WebApplicationException(response);
+        }
+    }
+
+
+    public void putOrUpdateIntakeOrder(IntakeOrder order) throws Exception {
+        Response response = manager.getSampleEndpoint()
+                .path("intakeorder")
+                .request("application/json")
+                .put(Entity.json(order));
+        if (checkBadResponse(response.getStatus(), "problem making request to update/create an intake order for reprocessing pipelines: " + order.getOrderNo())) {
+            throw new WebApplicationException(response);
+        }
+    }
+
+
+    public IntakeOrder getIntakeOrder(String orderNo) throws Exception {
+        Response response = manager.getSampleEndpoint()
+                .path("intakeorder")
+                .queryParam("releaseId", orderNo)
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request to retrieve an intake order: " + orderNo)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(IntakeOrder.class);
     }
 }

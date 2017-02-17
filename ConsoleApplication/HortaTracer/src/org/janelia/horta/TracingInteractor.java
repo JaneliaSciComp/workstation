@@ -42,11 +42,12 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Set;
+
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JOptionPane;
@@ -56,28 +57,30 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 import javax.swing.event.UndoableEditEvent;
+import org.janelia.console.viewerapi.actions.CreateNeuronAction;
+import org.janelia.console.viewerapi.actions.DeleteNeuronAction;
+import org.janelia.console.viewerapi.actions.RecolorNeuronAction;
+import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
+import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
+import org.janelia.console.viewerapi.commands.MoveNeuronAnchorCommand;
+import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
+import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.horta.actors.DensityCursorActor;
 import org.janelia.horta.actors.ParentVertexActor;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
-import org.janelia.console.viewerapi.model.AppendNeuronVertexCommand;
-import org.janelia.console.viewerapi.model.CreateNeuronCommand;
-import org.janelia.console.viewerapi.model.DefaultNeuron;
-import org.janelia.console.viewerapi.model.MoveNeuronAnchorCommand;
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.UpdateNeuronAnchorRadiusCommand;
-import org.janelia.console.viewerapi.model.VertexAdder;
-import org.janelia.geometry3d.ConstVector3;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
 import org.openide.awt.StatusDisplayer;
@@ -100,14 +103,14 @@ public class TracingInteractor extends MouseAdapter
     // For selection affordance
     // For GUI feedback on existing model, contains zero or one vertex.
     // Larger yellow overlay over an existing vertex under the mouse pointer.
-    private final NeuronModel highlightHoverModel = new BasicNeuronModel("Hover highlight");
+    private final NeuronModel highlightHoverModel = new BasicNeuronModel("Hover highlight", null);
     private NeuronVertex cachedHighlightVertex = null;
     private NeuronModel cachedHighlightNeuron = null;
     
     // For Tracing
     // Larger blueish vertex with a "P" for current selected persisted parent
     // first model is an ephemeral single vertex neuron model for display of "P"
-    private final NeuronModel parentVertexModel = new BasicNeuronModel("Selected parent vertex"); // TODO: begin point of auto tracing
+    private final NeuronModel parentVertexModel = new BasicNeuronModel("Selected parent vertex", null); // TODO: begin point of auto tracing
     private NeuronVertex cachedParentVertex = null;
     // second model is the actual associated in-memory full parent neuron domain model
     private NeuronModel cachedParentNeuronModel = null;
@@ -115,15 +118,15 @@ public class TracingInteractor extends MouseAdapter
     // White ghost vertex for potential new vertex under cursor 
     // TODO: Maybe color RED until a good path from parent is found
     // This is the new neuron cursor
-    private final NeuronModel densityCursorModel = new BasicNeuronModel("Hover density");
+    private final NeuronModel densityCursorModel = new BasicNeuronModel("Hover density", null);
     private Vector3 cachedDensityCursorXyz = null;
     
-    private final NeuronModel anchorEditModel = new BasicNeuronModel("Interactive anchor edit view");
+    private final NeuronModel anchorEditModel = new BasicNeuronModel("Interactive anchor edit view", null);
     
-    private final UndoRedo.Manager undoRedoManager;
+    private UndoRedo.Manager undoRedoManager;
     
     // Data structure to help unravel serial undo/redo appendVertex commands
-    Map<List<Float>, VertexAdder> appendCommandForVertex = new HashMap<>();
+    // Map<List<Float>, VertexAdder> appendCommandForVertex = new HashMap<>();
     
     RadiusEstimator radiusEstimator = 
             // new TwoDimensionalRadiusEstimator(); // TODO: Use this again
@@ -135,15 +138,34 @@ public class TracingInteractor extends MouseAdapter
 
     private Logger log = LoggerFactory.getLogger(this.getClass());
     private NeuronVertex cachedDragVertex;
-
-    public NeuronSet getDefaultWorkspace() {
-        return defaultWorkspace;
-    }
+    private final Observer primaryAnchorObserver = new Observer() {
+        @Override
+        public void update(Observable o, Object arg) {
+            log.info("Parent anchor updated");
+            if (defaultWorkspace == null)
+                return;
+            NeuronVertex newParent = defaultWorkspace.getPrimaryAnchor();
+            if (newParent == null) {
+                log.info("Clearing parent anchor after signal");
+                clearParentVertexAndNotify();
+            }
+            else {
+                log.info("Setting parent anchor after signal");
+                NeuronModel parentNeuron = defaultWorkspace.getNeuronForAnchor(newParent);
+                selectParentVertex(newParent, parentNeuron);
+            }
+        }
+    };
 
     public void setDefaultWorkspace(NeuronSet defaultWorkspace) {
         if (this.defaultWorkspace == defaultWorkspace)
             return;
+        if (this.defaultWorkspace != null) {
+            this.defaultWorkspace.getPrimaryAnchorObservable().deleteObserver(primaryAnchorObserver);
+        }
         this.defaultWorkspace = defaultWorkspace;
+        this.undoRedoManager = defaultWorkspace.getUndoRedo();
+        this.defaultWorkspace.getPrimaryAnchorObservable().addObserver(primaryAnchorObserver);
     }
     
     @Override
@@ -318,7 +340,8 @@ public class TracingInteractor extends MouseAdapter
         addedSignal.notifyObservers(new VertexWithNeuron(parentVertex, neuron));
 
         parentVertexModel.getColorChangeObservable().notifyObservers();
-        
+        log.info("Horta parent vertex set");
+
         return true; 
     }
     
@@ -347,6 +370,7 @@ public class TracingInteractor extends MouseAdapter
         parentVertexModel.getVertexesRemovedObservable().setChanged();
         cachedParentVertex = null;
         cachedParentNeuronModel = null;
+        log.info("Horta parent vertex cleared");
         return true;
     }
     
@@ -579,7 +603,9 @@ public class TracingInteractor extends MouseAdapter
         try {
             if (cmd.execute()) {
                 log.info("User drag-moved anchor in Horta");
-                undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
+                
+                if (undoRedoManager != null)
+                    undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
 
                 // repaint right now...
                 highlightHoverModel.getVertexUpdatedObservable().setChanged();
@@ -599,6 +625,7 @@ public class TracingInteractor extends MouseAdapter
     }
 
     // Show provisional Anchor radius and position for current mouse location
+    private NeuronSet unsupportedSet = null; // Cache set lacking spatial index, so we only warn about it one time.
     private Point previousHoverPoint = null;
     public void moveHoverCursor(Point screenPoint) {
         if (screenPoint == previousHoverPoint)
@@ -617,15 +644,60 @@ public class TracingInteractor extends MouseAdapter
         NeuronModel neuronModel = null;
         if (volumeProjection.isNeuronModelAt(hoverPoint)) { // found an existing annotation model under the cursor
             Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
-            NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
-            nearestVertex = vix.getNearest(cursorXyz);
+            // NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
+
+            if (defaultWorkspace != null) {
+                try {
+                    double[] loc = new double[]{cursorXyz.getX(), cursorXyz.getY(), cursorXyz.getZ()};
+                    final boolean bSearchMultipleAnchors = true;
+                    if (bSearchMultipleAnchors) {
+                        // Skip hidden neurons
+                        List<NeuronVertex> nearestVertexes = defaultWorkspace.getAnchorClosestToMicronLocation(loc, 3);
+                        float minDistSquared = Float.MAX_VALUE;
+                        for (NeuronVertex v : nearestVertexes) {
+                            if (v == null)
+                                continue;
+                            NeuronModel neuron = defaultWorkspace.getNeuronForAnchor(v);
+                            if (neuron == null) 
+                                continue;
+                            if (! neuron.isVisible()) {
+                                // log.info("skipping invisible neuron");
+                                continue;
+                            }
+                            Vector3 xyz = new Vector3(v.getLocation()).minus(cursorXyz);
+                            float d2 = xyz.dot(xyz);
+                            // log.info("vertex distance = {} um", Math.sqrt(d2));
+                            if (d2 < minDistSquared) {
+                                nearestVertex = v;
+                                minDistSquared = d2;
+                            }
+                        }
+                    }
+                    else {
+                        nearestVertex = defaultWorkspace.getAnchorClosestToMicronLocation(loc);
+                    }
+                }
+                catch (UnsupportedOperationException e) {
+                    // TODO: this needs to be fixed so that Horta doesn't need to maintain its own spatial index for every neuron.
+                    if (unsupportedSet != defaultWorkspace) {
+                        log.warn("Workspace does not support spatial queries. Falling back on old Horta spatial index.");
+                        unsupportedSet = defaultWorkspace;
+                    }
+                }
+                if (nearestVertex != null) {
+                    neuronModel = defaultWorkspace.getNeuronForAnchor(nearestVertex);
+                }
+            }
+            else {
+                log.error("No default workspace found");
+            }
+            
             if (nearestVertex == null) // no vertices to be found?
                 foundGoodHighlightVertex = false;
             else {
-                neuronModel = vix.neuronForVertex(nearestVertex);
                 if (neuronModel == null) {
                     // TODO: Should not happen
-                    System.out.println("Unexpected null neuron");
+                    log.warn("Unexpected null neuron");
                 }
                 // Is cursor too far from closest vertex?
                 Vector3 vertexXyz = new Vector3(nearestVertex.getLocation());
@@ -752,26 +824,13 @@ public class TracingInteractor extends MouseAdapter
         // Possibly remove parent glyph, if vertex is deleted
         if (cachedParentVertex == null) 
             return; // no sense checking 
-        NeuronModel neuron = cachedParentNeuronModel; // In case we want to select a different parent below
-        NeuronVertex removedParent = null;
         Set<NeuronVertex> allDoomedVertexes = new HashSet<>(); // remember them efficiently, for later checking reparent
         List<Float> pvXyz = vtxKey(cachedParentVertex);
         for (NeuronVertex doomedVertex : doomed.vertexes) {
             allDoomedVertexes.add(doomedVertex);
             if (vtxKey(doomedVertex).equals(pvXyz)) {
-                removedParent = doomedVertex;
                 clearParentVertex();
                 break;
-            }
-        }
-        // Maybe set parent to previous parent
-        if (removedParent != null) {
-            VertexAdder removedParentAppendCommand = appendCommandForVertex.get(vtxKey(removedParent));
-            if (removedParentAppendCommand != null) {
-                NeuronVertex previousParent = removedParentAppendCommand.getParentVertex();
-                if (previousParent != null) {
-                    selectParentVertex(previousParent, neuron);
-                }
             }
         }
     }
@@ -844,25 +903,21 @@ public class TracingInteractor extends MouseAdapter
                 return false;
             // OLD WAY, pre Undo: NeuronVertex addedVertex = neuron.appendVertex(parentVertex, templateVertex.getLocation(), templateVertex.getRadius());
             // First, store a link to upstream append command, to be able to handle serial undo/redo, and the resulting chain of replaced parent vertices
-            VertexAdder parentAppendCmd = appendCommandForVertex.get(vtxKey(parentVertex));
+            // VertexAdder parentAppendCmd = appendCommandForVertex.get(vtxKey(parentVertex));
+            defaultWorkspace.setPrimaryAnchor(parentVertex);
             AppendNeuronVertexCommand appendCmd = new AppendNeuronVertexCommand(
-                    parentNeuron, 
-                    parentVertex, 
-                    parentAppendCmd,
+                    defaultWorkspace,
+                    // parentNeuron, 
+                    // parentVertex, 
+                    // parentAppendCmd,
                     densityVertex.getLocation(), 
                     parentVertex.getRadius());
             long beginExecuteTime = System.nanoTime();
             if (appendCmd.execute()) {
                 long endExecuteTime = System.nanoTime();
-                // System.out.println("appendCmd.execute() took " + (endExecuteTime - beginExecuteTime) / 1.0e6 + " milliseconds");
-                NeuronVertex addedVertex = appendCmd.getAddedVertex();
-                if (addedVertex != null) {
-                    selectParentVertex(addedVertex, parentNeuron);
-                    // undoRedoManager.addEdit(appendCmd);
+                if (undoRedoManager != null)
                     undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, appendCmd));
-                    appendCommandForVertex.put(vtxKey(addedVertex), appendCmd);
-                    return true;
-                }
+                return true;
             }
             return false;
         }
@@ -873,10 +928,10 @@ public class TracingInteractor extends MouseAdapter
             return true;
         }
         
-        public boolean clearParent() {
+        public void clearParent() {
             if (! canClearParent())
-                return false;
-            return clearParentVertexAndNotify();
+                return;
+            new SelectParentAnchorAction(defaultWorkspace, null).actionPerformed(null);
         }
         
         public boolean canCreateNeuron() {
@@ -888,52 +943,32 @@ public class TracingInteractor extends MouseAdapter
             return true;
         }
         
-        public boolean createNeuron() {
+        public void createNeuron() {
             if (! canCreateNeuron())
-                return false;
+                return;
             
-            // TODO: come up with a unique neuron name
-            String defaultName = "Neuron 1";
-            
-            //  showInputDialog(Component parentComponent, Object message, String title, int messageType, Icon icon, Object[] selectionValues, Object initialSelectionValue)
-            Object neuronName = JOptionPane.showInputDialog(
+            new CreateNeuronAction(
                     volumeProjection.getMouseableComponent(),
-                    "Create new neuron here?",
-                    "Create new neuron",
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    null,
-                    defaultName); // default button
-            if (neuronName == null) {
-                return false; // User pressed "Cancel"
-            }
-            CreateNeuronCommand cmd = new CreateNeuronCommand(
                     defaultWorkspace,
-                    neuronName.toString(),
                     densityVertex.getLocation(),
-                    densityVertex.getRadius());
-            String errorMessage = "Failed to create neuron";
-            try {
-                if (cmd.execute()) {
-                    log.info("Neuron created in Horta");
-                    NeuronVertex addedVertex = cmd.getAddedVertex();
-                    if (addedVertex != null) {
-                        selectParentVertex(addedVertex, cmd.getNewNeuron());
-                        undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
-                        appendCommandForVertex.put(vtxKey(addedVertex), cmd);
-                    }
-                    return true;
-                }
-            }
-            catch (Exception exc) {
-                errorMessage += ":\n" + exc.getMessage();
-            }
-            JOptionPane.showMessageDialog(
+                    densityVertex.getRadius()).actionPerformed(null);
+        }
+        
+        public boolean canDeleteNeuron() {
+            if (hoveredVertex == null)
+                return false;
+            if (hoveredNeuron == null)
+                return false;
+            return true;
+        }
+        
+        public void deleteNeuron() {
+            if (! canDeleteNeuron())
+                return;
+            new DeleteNeuronAction(
                     volumeProjection.getMouseableComponent(),
-                    errorMessage,
-                    "Failed to create neuron",
-                    JOptionPane.WARNING_MESSAGE);                
-            return false;
+                    defaultWorkspace,
+                    hoveredNeuron).actionPerformed(null);
         }
         
         public boolean canMergeNeurite() {
@@ -963,7 +998,8 @@ public class TracingInteractor extends MouseAdapter
             if (answer == JOptionPane.YES_OPTION) 
             {
                 // merging is not undoable, and thus taints previous edits 
-                undoRedoManager.discardAllEdits();
+                if (undoRedoManager != null)    
+                    undoRedoManager.discardAllEdits();
                 
                 // TODO: Create Undo-able command for mergeNeurite, and activate it from context menu
                 // 3/18/2016 reverse order of merge, with respect to traditional LVV behavior
@@ -986,14 +1022,31 @@ public class TracingInteractor extends MouseAdapter
             }
         }
         
+        public boolean canRecolorNeuron() {
+            if (hoveredVertex == null)
+                return false;
+            if (hoveredNeuron == null)
+                return false;
+            return true;
+        }
+        
+        public void recolorNeuron() {
+            if (! canRecolorNeuron())
+                return;
+            new RecolorNeuronAction(
+                    volumeProjection.getMouseableComponent(),
+                    defaultWorkspace,
+                    hoveredNeuron).actionPerformed(null);
+        }
+        
         public boolean canSelectParent() {
             if (hoveredVertex == null) return false;
             if (hoveredNeuron == null) return false;
             return true;
         }
         
-        public boolean selectParent() {
-            return selectParentVertex(hoveredVertex, hoveredNeuron);
+        public void selectParent() {
+            new SelectParentAnchorAction(defaultWorkspace, hoveredVertex).actionPerformed(null);
         }
 
         boolean canUpdateAnchorRadius() {
@@ -1033,6 +1086,10 @@ public class TracingInteractor extends MouseAdapter
                 radiusDialog.commitRadius();
                 return true;
             }
+        }
+
+        NeuronModel getHighlightedNeuron() {
+            return hoveredNeuron;   
         }
     }
     
@@ -1078,7 +1135,8 @@ public class TracingInteractor extends MouseAdapter
             try {
                 if (cmd.execute()) {
                     log.info("User adjusted anchor radius in Horta");
-                    undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
+                    if (undoRedoManager != null)
+                        undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
 
                     // repaint right now...
                     highlightHoverModel.getVertexUpdatedObservable().setChanged();

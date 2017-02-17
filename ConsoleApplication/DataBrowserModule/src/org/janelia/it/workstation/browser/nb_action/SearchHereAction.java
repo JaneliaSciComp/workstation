@@ -10,7 +10,7 @@ import org.janelia.it.workstation.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.gui.editor.FilterEditorPanel;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.FilterNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.openide.nodes.Node;
@@ -29,7 +29,7 @@ public final class SearchHereAction extends NodeAction {
         return singleton;
     }
 
-    private DomainObjectNode<?> selected;
+    private AbstractDomainObjectNode<?> selected;
 
     private SearchHereAction() {
     }
@@ -55,7 +55,7 @@ public final class SearchHereAction extends NodeAction {
         if (activatedNodes.length!=1) return false;
         for(Node node : activatedNodes) {
             if (node instanceof TreeNodeNode || node instanceof FilterNode) {
-                this.selected = (DomainObjectNode<?>)node;
+                this.selected = (AbstractDomainObjectNode<?>)node;
             }
         }
         return selected!=null;
@@ -74,10 +74,8 @@ public final class SearchHereAction extends NodeAction {
             TreeNodeCriteria criteria = new TreeNodeCriteria();
             criteria.setTreeNodeName(treeNode.getName());
             criteria.setTreeNodeReference(Reference.createFor(treeNode));
-
             filter = new Filter();
             filter.addCriteria(criteria);
-            // TODO: need "all" class
             filter.setSearchClass(FilterEditorPanel.DEFAULT_SEARCH_CLASS.getName());
         }
         else if (selected instanceof FilterNode) {
@@ -91,6 +89,7 @@ public final class SearchHereAction extends NodeAction {
 
         DomainListViewTopComponent browser = initView();
         FilterEditorPanel editor = ((FilterEditorPanel)browser.getEditor());
+        editor.resetState();
         editor.loadDomainObject(filter, true, null);
     }
     

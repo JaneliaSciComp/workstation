@@ -80,7 +80,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
         populate(Arrays.asList(domainObject));
     }
     
-    public void populate(Collection<? extends Object> sourceList) {
+    public synchronized void populate(Collection<? extends Object> sourceList) {
         
         if (currResult == null) {
             this.currResult = ResultDescriptor.LATEST;
@@ -91,7 +91,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
         for(Object source : sourceList) {
             if (source instanceof Sample) {
                 Sample sample = (Sample)source;
-                log.debug("Source is sample: {}",sample.getId());
+                log.trace("Source is sample: {}",sample.getId());
                 HasFiles result = SampleUtils.getResult(sample, currResult);
                 if (result!=null) {
                     source = result;
@@ -99,12 +99,12 @@ public class ImageTypeSelectionButton extends DropDownButton {
             }
             if (source instanceof HasFileGroups) {
                 Multiset<String> typeNames = DomainUtils.getTypeNames((HasFileGroups)source, only2d);
-                log.debug("Source has file groups: {}",typeNames);
+                log.trace("Source has file groups: {}",typeNames);
                 countedTypeNames.addAll(typeNames);
             }
             if (source instanceof HasFiles) {
                 Multiset<String> typeNames = DomainUtils.getTypeNames((HasFiles) source, only2d);
-                log.debug("Source has files: {}",typeNames);
+                log.trace("Source has files: {}",typeNames);
                 countedTypeNames.addAll(typeNames);
             }
         }
@@ -114,10 +114,10 @@ public class ImageTypeSelectionButton extends DropDownButton {
         
         ButtonGroup group = new ButtonGroup();
         
-        log.debug("{} domain objects have {} type names",sourceList.size(),countedTypeNames.elementSet().size());
+        log.trace("{} domain objects have {} type names",sourceList.size(),countedTypeNames.elementSet().size());
         for(final FileType fileType : FileType.values()) {
             String typeName = fileType.name();
-            log.debug("Type {} has count={}",typeName,countedTypeNames.count(typeName));
+            log.trace("Type {} has count={}",typeName,countedTypeNames.count(typeName));
             int count = countedTypeNames.count(typeName);
             if (count>0 || (only2d && fileType.equals(FileType.FirstAvailable2d)) || (!only2d && fileType.equals(FileType.FirstAvailable3d))) {
                 String typeLabel = fileType.getLabel();

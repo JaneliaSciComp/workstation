@@ -69,7 +69,6 @@ public class ProgressMeterPanel extends JPanel {
                 "[grow 1, growprio 1, fill]"
         ));
 
-//        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(scrollLayer);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -211,6 +210,10 @@ public class ProgressMeterPanel extends JPanel {
         if (workerPanel!=null) {
             log.debug("Worker ended: {}",e.getWorker().getName());
             workerPanel.update();
+            Throwable error = e.getWorker().getError();
+            if (error!=null) {
+                log.error("Error occurred while running task", error);
+            }
         }
     }
 
@@ -325,7 +328,6 @@ public class ProgressMeterPanel extends JPanel {
                 statusLabel.setText("Cancelled");
             }
             else if (error!=null) {
-                log.error("Error occurred while running task", error);
                 statusLabel.setText("ERROR: "+error.getMessage());
                 nextButton.setEnabled(true);
                 nextButton.setIcon(Icons.getIcon("bullet_error.png"));

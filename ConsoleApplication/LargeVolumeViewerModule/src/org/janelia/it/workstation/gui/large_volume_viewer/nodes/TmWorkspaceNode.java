@@ -5,11 +5,11 @@ import java.awt.Image;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 
-public class TmWorkspaceNode extends DomainObjectNode<TmWorkspace> {
+public class TmWorkspaceNode extends AbstractDomainObjectNode<TmWorkspace> {
 
     public TmWorkspaceNode(ChildFactory<?> parentChildFactory, TmWorkspace workspace) throws Exception {
         super(parentChildFactory, Children.LEAF, workspace);

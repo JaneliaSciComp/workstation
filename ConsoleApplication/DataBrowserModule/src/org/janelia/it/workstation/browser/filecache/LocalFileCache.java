@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -246,7 +247,7 @@ public class LocalFileCache {
      *   if the file cannot be cached locally.
      */
     public File getFile(URL remoteFileUrl)
-            throws FileNotCacheableException {
+            throws FileNotCacheableException, FileNotFoundException {
         return getFile(remoteFileUrl, false);
     }
 
@@ -270,7 +271,7 @@ public class LocalFileCache {
      */
     public File getFile(URL remoteFileUrl,
                         boolean forceRefresh)
-            throws FileNotCacheableException {
+            throws FileNotCacheableException, FileNotFoundException {
 
         File localFile;
 
@@ -281,7 +282,15 @@ public class LocalFileCache {
             // get call should load file if it is not already present
             CachedFile cachedFile = urlToFileCache.get(remoteFileUrl);
             localFile = getVerifiedLocalFile(cachedFile);
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
+            Throwable cause = e;
+            while(cause != null) {
+                if (FileNotFoundException.class.isAssignableFrom(cause.getClass())) {
+                    throw new FileNotFoundException(remoteFileUrl.toString());
+                }
+                cause = cause.getCause();
+            }
             throw new FileNotCacheableException("failed to retrieve " + remoteFileUrl, e);
         }
 
@@ -322,7 +331,7 @@ public class LocalFileCache {
                         return getFile(asyncRetrievalUrl);
                     }
                     catch (FileNotCacheableException e) {
-                        LOG.error("Error caching file asynchronously",e);
+                        LOG.warn("Problem encountered caching file asynchronously",e);
                         throw e;
                     }
                 }

@@ -46,7 +46,7 @@ public final class LaunchFijiAction extends CallableSystemAction {
     @Override
     public void performAction() {
         try {
-            ToolMgr.runTool(ToolMgr.TOOL_FIJI);
+            ToolMgr.runToolSafely(ToolMgr.TOOL_FIJI);
         }
         catch (Exception e) {
             ConsoleApp.handleException(e);

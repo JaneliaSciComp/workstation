@@ -16,9 +16,9 @@ import javax.swing.SwingUtilities;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
 import org.janelia.it.workstation.browser.gui.support.MailDialogueBox;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,10 +71,10 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             this.throwable = record.getThrown();
             
             // Only auto-send exceptions which are logged at error ("SEVERE") level or higher
-            //if (record.getLevel().intValue() < Level.SEVERE.intValue()) return;
+            if (record.getLevel().intValue() < Level.SEVERE.intValue()) return;
             
             // JW-25430: Only attempt to auto-send exceptions once the user has logged in
-            if (!AccessManager.getAccessManager().isLoggedIn()) return; 
+            if (ConsoleState.getCurrState()<ConsoleState.LOGGED_IN) return; 
             
             try {
                 autoSendNovelExceptions();
@@ -182,38 +182,35 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         try {
             String firstLine = getFirstLine(stacktrace);
             log.info("Reporting exception: "+firstLine);
-            
-            String titleSuffix = " from "+AccessManager.getUsername()+" -- "+firstLine;
 
-            MailDialogueBox mailDialogueBox = new MailDialogueBox(ConsoleApp.getMainFrame(),
-                    (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL),
-                    (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix,
-                    askForInput?"Problem Description: ":"");
-            try {
-                StringBuilder sb = new StringBuilder();
-                sb.append("\nSubject Key: ").append(AccessManager.getSubjectKey());
-                sb.append("\nApplication: ").append(ConsoleApp.getConsoleApp().getApplicationName()).append(" v").append(ConsoleApp.getConsoleApp().getApplicationVersion());
-                sb.append("\nOperating System: ").append(SystemInfo.getOSInfo());
-                sb.append("\nJava: ").append(SystemInfo.getJavaInfo());
-                sb.append("\nRuntime: ").append(SystemInfo.getRuntimeJavaInfo());
-                if (stacktrace!=null) {
-                    sb.append("\n\nStack Trace:\n");
-                    sb.append(stacktrace);
-                }
-                
-                mailDialogueBox.addMessageSuffix(sb.toString());
-            }
-            catch (Exception e) {
-                // Do nothing if the notification attempt fails.
-                log.warn("Error building exception suffix" , e);
-            }
+            String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
+            String titleSuffix = " from "+AccessManager.getUsername()+" -- "+firstLine;
+            String subject = (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix;
+             
+            MailDialogueBox mailDialogueBox = MailDialogueBox.newDialog(ConsoleApp.getMainFrame(), email)
+                    .withTitle("Create A Ticket")
+                    .withPromptText("If possible, please describe what you were doing when the error occured:")
+                    .withEmailSubject(subject)
+                    .appendStandardPrefix();
             
             if (askForInput) {
-                mailDialogueBox.showPopupThenSendEmail();
+                String problemDesc = mailDialogueBox.showPopup();
+                if (problemDesc==null) {
+                    // User pressed cancel
+                    return;
+                }
+                else {
+                    mailDialogueBox.append("\n\nProblem Description:\n");
+                    mailDialogueBox.append(problemDesc);
+                }
             }
-            else {
-                mailDialogueBox.sendEmail();
+
+            if (stacktrace!=null) {
+                mailDialogueBox.append("\n\nStack Trace:\n");
+                mailDialogueBox.append(stacktrace);
             }
+            
+            mailDialogueBox.sendEmail();
         }
         catch (Exception ex) {
             log.warn("Error sending exception email",ex);

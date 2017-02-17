@@ -45,6 +45,7 @@ import org.janelia.console.viewerapi.GenericObserver;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
+import org.janelia.console.viewerapi.listener.NeuronWorkspaceChangeListener;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -78,9 +79,9 @@ public class NeuronEditDispatcher implements LookupListener
     private Lookup.Result<NeuronSet> neuronsLookupResult = null;
 
     private final HortaMetaWorkspace workspace;
-    private final Set<NeuronSet> currentNeuronSets = new HashSet<>();
     private final Set<NeuronModel> currentNeuronModels = new HashSet<>();
     private final Map<NeuronVertex, NeuronModel> vertexNeurons = new HashMap<>();
+    private final Map<NeuronSet, NeuronSetUpdater> neuronSetUpdaters = new HashMap<>();
         
     private final NeuronVertexCreationObserver vertexAdditionObserver = 
             new NeuronVertexCreationObserver() {
@@ -124,6 +125,8 @@ public class NeuronEditDispatcher implements LookupListener
             new VertexUpdateObservable();
     private final VertexDeletionObservable neuronVertexDeletionObservable =
             new VertexDeletionObservable();
+    private final NeuronWorkspaceChangeObservable neuronWorkspaceChangeObservable =
+            new NeuronWorkspaceChangeObservable();
     
     public NeuronEditDispatcher(HortaMetaWorkspace workspace) {
         this.workspace = workspace;
@@ -145,9 +148,8 @@ public class NeuronEditDispatcher implements LookupListener
         neuronVertexDeletionObservable.addNeuronVertexDeletionListener(listener);
     }
     
-    public NeuronModel neuronForVertex(NeuronVertex vertex)
-    {
-        return vertexNeurons.get(vertex);
+    void addWorkspaceChangeListener(NeuronWorkspaceChangeListener listener) {
+        neuronWorkspaceChangeObservable.addNeuronWorkspaceChangeListener(listener);
     }
 
     // When Horta TopComponent opens
@@ -170,17 +172,26 @@ public class NeuronEditDispatcher implements LookupListener
     }
     
     private void addNeuronSet(NeuronSet set) {
-        currentNeuronSets.add(set); // TODO: is this accounting needed?
         for (NeuronModel neuron : set) {
             addNeuronModel(neuron);
         }
         // Prepare to emit finer-grained signals in the future
-        set.getMembershipChangeObservable().addObserver(new NeuronSetUpdater(set));
+        NeuronSetUpdater updater = new NeuronSetUpdater(set);
+        neuronSetUpdaters.put(set, updater);
+        set.getMembershipChangeObservable().addObserver(updater);
         // Notify observers now about the newly found neurons
         if (set.size() > 0) {
             neuronCreationObservable.addNewNeurons(set);
             neuronCreationObservable.notifyObservers();
         }
+    }
+    
+    private void removeNeuronSet(NeuronSet set) {
+        for (NeuronModel neuron : set) {
+            removeNeuronModel(neuron);
+        }
+        // Prepare to emit finer-grained signals in the future
+        set.getMembershipChangeObservable().deleteObserver(neuronSetUpdaters.get(set));
     }
     
     private void addNeuronModel(NeuronModel neuron) {
@@ -194,30 +205,71 @@ public class NeuronEditDispatcher implements LookupListener
         neuron.getVertexesRemovedObservable().addObserver(vertexDeletionObserver);
     }
     
+    private void removeNeuronModel(NeuronModel neuron) {
+        currentNeuronModels.remove(neuron);
+        for (NeuronVertex vertex : neuron.getVertexes()) {
+            vertexNeurons.remove(vertex);
+        }
+        // Observe neuron changes
+        neuron.getVertexCreatedObservable().deleteObserver(vertexAdditionObserver);
+        neuron.getVertexUpdatedObservable().deleteObserver(vertexUpdateObserver);
+        neuron.getVertexesRemovedObservable().deleteObserver(vertexDeletionObserver);
+    }
+    
     // Respond to changes in NeuronSet Lookup
     private void checkNeuronLookup() {
-        Collection<? extends NeuronSet> allNeuronLists = neuronsLookupResult.allInstances();
-        if (! allNeuronLists.isEmpty()) {
-            boolean bWorkspaceChanged = false;
-            // logger.info("Neuron Lookup found!");
-            for (NeuronSet neuronList : allNeuronLists) {
-                boolean bListAdded = workspace.getNeuronSets().add(neuronList);
-                if (bListAdded) {
-                    // logger.info("Added new neuron list!");
-                    workspace.setChanged();
-                    bWorkspaceChanged = true;
+        Collection<? extends NeuronSet> discoveredNeuronLists = neuronsLookupResult.allInstances();
+        if (discoveredNeuronLists.isEmpty())
+            return; // If there is nothing there, keep whatever we had before
+        boolean bWorkspaceChanged = false;
+        // logger.info("Neuron Lookup found!");
+        
+        Collection<NeuronSet> permanentWorkspaces = new HashSet<>();
+        Collection<NeuronSet> oldWorkspaces = new HashSet<>();
 
-                    // Process the new neuron list - this code was in NeuronVertexSpatialIndex
-                    addNeuronSet(neuronList);
-                }
+        for (NeuronSet neuronList : workspace.getNeuronSets()) {
+            if (neuronList.getName().equals("TemporaryNeurons")) {
+                // One special NeuronSet is always kept around, to support drag-and-drop in Horta
+                permanentWorkspaces.add(neuronList);
             }
-            if (bWorkspaceChanged) {
-                workspace.notifyObservers();
+            else {
+                oldWorkspaces.add(neuronList);
             }
         }
-        else {
-            // logger.info("Hey! There are no lists of neurons around.");
-            // TODO - repond to lack of neuron collections.
+       
+        Collection<NeuronSet> newWorkspaces = new HashSet<>();
+        for (NeuronSet neuronList : discoveredNeuronLists) {
+            if (workspace.getNeuronSets().contains(neuronList))
+                continue; // already have it
+            newWorkspaces.add(neuronList);
+        }
+        
+        Collection<NeuronSet> obsoleteWorkspaces = new HashSet<>();
+        for (NeuronSet neuronList : workspace.getNeuronSets()) {
+            if (discoveredNeuronLists.contains(neuronList))
+                continue; // shared by old and new
+            if (neuronList.getName().equals("Temporary Neurons"))
+                continue; // always keep this one, for drag-and-drop neurons
+            obsoleteWorkspaces.add(neuronList);
+        }
+        
+        for (NeuronSet neuronList : obsoleteWorkspaces) {
+            workspace.getNeuronSets().remove(neuronList);
+            workspace.setChanged();
+            bWorkspaceChanged = true;
+            removeNeuronSet(neuronList);
+        }
+        
+        for (NeuronSet neuronList : newWorkspaces) {
+            workspace.getNeuronSets().add(neuronList);
+            workspace.setChanged();
+            bWorkspaceChanged = true;
+            // Process the new neuron list - this code was in NeuronVertexSpatialIndex
+            addNeuronSet(neuronList);
+        }     
+        
+        if (bWorkspaceChanged) {
+            workspace.notifyObservers();
         }
     }
 
@@ -252,6 +304,34 @@ public class NeuronEditDispatcher implements LookupListener
         
     }
     
+    private static class NeuronWorkspaceChangeObservable {
+        private final GenericObservable<NeuronSet> observable = new BasicGenericObservable<>();
+
+        public void addNeuronWorkspaceChangeListener(NeuronWorkspaceChangeListener listener) {
+            observable.addObserver(new NeuronWorkspaceChangeListenerAdapter(listener));
+        }
+        
+        public void setChangedAndNotifyObservers(NeuronSet workspace) {
+            observable.setChanged();
+            observable.notifyObservers(workspace);
+        }
+
+        private static class NeuronWorkspaceChangeListenerAdapter 
+        implements GenericObserver<NeuronSet>
+        {
+            private final NeuronWorkspaceChangeListener listener;
+
+            private NeuronWorkspaceChangeListenerAdapter(NeuronWorkspaceChangeListener listener) {
+                this.listener = listener;
+            }
+
+            @Override
+            public void update(GenericObservable<NeuronSet> object, NeuronSet data) {
+                listener.workspaceChanged(data);
+            }
+            
+        }        
+    }
     
     private static class VertexCreationObservable {
         private final GenericObservable<VertexWithNeuron> observable = new BasicGenericObservable<>();

@@ -28,57 +28,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.console.viewerapi.model;
-
-import javax.swing.undo.AbstractUndoableEdit;
-import javax.swing.undo.UndoableEdit;
-import org.janelia.console.viewerapi.Command;
+package org.janelia.console.viewerapi.commands;
 
 /**
- * Seeds a new neuron with a single root anchor
+ *
  * @author brunsc
  */
-public class UpdateNeuronAnchorRadiusCommand 
-extends AbstractUndoableEdit
-implements UndoableEdit, Command
-{
-    private final NeuronModel neuron;
-    private final NeuronVertex anchor;
-    private final float initialRadius;
-    private final float finalRadius;
-    
-    public UpdateNeuronAnchorRadiusCommand(
-            NeuronModel neuron,
-            NeuronVertex anchor,
-            float initialRadius,
-            float finalRadius)
-    {
-        this.neuron = neuron;
-        this.anchor = anchor;
-        this.initialRadius = initialRadius;
-        this.finalRadius = finalRadius;
-    }
-
-    @Override
-    public boolean execute() {
-        return neuron.updateVertexRadius(anchor, finalRadius);
-    }
-
-    @Override
-    public String getPresentationName() {
-        return "Update Neuron Anchor Radius";
-    }
-    
-    @Override
-    public void redo() {
-        super.redo(); // raises exception if canRedo() is false
-        if (! execute())
-            die(); // Something went wrong. This Command object is no longer useful.
-    }
-
-    @Override
-    public void undo() {
-        super.undo(); // raises exception if canUndo() is false
-        neuron.updateVertexRadius(anchor, initialRadius);
-    }
+public interface Notifier {
+    // Top level semantic Commands, i.e. those that make it into the Undo/Redo
+    //  menu, should notify listeners of completed model changes.
+    // On the other hand, sub-Commands should maybe wait until the top level 
+    //  Command has completed. For performance reasons.
+    void setNotify(boolean doNotify);
+    boolean doesNotify();
 }

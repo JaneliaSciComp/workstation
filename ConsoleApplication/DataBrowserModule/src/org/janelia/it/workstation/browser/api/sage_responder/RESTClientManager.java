@@ -64,7 +64,10 @@ public class RESTClientManager {
     }
 
     public WebTarget getPublishingInfoLineEndpoint() {
-        return client.target(serverUrl + "publishinginfo/line/");
+        return client.target(serverUrl + "publishing");
     }
-    
+
+    public WebTarget getImageInfoLineEndpoint() {
+        return client.target(serverUrl + "images");
+    }
 }

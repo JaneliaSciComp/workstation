@@ -10,6 +10,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
@@ -129,6 +131,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewCon
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
@@ -310,11 +313,24 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             getSkeletonActor().getModel().setAnchorsVisible(false);
         }
     }
-    
-    public void setCameraFocus( Vec3 focus ) {
+
+    public void setCameraFocus(Vec3 focus) {
+        log.info("Setting camera focus: {}", focus);
         camera.setFocus(focus);
     }
 
+    public Vec3 getCameraFocus() {
+        return camera.getFocus();
+    }
+
+    public boolean setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
+        return camera.setPixelsPerSceneUnit(pixelsPerSceneUnit);
+    }
+    
+    public double getPixelsPerSceneUnit() {
+        return camera.getPixelsPerSceneUnit();
+    }
+    
     /**
      * move toward the neuron root to the next branch or the root
      */
@@ -323,7 +339,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         if (neuron != null) {
             Anchor anchor = getSkeletonActor().getModel().getNextParent();
             if (anchor != null) {
-                TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
+                TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
                 if (!ann.isRoot()) {
                     ann = neuron.getParentOf(ann);
                     while (!ann.isRoot() && !ann.isBranch()) {
@@ -382,12 +398,17 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 //cacheController.focusChanged(camera.getFocus());
                 TileStackCacheController.getInstance().setFocus(camera.getFocus());
                 tileServer.refreshCurrentTileSet();
+                // If we are using this optimization, the anchor set needs to be updated whenever the view is changed
+                if (ApplicationPanel.isAnchorsInViewport()) {
+                    getSkeletonActor().getModel().forceUpdateAnchors();
+                }
             }            
         });
 
         setupUi(parentFrame, overrideFrameMenuBar);
         interceptModifierKeyPresses();
         interceptModeChangeGestures();
+        interceptResizeEvents();
         setupAnnotationGestures();
 
         // connect up text UI and model with graphic UI(s):
@@ -477,11 +498,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     Tiled3dSampleLocationProviderAcceptor originator =
                         helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
                     RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
-                    JMenu navigateToHortaMenu = new JMenu("Navigate to this location in Horta");
+                    // JMenu navigateToHortaMenu = new JMenu("Navigate to this location in Horta");
                     for (JMenuItem navItem : menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor())) {
-                        navigateToHortaMenu.add(navItem);
+                        result.add(navItem);
                     }
-                    result.add(navigateToHortaMenu);
+                    // result.add(navigateToHortaMenu);
 
                     return result;
                 }
@@ -532,7 +553,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         loadStatusLabel.setLoadStatus(loadStatus);
     }
 
-    public void pathTraceRequested(Long annotationID) {
+    public void pathTraceRequested(Long neuronId, Long annotationID) {
         // this needs to happen before you draw anchored paths; should
         //  go somewhere else so it only happens once, but not clear where;
         //  not clear we have a trigger for when the image is loaded enough for
@@ -541,7 +562,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 tileServer.getLoadAdapter().getTileFormat());
 
         // construct new request; add image data to anchor and pass it on
-        PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
+        PathTraceToParentRequest request = new PathTraceToParentRequest(neuronId, annotationID);
         request.setImageVolume(volumeImage);
         request.setTextureCache(tileServer.getTextureCache());
         if (pathTraceListener != null) {
@@ -565,6 +586,14 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		tileServer.clearCache();
 	}
 	
+	public BoundingBox3d getBoundingBox() {
+	    return volumeImage.getBoundingBox3d();
+	}
+	
+    public TileFormat getTileFormat() {
+        return tileFormat;
+    }
+
     // TODO update zoom range too?
     private void updateRanges() {
         // Z range
@@ -1017,6 +1046,19 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         }
 	}
 
+	private void interceptResizeEvents() {
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                log.info("componentResized "+e);
+                // If we are using this optimization, the anchor set needs to be updated whenever the view is resized
+                if (ApplicationPanel.isAnchorsInViewport()) {
+                    getSkeletonActor().getModel().forceUpdateAnchors();
+                }
+            }
+        });
+	}
+	
     private void setupAnnotationGestures() {
         // like the two "intercept" routines, but annotation-related;
         //  broken out for clarity and organization more than anything
@@ -1141,7 +1183,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		double maxZ = volumeImage.getBoundingBox3d().getMax().getZ() - halfVoxel;
 		newZ = Math.max(newZ, minZ);
 		newZ = Math.min(newZ, maxZ);
-		camera.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+                if (!Double.isNaN(newZ)) {
+                    camera.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+                }
 		return true;
 	}
 

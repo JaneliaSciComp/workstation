@@ -28,6 +28,10 @@ public class NeuronStyleModel {
     public void put( Long id, NeuronStyle style ) {
         styles.put( id, style );
     }
+
+    public void remove( Long id ) {
+        styles.remove( id );
+    }
     
     public boolean containsKey( Long id ) {
         return styles.containsKey(id);

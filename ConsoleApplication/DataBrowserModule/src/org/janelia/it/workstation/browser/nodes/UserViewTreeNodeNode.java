@@ -27,7 +27,7 @@ import java.util.Map;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class UserViewTreeNodeNode extends DomainObjectNode<TreeNode> {
+public class UserViewTreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
         
     private final static Logger log = LoggerFactory.getLogger(UserViewTreeNodeNode.class);
     

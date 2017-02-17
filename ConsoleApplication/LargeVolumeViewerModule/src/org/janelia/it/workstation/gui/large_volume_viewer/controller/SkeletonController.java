@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -11,6 +12,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -58,8 +60,21 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     private SkeletonController() {
     }
 
+    public NeuronSet getNeuronSet() {
+        return annoMgr.getNeuronSet();
+    }
+    
     public void setSkipSkeletonChange(boolean skipSkeletonChange) {
-        this.skipSkeletonChange=skipSkeletonChange;
+        this.skipSkeletonChange = skipSkeletonChange;
+    }
+
+    public void beginTransaction() {
+        this.skipSkeletonChange = true;
+    }
+    
+    public void endTransaction() {
+        this.skipSkeletonChange = false;
+        skeletonChanged();
     }
 
     public static SkeletonController getInstance() {
@@ -82,7 +97,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         lvvTranslator = null;
         qvController = null;
     }
-
+    
     public void registerForEvents(SkeletonActor actor) {
         this.actors.add(actor);
         actor.getModel().setNextParentByID(nextParentId);
@@ -158,6 +173,12 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         skeletonChanged();
     }
 
+    @Override
+    public void removeAnchoredVoxelPaths(Long neuronID) {
+        skeleton.removeTracedSegments(neuronID);
+        skeletonChanged();
+    }
+    
     //--------------------------------IMPLEMENTS TmGeoAnnotationAnchorListener
     @Override
     public void anchorAdded(TmGeoAnnotation tmAnchor) {
@@ -197,6 +218,17 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         skeleton.moveTmGeoAnchor(anchor);
     }
 
+    @Override
+    public void clearAnchors(Collection<TmGeoAnnotation> annotations) {
+        for(TmGeoAnnotation annotation : annotations) {
+            Anchor anchor = skeleton.getAnchorByID(annotation.getId());
+            if (anchor!=null) {
+                skeleton.delete(anchor);
+            }
+        }
+        skeletonChanged();
+    }
+    
     @Override
     public void clearAnchors() {
         skeleton.clear();
@@ -243,15 +275,32 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         refreshMeshDrawUpdateTimer();
         fireComponentUpdate();
     }
+    
+    
+    @Override
+    public void neuronStyleRemoved(TmNeuronMetadata neuron) {
+        for (SkeletonActor actor: actors) {
+            actor.getModel().removeNeuronStyle(neuron);
+        }
+    }
 
     public void annotationSelected( Long guid ) {
         lvvTranslator.annotationSelected(guid);
     }
-    
+
     public void skeletonChanged() {
+        skeletonChanged(false);
+    }
+    
+    public void skeletonChanged(boolean forceUpdate) {
         if (!skipSkeletonChange) {
             for (SkeletonActor actor : actors) {
-                actor.getModel().updateAnchors();
+                if (forceUpdate) {
+                    actor.getModel().forceUpdateAnchors();    
+                }
+                else {
+                    actor.getModel().updateAnchors();
+                }
             }
             refreshMeshDrawUpdateTimer();
             fireComponentUpdate();
@@ -303,12 +352,12 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         annoMgr.anchorAdded(anchorSeed);
     }
     
-    public void pathTraceRequested(Long id) {
-        qvController.pathTraceRequested(id);
+    public void pathTraceRequested(Long neuronId, Long annotationId) {
+        qvController.pathTraceRequested(neuronId, annotationId);
     }
 
-    public void navigationRelative(Long id, AnnotationNavigationDirection direction) {
-        Anchor anchor = skeleton.getAnchorByID(annoMgr.relativeAnnotation(id, direction));
+    public void navigationRelative(Long neuronId, Long annotationId, AnnotationNavigationDirection direction) {
+        Anchor anchor = skeleton.getAnchorByID(annoMgr.relativeAnnotation(neuronId, annotationId, direction));
         setNextParent(anchor);
         qvController.setCameraFocus(anchor.getLocation());
     }

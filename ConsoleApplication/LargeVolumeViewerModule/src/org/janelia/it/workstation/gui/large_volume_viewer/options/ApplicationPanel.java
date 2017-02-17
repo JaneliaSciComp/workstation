@@ -2,23 +2,40 @@ package org.janelia.it.workstation.gui.large_volume_viewer.options;
 
 import java.awt.BorderLayout;
 
+import javax.swing.Icon;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
-import org.openide.util.NbPreferences;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 
 import net.miginfocom.swing.MigLayout;
 
 public class ApplicationPanel extends javax.swing.JPanel {
 
+    private static final Icon ERROR_ICON = UIManager.getIcon("OptionPane.errorIcon");
+    
     public static final String PREFERENCE_LOAD_LAST_OBJECT = "LoadLastObject";
     public static final String PREFERENCE_LOAD_LAST_OBJECT_DEFAULT = "true";
+    public static final String PREFERENCE_VERIFY_NEURONS = "VerifyNeurons";
+    public static final String PREFERENCE_VERIFY_NEURONS_DEFAULT = "false";
+    public static final String PREFERENCE_ANCHORS_IN_VIEWPORT = "AnchorsInViewport";
+    public static final String PREFERENCE_ANCHORS_IN_VIEWPORT_DEFAULT = "true";
+    public static final String PREFERENCE_Z_THICKNESS = "ZThickness";
+    public static final String PREFERENCE_Z_THICKNESS_DEFAULT = "80";
     
     private final ApplicationOptionsPanelController controller;
     private JCheckBox loadLastCheckbox; 
+    private JCheckBox verifyNeuronsCheckbox; 
+    private JCheckBox anchorsInViewportCheckbox; 
+    private JTextField zThicknessField;
+    private JLabel errorLabel;
     
     ApplicationPanel(final ApplicationOptionsPanelController controller) {
         this.controller = controller;
@@ -36,7 +53,58 @@ public class ApplicationPanel extends javax.swing.JPanel {
         JLabel titleLabel = new JLabel("Load last opened sample or workspace on startup: ");
         titleLabel.setLabelFor(loadLastCheckbox);
         attrPanel.add(titleLabel,"gap para");
-        attrPanel.add(loadLastCheckbox,"gap para, width 100:400:600, growx");
+        attrPanel.add(loadLastCheckbox,"gap para");
+
+        
+        this.verifyNeuronsCheckbox = new JCheckBox();
+        verifyNeuronsCheckbox.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                controller.changed();
+            }
+        });
+        JLabel titleLabel4 = new JLabel("Verify neurons on workspace load: ");
+        titleLabel4.setLabelFor(verifyNeuronsCheckbox);
+        attrPanel.add(titleLabel4,"gap para");
+        attrPanel.add(verifyNeuronsCheckbox,"gap para");
+        
+
+        this.anchorsInViewportCheckbox = new JCheckBox();
+        anchorsInViewportCheckbox.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                controller.changed();
+            }
+        });
+        JLabel titleLabel2 = new JLabel("Use anchors-in-viewport optimization: ");
+        titleLabel2.setLabelFor(anchorsInViewportCheckbox);
+        attrPanel.add(titleLabel2,"gap para");
+        attrPanel.add(anchorsInViewportCheckbox,"gap para");
+
+        
+        this.zThicknessField = new JTextField();
+        zThicknessField.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+                controller.changed();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                controller.changed();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                controller.changed();
+            }
+        });
+        JLabel titleLabel3 = new JLabel("Z-slice Thickness (microns): ");
+        titleLabel3.setLabelFor(zThicknessField);
+        attrPanel.add(titleLabel3,"gap para");
+        attrPanel.add(zThicknessField,"gap para, width 80:100:100, growx");
+
+
+        this.errorLabel = new JLabel("");
+        errorLabel.setIcon(ERROR_ICON);
+        errorLabel.setVisible(false);
+        attrPanel.add(errorLabel,"gap para, growx");
+        
         
         add(attrPanel, BorderLayout.CENTER);
     }
@@ -53,18 +121,89 @@ public class ApplicationPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     void load() {
-        String loadLastStr = NbPreferences.forModule(ApplicationPanel.class).get(PREFERENCE_LOAD_LAST_OBJECT, PREFERENCE_LOAD_LAST_OBJECT_DEFAULT);
-        loadLastCheckbox.setSelected(Boolean.parseBoolean(loadLastStr));
+        loadLastCheckbox.setSelected(isLoadLastObject());
+        anchorsInViewportCheckbox.setSelected(isAnchorsInViewport());
+        zThicknessField.setText(getZThickness()+"");
     }
 
     void store() {
-        NbPreferences.forModule(ApplicationPanel.class).put(PREFERENCE_LOAD_LAST_OBJECT, loadLastCheckbox.isSelected()+"");
+        
+        FrameworkImplProvider.setLocalPreferenceValue(
+                ApplicationPanel.class, 
+                PREFERENCE_LOAD_LAST_OBJECT, 
+                loadLastCheckbox.isSelected()+"");
+
+        FrameworkImplProvider.setLocalPreferenceValue(
+                ApplicationPanel.class, 
+                PREFERENCE_VERIFY_NEURONS, 
+                loadLastCheckbox.isSelected()+"");
+        
+        FrameworkImplProvider.setLocalPreferenceValue(
+                ApplicationPanel.class, 
+                PREFERENCE_ANCHORS_IN_VIEWPORT, 
+                anchorsInViewportCheckbox.isSelected()+"");  
+
+        FrameworkImplProvider.setLocalPreferenceValue(
+                ApplicationPanel.class, 
+                PREFERENCE_Z_THICKNESS, 
+                zThicknessField.getText());  
     }
 
     boolean valid() {
+        errorLabel.setVisible(false);
+        
+        if (!isZThicknessValid()) {
+            errorLabel.setText("Z-slice Thickness must be a positive integer");
+            errorLabel.setVisible(true);
+            return false;
+        }
+
         return true;
+    }
+    
+    boolean isZThicknessValid() {
+        try {
+            int zThickness = Integer.parseInt(zThicknessField.getText());
+            return zThickness>0;
+        }
+        catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
+    
+    public static boolean isLoadLastObject() {
+        String loadLastStr = FrameworkImplProvider.getLocalPreferenceValue(
+                ApplicationPanel.class, 
+                ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT, 
+                ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT_DEFAULT);
+        return Boolean.parseBoolean(loadLastStr);
+    }
+
+    public static boolean isVerifyNeurons() {
+        String loadLastStr = FrameworkImplProvider.getLocalPreferenceValue(
+                ApplicationPanel.class, 
+                ApplicationPanel.PREFERENCE_VERIFY_NEURONS, 
+                ApplicationPanel.PREFERENCE_VERIFY_NEURONS_DEFAULT);
+        return Boolean.parseBoolean(loadLastStr);
+    }
+    
+    public static boolean isAnchorsInViewport() {
+        String anchorsInViewportStr = FrameworkImplProvider.getLocalPreferenceValue(
+                ApplicationPanel.class, 
+                ApplicationPanel.PREFERENCE_ANCHORS_IN_VIEWPORT, 
+                ApplicationPanel.PREFERENCE_ANCHORS_IN_VIEWPORT_DEFAULT);
+        return Boolean.parseBoolean(anchorsInViewportStr);
+    }
+
+    public static int getZThickness() {
+        String zThicknessStr = FrameworkImplProvider.getLocalPreferenceValue(
+                ApplicationPanel.class, 
+                ApplicationPanel.PREFERENCE_Z_THICKNESS, 
+                ApplicationPanel.PREFERENCE_Z_THICKNESS_DEFAULT);
+        return Integer.parseInt(zThicknessStr);
+    }
+    
 }

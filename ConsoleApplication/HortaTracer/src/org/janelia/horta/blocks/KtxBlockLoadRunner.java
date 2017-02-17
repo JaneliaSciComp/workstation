@@ -101,17 +101,22 @@ implements Runnable
         long start = System.nanoTime();
         state = State.LOADING;
         KtxData ktxData = new KtxData();
+        String blockDescription = "Some Ktx block...";
+        if (blockTileKey != null)
+            blockDescription = blockTileKey.toString();
         // Thank you Java 7 for try-with-resources
         try
         {
             ktxData.loadStreamInterruptably(stream);
+            if (blockTileKey == null)
+                blockDescription = ktxData.header.keyValueMetadata.get("octree_path");
         } catch (IOException ex) {
             state = State.FAILED;
-            logger.warn("IOException loading tile {} from stream", blockTileKey);
+            logger.warn("IOException loading tile {} from stream", blockDescription);
             // Exceptions.printStackTrace(ex);
             return;
         } catch (InterruptedException ex) {
-            logger.info("loading tile {} was interrupted", blockTileKey);
+            logger.info("loading tile {} was interrupted", blockDescription);
             state = State.INTERRUPTED;
             return;
         }
@@ -121,7 +126,7 @@ implements Runnable
         setChanged();
         long end = System.nanoTime();
         double elapsed = (end - start)/1.0e9;
-        logger.info(String.format("Ktx tile load took %.3f seconds", elapsed));
+        logger.info(String.format("Ktx tile load for "+ blockDescription +" took %.3f seconds", elapsed));
         // notify listeners
         notifyObservers();
     }
