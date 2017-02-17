@@ -4,8 +4,10 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
+import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
@@ -23,6 +25,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<File> {
@@ -55,6 +58,17 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
     @Override
     public void setResult(File result, JacsServiceData jacsServiceData) {
         jacsServiceData.setStringifiedResult(ServiceDataUtils.fileToString(result));
+    }
+
+    @Override
+    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+        StitchGroupingServiceDescriptor.StitchGroupingArgs  args = getArgs(jacsServiceData);
+        try {
+            Files.createDirectories(Paths.get(args.resultDir));
+        } catch (IOException e) {
+            throw new ComputationException(jacsServiceData, e);
+        }
+        return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
     @Override
