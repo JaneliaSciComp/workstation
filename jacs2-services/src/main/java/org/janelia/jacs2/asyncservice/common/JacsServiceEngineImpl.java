@@ -90,6 +90,7 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
 
     @Override
     public void releaseSlot() {
+        availableSlots.release();
     }
 
     private ServiceDescriptor getServiceDescriptor(String serviceName) {
