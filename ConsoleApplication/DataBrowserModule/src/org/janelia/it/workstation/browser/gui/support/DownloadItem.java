@@ -9,8 +9,11 @@ import java.util.regex.Pattern;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
+import org.janelia.it.jacs.model.domain.interfaces.HasFilepath;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -94,6 +97,16 @@ public class DownloadItem {
         FileType fileType = FileType.valueOf(imageType);
 
         String sourceFilePath = DomainUtils.getFilepath(fileProvider, imageType);
+        if (sourceFilePath==null && fileProvider instanceof PipelineResult) {
+            // Try separation
+            PipelineResult result = (PipelineResult)fileProvider;
+            NeuronSeparation separation = result.getLatestSeparationResult();
+            sourceFilePath = DomainUtils.getFilepath(separation, fileType); 
+            if (sourceFilePath==null) {
+                sourceFilePath = getStaticPath(separation, fileType);
+            }
+        }
+        
         if (sourceFilePath==null) {
             errorMessage = "Cannot find '"+fileType.getLabel()+"' file for '"+resultDescriptor+"' result in: "+domainObject.getName();
             return;
@@ -133,6 +146,16 @@ public class DownloadItem {
         catch (Exception e) {
             ConsoleApp.handleException(e);
         }
+    }
+    
+    private String getStaticPath(HasFilepath hasFilePath, FileType fileType) {
+        switch (fileType) {
+            case NeuronAnnotatorLabel: return new File(hasFilePath.getFilepath(),"ConsolidatedLabel.v3dpbd").getAbsolutePath();
+            case NeuronAnnotatorSignal: return new File(hasFilePath.getFilepath(),"ConsolidatedSignal.v3dpbd").getAbsolutePath();
+            case NeuronAnnotatorReference: return new File(hasFilePath.getFilepath(),"Reference.v3dpbd").getAbsolutePath();
+            default: break;
+        }
+        return null;
     }
 
     // TODO: rewrite this to use StringUtils.replaceVariablePattern 
