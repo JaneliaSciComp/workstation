@@ -1,6 +1,7 @@
 package org.janelia.jacs2.asyncservice.common;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
@@ -185,21 +186,23 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
             if (currentResult.exc != null) {
                 next.completeExceptionally(currentResult.exc);
             } else {
-                List<Object> otherResults = otherComputations.stream()
+                List<ComputeResult<?>> otherResults = otherComputations.stream()
                         .map(oc -> {
                             FutureBasedServiceComputation<Object> ocStage = new FutureBasedServiceComputation<>(executor);
                             ocStage.execute(oc::get);
                             return ocStage;
                         })
                         .map(FutureBasedServiceComputation::getResult)
-                        .map(r -> {
-                            if (r.exc != null) {
-                                throw new IllegalStateException(r.exc);
-                            }
-                            return r.result;
-                        })
                         .collect(Collectors.toList());
-                next.complete(fn.apply(currentResult.result, otherResults));
+                Optional<ComputeResult<?>> anyExcResult = otherResults.stream()
+                        .filter(r -> r.exc != null)
+                        .findFirst();
+                if (anyExcResult.isPresent()) {
+                    next.completeExceptionally(anyExcResult.get().exc);
+                } else {
+                    List<Object> goodResults = otherResults.stream().filter(r -> r.exc == null).map(r -> r.result).collect(Collectors.toList());
+                    next.complete(fn.apply(currentResult.result, goodResults));
+                }
             }
         } catch (Exception e) {
             if (next.result == null || next.result.exc == null) {
