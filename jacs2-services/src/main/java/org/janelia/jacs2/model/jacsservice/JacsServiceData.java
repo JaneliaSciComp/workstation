@@ -319,11 +319,11 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     }
 
     public boolean hasCompletedUnsuccessfully() {
-        return state == JacsServiceState.CANCELED || state == JacsServiceState.ERROR || state == JacsServiceState.TIMEOUT;
+        return state == JacsServiceState.PROCESSING_ERROR || state == JacsServiceState.CANCELED || state == JacsServiceState.ERROR || state == JacsServiceState.TIMEOUT;
     }
 
     public boolean hasCompletedSuccessfully() {
-        return state == JacsServiceState.SUCCESSFUL;
+        return state == JacsServiceState.SUCCESSFUL || state == JacsServiceState.PROCESSING_COMPLETED;
     }
 
     public Long getServiceTimeout() {
