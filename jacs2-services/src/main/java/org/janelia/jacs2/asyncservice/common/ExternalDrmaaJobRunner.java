@@ -85,7 +85,7 @@ public class ExternalDrmaaJobRunner extends AbstractExternalProcessRunner {
             JobInfo jobInfo = drmaaSession.wait(jobId, getTimeout(serviceContext));
 
             if (jobInfo.wasAborted()) {
-                serviceContext.setState(JacsServiceState.PROCESSING_ERROR);
+                serviceContext.setState(JacsServiceState.ERROR);
                 serviceContext.addEvent(JacsServiceEventTypes.DRMAA_JOB_ABORTED, String.format("Aborted DRMAA job %s {%s}", serviceContext.getName(), jobId));
                 logger.error("Job {} for {} never ran", jobId, serviceContext);
                 throw new ComputationException(serviceContext, String.format("Job %s never ran", jobId));
@@ -103,34 +103,33 @@ public class ExternalDrmaaJobRunner extends AbstractExternalProcessRunner {
                 }
                 int jobExitStatus = jobInfo.getExitStatus();
                 if (jobExitStatus != 0) {
-                    serviceContext.setState(JacsServiceState.PROCESSING_ERROR);
+                    serviceContext.setState(JacsServiceState.ERROR);
                     serviceContext.addEvent(JacsServiceEventTypes.DRMAA_JOB_ERROR, String.format("DRMAA job %s {%s} exit status %d", serviceContext.getName(), jobId, jobExitStatus));
                     throw new ComputationException(serviceContext, String.format("Job %s completed with status %d", jobId, jobInfo.getExitStatus()));
                 } else if (processStdoutHandler.getResult() != null) {
-                    serviceContext.setState(JacsServiceState.PROCESSING_ERROR);
+                    serviceContext.setState(JacsServiceState.ERROR);
                     serviceContext.addEvent(JacsServiceEventTypes.DRMAA_JOB_ERROR, String.format("DRMAA job %s {%s} error %s", serviceContext.getName(), jobId, processStdoutHandler.getResult()));
                     throw new ComputationException(serviceContext, "Process error: " + processStdoutHandler.getResult());
                 } else if (processStderrHandler.getResult() != null) {
-                    serviceContext.setState(JacsServiceState.PROCESSING_ERROR);
+                    serviceContext.setState(JacsServiceState.ERROR);
                     serviceContext.addEvent(JacsServiceEventTypes.DRMAA_JOB_ERROR, String.format("DRMAA job %s {%s} error %s", serviceContext.getName(), jobId, processStderrHandler.getResult()));
                     throw new ComputationException(serviceContext, "Process error: " + processStderrHandler.getResult());
                 }
-                serviceContext.setState(JacsServiceState.PROCESSING_COMPLETED);
                 serviceContext.addEvent(JacsServiceEventTypes.DRMAA_JOB_COMPLETED, String.format("DRMAA job %s {%s} completed", serviceContext.getName(), jobId));
                 deleteProcessingScript(processingScript);
             } else if (jobInfo.hasSignaled()) {
-                serviceContext.setState(JacsServiceState.PROCESSING_ERROR);
+                serviceContext.setState(JacsServiceState.ERROR);
                 serviceContext.addEvent(JacsServiceEventTypes.DRMAA_JOB_ERROR, String.format("DRMAA job %s {%s} signaled to terminate %s", serviceContext.getName(), jobId, jobInfo.getTerminatingSignal()));
                 logger.warn("Job {} for {} terminated due to signal {}", jobId, serviceContext, jobInfo.getTerminatingSignal());
                 throw new ComputationException(serviceContext, String.format("Job %s completed with status %s", jobId, jobInfo.getTerminatingSignal()));
             } else {
-                serviceContext.setState(JacsServiceState.PROCESSING_ERROR);
+                serviceContext.setState(JacsServiceState.ERROR);
                 serviceContext.addEvent(JacsServiceEventTypes.DRMAA_JOB_ERROR, String.format("DRMAA job %s {%s} unknown error", serviceContext.getName(), jobId));
                 logger.warn("Job {} for {} finished with unclear conditions", jobId, serviceContext);
                 throw new ComputationException(serviceContext, String.format("Job %s completed with unclear conditions", jobId));
             }
         } catch (Exception e) {
-            serviceContext.setState(JacsServiceState.PROCESSING_ERROR);
+            serviceContext.setState(JacsServiceState.ERROR);
             serviceContext.addEvent(JacsServiceEventTypes.DRMAA_JOB_ERROR, String.format("Error creating DRMAA job %s - %s", serviceContext.getName(), e.getMessage()));
             logger.error("Error creating a DRMAA job {} for {}", processingScript, serviceContext, e);
             throw new ComputationException(serviceContext, e);

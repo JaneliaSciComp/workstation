@@ -43,7 +43,7 @@ public class ExternalLocalProcessRunner extends AbstractExternalProcessRunner {
             localProcess = processBuilder.start();
             logger.info("Started process {} for {}", localProcess, serviceContext);
         } catch (Exception e) {
-            serviceContext.setState(JacsServiceState.PROCESSING_ERROR);
+            serviceContext.setState(JacsServiceState.ERROR);
             logger.error("Error starting the computation process {} for {}", processingScript, serviceContext, e);
             serviceContext.addEvent(JacsServiceEventTypes.START_PROCESS_ERROR, String.format("Error starting %s - %s", processingScript, e.getMessage()));
             throw new ComputationException(serviceContext, e);
@@ -58,23 +58,22 @@ public class ExternalLocalProcessRunner extends AbstractExternalProcessRunner {
             processStderrHandler.join();
             logger.info("Process {} for {} terminated with code {}", processingScript, serviceContext, returnCode);
             if (returnCode != 0) {
-                serviceContext.setState(JacsServiceState.PROCESSING_ERROR);
+                serviceContext.setState(JacsServiceState.ERROR);
                 serviceContext.addEvent(JacsServiceEventTypes.PROCESSING_ERROR, String.format("Error processing %s - process termninated with %s", processingScript, returnCode));
                 throw new ComputationException(serviceContext, "Process terminated with code " + returnCode);
             } else if (processStdoutHandler.getResult() != null) {
-                serviceContext.setState(JacsServiceState.PROCESSING_ERROR);
+                serviceContext.setState(JacsServiceState.ERROR);
                 serviceContext.addEvent(JacsServiceEventTypes.PROCESSING_ERROR, String.format("Error processing %s - %s", processingScript, processStdoutHandler.getResult()));
                 throw new ComputationException(serviceContext, "Process error: " + processStdoutHandler.getResult());
             } else if (processStderrHandler.getResult() != null) {
-                serviceContext.setState(JacsServiceState.PROCESSING_ERROR);
+                serviceContext.setState(JacsServiceState.ERROR);
                 serviceContext.addEvent(JacsServiceEventTypes.PROCESSING_ERROR, String.format("Error processing %s - %s", processingScript, processStderrHandler.getResult()));
                 throw new ComputationException(serviceContext, "Process error: " + processStderrHandler.getResult());
             }
-            serviceContext.setState(JacsServiceState.PROCESSING_COMPLETED);
             serviceContext.addEvent(JacsServiceEventTypes.PROCESSING_COMPLETED, String.format("Completed %s", processingScript));
             deleteProcessingScript(processingScript);
         } catch (InterruptedException e) {
-            serviceContext.setState(JacsServiceState.PROCESSING_ERROR);
+            serviceContext.setState(JacsServiceState.ERROR);
             serviceContext.addEvent(JacsServiceEventTypes.PROCESSING_ERROR, String.format("Interrupted processing %s - %s", processingScript, e.getMessage()));
             logger.error("Process {} for {} was interrupted", processingScript, serviceContext, e);
             throw new ComputationException(serviceContext, e);
