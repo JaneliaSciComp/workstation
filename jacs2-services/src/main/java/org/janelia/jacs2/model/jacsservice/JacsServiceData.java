@@ -22,6 +22,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     @JsonProperty("_id")
     private Number id;
     private String name;
+    private String version;
     private ProcessingLocation processingLocation;
     private JacsServiceState state = JacsServiceState.CREATED;
     private Integer priority = 0;
@@ -59,6 +60,14 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     public ProcessingLocation getProcessingLocation() {

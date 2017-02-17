@@ -1,4 +1,4 @@
-package org.janelia.jacs2.asyncservice.lsmfileservices;
+package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
@@ -25,25 +25,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File> {
+public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<File> {
 
-    private static final String DEFAULT_MERGE_RESULT_FILE_NAME = "merged.v3draw";
+    private static final String DEFAULT_GROUP_RESULT_FILE_NAME = "igroups.txt";
 
-    private final String lsmMergeScript;
+    private final String vaa3dExecutable;
     private final String libraryPath;
 
     @Inject
-    MergeLsmPairProcessor(JacsServiceEngine jacsServiceEngine,
-                          ServiceComputationFactory computationFactory,
-                          JacsServiceDataPersistence jacsServiceDataPersistence,
-                          @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                          @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-                          @Any Instance<ExternalProcessRunner> serviceRunners,
-                          @PropertyValue(name = "LSMMerge.ScriptPath") String lsmMergeScript,
-                          @PropertyValue(name = "VAA3D.LibraryPath") String libraryPath,
-                          Logger logger) {
+    StitchGroupingProcessor(JacsServiceEngine jacsServiceEngine,
+                            ServiceComputationFactory computationFactory,
+                            JacsServiceDataPersistence jacsServiceDataPersistence,
+                            @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                            @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
+                            @Any Instance<ExternalProcessRunner> serviceRunners,
+                            @PropertyValue(name = "VAA3D.Bin.Path") String vaa3dExecutable,
+                            @PropertyValue(name = "VAA3D.LibraryPath") String libraryPath,
+                            Logger logger) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
-        this.lsmMergeScript = lsmMergeScript;
+        this.vaa3dExecutable = vaa3dExecutable;
         this.libraryPath = libraryPath;
     }
 
@@ -59,7 +59,7 @@ public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File
 
     @Override
     protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
-        MergeLsmPairServiceDescriptor.MergeLsmPairArgs args = getArgs(jacsServiceData);
+        StitchGroupingServiceDescriptor.StitchGroupingArgs args = getArgs(jacsServiceData);
         ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
         ScriptWriter externalScriptWriter = externalScriptCode.getCodeWriter();
         createScript(jacsServiceData, args, externalScriptWriter);
@@ -67,7 +67,7 @@ public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File
         return externalScriptCode;
     }
 
-    private void createScript(JacsServiceData jacsServiceData, MergeLsmPairServiceDescriptor.MergeLsmPairArgs args,
+    private void createScript(JacsServiceData jacsServiceData, StitchGroupingServiceDescriptor.StitchGroupingArgs args,
                               ScriptWriter scriptWriter) {
         try {
             Path workingDir = getWorkingDirectory(jacsServiceData);
@@ -75,12 +75,11 @@ public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File
             File resultDir = new File(args.resultDir);
             Files.createDirectories(resultDir.toPath());
             scriptWriter.addWithArgs(getExecutable())
-                    .addArgs("-o", resultDir.getAbsolutePath());
-            if (StringUtils.isNotBlank(args.multiscanBlendVersion)) {
-                scriptWriter.addArgs("-m", args.multiscanBlendVersion);
-            }
-            scriptWriter
-                    .addArgs(args.lsm1File, args.lsm2File)
+                    .addArgs("-x", "imageStitch.so")
+                    .addArgs("-f", "istitch-grouping")
+                    .addArgs("-p", "#c", String.valueOf(args.referenceChannelIndex))
+                    .addArgs("-i", args.inputDir)
+                    .addArgs("-o", args.resultDir)
                     .endArgs("");
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -94,13 +93,13 @@ public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File
 
     @Override
     protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        File mergedLsmResultFile = getMergedLsmResultFile(jacsServiceData);
+        File mergedLsmResultFile = getGroupResultFile(jacsServiceData);
         return mergedLsmResultFile.exists();
     }
 
     @Override
     protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        return getMergedLsmResultFile(jacsServiceData);
+        return getGroupResultFile(jacsServiceData);
     }
 
     @Override
@@ -117,17 +116,17 @@ public class MergeLsmPairProcessor extends AbstractExeBasedServiceProcessor<File
         }
     }
 
-    private MergeLsmPairServiceDescriptor.MergeLsmPairArgs getArgs(JacsServiceData jacsServiceData) {
-        return MergeLsmPairServiceDescriptor.MergeLsmPairArgs.parse(jacsServiceData.getArgsArray(), new MergeLsmPairServiceDescriptor.MergeLsmPairArgs());
+    private StitchGroupingServiceDescriptor.StitchGroupingArgs getArgs(JacsServiceData jacsServiceData) {
+        return StitchGroupingServiceDescriptor.StitchGroupingArgs.parse(jacsServiceData.getArgsArray(), new StitchGroupingServiceDescriptor.StitchGroupingArgs());
     }
 
     private String getExecutable() {
-        return getFullExecutableName(lsmMergeScript);
+        return getFullExecutableName(vaa3dExecutable);
     }
 
-    private File getMergedLsmResultFile(JacsServiceData jacsServiceData) {
-        MergeLsmPairServiceDescriptor.MergeLsmPairArgs args = getArgs(jacsServiceData);
-        return new File(args.resultDir, DEFAULT_MERGE_RESULT_FILE_NAME);
+    private File getGroupResultFile(JacsServiceData jacsServiceData) {
+        StitchGroupingServiceDescriptor.StitchGroupingArgs args = getArgs(jacsServiceData);
+        return new File(args.resultDir, DEFAULT_GROUP_RESULT_FILE_NAME);
     }
 
 }
