@@ -170,14 +170,32 @@
         camera=new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 10000);
         camera.position.z=1000;
 
-        controls = new THREE.TrackballControls(camera);
-        controls.rotateSpeed = 1.0;
-        controls.zoomSpeed = 1.2;
-        controls.panSpeed = 0.8;
+        renderer=new THREE.WebGLRenderer( { antalias: true });
+        renderer.setClearColor(0xffffff);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.sortObjects=false;
+        container.appendChild(renderer.domElement);
+
+        stats = new Stats();
+        container.appendChild(stats.dom);
+
+        renderer.domElement.addEventListener('mousemove', onMouseMove);
+
+        controls = new THREE.TrackballControls(camera, renderer.domElement);
+//        controls.rotateSpeed = 1.0;
+        controls.rotateSpeed = 10.0;
+//        controls.zoomSpeed = 1.2;
+        controls.zoomSpeed = 12.0;
+//        controls.panSpeed = 0.8;
+        controls.panSpeed = 8.0;
+
         controls.noZoom = false;
         controls.noPan = false;
         controls.staticMoving = true;
-        controls.dynamicDampingFactor = 0.3;
+
+//        controls.dynamicDampingFactor = 0.3;
+        controls.dynamicDampingFactor = 3.0;
 
         scene = new THREE.Scene();
 
@@ -195,7 +213,7 @@
         var pickingMaterial = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } );
 
         var geom = new THREE.BoxGeometry(1,1,1);
-        var color = new THREE.Color(0x55ff55);
+        var color = new THREE.Color(0x005500);
         var pickingColor = new THREE.Color();
 
         var matrix=new THREE.Matrix4();
@@ -203,7 +221,7 @@
 
         // We want this to be updated every time the number of services changes - in this original version,
         // it is presumably only called during setup
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < 1; i++) {
             var position = new THREE.Vector3();
             position.x = Math.random() * 10000 - 5000;
             position.y = Math.random() * 6000 - 3000;
@@ -239,17 +257,6 @@
         highlightBox = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshLambertMaterial( { color: 0xffff00 }));
         scene.add(highlightBox);
 
-        renderer=new THREE.WebGLRenderer( { antalias: true });
-        renderer.setClearColor(0xffffff);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.sortObjects=false;
-        container.appendChild(renderer.domElement);
-
-        stats = new Stats();
-        container.appendChild(stats.dom);
-
-        renderer.domElement.addEventListener('mousemove', onMouseMove);
     }
 
     function onMouseMove(e) {
@@ -318,7 +325,7 @@
         quaternion.setFromEuler(rotation, false);
         matrix.compose(position, quaternion, scale);
 
-        applyVertexColors(geom, color.setHex(0xff0000));
+        applyVertexColors(geom, color.setHex(0x00ff00));
         geometry.merge(geom, matrix);
 
         for (var s=0;s<$scope.currentServices.length;s++) {
@@ -343,7 +350,7 @@
             quaternion.setFromEuler(rotation, false);
             matrix.compose(position, quaternion, scale);
 
-            applyVertexColors(geom, color.setHex(0xff5555));
+            applyVertexColors(geom, color.setHex(0x0000ff));
             geometry.merge(geom, matrix);
 
         }
@@ -420,7 +427,17 @@
             quaternion.setFromEuler(rotation, false);
             matrix.compose(position, quaternion, scale);
 
-            applyVertexColors(geom, color.setHex(0xff0000));
+            //applyVertexColors(geom, color.setHex(0xff0000));
+
+            color.setHex(0xff0000);
+
+            geom.faces.forEach(function(f) {
+                var n = (f instanceof THREE.Face3) ? 3 : 4;
+                for (var j=0;j<n;j++) {
+                    f.vertexColors[j]=color;
+                }
+            });
+
             geometry.merge(geom, matrix);
 
             var drawnObject = new THREE.Mesh(geometry, defaultMaterial);
@@ -433,10 +450,8 @@
                     $scope.currentServices = response.data;
                     $scope.retrieveOn=false;
                     $scope.mode="currentServices";
+                    $scope.threeJsTest();
                 });
-            $scope.threeJsTest();
-            determineServiceUpdates();
-            updateServiceModel();
         }
 
         $scope.getEventsForService = function(x) {
@@ -446,10 +461,10 @@
         }
 
         var stateSummaryIntervalFunction;
-        stateSummaryIntervalFunction=$interval( $scope.getStateSummary, 10000);
+        stateSummaryIntervalFunction=$interval( $scope.getStateSummary, 5000);
 
         var currentServicesIntervalFunction;
-        stateSummaryIntervalFunction=$interval( $scope.getCurrentServices, 10000);
+        stateSummaryIntervalFunction=$interval( $scope.getCurrentServices, 5000);
 
         $scope.modeStateSummary();
 
