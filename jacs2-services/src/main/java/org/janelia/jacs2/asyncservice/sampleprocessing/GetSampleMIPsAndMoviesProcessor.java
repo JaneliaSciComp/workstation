@@ -6,8 +6,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
-import org.janelia.jacs2.asyncservice.imageservices.FijiColor;
-import org.janelia.jacs2.asyncservice.imageservices.FijiUtils;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -65,12 +63,6 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
             return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "No sample image file was found"));
         }
         GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
-        try {
-            // the output directory must exist
-            Files.createDirectories(getResultsDir(args));
-        } catch (IOException e) {
-            throw new ComputationException(jacsServiceData, e);
-        }
         List<ServiceComputation<?>> mipsComputations = submitAllBasicMipsAndMoviesServices(sampleLSMs, args, jacsServiceData);
         return computationFactory.newCompletedComputation(jacsServiceData)
                 .thenCombineAll(mipsComputations, (sd, basicMipsResults) -> {
@@ -78,10 +70,6 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                     basicMipsResults.forEach(f -> sampleMIPsResults.addAll((List<File>) f));
                     return sampleMIPsResults;
                 });
-    }
-
-    private Path getResultsDir(GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args) {
-        return Paths.get(args.sampleDataDir, args.mipsSubDir);
     }
 
     @Override
