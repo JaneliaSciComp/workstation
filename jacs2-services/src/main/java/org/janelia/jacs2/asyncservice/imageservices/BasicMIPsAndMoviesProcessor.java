@@ -171,7 +171,7 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
         builder.add(""); // input file 2
         builder.add(args.laser == null ? "" : args.laser.toString());
         builder.add(args.gain == null ? "" : args.gain.toString());
-        builder.add(StringUtils.defaultString(args.chanSpec, ""));
+        builder.add(args.chanSpec);
         builder.add(colorSpec);
         builder.add(divSpec);
         builder.add(StringUtils.defaultIfBlank(args.options, DEFAULT_OPTIONS));

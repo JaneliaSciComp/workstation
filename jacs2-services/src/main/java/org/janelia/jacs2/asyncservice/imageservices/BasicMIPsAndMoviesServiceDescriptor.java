@@ -11,7 +11,7 @@ import javax.inject.Named;
 @Named("basicMIPsAndMovies")
 public class BasicMIPsAndMoviesServiceDescriptor implements ServiceDescriptor {
     static class BasicMIPsAndMoviesArgs extends ServiceArgs {
-        @Parameter(names = "-imgFiles", description = "list of image files", required = true)
+        @Parameter(names = "-imgFile", description = "The name of the image file", required = true)
         String imageFile;
         @Parameter(names = "-chanSpec", description = "Channel spec", required = true)
         String chanSpec;
