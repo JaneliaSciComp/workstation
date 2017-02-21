@@ -17,8 +17,6 @@ public class BasicMIPsAndMoviesServiceDescriptor implements ServiceDescriptor {
         String chanSpec;
         @Parameter(names = "-colorSpec", description = "Color spec", required = false)
         String colorSpec;
-        @Parameter(names = "-divSpec", description = "Div spec", required = false)
-        String divSpec;
         @Parameter(names = "-laser", description = "Laser", required = false)
         Integer laser;
         @Parameter(names = "-gain", description = "Gain", required = false)

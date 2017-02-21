@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
-import org.janelia.jacs2.asyncservice.utils.FileUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.asyncservice.imageservices.FijiColor;
 import org.janelia.jacs2.asyncservice.imageservices.FijiUtils;
@@ -22,20 +21,14 @@ import org.slf4j.Logger;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<File>> {
-
-    private static final String DEFAULT_OPTIONS = "mips:movies";
 
     @Inject
     GetSampleMIPsAndMoviesProcessor(JacsServiceEngine jacsServiceEngine,
@@ -114,22 +107,23 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                 colors = FijiUtils.getDefaultColorSpec(f.getChanSpec(), "RGB", '1');
             }
             String colorSpec = colors.stream().map(c -> String.valueOf(c.getCode())).collect(Collectors.joining(","));
-            String divSpec = colors.stream().map(c -> String.valueOf(c.getDivisor())).collect(Collectors.joining(","));
-            String laser = f.getLaser() == null ? "" : f.getLaser().toString();
-            String gain = f.getGain() == null ? "" : f.getGain().toString();
-            JacsServiceData fijiService =
+            JacsServiceDataBuilder basicMipsAndMoviesServiceBuilder =
                     new JacsServiceDataBuilder(jacsServiceData)
                             .setName("basicMIPsAndMovies")
                             .addArg("-imgFile", f.getWorkingFilePath())
                             .addArg("-chanSpec", f.getChanSpec())
-                            .addArg("-colorSpec", colorSpec)
-                            .addArg("-divSpec", divSpec)
-                            .addArg("-laser", laser)
-                            .addArg("-gain", gain)
-                            .addArg("-resultsDir", resultsDir.toString())
-                            .build();
+                            .addArg("-colorSpec", colorSpec);
+            if (f.getLaser() != null) {
+                basicMipsAndMoviesServiceBuilder.addArg("-laser", f.getLaser().toString());
+            }
+            if (f.getGain() != null) {
+                basicMipsAndMoviesServiceBuilder.addArg("-gain", f.getGain().toString());
+            }
+            basicMipsAndMoviesServiceBuilder
+                    .addArg("-options", args.options)
+                    .addArg("-resultsDir", resultsDir.toString());
             basicMipsAndMoviesComputations.add(
-                    createServiceComputation(jacsServiceEngine.submitSingleService(fijiService))
+                    createServiceComputation(jacsServiceEngine.submitSingleService(basicMipsAndMoviesServiceBuilder.build()))
                             .thenCompose(sd -> this.waitForCompletion(sd))
             );
         });
@@ -146,7 +140,8 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         }
         pathCompBuilder.add(com.google.common.io.Files.getNameWithoutExtension(sampleImgFile.getWorkingFilePath()));
         pathCompBuilder.add(args.mipsSubDir);
-        return Paths.get(args.sampleDataDir, pathCompBuilder.build().toArray(new String[0]));
+        ImmutableList<String> pathComps = pathCompBuilder.build();
+        return Paths.get(args.sampleDataDir, pathComps.toArray(new String[pathComps.size()]));
     }
 
     private GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs getArgs(JacsServiceData jacsServiceData) {
