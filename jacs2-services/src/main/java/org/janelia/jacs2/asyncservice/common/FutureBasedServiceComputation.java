@@ -52,7 +52,11 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
     public T get() {
         getResult();
         if (result.exc != null) {
-            throw new IllegalStateException(result.exc);
+            if (result.exc instanceof ComputationException) {
+                throw (ComputationException) result.exc;
+            } else {
+                throw new IllegalStateException(result.exc);
+            }
         }
         return result.result;
     }
@@ -181,34 +185,24 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
     @Override
     public <U> ServiceComputation<U> thenCombineAll(List<ServiceComputation<?>> otherComputations, BiFunction<? super T, List<?>, ? extends U> fn) {
         FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(executor);
-        try {
-            ComputeResult<T> currentResult = getResult();
-            if (currentResult.exc != null) {
-                next.completeExceptionally(currentResult.exc);
-            } else {
-                List<ComputeResult<?>> otherResults = otherComputations.stream()
-                        .map(oc -> {
-                            FutureBasedServiceComputation<Object> ocStage = new FutureBasedServiceComputation<>(executor);
-                            ocStage.execute(oc::get);
-                            return ocStage;
-                        })
-                        .map(FutureBasedServiceComputation::getResult)
-                        .collect(Collectors.toList());
-                Optional<ComputeResult<?>> anyExcResult = otherResults.stream()
-                        .filter(r -> r.exc != null)
-                        .findFirst();
-                if (anyExcResult.isPresent()) {
-                    next.completeExceptionally(anyExcResult.get().exc);
+        next.execute(() -> {
+            try {
+                ComputeResult<T> currentResult = getResult();
+                if (currentResult.exc != null) {
+                    next.completeExceptionally(currentResult.exc);
                 } else {
-                    List<Object> goodResults = otherResults.stream().filter(r -> r.exc == null).map(r -> r.result).collect(Collectors.toList());
-                    next.complete(fn.apply(currentResult.result, goodResults));
+                    List<Object> otherResults = otherComputations.stream()
+                            .map(ServiceComputation::get)
+                            .collect(Collectors.toList());
+                    next.complete(fn.apply(currentResult.result, otherResults));
+                }
+            } catch (Exception e) {
+                if (next.result == null || next.result.exc == null) {
+                    next.completeExceptionally(e);
                 }
             }
-        } catch (Exception e) {
-            if (next.result == null || next.result.exc == null) {
-                next.completeExceptionally(e);
-            }
-        }
+            return next.get();
+        });
         return next;
     }
 
