@@ -1,6 +1,5 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceDescriptor;
@@ -8,7 +7,6 @@ import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.xml.ws.Service;
 
 @Named("vaa3d")
 public class Vaa3dServiceDescriptor implements ServiceDescriptor {

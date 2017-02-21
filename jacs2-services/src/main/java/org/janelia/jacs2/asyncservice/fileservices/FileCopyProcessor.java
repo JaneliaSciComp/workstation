@@ -109,7 +109,6 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
     protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
         File destFile = (File) preProcessingResult;
         return Files.exists(destFile.toPath());
-
     }
 
     @Override
