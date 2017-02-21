@@ -597,6 +597,7 @@ implements NeuronSet// , LookupListener
         @Override
         public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style)
         {
+            // log.info("neuronStyleChanged");
             if (updateOneNeuronStyle(neuron, style)) {
                 repaintHorta();
             }
@@ -604,6 +605,7 @@ implements NeuronSet// , LookupListener
             
         private boolean updateOneNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style)
         {
+            // log.info("updateOneNeuronStyle");
             if (neuron == null)
                 return false;
             if (style == null)
@@ -636,18 +638,21 @@ implements NeuronSet// , LookupListener
         @Override
         public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStylemap)
         {
+            // log.info("neuronStylesChanged");
             if (neuronStylemap == null)
                 return;
             
             // bulk color/visibility change
+            
+            /* */
             boolean bChanged = false;
             for (Map.Entry<TmNeuronMetadata, NeuronStyle> entry : neuronStylemap.entrySet()) {
                 if (updateOneNeuronStyle(entry.getKey(), entry.getValue()))
                     bChanged = true;
             }
-            
             if (bChanged)
                 repaintHorta();
+            /* */
         }
 
         @Override
