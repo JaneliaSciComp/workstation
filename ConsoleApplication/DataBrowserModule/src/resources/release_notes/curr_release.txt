@@ -4,6 +4,7 @@ Workstation Browser
 * Shared annotations can now be searched for
 * Spaces in paths are now supported on Windows
 * "View in Fiji" now works on Windows
+* Fixed error when reordering folders which contain non-folders (e.g. neuron fragments) 
 * Many other minor bug fixes (see JIRA)
 
 FlyLight
