@@ -134,7 +134,9 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
     protected boolean hasErrors(String l) {
         if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(error|exception).*)")) {
-            if (l.contains("Cannot write XdndAware property")) {
+            if (l.contains("Cannot write XdndAware property") ||
+                    l.contains("java.rmi.ConnectException") ||
+                    l.contains("java.net.ConnectException")) {
                 logger.warn(l);
                 return false;
             }
