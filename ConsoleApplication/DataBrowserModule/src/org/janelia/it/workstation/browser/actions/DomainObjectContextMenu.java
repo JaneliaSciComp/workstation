@@ -805,7 +805,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     protected JMenuItem getNeuronAnnotatorItem() {
         if (multiple) return null;
         if (domainObject instanceof NeuronFragment) {
-            return new JMenuItem(new OpenInNeuronAnnotatorAction((NeuronFragment)domainObject));
+            return getNamedActionItem(new OpenInNeuronAnnotatorAction((NeuronFragment)domainObject));
         }
         return null;
     }

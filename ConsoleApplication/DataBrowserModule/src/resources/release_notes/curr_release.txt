@@ -1,15 +1,18 @@
 // 5.9.0
 
 Workstation Browser
-* Shared annotations can now be searched for
+* Shared annotations can now be searched
 * Spaces in paths are now supported on Windows
 * "View in Fiji" now works on Windows
+* Fixed error when reordering folders that contain non-folders (e.g. neuron fragments) 
 * Many other minor bug fixes (see JIRA)
 
 FlyLight
 * Fixed usability issue with LSMs being annotated instead of sample
+* The separated neurons can now be selected for download from a Sample
 
 MouseLight
+* Fixed point selection issue when using the viewport optimization setting
 * Greatly improved neuron operation performance, supporting millions of anchors 
 * Newly created workspaces are now added to the Recently Opened folder
 * Reopening last workspace on startup now also restores viewer position
