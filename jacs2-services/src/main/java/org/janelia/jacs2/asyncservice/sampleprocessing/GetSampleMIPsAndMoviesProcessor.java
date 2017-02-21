@@ -75,7 +75,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         return computationFactory.newCompletedComputation(jacsServiceData)
                 .thenCombineAll(mipsComputations, (sd, basicMipsResults) -> {
                     List<File> sampleMIPsResults = new ArrayList<>();
-                    basicMipsResults.forEach(f -> sampleMIPsResults.add((File) f));
+                    basicMipsResults.forEach(f -> sampleMIPsResults.addAll((List<File>) f));
                     return sampleMIPsResults;
                 });
     }
