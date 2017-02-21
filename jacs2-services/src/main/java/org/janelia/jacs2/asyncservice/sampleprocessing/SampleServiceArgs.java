@@ -1,6 +1,5 @@
 package org.janelia.jacs2.asyncservice.sampleprocessing;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 

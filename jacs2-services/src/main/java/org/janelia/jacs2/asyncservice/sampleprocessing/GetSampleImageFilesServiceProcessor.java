@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
 import org.janelia.it.jacs.model.domain.sample.Image;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
@@ -68,16 +69,21 @@ public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcesso
         List<ServiceComputation<?>> fcs = new ArrayList<>();
         // invoke child file copy services for all LSM files
         anatomicalAreas.stream()
-                .flatMap(ar -> ar.getTileLsmPairs().stream().flatMap(lsmp -> lsmp.getLsmFiles().stream()))
-                .map(lsmf -> {
-                    SampleImageFile sif = new SampleImageFile();
-                    sif.setId(lsmf.getId());
-                    sif.setArchiveFilePath(lsmf.getFilepath());
-                    sif.setWorkingFilePath(getTargetImageFile(destinationDirectory, lsmf).getAbsolutePath());
-                    sif.setArea(lsmf.getAnatomicalArea());
-                    sif.setChanSpec(lsmf.getChanSpec());
-                    sif.setColorSpec(lsmf.getChannelColors());
-                    return sif;
+                .flatMap(ar -> {
+                    return ar.getTileLsmPairs()
+                            .stream()
+                            .flatMap(lsmp -> lsmp.getLsmFiles().stream())
+                            .map(lsmf -> {
+                                SampleImageFile sif = new SampleImageFile();
+                                sif.setId(lsmf.getId());
+                                sif.setArchiveFilePath(lsmf.getFilepath());
+                                sif.setWorkingFilePath(getTargetImageFile(destinationDirectory, lsmf).getAbsolutePath());
+                                sif.setArea(ar.getName());
+                                sif.setChanSpec(lsmf.getChanSpec());
+                                sif.setColorSpec(lsmf.getChannelColors());
+                                sif.setObjective(ar.getObjective());
+                                return sif;
+                            });
                 })
                 .forEach(sif -> {
                     JacsServiceData retrieveImageFileServiceData =

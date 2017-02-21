@@ -15,8 +15,6 @@ public class BasicMIPsAndMoviesServiceDescriptor implements ServiceDescriptor {
         String imageFile;
         @Parameter(names = "-chanSpec", description = "Channel spec", required = true)
         String chanSpec;
-        @Parameter(names = "-defaultChanSpec", description = "Channel spec", required = false)
-        String defaultChanSpec;
         @Parameter(names = "-colorSpec", description = "Color spec", required = false)
         String colorSpec;
         @Parameter(names = "-divSpec", description = "Div spec", required = false)
@@ -25,11 +23,7 @@ public class BasicMIPsAndMoviesServiceDescriptor implements ServiceDescriptor {
         Integer laser;
         @Parameter(names = "-gain", description = "Gain", required = false)
         Integer gain;
-        @Parameter(names = "-area", description = "Area", required = false)
-        String area;
-        @Parameter(names = "-objective", description = "Objective", required = false)
-        String objective;
-        @Parameter(names = "-resultDir", description = "Results directory", required = false)
+        @Parameter(names = "-resultsDir", description = "Results directory", required = false)
         public String resultsDir;
         @Parameter(names = "-options", description = "Options", required = false)
         String options = "mips:movies:legends:bcomp";
