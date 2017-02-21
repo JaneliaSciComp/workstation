@@ -102,17 +102,12 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                         "No channel spec for LSM " + f.getId() + "-" + f.getArchiveFilePath());
             }
             Path resultsDir = getResultsDir(args, f);
-            List<FijiColor> colors = FijiUtils.getColorSpec(f.getColorSpec(), f.getChanSpec());
-            if (colors.isEmpty()) {
-                colors = FijiUtils.getDefaultColorSpec(f.getChanSpec(), "RGB", '1');
-            }
-            String colorSpec = colors.stream().map(c -> String.valueOf(c.getCode())).collect(Collectors.joining(","));
             JacsServiceDataBuilder basicMipsAndMoviesServiceBuilder =
                     new JacsServiceDataBuilder(jacsServiceData)
                             .setName("basicMIPsAndMovies")
                             .addArg("-imgFile", f.getWorkingFilePath())
                             .addArg("-chanSpec", f.getChanSpec())
-                            .addArg("-colorSpec", colorSpec);
+                            .addArg("-colorSpec", f.getColorSpec());
             if (f.getLaser() != null) {
                 basicMipsAndMoviesServiceBuilder.addArg("-laser", f.getLaser().toString());
             }
