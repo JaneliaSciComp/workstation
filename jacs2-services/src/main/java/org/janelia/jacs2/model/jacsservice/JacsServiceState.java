@@ -1,5 +1,5 @@
 package org.janelia.jacs2.model.jacsservice;
 
 public enum JacsServiceState {
-    CREATED, SUBMITTED, QUEUED, RUNNING, WAITING, CANCELED, TIMEOUT, ERROR, SUCCESSFUL
+    CREATED, SUBMITTED, QUEUED, RUNNING, CANCELED, TIMEOUT, ERROR, SUCCESSFUL
 }
