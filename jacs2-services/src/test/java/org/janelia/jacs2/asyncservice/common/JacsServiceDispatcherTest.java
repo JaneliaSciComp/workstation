@@ -46,11 +46,11 @@ public class JacsServiceDispatcherTest {
     public void setUp() {
         ExecutorService executor = mock(ExecutorService.class);
 
-        when(executor.submit(any(Runnable.class))).thenAnswer(invocation -> {
+        doAnswer(invocation -> {
             Runnable r = invocation.getArgument(0);
             r.run();
             return null;
-        });
+        }).when(executor).execute(any(Runnable.class));
 
         serviceComputationFactory = new ServiceComputationFactory(executor);
         jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);

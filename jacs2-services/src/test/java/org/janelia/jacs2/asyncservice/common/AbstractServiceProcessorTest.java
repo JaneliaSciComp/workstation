@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -108,12 +109,11 @@ public class AbstractServiceProcessorTest {
     public void setUp() {
         ExecutorService executor = mock(ExecutorService.class);
 
-        when(executor.submit(any(Runnable.class))).thenAnswer(invocation -> {
+        doAnswer(invocation -> {
             Runnable r = invocation.getArgument(0);
             r.run();
             return null;
-        });
-
+        }).when(executor).execute(any(Runnable.class));
         serviceComputationFactory = new ServiceComputationFactory(executor);
 
         testJacsServiceData = new JacsServiceData();
