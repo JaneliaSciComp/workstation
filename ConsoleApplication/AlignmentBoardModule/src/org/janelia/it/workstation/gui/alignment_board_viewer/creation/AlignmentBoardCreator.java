@@ -179,7 +179,8 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
         else {
             log.debug("Just UN-Nulled object in ABCreator");
             if (domainObject instanceof Sample) {
-                return compatibilityChecker.isAligned((Sample)domainObject);
+                return compatibilityChecker.isAligned((Sample)domainObject)  &&
+                       compatibilityChecker.hasNeuronFragments((Sample)domainObject);
             }
             else if (domainObject instanceof CompartmentSet) {
                 return true;
