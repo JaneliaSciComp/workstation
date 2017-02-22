@@ -69,10 +69,6 @@ public class DomainHelper {
                 for (SamplePipelineRun pipelineRun : os.getPipelineRuns()) {
                     for (PipelineResult result : pipelineRun.getResults()) {
                         if (result instanceof SampleAlignmentResult) {
-                            CompatibilityChecker compatibilityChecker = new CompatibilityChecker();
-                            //if (compatibilityChecker.hasNeuronFragments(sample)) {
-                            //
-                            //}
                             SampleAlignmentResult sar = (SampleAlignmentResult)result;
                             String alignmentSpace = sar.getAlignmentSpace();
                             String imageSize = sar.getImageSize();
@@ -84,8 +80,14 @@ public class DomainHelper {
                                 if (nextCtx.getAlignmentSpace().equals(alignmentSpace)  &&
                                     nextCtx.getImageSize().equals(imageSize)  &&
                                     nextCtx.getOpticalResolution().equals(opticalResolution)) {
-                                    
-                                    rtnVal.add(nextCtx);
+
+                                    // Do not make boards for things without neurons on the given alignment space.
+                                    // To enforce: leave the context off the list, if its neuron rref is empty.
+                                    ReverseReference revRef = getNeuronRRefForSample(sample, nextCtx);
+                                    if (revRef != null  &&  revRef.getCount() > 0) {
+                                        rtnVal.add(nextCtx);
+                                    }
+
                                 }
                             }
                         }

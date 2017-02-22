@@ -182,7 +182,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
     
     /**
      * Returns parent of the item given.
-     * @param childId whose parent to find.
+     * @param soughtItem whose parent to find.
      * @return parent of this child.
      */
     public AlignmentBoardItem getAlignmentBoardItemParent(ABItem soughtItem) {
