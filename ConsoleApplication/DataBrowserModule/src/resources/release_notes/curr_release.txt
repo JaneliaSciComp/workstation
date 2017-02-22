@@ -10,6 +10,7 @@ Workstation Browser
 FlyLight
 * Fixed usability issue with LSMs being annotated instead of sample
 * The separated neurons can now be selected for download from a Sample
+* Alignment scores are now available in Table View and for file naming
 
 MouseLight
 * Fixed point selection issue when using the viewport optimization setting

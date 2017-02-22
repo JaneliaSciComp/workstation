@@ -201,11 +201,12 @@ public class NeuronVbo implements Iterable<NeuronModel>
     }
     
     // lightweight update of just the color field
-    private void updateNeuronColor(NeuronModel neuron) 
+    private boolean updateNeuronColor(NeuronModel neuron) 
     {
         int sv = neuron.getVertexes().size();
         float rgb[] = {0,0,0,1};
         neuron.getColor().getRGBComponents(rgb);
+        boolean bChanged = false; // nothing has changed yet
 
         // sanity check
         // Do we already have most of the information for this neuron tabulated?
@@ -219,7 +220,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
                     && (vertexBuffer.get(offset+1) == rgb[1])
                     && (vertexBuffer.get(offset+2) == rgb[2]) )
             {
-                return; // color has not changed
+                return bChanged; // color has not changed
             }
             log.info("old neuron color was [{},{},{}]", 
                     vertexBuffer.get(offset+0), 
@@ -234,19 +235,23 @@ public class NeuronVbo implements Iterable<NeuronModel>
                 }
             }
             buffersNeedUpdate = true;
+            bChanged = true;
         }
         else {
-            rebuildBuffers();
+            buffersNeedRebuild = true;
+            bChanged = true;
         }
+        return bChanged;
     }
     
     // lightweight update of just the visibility field
-    private void updateNeuronVisibility(NeuronModel neuron) 
+    private boolean updateNeuronVisibility(NeuronModel neuron) 
     {
         int sv = neuron.getVertexes().size();
         boolean bIsVisible = neuron.isVisible();
         float visFloat = bIsVisible ? 1.0f : 0.0f;
-        log.info("Updating neuron visibility to '{}'", bIsVisible);
+        boolean bChanged = false;
+        // log.info("Updating neuron visibility to '{}'", bIsVisible);
 
         // sanity check
         // Do we already have most of the information for this neuron tabulated?
@@ -262,11 +267,14 @@ public class NeuronVbo implements Iterable<NeuronModel>
                     vertexBuffer.put(index, visFloat);
                 }
                 buffersNeedUpdate = true;
+                bChanged = true;
             }
         }
         else {
-            rebuildBuffers();
+            buffersNeedRebuild = true;
+            bChanged = true; // something changed...
         }
+        return bChanged;
     }
     
     private void rebuildBuffers()
@@ -375,7 +383,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
     // TODO: Incrementally update one neuron at a time.
     private void updateBuffers(GL3 gl)
     {
-        log.info("Updating neuron vbo data");
+        // log.info("Updating neuron vbo data");
         if (buffersNeedRebuild)
             rebuildBuffers();
         vertexBuffer.rewind();
@@ -440,6 +448,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
 
     void checkForChanges() 
     {
+        // log.info("check for changes");
         if (buffersNeedRebuild)
             return; // no need to check counts, if we will be rebuilding anyway
         for (NeuronModel neuron : this) {
@@ -447,6 +456,9 @@ public class NeuronVbo implements Iterable<NeuronModel>
                 buffersNeedRebuild = true;
                 return;
             }
+            // Check for visibility and color changes, in case of bulk update
+            updateNeuronVisibility(neuron);
+            updateNeuronColor(neuron);
         }
     }
     

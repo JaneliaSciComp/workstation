@@ -1,11 +1,7 @@
 package org.janelia.it.workstation.browser.gui.support;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
@@ -15,8 +11,9 @@ import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
+import org.janelia.it.jacs.model.domain.support.MapUnion;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.shared.utils.FileUtil;
@@ -157,99 +154,46 @@ public class DownloadItem {
         }
         return null;
     }
-
-    // TODO: rewrite this to use StringUtils.replaceVariablePattern 
+ 
     private String constructFilePath(String filePattern) throws Exception {
-        Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
-        for (DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainObject.getClass())) {
-            log.trace("Adding attribute: " + attr.getLabel());
-            attributeMap.put(attr.getLabel(), attr);
+
+        DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
+        
+        MapUnion<String, Object> keyValues = new MapUnion<>();
+        keyValues.addMap(proxy);
+        keyValues.put(ATTR_LABEL_RESULT_NAME, resultName);
+        keyValues.put(ATTR_LABEL_FILE_NAME, new File(sourceFile).getName());
+        keyValues.put(ATTR_LABEL_EXTENSION, targetExtension);
+
+        if (domainObject instanceof Sample) {
+            keyValues.put(ATTR_LABEL_SAMPLE_NAME, domainObject.getName());
         }
-
-        log.debug("File pattern: {}", filePattern);
-
-        Pattern pattern = Pattern.compile("\\{(.+?)\\}");
-        Matcher matcher = pattern.matcher(filePattern);
-        StringBuffer buffer = new StringBuffer();
-        while (matcher.find()) {
-            String template = matcher.group(1);
-            String replacement = null;
-            log.debug("  Matched: {}", template);
-            for (String templatePart : template.split("\\|")) {
-                String attrLabel = templatePart.trim();
-                if (ATTR_LABEL_RESULT_NAME.equals(attrLabel)) {
-                    replacement = resultName == null ? null : resultName;
-                }
-                else if (ATTR_LABEL_FILE_NAME.equals(attrLabel)) {
-                    replacement = new File(sourceFile).getName();
-                }
-                else if (ATTR_LABEL_SAMPLE_NAME.equals(attrLabel)) {
-                    if (domainObject instanceof Sample) {
-                        replacement = domainObject.getName();
-                    }
-                    else if (domainObject instanceof LSMImage) {
-                        LSMImage lsm = (LSMImage) domainObject;
-                        Sample sample = (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(lsm.getSample());
-                        if (sample != null) {
-                            replacement = sample.getName();
-                        }
-                    }
-                }
-                else if (ATTR_LABEL_EXTENSION.equals(attrLabel)) {
-                    replacement = targetExtension;
-                }
-                else if (attrLabel.matches("\"(.*?)\"")) {
-                    replacement = attrLabel.substring(1, attrLabel.length() - 1);
-                }
-                else {
-                    DomainObjectAttribute attr = attributeMap.get(attrLabel);
-                    if (attr != null) {
-                        replacement = getStringAttributeValue(attr);
-                    }
-                }
-
-                if (replacement != null) {
-                    matcher.appendReplacement(buffer, replacement);
-                    log.debug("    '{}'->'{}' = '{}'", template, replacement, buffer);
-                    break;
-                }
-            }
-
-            if (replacement == null) {
-                log.warn("      Cannot find a replacement for: {}", template);
+        else if (domainObject instanceof LSMImage) {
+            LSMImage lsm = (LSMImage) domainObject;
+            Sample sample = (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(lsm.getSample());
+            if (sample != null) {
+                keyValues.put(ATTR_LABEL_SAMPLE_NAME, sample.getName());
             }
         }
-        matcher.appendTail(buffer);
-
-        log.debug("Final buffer: {}", buffer);
-
+        
+        log.debug("Filepath pattern: {}", filePattern);
+        String filepath = StringUtils.replaceVariablePattern(filePattern, keyValues);
+        log.debug("Interpolated filepath: {}", filepath);
+        
         // Strip extension, if any. We'll re-add it at the end.
-        StringBuilder filepath = new StringBuilder(FileUtil.getBasename(buffer.toString()));
+        StringBuilder sb = new StringBuilder(FileUtil.getBasename(filepath));
 
         if (splitChannels) {
-            filepath.append("_#");
+            sb.append("_#");
         }
 
         if (!StringUtils.isEmpty(targetExtension)) {
-            filepath.append(".").append(targetExtension);
+            sb.append(".").append(targetExtension);
         }
-        log.debug("Final file path: {}", filepath);
+        log.debug("Final file path: {}", sb);
 
-        return filepath.toString();
+        return sb.toString();
 
-    }
-
-    private String getStringAttributeValue(DomainObjectAttribute attr) {
-        try {
-            Object value = attr.getGetter().invoke(domainObject);
-            if (value!=null) {
-                return value.toString();
-            }
-            return null;
-        }
-        catch (Exception e) {
-            throw new IllegalStateException("Problem getting attribute "+attr.getName());
-        }
     }
     
     public List<String> getItemPath() {

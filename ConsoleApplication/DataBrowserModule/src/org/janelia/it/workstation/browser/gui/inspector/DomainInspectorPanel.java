@@ -4,8 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -46,7 +46,7 @@ import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.SampleUtils;
+import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -426,35 +426,14 @@ public class DomainInspectorPanel extends JPanel {
         log.debug("Loading properties for domain object {}", domainObject.getId());
         showAttributesLoadingIndicator();
 
-        List<DomainObjectAttribute> searchAttrs = DomainUtils.getSearchAttributes(domainObject.getClass());
-
+        List<DomainObjectAttribute> searchAttrs = DomainUtils.getDisplayAttributes(Arrays.asList(domainObject));
+        
+        DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
+        
         this.propertySet = new TreeSet<>();
         for(DomainObjectAttribute attr : searchAttrs) {
-            if (attr.isDisplay()) {
-                Object value = null;
-                try {
-                    value = attr.getGetter().invoke(domainObject);
-                }
-                catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                    log.error("Error getting value for attribute: " + attr.getName(), e);
-                }
-                addProperty(attr.getLabel(), value);
-            }
-        }
-
-        if (domainObject instanceof Sample) {
-
-            // TODO: factor this out into a separate confocal module 
-            
-            Sample sample = (Sample)domainObject;
-            Map<AlignmentScoreType, String> scores = SampleUtils.getLatestAlignmentScores(sample);
-
-            for (AlignmentScoreType alignmentScoreType : AlignmentScoreType.values()) {
-                String value = scores.get(alignmentScoreType);
-                if (value!=null) {
-                    addProperty(alignmentScoreType.getLabel(), value);
-                }
-            }
+            Object value = proxy.get(attr.getLabel());
+            addProperty(attr.getLabel(), value);
         }
 
         addPropertiesToTable();

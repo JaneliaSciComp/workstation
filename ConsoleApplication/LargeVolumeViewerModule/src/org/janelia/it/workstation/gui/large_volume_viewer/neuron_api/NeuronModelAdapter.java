@@ -82,7 +82,6 @@ public class NeuronModelAdapter implements NeuronModel
             new BasicNeuronVertexUpdateObservable();
     private final NeuronVertexDeletionObservable membersRemovedObservable = 
             new BasicNeuronVertexDeletionObservable();
-    private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // private NeuronStyle neuronStyle;
     // TODO: Stop using locally cached color and visibility, in favor of proper syncing with underlying Style
@@ -356,16 +355,23 @@ public class NeuronModelAdapter implements NeuronModel
 
         // Set color in actual wrapped Style
         boolean vis = true;
+        Color deepColor = null;
         NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
-        if (style != null)
+        if (style != null) {
             vis = style.isVisible();
-        else
+            deepColor = style.getColor();
+        }
+        else {
             vis = isVisible();
-        
-        try {
-            neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, vis));
-        } catch (Exception ex) {
-        	logger.error("Error setting neuron style", ex);
+        }
+
+        // Avoid multiple style setting calls
+        if (! color.equals(deepColor)) {
+            try {
+                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, vis));
+            } catch (Exception ex) {
+                logger.error("Error setting neuron style", ex);
+            }
         }
 
         getColorChangeObservable().setChanged();
@@ -440,12 +446,19 @@ public class NeuronModelAdapter implements NeuronModel
         // Synchronize with TmNeuron Style
         NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
         Color color = cachedColor;
-        if (style != null)
+
+        boolean deepVisibility = ! visible;
+        if (style != null) {
             color = style.getColor();
-        try {
-            neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, visible));
-        } catch (Exception ex) {
-        	logger.error("Error setting neuron style", ex);
+            deepVisibility = style.isVisible();
+        }
+        // Don't keep updating visibility, if it's already set correctly
+        if (visible != deepVisibility) {
+            try {
+                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, visible));
+            } catch (Exception ex) {
+                logger.error("Error setting neuron style", ex);
+            }
         }
         
         getVisibilityChangeObservable().setChanged();
