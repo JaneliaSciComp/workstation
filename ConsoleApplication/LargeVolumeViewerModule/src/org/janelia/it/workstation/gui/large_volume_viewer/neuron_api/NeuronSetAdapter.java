@@ -479,7 +479,12 @@ implements NeuronSet// , LookupListener
 
 
     private class MyGlobalAnnotationListener implements GlobalAnnotationListener {
-        
+
+        @Override
+        public void workspaceUnloaded(final TmWorkspace workspace) {
+            spatialIndex.clear();
+        }
+    
         @Override
         public void workspaceLoaded(final TmWorkspace workspace)
         {

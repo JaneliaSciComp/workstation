@@ -56,6 +56,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.janelia.it.workstation.tracing.PathTraceToParentWorker;
@@ -1143,30 +1144,36 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         // create it in another thread
         // there is no doubt a better way to get these parameters in:
-        final Long ID = sampleID;
+        final Long finalSampleId = sampleID;
         SimpleWorker creator = new SimpleWorker() {
+            
+            private TmWorkspace workspace;
+            
             @Override
             protected void doStuff() throws Exception {
                 
+                log.info("Creating new workspace with name '{}' for {}",workspaceName,finalSampleId);
+                
                 // now we can create the workspace
-                TmWorkspace workspace = annotationModel.createWorkspace(ID, workspaceName);
-                annotationModel.loadWorkspace(workspace);
+                this.workspace = annotationModel.createWorkspace(finalSampleId, workspaceName);
+                log.info("Created workspace with id={}",workspace.getId());
 
-                // and if there was a previously existing workspace, we'll save the
-                //  existing color model (which isn't cleared by creating a new
-                //  workspace) into the new workspace
+                // Reuse the existing color model 
                 if (existingWorkspace) {
-                    saveQuadViewColorModel();
+                    workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
+                    annotationModel.saveWorkspace(workspace);
+                    log.info("Copied existing color model");
                 }
 
                 // Update "Recently Opened" history
                 String strRef = Reference.createFor(workspace).toString();
                 StateMgr.getStateMgr().updateRecentlyOpenedHistory(strRef);
+                log.info("Updated recently opened history.");
             }
 
             @Override
             protected void hadSuccess() {
-                annotationModel.loadComplete();
+                LargeVolumeViewerTopComponent.getInstance().openLargeVolumeViewer(workspace);
             }
 
             @Override
@@ -1174,6 +1181,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 ConsoleApp.handleException(error);
             }
         };
+        creator.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Creating new workspace...", ""));
         creator.execute();
     }
 
@@ -1399,24 +1407,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     updateMap.put(neuron, getNeuronStyle(neuron));
                 }
                 annotationModel.fireNeuronStylesChanged(updateMap);
-                // This hack is currently needed because the event model is so screwed up
-                SimpleWorker updater = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        setCurrentNeuronVisibility(true);
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        // nothing; listeners will update
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
-                    }
-                };
-                updater.execute();
+                setCurrentNeuronVisibility(true);
             }
 
             @Override
@@ -1424,6 +1415,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 ConsoleApp.handleException(error);
             }
         };
+        updater.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Hiding neurons...", ""));
         updater.execute();
     }
     

@@ -41,7 +41,7 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
 
     @Override
     public List<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) throws Exception {
-        log.info("Checking neurons for workspace: "+workspace);
+        log.info("Loading neurons for workspace: {}", workspace);
         List<TmNeuronMetadata> neurons = new ArrayList<>();
 
         try {            

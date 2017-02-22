@@ -1050,7 +1050,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                log.info("componentResized "+e);
                 // If we are using this optimization, the anchor set needs to be updated whenever the view is resized
                 if (ApplicationPanel.isAnchorsInViewport()) {
                     getSkeletonActor().getModel().forceUpdateAnchors();

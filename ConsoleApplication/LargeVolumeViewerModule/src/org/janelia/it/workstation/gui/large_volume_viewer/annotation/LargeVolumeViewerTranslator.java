@@ -282,18 +282,18 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     public void annotationSelected(Long id) {
         fireNextParentEvent(id);
     }
+
+    @Override
+    public void workspaceUnloaded(TmWorkspace workspace) {
+        logger.info("Workspace unloaded");
+        fireClearAnchors();
+    }
     
-    /**
-     * called by the model when it loads a new workspace
-     */
     @Override
     public void workspaceLoaded(TmWorkspace workspace) {
         
         logger.info("Workspace loaded");
         
-        // clear existing
-        fireClearAnchors();
-
         if (workspace != null) {
             
             // See about things to add to the Tile Format.
@@ -354,7 +354,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                 }   
             }
 
-            skeletonController.beginTransaction();
+            skeletonController.setSkipSkeletonChange(true);
 
             fireNeuronStylesChangedEvent(updateNeuronStyleMap);
             logger.debug("updated {} neuron styles", updateNeuronStyleMap.size());
@@ -365,7 +365,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             fireAnchoredVoxelPathsAdded(voxelPathList);
             logger.debug("added {} anchored paths", voxelPathList.size());
             
-            skeletonController.endTransaction();
+            skeletonController.setSkipSkeletonChange(false);
+            skeletonController.skeletonChanged(true);
         }
     }
 

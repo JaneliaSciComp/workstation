@@ -203,9 +203,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public void saveCurrentWorkspace() throws Exception {
-        tmDomainMgr.save(currentWorkspace);
+        saveWorkspace(currentWorkspace);
     }
 
+    public void saveWorkspace(TmWorkspace workspace) throws Exception {
+        tmDomainMgr.save(workspace);
+    }
+    
     public TmSample getCurrentSample() {
         return currentSample;
     }
@@ -251,13 +255,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         currentSample = null;
         currentTagMap = null;
         setCurrentNeuron(null);
+        fireWorkspaceUnloaded(currentWorkspace);
     }
     
     public synchronized void loadSample(final TmSample sample) throws Exception {
         if (sample == null) {
             throw new IllegalArgumentException("Cannot load null sample");
         }
-        
         log.info("Loading sample {}", sample.getId());
         currentWorkspace = null;
         currentSample = sample;
@@ -268,7 +272,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         if (workspace == null) {
             throw new IllegalArgumentException("Cannot load null workspace");
         }
-
         log.info("Loading workspace {}", workspace.getId());
         currentWorkspace = workspace;
         currentSample = tmDomainMgr.getSample(workspace);
@@ -1757,6 +1760,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
 
+    void fireWorkspaceUnloaded(TmWorkspace workspace) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.workspaceUnloaded(workspace);
+        }
+    }
+    
     void fireWorkspaceLoaded(TmWorkspace workspace) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.workspaceLoaded(workspace);
