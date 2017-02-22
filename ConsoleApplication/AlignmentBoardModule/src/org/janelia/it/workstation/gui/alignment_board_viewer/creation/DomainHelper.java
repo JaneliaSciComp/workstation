@@ -204,7 +204,19 @@ public class DomainHelper {
                 if (! checkSampleAlignmentResult(sar, context)) {
                     continue;
                 }
-                NeuronSeparation ns = sar.getLatestSeparationResult();
+                NeuronSeparation ns = null;
+                List<NeuronSeparation> results = sar.getResultsOfType(NeuronSeparation.class);
+                sar.getLatestSeparationResult();
+                for (NeuronSeparation nextNeuSep: results) {
+                    ReverseReference fragRef = nextNeuSep.getFragmentsReference();
+                    if (fragRef == null  ||  fragRef.getCount() == 0) {
+                        continue;
+                    }
+                    else {
+                        // Keep the last neuron-bearing separation.
+                        ns = nextNeuSep;
+                    }
+                }
                 if (ns == null) {
                     log.info("No neuron separation for {}, objective {}.", sample.getName(), sar.getObjective());
                 } else {
