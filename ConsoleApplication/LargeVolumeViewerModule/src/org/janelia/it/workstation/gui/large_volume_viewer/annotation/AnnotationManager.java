@@ -1164,11 +1164,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     annotationModel.saveWorkspace(workspace);
                     log.info("Copied existing color model");
                 }
-
-                // Update "Recently Opened" history
-                String strRef = Reference.createFor(workspace).toString();
-                StateMgr.getStateMgr().updateRecentlyOpenedHistory(strRef);
-                log.info("Updated recently opened history.");
             }
 
             @Override
@@ -1204,12 +1199,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             @Override
             protected void doStuff() throws Exception {
                 workspaceCopy = annotationModel.copyWorkspace(workspace, workspaceName);
-                annotationModel.loadWorkspace(workspaceCopy);
             }
 
             @Override
             protected void hadSuccess() {
-                annotationModel.loadComplete();
+                LargeVolumeViewerTopComponent.getInstance().openLargeVolumeViewer(workspaceCopy);
             }
 
             @Override
