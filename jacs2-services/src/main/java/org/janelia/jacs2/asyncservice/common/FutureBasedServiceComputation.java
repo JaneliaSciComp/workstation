@@ -84,7 +84,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
     @Override
     public <U> ServiceComputation<U> thenCompose(Function<? super T, ? extends ServiceComputation<U>> fn) {
-        return new FutureBasedServiceComputation<>(executor, future.thenComposeAsync(t -> CompletableFuture.supplyAsync(() -> fn.apply(t).get(), executor), executor));
+        return new FutureBasedServiceComputation<>(executor, future.thenCompose(t -> CompletableFuture.supplyAsync(() -> fn.apply(t).get(), executor)));
     }
 
     @Override
