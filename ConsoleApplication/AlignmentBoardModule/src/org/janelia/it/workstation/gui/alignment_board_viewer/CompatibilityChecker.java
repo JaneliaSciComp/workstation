@@ -137,6 +137,34 @@ public class CompatibilityChecker {
     }
     
     /**
+     * Only neurons with fragments in their aligned areas can be
+     * presented in an alignment board.  Otherwise just confuses people.
+     * 
+     * @param sample check for neurons
+     * @return T if found.
+     */
+    public boolean hasNeuronFragments(Sample sample) {
+        boolean rtnVal = false;
+        try {
+            List<AlignmentContext> contexts = domainHelper.getAvailableAlignmentContexts(sample);
+            if (contexts == null  ||  contexts.isEmpty()) {
+                return false;
+            }
+            
+            for (AlignmentContext ctx: contexts) {
+                ReverseReference neuronRref = domainHelper.getNeuronRRefForSample(sample, ctx);
+                if (neuronRref != null  &&  neuronRref.getCount() > 0) {
+                    rtnVal = true;
+                    break;
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return rtnVal;
+    }
+    
+    /**
      * Only aligned neuron fragments may be presented in the alignment board.
      * 
      * @param neuronFragment may/may not have alignment context.
