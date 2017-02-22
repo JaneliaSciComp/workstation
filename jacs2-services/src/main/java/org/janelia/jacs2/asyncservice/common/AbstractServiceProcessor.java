@@ -64,9 +64,7 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         return computationFactory.<JacsServiceData>newComputation()
                 .supply(() -> {
                     long startTime = System.currentTimeMillis();
-                    jacsServiceData.setState(JacsServiceState.WAITING);
-                    jacsServiceDataPersistence.update(jacsServiceData);
-                    for (; ; ) {
+                    for (;;) {
                         JacsServiceData sd = jacsServiceDataPersistence.findById(jacsServiceData.getId());
                         if (sd.hasCompletedSuccessfully()) {
                             return sd;
