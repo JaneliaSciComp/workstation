@@ -43,6 +43,7 @@ import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
 import org.janelia.it.workstation.gui.alignment_board.util.ABUnspecified;
+import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +69,10 @@ public class DomainHelper {
                 for (SamplePipelineRun pipelineRun : os.getPipelineRuns()) {
                     for (PipelineResult result : pipelineRun.getResults()) {
                         if (result instanceof SampleAlignmentResult) {
+                            CompatibilityChecker compatibilityChecker = new CompatibilityChecker();
+                            //if (compatibilityChecker.hasNeuronFragments(sample)) {
+                            //
+                            //}
                             SampleAlignmentResult sar = (SampleAlignmentResult)result;
                             String alignmentSpace = sar.getAlignmentSpace();
                             String imageSize = sar.getImageSize();
