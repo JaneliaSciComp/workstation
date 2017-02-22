@@ -13,6 +13,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
  * @author fosterl
  */
 public interface GlobalAnnotationListener {
+    void workspaceUnloaded(TmWorkspace workspace);
     void workspaceLoaded(TmWorkspace workspace);
     void spatialIndexReady(TmWorkspace workspace);
     void neuronCreated(TmNeuronMetadata neuron);

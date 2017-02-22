@@ -122,6 +122,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
 
     void load() {
         loadLastCheckbox.setSelected(isLoadLastObject());
+        verifyNeuronsCheckbox.setSelected(isVerifyNeurons());
         anchorsInViewportCheckbox.setSelected(isAnchorsInViewport());
         zThicknessField.setText(getZThickness()+"");
     }
@@ -136,7 +137,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
         FrameworkImplProvider.setLocalPreferenceValue(
                 ApplicationPanel.class, 
                 PREFERENCE_VERIFY_NEURONS, 
-                loadLastCheckbox.isSelected()+"");
+                verifyNeuronsCheckbox.isSelected()+"");
         
         FrameworkImplProvider.setLocalPreferenceValue(
                 ApplicationPanel.class, 

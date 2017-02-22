@@ -14,6 +14,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
@@ -116,6 +117,10 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         setCurrent(domainObject);
         Snapshot3DLauncher.removeStaleViewer();
         getLvvv().loadDomainObject(domainObject);
+
+        // Update "Recently Opened" history
+        String strRef = Reference.createFor(domainObject).toString();
+        StateMgr.getStateMgr().updateRecentlyOpenedHistory(strRef);
     }
 
     /**
