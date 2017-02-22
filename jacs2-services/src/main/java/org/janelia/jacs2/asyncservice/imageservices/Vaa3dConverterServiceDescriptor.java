@@ -12,7 +12,7 @@ import javax.inject.Named;
 public class Vaa3dConverterServiceDescriptor implements ServiceDescriptor {
     static class Vaa3dConverterArgs extends ServiceArgs {
         @Parameter(names = "-convertCmd", description = "Convert command. Valid values are: []")
-        String convertCmd = "convert";
+        String convertCmd = "-convert";
         @Parameter(names = "-input", description = "Input file", required = true)
         String inputFileName;
         @Parameter(names = "-output", description = "Output file", required = true)
