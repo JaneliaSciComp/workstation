@@ -1,6 +1,7 @@
 package org.janelia.jacs2.asyncservice.sampleprocessing;
 
 import com.beust.jcommander.Parameter;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.janelia.jacs2.asyncservice.common.ServiceDescriptor;
 
@@ -25,11 +26,7 @@ public class GetSampleMIPsAndMoviesServiceDescriptor implements ServiceDescripto
 
     @Override
     public ServiceMetaData getMetadata() {
-        String serviceName = this.getClass().getAnnotation(Named.class).value();
-        ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(serviceName);
-        smd.setUsage(SampleMIPsAndMoviesArgs.usage(serviceName, new SampleMIPsAndMoviesArgs()));
-        return smd;
+        return ServiceArgs.getMetadata(this.getClass(), new SampleMIPsAndMoviesArgs());
     }
 
     @Override

@@ -2,6 +2,7 @@ package org.janelia.jacs2.asyncservice.common;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.ProcessingLocation;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -25,14 +26,14 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
     private final String executablesBaseDir;
     private final Instance<ExternalProcessRunner> serviceRunners;
 
-    public AbstractExeBasedServiceProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+    public AbstractExeBasedServiceProcessor(JacsServiceEngine jacsServiceEngine,
                                             ServiceComputationFactory computationFactory,
                                             JacsServiceDataPersistence jacsServiceDataPersistence,
                                             String defaultWorkingDir,
                                             String executablesBaseDir,
                                             Instance<ExternalProcessRunner> serviceRunners,
                                             Logger logger) {
-        super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.serviceRunners = serviceRunners;
         this.executablesBaseDir = executablesBaseDir;
     }
@@ -87,7 +88,7 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
                 String l = outputReader.readLine();
                 if (l == null) break;
                 logWriter.accept(l);
-                if (checkForErrors(l)) {
+                if (hasErrors(l)) {
                     error = l;
                 }
             } catch (IOException re) {
@@ -98,7 +99,7 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
         return error;
     }
 
-    protected boolean checkForErrors(String l) {
+    protected boolean hasErrors(String l) {
         if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(error|exception).*)")) {
             logger.error(l);
             return true;

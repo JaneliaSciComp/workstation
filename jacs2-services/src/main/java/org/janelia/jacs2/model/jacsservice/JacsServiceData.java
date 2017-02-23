@@ -22,6 +22,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     @JsonProperty("_id")
     private Number id;
     private String name;
+    private String version;
     private ProcessingLocation processingLocation;
     private JacsServiceState state = JacsServiceState.CREATED;
     private Integer priority = 0;
@@ -59,6 +60,14 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     public ProcessingLocation getProcessingLocation() {
@@ -159,6 +168,10 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         return parentServiceId;
     }
 
+    public boolean hasParentServiceId() {
+        return parentServiceId != null;
+    }
+
     public void setParentServiceId(Number parentServiceId) {
         this.parentServiceId = parentServiceId;
     }
@@ -225,6 +238,13 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
 
     public void setStringifiedResult(String stringifiedResult) {
         this.stringifiedResult = stringifiedResult;
+    }
+
+    public void addEvent(JacsServiceEventTypes name, String value) {
+        JacsServiceEvent se = new JacsServiceEvent();
+        se.setName(name.name());
+        se.setValue(value);
+        addEvent(se);
     }
 
     public void addEvent(JacsServiceEvent se) {

@@ -20,6 +20,7 @@ public class ApplicationProducer {
         return ObjectMapperFactory.instance().getDefaultObjectMapper();
     }
 
+    @Singleton
     @Produces
     public TimebasedIdentifierGenerator idGenerator(@PropertyValue(name = "TimebasedIdentifierGenerator.DeploymentContext") Integer deploymentContext) {
         return new TimebasedIdentifierGenerator(deploymentContext);

@@ -2,10 +2,10 @@ package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.JCommander;
 import com.google.common.collect.ImmutableMap;
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
-import org.janelia.jacs2.asyncservice.common.JacsServiceDispatcher;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.asyncservice.utils.X11Utils;
@@ -28,7 +28,7 @@ public class Vaa3dProcessor extends AbstractExeBasedServiceProcessor<Void> {
     private final String libraryPath;
 
     @Inject
-    Vaa3dProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+    Vaa3dProcessor(JacsServiceEngine jacsServiceEngine,
                    ServiceComputationFactory computationFactory,
                    JacsServiceDataPersistence jacsServiceDataPersistence,
                    @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
@@ -37,7 +37,7 @@ public class Vaa3dProcessor extends AbstractExeBasedServiceProcessor<Void> {
                    @PropertyValue(name = "VAA3D.Bin.Path") String vaa3dExecutable,
                    @PropertyValue(name = "VAA3D.LibraryPath") String libraryPath,
                    Logger logger) {
-        super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.vaa3dExecutable = vaa3dExecutable;
         this.libraryPath = libraryPath;
     }

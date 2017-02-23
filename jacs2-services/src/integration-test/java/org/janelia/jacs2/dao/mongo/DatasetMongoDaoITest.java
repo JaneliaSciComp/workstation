@@ -35,7 +35,7 @@ public class DatasetMongoDaoITest extends AbstractDomainObjectDaoITest<DataSet> 
 
     @Before
     public void setUp() {
-        testDao = new DatasetMongoDao(testMongoDatabase, idGenerator, objectMapper);
+        testDao = new DatasetMongoDao(testMongoDatabase, idGenerator, testObjectMapperFactory);
     }
 
     @After
@@ -96,7 +96,7 @@ public class DatasetMongoDaoITest extends AbstractDomainObjectDaoITest<DataSet> 
 
     @Test
     public void updateDataset() {
-        DataSet testDataset = createTestDataset("ds1");
+        DataSet testDataset = createTestDataset("ds1", "subject:verify");
         testDao.save(testDataset);
         testDataset.setOwnerKey("subject:verify");
         testDao.update(testDataset);
@@ -113,7 +113,7 @@ public class DatasetMongoDaoITest extends AbstractDomainObjectDaoITest<DataSet> 
         return testItems;
     }
 
-    private DataSet createTestDataset(String dataset) {
+    private DataSet createTestDataset(String dataset, String... writers) {
         DataSet testDataset = new DataSet();
         Date currentTime = new Date();
         testDataset.setIdentifier(dataset + "Id");
@@ -122,6 +122,9 @@ public class DatasetMongoDaoITest extends AbstractDomainObjectDaoITest<DataSet> 
         testDataset.setSageGrammarPath(dataset);
         testDataset.setCreationDate(currentTime);
         testDataset.setOwnerKey(TEST_OWNER_KEY);
+        for (String writer : writers) {
+            testDataset.addWriter(writer);
+        }
         testData.add(testDataset);
         return testDataset;
     }

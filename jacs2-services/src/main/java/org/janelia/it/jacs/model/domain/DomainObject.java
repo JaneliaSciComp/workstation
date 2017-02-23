@@ -20,8 +20,13 @@ public interface DomainObject extends BaseEntity, HasIdentifier {
     String getEntityRefId();
     String getName();
     void setName(String name);
+    String getOwnerName();
     String getOwnerKey();
     void setOwnerKey(String ownerKey);
+    String getLockKey();
+    void setLockKey(String lockKey);
+    Date getLockTimestamp();
+    void setLockTimestamp(Date lockTimestamp);
     Set<String> getReaders();
     void setReaders(Set<String> readers);
     void addReader(String reader);

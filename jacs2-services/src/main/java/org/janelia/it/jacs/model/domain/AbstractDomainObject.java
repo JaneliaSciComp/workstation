@@ -26,6 +26,8 @@ public abstract class AbstractDomainObject implements DomainObject {
     private Number id;
     private String name;
     private String ownerKey;
+    private String lockKey;
+    private Date lockTimestamp;
     private Set<String> readers = new HashSet<>();
     private Set<String> writers = new HashSet<>();
     private Date creationDate;
@@ -44,6 +46,7 @@ public abstract class AbstractDomainObject implements DomainObject {
     }
 
     @JsonIgnore
+    @Override
     public String getOwnerName() {
         return DomainModelUtils.getNameFromSubjectKey(ownerKey);
     }
@@ -76,6 +79,26 @@ public abstract class AbstractDomainObject implements DomainObject {
     @Override
     public void setOwnerKey(String ownerKey) {
         this.ownerKey = ownerKey;
+    }
+
+    @Override
+    public String getLockKey() {
+        return lockKey;
+    }
+
+    @Override
+    public void setLockKey(String lockKey) {
+        this.lockKey = lockKey;
+    }
+
+    @Override
+    public Date getLockTimestamp() {
+        return lockTimestamp;
+    }
+
+    @Override
+    public void setLockTimestamp(Date lockTimestamp) {
+        this.lockTimestamp = lockTimestamp;
     }
 
     @Override

@@ -27,12 +27,15 @@ import static java.util.Objects.isNull;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.everyItem;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.IsNot.not;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.same;
 
 public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
@@ -42,7 +45,7 @@ public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
 
     @Before
     public void setUp() {
-        testDao = new SampleMongoDao(testMongoDatabase, idGenerator, objectMapper);
+        testDao = new SampleMongoDao(testMongoDatabase, idGenerator, testObjectMapperFactory);
     }
 
     @After
@@ -165,7 +168,44 @@ public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
     public void updateSample() {
         Sample testSample = createTestSample("ds1", "sc1");
         testDao.save(testSample);
-        testSample.setOwnerKey("subject:verify");
+        Sample newSample = testDao.findById(testSample.getId());
+        changeAndUpdateSample(newSample);
+        Sample retrievedSample = testDao.findById(testSample.getId());
+        assertNull(retrievedSample.getFlycoreAlias());
+        assertThat(retrievedSample, hasProperty("line", equalTo("Updated line")));
+        assertThat(retrievedSample, hasProperty("dataSet", equalTo(newSample.getDataSet())));
+    }
+
+    @Test
+    public void tryToUpdateALockedSampleWithoutTheKey() {
+        Sample testSample = createTestSample("ds1", "sc1");
+        testSample.setLockKey("LockKey");
+        testDao.save(testSample);
+        Sample newSample = testDao.findById(testSample.getId());
+        for (String lockKey : new String[]{null, "WrongKey"}) {
+            newSample.setLockKey(lockKey);
+            changeAndUpdateSample(newSample);
+            Sample retrievedSample = testDao.findById(testSample.getId());
+            assertThat(retrievedSample.getFlycoreAlias(), allOf(equalTo(testSample.getFlycoreAlias()), not(equalTo(newSample.getFlycoreAlias()))));
+            assertThat(retrievedSample.getLine(), allOf(equalTo(testSample.getLine()), not(equalTo(newSample.getLine()))));
+            assertThat(retrievedSample.getDataSet(), allOf(equalTo(testSample.getDataSet()), not(equalTo(newSample.getDataSet()))));
+        }
+    }
+
+    @Test
+    public void tryToUpdateALockedSampleWithTheRightKey() {
+        Sample testSample = createTestSample("ds1", "sc1");
+        testSample.setLockKey("LockKey");
+        testDao.save(testSample);
+        Sample newSample = testDao.findById(testSample.getId());
+        changeAndUpdateSample(newSample);
+        Sample retrievedSample = testDao.findById(testSample.getId());
+        assertThat(retrievedSample.getFlycoreAlias(), allOf(equalTo(newSample.getFlycoreAlias()), not(equalTo(testSample.getFlycoreAlias()))));
+        assertThat(retrievedSample.getLine(), allOf(equalTo(newSample.getLine()), not(equalTo(testSample.getLine()))));
+        assertThat(retrievedSample.getDataSet(), allOf(equalTo(newSample.getDataSet()), not(equalTo(testSample.getDataSet()))));
+    }
+
+    private void changeAndUpdateSample(Sample testSample) {
         testSample.setFlycoreAlias(null);
         testSample.setDataSet("newDataSet that has been changed");
         testSample.setLine("Updated line");
@@ -175,10 +215,48 @@ public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
                 createSampleObjective("new_o2"),
                 createSampleObjective("new_o3")));
         testDao.update(testSample);
-        Sample retrievedSample = testDao.findById(testSample.getId());
-        assertNull(testSample.getFlycoreAlias());
-        assertThat(retrievedSample, hasProperty("ownerKey", equalTo("subject:verify")));
-        assertThat(retrievedSample, hasProperty("dataSet", equalTo(testSample.getDataSet())));
+
+    }
+
+    @Test
+    public void lockAndUnlockAnUnlockedSample() {
+        Sample testSample = createTestSample("ds1", "sc1");
+        testDao.save(testSample);
+        Sample savedSample = testDao.findById(testSample.getId());
+        assertThat(savedSample.getLockKey(), nullValue());
+        assertThat(savedSample.getLockTimestamp(), nullValue());
+        // unlocking an unlocked sample has no effect
+        assertTrue(testDao.unlockEntity("AnyKey", savedSample));
+        savedSample = testDao.findById(testSample.getId());
+        assertThat(savedSample.getLockKey(), nullValue());
+        assertThat(savedSample.getLockTimestamp(), nullValue());
+        // now place the lock
+        assertTrue(testDao.lockEntity("LockKey", testSample));
+        Sample savedLockedSample = testDao.findById(testSample.getId());
+        assertThat(savedLockedSample.getLockKey(), equalTo("LockKey"));
+        assertThat(savedLockedSample.getLockTimestamp(), not(nullValue()));
+    }
+
+    @Test
+    public void lockAndUnlockAnAlreadyLockedSample() {
+        Sample testSample = createTestSample("ds1", "sc1");
+        testDao.save(testSample);
+        assertTrue(testDao.lockEntity("LockKey", testSample));
+        Sample savedLockedSample = testDao.findById(testSample.getId());
+        assertThat(savedLockedSample.getLockKey(), equalTo("LockKey"));
+        // I cannot place another lock on an already locked sample
+        assertFalse(testDao.lockEntity("NewKey", savedLockedSample));
+        savedLockedSample = testDao.findById(testSample.getId());
+        assertThat(savedLockedSample.getLockKey(), equalTo("LockKey"));
+        // The sample cannot be unlocked with the wrong key
+        assertFalse(testDao.lockEntity("WrongKey", savedLockedSample));
+        savedLockedSample = testDao.findById(testSample.getId());
+        assertThat(savedLockedSample.getLockKey(), equalTo("LockKey"));
+        // Now unlock it and test that the lock can be placed
+        assertTrue(testDao.unlockEntity("LockKey", savedLockedSample));
+        assertTrue(testDao.lockEntity("NewKey", savedLockedSample));
+        savedLockedSample = testDao.findById(testSample.getId());
+        assertThat(savedLockedSample.getLockKey(), equalTo("NewKey"));
     }
 
     private ObjectiveSample createSampleObjective(String o) {

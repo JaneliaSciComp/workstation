@@ -2,8 +2,10 @@ package org.janelia.jacs2.asyncservice.common;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
+import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.slf4j.Logger;
 
@@ -11,24 +13,25 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T> {
 
     protected static final int N_RETRIES_FOR_RESULT = 60;
     protected static final long WAIT_BETWEEN_RETRIES_FOR_RESULT = 1000; // 1s
 
-    protected final JacsServiceDispatcher jacsServiceDispatcher;
+    protected final JacsServiceEngine jacsServiceEngine;
     protected final ServiceComputationFactory computationFactory;
-    private final JacsServiceDataPersistence jacsServiceDataPersistence;
+    protected final JacsServiceDataPersistence jacsServiceDataPersistence;
     private final String defaultWorkingDir;
     protected final Logger logger;
 
-    public AbstractServiceProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+    public AbstractServiceProcessor(JacsServiceEngine jacsServiceEngine,
                                     ServiceComputationFactory computationFactory,
                                     JacsServiceDataPersistence jacsServiceDataPersistence,
                                     String defaultWorkingDir,
                                     Logger logger) {
-        this.jacsServiceDispatcher = jacsServiceDispatcher;
+        this.jacsServiceEngine = jacsServiceEngine;
         this.computationFactory= computationFactory;
         this.jacsServiceDataPersistence = jacsServiceDataPersistence;
         this.defaultWorkingDir = defaultWorkingDir;
@@ -52,42 +55,41 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         return computationFactory.newCompletedComputation(processingResult);
     }
 
-    /**
-     * The method submits a service dependency {@code serviceDependency} whose result is required by {@code jacsServiceData} computation.
-     *
-     * @param jacsServiceData
-     * @param serviceDependency
-     * @return a computation for the new submitted service.
-     */
-    protected ServiceComputation<JacsServiceData> submitServiceDependency(JacsServiceData jacsServiceData, JacsServiceData serviceDependency) {
-        serviceDependency.updateParentService(jacsServiceData);
-        return computationFactory.newCompletedComputation(jacsServiceDispatcher.submitServiceAsync(serviceDependency));
+    protected ServiceComputation<JacsServiceData> createServiceComputation(JacsServiceData jacsServiceData) {
+        return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
     protected ServiceComputation<?> waitForCompletion(JacsServiceData jacsServiceData) {
-        ServiceProcessor<?> serviceProcessor = jacsServiceDispatcher.getServiceProcessor(jacsServiceData);
+        ServiceProcessor<?> serviceProcessor = jacsServiceEngine.getServiceProcessor(jacsServiceData);
         return computationFactory.<JacsServiceData>newComputation()
                 .supply(() -> {
                     long startTime = System.currentTimeMillis();
-                    jacsServiceData.setState(JacsServiceState.WAITING);
-                    jacsServiceDataPersistence.update(jacsServiceData);
-                    for (; ; ) {
+                    for (;;) {
                         JacsServiceData sd = jacsServiceDataPersistence.findById(jacsServiceData.getId());
                         if (sd.hasCompletedSuccessfully()) {
                             return sd;
                         } else if (sd.hasCompletedUnsuccessfully()) {
                             logger.warn("Service {} completed unsuccessfully", sd);
                             throw new ComputationException(sd, "Service " + sd + " did not complete successfully");
-                        } else {
-                            try {
-                                Thread.currentThread().sleep(1000);
-                            } catch (InterruptedException e) {
-                                logger.warn("Interrupt {}", jacsServiceData, e);
-                                throw new ComputationException(jacsServiceData, e);
-                            }
+                        }
+                        List<JacsServiceData> childServices = jacsServiceDataPersistence.findChildServices(jacsServiceData.getId());
+                        Optional<JacsServiceData> failedChildService = childServices.stream().filter(cs -> cs.hasCompletedUnsuccessfully()).findFirst();
+                        if (failedChildService.isPresent()) {
+                            sd.setState(JacsServiceState.CANCELED);
+                            sd.addEvent(JacsServiceEventTypes.CANCELED, String.format("Canceled because child service %d - %s %s -  finished unsuccessfully",
+                                    failedChildService.get().getId(), failedChildService.get().getName(), failedChildService.get().getArgs()));
+                            jacsServiceDataPersistence.update(sd);
+                            logger.warn("Service {} canceled because of {}", sd, failedChildService.get());
+                            throw new ComputationException(sd, "Service " + sd + " canceled");
+                        }
+                        try {
+                            Thread.currentThread().sleep(1000);
+                        } catch (InterruptedException e) {
+                            logger.warn("Interrupt {}", jacsServiceData, e);
+                            throw new ComputationException(jacsServiceData, e);
                         }
                         long timeSinceStart = System.currentTimeMillis() - startTime;
-                        if (sd.timeout() > 0 &&  timeSinceStart > sd.timeout()) {
+                        if (sd.timeout() > 0 && timeSinceStart > sd.timeout()) {
                             logger.warn("Service {} timed out after {}ms", sd, timeSinceStart);
                             sd.setState(JacsServiceState.TIMEOUT);
                             throw new ComputationException(sd, "Service " + sd + " timed out");

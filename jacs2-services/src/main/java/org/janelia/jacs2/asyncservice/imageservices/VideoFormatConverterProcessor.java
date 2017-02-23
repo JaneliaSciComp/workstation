@@ -1,9 +1,9 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.JCommander;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
@@ -12,7 +12,6 @@ import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
-import org.janelia.jacs2.asyncservice.common.JacsServiceDispatcher;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
@@ -24,7 +23,6 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.List;
 import java.util.Map;
 
 public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProcessor<File> {
@@ -33,7 +31,7 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
     private final String libraryPath;
 
     @Inject
-    VideoFormatConverterProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+    VideoFormatConverterProcessor(JacsServiceEngine jacsServiceEngine,
                                   ServiceComputationFactory computationFactory,
                                   JacsServiceDataPersistence jacsServiceDataPersistence,
                                   @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
@@ -42,7 +40,7 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
                                   @PropertyValue(name = "FFMPEG.Bin.Path") String ffmpegExecutable,
                                   @PropertyValue(name = "VAA3D.LibraryPath") String libraryPath,
                                   Logger logger) {
-        super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.ffmpegExecutable = ffmpegExecutable;
         this.libraryPath = libraryPath;
     }

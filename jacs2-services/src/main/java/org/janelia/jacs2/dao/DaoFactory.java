@@ -8,8 +8,12 @@ import javax.inject.Inject;
 
 public class DaoFactory {
 
-    @Any @Inject
-    private Instance<Dao<?, Number>> daosSource;
+    private final Instance<Dao<?, Number>> daosSource;
+
+    @Inject
+    public DaoFactory(@Any Instance<Dao<?, Number>> daosSource) {
+        this.daosSource = daosSource;
+    }
 
     public Dao<?, Number> createDao(String entityName) {
         Class<?> entityClass = DomainModelUtils.getBasePersistedEntityClass(entityName);

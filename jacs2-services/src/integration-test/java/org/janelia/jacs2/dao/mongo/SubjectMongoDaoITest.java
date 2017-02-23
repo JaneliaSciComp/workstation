@@ -20,10 +20,8 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.same;
 
@@ -34,7 +32,7 @@ public class SubjectMongoDaoITest extends AbstractMongoDaoITest<Subject> {
 
     @Before
     public void setUp() {
-        testDao = new SubjectMongoDao(testMongoDatabase, idGenerator, objectMapper);
+        testDao = new SubjectMongoDao(testMongoDatabase, idGenerator, testObjectMapperFactory);
     }
 
     @After

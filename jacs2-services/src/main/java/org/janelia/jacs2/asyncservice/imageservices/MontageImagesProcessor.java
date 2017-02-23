@@ -2,13 +2,13 @@ package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.JCommander;
 import com.google.common.collect.ImmutableMap;
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
-import org.janelia.jacs2.asyncservice.common.JacsServiceDispatcher;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.slf4j.Logger;
@@ -35,7 +35,7 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
     private final String libraryPath;
 
     @Inject
-    MontageImagesProcessor(JacsServiceDispatcher jacsServiceDispatcher,
+    MontageImagesProcessor(JacsServiceEngine jacsServiceEngine,
                            ServiceComputationFactory computationFactory,
                            JacsServiceDataPersistence jacsServiceDataPersistence,
                            @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
@@ -45,7 +45,7 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
                            @PropertyValue(name = "ImageMagick.Montage.Name") String montageToolName,
                            @PropertyValue(name = "ImageMagick.Lib.Path") String libraryPath,
                            Logger logger) {
-        super(jacsServiceDispatcher, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.montageToolLocation = montageToolLocation;
         this.montageToolName = montageToolName;
         this.libraryPath = libraryPath;

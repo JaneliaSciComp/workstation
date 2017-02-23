@@ -1,11 +1,11 @@
 package org.janelia.jacs2.asyncservice.fileservices;
 
+import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
-import org.janelia.jacs2.asyncservice.common.JacsServiceDispatcher;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.junit.After;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 
 public class FileCopyProcessorTest {
 
-    private JacsServiceDispatcher jacsServiceDispatcher;
+    private JacsServiceEngine jacsServiceEngine;
     private ServiceComputationFactory serviceComputationFactory;
     private JacsServiceDataPersistence jacsServiceDataPersistence;
     private Instance<ExternalProcessRunner> serviceRunners;
@@ -60,7 +60,7 @@ public class FileCopyProcessorTest {
         serviceComputationFactory = new ServiceComputationFactory(executor);
         Logger logger = mock(Logger.class);
         testProcessor = new FileCopyProcessor(
-                jacsServiceDispatcher,
+                jacsServiceEngine,
                 serviceComputationFactory,
                 jacsServiceDataPersistence,
                 defaultWorkingDir,

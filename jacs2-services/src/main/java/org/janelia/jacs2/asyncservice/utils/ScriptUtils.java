@@ -13,7 +13,6 @@ public class ScriptUtils {
                 .add("rm -rf $TEMP_DIR")
                 .echo("Cleaned up $TEMP_DIR")
                 .closeFunction(cleanupFunctionName);
-
     }
 
 }

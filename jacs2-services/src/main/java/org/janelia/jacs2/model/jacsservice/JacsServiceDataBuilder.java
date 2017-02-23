@@ -2,9 +2,11 @@ package org.janelia.jacs2.model.jacsservice;
 
 public class JacsServiceDataBuilder {
 
+    private final JacsServiceData serviceContext;
     private final JacsServiceData serviceData = new JacsServiceData();
 
     public JacsServiceDataBuilder(JacsServiceData serviceContext) {
+        this.serviceContext = serviceContext;
         if (serviceContext != null) {
             serviceData.setOwner(serviceContext.getOwner());
             serviceData.updateParentService(serviceContext);
@@ -38,6 +40,9 @@ public class JacsServiceDataBuilder {
     }
 
     public JacsServiceData build() {
+        if (serviceContext != null) {
+            serviceContext.addEvent(JacsServiceEventTypes.CREATE_CHILD_SERVICE, String.format("Create child service %s %s", serviceData.getName(), serviceData.getArgs()));
+        }
         return serviceData;
     }
 }

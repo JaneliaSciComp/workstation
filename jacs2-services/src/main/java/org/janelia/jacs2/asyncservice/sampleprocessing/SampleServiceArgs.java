@@ -1,23 +1,9 @@
 package org.janelia.jacs2.asyncservice.sampleprocessing;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 
-class SampleServiceArgs {
-
-    static <A extends SampleServiceArgs> A parse(String[] argsList, A args) {
-        new JCommander(args).parse(argsList);
-        return args;
-    }
-
-    static <A extends SampleServiceArgs> String usage(String serviceName, A args) {
-        StringBuilder usageOutput = new StringBuilder();
-        JCommander jc = new JCommander(args);
-        jc.setProgramName(serviceName);
-        jc.usage(usageOutput);
-        return usageOutput.toString();
-    }
-
+class SampleServiceArgs extends ServiceArgs {
     @Parameter(names = "-sampleId", description = "Sample ID", required = true)
     Long sampleId;
     @Parameter(names = "-objective",

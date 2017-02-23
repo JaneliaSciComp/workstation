@@ -15,6 +15,8 @@ import io.undertow.servlet.api.ServletInfo;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.janelia.jacs2.job.BackgroundJobs;
 import org.jboss.weld.environment.servlet.Listener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletException;
 
@@ -22,6 +24,8 @@ import javax.servlet.ServletException;
  * This is the bootstrap application.
  */
 public class Application {
+
+    private static final Logger LOG = LoggerFactory.getLogger(Application.class);
 
     private Undertow server;
 
@@ -78,6 +82,7 @@ public class Application {
             Handlers.path(Handlers.redirect(contextPath))
                 .addPrefixPath(contextPath, deploymentManager.start());
 
+        LOG.info("Start JACSv2 listener on {}:{}", appArgs.host, appArgs.portNumber);
         app.server = Undertow
                         .builder()
                         .addHttpListener(appArgs.portNumber, appArgs.host)

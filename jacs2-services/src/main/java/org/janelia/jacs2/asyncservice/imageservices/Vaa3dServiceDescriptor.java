@@ -1,7 +1,7 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceDescriptor;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 
@@ -10,7 +10,7 @@ import javax.inject.Named;
 
 @Named("vaa3d")
 public class Vaa3dServiceDescriptor implements ServiceDescriptor {
-    static class Vaa3dArgs {
+    static class Vaa3dArgs extends ServiceArgs {
         @Parameter(names = "-vaa3dArgs", description = "Arguments for vaa3d")
         String vaa3dArgs;
     }
@@ -24,16 +24,7 @@ public class Vaa3dServiceDescriptor implements ServiceDescriptor {
 
     @Override
     public ServiceMetaData getMetadata() {
-        String serviceName = this.getClass().getAnnotation(Named.class).value();
-        ServiceMetaData smd = new ServiceMetaData();
-        smd.setServiceName(serviceName);
-        Vaa3dArgs args = new Vaa3dArgs();
-        StringBuilder usageOutput = new StringBuilder();
-        JCommander jc = new JCommander(args);
-        jc.setProgramName(serviceName);
-        jc.usage(usageOutput);
-        smd.setUsage(usageOutput.toString());
-        return smd;
+        return ServiceArgs.getMetadata(this.getClass(), new Vaa3dArgs());
     }
 
     @Override
