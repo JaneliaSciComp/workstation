@@ -2107,7 +2107,7 @@ public class DomainDAO {
     }
 
     public List<StatusTransition> getPipelineStatusTransitionsBySampleId(Long sampleId) throws Exception {
-       return toList(pipelineStatusCollection.find("{sampleId: #}", sampleId).as(StatusTransition.class));
+       return toList(pipelineStatusCollection.find("{sampleId: #}", sampleId).sort("{transitionDate: -1}").as(StatusTransition.class));
     }
 
     public void addIntakeOrder(String orderNo,String owner) throws Exception {
