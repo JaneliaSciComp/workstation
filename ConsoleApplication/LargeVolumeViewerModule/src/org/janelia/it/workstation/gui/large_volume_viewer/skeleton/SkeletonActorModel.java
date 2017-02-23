@@ -190,7 +190,7 @@ public class SkeletonActorModel {
         updater.update();
     }
 
-    public boolean updateVertices() {
+    public synchronized boolean updateVertices() {
         if (verticesNeedCopy) {
             log.trace("updateVertices - running");
             
@@ -294,7 +294,7 @@ public class SkeletonActorModel {
         }
     }
 
-    public boolean updatePoints() {
+    public synchronized boolean updatePoints() {
         if (pointIndicesNeedCopy) {
             log.trace("updatePoints - running");
 
@@ -309,9 +309,15 @@ public class SkeletonActorModel {
                     continue;
                 }
                 neuronOrderList.add(neuronID);
-                int pointBufferSize=neuronPointIndices.get(neuronID).capacity()*INT_BYTE_COUNT;
-                pointOffsets.add(new ElementDataOffset(neuronID, pointBufferSize, cummulativePointOffset));
-                cummulativePointOffset+=pointBufferSize;
+                IntBuffer intBuffer = neuronPointIndices.get(neuronID);
+                if (intBuffer==null) {
+                    log.warn("Missing neuron {} from neuronPointIndices",neuronID);
+                }
+                else {
+                    int pointBufferSize=intBuffer.capacity()*INT_BYTE_COUNT;
+                    pointOffsets.add(new ElementDataOffset(neuronID, pointBufferSize, cummulativePointOffset));
+                    cummulativePointOffset+=pointBufferSize;
+                }
             }
 
             int n=0;

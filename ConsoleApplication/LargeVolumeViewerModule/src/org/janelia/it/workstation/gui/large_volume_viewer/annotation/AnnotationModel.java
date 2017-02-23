@@ -203,9 +203,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public void saveCurrentWorkspace() throws Exception {
-        tmDomainMgr.save(currentWorkspace);
+        saveWorkspace(currentWorkspace);
     }
 
+    public void saveWorkspace(TmWorkspace workspace) throws Exception {
+        tmDomainMgr.save(workspace);
+    }
+    
     public TmSample getCurrentSample() {
         return currentSample;
     }
@@ -251,13 +255,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         currentSample = null;
         currentTagMap = null;
         setCurrentNeuron(null);
+        fireWorkspaceUnloaded(currentWorkspace);
     }
     
     public synchronized void loadSample(final TmSample sample) throws Exception {
         if (sample == null) {
             throw new IllegalArgumentException("Cannot load null sample");
         }
-        
         log.info("Loading sample {}", sample.getId());
         currentWorkspace = null;
         currentSample = sample;
@@ -268,7 +272,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         if (workspace == null) {
             throw new IllegalArgumentException("Cannot load null workspace");
         }
-
         log.info("Loading workspace {}", workspace.getId());
         currentWorkspace = workspace;
         currentSample = tmDomainMgr.getSample(workspace);
@@ -531,7 +534,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     /**
      * Create a new copy of the given workspace, owned by the current user.
-     * @param sampleId = workspace Id
+     * @param workspace = workspace object
      * @param name = name of new workspace
      * @throws Exception
      */
@@ -1420,11 +1423,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * called from multiple threads, and the update is not atomic
      */
     public synchronized void setNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) throws Exception {
-        ModelTranslation.updateNeuronStyle(style, neuron);
-        neuronManager.saveNeuronMetadata(neuron);
-        // fire change to listeners
-        fireNeuronStyleChanged(neuron, style);
-        activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
+        if (neuron.getVisibility() != style.isVisible() || neuron.getColor() != style.getColor()) {
+            ModelTranslation.updateNeuronStyle(style, neuron);
+            neuronManager.saveNeuronMetadata(neuron);
+            // fire change to listeners
+            fireNeuronStyleChanged(neuron, style);
+            activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
+        }
     }
 
     public synchronized void setNeuronColors(List<TmNeuronMetadata> neuronList, Color color) throws Exception {
@@ -1755,6 +1760,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
 
+    void fireWorkspaceUnloaded(TmWorkspace workspace) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.workspaceUnloaded(workspace);
+        }
+    }
+    
     void fireWorkspaceLoaded(TmWorkspace workspace) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.workspaceLoaded(workspace);

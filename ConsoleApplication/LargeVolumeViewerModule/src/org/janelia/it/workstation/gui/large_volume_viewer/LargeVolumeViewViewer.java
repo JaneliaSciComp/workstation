@@ -68,21 +68,19 @@ public class LargeVolumeViewViewer extends JPanel {
     }
     
     public void loadDomainObject(final DomainObject domainObject) {
-        // NOTE: there must be a better way to handle the tasks in and out of
-        //  the UI thread; this version is the result of fixing what
-        //  we had w/o serious rewriting
-
     	logger.info("loadDomainObject({})", domainObject);
-    	
-        //  I have found that with very large numbers of
-        //  neurons in the neurons table, not reloading
-        //  causes GUI lockup.
+
+        // Clear existing UI state
+        if (annotationModel!=null) {
+            annotationModel.clear();
+        }
         close();
-    	
+        
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
+                
                 initialObject = domainObject;
 
                 // initial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
@@ -268,17 +266,36 @@ public class LargeVolumeViewViewer extends JPanel {
         sliceSample = null;
         initialObject = null;
         removeAll();
-        if (viewUI != null)
-            viewUI.clearCache();
-        viewUI = null;
+
+        if (viewUI != null) {
+            
+            final QuadViewUi oldQuadView = viewUI;
+            viewUI = null;
+            
+            SimpleWorker worker = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    logger.info("Clearing cache...");
+                    oldQuadView.clearCache();
+                }
+    
+                @Override
+                protected void hadSuccess() {
+                    logger.info("Cache cleared");
+                }
+    
+                @Override
+                protected void hadError(Throwable error) {
+                    ConsoleApp.handleException(error);
+                }
+            };
+            worker.execute();
+        }
+        
         if (annotationModel!=null) {
             Events.getInstance().unregisterOnEventBus(annotationModel);
             annotationModel = null;
         }
-    }
-
-    public void totalRefresh() {
-        refresh();
     }
     
     public void refresh() {
@@ -325,7 +342,7 @@ public class LargeVolumeViewViewer extends JPanel {
         }
         else {
             for(DomainObject domainObject : event.getDomainObjects()) {
-                if (DomainUtils.equals(domainObject, sliceSample)) {
+                if (DomainUtils.equals(domainObject, initialObject)) {
                     refresh();
                 }
             }
