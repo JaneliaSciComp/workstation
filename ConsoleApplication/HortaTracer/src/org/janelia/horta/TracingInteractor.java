@@ -248,10 +248,11 @@ public class TracingInteractor extends MouseAdapter
                 else if (context.canMergeNeurite()) { // Maybe merge two neurons
                     context.mergeNeurite();
                 }
+                else if (context.canCreateNeuron()) {
+                    context.createNeuron();
+                }
                 else {
-                    if (context.canCreateNeuron()) {
-                        context.createNeuron();
-                    }
+                    // TODO: What happens if you shift click on a readOnly workspace?
                 }
             }
             else { // Non-shift click to select vertices
@@ -525,6 +526,8 @@ public class TracingInteractor extends MouseAdapter
         // log.info("Tracing Dragging");
         if (cachedDragVertex == null)
             return; // no vertex to drag
+        if (defaultWorkspace.isReadOnly())
+            return; // not allowed to move that vertex
         if (! SwingUtilities.isLeftMouseButton(event))
             return; // left button drag only
 
@@ -560,7 +563,7 @@ public class TracingInteractor extends MouseAdapter
     @Override
     public void mousePressed(MouseEvent event) {
         // log.info("Begin drag");
-        if (cachedHighlightVertex != null) {
+        if ( (cachedHighlightVertex != null) && (! defaultWorkspace.isReadOnly()) ) {
             cachedDragVertex = cachedHighlightVertex;
             previousDragXYZ = volumeProjection.worldXyzForScreenXyInPlane(event.getPoint());
             startingDragVertexLocation = new Vector3(cachedHighlightVertex.getLocation());
@@ -575,7 +578,7 @@ public class TracingInteractor extends MouseAdapter
     public void mouseReleased(MouseEvent event) {
         // log.info("End drag");
         // Maybe complete an "anchor dragged" gesture
-        if (cachedDragVertex != null) {
+        if ( (cachedDragVertex != null) && (! defaultWorkspace.isReadOnly()) ) {
             assert(cachedDragVertex == cachedHighlightVertex);
             // log.info("End drag vertex");
             NeuronVertex hoverVertex = highlightHoverModel.getVertexes().iterator().next();
@@ -894,6 +897,7 @@ public class TracingInteractor extends MouseAdapter
             if (parentVertex == null) return false;
             if (densityVertex == null) return false;
             if (parentNeuron == null) return false;
+            if (defaultWorkspace.isReadOnly()) return false;
             return true;
         }
         
@@ -940,6 +944,7 @@ public class TracingInteractor extends MouseAdapter
             if (hoveredVertex != null) return false; // must not be looking at an existing vertex
             if (densityVertex == null) return false; // must have a place to plant the seed
             if (defaultWorkspace == null) return false; // must have a workspace to place the neuron into
+            if (defaultWorkspace.isReadOnly()) return false;
             return true;
         }
         
@@ -959,6 +964,8 @@ public class TracingInteractor extends MouseAdapter
                 return false;
             if (hoveredNeuron == null)
                 return false;
+            if (defaultWorkspace.isReadOnly())
+                return false;
             return true;
         }
         
@@ -977,6 +984,7 @@ public class TracingInteractor extends MouseAdapter
             if (parentVertex == null) return false;
             if (hoveredVertex == parentVertex) return false;
             if (hoveredNeuron == parentNeuron) return false; // cannot merge a neuron with itself
+            if (defaultWorkspace.isReadOnly()) return false;
             return true;
         }
         
@@ -1027,6 +1035,8 @@ public class TracingInteractor extends MouseAdapter
                 return false;
             if (hoveredNeuron == null)
                 return false;
+            if (defaultWorkspace.isReadOnly())
+                return false;
             return true;
         }
         
@@ -1052,6 +1062,7 @@ public class TracingInteractor extends MouseAdapter
         boolean canUpdateAnchorRadius() {
             if (hoveredVertex == null) return false;
             if (hoveredNeuron == null) return false;
+            if (defaultWorkspace.isReadOnly()) return false;
             return true;
         }
 
