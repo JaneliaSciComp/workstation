@@ -92,7 +92,7 @@ layout(location = 13) uniform int projectionMode = PROJECTION_MAXIMUM;
 #define FILTER_TRILINEAR 1
 layout(location = 14) uniform int voxelFilter = FILTER_TRILINEAR;
 
-layout(location = 15) uniform int levelOfDetail = 0; // TODO: adjust dynamically
+layout(location = 15) uniform float levelOfDetail = 0;
 
 
 /************************************************************************/
@@ -148,17 +148,18 @@ vec3 rampstep(vec3 edge0, vec3 edge1, vec3 x) {
 // Unmixes one voxel from two channels to create a third, synthetic channel voxel
 float tracing_channel_from_measured(CHANNEL_VEC raw_channels) {
     vec2 raw = raw_channels.xy;
+    vec2 rebased = raw - unmixMinScale.xy;
     // Avoid extreme differences at low input intensity
-    if (raw.x < 0.99 * unmixMinScale.x) return 0; // below threshold -> no data
-    if (raw.y < 0.99 * unmixMinScale.y) return 0;
-    // scale the two channels and combine
-    float result = dot(raw_channels.xy, unmixMinScale.zw);
+    if (min(rebased.x, rebased.y) < -0.05)
+        return 0; // below threshold -> no data
+    vec2 scaled = rebased * unmixMinScale.zw;
+    float result = scaled.x + scaled.y;
     // adjust the minimum to roughly match one of the input channels
-    float offset = -dot(unmixMinScale.xy, unmixMinScale.zw); // move average black level to zero
     // restore black level to match one of the inputs
-    if (unmixMinScale.z >= unmixMinScale.w) offset += unmixMinScale.x; // use black level from channel 1
-    else offset += unmixMinScale.y; // use black level from channel 2
-    result += offset; // allow room to explore negative differences
+    if (unmixMinScale.z >= unmixMinScale.w) 
+        result += unmixMinScale.x; // use black level from channel 1
+    else 
+        result += unmixMinScale.y; // use black level from channel 2
     result = clamp(result, 0, 1);
     return result;
 }
@@ -280,7 +281,7 @@ float advance_to_voxel_edge(
 }
 
 // Nearest-neighbor filtering
-CHANNEL_VEC fetch_texture_sample(in vec3 texCoord, in int levelOfDetail)
+CHANNEL_VEC fetch_texture_sample(in vec3 texCoord, in float levelOfDetail)
 {
     CHANNEL_VEC intensity = CHANNEL_VEC(textureLod(volumeTexture, texCoord, levelOfDetail));
 
@@ -420,7 +421,8 @@ void main()
     vec3 rearTexCoord = x0 + maxRay * x1;
 
     // Set up for texel-by-texel ray marching
-    ivec3 texelsPerVolume = textureSize(volumeTexture, levelOfDetail);
+    int intLod = max(0, int(floor(levelOfDetail)));
+    ivec3 texelsPerVolume = textureSize(volumeTexture, intLod);
 
     vec3 rayOriginInTexels = x0 * texelsPerVolume;
     vec3 rayDirectionInTexels = x1 * texelsPerVolume;

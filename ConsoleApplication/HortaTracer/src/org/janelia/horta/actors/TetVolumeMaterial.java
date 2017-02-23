@@ -115,13 +115,14 @@ public class TetVolumeMaterial extends BasicMaterial
                 / Math.log(2.0) );
         // Performance/Quality tradeoff: adjust to taste; 0.5f matches automatic lod
         levelOfDetail += 
-                2f;  
+                // 2f;  
+                1f;
                 // 0.5f; 
         levelOfDetail = Math.max(levelOfDetail, 0); // hard minimum
-        levelOfDetail = (float)Math.floor(levelOfDetail); // convert to int
-        int intLod = (int) levelOfDetail;
+        // levelOfDetail = (float)Math.floor(levelOfDetail); // convert to int
+        // int intLod = (int) levelOfDetail;
         // System.out.println("Computed level of detail = "+levelOfDetail);
-        gl.glUniform1i(15, intLod);
+        gl.glUniform1f(15, levelOfDetail);
         
         mesh.displayTriangleAdjacencies(gl);
     }
@@ -285,7 +286,7 @@ public class TetVolumeMaterial extends BasicMaterial
         }
         else { // trilinear or tricubic
             gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_LINEAR);
-            gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_LINEAR_MIPMAP_NEAREST);            
+            gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_LINEAR_MIPMAP_LINEAR);            
         }
     }
 
