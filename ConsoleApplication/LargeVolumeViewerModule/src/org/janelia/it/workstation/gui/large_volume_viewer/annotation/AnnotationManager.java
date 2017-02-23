@@ -109,8 +109,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public boolean editsAllowed() {
-        if (getCurrentWorkspace()==null) return false;
-        return ClientDomainUtils.hasWriteAccess(getCurrentWorkspace());
+        return annotationModel.editsAllowed();
     }
     
     public void deleteSubtreeRequested(Anchor anchor) {

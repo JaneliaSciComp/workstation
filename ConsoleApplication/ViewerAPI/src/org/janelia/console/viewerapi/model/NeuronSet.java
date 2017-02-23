@@ -42,24 +42,26 @@ import org.openide.awt.UndoRedo;
  */
 public interface NeuronSet extends Collection<NeuronModel>
 {
+    boolean isReadOnly();
+    
     // getMembershipChangeObservable() signals when whole neurons are added or removed from the collection
     ObservableInterface getMembershipChangeObservable();
     ObservableInterface getNameChangeObservable();
     String getName();
     NeuronModel createNeuron(String initialNeuronName);
 
-    public boolean isSpatialIndexValid();
+    boolean isSpatialIndexValid();
     List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2);
     List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n);
     NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ);
 
     NeuronModel getNeuronForAnchor(NeuronVertex anchor);
 
-    public UndoRedo.Manager getUndoRedo(); // Manage edit operations per neuron collection
+    UndoRedo.Manager getUndoRedo(); // Manage edit operations per neuron collection
     // Sometimes there is one anchor selected for edit operations
     NeuronVertex getPrimaryAnchor(); // can be null
     void setPrimaryAnchor(NeuronVertex anchor); // set to null to clear
     ObservableInterface getPrimaryAnchorObservable();
     
-    public NeuronModel getNeuronByGuid(Long guid);
+    NeuronModel getNeuronByGuid(Long guid);
 }
