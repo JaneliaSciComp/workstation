@@ -1,10 +1,12 @@
 package org.janelia.jacs2.asyncservice.sampleprocessing;
 
+import com.beust.jcommander.Parameter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
@@ -14,19 +16,26 @@ import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
+@Named("getSampleMIPsAndMovies")
 public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<File>> {
+
+    static class SampleMIPsAndMoviesArgs extends SampleServiceArgs {
+        @Parameter(names = "-options", description = "Options", required = false)
+        String options = "mips:movies:legends:bcomp";
+        @Parameter(names = "-mipsSubDir", description = "MIPs and movies directory relative to sampleData directory", required = false)
+        public String mipsSubDir = "mips";
+    }
 
     @Inject
     GetSampleMIPsAndMoviesProcessor(JacsServiceEngine jacsServiceEngine,
@@ -35,6 +44,11 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                                     @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                     Logger logger) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+    }
+
+    @Override
+    public ServiceMetaData getMetadata() {
+        return ServiceArgs.getMetadata(this.getClass(), new SampleMIPsAndMoviesArgs());
     }
 
     @Override
@@ -62,7 +76,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         if (CollectionUtils.isEmpty(sampleLSMs)) {
             return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "No sample image file was found"));
         }
-        GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
+        SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
         List<ServiceComputation<?>> mipsComputations = submitAllBasicMipsAndMoviesServices(sampleLSMs, args, jacsServiceData);
         return computationFactory.newCompletedComputation(jacsServiceData)
                 .thenCombineAll(mipsComputations, (sd, basicMipsResults) -> {
@@ -82,7 +96,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         throw new UnsupportedOperationException();
     }
 
-    private List<ServiceComputation<?>> submitAllBasicMipsAndMoviesServices(List<SampleImageFile> lsmFiles, GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args, JacsServiceData jacsServiceData) {
+    private List<ServiceComputation<?>> submitAllBasicMipsAndMoviesServices(List<SampleImageFile> lsmFiles, SampleMIPsAndMoviesArgs args, JacsServiceData jacsServiceData) {
         List<ServiceComputation<?>> basicMipsAndMoviesComputations = new ArrayList<>();
         lsmFiles.forEach(f -> {
             if (!f.isChanSpecDefined()) {
@@ -113,7 +127,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         return basicMipsAndMoviesComputations;
     }
 
-    private Path getResultsDir(GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs args, SampleImageFile sampleImgFile) {
+    private Path getResultsDir(SampleMIPsAndMoviesArgs args, SampleImageFile sampleImgFile) {
         ImmutableList.Builder<String> pathCompBuilder = new ImmutableList.Builder<>();
         if (StringUtils.isNotBlank(sampleImgFile.getObjective())) {
             pathCompBuilder.add(sampleImgFile.getObjective());
@@ -127,7 +141,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         return Paths.get(args.sampleDataDir, pathComps.toArray(new String[pathComps.size()]));
     }
 
-    private GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs getArgs(JacsServiceData jacsServiceData) {
-        return SampleServiceArgs.parse(jacsServiceData.getArgsArray(), new GetSampleMIPsAndMoviesServiceDescriptor.SampleMIPsAndMoviesArgs());
+    private SampleMIPsAndMoviesArgs getArgs(JacsServiceData jacsServiceData) {
+        return SampleServiceArgs.parse(jacsServiceData.getArgsArray(), new SampleMIPsAndMoviesArgs());
     }
 }

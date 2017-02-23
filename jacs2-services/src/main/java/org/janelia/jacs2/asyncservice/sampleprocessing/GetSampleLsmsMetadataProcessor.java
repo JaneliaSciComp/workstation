@@ -3,6 +3,7 @@ package org.janelia.jacs2.asyncservice.sampleprocessing;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
@@ -12,14 +13,17 @@ import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Named("getSampleLsmMetadata")
 public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<List<SampleImageMetadataFile>> {
 
     @Inject
@@ -29,6 +33,11 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
                                    @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                    Logger logger) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+    }
+
+    @Override
+    public ServiceMetaData getMetadata() {
+        return ServiceArgs.getMetadata(this.getClass(), new SampleServiceArgs());
     }
 
     @Override

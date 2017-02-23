@@ -13,26 +13,29 @@ import java.util.stream.Collectors;
 
 public class JacsServiceRegistry implements ServiceRegistry {
 
-    @Inject
-    private Logger logger;
+    private final Instance<ServiceProcessor<?>> anyServiceSource;
+    private final Logger logger;
 
-    @Any @Inject
-    private Instance<ServiceDescriptor> anyServiceSource;
+    @Inject
+    JacsServiceRegistry(@Any Instance<ServiceProcessor<?>> anyServiceSource, Logger logger) {
+        this.anyServiceSource = anyServiceSource;
+        this.logger = logger;
+    }
 
     @Override
-    public ServiceMetaData getServiceDescriptor(String serviceName) {
-        ServiceDescriptor service = lookupService(serviceName);
+    public ServiceMetaData getServiceMetadata(String serviceName) {
+        ServiceProcessor service = lookupService(serviceName);
         return service != null ? service.getMetadata() : null;
     }
 
     @Override
-    public List<ServiceMetaData> getAllServiceDescriptors() {
-        return getAllServices(anyServiceSource).stream().map(sd -> sd.getMetadata()).collect(Collectors.toList());
+    public List<ServiceMetaData> getAllServicesMetadata() {
+        return getAllServices(anyServiceSource).stream().map(ServiceProcessor::getMetadata).collect(Collectors.toList());
     }
 
     @Override
-    public ServiceDescriptor lookupService(String serviceName) {
-        for (ServiceDescriptor service : getAllServices(anyServiceSource)) {
+    public ServiceProcessor<?> lookupService(String serviceName) {
+        for (ServiceProcessor<?> service : getAllServices(anyServiceSource)) {
             if (serviceName.equals(service.getMetadata().getServiceName())) {
                 logger.info("Service found for {}", serviceName);
                 return service;
@@ -43,9 +46,9 @@ public class JacsServiceRegistry implements ServiceRegistry {
     }
 
     @Inject
-    private List<ServiceDescriptor> getAllServices(@Any Instance<ServiceDescriptor> services) {
-        List<ServiceDescriptor> allServices = new ArrayList<>();
-        for (ServiceDescriptor service : services) {
+    private List<ServiceProcessor<?>> getAllServices(@Any Instance<ServiceProcessor<?>> services) {
+        List<ServiceProcessor<?>> allServices = new ArrayList<>();
+        for (ServiceProcessor<?> service : services) {
             allServices.add(service);
         }
         return allServices;

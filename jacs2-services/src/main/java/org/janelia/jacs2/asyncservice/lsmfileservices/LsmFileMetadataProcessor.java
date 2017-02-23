@@ -1,10 +1,12 @@
 package org.janelia.jacs2.asyncservice.lsmfileservices;
 
 import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
@@ -15,18 +17,28 @@ import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.Map;
 
+@Named("lsmFileMetadata")
 public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<File> {
+
+    static class LsmFileMetadataArgs extends ServiceArgs {
+        @Parameter(names = "-inputLSM", description = "LSM Input file name", required = true)
+        String inputLSMFile;
+        @Parameter(names = "-outputLSMMetadata", description = "Destination directory", required = true)
+        String outputLSMMetadata;
+    }
 
     private static final String PERLLIB_VARNAME = "PERL5LIB";
 
@@ -52,6 +64,11 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
     }
 
     @Override
+    public ServiceMetaData getMetadata() {
+        return ServiceArgs.getMetadata(this.getClass(), new LsmFileMetadataArgs());
+    }
+
+    @Override
     public File getResult(JacsServiceData jacsServiceData) {
         return ServiceDataUtils.stringToFile(jacsServiceData.getStringifiedResult());
     }
@@ -66,7 +83,7 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
         return computationFactory.newCompletedComputation(jacsServiceData)
                 .thenApply(sd -> {
                     try {
-                        LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args = getArgs(jacsServiceData);
+                        LsmFileMetadataArgs args = getArgs(jacsServiceData);
                         if (StringUtils.isBlank(args.inputLSMFile)) {
                             throw new ComputationException(jacsServiceData, "Input LSM file name must be specified");
                         } else if (StringUtils.isBlank(args.outputLSMMetadata)) {
@@ -93,13 +110,13 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
 
     @Override
     protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
-        LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args = getArgs(jacsServiceData);
+        LsmFileMetadataArgs args = getArgs(jacsServiceData);
         ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
         createScript(args, externalScriptCode.getCodeWriter());
         return externalScriptCode;
     }
 
-    private void createScript(LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args, ScriptWriter scriptWriter) {
+    private void createScript(LsmFileMetadataArgs args, ScriptWriter scriptWriter) {
         scriptWriter
                 .addWithArgs(perlExecutable)
                 .addArg(getFullExecutableName(scriptName))
@@ -116,17 +133,17 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
         );
     }
 
-    private LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs getArgs(JacsServiceData jacsServiceData) {
-        LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args = new LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs();
+    private LsmFileMetadataArgs getArgs(JacsServiceData jacsServiceData) {
+        LsmFileMetadataArgs args = new LsmFileMetadataArgs();
         new JCommander(args).parse(jacsServiceData.getArgsArray());
         return args;
     }
 
-    private File getInputFile(LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args) {
+    private File getInputFile(LsmFileMetadataArgs args) {
         return new File(args.inputLSMFile);
     }
 
-    private File getOutputFile(LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args) {
+    private File getOutputFile(LsmFileMetadataArgs args) {
         try {
             File outputFile = new File(args.outputLSMMetadata);
             Files.createDirectories(outputFile.getParentFile().toPath());

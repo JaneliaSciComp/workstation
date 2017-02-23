@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.sampleprocessing.zeiss.LSMDetectionChannel;
 import org.janelia.jacs2.asyncservice.sampleprocessing.zeiss.LSMMetadata;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
@@ -18,15 +19,18 @@ import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Named("updateLSMMetadata")
 public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> {
 
     private final SampleDataService sampleDataService;
@@ -40,6 +44,11 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
                                 Logger logger) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.sampleDataService = sampleDataService;
+    }
+
+    @Override
+    public ServiceMetaData getMetadata() {
+        return ServiceArgs.getMetadata(this.getClass(), new SampleServiceArgs());
     }
 
     @Override

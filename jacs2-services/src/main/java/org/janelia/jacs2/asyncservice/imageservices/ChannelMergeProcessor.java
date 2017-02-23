@@ -1,11 +1,13 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
+import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
@@ -13,11 +15,13 @@ import org.janelia.jacs2.asyncservice.utils.X11Utils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -25,7 +29,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
+@Named("mergeChannels")
 public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File> {
+
+    static class ChannelMergeArgs extends ServiceArgs {
+        @Parameter(names = "-chInput1", description = "File containing the first set of channels", required = true)
+        String chInput1;
+        @Parameter(names = "-chInput2", description = "File containing the second set of channels", required = true)
+        String chInput2;
+        @Parameter(names = "-multiscanVersion", description = "Multiscan blend version", required = false)
+        String multiscanBlendVersion;
+        @Parameter(names = "-resultDir", description = "Result directory", required = true)
+        String resultDir;
+    }
 
     private static final String DEFAULT_MERGE_RESULT_FILE_NAME = "merged.v3draw";
 
@@ -48,6 +64,11 @@ public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File
     }
 
     @Override
+    public ServiceMetaData getMetadata() {
+        return ServiceArgs.getMetadata(this.getClass(), new ChannelMergeArgs());
+    }
+
+    @Override
     public File getResult(JacsServiceData jacsServiceData) {
         return ServiceDataUtils.stringToFile(jacsServiceData.getStringifiedResult());
     }
@@ -59,7 +80,7 @@ public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File
 
     @Override
     protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
-        ChannelMergeServiceDescriptor.ChannelMergeArgs args = getArgs(jacsServiceData);
+        ChannelMergeArgs args = getArgs(jacsServiceData);
         ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
         ScriptWriter externalScriptWriter = externalScriptCode.getCodeWriter();
         createScript(jacsServiceData, args, externalScriptWriter);
@@ -67,7 +88,7 @@ public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File
         return externalScriptCode;
     }
 
-    private void createScript(JacsServiceData jacsServiceData, ChannelMergeServiceDescriptor.ChannelMergeArgs args,
+    private void createScript(JacsServiceData jacsServiceData, ChannelMergeArgs args,
                               ScriptWriter scriptWriter) {
         try {
             Path workingDir = getWorkingDirectory(jacsServiceData);
@@ -117,8 +138,8 @@ public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File
         }
     }
 
-    private ChannelMergeServiceDescriptor.ChannelMergeArgs getArgs(JacsServiceData jacsServiceData) {
-        return ChannelMergeServiceDescriptor.ChannelMergeArgs.parse(jacsServiceData.getArgsArray(), new ChannelMergeServiceDescriptor.ChannelMergeArgs());
+    private ChannelMergeArgs getArgs(JacsServiceData jacsServiceData) {
+        return ChannelMergeArgs.parse(jacsServiceData.getArgsArray(), new ChannelMergeArgs());
     }
 
     private String getExecutable() {
@@ -126,7 +147,7 @@ public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File
     }
 
     private File getMergedLsmResultFile(JacsServiceData jacsServiceData) {
-        ChannelMergeServiceDescriptor.ChannelMergeArgs args = getArgs(jacsServiceData);
+        ChannelMergeArgs args = getArgs(jacsServiceData);
         return new File(args.resultDir, DEFAULT_MERGE_RESULT_FILE_NAME);
     }
 

@@ -62,21 +62,7 @@ public class JacsServiceDispatcher {
                     })
                     .thenCompose(sd -> serviceProcessor.process(sd))
                     .whenComplete((r, exc) -> {
-                        JacsServiceData updatedService = queuedService;
-                        if (exc == null) {
-                            logger.info("Successfully completed {}", updatedService);
-                            updatedService.addEvent(JacsServiceEventTypes.COMPLETED, "Completed successfully");
-                            updatedService.setState(JacsServiceState.SUCCESSFUL);
-                        } else {
-                            // if the service data state has already been marked as cancelled or error leave it as is
-                            if (!updatedService.hasCompletedUnsuccessfully()) {
-                                logger.error("Error executing {}", updatedService, exc);
-                                updatedService.addEvent(JacsServiceEventTypes.FAILED, String.format("Failed: %s", exc.getMessage()));
-                                updatedService.setState(JacsServiceState.ERROR);
-                            }
-                        }
-                        updateServiceInfo(updatedService);
-                        jacsServiceQueue.completeService(updatedService);
+                        jacsServiceQueue.completeService(queuedService);
                     });
         }
     }

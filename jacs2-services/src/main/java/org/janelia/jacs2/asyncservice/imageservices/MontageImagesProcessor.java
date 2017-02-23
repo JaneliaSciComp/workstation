@@ -1,9 +1,11 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -11,11 +13,13 @@ import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -28,7 +32,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Create a square montage from PNGs in a given directory.
+ */
+@Named("montageImages")
 public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<File> {
+
+    static class MontageImagesArgs extends ServiceArgs {
+        @Parameter(names = "-inputFolder", description = "Input folder", required = true)
+        String inputFolder;
+        @Parameter(names = "-size", description = "The size of the montage", required = true)
+        int size;
+        @Parameter(names = "-target", description = "Name of the target montage")
+        String target;
+        @Parameter(names = "-imageFilePattern", description = "The extension of the image files from the input folder")
+        String imageFilePattern = "glob:**/*.png";
+    }
 
     private final String montageToolLocation;
     private final String montageToolName;
@@ -52,6 +71,11 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
     }
 
     @Override
+    public ServiceMetaData getMetadata() {
+        return ServiceArgs.getMetadata(this.getClass(), new MontageImagesArgs());
+    }
+
+    @Override
     public File getResult(JacsServiceData jacsServiceData) {
         return ServiceDataUtils.stringToFile(jacsServiceData.getStringifiedResult());
     }
@@ -63,21 +87,21 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
 
     @Override
     protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        MontageImagesServiceDescriptor.MontageImagesArgs args = getArgs(jacsServiceData);
+        MontageImagesArgs args = getArgs(jacsServiceData);
         File targetImage = new File(args.target);
         return targetImage.exists();
     }
 
     @Override
     protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        MontageImagesServiceDescriptor.MontageImagesArgs args = getArgs(jacsServiceData);
+        MontageImagesArgs args = getArgs(jacsServiceData);
         File targetImage = new File(args.target);
         return targetImage;
     }
 
     @Override
     protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
-        MontageImagesServiceDescriptor.MontageImagesArgs args = getArgs(jacsServiceData);
+        MontageImagesArgs args = getArgs(jacsServiceData);
         Path inputPath = Paths.get(args.inputFolder);
         List<String> inputFiles = new ArrayList<>();
         try {
@@ -110,8 +134,8 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
         return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, getFullExecutableName(libraryPath)));
     }
 
-    private MontageImagesServiceDescriptor.MontageImagesArgs getArgs(JacsServiceData jacsServiceData) {
-        MontageImagesServiceDescriptor.MontageImagesArgs args = new MontageImagesServiceDescriptor.MontageImagesArgs();
+    private MontageImagesArgs getArgs(JacsServiceData jacsServiceData) {
+        MontageImagesArgs args = new MontageImagesArgs();
         new JCommander(args).parse(jacsServiceData.getArgsArray());
         return args;
     }

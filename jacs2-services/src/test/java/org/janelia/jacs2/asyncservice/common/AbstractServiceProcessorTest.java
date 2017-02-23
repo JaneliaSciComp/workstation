@@ -4,6 +4,7 @@ import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -41,6 +42,11 @@ public class AbstractServiceProcessorTest {
         }
 
         @Override
+        public ServiceMetaData getMetadata() {
+            return new ServiceMetaData();
+        }
+
+        @Override
         public Void getResult(JacsServiceData jacsServiceData) {
             return null;
         }
@@ -73,6 +79,11 @@ public class AbstractServiceProcessorTest {
         @Override
         protected ServiceComputation<Void> localProcessData(Object preprocessingResults, JacsServiceData jacsServiceData) {
             return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "test"));
+        }
+
+        @Override
+        public ServiceMetaData getMetadata() {
+            return new ServiceMetaData();
         }
 
         @Override

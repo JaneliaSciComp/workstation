@@ -1,10 +1,12 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.utils.ScriptUtils;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.asyncservice.utils.X11Utils;
@@ -16,19 +18,37 @@ import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+@Named("fijiMacro")
 public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
+
+    static class FijiMacroArgs extends ServiceArgs {
+        @Parameter(names = "-macro", description = "FIJI macro name", required = true)
+        String macroName;
+        @Parameter(names = "-macroArgs", description = "Arguments for the fiji macro")
+        String macroArgs;
+        @Parameter(names = "-temporaryOutput", description = "Temporary output directory")
+        String temporaryOutput;
+        @Parameter(names = "-finalOutput", description = "Final output directory")
+        String finalOutput;
+        @Parameter(names = "-resultsPatterns", description = "results patterns")
+        List<String> resultsPatterns = new ArrayList<>();
+    }
 
     private final String fijiExecutable;
     private final String fijiMacrosPath;
@@ -49,6 +69,11 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
     }
 
     @Override
+    public ServiceMetaData getMetadata() {
+        return ServiceArgs.getMetadata(this.getClass(), new FijiMacroArgs());
+    }
+
+    @Override
     public Void getResult(JacsServiceData jacsServiceData) {
         return null;
     }
@@ -59,7 +84,7 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
     @Override
     protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
-        FijiMacroServiceDescriptor.FijiMacroArgs args = getArgs(jacsServiceData);
+        FijiMacroArgs args = getArgs(jacsServiceData);
         if (StringUtils.isBlank(args.macroName)) {
             return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "FIJI macro must be specified"));
         } else {
@@ -79,7 +104,7 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
     @Override
     protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
-        FijiMacroServiceDescriptor.FijiMacroArgs args = getArgs(jacsServiceData);
+        FijiMacroArgs args = getArgs(jacsServiceData);
         ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
         ScriptWriter externalScriptWriter = externalScriptCode.getCodeWriter();
         createScript(jacsServiceData, args, externalScriptWriter);
@@ -87,7 +112,7 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
         return externalScriptCode;
     }
 
-    private void createScript(JacsServiceData jacsServiceData, FijiMacroServiceDescriptor.FijiMacroArgs args,
+    private void createScript(JacsServiceData jacsServiceData, FijiMacroArgs args,
                               ScriptWriter scriptWriter) {
         try {
             if (StringUtils.isNotBlank(args.temporaryOutput)) {
@@ -147,8 +172,8 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
         }
     }
 
-    private FijiMacroServiceDescriptor.FijiMacroArgs getArgs(JacsServiceData jacsServiceData) {
-        FijiMacroServiceDescriptor.FijiMacroArgs args = new FijiMacroServiceDescriptor.FijiMacroArgs();
+    private FijiMacroArgs getArgs(JacsServiceData jacsServiceData) {
+        FijiMacroArgs args = new FijiMacroArgs();
         new JCommander(args).parse(jacsServiceData.getArgsArray());
         return args;
     }
@@ -157,7 +182,7 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
         return getFullExecutableName(fijiExecutable);
     }
 
-    private String getFullFijiMacro(FijiMacroServiceDescriptor.FijiMacroArgs args) {
+    private String getFullFijiMacro(FijiMacroArgs args) {
         if (args.macroName.startsWith("/")) {
             return args.macroName;
         } else {

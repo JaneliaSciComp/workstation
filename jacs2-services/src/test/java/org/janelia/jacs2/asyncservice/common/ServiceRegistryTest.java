@@ -11,30 +11,26 @@ import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
+import javax.xml.ws.Service;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class ServiceRegistryTest {
-
-    @Mock
-    private Logger logger;
-    @Mock
-    private Instance<ServiceDescriptor> anyServiceSource;
-    @Mock
-    private ServiceDescriptor registeredService;
-    @InjectMocks
     private ServiceRegistry testServiceRegistry;
 
     @Before
     public void setUp() {
-        testServiceRegistry = new JacsServiceRegistry();
-        MockitoAnnotations.initMocks(this);
+        Logger logger = mock(Logger.class);
+        Instance<ServiceProcessor<?>> anyServiceSource = mock(Instance.class);
+        ServiceProcessor<?> registeredService = mock(ServiceProcessor.class);
+        testServiceRegistry = new JacsServiceRegistry(anyServiceSource, logger);
         when(registeredService.getMetadata()).thenReturn(createTestServiceMetadata());
-        when(anyServiceSource.iterator()).thenReturn(ImmutableList.of(registeredService).iterator());
+        when(anyServiceSource.iterator()).thenReturn(ImmutableList.<ServiceProcessor<?>>of(registeredService).iterator());
     }
 
     private ServiceMetaData createTestServiceMetadata() {
@@ -44,13 +40,13 @@ public class ServiceRegistryTest {
     }
     @Test
     public void getMetadataForRegisteredService() {
-        ServiceMetaData smd = testServiceRegistry.getServiceDescriptor("registered");
+        ServiceMetaData smd = testServiceRegistry.getServiceMetadata("registered");
         assertThat(smd, hasProperty("serviceName", equalTo("registered")));
     }
 
     @Test
     public void getMetadataForUnregisteredService() {
-        ServiceMetaData smd = testServiceRegistry.getServiceDescriptor("unregistered");
+        ServiceMetaData smd = testServiceRegistry.getServiceMetadata("unregistered");
         assertNull(smd);
     }
 

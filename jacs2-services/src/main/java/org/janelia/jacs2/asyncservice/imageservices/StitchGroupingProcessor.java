@@ -1,5 +1,6 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
+import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
@@ -7,6 +8,7 @@ import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
@@ -15,11 +17,13 @@ import org.janelia.jacs2.asyncservice.utils.X11Utils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -28,7 +32,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
+@Named("stitchGrouping")
 public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<File> {
+
+    static class StitchGroupingArgs extends ServiceArgs {
+        @Parameter(names = "-referenceChannelIndex", description = "Reference channel index", required = true)
+        int referenceChannelIndex;
+        @Parameter(names = "-inputDir", description = "Input directory path", required = true)
+        String inputDir;
+        @Parameter(names = "-resultDir", description = "Result directory", required = true)
+        String resultDir;
+    }
 
     private static final String DEFAULT_GROUP_RESULT_FILE_NAME = "igroups.txt";
 
@@ -51,6 +65,11 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
     }
 
     @Override
+    public ServiceMetaData getMetadata() {
+        return ServiceArgs.getMetadata(this.getClass(), new StitchGroupingArgs());
+    }
+
+    @Override
     public File getResult(JacsServiceData jacsServiceData) {
         return ServiceDataUtils.stringToFile(jacsServiceData.getStringifiedResult());
     }
@@ -62,7 +81,7 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
 
     @Override
     protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
-        StitchGroupingServiceDescriptor.StitchGroupingArgs  args = getArgs(jacsServiceData);
+        StitchGroupingArgs  args = getArgs(jacsServiceData);
         try {
             Files.createDirectories(Paths.get(args.resultDir));
         } catch (IOException e) {
@@ -73,7 +92,7 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
 
     @Override
     protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
-        StitchGroupingServiceDescriptor.StitchGroupingArgs args = getArgs(jacsServiceData);
+        StitchGroupingArgs args = getArgs(jacsServiceData);
         ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
         ScriptWriter externalScriptWriter = externalScriptCode.getCodeWriter();
         createScript(jacsServiceData, args, externalScriptWriter);
@@ -81,8 +100,7 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
         return externalScriptCode;
     }
 
-    private void createScript(JacsServiceData jacsServiceData, StitchGroupingServiceDescriptor.StitchGroupingArgs args,
-                              ScriptWriter scriptWriter) {
+    private void createScript(JacsServiceData jacsServiceData, StitchGroupingArgs args, ScriptWriter scriptWriter) {
         try {
             Path workingDir = getWorkingDirectory(jacsServiceData);
             X11Utils.setDisplayPort(workingDir.toString(), scriptWriter);
@@ -130,8 +148,8 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
         }
     }
 
-    private StitchGroupingServiceDescriptor.StitchGroupingArgs getArgs(JacsServiceData jacsServiceData) {
-        return StitchGroupingServiceDescriptor.StitchGroupingArgs.parse(jacsServiceData.getArgsArray(), new StitchGroupingServiceDescriptor.StitchGroupingArgs());
+    private StitchGroupingArgs getArgs(JacsServiceData jacsServiceData) {
+        return StitchGroupingArgs.parse(jacsServiceData.getArgsArray(), new StitchGroupingArgs());
     }
 
     private String getExecutable() {
@@ -139,7 +157,7 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
     }
 
     private File getGroupResultFile(JacsServiceData jacsServiceData) {
-        StitchGroupingServiceDescriptor.StitchGroupingArgs args = getArgs(jacsServiceData);
+        StitchGroupingArgs args = getArgs(jacsServiceData);
         return new File(args.resultDir, DEFAULT_GROUP_RESULT_FILE_NAME);
     }
 
