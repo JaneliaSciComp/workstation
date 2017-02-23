@@ -570,12 +570,13 @@ public class DomainModel {
     public List<Workspace> getWorkspaces() throws Exception {
         synchronized (this) {
             if (workspaceCache.isEmpty()) {
-                log.debug("Getting workspaces from database");
+                log.info("Caching workspaces from database...");
                 StopWatch w = TIMER ? new LoggingStopWatch() : null;
-                Collection<Workspace> ontologies = workspaceFacade.getWorkspaces();
-                List<Workspace> canonicalObjects = putOrUpdate(ontologies, false);
+                Collection<Workspace> workspaces = workspaceFacade.getWorkspaces();
+                List<Workspace> canonicalObjects = putOrUpdate(workspaces, false);
                 Collections.sort(canonicalObjects, new DomainObjectComparator());
                 for (Workspace workspace : canonicalObjects) {
+                    log.info("Caching workspace: {} ({})", workspace.getName(), workspace.getOwnerKey());
                     workspaceCache.put(Reference.createFor(workspace), workspace);
                 }
                 if (TIMER) w.stop("getWorkspaces");
