@@ -35,6 +35,7 @@ import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.swc.SWCNode;
 import org.janelia.it.jacs.shared.utils.Progress;
+import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionSupport;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
@@ -149,6 +150,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         });
     }
 
+    public boolean editsAllowed() {
+        if (getCurrentWorkspace()==null) return false;
+        return ClientDomainUtils.hasWriteAccess(getCurrentWorkspace());
+    }
+    
     @Override
     public DomainObjectSelectionModel getSelectionModel() {
         return selectionModel;

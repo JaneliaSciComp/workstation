@@ -103,6 +103,11 @@ implements NeuronSet// , LookupListener
         this(new NeuronList());
     }
 
+    @Override
+    public boolean isReadOnly() {
+        return !annotationModel.editsAllowed();
+    }
+    
     private void updateVoxToMicronMatrices(TmSample sample)
     {
         // If we try to get the matrix too early, it comes back null, so populate just-in-time

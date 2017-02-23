@@ -60,7 +60,12 @@ implements NeuronSet
         this.name = name;
         this.neurons = contents;
     }
-
+    
+    @Override
+    public boolean isReadOnly() {
+        return false;
+    }
+    
     @Override
     public ObservableInterface getMembershipChangeObservable()
     {
