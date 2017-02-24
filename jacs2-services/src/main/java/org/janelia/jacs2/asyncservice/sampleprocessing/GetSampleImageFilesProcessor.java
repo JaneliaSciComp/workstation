@@ -11,7 +11,6 @@ import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.fileservices.FileCopyProcessor;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
-import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.model.jacsservice.ProcessingLocation;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.dataservice.sample.SampleDataService;
@@ -83,36 +82,27 @@ public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<
         List<ServiceComputation<?>> fcs = new ArrayList<>();
         // invoke child file copy services for all LSM files
         anatomicalAreas.stream()
-                .flatMap(ar -> {
-                    return ar.getTileLsmPairs()
-                            .stream()
-                            .flatMap(lsmp -> lsmp.getLsmFiles().stream())
-                            .map(lsmf -> {
-                                SampleImageFile sif = new SampleImageFile();
-                                sif.setId(lsmf.getId());
-                                sif.setArchiveFilePath(lsmf.getFilepath());
-                                sif.setWorkingFilePath(getTargetImageFile(destinationDirectory, lsmf).getAbsolutePath());
-                                sif.setArea(ar.getName());
-                                sif.setChanSpec(lsmf.getChanSpec());
-                                sif.setColorSpec(lsmf.getChannelColors());
-                                sif.setObjective(ar.getObjective());
-                                return sif;
-                            });
-                })
+                .flatMap(ar -> ar.getTileLsmPairs()
+                        .stream()
+                        .flatMap(lsmp -> lsmp.getLsmFiles().stream())
+                        .map(lsmf -> {
+                            SampleImageFile sif = new SampleImageFile();
+                            sif.setId(lsmf.getId());
+                            sif.setArchiveFilePath(lsmf.getFilepath());
+                            sif.setWorkingFilePath(getTargetImageFile(destinationDirectory, lsmf).getAbsolutePath());
+                            sif.setArea(ar.getName());
+                            sif.setChanSpec(lsmf.getChanSpec());
+                            sif.setColorSpec(lsmf.getChannelColors());
+                            sif.setObjective(ar.getObjective());
+                            return sif;
+                        }))
                 .forEach(sif -> {
-                    JacsServiceData retrieveImageFileServiceData =
-                            new JacsServiceDataBuilder(jacsServiceData)
-                                    .setName("fileCopy")
-                                    .addArg()
-                                    .addArg()
-                                    .setProcessingLocation(ProcessingLocation.CLUSTER) // fileCopy only works on the cluster for now
-                                    .build();
-                    indexedSampleImageFiles.put(sif.getWorkingFilePath(), sif);
-                    ServiceComputation<?> fc = fileCopyProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData, ProcessingLocation.CLUSTER),
+                    ServiceComputation<?> fc = fileCopyProcessor.invokeAsync(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
                             new ServiceArg("-src", sif.getArchiveFilePath()),
                             new ServiceArg("-dst", sif.getWorkingFilePath()))
-                            .thenCompose(sd -> this.waitForCompletion(sd))
-                            .thenApply(sd -> fileCopyProcessor.getResult(sd));
+                            .thenCompose(this::waitForCompletion)
+                            .thenApply(fileCopyProcessor::getResult);
+                    indexedSampleImageFiles.put(sif.getWorkingFilePath(), sif);
                     fcs.add(fc);
                 });
         return computationFactory.newCompletedComputation(jacsServiceData)

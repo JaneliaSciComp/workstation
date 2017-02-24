@@ -15,7 +15,6 @@ import org.janelia.jacs2.asyncservice.utils.FileUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
-import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
@@ -58,6 +57,7 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
 
     private final String basicMIPsAndMoviesMacro;
     private final String scratchLocation;
+    private final FijiMacroProcessor fijiMacroProcessor;
     private final VideoFormatConverterProcessor mpegConverterProcessor;
 
     @Inject
@@ -68,10 +68,12 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
                                 @PropertyValue(name = "Fiji.BasicMIPsAndMovies") String basicMIPsAndMoviesMacro,
                                 @PropertyValue(name = "service.DefaultScratchDir") String scratchLocation,
                                 Logger logger,
+                                FijiMacroProcessor fijiMacroProcessor,
                                 VideoFormatConverterProcessor mpegConverterProcessor) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.basicMIPsAndMoviesMacro = basicMIPsAndMoviesMacro;
         this.scratchLocation =scratchLocation;
+        this.fijiMacroProcessor = fijiMacroProcessor;
         this.mpegConverterProcessor = mpegConverterProcessor;
     }
 
@@ -106,7 +108,6 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
         BasicMIPsAndMoviesArgs args = getArgs(jacsServiceData);
         List<File> pngAndMpegFileResults = new ArrayList<>();
         return submitFijiService(args, jacsServiceData)
-                .thenCompose(sd -> this.waitForCompletion(sd))
                 .thenCompose(sd -> this.collectResult(preProcessingResult, jacsServiceData))
                 .thenCompose(fileResults -> {
                     fileResults
@@ -169,17 +170,14 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
             throw new ComputationException(jacsServiceData,  "No channel spec for " + args.imageFile);
         }
         Path temporaryOutputDir = getServicePath(scratchLocation, jacsServiceData, com.google.common.io.Files.getNameWithoutExtension(args.imageFile));
-        JacsServiceData fijiService =
-                new JacsServiceDataBuilder(jacsServiceData)
-                        .setName("fijiMacro")
-                        .addArg("-macro", basicMIPsAndMoviesMacro)
-                        .addArg("-macroArgs", getBasicMIPsAndMoviesArgs(args, temporaryOutputDir))
-                        .addArg("-temporaryOutput", temporaryOutputDir.toString())
-                        .addArg("-finalOutput", getResultsDir(args).toString())
-                        .addArg("-resultsPatterns", "*.png")
-                        .addArg("-resultsPatterns", "*.avi")
-                        .build();
-        return createServiceComputation(jacsServiceEngine.submitSingleService(fijiService));
+        return fijiMacroProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
+                new ServiceArg("-macro", basicMIPsAndMoviesMacro),
+                new ServiceArg("-macroArgs", getBasicMIPsAndMoviesArgs(args, temporaryOutputDir)),
+                new ServiceArg("-temporaryOutput", temporaryOutputDir.toString()),
+                new ServiceArg("-finalOutput", getResultsDir(args).toString()),
+                new ServiceArg("-resultsPatterns", "*.png"),
+                new ServiceArg("-resultsPatterns", "*.avi"))
+                .thenCompose(sd -> this.waitForCompletion(sd));
     }
 
     private String getBasicMIPsAndMoviesArgs(BasicMIPsAndMoviesArgs args, Path outputDir) {

@@ -2,14 +2,14 @@ package org.janelia.jacs2.asyncservice.lsmfileservices;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
+import org.janelia.jacs2.asyncservice.fileservices.FileCopyProcessor;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
-import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.model.jacsservice.ProcessingLocation;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -41,13 +41,20 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
         boolean keepIntermediateLSM = false;
     }
 
+    private final FileCopyProcessor fileCopyProcessor;
+    private final LsmFileMetadataProcessor lsmFileMetadataProcessor;
+
     @Inject
     ArchivedLsmMetadataProcessor(JacsServiceEngine jacsServiceEngine,
                                  ServiceComputationFactory computationFactory,
                                  JacsServiceDataPersistence jacsServiceDataPersistence,
                                  @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                                 Logger logger) {
+                                 Logger logger,
+                                 FileCopyProcessor fileCopyProcessor,
+                                 LsmFileMetadataProcessor lsmFileMetadataProcessor) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        this.fileCopyProcessor = fileCopyProcessor;
+        this.lsmFileMetadataProcessor = lsmFileMetadataProcessor;
     }
 
     @Override
@@ -75,22 +82,15 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
         }
         File lsmMetadataFile = getOutputFile(args);
         File workingLsmFile = getWorkingLsmFile(jacsServiceData, lsmMetadataFile);
-        List<JacsServiceData> childServices = jacsServiceEngine.submitMultipleServices(
-                ImmutableList.of(
-                        new JacsServiceDataBuilder(jacsServiceData)
-                                .setName("fileCopy")
-                                .addArg("-src", getInputFile(args).getAbsolutePath())
-                                .addArg("-dst", workingLsmFile.getAbsolutePath())
-                                .setProcessingLocation(ProcessingLocation.CLUSTER) // fileCopy only works on the cluster for now
+        return fileCopyProcessor.invokeAsync(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
+                new ServiceArg("-src", getInputFile(args).getAbsolutePath()),
+                new ServiceArg("-dst", workingLsmFile.getAbsolutePath()))
+                .thenCompose(fcsd -> lsmFileMetadataProcessor.invokeAsync(new ServiceExecutionContext.Builder(jacsServiceData)
+                                .processingLocation(ProcessingLocation.CLUSTER)
+                                .waitFor(fcsd)
                                 .build(),
-                        new JacsServiceDataBuilder(jacsServiceData)
-                                .setName("lsmFileMetadata")
-                                .addArg("-inputLSM", workingLsmFile.getAbsolutePath())
-                                .addArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())
-                                .build()
-                        )
-        );
-        return createServiceComputation(Iterables.getLast(childServices));
+                                new ServiceArg("-inputLSM", workingLsmFile.getAbsolutePath()),
+                                new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())));
     }
 
     @Override

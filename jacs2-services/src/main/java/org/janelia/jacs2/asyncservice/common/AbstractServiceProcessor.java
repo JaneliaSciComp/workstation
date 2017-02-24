@@ -55,13 +55,14 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
 
     private ServiceComputation<JacsServiceData> invokeService(ServiceExecutionContext executionContext, JacsServiceState serviceState, ServiceArg... args) {
         ServiceMetaData smd = getMetadata();
-        JacsServiceData jacsServiceData =
+        JacsServiceDataBuilder jacsServiceDataBuilder =
                 new JacsServiceDataBuilder(executionContext.getParentServiceData())
                         .setName(smd.getServiceName())
                         .setProcessingLocation(executionContext.getProcessingLocation())
                         .setState(serviceState)
-                        .addArg(Stream.of(args).flatMap(arg -> Stream.of(arg.toStringArray())).toArray(String[]::new))
-                        .build();
+                        .addArg(Stream.of(args).flatMap(arg -> Stream.of(arg.toStringArray())).toArray(String[]::new));
+        executionContext.getWaitFor().forEach(sd -> jacsServiceDataBuilder.addDependency(sd));
+        JacsServiceData jacsServiceData = jacsServiceDataBuilder.build();
         jacsServiceEngine.submitSingleService(jacsServiceData);
         return createServiceComputation(jacsServiceData);
     }

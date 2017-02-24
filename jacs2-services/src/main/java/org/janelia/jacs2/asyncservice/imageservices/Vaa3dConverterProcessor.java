@@ -6,14 +6,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
+import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
+import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
-import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
@@ -37,13 +38,17 @@ public class Vaa3dConverterProcessor extends AbstractServiceProcessor<File> {
         String outputFileName;
     }
 
+    private final Vaa3dCmdProcessor vaa3dCmdProcessor;
+
     @Inject
     Vaa3dConverterProcessor(JacsServiceEngine jacsServiceEngine,
                             ServiceComputationFactory computationFactory,
                             JacsServiceDataPersistence jacsServiceDataPersistence,
                             @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                            Logger logger) {
+                            Logger logger,
+                            Vaa3dCmdProcessor vaa3dCmdProcessor) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        this.vaa3dCmdProcessor = vaa3dCmdProcessor;
     }
 
     @Override
@@ -110,13 +115,9 @@ public class Vaa3dConverterProcessor extends AbstractServiceProcessor<File> {
                 .add(args.convertCmd)
                 .add(args.inputFileName)
                 .add(args.outputFileName);
-        JacsServiceData vaa3dCmdService =
-                new JacsServiceDataBuilder(jacsServiceData)
-                        .setName("vaa3dCmd")
-                        .addArg("-vaa3dCmd", "image-loader")
-                        .addArg("-vaa3dCmdArgs", vaa3dCmdArgs.toString())
-                        .build();
-        return createServiceComputation(jacsServiceEngine.submitSingleService(vaa3dCmdService));
+        return vaa3dCmdProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
+                new ServiceArg("-vaa3dCmd", "image-loader"),
+                new ServiceArg("-vaa3dCmdArgs", vaa3dCmdArgs.toString()));
     }
 
     private Vaa3dConverterArgs getArgs(JacsServiceData jacsServiceData) {

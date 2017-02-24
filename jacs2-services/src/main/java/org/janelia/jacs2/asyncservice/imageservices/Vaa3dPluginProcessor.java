@@ -7,14 +7,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
+import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
+import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
-import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
@@ -45,13 +46,17 @@ public class Vaa3dPluginProcessor extends AbstractServiceProcessor<File> {
         List<String> pluginParams = new ArrayList<>();
     }
 
+    private final Vaa3dProcessor vaa3dProcessor;
+
     @Inject
     Vaa3dPluginProcessor(JacsServiceEngine jacsServiceEngine,
                          ServiceComputationFactory computationFactory,
                          JacsServiceDataPersistence jacsServiceDataPersistence,
                          @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                         Logger logger) {
+                         Logger logger,
+                         Vaa3dProcessor vaa3dProcessor) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        this.vaa3dProcessor = vaa3dProcessor;
     }
 
     @Override
@@ -122,12 +127,8 @@ public class Vaa3dPluginProcessor extends AbstractServiceProcessor<File> {
         if (CollectionUtils.isNotEmpty(args.pluginParams)) {
             vaa3Args.add(StringUtils.wrap(args.pluginParams.stream().collect(Collectors.joining(" ")), '"'));
         }
-        JacsServiceData vaa3dCmdService =
-                new JacsServiceDataBuilder(jacsServiceData)
-                        .setName("vaa3d")
-                        .addArg("-vaa3dArgs", vaa3Args.toString())
-                        .build();
-        return createServiceComputation(jacsServiceEngine.submitSingleService(vaa3dCmdService));
+        return vaa3dProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
+                new ServiceArg("-vaa3dArgs", vaa3Args.toString()));
     }
 
     private Vaa3dPluginArgs getArgs(JacsServiceData jacsServiceData) {
