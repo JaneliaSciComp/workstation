@@ -63,6 +63,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
 import Jama.Matrix;
+import org.janelia.console.viewerapi.model.DefaultNeuron;
 
 /**
  * This class is responsible for handling requests from the AnnotationManager.  those
@@ -1119,6 +1120,21 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // create the new annotation, child of original parent
         final TmGeoAnnotation newAnnotation = neuronManager.addGeometricAnnotation(neuron,
                 annotation2.getId(), newPoint.x(), newPoint.y(), newPoint.z());
+        
+        // set radius of new point to an intermediate value
+        double newRadius = DefaultNeuron.radius;
+        if (annotation2.getRadius() != null) {
+            newRadius = annotation2.getRadius();
+            if (annotation1.getRadius() != null) {
+                double r1 = annotation1.getRadius();
+                double r2 = annotation2.getRadius();
+                newRadius = t * r2 + (1.0 - t) * r1;
+            }
+        }
+        else if (annotation1.getRadius() != null) {
+            newRadius = annotation1.getRadius();
+        }
+        newAnnotation.setRadius(newRadius);
 
         //  reparent existing annotation to new annotation
         neuronManager.reparentGeometricAnnotation(annotation1, newAnnotation.getId(), neuron);
