@@ -1,7 +1,9 @@
 // 5.10.0
 
 Workstation Browser
-* No change 
+* Now defaults to direct non-proxy connection to fix slow performance over VPN
+* Spaces in paths are now supported on Windows
+* Many other minor bug fixes (see JIRA)
 
 FlyLight
 * No change
