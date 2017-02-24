@@ -98,7 +98,7 @@ public class Vaa3dPluginProcessor extends AbstractServiceProcessor<File> {
         Vaa3dPluginArgs args = getArgs(jacsServiceData);
         return submitVaa3dService(args, jacsServiceData)
                 .thenCompose(sd -> this.waitForCompletion(sd))
-                .thenCompose(r -> this.collectResult(preProcessingResult, jacsServiceData));
+                .thenCompose(sd -> this.collectResult(preProcessingResult, jacsServiceData));
     }
 
     @Override

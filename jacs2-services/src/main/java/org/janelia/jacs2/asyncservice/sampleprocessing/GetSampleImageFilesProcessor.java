@@ -6,6 +6,8 @@ import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
 import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
+import org.janelia.jacs2.asyncservice.fileservices.FileCopyProcessor;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
@@ -32,19 +34,22 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Named("getSampleImageFiles")
-public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcessor<List<SampleImageFile>> {
+public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<SampleImageFile>> {
 
     private final SampleDataService sampleDataService;
+    private final FileCopyProcessor fileCopyProcessor;
 
     @Inject
-    GetSampleImageFilesServiceProcessor(JacsServiceEngine jacsServiceEngine,
-                                        ServiceComputationFactory computationFactory,
-                                        JacsServiceDataPersistence jacsServiceDataPersistence,
-                                        @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                                        SampleDataService sampleDataService,
-                                        Logger logger) {
+    GetSampleImageFilesProcessor(JacsServiceEngine jacsServiceEngine,
+                                 ServiceComputationFactory computationFactory,
+                                 JacsServiceDataPersistence jacsServiceDataPersistence,
+                                 @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                                 SampleDataService sampleDataService,
+                                 Logger logger,
+                                 FileCopyProcessor fileCopyProcessor) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.sampleDataService = sampleDataService;
+        this.fileCopyProcessor = fileCopyProcessor;
     }
 
     @Override
@@ -97,13 +102,16 @@ public class GetSampleImageFilesServiceProcessor extends AbstractServiceProcesso
                     JacsServiceData retrieveImageFileServiceData =
                             new JacsServiceDataBuilder(jacsServiceData)
                                     .setName("fileCopy")
-                                    .addArg("-src", sif.getArchiveFilePath())
-                                    .addArg("-dst", sif.getWorkingFilePath())
+                                    .addArg()
+                                    .addArg()
                                     .setProcessingLocation(ProcessingLocation.CLUSTER) // fileCopy only works on the cluster for now
                                     .build();
                     indexedSampleImageFiles.put(sif.getWorkingFilePath(), sif);
-                    ServiceComputation<?> fc = this.createServiceComputation(jacsServiceEngine.submitSingleService(retrieveImageFileServiceData))
-                            .thenCompose(sd -> this.waitForCompletion(sd));
+                    ServiceComputation<?> fc = fileCopyProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData, ProcessingLocation.CLUSTER),
+                            "-src", sif.getArchiveFilePath(),
+                            "-dst", sif.getWorkingFilePath())
+                            .thenCompose(sd -> this.waitForCompletion(sd))
+                            .thenApply(sd -> fileCopyProcessor.getResult(sd));
                     fcs.add(fc);
                 });
         return computationFactory.newCompletedComputation(jacsServiceData)

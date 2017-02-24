@@ -8,8 +8,12 @@ public class ServiceExecutionContext {
     private ProcessingLocation processingLocation;
 
     public ServiceExecutionContext(JacsServiceData parentServiceData) {
+        this(parentServiceData, parentServiceData.getProcessingLocation());
+    }
+
+    public ServiceExecutionContext(JacsServiceData parentServiceData, ProcessingLocation processingLocation) {
         this.parentServiceData = parentServiceData;
-        processingLocation = parentServiceData.getProcessingLocation();
+        this.processingLocation = processingLocation;
     }
 
     public JacsServiceData getParentServiceData() {

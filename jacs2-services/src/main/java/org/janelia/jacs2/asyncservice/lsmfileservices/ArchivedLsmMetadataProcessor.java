@@ -95,13 +95,13 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
 
     @Override
     protected ServiceComputation<File> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        JacsServiceData lsmServiceData = (JacsServiceData) preProcessingResult;
+        JacsServiceData lsmMetadataSD = (JacsServiceData) preProcessingResult;
         // wait for the child services to complete and set the result to the result of the last computation (LSM metadata)
-        return this.waitForCompletion(lsmServiceData)
-                .thenApply(r -> {
-                    File localLsmFile = new File(lsmServiceData.getStringifiedResult());
-                    setResult(localLsmFile, jacsServiceData);
-                    return localLsmFile;
+        return this.waitForCompletion(lsmMetadataSD)
+                .thenApply(sd -> {
+                    File localLsmMetadataFile = new File(sd.getStringifiedResult());
+                    setResult(localLsmMetadataFile, jacsServiceData);
+                    return localLsmMetadataFile;
                 })
                 .exceptionally(exc -> {
                     jacsServiceData.setState(JacsServiceState.CANCELED);

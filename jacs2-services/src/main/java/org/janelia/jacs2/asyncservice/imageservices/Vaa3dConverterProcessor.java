@@ -90,7 +90,7 @@ public class Vaa3dConverterProcessor extends AbstractServiceProcessor<File> {
         Vaa3dConverterArgs args = getArgs(jacsServiceData);
         return submitVaa3dCmdService(args, jacsServiceData)
                 .thenCompose(sd -> this.waitForCompletion(sd))
-                .thenCompose(r -> this.collectResult(preProcessingResult, jacsServiceData));
+                .thenCompose(sd -> this.collectResult(preProcessingResult, jacsServiceData));
     }
 
     @Override

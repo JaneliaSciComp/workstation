@@ -1,15 +1,15 @@
 package org.janelia.jacs2.asyncservice.sampleprocessing;
 
 import com.beust.jcommander.Parameter;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
+import org.janelia.jacs2.asyncservice.imageservices.BasicMIPsAndMoviesProcessor;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
-import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
@@ -37,13 +37,20 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         public String mipsSubDir = "mips";
     }
 
+    private final GetSampleImageFilesProcessor getSampleImageFilesProcessor;
+    private final BasicMIPsAndMoviesProcessor basicMIPsAndMoviesProcessor;
+
     @Inject
     GetSampleMIPsAndMoviesProcessor(JacsServiceEngine jacsServiceEngine,
                                     ServiceComputationFactory computationFactory,
                                     JacsServiceDataPersistence jacsServiceDataPersistence,
                                     @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                                    Logger logger) {
+                                    Logger logger,
+                                    GetSampleImageFilesProcessor getSampleImageFilesProcessor,
+                                    BasicMIPsAndMoviesProcessor basicMIPsAndMoviesProcessor) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        this.getSampleImageFilesProcessor = getSampleImageFilesProcessor;
+        this.basicMIPsAndMoviesProcessor = basicMIPsAndMoviesProcessor;
     }
 
     @Override
@@ -63,11 +70,13 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
 
     @Override
     protected ServiceComputation<List<SampleImageFile>> preProcessData(JacsServiceData jacsServiceData) {
-        JacsServiceData sampleLSMsServiceData = SampleServicesUtils.createChildSampleServiceData("getSampleImageFiles", getArgs(jacsServiceData), jacsServiceData);
-        return createServiceComputation(jacsServiceEngine.submitSingleService(sampleLSMsServiceData))
+        SampleServiceArgs args = getArgs(jacsServiceData);
+        return getSampleImageFilesProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
+                "-sampleId", args.sampleId.toString(),
+                "-objective", args.sampleObjective,
+                "-sampleDataDir", args.sampleDataDir)
                 .thenCompose(sd -> this.waitForCompletion(sd))
-                .thenApply(r -> ServiceDataUtils.stringToAny(sampleLSMsServiceData.getStringifiedResult(), new TypeReference<List<SampleImageFile>>() {
-                }));
+                .thenApply(sd -> getSampleImageFilesProcessor.getResult(sd));
     }
 
     @Override
@@ -104,25 +113,18 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                         "No channel spec for LSM " + f.getId() + "-" + f.getArchiveFilePath());
             }
             Path resultsDir = getResultsDir(args, f);
-            JacsServiceDataBuilder basicMipsAndMoviesServiceBuilder =
-                    new JacsServiceDataBuilder(jacsServiceData)
-                            .setName("basicMIPsAndMovies")
-                            .addArg("-imgFile", f.getWorkingFilePath())
-                            .addArg("-chanSpec", f.getChanSpec())
-                            .addArg("-colorSpec", f.getColorSpec());
-            if (f.getLaser() != null) {
-                basicMipsAndMoviesServiceBuilder.addArg("-laser", f.getLaser().toString());
-            }
-            if (f.getGain() != null) {
-                basicMipsAndMoviesServiceBuilder.addArg("-gain", f.getGain().toString());
-            }
-            basicMipsAndMoviesServiceBuilder
-                    .addArg("-options", args.options)
-                    .addArg("-resultsDir", resultsDir.toString());
-            basicMipsAndMoviesComputations.add(
-                    createServiceComputation(jacsServiceEngine.submitSingleService(basicMipsAndMoviesServiceBuilder.build()))
-                            .thenCompose(sd -> this.waitForCompletion(sd))
-            );
+            ServiceComputation<?> basicMipsAndMoviesComputation = basicMIPsAndMoviesProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
+                    "-imgFile", f.getWorkingFilePath(),
+                    "-chanSpec", f.getChanSpec(),
+                    "-colorSpec", f.getColorSpec(),
+                    "-laser", f.getLaser() == null ? null : f.getLaser().toString(),
+                    "-gain", f.getGain() == null ? null : f.getGain().toString(),
+                    "-options", args.options,
+                    "-resultsDir", resultsDir.toString()
+            )
+                    .thenCompose(mipsSD -> waitForCompletion(mipsSD))
+                    .thenApply(mipsSD -> basicMIPsAndMoviesProcessor.getResult(mipsSD));
+            basicMipsAndMoviesComputations.add(basicMipsAndMoviesComputation);
         });
         return basicMipsAndMoviesComputations;
     }

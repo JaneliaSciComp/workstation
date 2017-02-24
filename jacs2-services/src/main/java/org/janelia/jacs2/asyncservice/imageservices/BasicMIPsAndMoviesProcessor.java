@@ -9,6 +9,7 @@ import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
+import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.utils.FileUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -56,6 +57,7 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
 
     private final String basicMIPsAndMoviesMacro;
     private final String scratchLocation;
+    private final VideoFormatConverterProcessor mpegConverterProcessor;
 
     @Inject
     BasicMIPsAndMoviesProcessor(JacsServiceEngine jacsServiceEngine,
@@ -64,10 +66,12 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
                                 @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                 @PropertyValue(name = "Fiji.BasicMIPsAndMovies") String basicMIPsAndMoviesMacro,
                                 @PropertyValue(name = "service.DefaultScratchDir") String scratchLocation,
-                                Logger logger) {
+                                Logger logger,
+                                VideoFormatConverterProcessor mpegConverterProcessor) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.basicMIPsAndMoviesMacro = basicMIPsAndMoviesMacro;
         this.scratchLocation =scratchLocation;
+        this.mpegConverterProcessor = mpegConverterProcessor;
     }
 
     @Override
@@ -102,7 +106,7 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
         List<File> pngAndMpegFileResults = new ArrayList<>();
         return submitFijiService(args, jacsServiceData)
                 .thenCompose(sd -> this.waitForCompletion(sd))
-                .thenCompose(r -> this.collectResult(preProcessingResult, jacsServiceData))
+                .thenCompose(sd -> this.collectResult(preProcessingResult, jacsServiceData))
                 .thenCompose(fileResults -> {
                     fileResults
                             .stream()
@@ -111,13 +115,9 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
                     List<ServiceComputation<?>> mpegConverters = fileResults.stream()
                             .filter(f -> f.getName().endsWith(".avi"))
                             .map(f -> {
-                                JacsServiceData mpegConverterService =
-                                        new JacsServiceDataBuilder(jacsServiceData)
-                                                .setName("mpegConverter")
-                                                .addArg("-input", f.getAbsolutePath())
-                                                .build();
-                                return createServiceComputation(jacsServiceEngine.submitSingleService(mpegConverterService))
-                                        .thenCompose(sd -> this.waitForCompletion(sd));
+                                return mpegConverterProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData), "-input", f.getAbsolutePath())
+                                        .thenCompose(sd -> this.waitForCompletion(sd))
+                                        .thenApply(sd -> mpegConverterProcessor.getResult(sd));
                             })
                             .collect(Collectors.toList());
                     // collect the results by appending the generated MPEG to the list

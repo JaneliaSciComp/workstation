@@ -61,7 +61,6 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                         .addArg(args)
                         .build();
         jacsServiceEngine.submitSingleService(jacsServiceData);
-        // TODO
         return createServiceComputation(jacsServiceData);
     }
 
@@ -101,8 +100,7 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
-    protected ServiceComputation<?> waitForCompletion(JacsServiceData jacsServiceData) {
-        ServiceProcessor<?> serviceProcessor = jacsServiceEngine.getServiceProcessor(jacsServiceData);
+    protected ServiceComputation<JacsServiceData> waitForCompletion(JacsServiceData jacsServiceData) {
         return computationFactory.<JacsServiceData>newComputation()
                 .supply(() -> {
                     long startTime = System.currentTimeMillis();
@@ -137,8 +135,7 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                             throw new ComputationException(sd, "Service " + sd + " timed out");
                         }
                     }
-                })
-                .thenApply(sd -> serviceProcessor.getResult(sd));
+                });
     }
 
     protected abstract boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData);
