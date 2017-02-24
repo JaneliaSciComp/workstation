@@ -5,8 +5,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
+import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
@@ -14,6 +16,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T> {
 
@@ -39,10 +43,50 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
     }
 
     @Override
+    public ServiceComputation<T> invoke(ServiceExecutionContext executionContext, ServiceArg... args) {
+        return invokeService(executionContext, JacsServiceState.RUNNING, args)
+                .thenCompose(sd -> this.process(sd));
+    }
+
+    @Override
+    public ServiceComputation<JacsServiceData> invokeAsync(ServiceExecutionContext executionContext, ServiceArg... args) {
+        return invokeService(executionContext, JacsServiceState.QUEUED, args);
+    }
+
+    private ServiceComputation<JacsServiceData> invokeService(ServiceExecutionContext executionContext, JacsServiceState serviceState, ServiceArg... args) {
+        ServiceMetaData smd = getMetadata();
+        JacsServiceDataBuilder jacsServiceDataBuilder =
+                new JacsServiceDataBuilder(executionContext.getParentServiceData())
+                        .setName(smd.getServiceName())
+                        .setProcessingLocation(executionContext.getProcessingLocation())
+                        .setState(serviceState)
+                        .addArg(Stream.of(args).flatMap(arg -> Stream.of(arg.toStringArray())).toArray(String[]::new));
+        executionContext.getWaitFor().forEach(sd -> jacsServiceDataBuilder.addDependency(sd));
+        JacsServiceData jacsServiceData = jacsServiceDataBuilder.build();
+        jacsServiceEngine.submitSingleService(jacsServiceData);
+        return createServiceComputation(jacsServiceData);
+    }
+
+    @Override
     public ServiceComputation<T> process(JacsServiceData jacsServiceData) {
         return preProcessData(jacsServiceData)
                 .thenCompose(preProcessingResults -> this.localProcessData(preProcessingResults, jacsServiceData))
-                .thenCompose(r -> this.postProcessData(r, jacsServiceData));
+                .thenCompose(r -> this.postProcessData(r, jacsServiceData))
+                .whenComplete((r, exc) -> {
+                    if (exc == null) {
+                        logger.info("Successfully completed {}", jacsServiceData);
+                        jacsServiceData.addEvent(JacsServiceEventTypes.COMPLETED, "Completed successfully");
+                        jacsServiceData.setState(JacsServiceState.SUCCESSFUL);
+                    } else {
+                        // if the service data state has already been marked as cancelled or error leave it as is
+                        if (!jacsServiceData.hasCompletedUnsuccessfully()) {
+                            logger.error("Error executing {}", jacsServiceData, exc);
+                            jacsServiceData.addEvent(JacsServiceEventTypes.FAILED, String.format("Failed: %s", exc.getMessage()));
+                            jacsServiceData.setState(JacsServiceState.ERROR);
+                        }
+                    }
+                    jacsServiceDataPersistence.save(jacsServiceData);
+                });
     }
 
     protected ServiceComputation<?> preProcessData(JacsServiceData jacsServiceData) {
@@ -59,12 +103,11 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
-    protected ServiceComputation<?> waitForCompletion(JacsServiceData jacsServiceData) {
-        ServiceProcessor<?> serviceProcessor = jacsServiceEngine.getServiceProcessor(jacsServiceData);
+    protected ServiceComputation<JacsServiceData> waitForCompletion(JacsServiceData jacsServiceData) {
         return computationFactory.<JacsServiceData>newComputation()
                 .supply(() -> {
                     long startTime = System.currentTimeMillis();
-                    for (;;) {
+                    for (; ; ) {
                         JacsServiceData sd = jacsServiceDataPersistence.findById(jacsServiceData.getId());
                         if (sd.hasCompletedSuccessfully()) {
                             return sd;
@@ -95,8 +138,7 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                             throw new ComputationException(sd, "Service " + sd + " timed out");
                         }
                     }
-                })
-                .thenApply(sd -> serviceProcessor.getResult(sd));
+                });
     }
 
     protected abstract boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData);

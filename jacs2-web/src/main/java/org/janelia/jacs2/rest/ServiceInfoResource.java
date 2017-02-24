@@ -110,7 +110,7 @@ public class ServiceInfoResource {
     @GET
     @Path("/metadata")
     public Response getAllServicesMetadata() {
-        List<ServiceMetaData> services = serviceRegistry.getAllServiceDescriptors();
+        List<ServiceMetaData> services = serviceRegistry.getAllServicesMetadata();
         return Response
                 .status(Response.Status.OK)
                 .entity(services)
@@ -120,7 +120,7 @@ public class ServiceInfoResource {
     @GET
     @Path("/metadata/{service-name}")
     public Response getServiceMetadata(@PathParam("service-name") String serviceName) {
-        ServiceMetaData smd = serviceRegistry.getServiceDescriptor(serviceName);
+        ServiceMetaData smd = serviceRegistry.getServiceMetadata(serviceName);
         if (smd == null) {
             return Response
                     .status(Response.Status.NOT_FOUND)

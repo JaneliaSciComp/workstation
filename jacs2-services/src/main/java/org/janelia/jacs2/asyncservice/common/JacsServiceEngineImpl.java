@@ -79,8 +79,7 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
 
     @Override
     public ServiceProcessor<?> getServiceProcessor(JacsServiceData jacsServiceData) {
-        ServiceDescriptor serviceDescriptor = getServiceDescriptor(jacsServiceData.getName());
-        return serviceDescriptor.createServiceProcessor();
+        return getServiceProcessor(jacsServiceData.getName());
     }
 
     @Override
@@ -93,14 +92,14 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
         availableSlots.release();
     }
 
-    private ServiceDescriptor getServiceDescriptor(String serviceName) {
+    private ServiceProcessor<?> getServiceProcessor(String serviceName) {
         ServiceRegistry registrar = serviceRegistrarSource.get();
-        ServiceDescriptor serviceDescriptor = registrar.lookupService(serviceName);
-        if (serviceDescriptor == null) {
+        ServiceProcessor<?> serviceProcessor = registrar.lookupService(serviceName);
+        if (serviceProcessor == null) {
             logger.error("No service found for {}", serviceName);
             throw new IllegalArgumentException("Unknown service: " + serviceName);
         }
-        return serviceDescriptor;
+        return serviceProcessor;
     }
 
     @Override

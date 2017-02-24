@@ -1,11 +1,13 @@
 package org.janelia.jacs2.asyncservice.sampleprocessing;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.ServiceArg;
+import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.sampleprocessing.zeiss.LSMDetectionChannel;
 import org.janelia.jacs2.asyncservice.sampleprocessing.zeiss.LSMMetadata;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
@@ -16,20 +18,23 @@ import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Named("updateLSMMetadata")
 public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> {
 
     private final SampleDataService sampleDataService;
+    private final GetSampleLsmsMetadataProcessor getSampleLsmsMetadataProcessor;
 
     @Inject
     UpdateLSMsMetadataProcessor(JacsServiceEngine jacsServiceEngine,
@@ -37,9 +42,16 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
                                 JacsServiceDataPersistence jacsServiceDataPersistence,
                                 @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                 SampleDataService sampleDataService,
-                                Logger logger) {
+                                Logger logger,
+                                GetSampleLsmsMetadataProcessor getSampleLsmsMetadataProcessor) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.sampleDataService = sampleDataService;
+        this.getSampleLsmsMetadataProcessor = getSampleLsmsMetadataProcessor;
+    }
+
+    @Override
+    public ServiceMetaData getMetadata() {
+        return ServiceArgs.getMetadata(this.getClass(), new SampleServiceArgs());
     }
 
     @Override
@@ -53,11 +65,13 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
 
     @Override
     protected ServiceComputation<List<SampleImageMetadataFile>> preProcessData(JacsServiceData jacsServiceData) {
-        JacsServiceData sampleLSMsMetadataServiceData = SampleServicesUtils.createChildSampleServiceData("getSampleLsmMetadata", getArgs(jacsServiceData), jacsServiceData);
-        return createServiceComputation(jacsServiceEngine.submitSingleService(sampleLSMsMetadataServiceData))
+        SampleServiceArgs args = getArgs(jacsServiceData);
+        return getSampleLsmsMetadataProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
+                new ServiceArg("-sampleId", args.sampleId.toString()),
+                new ServiceArg("-objective", args.sampleObjective),
+                new ServiceArg("-sampleDataDir", args.sampleDataDir))
                 .thenCompose(sd -> this.waitForCompletion(sd))
-                .thenApply(r -> ServiceDataUtils.stringToAny(sampleLSMsMetadataServiceData.getStringifiedResult(), new TypeReference<List<SampleImageMetadataFile>>() {
-                }));
+                .thenApply(sd -> getSampleLsmsMetadataProcessor.getResult(sd));
     }
 
     @Override

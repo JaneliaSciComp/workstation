@@ -11,6 +11,7 @@ import org.janelia.jacs2.asyncservice.ServiceRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
@@ -150,16 +151,20 @@ public class JacsServiceDispatcherTest {
     }
 
     private ServiceProcessor prepareServiceProcessor(JacsServiceData testServiceData, Exception exc) {
-        ServiceDescriptor testDescriptor = mock(ServiceDescriptor.class);
         ServiceProcessor testProcessor = mock(ServiceProcessor.class);
 
-        when(serviceRegistry.lookupService(testServiceData.getName())).thenReturn(testDescriptor);
-        when(testDescriptor.createServiceProcessor()).thenReturn(testProcessor);
+        when(serviceRegistry.lookupService(testServiceData.getName())).thenReturn(testProcessor);
 
         if (exc == null) {
-            when(testProcessor.process(any(JacsServiceData.class))).thenReturn(serviceComputationFactory.newCompletedComputation(null));
+            when(testProcessor.process(any(JacsServiceData.class))).thenAnswer(invocation -> {
+                testServiceData.setState(JacsServiceState.SUCCESSFUL);
+                return serviceComputationFactory.newCompletedComputation(null);
+            });
         } else {
-            when(testProcessor.process(any(JacsServiceData.class))).thenReturn(serviceComputationFactory.newFailedComputation(exc));
+            when(testProcessor.process(any(JacsServiceData.class))).thenAnswer(invocation -> {
+                testServiceData.setState(JacsServiceState.ERROR);
+                return serviceComputationFactory.newFailedComputation(exc);
+            });
         }
         return testProcessor;
     }
@@ -178,7 +183,7 @@ public class JacsServiceDispatcherTest {
         ArgumentCaptor<JacsServiceData> jacsServiceArg = ArgumentCaptor.forClass(JacsServiceData.class);
         verify(testProcessor).process(jacsServiceArg.capture());
         assertSame(testServiceData, jacsServiceArg.getValue());
-        verify(jacsServiceDataPersistence, times(3)).update(testServiceData);
+        verify(jacsServiceDataPersistence, times(2)).update(testServiceData);
         assertThat(testServiceData.getState(), equalTo(JacsServiceState.ERROR));
     }
 

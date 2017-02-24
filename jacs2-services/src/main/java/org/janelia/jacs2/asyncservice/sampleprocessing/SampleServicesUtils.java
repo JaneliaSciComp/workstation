@@ -6,9 +6,6 @@ import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFilepath;
 import org.janelia.it.jacs.model.domain.sample.FileGroup;
 import org.janelia.jacs2.model.DomainModelUtils;
-import org.janelia.jacs2.model.jacsservice.JacsServiceData;
-import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
-import org.janelia.jacs2.asyncservice.common.ComputationException;
 
 import java.io.File;
 import java.util.LinkedHashMap;
@@ -104,22 +101,6 @@ public class SampleServicesUtils {
             }
         }
         return null;
-    }
-
-    static JacsServiceData createChildSampleServiceData(String serviceName, SampleServiceArgs args, JacsServiceData currentServiceData) {
-        if (args.sampleId == null) {
-            throw new IllegalArgumentException("Sample Id is required");
-        } else if (StringUtils.isBlank(args.sampleDataDir)) {
-            throw new ComputationException(currentServiceData, "Output directory is required");
-        }
-        JacsServiceDataBuilder sampleLSMsServiceDataBuilder = new JacsServiceDataBuilder(currentServiceData)
-                .setName(serviceName)
-                .addArg("-sampleId", args.sampleId.toString());
-        if (StringUtils.isNotBlank(args.sampleObjective)) {
-            sampleLSMsServiceDataBuilder.addArg("-objective", args.sampleObjective);
-        }
-        sampleLSMsServiceDataBuilder.addArg("-sampleDataDir", args.sampleDataDir);
-        return sampleLSMsServiceDataBuilder.build();
     }
 
 }
