@@ -26,6 +26,8 @@ public class IntegerComputeServiceITest extends AbstractITest {
     private Instance<ExternalProcessRunner> serviceRunners;
     private Logger logger;
 
+    @Inject Logger logger2;
+
     @Before
     public void setup() {}
 
@@ -39,11 +41,19 @@ public class IntegerComputeServiceITest extends AbstractITest {
                 executablesBaseDir,
                 serviceRunners,
                 logger);
+
         if (logger==null) {
             System.out.println("logger is null");
         } else {
             System.out.println("logger is NOT null");
         }
+
+        if (logger2==null) {
+            System.out.println("logger2 is null");
+        } else {
+            System.out.println("logger2 is NOT null");
+        }
+
     }
 
     @After
