@@ -105,8 +105,12 @@ implements BrickInfo
             pixelDims[i] = dims.get(i);
         intensityType = (String)shape.get("type");
         List<Double> td = (List<Double>)yamlFragment.get("transform");
-        if (td.size() != 25)
-            throw new ParseException("Unexpected raw tile transform size "+td.size(), 25);
+        if (td==null) {
+            throw new ParseException("Tiles missing transform", 0);
+        }
+        if (td.size() != 25) {
+            throw new ParseException("Unexpected raw tile transform size: "+td.size()+" (should be 25)", 0);
+        }
         double[][] dd = new double[5][5];
         for (int i = 0; i < 5; ++i) {
             for (int j = 0; j < 5; ++j) {

@@ -195,14 +195,15 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             URL yamlUrl = yamlUri.toURL();
             try (InputStream stream1 = yamlUrl.openStream()) {
                 volumeSource = nttc.loadYaml(stream1, loader, progress);
-            } catch (ParseException ex) {
-                JOptionPane.showMessageDialog(nttc, 
-                        "Problem Loading Raw Tile Information from " + yamlUrlString + 
-                        "\n  Does the transform contain barycentric coordinates?"
-                        ,
-                        "Tilebase File Problem",
-                        JOptionPane.ERROR_MESSAGE);            }
-        } catch (IOException | URISyntaxException ex) {
+            }
+            catch (ParseException ex) {
+                JOptionPane.showMessageDialog(nttc,
+                        "Problem Loading Raw Tile Information from " + yamlUrlString +
+                        "\n  Does the transform contain barycentric coordinates?",
+                        "Tilebase File Problem", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        catch (IOException | URISyntaxException ex) {
             // Something went wrong with loading the Yaml file
             // Exceptions.printStackTrace(ex);
             JOptionPane.showMessageDialog(nttc, 
