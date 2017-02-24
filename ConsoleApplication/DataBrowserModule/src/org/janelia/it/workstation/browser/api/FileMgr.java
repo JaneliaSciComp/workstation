@@ -2,9 +2,11 @@ package org.janelia.it.workstation.browser.api;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.filecache.LocalFileCache;
 import org.janelia.it.workstation.browser.filecache.WebDavClient;
@@ -205,6 +207,14 @@ public class FileMgr {
             }
             catch (FileNotFoundException e) {
                 log.warn("File does not exist: " + standardPath, e);
+            }
+            catch (IOException e) {
+                if ("No space left on device".equals(e.getMessage())) {
+                    FrameworkImplProvider.handleExceptionQuietly("No space left on disk", e);
+                }
+                else {
+                    log.error("Failed to retrieve " + standardPath + " from local cache", e);
+                }
             }
             catch (Exception e) {
                 log.error("Failed to retrieve " + standardPath + " from local cache", e);
