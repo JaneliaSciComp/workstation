@@ -7,6 +7,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -24,12 +25,25 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 
 public final class NewFilterActionListener implements ActionListener {
 
-    private TreeNodeNode parentNode;
+    private final TreeNodeNode parentNode;
+    private final String searchString;
+    private final String searchClass;
 
     public NewFilterActionListener() {
+        this.searchString = null;
+        this.searchClass = FilterEditorPanel.DEFAULT_SEARCH_CLASS.getName();
+        this.parentNode = null;
     }
 
+    public NewFilterActionListener(String searchString, String searchClass) {
+        this.searchString = searchString;
+        this.searchClass = searchClass == null ? FilterEditorPanel.DEFAULT_SEARCH_CLASS.getName() : searchClass;
+        this.parentNode = null;
+    }
+    
     public NewFilterActionListener(TreeNodeNode parentNode) {
+        this.searchString = null;
+        this.searchClass = FilterEditorPanel.DEFAULT_SEARCH_CLASS.getName();
         this.parentNode = parentNode;
     }
 
@@ -46,7 +60,15 @@ public final class NewFilterActionListener implements ActionListener {
             // save a new filter. Just open up the editor:
             DomainListViewTopComponent browser = initView();
             FilterEditorPanel editor = ((FilterEditorPanel)browser.getEditor());
-            editor.loadNewFilter();
+            if (searchString==null) {
+                editor.loadNewFilter();
+            }
+            else {
+                Filter filter = new Filter();
+                filter.setSearchClass(searchClass);
+                filter.setSearchString(searchString);
+                editor.loadDomainObject(filter, true, null);
+            }
             return;
         }
 
@@ -66,7 +88,10 @@ public final class NewFilterActionListener implements ActionListener {
             protected void doStuff() throws Exception {
                 filter = new Filter();
                 filter.setName(name);
-                filter.setSearchClass(FilterEditorPanel.DEFAULT_SEARCH_CLASS.getName());
+                filter.setSearchClass(searchClass);
+                if (searchString!=null) {
+                    filter.setSearchString(searchString);
+                }
                 filter = model.save(filter);
                 TreeNode parentFolder = parentNode.getTreeNode();
                 model.addChild(parentFolder, filter);

@@ -76,7 +76,7 @@ public class WindowLocator {
      */
     public static TopComponent activateAndGet(final String frameName, final String modeName) {
         TopComponent win = WindowLocator.getByName(frameName);
-        if (win!=null) {
+        if (win != null) {
             if (!win.isOpened()) {
                 Mode mode = WindowManager.getDefault().findMode(modeName);
                 if (mode != null) {
@@ -90,11 +90,11 @@ public class WindowLocator {
 
     public static TopComponent makeVisibleAndGet(final String frameName) {
         TopComponent topComponent = WindowLocator.getByName(frameName);
-        if ( topComponent != null ) {
-            if ( ! topComponent.isOpened() ) {
+        if (topComponent != null) {
+            if (!topComponent.isOpened()) {
                 topComponent.open();
             }
-            if ( topComponent.isOpened() ) {
+            if (topComponent.isOpened()) {
                 topComponent.requestActive();
             }
 

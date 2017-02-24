@@ -34,6 +34,7 @@ import javax.swing.text.DefaultFormatter;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.gui.dialogs.ReleaseNotesDialog;
+import org.janelia.it.workstation.browser.gui.editor.StartPage;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.panels.MemorySettingPanel;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -52,6 +53,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
     private JComboBox<LookAndFeel> lookAndFeelCombobox;
 
     private JCheckBox showReleaseNotesOnStartup;
+    private JCheckBox showStartPageOnStartup;
     private JRadioButton fileCacheEnabledRadioButton;
     private JRadioButton fileCacheDisabledRadioButton;
     private JSpinner fileCacheSpinner;
@@ -93,6 +95,10 @@ final class ApplicationPanel extends javax.swing.JPanel {
         showReleaseNotesOnStartup = new JCheckBox("Show release notes after update");
         showReleaseNotesOnStartup.setSelected(ReleaseNotesDialog.isShowReleaseNotes());
         mainPanel.addItem(showReleaseNotesOnStartup);
+
+        showStartPageOnStartup = new JCheckBox("Show start page on startup");
+        showStartPageOnStartup.setSelected(ApplicationOptions.getInstance().isShowStartPageOnStartup());
+        mainPanel.addItem(showStartPageOnStartup);
         
         // L&F
         
@@ -335,6 +341,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
         // General
 
         ReleaseNotesDialog.setShowReleaseNotes(showReleaseNotesOnStartup.isSelected());
+        ApplicationOptions.getInstance().setShowStartPageOnStartup(showStartPageOnStartup.isSelected());
         
         // Memory
         
