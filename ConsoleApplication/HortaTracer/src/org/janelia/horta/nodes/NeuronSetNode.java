@@ -199,7 +199,7 @@ public class NeuronSetNode extends AbstractNode
 
         @Override
         protected Node createNodeForKey(NeuronModel key) {
-            return new NeuronModelNode(key);
+            return new NeuronModelNode(key, neuronList.isReadOnly());
         }
     }
     

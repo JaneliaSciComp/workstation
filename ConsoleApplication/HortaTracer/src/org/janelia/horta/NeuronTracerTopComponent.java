@@ -1688,10 +1688,14 @@ public final class NeuronTracerTopComponent extends TopComponent
                             + "':").setEnabled(false);
 
                     // Toggle Visiblity (maybe we could only hide from here though...)
-                    topMenu.add(new ToggleNeuronVisibilityAction(
+                    ToggleNeuronVisibilityAction visAction = new ToggleNeuronVisibilityAction(
                             NeuronTracerTopComponent.this,
                             activeNeuronSet,
-                            indicatedNeuron));
+                            indicatedNeuron);
+                    // NOTE: In my opinion one should be allowed to hide neurons in a read-only workspace.
+                    // But that's not the way it's implemented on the back end...
+                    visAction.setEnabled(! activeNeuronSet.isReadOnly());
+                    topMenu.add(visAction);
                     
                     // Change Neuron Color
                     if (interactorContext.canRecolorNeuron()) {
@@ -1704,10 +1708,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
 
                     // Change Neuron Name
-                    topMenu.add(new RenameNeuronAction(
-                            NeuronTracerTopComponent.this,
-                            activeNeuronSet,
-                            indicatedNeuron));
+                    if (! activeNeuronSet.isReadOnly()) {
+                        topMenu.add(new RenameNeuronAction(
+                                NeuronTracerTopComponent.this,
+                                activeNeuronSet,
+                                indicatedNeuron));
+                    }
 
                     // Delete Neuron DANGER!
                     if (interactorContext.canDeleteNeuron()) {

@@ -203,6 +203,8 @@ public class NeuronVbo implements Iterable<NeuronModel>
     // lightweight update of just the color field
     private boolean updateNeuronColor(NeuronModel neuron) 
     {
+        if (buffersNeedRebuild)
+            return false;
         int sv = neuron.getVertexes().size();
         float rgb[] = {0,0,0,1};
         neuron.getColor().getRGBComponents(rgb);
@@ -216,6 +218,13 @@ public class NeuronVbo implements Iterable<NeuronModel>
             // Has the color actually changed?
             final int COLOR_OFFSET = 4; // red color begins at 5th value
             int offset = neuronOffsets.get(neuron) * FLOATS_PER_VERTEX + COLOR_OFFSET;
+            int max_offset = offset + (sv-1) * FLOATS_PER_VERTEX;
+            if (max_offset >= vertexBuffer.limit()) {
+                // Hmm. The actual buffer is no longer big enough to hold this neuron.
+                log.info("vertex buffer object is too small. rebuild queued (after updateNeuronColor())");
+                buffersNeedRebuild = true;
+                return true;
+            }
             if ( (vertexBuffer.get(offset+0) == rgb[0])
                     && (vertexBuffer.get(offset+1) == rgb[1])
                     && (vertexBuffer.get(offset+2) == rgb[2]) )
@@ -245,8 +254,11 @@ public class NeuronVbo implements Iterable<NeuronModel>
     }
     
     // lightweight update of just the visibility field
+    // returns true if the buffer state actually changed
     private boolean updateNeuronVisibility(NeuronModel neuron) 
     {
+        if (buffersNeedRebuild)
+            return false; // we are going to redo everything anyway, so skip the surgical update
         int sv = neuron.getVertexes().size();
         boolean bIsVisible = neuron.isVisible();
         float visFloat = bIsVisible ? 1.0f : 0.0f;
@@ -261,6 +273,13 @@ public class NeuronVbo implements Iterable<NeuronModel>
             // Has the visibility actually changed?
             final int VISIBILITY_OFFSET = 7; // visibility is the 8th attribute value
             int offset = neuronOffsets.get(neuron) * FLOATS_PER_VERTEX + VISIBILITY_OFFSET;
+            int max_offset = offset + (sv-1) * FLOATS_PER_VERTEX;
+            if (max_offset >= vertexBuffer.limit()) {
+                log.info("vertex buffer object is too small. rebuild queued (after updateNeuronVisibility())");
+                // Hmm. The actual buffer is no longer big enough to hold this neuron.
+                buffersNeedRebuild = true;
+                return true;
+            }
             if (vertexBuffer.get(offset) != visFloat) { // visibility actually changed
                 for (int v = 0; v < sv; ++v) {
                     int index = offset + v * FLOATS_PER_VERTEX;
@@ -286,6 +305,8 @@ public class NeuronVbo implements Iterable<NeuronModel>
         vertexCount = 0;
         edgeCount = 0;
         float rgb[] = {0,0,0};
+        neuronOffsets.clear();
+        neuronVertexCounts.clear();
         for (NeuronModel neuron : neurons) {
             // if (! neuron.isVisible()) continue;
             neuronOffsets.put(neuron, vertexCount);
