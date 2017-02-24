@@ -16,6 +16,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T> {
 
@@ -41,24 +43,24 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
     }
 
     @Override
-    public ServiceComputation<T> invoke(ServiceExecutionContext executionContext, String... args) {
+    public ServiceComputation<T> invoke(ServiceExecutionContext executionContext, ServiceArg... args) {
         return invokeService(executionContext, JacsServiceState.RUNNING, args)
                 .thenCompose(sd -> this.process(sd));
     }
 
     @Override
-    public ServiceComputation<JacsServiceData> invokeAsync(ServiceExecutionContext executionContext, String... args) {
+    public ServiceComputation<JacsServiceData> invokeAsync(ServiceExecutionContext executionContext, ServiceArg... args) {
         return invokeService(executionContext, JacsServiceState.QUEUED, args);
     }
 
-    private ServiceComputation<JacsServiceData> invokeService(ServiceExecutionContext executionContext, JacsServiceState serviceState, String... args) {
+    private ServiceComputation<JacsServiceData> invokeService(ServiceExecutionContext executionContext, JacsServiceState serviceState, ServiceArg... args) {
         ServiceMetaData smd = getMetadata();
         JacsServiceData jacsServiceData =
                 new JacsServiceDataBuilder(executionContext.getParentServiceData())
                         .setName(smd.getServiceName())
                         .setProcessingLocation(executionContext.getProcessingLocation())
                         .setState(serviceState)
-                        .addArg(args)
+                        .addArg(Stream.of(args).flatMap(arg -> Stream.of(arg.toStringArray())).toArray(String[]::new))
                         .build();
         jacsServiceEngine.submitSingleService(jacsServiceData);
         return createServiceComputation(jacsServiceData);

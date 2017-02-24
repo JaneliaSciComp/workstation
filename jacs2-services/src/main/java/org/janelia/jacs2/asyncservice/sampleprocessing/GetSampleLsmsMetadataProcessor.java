@@ -3,6 +3,7 @@ package org.janelia.jacs2.asyncservice.sampleprocessing;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.lsmfileservices.LsmFileMetadataProcessor;
@@ -62,9 +63,9 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
     protected ServiceComputation<List<SampleImageFile>> preProcessData(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
         return getSampleImageFilesProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
-                "-sampleId", args.sampleId.toString(),
-                "-objective", args.sampleObjective,
-                "-sampleDataDir", args.sampleDataDir)
+                new ServiceArg("-sampleId", args.sampleId.toString()),
+                new ServiceArg("-objective", args.sampleObjective),
+                new ServiceArg("-sampleDataDir", args.sampleDataDir))
                 .thenCompose(sd -> this.waitForCompletion(sd))
                 .thenApply(sd -> getSampleImageFilesProcessor.getResult(sd));
     }
@@ -98,8 +99,8 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
             File lsmMetadataFile = getOutputFileName(outputDir, new File(lsmf.getWorkingFilePath()));
             lsmMetadataComputations.add(
                     lsmFileMetadataProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
-                            "-inputLSM", lsmf.getWorkingFilePath(),
-                            "-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())
+                            new ServiceArg("-inputLSM", lsmf.getWorkingFilePath()),
+                            new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath()))
                             .thenCompose(sd -> this.waitForCompletion(sd))
                             .thenApply(sd -> lsmFileMetadataProcessor.getResult(sd))
                             .thenApply(f -> {

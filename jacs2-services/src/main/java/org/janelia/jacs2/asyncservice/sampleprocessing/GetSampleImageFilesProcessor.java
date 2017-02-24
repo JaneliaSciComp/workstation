@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
 import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.fileservices.FileCopyProcessor;
@@ -108,8 +109,8 @@ public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<
                                     .build();
                     indexedSampleImageFiles.put(sif.getWorkingFilePath(), sif);
                     ServiceComputation<?> fc = fileCopyProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData, ProcessingLocation.CLUSTER),
-                            "-src", sif.getArchiveFilePath(),
-                            "-dst", sif.getWorkingFilePath())
+                            new ServiceArg("-src", sif.getArchiveFilePath()),
+                            new ServiceArg("-dst", sif.getWorkingFilePath()))
                             .thenCompose(sd -> this.waitForCompletion(sd))
                             .thenApply(sd -> fileCopyProcessor.getResult(sd));
                     fcs.add(fc);

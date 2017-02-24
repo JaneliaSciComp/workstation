@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.sampleprocessing.zeiss.LSMDetectionChannel;
@@ -66,9 +67,9 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
     protected ServiceComputation<List<SampleImageMetadataFile>> preProcessData(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
         return getSampleLsmsMetadataProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
-                "-sampleId", args.sampleId.toString(),
-                "-objective", args.sampleObjective,
-                "-sampleDataDir", args.sampleDataDir)
+                new ServiceArg("-sampleId", args.sampleId.toString()),
+                new ServiceArg("-objective", args.sampleObjective),
+                new ServiceArg("-sampleDataDir", args.sampleDataDir))
                 .thenCompose(sd -> this.waitForCompletion(sd))
                 .thenApply(sd -> getSampleLsmsMetadataProcessor.getResult(sd));
     }

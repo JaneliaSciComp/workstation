@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.imageservices.BasicMIPsAndMoviesProcessor;
@@ -72,9 +73,9 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
     protected ServiceComputation<List<SampleImageFile>> preProcessData(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
         return getSampleImageFilesProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
-                "-sampleId", args.sampleId.toString(),
-                "-objective", args.sampleObjective,
-                "-sampleDataDir", args.sampleDataDir)
+                new ServiceArg("-sampleId", args.sampleId.toString()),
+                new ServiceArg("-objective", args.sampleObjective),
+                new ServiceArg("-sampleDataDir", args.sampleDataDir))
                 .thenCompose(sd -> this.waitForCompletion(sd))
                 .thenApply(sd -> getSampleImageFilesProcessor.getResult(sd));
     }
@@ -114,14 +115,13 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
             }
             Path resultsDir = getResultsDir(args, f);
             ServiceComputation<?> basicMipsAndMoviesComputation = basicMIPsAndMoviesProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
-                    "-imgFile", f.getWorkingFilePath(),
-                    "-chanSpec", f.getChanSpec(),
-                    "-colorSpec", f.getColorSpec(),
-                    "-laser", f.getLaser() == null ? null : f.getLaser().toString(),
-                    "-gain", f.getGain() == null ? null : f.getGain().toString(),
-                    "-options", args.options,
-                    "-resultsDir", resultsDir.toString()
-            )
+                    new ServiceArg("-imgFile", f.getWorkingFilePath()),
+                    new ServiceArg("-chanSpec", f.getChanSpec()),
+                    new ServiceArg("-colorSpec", f.getColorSpec()),
+                    new ServiceArg("-laser", f.getLaser() == null ? null : f.getLaser().toString()),
+                    new ServiceArg("-gain", f.getGain() == null ? null : f.getGain().toString()),
+                    new ServiceArg("-options", args.options),
+                    new ServiceArg("-resultsDir", resultsDir.toString()))
                     .thenCompose(mipsSD -> waitForCompletion(mipsSD))
                     .thenApply(mipsSD -> basicMIPsAndMoviesProcessor.getResult(mipsSD));
             basicMipsAndMoviesComputations.add(basicMipsAndMoviesComputation);

@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
+import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
@@ -114,11 +115,9 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
                             .forEach(pngAndMpegFileResults::add);
                     List<ServiceComputation<?>> mpegConverters = fileResults.stream()
                             .filter(f -> f.getName().endsWith(".avi"))
-                            .map(f -> {
-                                return mpegConverterProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData), "-input", f.getAbsolutePath())
-                                        .thenCompose(sd -> this.waitForCompletion(sd))
-                                        .thenApply(sd -> mpegConverterProcessor.getResult(sd));
-                            })
+                            .map(f -> mpegConverterProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData), new ServiceArg("-input", f.getAbsolutePath()))
+                                    .thenCompose(sd -> this.waitForCompletion(sd))
+                                    .thenApply(sd -> mpegConverterProcessor.getResult(sd)))
                             .collect(Collectors.toList());
                     // collect the results by appending the generated MPEG to the list
                     return computationFactory.newCompletedComputation(fileResults)
