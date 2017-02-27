@@ -96,11 +96,11 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
     }
 
     private Object checkForDependenciesCompletion(JacsServiceData jacsServiceData, Object result) throws ComputationException {
-        long startTime = System.currentTimeMillis();
         Coroutine checker = new Coroutine() {
 
             @Override
             public void run(Continuation continuation) throws Exception {
+                long startTime = System.currentTimeMillis();
                 List<JacsServiceData> running = new ArrayList<>();
                 List<JacsServiceData> failed = new ArrayList<>();
                 for (;;) {
@@ -172,36 +172,43 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
     }
 
     private void checkForCompletion(JacsServiceData jacsServiceData) {
-        long startTime = System.currentTimeMillis();
+        Coroutine checker = new Coroutine() {
+            @Override
+            public void run(Continuation continuation) throws Exception {
+                long startTime = System.currentTimeMillis();
+                for (;;) {
+                    JacsServiceData sd = jacsServiceDataPersistence.findById(jacsServiceData.getId());
+                    if (sd.hasCompletedSuccessfully()) {
+                        return;
+                    } else if (sd.hasCompletedUnsuccessfully()) {
+                        logger.warn("Service {} completed unsuccessfully", sd);
+                        throw new ComputationException(sd, "Service " + sd + " did not complete successfully");
+                    }
+                    List<JacsServiceData> childServices = jacsServiceDataPersistence.findChildServices(jacsServiceData.getId());
+                    Optional<JacsServiceData> failedChildService = childServices.stream().filter(cs -> cs.hasCompletedUnsuccessfully()).findFirst();
+                    if (failedChildService.isPresent()) {
+                        sd.setState(JacsServiceState.CANCELED);
+                        sd.addEvent(JacsServiceEventTypes.CANCELED, String.format("Canceled because child service %d - %s %s -  finished unsuccessfully",
+                                failedChildService.get().getId(), failedChildService.get().getName(), failedChildService.get().getArgs()));
+                        jacsServiceDataPersistence.update(sd);
+                        logger.warn("Service {} canceled because of {}", sd, failedChildService.get());
+                        throw new ComputationException(sd, "Service " + sd + " canceled");
+                    }
+                    long timeSinceStart = System.currentTimeMillis() - startTime;
+                    if (sd.timeout() > 0 && timeSinceStart > sd.timeout()) {
+                        logger.warn("Service {} timed out after {}ms", sd, timeSinceStart);
+                        sd.setState(JacsServiceState.TIMEOUT);
+                        throw new ComputationException(sd, "Service " + sd + " timed out");
+                    }
+                    continuation.suspend();
+                }
+
+            }
+        };
+        CoroutineRunner runner = new CoroutineRunner(checker);
         for (;;) {
-            JacsServiceData sd = jacsServiceDataPersistence.findById(jacsServiceData.getId());
-            if (sd.hasCompletedSuccessfully()) {
+            if (!runner.execute()) {
                 return;
-            } else if (sd.hasCompletedUnsuccessfully()) {
-                logger.warn("Service {} completed unsuccessfully", sd);
-                throw new ComputationException(sd, "Service " + sd + " did not complete successfully");
-            }
-            List<JacsServiceData> childServices = jacsServiceDataPersistence.findChildServices(jacsServiceData.getId());
-            Optional<JacsServiceData> failedChildService = childServices.stream().filter(cs -> cs.hasCompletedUnsuccessfully()).findFirst();
-            if (failedChildService.isPresent()) {
-                sd.setState(JacsServiceState.CANCELED);
-                sd.addEvent(JacsServiceEventTypes.CANCELED, String.format("Canceled because child service %d - %s %s -  finished unsuccessfully",
-                        failedChildService.get().getId(), failedChildService.get().getName(), failedChildService.get().getArgs()));
-                jacsServiceDataPersistence.update(sd);
-                logger.warn("Service {} canceled because of {}", sd, failedChildService.get());
-                throw new ComputationException(sd, "Service " + sd + " canceled");
-            }
-            try {
-                Thread.currentThread().sleep(1000);
-            } catch (InterruptedException e) {
-                logger.warn("Interrupt {}", jacsServiceData, e);
-                throw new ComputationException(jacsServiceData, e);
-            }
-            long timeSinceStart = System.currentTimeMillis() - startTime;
-            if (sd.timeout() > 0 && timeSinceStart > sd.timeout()) {
-                logger.warn("Service {} timed out after {}ms", sd, timeSinceStart);
-                sd.setState(JacsServiceState.TIMEOUT);
-                throw new ComputationException(sd, "Service " + sd + " timed out");
             }
         }
     }
