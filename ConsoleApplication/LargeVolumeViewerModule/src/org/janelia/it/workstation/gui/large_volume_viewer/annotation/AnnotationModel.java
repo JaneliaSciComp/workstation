@@ -594,6 +594,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 
         final TmGeoAnnotation annotation = neuronManager.addGeometricAnnotation(
                 neuron, parentAnn.getId(), xyz.x(), xyz.y(), xyz.z());
+        annotation.setRadius(parentAnn.getRadius());
 
         log.info("Added annotation {} to neuron {}", annotation.getId(), neuron);
         

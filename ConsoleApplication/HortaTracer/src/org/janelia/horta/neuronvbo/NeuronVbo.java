@@ -86,6 +86,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
     // Cached indices
     private final Map<NeuronModel, Integer> neuronOffsets = new HashMap<>(); // for surgically updating buffers
     private final Map<NeuronModel, Integer> neuronVertexCounts = new HashMap<>(); // for sanity checking
+    private final Map<NeuronModel, Integer> neuronEdgeCounts = new HashMap<>(); // for sanity checking
     private final Map<NeuronModel, NeuronObserver> neuronObservers = new HashMap<>();
     
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -105,6 +106,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
             buffersNeedRebuild = true;
         neurons.clear();
         neuronOffsets.clear();
+        neuronEdgeCounts.clear();
         neuronVertexCounts.clear();
         neuronObservers.clear();
         edgeCount = 0;
@@ -206,6 +208,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
         if (buffersNeedRebuild)
             return false;
         int sv = neuron.getVertexes().size();
+        int se = neuron.getEdges().size();
         float rgb[] = {0,0,0,1};
         neuron.getColor().getRGBComponents(rgb);
         boolean bChanged = false; // nothing has changed yet
@@ -213,7 +216,8 @@ public class NeuronVbo implements Iterable<NeuronModel>
         // sanity check
         // Do we already have most of the information for this neuron tabulated?
         if ( neuronOffsets.containsKey(neuron)
-                && (neuronVertexCounts.get(neuron) == sv) ) 
+                && (neuronVertexCounts.get(neuron) == sv)
+                && (neuronEdgeCounts.get(neuron) == se)) 
         {
             // Has the color actually changed?
             final int COLOR_OFFSET = 4; // red color begins at 5th value
@@ -260,6 +264,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
         if (buffersNeedRebuild)
             return false; // we are going to redo everything anyway, so skip the surgical update
         int sv = neuron.getVertexes().size();
+        int se = neuron.getEdges().size();
         boolean bIsVisible = neuron.isVisible();
         float visFloat = bIsVisible ? 1.0f : 0.0f;
         boolean bChanged = false;
@@ -268,7 +273,8 @@ public class NeuronVbo implements Iterable<NeuronModel>
         // sanity check
         // Do we already have most of the information for this neuron tabulated?
         if ( neuronOffsets.containsKey(neuron)
-                && (neuronVertexCounts.get(neuron) == sv) ) 
+                && (neuronVertexCounts.get(neuron) == sv)
+                && (neuronEdgeCounts.get(neuron) == se) ) 
         {
             // Has the visibility actually changed?
             final int VISIBILITY_OFFSET = 7; // visibility is the 8th attribute value
@@ -307,10 +313,12 @@ public class NeuronVbo implements Iterable<NeuronModel>
         float rgb[] = {0,0,0};
         neuronOffsets.clear();
         neuronVertexCounts.clear();
+        neuronEdgeCounts.clear();
         for (NeuronModel neuron : neurons) {
             // if (! neuron.isVisible()) continue;
             neuronOffsets.put(neuron, vertexCount);
             neuronVertexCounts.put(neuron, neuron.getVertexes().size());
+            neuronEdgeCounts.put(neuron, neuron.getEdges().size());
             float visibility = neuron.isVisible() ? 1 : 0;
             Color color = neuron.getColor();
             color.getColorComponents(rgb);
@@ -473,7 +481,9 @@ public class NeuronVbo implements Iterable<NeuronModel>
         if (buffersNeedRebuild)
             return; // no need to check counts, if we will be rebuilding anyway
         for (NeuronModel neuron : this) {
-            if (neuron.getVertexes().size() != neuronVertexCounts.get(neuron)) {
+            if ( (neuron.getVertexes().size() != neuronVertexCounts.get(neuron)) 
+                    || (neuron.getEdges().size() != neuronEdgeCounts.get(neuron)))
+            {
                 buffersNeedRebuild = true;
                 return;
             }
