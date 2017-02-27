@@ -1,6 +1,7 @@
 package org.janelia.jacs2.asyncservice.utils;
 
 import com.google.common.collect.Iterables;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -54,6 +55,28 @@ public class ScriptWriter {
     public ScriptWriter addArg(String arg) {
         try {
             w.append(' ').append(arg);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return this;
+    }
+
+    public ScriptWriter addArgFlag(String argFlag, String argValue) {
+        try {
+            if (StringUtils.isNotBlank(argValue)) {
+                w.append(' ').append(argFlag).append(' ').append(argValue);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return this;
+    }
+
+    public ScriptWriter addArgFlag(String argFlag, Boolean argValue) {
+        try {
+            if (argValue) {
+                w.append(' ').append(argFlag);
+            }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

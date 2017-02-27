@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -31,6 +32,11 @@ public class AbstractExeBasedServiceProcessorTest {
                                      String executablesBaseDir,
                                      Logger logger) {
             super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+        }
+
+        @Override
+        public ServiceMetaData getMetadata() {
+            return new ServiceMetaData();
         }
 
         @Override

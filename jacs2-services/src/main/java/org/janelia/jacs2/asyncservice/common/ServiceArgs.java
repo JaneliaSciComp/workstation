@@ -20,8 +20,8 @@ public class ServiceArgs {
         return usageOutput.toString();
     }
 
-    public static <D extends ServiceDescriptor, A extends ServiceArgs> ServiceMetaData getMetadata(Class<D> descriptorClass, A args) {
-        String serviceName = descriptorClass.getAnnotation(Named.class).value();
+    public static <P extends ServiceProcessor, A extends ServiceArgs> ServiceMetaData getMetadata(Class<P> processorClass, A args) {
+        String serviceName = processorClass.getAnnotation(Named.class).value();
         ServiceMetaData smd = new ServiceMetaData();
         smd.setServiceName(serviceName);
         smd.setUsage(ServiceArgs.usage(serviceName, args));

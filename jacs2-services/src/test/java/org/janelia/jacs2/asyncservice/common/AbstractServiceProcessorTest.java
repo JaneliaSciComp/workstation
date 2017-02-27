@@ -4,6 +4,7 @@ import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
+import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -41,6 +42,11 @@ public class AbstractServiceProcessorTest {
         }
 
         @Override
+        public ServiceMetaData getMetadata() {
+            return new ServiceMetaData();
+        }
+
+        @Override
         public Void getResult(JacsServiceData jacsServiceData) {
             return null;
         }
@@ -73,6 +79,11 @@ public class AbstractServiceProcessorTest {
         @Override
         protected ServiceComputation<Void> localProcessData(Object preprocessingResults, JacsServiceData jacsServiceData) {
             return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "test"));
+        }
+
+        @Override
+        public ServiceMetaData getMetadata() {
+            return new ServiceMetaData();
         }
 
         @Override
@@ -138,9 +149,20 @@ public class AbstractServiceProcessorTest {
     }
 
     @Test
-    public void testSuccessfulProcessing() {
+    public void successfulProcessing() {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
+
+        JacsServiceData testJacsServiceDataDependency = new JacsServiceData();
+        testJacsServiceDataDependency.setId(TEST_ID.longValue() + 1);
+
+        testJacsServiceData.addServiceDependency(testJacsServiceDataDependency);
+        when(jacsServiceDataPersistence.findServiceHierarchy(TEST_ID))
+                .thenAnswer(invocation -> testJacsServiceData)
+                .thenAnswer(invocation -> {
+                    testJacsServiceDataDependency.setState(JacsServiceState.SUCCESSFUL);
+                    return testJacsServiceData;
+                });
 
         testSuccessfullProcessor.process(testJacsServiceData)
                 .whenComplete((r, e) -> {
@@ -155,7 +177,62 @@ public class AbstractServiceProcessorTest {
     }
 
     @Test
-    public void testFailedProcessing() throws ComputationException {
+    public void processingFailureDueToDependencyFailure() {
+        Consumer successful = mock(Consumer.class);
+        Consumer failure = mock(Consumer.class);
+
+        JacsServiceData testJacsServiceDataDependency = new JacsServiceData();
+        testJacsServiceDataDependency.setId(TEST_ID.longValue() + 1);
+
+        testJacsServiceData.addServiceDependency(testJacsServiceDataDependency);
+        when(jacsServiceDataPersistence.findServiceHierarchy(TEST_ID))
+                .thenAnswer(invocation -> {
+                    testJacsServiceDataDependency.setState(JacsServiceState.CANCELED);
+                    return testJacsServiceData;
+                });
+
+        testSuccessfullProcessor.process(testJacsServiceData)
+                .whenComplete((r, e) -> {
+                    if (e == null) {
+                        successful.accept(r);
+                    } else {
+                        failure.accept(e);
+                    }
+                });
+        verify(failure).accept(any());
+        verify(successful, never()).accept(any());
+    }
+
+    @Test
+    public void processingTimeout() {
+        Consumer successful = mock(Consumer.class);
+        Consumer failure = mock(Consumer.class);
+
+        JacsServiceData testJacsServiceDataDependency = new JacsServiceData();
+        testJacsServiceDataDependency.setId(TEST_ID.longValue() + 1);
+        testJacsServiceDataDependency.setState(JacsServiceState.RUNNING);
+
+        testJacsServiceData.setServiceTimeout(100L);
+        testJacsServiceData.addServiceDependency(testJacsServiceDataDependency);
+
+        when(jacsServiceDataPersistence.findServiceHierarchy(TEST_ID))
+                .thenAnswer(invocation -> testJacsServiceData);
+
+        testSuccessfullProcessor.process(testJacsServiceData)
+                .whenComplete((r, e) -> {
+                    if (e == null) {
+                        successful.accept(r);
+                    } else {
+                        failure.accept(e);
+                    }
+                });
+        verify(failure).accept(any());
+        verify(successful, never()).accept(any());
+        assertThat(testJacsServiceData.getState(), equalTo(JacsServiceState.TIMEOUT));
+    }
+
+    @Test
+    public void failedProcessing() throws ComputationException {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
 
