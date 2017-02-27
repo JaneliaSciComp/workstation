@@ -67,13 +67,13 @@ public class Application {
         DeploymentInfo servletBuilder =
             Servlets.deployment()
                     .setClassLoader(Application.class.getClassLoader())
-                .setContextPath(contextPath)
-                .setDeploymentName(appArgs.deployment)
-                .addListeners(
+                    .setContextPath(contextPath)
+                    .setDeploymentName(appArgs.deployment)
+                    .addListeners(
                         listener(Listener.class),
                         listener(BackgroundJobs.class)
-                )
-                .addServlets(restApiServlet);
+                    )
+                    .addServlets(restApiServlet);
 
         DeploymentManager deploymentManager = Servlets.defaultContainer().addDeployment(servletBuilder);
         deploymentManager.deploy();
