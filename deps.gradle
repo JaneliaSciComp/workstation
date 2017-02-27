@@ -53,6 +53,9 @@ dependencies {
         // drmaa
         DRMAA1_LIB = "us.levk:drmaa-gridengine:6.2u5"
 
+        // coroutines
+        COROUTINE_LIB = "com.offbynull.coroutines:user:1.2.2"
+
         // testing
         JUNIT_VERSION = "4.12"
     }

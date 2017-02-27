@@ -68,14 +68,14 @@ public class Application {
         DeploymentInfo servletBuilder =
             Servlets.deployment()
                     .setClassLoader(Application.class.getClassLoader())
-                .setContextPath(contextPath)
-                .setDeploymentName(appArgs.deployment)
+                    .setContextPath(contextPath)
+                    .setDeploymentName(appArgs.deployment)
                     .addFilter(new FilterInfo("corsFilter", CORSResponseFilter.class))
-                .addListeners(
+                    .addListeners(
                         listener(Listener.class),
                         listener(BackgroundJobs.class)
-                )
-                .addServlets(restApiServlet);
+                    )
+                    .addServlets(restApiServlet);
 
         DeploymentManager deploymentManager = Servlets.defaultContainer().addDeployment(servletBuilder);
         deploymentManager.deploy();
