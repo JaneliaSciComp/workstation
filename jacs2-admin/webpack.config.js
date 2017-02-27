@@ -1,43 +1,58 @@
 const path = require('path');
-const webpack = require('webpack')
-const ROOT = path.resolve(__dirname, 'src/main/webapp');
-const SRC = path.resolve(ROOT, 'javascript');
-const DEST = path.resolve(__dirname, 'src/main/webapp/dist');
+const webpack = require('webpack');
+const autoprefixer = require('autoprefixer');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
-  devtool: 'source-map',
-  entry: {
-    app: SRC + '/index.jsx',
+  context: __dirname,
+  devtool: 'inline-source-map',
+  devServer: {
+     address: 'localhost',
+     contentBase: path.join(__dirname, "build"),
+     port: 3000
+  },
+  entry: [
+    './src/app/client.js',
+  ],
+  output: {
+    path: path.join(__dirname, 'build'),
+    filename: 'bundle.js',
+    publicPath: '/'
   },
   resolve: {
-    modules: [
-      path.resolve(ROOT, 'javascript'),
-      path.resolve(ROOT, 'css'),
-      'node_modules/'
-    ],
-    extensions: ['.js', '.jsx', '.css', '.scss']
-  },
-  output: {
-    path: DEST,
-    filename: 'bundle.js',
-    publicPath: '/dist/'
+    extensions: ['', '.scss', '.css', '.js', '.json'],
+    modulesDirectories: [
+      'node_modules',
+      path.resolve(__dirname, './node_modules')
+    ]
   },
   module: {
     loaders: [
       {
-        test: /\.jsx?$/,
-        loader: 'babel-loader',
-        query: {
-           presets: [
-                  'es2015','react'
-           ]
-        },
-        include: SRC
-      },
-      {
+        test: /(\.js|\.jsx)$/,
+        exclude: /(node_modules)/,
+        loader: 'babel',
+        query: { presets: ['es2015', 'stage-0', 'react'] }
+      }, {
         test: /(\.scss|\.css)$/,
-        loader: 'style-loader!css-loader!sass-loader' 
+        loader: ExtractTextPlugin.extract('style', 'css?sourceMap&modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss!sass')
       }
     ]
-  }
+  },
+  postcss: [autoprefixer],
+  sassLoader: {
+    data: '@import "theme/_config.scss";',
+    includePaths: [path.resolve(__dirname, './src/app')]
+  },
+  plugins: [
+    new ExtractTextPlugin('bundle.css', { allChunks: true }),
+    new webpack.optimize.OccurenceOrderPlugin(),
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'vendor',
+      filename: 'vendor.bundle.js',
+      minChunks: Infinity
+    }),
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NoErrorsPlugin()
+  ]
 };
