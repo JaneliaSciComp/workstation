@@ -70,7 +70,7 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
                 new ServiceArg("-sampleDataDir", args.sampleDataDir))
-                .thenCompose(sd -> this.waitForCompletion(sd))
+                .suspend(sd -> this.checkForCompletion(sd), sd -> sd)
                 .thenApply(sd -> getSampleLsmsMetadataProcessor.getResult(sd));
     }
 

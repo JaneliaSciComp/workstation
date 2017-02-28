@@ -117,7 +117,7 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
                     List<ServiceComputation<?>> mpegConverters = fileResults.stream()
                             .filter(f -> f.getName().endsWith(".avi"))
                             .map(f -> mpegConverterProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData), new ServiceArg("-input", f.getAbsolutePath()))
-                                    .thenCompose(sd -> this.waitForCompletion(sd))
+                                    .suspend(sd -> this.checkForCompletion(sd), sd -> sd)
                                     .thenApply(sd -> mpegConverterProcessor.getResult(sd)))
                             .collect(Collectors.toList());
                     // collect the results by appending the generated MPEG to the list
@@ -177,7 +177,7 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
                 new ServiceArg("-finalOutput", getResultsDir(args).toString()),
                 new ServiceArg("-resultsPatterns", "*.png"),
                 new ServiceArg("-resultsPatterns", "*.avi"))
-                .thenCompose(sd -> this.waitForCompletion(sd));
+                .suspend(sd -> this.checkForCompletion(sd), sd -> sd);
     }
 
     private String getBasicMIPsAndMoviesArgs(BasicMIPsAndMoviesArgs args, Path outputDir) {
