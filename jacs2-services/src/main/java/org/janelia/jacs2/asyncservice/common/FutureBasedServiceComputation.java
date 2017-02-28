@@ -1,11 +1,17 @@
 package org.janelia.jacs2.asyncservice.common;
 
+import com.offbynull.coroutines.user.Continuation;
+import com.offbynull.coroutines.user.Coroutine;
+import com.offbynull.coroutines.user.CoroutineRunner;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -17,25 +23,30 @@ import java.util.stream.Collectors;
 public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
     private final ExecutorService executor;
+    private final ExecutorService suspendedExecutor;
     private CompletableFuture<T> future;
 
-    FutureBasedServiceComputation(ExecutorService executor) {
+    FutureBasedServiceComputation(ExecutorService executor, ExecutorService suspendedExecutor) {
         this.executor = executor;
+        this.suspendedExecutor = suspendedExecutor;
     }
 
-    FutureBasedServiceComputation(ExecutorService executor, T result) {
+    FutureBasedServiceComputation(ExecutorService executor, ExecutorService suspendedExecutor, T result) {
         this.executor = executor;
+        this.suspendedExecutor = suspendedExecutor;
         future = CompletableFuture.completedFuture(result);
     }
 
-    FutureBasedServiceComputation(ExecutorService executor, Throwable exc) {
+    FutureBasedServiceComputation(ExecutorService executor, ExecutorService suspendedExecutor, Throwable exc) {
         this.executor = executor;
+        this.suspendedExecutor = suspendedExecutor;
         future = new CompletableFuture<>();
         future.completeExceptionally(exc);
     }
 
-    private FutureBasedServiceComputation(ExecutorService executor, CompletableFuture<T> future) {
+    private FutureBasedServiceComputation(ExecutorService executor, ExecutorService suspendedExecutor, CompletableFuture<T> future) {
         this.executor = executor;
+        this.suspendedExecutor = suspendedExecutor;
         this.future = future;
     }
 
@@ -74,23 +85,23 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
     @Override
     public ServiceComputation<T> exceptionally(Function<Throwable, ? extends T> fn) {
-        return new FutureBasedServiceComputation<>(executor, future.exceptionally(fn));
+        return new FutureBasedServiceComputation<>(executor, suspendedExecutor, future.exceptionally(fn));
     }
 
     @Override
     public <U> ServiceComputation<U> thenApply(Function<? super T, ? extends U> fn) {
         CompletableFuture<U> newFuture = future.thenApplyAsync(fn, executor);
-        return new FutureBasedServiceComputation<>(executor, newFuture);
+        return new FutureBasedServiceComputation<>(executor, suspendedExecutor, newFuture);
     }
 
     @Override
     public <U> ServiceComputation<U> thenCompose(Function<? super T, ? extends ServiceComputation<U>> fn) {
-        return new FutureBasedServiceComputation<>(executor, future.thenCompose(t -> CompletableFuture.supplyAsync(() -> fn.apply(t).get(), executor)));
+        return new FutureBasedServiceComputation<>(executor, suspendedExecutor, future.thenCompose(t -> CompletableFuture.supplyAsync(() -> fn.apply(t).get(), executor)));
     }
 
     @Override
     public ServiceComputation<T> whenComplete(BiConsumer<? super T, ? super Throwable> action) {
-        return new FutureBasedServiceComputation<T>(executor, future.whenCompleteAsync(action, executor));
+        return new FutureBasedServiceComputation<T>(executor, suspendedExecutor, future.whenCompleteAsync(action, executor));
     }
 
     @Override
@@ -101,7 +112,36 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
                     .collect(Collectors.toList());
             return fn.apply(this.get(), otherResults);
         }, executor);
-        return new FutureBasedServiceComputation<>(executor, newFuture);
+        return new FutureBasedServiceComputation<>(executor, suspendedExecutor, newFuture);
+    }
+
+    @Override
+    public <U> ServiceComputation<U> suspend(Predicate<? super T> condToCont, Function<? super T, ? extends U> fn) {
+        Coroutine suspend = new Coroutine() {
+            @Override
+            public void run(Continuation continuation) throws Exception {
+                for(;;) {
+                    if (future.isDone() && condToCont.test(future.getNow(null))) {
+                        break;
+                    }
+                    continuation.suspend();
+                }
+            }
+        };
+        CoroutineRunner runner = new CoroutineRunner(suspend);
+        CompletableFuture<U> newFuture = CompletableFuture.supplyAsync(() -> {
+            for(;;) {
+                if (!runner.execute()) {
+                    return fn.apply(future.getNow(null));
+                }
+                try {
+                    Thread.sleep(1000L);
+                } catch (InterruptedException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+        }, suspendedExecutor);
+        return new FutureBasedServiceComputation<>(executor, suspendedExecutor, newFuture);
     }
 
 }

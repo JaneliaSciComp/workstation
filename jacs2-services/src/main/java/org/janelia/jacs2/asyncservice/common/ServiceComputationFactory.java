@@ -1,5 +1,7 @@
 package org.janelia.jacs2.asyncservice.common;
 
+import org.janelia.jacs2.cdi.qualifier.SuspendedTaskExecutor;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.concurrent.ExecutorService;
@@ -8,14 +10,16 @@ import java.util.concurrent.ExecutorService;
 public class ServiceComputationFactory {
 
     private final ExecutorService executor;
+    private final ExecutorService suspendedExecutor;
 
     @Inject
-    public ServiceComputationFactory(ExecutorService executor) {
+    public ServiceComputationFactory(ExecutorService executor, @SuspendedTaskExecutor ExecutorService suspendedExecutor) {
         this.executor = executor;
+        this.suspendedExecutor = suspendedExecutor;
     }
 
     public <T> ServiceComputation<T> newComputation() {
-        return new FutureBasedServiceComputation<>(executor);
+        return new FutureBasedServiceComputation<>(executor, suspendedExecutor);
     }
 
     /**
@@ -25,7 +29,7 @@ public class ServiceComputationFactory {
      * @return
      */
     public <T> ServiceComputation<T> newCompletedComputation(T result) {
-        return new FutureBasedServiceComputation<>(executor, result);
+        return new FutureBasedServiceComputation<>(executor, suspendedExecutor, result);
     }
 
     /**
@@ -35,6 +39,6 @@ public class ServiceComputationFactory {
      * @return
      */
     public <T> ServiceComputation<T> newFailedComputation(Throwable exc) {
-        return new FutureBasedServiceComputation<T>(executor, exc);
+        return new FutureBasedServiceComputation<T>(executor, suspendedExecutor, exc);
     }
 }

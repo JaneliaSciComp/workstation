@@ -119,18 +119,25 @@ public class AbstractServiceProcessorTest {
     @Before
     public void setUp() {
         ExecutorService executor = mock(ExecutorService.class);
+        ExecutorService suspendExecutor = mock(ExecutorService.class);
 
         doAnswer(invocation -> {
             Runnable r = invocation.getArgument(0);
             r.run();
             return null;
         }).when(executor).execute(any(Runnable.class));
-        serviceComputationFactory = new ServiceComputationFactory(executor);
+        doAnswer(invocation -> {
+            Runnable r = invocation.getArgument(0);
+            r.run();
+            Thread.sleep(1000);
+            return null;
+        }).when(suspendExecutor).execute(any(Runnable.class));
+        serviceComputationFactory = new ServiceComputationFactory(executor, suspendExecutor);
 
         testJacsServiceData = new JacsServiceData();
         testJacsServiceData.setId(TEST_ID);
         jacsServiceEngine = mock(JacsServiceEngine.class);
-        serviceComputationFactory = new ServiceComputationFactory(executor);
+        serviceComputationFactory = new ServiceComputationFactory(executor, executor);
         jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
 
         logger = mock(Logger.class);
@@ -223,6 +230,7 @@ public class AbstractServiceProcessorTest {
                     if (e == null) {
                         successful.accept(r);
                     } else {
+                        e.printStackTrace(System.out);
                         failure.accept(e);
                     }
                 });
@@ -278,6 +286,20 @@ public class AbstractServiceProcessorTest {
     public void waitAndFail() {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
+        ExecutorService executor = mock(ExecutorService.class);
+        ExecutorService suspendExecutor = mock(ExecutorService.class);
+
+        doAnswer(invocation -> {
+            Runnable r = invocation.getArgument(0);
+            r.run();
+            return null;
+        }).when(executor).execute(any(Runnable.class));
+        doAnswer(invocation -> {
+            Runnable r = invocation.getArgument(0);
+            r.run();
+            return null;
+        }).when(suspendExecutor).execute(any(Runnable.class));
+        serviceComputationFactory = new ServiceComputationFactory(executor, suspendExecutor);
 
         when(jacsServiceDataPersistence.findById(TEST_ID))
                 .thenAnswer(invocation -> testJacsServiceData)
@@ -306,9 +328,7 @@ public class AbstractServiceProcessorTest {
         Consumer failure = mock(Consumer.class);
 
         testJacsServiceData.setServiceTimeout(100L);
-        when(jacsServiceDataPersistence.findById(TEST_ID))
-                .thenAnswer(invocation -> testJacsServiceData)
-                .thenAnswer(invocation -> testJacsServiceData);
+        when(jacsServiceDataPersistence.findById(TEST_ID)).thenReturn(testJacsServiceData);
 
         when(jacsServiceEngine.getServiceProcessor(testJacsServiceData)).thenReturn((ServiceProcessor) testSuccessfullProcessor);
 
