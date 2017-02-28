@@ -26,6 +26,9 @@ public class ExecutorProducer {
     @PropertyValue(name = "service.executor.ThreadPoolSize")
     @Inject
     private Integer threadPoolSize;
+    @PropertyValue(name = "service.suspendedTasksExecutor.ThreadPoolSize")
+    @Inject
+    private Integer suspendedTasksThreadPoolSize;
 
     @Singleton
     @Produces
@@ -44,11 +47,14 @@ public class ExecutorProducer {
     @Singleton
     @Produces
     public ExecutorService createSuspendedTasksExecutorService() {
+        if (suspendedTasksThreadPoolSize == null || suspendedTasksThreadPoolSize == 0) {
+            suspendedTasksThreadPoolSize = DEFAULT_THREAD_POOL_SIZE;
+        }
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("JACS-suspended-%d")
                 .setDaemon(true)
                 .build();
-        return Executors.newSingleThreadScheduledExecutor(threadFactory);
+        return Executors.newScheduledThreadPool(suspendedTasksThreadPoolSize, threadFactory);
     }
 
     public void shutdownExecutor(@Disposes @Default ExecutorService executorService) throws InterruptedException {
