@@ -11,13 +11,12 @@ export const RECEIVE_SERVICES_QUEUE = 'RECEIVE_SERVICES_QUEUE'
 export function receiveServices(url, json) {
   return {
     type: RECEIVE_SERVICES_QUEUE,
-    services: json.data.children.map(child => child.data),
+    services: json,
     receivedAt: Date.now()
   }
 }
 
 export function fetchServices(url) {
-  console.log(url);
   var endpoint = 'http://' + url + '/jacs/jacs-api/v2/services/metadata';
   return dispatch => {
     dispatch(reloadServices(url))

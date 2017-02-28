@@ -78,6 +78,10 @@ and then use JACS2_CONFIG environment variable to reference the settings file, e
 
 `JACS2_CONFIG=/usr/local/etc/myjacs2-config.properties jacs2-web/build/install/jacs2-web/bin/jacs2-web`
 
+### Run the admin dashboard
+
+To run the dashboard, navigate to the jacs2-admin directory after building and type npm start.  This will kick off the administration dashboard in hot-deploy mode.
+Any items that you change in the source will be rebuilt an deployed to the server, so you can edit your React pages live.
 
 ### Test the application
 

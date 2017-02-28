@@ -19,6 +19,7 @@ import org.jboss.weld.environment.servlet.Listener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.DispatcherType;
 import javax.servlet.ServletException;
 
 /**
@@ -71,9 +72,10 @@ public class Application {
                     .setContextPath(contextPath)
                     .setDeploymentName(appArgs.deployment)
                     .addFilter(new FilterInfo("corsFilter", CORSResponseFilter.class))
+                    .addFilterUrlMapping("corsFilter", "/*", DispatcherType.REQUEST)
                     .addListeners(
-                        listener(Listener.class),
-                        listener(BackgroundJobs.class)
+                            listener(Listener.class),
+                            listener(BackgroundJobs.class)
                     )
                     .addServlets(restApiServlet);
 
