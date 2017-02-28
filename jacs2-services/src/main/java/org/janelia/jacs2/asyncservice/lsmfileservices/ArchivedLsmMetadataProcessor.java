@@ -86,18 +86,18 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
                 new ServiceArg("-src", getInputFile(args).getAbsolutePath()),
                 new ServiceArg("-dst", workingLsmFile.getAbsolutePath()))
                 .thenCompose(fcsd -> lsmFileMetadataProcessor.invokeAsync(new ServiceExecutionContext.Builder(jacsServiceData)
-                                .processingLocation(ProcessingLocation.CLUSTER)
                                 .waitFor(fcsd)
                                 .build(),
                                 new ServiceArg("-inputLSM", workingLsmFile.getAbsolutePath()),
-                                new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())));
+                                new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())))
+                .suspend(sd -> this.checkForCompletion(sd), sd -> sd);
     }
 
     @Override
     protected ServiceComputation<File> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
         JacsServiceData lsmMetadataSD = (JacsServiceData) preProcessingResult;
         // wait for the child services to complete and set the result to the result of the last computation (LSM metadata)
-        return this.waitForCompletion(lsmMetadataSD)
+        return computationFactory.newCompletedComputation(lsmMetadataSD)
                 .thenApply(sd -> {
                     File localLsmMetadataFile = new File(sd.getStringifiedResult());
                     setResult(localLsmMetadataFile, jacsServiceData);
