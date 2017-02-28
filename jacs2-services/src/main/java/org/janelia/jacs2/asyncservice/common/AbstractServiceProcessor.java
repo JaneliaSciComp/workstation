@@ -151,7 +151,7 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                 .suspend(sd -> checkForCompletion(sd), sd -> sd);
     }
 
-    private boolean checkForCompletion(JacsServiceData jacsServiceData) {
+    protected boolean checkForCompletion(JacsServiceData jacsServiceData) {
         JacsServiceData sd = jacsServiceDataPersistence.findById(jacsServiceData.getId());
         if (sd.hasCompletedSuccessfully()) {
             return true;

@@ -76,7 +76,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
                 new ServiceArg("-sampleDataDir", args.sampleDataDir))
-                .thenCompose(this::waitForCompletion)
+                .suspend(sd -> this.checkForCompletion(sd), sd -> sd)
                 .thenApply(getSampleImageFilesProcessor::getResult);
     }
 
@@ -122,7 +122,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                     new ServiceArg("-gain", f.getGain() == null ? null : f.getGain().toString()),
                     new ServiceArg("-options", args.options),
                     new ServiceArg("-resultsDir", resultsDir.toString()))
-                    .thenCompose(this::waitForCompletion)
+                    .suspend(sd -> this.checkForCompletion(sd), sd -> sd)
                     .thenApply(basicMIPsAndMoviesProcessor::getResult);
             basicMipsAndMoviesComputations.add(basicMipsAndMoviesComputation);
         });

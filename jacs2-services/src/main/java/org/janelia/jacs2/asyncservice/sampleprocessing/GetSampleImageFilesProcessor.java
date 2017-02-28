@@ -100,7 +100,7 @@ public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<
                     ServiceComputation<?> fc = fileCopyProcessor.invokeAsync(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
                             new ServiceArg("-src", sif.getArchiveFilePath()),
                             new ServiceArg("-dst", sif.getWorkingFilePath()))
-                            .thenCompose(this::waitForCompletion)
+                            .suspend(sd -> this.checkForCompletion(sd), sd -> sd)
                             .thenApply(fileCopyProcessor::getResult);
                     indexedSampleImageFiles.put(sif.getWorkingFilePath(), sif);
                     fcs.add(fc);
