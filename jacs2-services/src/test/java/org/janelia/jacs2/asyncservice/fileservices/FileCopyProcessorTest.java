@@ -18,20 +18,18 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class FileCopyProcessorTest {
 
@@ -51,13 +49,13 @@ public class FileCopyProcessorTest {
     public void setUp() throws IOException {
         ExecutorService executor = mock(ExecutorService.class);
 
-        when(executor.submit(any(Runnable.class))).thenAnswer(invocation -> {
+        doAnswer(invocation -> {
             Runnable r = invocation.getArgument(0);
             r.run();
             return null;
-        });
+        }).when(executor).execute(any(Runnable.class));
+        serviceComputationFactory = new ServiceComputationFactory(executor, executor);
 
-        serviceComputationFactory = new ServiceComputationFactory(executor);
         Logger logger = mock(Logger.class);
         testProcessor = new FileCopyProcessor(
                 jacsServiceEngine,
