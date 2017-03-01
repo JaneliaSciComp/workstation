@@ -1,0 +1,22 @@
+plugins {
+  id "com.moowork.node" version "1.1.1"
+}
+apply plugin: 'java'
+
+task webpack(type: NodeTask, dependsOn: 'npmInstall') {
+  script = project.file('node_modules/.bin/webpack')
+}
+
+task start(type: NpmTask, dependsOn: 'webpack') {
+    args = ['start']
+}
+
+task copyRoot(type: Copy) {
+    from('src')
+    into('build')
+    include('*.html')
+}
+ 
+processResources.dependsOn 'webpack'
+processResources.dependsOn 'copyRoot'
+ 

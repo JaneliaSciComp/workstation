@@ -66,8 +66,8 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
                 new ServiceArg("-sampleDataDir", args.sampleDataDir))
-                .thenCompose(sd -> this.waitForCompletion(sd))
-                .thenApply(sd -> getSampleImageFilesProcessor.getResult(sd));
+                .thenCompose(this::waitForCompletion)
+                .thenApply(getSampleImageFilesProcessor::getResult);
     }
 
     @Override
@@ -101,8 +101,8 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
                     lsmFileMetadataProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
                             new ServiceArg("-inputLSM", lsmf.getWorkingFilePath()),
                             new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath()))
-                            .thenCompose(sd -> this.waitForCompletion(sd))
-                            .thenApply(sd -> lsmFileMetadataProcessor.getResult(sd))
+                            .thenCompose(this::waitForCompletion)
+                            .thenApply(lsmFileMetadataProcessor::getResult)
                             .thenApply(f -> {
                                 SampleImageMetadataFile lsmMetadata = new SampleImageMetadataFile();
                                 lsmMetadata.setSampleImageFile(lsmf);

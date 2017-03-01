@@ -62,7 +62,7 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
                                   @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
                                   @Any Instance<ExternalProcessRunner> serviceRunners,
                                   @PropertyValue(name = "FFMPEG.Bin.Path") String ffmpegExecutable,
-                                  @PropertyValue(name = "VAA3D.LibraryPath") String libraryPath,
+                                  @PropertyValue(name = "VAA3D.Library.Path") String libraryPath,
                                   Logger logger) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.ffmpegExecutable = ffmpegExecutable;

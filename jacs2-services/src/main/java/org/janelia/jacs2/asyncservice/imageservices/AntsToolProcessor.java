@@ -104,7 +104,7 @@ public class AntsToolProcessor extends AbstractExeBasedServiceProcessor<Void> {
                       @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
                       @Any Instance<ExternalProcessRunner> serviceRunners,
                       @PropertyValue(name = "ANTS.Bin.Path") String executable,
-                      @PropertyValue(name = "ANTS.LibraryPath") String libraryPath,
+                      @PropertyValue(name = "ANTS.Library.Path") String libraryPath,
                       Logger logger) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.executable = executable;

@@ -57,7 +57,7 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
                             @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
                             @Any Instance<ExternalProcessRunner> serviceRunners,
                             @PropertyValue(name = "VAA3D.Bin.Path") String vaa3dExecutable,
-                            @PropertyValue(name = "VAA3D.LibraryPath") String libraryPath,
+                            @PropertyValue(name = "VAA3D.Library.Path") String libraryPath,
                             Logger logger) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.vaa3dExecutable = vaa3dExecutable;

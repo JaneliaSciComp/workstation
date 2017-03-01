@@ -11,6 +11,7 @@ import io.undertow.server.handlers.PathHandler;
 import io.undertow.servlet.Servlets;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.DeploymentManager;
+import io.undertow.servlet.api.FilterInfo;
 import io.undertow.servlet.api.ServletInfo;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.janelia.jacs2.job.BackgroundJobs;
@@ -18,6 +19,7 @@ import org.jboss.weld.environment.servlet.Listener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.DispatcherType;
 import javax.servlet.ServletException;
 
 /**
@@ -67,13 +69,15 @@ public class Application {
         DeploymentInfo servletBuilder =
             Servlets.deployment()
                     .setClassLoader(Application.class.getClassLoader())
-                .setContextPath(contextPath)
-                .setDeploymentName(appArgs.deployment)
-                .addListeners(
-                        listener(Listener.class),
-                        listener(BackgroundJobs.class)
-                )
-                .addServlets(restApiServlet);
+                    .setContextPath(contextPath)
+                    .setDeploymentName(appArgs.deployment)
+                    .addFilter(new FilterInfo("corsFilter", CORSResponseFilter.class))
+                    .addFilterUrlMapping("corsFilter", "/*", DispatcherType.REQUEST)
+                    .addListeners(
+                            listener(Listener.class),
+                            listener(BackgroundJobs.class)
+                    )
+                    .addServlets(restApiServlet);
 
         DeploymentManager deploymentManager = Servlets.defaultContainer().addDeployment(servletBuilder);
         deploymentManager.deploy();
