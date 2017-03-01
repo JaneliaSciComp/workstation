@@ -1,7 +1,8 @@
-package org.janelia.jacs2.asyncservice.common;
+package org.janelia.jacs2.asyncservice.demo;
 
 import com.beust.jcommander.Parameter;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.*;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
