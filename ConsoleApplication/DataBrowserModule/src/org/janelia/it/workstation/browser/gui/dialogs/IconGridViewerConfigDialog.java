@@ -189,11 +189,6 @@ public class IconGridViewerConfigDialog extends ModalDialog {
         for(DomainObjectAttribute attr : attrs) {
             provider.addCompletion(new ShorthandCompletion(provider, attr.getLabel(), "{"+attr.getLabel()+"}", ""));
         }
-        if (resultClass.equals(Sample.class)) {
-            for (AlignmentScoreType alignmentScoreType : AlignmentScoreType.values()) {
-                provider.addCompletion(new ShorthandCompletion(provider, alignmentScoreType.getLabel(), "{"+alignmentScoreType.getLabel()+"}", ""));
-            }
-        }
         return provider;
     }
 
