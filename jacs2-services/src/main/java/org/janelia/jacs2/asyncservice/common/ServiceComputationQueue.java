@@ -19,16 +19,18 @@ public class ServiceComputationQueue {
         this.taskExecutor = taskExecutor;
         this.queueInspector = queueInspector;
         taskQueue = new LinkedBlockingQueue<>();
-        queueInspector.submit(() -> executeTasks());
+        this.queueInspector.submit(() -> executeTasks());
     }
 
     private void executeTasks() {
         for (;;) {
             try {
                 ServiceComputationTask<?> task = taskQueue.take();
-                if (!task.tryFire()) {
-                    taskQueue.offer(task);
-                }
+                taskExecutor.submit(() -> {
+                    if (!task.tryFire()) {
+                        taskQueue.offer(task);
+                    }
+                });
             } catch (InterruptedException e) {
                 break;
             }
