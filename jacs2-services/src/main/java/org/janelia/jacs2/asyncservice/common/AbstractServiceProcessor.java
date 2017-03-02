@@ -93,13 +93,13 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                     return updatedSD;
                 })
                 .exceptionally(exc -> {
+                    logger.error("Processing error executing {}", jacsServiceData.getId(), exc);
                     JacsServiceData updatedSD = jacsServiceDataPersistence.findById(jacsServiceData.getId());
                     if (exc instanceof SuspendedException) {
                        if (!updatedSD.hasCompleted() && !updatedSD.hasBeenSuspended()) {
                            updateStateToSuspended(updatedSD);
                        }
                     } else if (!updatedSD.hasCompletedUnsuccessfully()) {
-                        logger.error("Error executing {}", updatedSD, exc);
                         updatedSD.addEvent(JacsServiceEventTypes.FAILED, String.format("Failed: %s", exc.getMessage()));
                         updatedSD.setState(JacsServiceState.ERROR);
                         jacsServiceDataPersistence.save(updatedSD);

@@ -100,23 +100,12 @@ class ServiceComputationTask<T> {
                 if (dep == null) {
                     break;
                 }
-                if (!dep.isDone()) {
-                    return false;
+                if (dep.isDone()) {
+                    // the current dependency completed successfully - go to the next one
+                    depStack.pop();
+                    dep = depStack.top();
                 } else {
-                    if (dep.isCompletedExceptionally()) {
-                        // terminate early if any of the dependencies failed
-                        try {
-                            dep.get();
-                        } catch (Exception e) {
-                            completeExceptionally(e);
-                            depStack.clear();
-                            return true;
-                        }
-                    } else {
-                        // the current dependency completed successfully - go to the next one
-                        depStack.pop();
-                        dep = depStack.top();
-                    }
+                    return false;
                 }
             }
             if (resultSupplier != null) {
