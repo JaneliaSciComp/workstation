@@ -31,8 +31,8 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
         Integer iterations;
     }
 
-    private final int DEFAULT_MATRIX_SIZE=1000;
-    private final int DEFAULT_ITERATIONS=1;
+    private final int DEFAULT_MATRIX_SIZE=700;
+    private final int DEFAULT_ITERATIONS=10;
 
     private long resultComputationTime;
 
@@ -54,6 +54,7 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
 
     @Override
     protected ServiceComputation<Long> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        logger.debug("localProcessData() start");
         IntegerComputeTestArgs args=getArgs(jacsServiceData);
         int matrixSize=DEFAULT_MATRIX_SIZE;
         if (args.matrixSize!=null) {
@@ -63,6 +64,7 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
         if (args.iterations!=null) {
             iterations=args.iterations;
         }
+        logger.debug("matrixSize="+matrixSize+", iterations="+iterations);
         long startTime=new Date().getTime();
         jacsServiceData.getArgs();
         Random random = new Random(startTime);
@@ -73,6 +75,7 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
         long[] result=new long[matrixSize*matrixSize];
         int position=0;
         // Create matrices
+        logger.debug("Creating matrices");
         for (int i=0;i<matrixSize;i++) {
             for (int j=0;j<matrixSize;j++) {
                 matrix1[position]=iterator.nextLong();
@@ -81,21 +84,24 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
             }
         }
         // Do multiply
+        logger.debug("Doing matrix multiply");
         for (int i=0;i<iterations;i++) {
+            logger.debug("Starting iteration "+i+" of "+iterations);
             for (int column2=0;column2<matrixSize;column2++) {
                 for (int row1 = 0; row1 < matrixSize; row1++) {
                     long sum = 0L;
-                    for (int column1 = 0; column1 < matrixSize; column1++) {
-                        for (int row2 = 0; row2 < matrixSize; row2++) {
-                            sum += matrix1[column1 * matrixSize + row1] * matrix2[column2 * matrixSize + row2];
-                        }
+                    int row2=0;
+                    for (int column1=0; column1 < matrixSize; column1++) {
+                        sum += matrix1[row1 * matrixSize + column1] * matrix2[row2 * matrixSize + column2];
+                        row2++;
                     }
-                    result[column2 * matrixSize + row1] = sum;
+                    result[row1 * matrixSize + column2] = sum;
                 }
             }
         }
         long doneTime=new Date().getTime();
         resultComputationTime=doneTime-startTime;
+        logger.debug("localProcessData() end");
         return computationFactory.newCompletedComputation(resultComputationTime);
     }
 
