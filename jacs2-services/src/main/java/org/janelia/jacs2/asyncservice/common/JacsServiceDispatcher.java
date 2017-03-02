@@ -52,13 +52,14 @@ public class JacsServiceDispatcher {
             ServiceProcessor<?> serviceProcessor = jacsServiceEngine.getServiceProcessor(queuedService);
             serviceComputationFactory.<JacsServiceData>newComputation()
                     .supply(() -> {
-                        JacsServiceData updatedService = queuedService;
-                        logger.debug("Submit {}", updatedService);
-                        updatedService.addEvent(JacsServiceEventTypes.DEQUEUE_SERVICE, "Dequeued");
-                        updatedService.setState(JacsServiceState.SUBMITTED);
-                        updateServiceInfo(updatedService);
+                        JacsServiceData service = queuedService;
+                        logger.debug("Submit {}", service);
+                        if (service.hasNeverBeenProcessed()) {
+                            service.setState(JacsServiceState.SUBMITTED);
+                            updateServiceInfo(service);
+                        }
                         jacsServiceEngine.releaseSlot();
-                        return updatedService;
+                        return service;
                     })
                     .thenCompose(sd -> serviceProcessor.process(sd))
                     .whenComplete((r, exc) -> {
