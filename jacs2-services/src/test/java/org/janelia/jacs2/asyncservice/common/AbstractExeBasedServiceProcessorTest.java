@@ -40,12 +40,12 @@ public class AbstractExeBasedServiceProcessorTest {
         }
 
         @Override
-        protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
             return true;
         }
 
         @Override
-        protected Void retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        protected Void retrieveResult(JacsServiceData jacsServiceData) {
             return null;
         }
 
@@ -57,11 +57,6 @@ public class AbstractExeBasedServiceProcessorTest {
         @Override
         protected Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData) {
             return Collections.emptyMap();
-        }
-
-        @Override
-        protected ServiceComputation<Void> localProcessData(Object preprocessingResults, JacsServiceData jacsServiceData) {
-            return null;
         }
 
         @Override

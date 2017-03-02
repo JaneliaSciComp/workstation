@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
-import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
+import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -44,17 +45,22 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
     }
 
     @Override
-    public ServiceComputation<T> invoke(ServiceExecutionContext executionContext, ServiceArg... args) {
-        return invokeService(executionContext, JacsServiceState.RUNNING, args)
+    public JacsServiceData create(ServiceExecutionContext executionContext, ServiceArg... args) {
+        return create(executionContext, JacsServiceState.QUEUED, args);
+    }
+
+    @Override
+    public ServiceComputation<JacsServiceData> invoke(ServiceExecutionContext executionContext, ServiceArg... args) {
+        return createComputation(create(executionContext, JacsServiceState.RUNNING, args))
                 .thenCompose(sd -> this.process(sd));
     }
 
     @Override
     public ServiceComputation<JacsServiceData> invokeAsync(ServiceExecutionContext executionContext, ServiceArg... args) {
-        return invokeService(executionContext, JacsServiceState.QUEUED, args);
+        return createComputation(create(executionContext, JacsServiceState.QUEUED, args));
     }
 
-    private ServiceComputation<JacsServiceData> invokeService(ServiceExecutionContext executionContext, JacsServiceState serviceState, ServiceArg... args) {
+    private JacsServiceData create(ServiceExecutionContext executionContext, JacsServiceState serviceState, ServiceArg... args) {
         ServiceMetaData smd = getMetadata();
         JacsServiceDataBuilder jacsServiceDataBuilder =
                 new JacsServiceDataBuilder(executionContext.getParentServiceData())
@@ -64,50 +70,79 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                         .addArg(Stream.of(args).flatMap(arg -> Stream.of(arg.toStringArray())).toArray(String[]::new));
         executionContext.getWaitFor().forEach(sd -> jacsServiceDataBuilder.addDependency(sd));
         JacsServiceData jacsServiceData = jacsServiceDataBuilder.build();
-        jacsServiceEngine.submitSingleService(jacsServiceData);
-        return createServiceComputation(jacsServiceData);
+        return jacsServiceEngine.submitSingleService(jacsServiceData);
     }
 
     @Override
-    public ServiceComputation<T> process(JacsServiceData jacsServiceData) {
+    public ServiceComputation<JacsServiceData> process(JacsServiceData jacsServiceData) {
+        jacsServiceData.setProcessStartTime(new Date());
         return preProcessData(jacsServiceData)
-                .thenCompose(preProcessingResults -> {
-                    return computationFactory.newCompletedComputation(jacsServiceData)
-                            .suspend(this::checkForDependenciesCompletion, sd -> preProcessingResults);
+                .thenApply(sd -> {
+                    this.submitAllDependencies(sd);
+                    return sd;
                 })
-                .thenCompose(preProcessingResults -> this.localProcessData(preProcessingResults, jacsServiceData))
-                .thenCompose(r -> this.postProcessData(r, jacsServiceData))
-                .whenComplete((r, exc) -> {
-                    if (exc == null) {
-                        logger.info("Successfully completed {}", jacsServiceData);
-                        jacsServiceData.addEvent(JacsServiceEventTypes.COMPLETED, "Completed successfully");
-                        jacsServiceData.setState(JacsServiceState.SUCCESSFUL);
-                    } else {
-                        // if the service data state has already been marked as cancelled or error leave it as is
-                        if (!jacsServiceData.hasCompletedUnsuccessfully()) {
-                            logger.error("Error executing {}", jacsServiceData, exc);
-                            jacsServiceData.addEvent(JacsServiceEventTypes.FAILED, String.format("Failed: %s", exc.getMessage()));
-                            jacsServiceData.setState(JacsServiceState.ERROR);
-                        }
+                .thenCompose(sd -> this.waitForDependencies(sd))
+                .thenCompose(sd -> this.processData(sd))
+                .thenCompose(sd -> this.postProcessData(sd))
+                .thenApply(sd -> {
+                    JacsServiceData updatedSD = jacsServiceDataPersistence.findById(sd.getId());
+                    retrieveResultWhenReady(updatedSD);
+                    updatedSD.setState(JacsServiceState.SUCCESSFUL);
+                    updatedSD.addEvent(JacsServiceEventTypes.COMPLETED, "Completed successfully");
+                    jacsServiceDataPersistence.save(updatedSD);
+                    return updatedSD;
+                })
+                .exceptionally(exc -> {
+                    JacsServiceData updatedSD = jacsServiceDataPersistence.findById(jacsServiceData.getId());
+                    if (exc instanceof SuspendedException) {
+                       if (!updatedSD.hasCompleted() && !updatedSD.hasBeenSuspended()) {
+                           updateStateToSuspended(updatedSD);
+                       }
+                    } else if (!updatedSD.hasCompletedUnsuccessfully()) {
+                        logger.error("Error executing {}", updatedSD, exc);
+                        updatedSD.addEvent(JacsServiceEventTypes.FAILED, String.format("Failed: %s", exc.getMessage()));
+                        updatedSD.setState(JacsServiceState.ERROR);
+                        jacsServiceDataPersistence.save(updatedSD);
                     }
-                    jacsServiceDataPersistence.save(jacsServiceData);
+                    return updatedSD;
+                })
+                ;
+    }
+
+    protected ServiceComputation<JacsServiceData> waitForDependencies(JacsServiceData jacsServiceData) {
+        return computationFactory.<JacsServiceData>newComputation()
+                .supply(() -> {
+                    if (!checkForDependenciesCompletion(jacsServiceData)) {
+                        suspend(jacsServiceData);
+                    }
+                    return jacsServiceData;
                 });
     }
 
+    protected void suspend(JacsServiceData jacsServiceData) {
+        if (!jacsServiceData.hasCompleted()) {
+            updateStateToSuspended(jacsServiceData);
+            throw new SuspendedException(jacsServiceData.toString());
+        }
+    }
+
+    private void updateStateToSuspended(JacsServiceData jacsServiceData) {
+        jacsServiceData.setState(JacsServiceState.SUSPENDED);
+        jacsServiceDataPersistence.save(jacsServiceData);
+        jacsServiceData.addEvent(JacsServiceEventTypes.SUSPEND, String.format("Suspended: %s", jacsServiceData.getName()));
+    }
+
     private boolean checkForDependenciesCompletion(JacsServiceData jacsServiceData) {
-        long startTime = System.currentTimeMillis();
         List<JacsServiceData> running = new ArrayList<>();
         List<JacsServiceData> failed = new ArrayList<>();
         JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
         jacsServiceDataHierarchy.serviceHierarchyStream()
                 .filter(sd -> !sd.getId().equals(jacsServiceData.getId()))
                 .forEach(sd -> {
-                    if (sd.hasCompletedSuccessfully()) {
-                        return;
+                    if (!sd.hasCompleted()) {
+                        running.add(sd);
                     } else if (sd.hasCompletedUnsuccessfully()) {
                         failed.add(sd);
-                    } else {
-                        running.add(sd);
                     }
                 });
         if (CollectionUtils.isNotEmpty(failed)) {
@@ -121,7 +156,7 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         if (running.isEmpty()) {
             return true;
         }
-        long timeSinceStart = System.currentTimeMillis() - jacsServiceData.getCreationDate().getTime();
+        long timeSinceStart = System.currentTimeMillis() - jacsServiceData.getProcessStartTime().getTime();
         if (jacsServiceData.timeout() > 0 && timeSinceStart > jacsServiceData.timeout()) {
             jacsServiceData.setState(JacsServiceState.TIMEOUT);
             jacsServiceData.addEvent(JacsServiceEventTypes.TIMEOUT, String.format("Service timed out after %s ms", timeSinceStart));
@@ -132,23 +167,24 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         return false;
     }
 
-    protected ServiceComputation<?> preProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
+    }
+
+    protected abstract ServiceComputation<JacsServiceData> processData(JacsServiceData jacsServiceData);
+
+    protected ServiceComputation<JacsServiceData> postProcessData(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
+    }
+
+    protected abstract List<JacsServiceData> submitAllDependencies(JacsServiceData jacsServiceData);
+
+    protected ServiceComputation<JacsServiceData> createFailure(JacsServiceData jacsServiceData, Throwable exc) {
+        return computationFactory.newFailedComputation(exc);
+    }
+
+    protected ServiceComputation<JacsServiceData> createComputation(JacsServiceData jacsServiceData) {
         return computationFactory.newCompletedComputation(jacsServiceData);
-    }
-
-    protected abstract ServiceComputation<T> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData);
-
-    protected ServiceComputation<T> postProcessData(T processingResult, JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(processingResult);
-    }
-
-    protected ServiceComputation<JacsServiceData> createServiceComputation(JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(jacsServiceData);
-    }
-
-    protected ServiceComputation<JacsServiceData> waitForCompletion(JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(jacsServiceData)
-                .suspend(sd -> checkForCompletion(sd), sd -> sd);
     }
 
     protected boolean checkForCompletion(JacsServiceData jacsServiceData) {
@@ -169,32 +205,28 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
             logger.warn("Service {} canceled because of {}", sd, failedChildService.get());
             throw new ComputationException(sd, "Service " + sd + " canceled");
         }
-        long timeSinceStart = System.currentTimeMillis() - jacsServiceData.getCreationDate().getTime();
+        long timeSinceStart = System.currentTimeMillis() - jacsServiceData.getProcessStartTime().getTime();
         if (sd.timeout() > 0 && timeSinceStart > sd.timeout()) {
             logger.warn("Service {} timed out after {}ms", sd, timeSinceStart);
             sd.setState(JacsServiceState.TIMEOUT);
+            sd.addEvent(JacsServiceEventTypes.CANCELED, "Canceled because timeout");
+            jacsServiceDataPersistence.update(sd);
             throw new ComputationException(sd, "Service " + sd + " timed out");
         }
         return false;
     }
 
-    protected abstract boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData);
+    protected abstract boolean isResultAvailable(JacsServiceData jacsServiceData);
 
-    protected abstract T retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData);
+    protected abstract T retrieveResult(JacsServiceData jacsServiceData);
 
-    protected T applyResult(T result, JacsServiceData jacsServiceData) {
-        setResult(result, jacsServiceData);
-        return result;
-    }
-
-    protected ServiceComputation<T> collectResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        long startTime = System.currentTimeMillis();
+    protected T retrieveResultWhenReady(JacsServiceData jacsServiceData) {
         for (int i = 0; i < N_RETRIES_FOR_RESULT; i ++) {
-            if (isResultAvailable(preProcessingResult, jacsServiceData)) {
+            if (isResultAvailable(jacsServiceData)) {
                 logger.info("Found result on try # {}", i + 1);
-                T result = retrieveResult(preProcessingResult, jacsServiceData);
+                T result = retrieveResult(jacsServiceData);
                 setResult(result, jacsServiceData);
-                return computationFactory.newCompletedComputation(result);
+                return result;
             }
             logger.info("Result not found on try # {}", i + 1);
             try {
@@ -202,16 +234,19 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
             } catch (InterruptedException e) {
                 throw new ComputationException(jacsServiceData, e);
             }
-            long timeSinceStart = System.currentTimeMillis() - startTime;
+            long timeSinceStart = System.currentTimeMillis() - jacsServiceData.getProcessStartTime().getTime();
             if (jacsServiceData.timeout() > 0 &&  timeSinceStart > jacsServiceData.timeout()) {
                 logger.warn("Service {} timed out after {}ms while collecting the results", jacsServiceData, timeSinceStart);
                 jacsServiceData.setState(JacsServiceState.TIMEOUT);
-                return computationFactory.newFailedComputation(
-                        new ComputationException(jacsServiceData, "Service " + jacsServiceData + " timed out"));
+                jacsServiceData.addEvent(JacsServiceEventTypes.CANCELED, "Canceled because of retrieve results timeout");
+                jacsServiceDataPersistence.update(jacsServiceData);
+                throw new ComputationException(jacsServiceData, "Retrieve results for service " + jacsServiceData + " timed out");
             }
         }
-        return computationFactory.newFailedComputation(new ComputationException(jacsServiceData,
-                "Could not retrieve result for " + jacsServiceData.toString()));
+        jacsServiceData.setState(JacsServiceState.TIMEOUT);
+        jacsServiceData.addEvent(JacsServiceEventTypes.CANCELED, "Canceled because results could not be retrieved after " + N_RETRIES_FOR_RESULT + " retries");
+        jacsServiceDataPersistence.update(jacsServiceData);
+        throw new ComputationException(jacsServiceData, "Results could not be retrieved after " + N_RETRIES_FOR_RESULT + " retries");
     }
 
     protected Path getWorkingDirectory(JacsServiceData jacsServiceData) {

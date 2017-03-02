@@ -2,6 +2,7 @@ package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
@@ -79,11 +80,9 @@ public class Vaa3dPluginProcessor extends AbstractServiceProcessor<File> {
         try {
             Vaa3dPluginArgs args = getArgs(jacsServiceData);
             if (StringUtils.isBlank(args.pluginInput)) {
-                return computationFactory.newFailedComputation(
-                        new ComputationException(jacsServiceData, "Plugin input name must be specified"));
+                return createFailure(jacsServiceData, new ComputationException(jacsServiceData, "Plugin input name must be specified"));
             } else if (StringUtils.isBlank(args.pluginOutput)) {
-                return computationFactory.newFailedComputation(
-                        new ComputationException(jacsServiceData, "Plugin output name must be specified"));
+                return createFailure(jacsServiceData, new ComputationException(jacsServiceData, "Plugin output name must be specified"));
             } else {
                 File pluginOutput = new File(args.pluginOutput);
                 try {
@@ -91,7 +90,7 @@ public class Vaa3dPluginProcessor extends AbstractServiceProcessor<File> {
                 } catch (IOException e) {
                     throw new ComputationException(jacsServiceData, e);
                 }
-                return computationFactory.newCompletedComputation(jacsServiceData);
+                return createComputation(jacsServiceData);
             }
         } catch (Exception e) {
             return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, e));
@@ -99,26 +98,29 @@ public class Vaa3dPluginProcessor extends AbstractServiceProcessor<File> {
     }
 
     @Override
-    protected ServiceComputation<File> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected List<JacsServiceData> submitAllDependencies(JacsServiceData jacsServiceData) {
         Vaa3dPluginArgs args = getArgs(jacsServiceData);
-        return submitVaa3dService(args, jacsServiceData)
-                .suspend(sd -> this.checkForCompletion(sd), sd -> sd)
-                .thenCompose(sd -> this.collectResult(preProcessingResult, jacsServiceData));
+        return ImmutableList.of(submitVaa3dService(args, jacsServiceData));
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> processData(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
+    }
+
+    @Override
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         Vaa3dPluginArgs args = getArgs(jacsServiceData);
         return Files.exists(Paths.get(args.pluginOutput));
     }
 
     @Override
-    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected File retrieveResult(JacsServiceData jacsServiceData) {
         Vaa3dPluginArgs args = getArgs(jacsServiceData);
         return new File(args.pluginOutput);
     }
 
-    private ServiceComputation<JacsServiceData> submitVaa3dService(Vaa3dPluginArgs args, JacsServiceData jacsServiceData) {
+    private JacsServiceData submitVaa3dService(Vaa3dPluginArgs args, JacsServiceData jacsServiceData) {
         StringJoiner vaa3Args = new StringJoiner(" ")
                 .add("-x").add(args.plugin)
                 .add("-f").add(args.pluginFunc)
@@ -127,7 +129,7 @@ public class Vaa3dPluginProcessor extends AbstractServiceProcessor<File> {
         if (CollectionUtils.isNotEmpty(args.pluginParams)) {
             vaa3Args.add(StringUtils.wrap(args.pluginParams.stream().collect(Collectors.joining(" ")), '"'));
         }
-        return vaa3dProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
+        return vaa3dProcessor.create(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-vaa3dArgs", vaa3Args.toString()));
     }
 

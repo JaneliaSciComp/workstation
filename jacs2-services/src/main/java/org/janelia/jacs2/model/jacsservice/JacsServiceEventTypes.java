@@ -3,6 +3,7 @@ package org.janelia.jacs2.model.jacsservice;
 public enum JacsServiceEventTypes {
     CANCELED,
     COMPLETED,
+    SUSPEND,
     TIMEOUT,
     CREATE_CHILD_SERVICE,
     DRMAA_SUBMIT,

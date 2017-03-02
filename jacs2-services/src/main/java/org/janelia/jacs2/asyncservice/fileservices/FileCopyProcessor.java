@@ -77,64 +77,64 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
     }
 
     @Override
-    protected ServiceComputation<File> preProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
         try {
             FileCopyArgs args = getArgs(jacsServiceData);
             if (StringUtils.isBlank(args.sourceFilename)) {
-                return computationFactory.newFailedComputation(
-                        new ComputationException(jacsServiceData, "Source file name must be specified"));
+                return createFailure(jacsServiceData, new ComputationException(jacsServiceData, "Source file name must be specified"));
             } else if (StringUtils.isBlank(args.targetFilename)) {
-                return computationFactory.newFailedComputation(
-                        new ComputationException(jacsServiceData, "Target file name must be specified"));
+                return createFailure(jacsServiceData, new ComputationException(jacsServiceData, "Target file name must be specified"));
             } else {
-                File targetFile = new File(args.targetFilename);
+                File targetFile = getTargetFile(args);
                 try {
                     Files.createDirectories(targetFile.getParentFile().toPath());
                 } catch (IOException e) {
-                    throw new ComputationException(jacsServiceData, e);
+                    return createFailure(jacsServiceData, e);
                 }
-                return computationFactory.newCompletedComputation(targetFile);
+                return createComputation(jacsServiceData);
             }
         } catch (Exception e) {
-            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, e));
+            return createFailure(jacsServiceData, e);
         }
     }
 
     @Override
-    protected ServiceComputation<File> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        File destFile = (File)preProcessingResult;
+    protected ServiceComputation<JacsServiceData> processData(JacsServiceData jacsServiceData) {
+        FileCopyArgs args = getArgs(jacsServiceData);
+        File destFile = getTargetFile(args);
         if (destFile.exists()) {
             logger.info("Nothing to do since the destination file '{}' already exists", destFile);
-            setResult(destFile, jacsServiceData);
-            return computationFactory.newCompletedComputation(destFile);
+            return createComputation(jacsServiceData);
         } else {
-            return super.localProcessData(preProcessingResult, jacsServiceData);
+            return super.processData(jacsServiceData);
         }
     }
 
     @Override
-    protected ServiceComputation<File> postProcessData(File processingResult, JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> postProcessData(JacsServiceData jacsServiceData) {
         try {
             FileCopyArgs args = getArgs(jacsServiceData);
             if (args.deleteSourceFile) {
-                File sourceFile = new File(args.sourceFilename);
+                File sourceFile = getSourceFile(args);
                 Files.deleteIfExists(sourceFile.toPath());
             }
-            return computationFactory.newCompletedComputation(processingResult);
+            return createComputation(jacsServiceData);
         } catch (Exception e) {
-            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, e));
+            return createFailure(jacsServiceData, e);
         }
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        File destFile = (File) preProcessingResult;
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
+        FileCopyArgs args = getArgs(jacsServiceData);
+        File destFile = getTargetFile(args);
         return Files.exists(destFile.toPath());
     }
 
     @Override
-    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        return (File) preProcessingResult;
+    protected File retrieveResult(JacsServiceData jacsServiceData) {
+        FileCopyArgs args = getArgs(jacsServiceData);
+        return getTargetFile(args);
     }
 
     @Override
@@ -162,6 +162,14 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
         FileCopyArgs fileCopyArgs = new FileCopyArgs();
         new JCommander(fileCopyArgs).parse(jacsServiceData.getArgsArray());
         return fileCopyArgs;
+    }
+
+    private File getSourceFile(FileCopyArgs args) {
+        return new File(args.sourceFilename);
+    }
+
+    private File getTargetFile(FileCopyArgs args) {
+        return new File(args.targetFilename);
     }
 
 }

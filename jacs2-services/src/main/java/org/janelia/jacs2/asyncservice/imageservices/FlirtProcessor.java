@@ -157,12 +157,12 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<Void> {
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         return true;
     }
 
     @Override
-    protected Void retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected Void retrieveResult(JacsServiceData jacsServiceData) {
         return null;
     }
 

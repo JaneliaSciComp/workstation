@@ -2,6 +2,7 @@ package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
@@ -24,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.StringJoiner;
 
 @Named("vaa3dConverter")
@@ -71,51 +73,52 @@ public class Vaa3dConverterProcessor extends AbstractServiceProcessor<File> {
         try {
             Vaa3dConverterArgs args = getArgs(jacsServiceData);
             if (StringUtils.isBlank(args.inputFileName)) {
-                return computationFactory.newFailedComputation(
-                        new ComputationException(jacsServiceData, "Input file name must be specified"));
+                return createFailure(jacsServiceData, new ComputationException(jacsServiceData, "Input file name must be specified"));
             } else if (StringUtils.isBlank(args.outputFileName)) {
-                return computationFactory.newFailedComputation(
-                        new ComputationException(jacsServiceData, "Output file name must be specified"));
+                return createFailure(jacsServiceData, new ComputationException(jacsServiceData, "Output file name must be specified"));
             } else {
                 File outputFile = new File(args.outputFileName);
                 try {
                     Files.createDirectories(outputFile.getParentFile().toPath());
                 } catch (IOException e) {
-                    throw new ComputationException(jacsServiceData, e);
+                    return createFailure(jacsServiceData, e);
                 }
-                return computationFactory.newCompletedComputation(jacsServiceData);
+                return createComputation(jacsServiceData);
             }
         } catch (Exception e) {
-            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, e));
+            return createFailure(jacsServiceData, e);
         }
     }
 
     @Override
-    protected ServiceComputation<File> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected List<JacsServiceData> submitAllDependencies(JacsServiceData jacsServiceData) {
         Vaa3dConverterArgs args = getArgs(jacsServiceData);
-        return submitVaa3dCmdService(args, jacsServiceData)
-                .suspend(sd -> this.checkForCompletion(sd), sd -> sd)
-                .thenCompose(sd -> this.collectResult(preProcessingResult, jacsServiceData));
+        return ImmutableList.of(submitVaa3dCmdService(args, jacsServiceData));
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> processData(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
+    }
+
+    @Override
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         Vaa3dConverterArgs args = getArgs(jacsServiceData);
         return Files.exists(Paths.get(args.outputFileName));
     }
 
     @Override
-    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected File retrieveResult(JacsServiceData jacsServiceData) {
         Vaa3dConverterArgs args = getArgs(jacsServiceData);
         return new File(args.outputFileName);
     }
 
-    private ServiceComputation<JacsServiceData> submitVaa3dCmdService(Vaa3dConverterArgs args, JacsServiceData jacsServiceData) {
+    private JacsServiceData submitVaa3dCmdService(Vaa3dConverterArgs args, JacsServiceData jacsServiceData) {
         StringJoiner vaa3dCmdArgs = new StringJoiner(" ")
                 .add(args.convertCmd)
                 .add(args.inputFileName)
                 .add(args.outputFileName);
-        return vaa3dCmdProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
+        return vaa3dCmdProcessor.create(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-vaa3dCmd", "image-loader"),
                 new ServiceArg("-vaa3dCmdArgs", vaa3dCmdArgs.toString()));
     }

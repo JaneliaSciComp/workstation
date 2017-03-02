@@ -1,5 +1,7 @@
 package org.janelia.it.jacs.model.domain.sample;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.Reference;
 
 import java.util.Date;
@@ -231,6 +233,11 @@ public class LSMImage extends Image {
 
     public void setChanSpec(String chanSpec) {
         this.chanSpec = chanSpec;
+    }
+
+    @JsonIgnore
+    public boolean isChanSpecDefined() {
+        return StringUtils.isNotBlank(chanSpec);
     }
 
     public String getDetectionChannel1DetectorGain() {
@@ -736,4 +743,5 @@ public class LSMImage extends Image {
     public void setLineHide(String lineHide) {
         this.lineHide = lineHide;
     }
+
 }
