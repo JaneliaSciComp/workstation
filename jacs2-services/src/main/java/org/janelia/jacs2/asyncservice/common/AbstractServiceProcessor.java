@@ -78,7 +78,9 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         jacsServiceData.setProcessStartTime(new Date());
         return preProcessData(jacsServiceData)
                 .thenApply(sd -> {
-                    this.submitAllDependencies(sd);
+                    if (!sd.hasBeenSuspended()) {
+                        this.submitAllDependencies(sd);
+                    }
                     return sd;
                 })
                 .thenCompose(sd -> this.waitForDependencies(sd))
@@ -96,9 +98,9 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                     logger.error("Processing error executing {}", jacsServiceData.getId(), exc);
                     JacsServiceData updatedSD = jacsServiceDataPersistence.findById(jacsServiceData.getId());
                     if (exc instanceof SuspendedException) {
-                       if (!updatedSD.hasCompleted() && !updatedSD.hasBeenSuspended()) {
-                           updateStateToSuspended(updatedSD);
-                       }
+                        if (!updatedSD.hasCompleted() && !updatedSD.hasBeenSuspended()) {
+                            updateStateToSuspended(updatedSD);
+                        }
                     } else if (!updatedSD.hasCompletedUnsuccessfully()) {
                         updatedSD.addEvent(JacsServiceEventTypes.FAILED, String.format("Failed: %s", exc.getMessage()));
                         updatedSD.setState(JacsServiceState.ERROR);
@@ -121,7 +123,9 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
 
     protected void suspend(JacsServiceData jacsServiceData) {
         if (!jacsServiceData.hasCompleted()) {
-            updateStateToSuspended(jacsServiceData);
+            if (!jacsServiceData.hasBeenSuspended()) {
+                updateStateToSuspended(jacsServiceData);
+            }
             throw new SuspendedException(jacsServiceData.toString());
         }
     }

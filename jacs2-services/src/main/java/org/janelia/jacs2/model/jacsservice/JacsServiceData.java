@@ -40,6 +40,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     private List<JacsServiceEvent> events;
     private Date processStartTime = new Date();
     private Date creationDate = new Date();
+    private Date modificationDate = new Date();
     @JsonIgnore
     private JacsServiceData parentService;
     @JsonIgnore
@@ -209,6 +210,14 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         this.processStartTime = processStartTime;
     }
 
+    public Date getModificationDate() {
+        return modificationDate;
+    }
+
+    public void setModificationDate(Date modificationDate) {
+        this.modificationDate = modificationDate;
+    }
+
     public Map<String, String> getEnv() {
         return env;
     }
@@ -334,6 +343,10 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     @Override
     public String toString() {
         return ReflectionToStringBuilder.toStringExclude(this, ImmutableList.of("dependencies"));
+    }
+
+    public boolean hasNeverBeenProcessed() {
+        return state == JacsServiceState.CREATED || state == JacsServiceState.QUEUED;
     }
 
     public boolean hasCompleted() {
