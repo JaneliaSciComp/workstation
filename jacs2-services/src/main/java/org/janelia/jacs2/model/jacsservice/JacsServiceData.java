@@ -38,6 +38,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     private Number parentServiceId;
     private Number rootServiceId;
     private List<JacsServiceEvent> events;
+    private Date processStartTime = new Date();
     private Date creationDate = new Date();
     @JsonIgnore
     private JacsServiceData parentService;
@@ -200,6 +201,14 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         this.creationDate = creationDate;
     }
 
+    public Date getProcessStartTime() {
+        return processStartTime;
+    }
+
+    public void setProcessStartTime(Date processStartTime) {
+        this.processStartTime = processStartTime;
+    }
+
     public Map<String, String> getEnv() {
         return env;
     }
@@ -327,12 +336,20 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         return ReflectionToStringBuilder.toStringExclude(this, ImmutableList.of("dependencies"));
     }
 
+    public boolean hasCompleted() {
+        return hasCompletedSuccessfully() || hasCompletedUnsuccessfully();
+    }
+
     public boolean hasCompletedUnsuccessfully() {
         return state == JacsServiceState.CANCELED || state == JacsServiceState.ERROR || state == JacsServiceState.TIMEOUT;
     }
 
     public boolean hasCompletedSuccessfully() {
         return state == JacsServiceState.SUCCESSFUL;
+    }
+
+    public boolean hasBeenSuspended() {
+        return state == JacsServiceState.SUSPENDED;
     }
 
     public Long getServiceTimeout() {
@@ -359,4 +376,5 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
             s.setPriority(s.priority() + priorityDiff);
         });
     }
+
 }

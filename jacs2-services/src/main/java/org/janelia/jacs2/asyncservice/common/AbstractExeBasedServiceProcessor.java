@@ -1,6 +1,7 @@
 package org.janelia.jacs2.asyncservice.common;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
@@ -15,6 +16,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -39,9 +41,13 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
     }
 
     @Override
-    protected ServiceComputation<T> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        return invokeExternalProcess(jacsServiceData)
-                .thenCompose(r -> this.collectResult(preProcessingResult, jacsServiceData));
+    protected ServiceComputation<JacsServiceData> processData(JacsServiceData jacsServiceData) {
+        return invokeExternalProcess(jacsServiceData);
+    }
+
+    @Override
+    protected List<JacsServiceData> submitAllDependencies(JacsServiceData jacsServiceData) {
+        return ImmutableList.<JacsServiceData>of();
     }
 
     protected abstract ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData);
@@ -108,10 +114,10 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
         }
     }
 
-    protected ServiceComputation<Void> invokeExternalProcess(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> invokeExternalProcess(JacsServiceData jacsServiceData) {
         ExternalCodeBlock script = prepareExternalScript(jacsServiceData);
         Map<String, String> env = prepareEnvironment(jacsServiceData);
-        return computationFactory.<Void>newComputation()
+        return computationFactory.<JacsServiceData>newComputation()
                 .supply(() -> {
                     getProcessRunner(jacsServiceData.getProcessingLocation()).runCmds(
                             script,
@@ -120,7 +126,7 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
                             this::outputStreamHandler,
                             this::errStreamHandler,
                             jacsServiceData);
-                    return null;
+                    return jacsServiceData;
                 });
     }
 

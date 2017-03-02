@@ -124,13 +124,13 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         File mergedLsmResultFile = getGroupResultFile(jacsServiceData);
         return mergedLsmResultFile.exists();
     }
 
     @Override
-    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected File retrieveResult(JacsServiceData jacsServiceData) {
         return getGroupResultFile(jacsServiceData);
     }
 

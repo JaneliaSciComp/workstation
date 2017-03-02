@@ -9,17 +9,15 @@ import java.util.concurrent.ExecutorService;
 @Singleton
 public class ServiceComputationFactory {
 
-    private final ExecutorService executor;
-    private final ExecutorService suspendedExecutor;
+    private final ServiceComputationQueue computationQueue;
 
     @Inject
-    public ServiceComputationFactory(ExecutorService executor, @SuspendedTaskExecutor ExecutorService suspendedExecutor) {
-        this.executor = executor;
-        this.suspendedExecutor = suspendedExecutor;
+    public ServiceComputationFactory(ServiceComputationQueue computationQueue) {
+        this.computationQueue = computationQueue;
     }
 
     public <T> ServiceComputation<T> newComputation() {
-        return new FutureBasedServiceComputation<>(executor, suspendedExecutor);
+        return new FutureBasedServiceComputation<T>(computationQueue);
     }
 
     /**
@@ -29,16 +27,16 @@ public class ServiceComputationFactory {
      * @return
      */
     public <T> ServiceComputation<T> newCompletedComputation(T result) {
-        return new FutureBasedServiceComputation<>(executor, suspendedExecutor, result);
+        return new FutureBasedServiceComputation<>(computationQueue, result);
     }
 
     /**
      * Create a completed failed computation.
      * @param exc exception thrown during the computation
-     * @param <T>
-     * @return
+     * @param <T> result type
+     * @return a ServiceComputation that has a result of type <T></T>
      */
     public <T> ServiceComputation<T> newFailedComputation(Throwable exc) {
-        return new FutureBasedServiceComputation<T>(executor, suspendedExecutor, exc);
+        return new FutureBasedServiceComputation<T>(computationQueue, exc);
     }
 }

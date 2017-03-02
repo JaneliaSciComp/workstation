@@ -53,7 +53,7 @@ public class JacsServiceDispatcherTest {
             return null;
         }).when(executor).execute(any(Runnable.class));
 
-        serviceComputationFactory = new ServiceComputationFactory(executor, executor);
+        serviceComputationFactory = new ServiceComputationFactory(new ServiceComputationQueue(executor, executor));
         jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
         serviceRegistrarSource = mock(Instance.class);
         serviceRegistry = mock(ServiceRegistry.class);

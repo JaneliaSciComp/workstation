@@ -51,7 +51,7 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
         }
     }
 
-    private final String ffmpegExecutable;
+    private final String executable;
     private final String libraryPath;
 
     @Inject
@@ -61,11 +61,11 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
                                   @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                   @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
                                   @Any Instance<ExternalProcessRunner> serviceRunners,
-                                  @PropertyValue(name = "FFMPEG.Bin.Path") String ffmpegExecutable,
+                                  @PropertyValue(name = "FFMPEG.Bin.Path") String executable,
                                   @PropertyValue(name = "VAA3D.Library.Path") String libraryPath,
                                   Logger logger) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
-        this.ffmpegExecutable = ffmpegExecutable;
+        this.executable = executable;
         this.libraryPath = libraryPath;
     }
 
@@ -85,30 +85,30 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
     }
 
     @Override
-    protected ServiceComputation<File> preProcessData(JacsServiceData jacsServiceData) {
-        ConverterArgs args = getArgs(jacsServiceData);
-        if (StringUtils.isBlank(args.input)) {
-            throw new ComputationException(jacsServiceData, "Input must be specified");
-        }
-        File outputFile = new File(args.getOutputName());
+    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
         try {
+            ConverterArgs args = getArgs(jacsServiceData);
+            if (StringUtils.isBlank(args.input)) {
+                createFailure(jacsServiceData, new ComputationException(jacsServiceData, "Input must be specified"));
+            }
+            File outputFile = getOutputFile(args);
             Files.createDirectories(outputFile.getParentFile().toPath());
         } catch (IOException e) {
-            throw new ComputationException(jacsServiceData, e);
+            return createFailure(jacsServiceData, e);
         }
-        return computationFactory.newCompletedComputation(outputFile);
+        return createComputation(jacsServiceData);
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        File destFile = (File) preProcessingResult;
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
+        File destFile = getOutputFile(getArgs(jacsServiceData));
         return Files.exists(destFile.toPath());
 
     }
 
     @Override
-    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        return (File) preProcessingResult;
+    protected File retrieveResult(JacsServiceData jacsServiceData) {
+        return getOutputFile(getArgs(jacsServiceData));
     }
 
     @Override
@@ -116,7 +116,7 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
         ConverterArgs args = getArgs(jacsServiceData);
         ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
         ScriptWriter externalScriptWriter = externalScriptCode.getCodeWriter();
-        externalScriptWriter.addWithArgs(getFFMPEGExecutable())
+        externalScriptWriter.addWithArgs(getExecutable())
                 .addArg("-y")
                 .addArg("-r").addArg("7")
                 .addArg("-i").addArg(args.input)
@@ -151,8 +151,12 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
         return args;
     }
 
-    private String getFFMPEGExecutable() {
-        return getFullExecutableName(ffmpegExecutable);
+    private File getOutputFile(ConverterArgs args) {
+        return new File(args.getOutputName());
+    }
+
+    private String getExecutable() {
+        return getFullExecutableName(executable);
     }
 
 }

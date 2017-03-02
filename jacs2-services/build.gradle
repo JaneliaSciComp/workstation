@@ -2,7 +2,6 @@ project(":jacs2-services") {
     dependencies {
         compile CDI_API_LIB,
                 CMDLINE_ARG_LIB,
-                COROUTINE_LIB,
                 DRMAA1_LIB,
                 JACKSON_ANNOTATIONS_LIB,
                 JACKSON_CORE_LIB,

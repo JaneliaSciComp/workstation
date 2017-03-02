@@ -8,6 +8,7 @@ import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
@@ -88,8 +89,7 @@ public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File
         return externalScriptCode;
     }
 
-    private void createScript(JacsServiceData jacsServiceData, ChannelMergeArgs args,
-                              ScriptWriter scriptWriter) {
+    private void createScript(JacsServiceData jacsServiceData, ChannelMergeArgs args, ScriptWriter scriptWriter) {
         try {
             Path workingDir = getWorkingDirectory(jacsServiceData);
             X11Utils.setDisplayPort(workingDir.toString(), scriptWriter);
@@ -114,13 +114,13 @@ public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         File mergedLsmResultFile = getMergedLsmResultFile(jacsServiceData);
         return mergedLsmResultFile.exists();
     }
 
     @Override
-    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected File retrieveResult(JacsServiceData jacsServiceData) {
         return getMergedLsmResultFile(jacsServiceData);
     }
 

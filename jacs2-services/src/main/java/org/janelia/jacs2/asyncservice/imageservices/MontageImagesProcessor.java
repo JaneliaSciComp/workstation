@@ -86,16 +86,16 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         MontageImagesArgs args = getArgs(jacsServiceData);
-        File targetImage = new File(args.target);
+        File targetImage = getTargetImage(args);
         return targetImage.exists();
     }
 
     @Override
-    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected File retrieveResult(JacsServiceData jacsServiceData) {
         MontageImagesArgs args = getArgs(jacsServiceData);
-        File targetImage = new File(args.target);
+        File targetImage = getTargetImage(args);
         return targetImage;
     }
 
@@ -138,6 +138,10 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
         MontageImagesArgs args = new MontageImagesArgs();
         new JCommander(args).parse(jacsServiceData.getArgsArray());
         return args;
+    }
+
+    private File getTargetImage(MontageImagesArgs args) {
+        return new File(args.target);
     }
 
     private String getExecutable() {

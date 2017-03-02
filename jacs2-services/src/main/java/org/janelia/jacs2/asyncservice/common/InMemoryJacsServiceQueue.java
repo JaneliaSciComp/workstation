@@ -69,7 +69,7 @@ public class InMemoryJacsServiceQueue implements JacsServiceQueue {
     @Override
     public JacsServiceData dequeService() {
         JacsServiceData queuedService = getWaitingService();
-        if (queuedService == null && enqueueAvailableServices(EnumSet.of(JacsServiceState.CREATED, JacsServiceState.QUEUED))) {
+        if (queuedService == null && enqueueAvailableServices(EnumSet.of(JacsServiceState.CREATED, JacsServiceState.QUEUED, JacsServiceState.SUSPENDED))) {
             queuedService = getWaitingService();
         }
         return queuedService;
