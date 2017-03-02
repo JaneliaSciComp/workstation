@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.Date;
 import java.util.PrimitiveIterator;
 import java.util.Random;
@@ -20,6 +21,7 @@ import java.util.stream.LongStream;
 /**
  * Created by murphys on 2/23/17.
  */
+@Named("integerComputeTest")
 public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> {
 
     public static class IntegerComputeTestArgs extends ServiceArgs {
@@ -99,7 +101,7 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
 
     @Override
     protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        return false;
+        return true;
     }
 
     @Override
