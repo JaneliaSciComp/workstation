@@ -11,7 +11,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -29,6 +28,8 @@ public class AbstractServiceProcessorTest {
     private static final Number TEST_ID = 1L;
 
     static class TestSuccessfulProcessor extends AbstractServiceProcessor<Void> {
+
+        private long timeout = -1;
 
         public TestSuccessfulProcessor(JacsServiceEngine jacsServiceEngine,
                                        ServiceComputationFactory computationFactory,
@@ -53,6 +54,17 @@ public class AbstractServiceProcessorTest {
         }
 
         @Override
+        protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+            if (timeout > 0) {
+                try {
+                    Thread.sleep(timeout);
+                } catch (InterruptedException e) {
+                }
+            }
+            return createComputation(jacsServiceData);
+        }
+
+        @Override
         protected ServiceComputation<JacsServiceData> processData(JacsServiceData jacsServiceData) {
             return createComputation(jacsServiceData);
         }
@@ -70,6 +82,10 @@ public class AbstractServiceProcessorTest {
         @Override
         protected Void retrieveResult(JacsServiceData jacsServiceData) {
             return null;
+        }
+
+        public void setTimeout(long timeout) {
+            this.timeout = timeout;
         }
     }
 
@@ -130,17 +146,12 @@ public class AbstractServiceProcessorTest {
 
     @Before
     public void setUp() {
-        ExecutorService executor = mock(ExecutorService.class);
-
-        doAnswer(invocation -> {
-            Runnable r = invocation.getArgument(0);
-            r.run();
-            return null;
-        }).when(executor).execute(any(Runnable.class));
         ServiceComputationQueue serviceComputationQueue = mock(ServiceComputationQueue.class);
         doAnswer((invocation -> {
             ServiceComputationTask task = invocation.getArgument(0);
-            task.tryFire();
+            if (task != null) {
+                task.tryFire();
+            }
             return null;
         })).when(serviceComputationQueue).submit(any(ServiceComputationTask.class));
         serviceComputationFactory = new ServiceComputationFactory(serviceComputationQueue);
@@ -174,8 +185,8 @@ public class AbstractServiceProcessorTest {
         testJacsServiceDataDependency.setId(TEST_ID.longValue() + 1);
 
         testJacsServiceData.addServiceDependency(testJacsServiceDataDependency);
+        when(jacsServiceDataPersistence.findById(TEST_ID)).thenReturn(testJacsServiceData);
         when(jacsServiceDataPersistence.findServiceHierarchy(TEST_ID))
-                .thenAnswer(invocation -> testJacsServiceData)
                 .thenAnswer(invocation -> {
                     testJacsServiceDataDependency.setState(JacsServiceState.SUCCESSFUL);
                     return testJacsServiceData;
@@ -221,7 +232,7 @@ public class AbstractServiceProcessorTest {
     }
 
     @Test
-    public void processingTimeout() {
+    public void processingSuspended() {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
 
@@ -229,24 +240,22 @@ public class AbstractServiceProcessorTest {
         testJacsServiceDataDependency.setId(TEST_ID.longValue() + 1);
         testJacsServiceDataDependency.setState(JacsServiceState.RUNNING);
 
-        testJacsServiceData.setServiceTimeout(100L);
         testJacsServiceData.addServiceDependency(testJacsServiceDataDependency);
 
-        when(jacsServiceDataPersistence.findServiceHierarchy(TEST_ID))
-                .thenAnswer(invocation -> testJacsServiceData);
+        when(jacsServiceDataPersistence.findById(TEST_ID)).thenReturn(testJacsServiceData);
+        when(jacsServiceDataPersistence.findServiceHierarchy(TEST_ID)).thenReturn(testJacsServiceData);
 
         testSuccessfullProcessor.process(testJacsServiceData)
                 .whenComplete((r, e) -> {
                     if (e == null) {
                         successful.accept(r);
                     } else {
-                        e.printStackTrace(System.out);
                         failure.accept(e);
                     }
                 });
-        verify(failure).accept(any());
-        verify(successful, never()).accept(any());
-        assertThat(testJacsServiceData.getState(), equalTo(JacsServiceState.TIMEOUT));
+        verify(successful).accept(any());
+        verify(failure, never()).accept(any());
+        assertThat(testJacsServiceData.getState(), equalTo(JacsServiceState.SUSPENDED));
     }
 
     @Test
@@ -277,8 +286,8 @@ public class AbstractServiceProcessorTest {
 
         testJacsServiceData.addServiceDependency(testJacsServiceDataDependency);
 
-        when(jacsServiceDataPersistence.findById(TEST_ID))
-                .thenAnswer(invocation -> testJacsServiceData)
+        when(jacsServiceDataPersistence.findById(TEST_ID)).thenReturn(testJacsServiceData);
+        when(jacsServiceDataPersistence.findServiceHierarchy(TEST_ID))
                 .thenAnswer(invocation -> {
                     testJacsServiceDataDependency.setState(JacsServiceState.SUCCESSFUL);
                     return testJacsServiceData;
@@ -339,12 +348,13 @@ public class AbstractServiceProcessorTest {
         testJacsServiceDataDependency.setId(TEST_ID.longValue() + 1);
         testJacsServiceDataDependency.setState(JacsServiceState.RUNNING);
 
-        testJacsServiceData.setServiceTimeout(100L);
+        testJacsServiceData.setServiceTimeout(10L);
         testJacsServiceData.addServiceDependency(testJacsServiceDataDependency);
 
         when(jacsServiceDataPersistence.findServiceHierarchy(TEST_ID)).thenReturn(testJacsServiceData);
         when(jacsServiceEngine.getServiceProcessor(testJacsServiceData)).thenReturn((ServiceProcessor) testSuccessfullProcessor);
 
+        testSuccessfullProcessor.setTimeout(100L);
         testSuccessfullProcessor.waitForDependencies(testJacsServiceData)
                 .whenComplete((r, e) -> {
                     if (e == null) {

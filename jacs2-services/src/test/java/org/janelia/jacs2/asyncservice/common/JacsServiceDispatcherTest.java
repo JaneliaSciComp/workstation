@@ -11,13 +11,11 @@ import org.janelia.jacs2.asyncservice.ServiceRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -45,15 +43,16 @@ public class JacsServiceDispatcherTest {
 
     @Before
     public void setUp() {
-        ExecutorService executor = mock(ExecutorService.class);
-
-        doAnswer(invocation -> {
-            Runnable r = invocation.getArgument(0);
-            r.run();
+        ServiceComputationQueue serviceComputationQueue = mock(ServiceComputationQueue.class);
+        doAnswer((invocation -> {
+            ServiceComputationTask task = invocation.getArgument(0);
+            if (task != null) {
+                task.tryFire();
+            }
             return null;
-        }).when(executor).execute(any(Runnable.class));
+        })).when(serviceComputationQueue).submit(any(ServiceComputationTask.class));
+        serviceComputationFactory = new ServiceComputationFactory(serviceComputationQueue);
 
-        serviceComputationFactory = new ServiceComputationFactory(new ServiceComputationQueue(executor, executor));
         jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
         serviceRegistrarSource = mock(Instance.class);
         serviceRegistry = mock(ServiceRegistry.class);
