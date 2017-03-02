@@ -5,11 +5,17 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
@@ -47,6 +53,10 @@ import org.slf4j.LoggerFactory;
 public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
     
     private final static Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
+
+    // We use a single threaded executor so that all node operations are serialized. Re-ordering operations 
+    // in particular must be done sequentially, for obvious reasons.
+    private static final Executor nodeOperationExecutor = Executors.newSingleThreadExecutor();
     
     private TreeNodeChildFactory childFactory;
     
@@ -72,11 +82,79 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                 }
                 @Override
                 public void reorder(final int[] order) {
+                    
+                    // Get current set of child nodes before going async
+                    final Node[] nodes = getNodes();
+                    
                     SimpleWorker worker = new SimpleWorker() {
                         @Override
                         protected void doStuff() throws Exception {
+
+                            // This is a little tricky for two reasons: 
+                            // a) The order parameter is not the reordered indexes of the nodes, as you'd expect
+                            //    but rather the new positions of each of the nodes in the old sequence. The tricky
+                            //    part is that these can be identical in many cases, so it's important to test all
+                            //    the corner cases.
+                            // b) The order only gives the new order for the nodes in the tree, but we have to account 
+                            //    for children of the TreeNode which are not represented as nodes. Currently, this  
+                            //    code just throws those non-node children at the end every time there's a reordering, 
+                            //    but eventually we'll want to make it preserve the ordering. 
+
                             DomainModel model = DomainMgr.getDomainMgr().getModel();
-                            model.reorderChildren(getTreeNode(), order);
+                            
+                            log.info("Reordering nodes with new permutation: {}", Arrays.toString(order));
+        
+                            // Get current children for the node
+                            final List<Reference> children = getTreeNode().getChildren();
+                            
+                            // Build lookup of all the existing child indexes
+                            Map<DomainObject,Integer> oldIndexes = new HashMap<>();
+                            int k = 0;
+                            for(Reference ref : children) {
+                                DomainObject domainObject = model.getDomainObject(ref);
+                                oldIndexes.put(domainObject, k);
+                                log.debug("Curr {} = {}", k, domainObject.getName());
+                                k++;
+                            }
+                            
+                            // Build new list of ordered nodes
+                            Map<DomainObject, Integer> newPositions = new HashMap<>();
+                            for(int i=0; i<nodes.length; i++) {
+                                Node node = nodes[i];
+                                int newPos = order[i];
+                                if (node instanceof DomainObjectNode) {
+                                    DomainObjectNode<?> domainObjectNode = (DomainObjectNode<?>)node;
+                                    DomainObject domainObject = domainObjectNode.getDomainObject();
+                                    newPositions.put(domainObject, newPos);
+                                    log.debug("Setting node {} at {}", domainObject.getName(), newPos);
+                                }
+                                else {
+                                    throw new IllegalStateException("Encountered node that is not DomainObjectNode");
+                                }
+                            }
+                            
+                            // Add the objects which are not represented as nodes
+                            int nextIndex = newPositions.size();
+                            for(Reference ref : children) {
+                                DomainObject domainObject = model.getDomainObject(ref);
+                                if (!newPositions.containsKey(domainObject)) {
+                                    int newPos = nextIndex++;
+                                    newPositions.put(domainObject, newPos);
+                                    log.debug("Setting non-node {} at {}", domainObject.getName(), newPos);
+                                }
+                            }
+                            
+                            // Build the real reordering array, including non-nodes
+                            int[] trueOrder = new int[children.size()];
+                            int i = 0;
+                            for(Reference ref : children) {
+                                DomainObject domainObject = model.getDomainObject(ref);
+                                int newPos = newPositions.get(domainObject);
+                                trueOrder[i++] = newPos; 
+                            }
+        
+                            log.info("Reordering children with new permutation: {}", Arrays.toString(trueOrder));
+                            model.reorderChildren(getTreeNode(), trueOrder);
                         }
                         @Override
                         protected void hadSuccess() {
@@ -87,7 +165,8 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                             ConsoleApp.handleException(error);
                         }
                     };
-                    worker.execute();
+                    
+                    nodeOperationExecutor.execute(worker);
                 }
             });
         }

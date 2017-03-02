@@ -15,6 +15,8 @@ import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.model.DomainObjectComparator;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The main child factory for the root node in the explorer.  
@@ -23,6 +25,8 @@ import org.openide.nodes.Node;
  */
 public class RootNodeChildFactory extends ChildFactory<DomainObject> {
 
+    private static final Logger log = LoggerFactory.getLogger(RootNodeChildFactory.class);
+    
     private final DummyObject RECENTLY_OPENED_ITEMS = new DummyObject();
     private final RecentOpenedItemsNode RECENTLY_OPENED_ITEMS_NODE = new RecentOpenedItemsNode();
     
@@ -35,6 +39,11 @@ public class RootNodeChildFactory extends ChildFactory<DomainObject> {
             
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             List<Workspace> workspaces = new ArrayList<>(model.getWorkspaces());
+            
+            for(Workspace workspace : workspaces) {
+                log.info("Adding workspace: {} ({})", workspace.getName(), workspace.getOwnerKey());
+            }
+            
             Collections.sort(workspaces, new DomainObjectComparator());
             list.addAll(workspaces);
         } 

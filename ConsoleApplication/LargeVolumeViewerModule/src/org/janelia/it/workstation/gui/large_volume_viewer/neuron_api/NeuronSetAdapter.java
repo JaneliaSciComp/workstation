@@ -103,6 +103,11 @@ implements NeuronSet// , LookupListener
         this(new NeuronList());
     }
 
+    @Override
+    public boolean isReadOnly() {
+        return !annotationModel.editsAllowed();
+    }
+    
     private void updateVoxToMicronMatrices(TmSample sample)
     {
         // If we try to get the matrix too early, it comes back null, so populate just-in-time
@@ -479,7 +484,12 @@ implements NeuronSet// , LookupListener
 
 
     private class MyGlobalAnnotationListener implements GlobalAnnotationListener {
-        
+
+        @Override
+        public void workspaceUnloaded(final TmWorkspace workspace) {
+            spatialIndex.clear();
+        }
+    
         @Override
         public void workspaceLoaded(final TmWorkspace workspace)
         {
@@ -597,6 +607,7 @@ implements NeuronSet// , LookupListener
         @Override
         public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style)
         {
+            // log.info("neuronStyleChanged");
             if (updateOneNeuronStyle(neuron, style)) {
                 repaintHorta();
             }
@@ -604,6 +615,7 @@ implements NeuronSet// , LookupListener
             
         private boolean updateOneNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style)
         {
+            // log.info("updateOneNeuronStyle");
             if (neuron == null)
                 return false;
             if (style == null)
@@ -636,18 +648,21 @@ implements NeuronSet// , LookupListener
         @Override
         public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStylemap)
         {
+            // log.info("neuronStylesChanged");
             if (neuronStylemap == null)
                 return;
             
             // bulk color/visibility change
+            
+            /* */
             boolean bChanged = false;
             for (Map.Entry<TmNeuronMetadata, NeuronStyle> entry : neuronStylemap.entrySet()) {
                 if (updateOneNeuronStyle(entry.getKey(), entry.getValue()))
                     bChanged = true;
             }
-            
             if (bChanged)
                 repaintHorta();
+            /* */
         }
 
         @Override

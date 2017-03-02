@@ -35,6 +35,7 @@ import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.swc.SWCNode;
 import org.janelia.it.jacs.shared.utils.Progress;
+import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionSupport;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
@@ -62,6 +63,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
 import Jama.Matrix;
+import org.janelia.console.viewerapi.model.DefaultNeuron;
 
 /**
  * This class is responsible for handling requests from the AnnotationManager.  those
@@ -149,6 +151,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         });
     }
 
+    public boolean editsAllowed() {
+        if (getCurrentWorkspace()==null) return false;
+        return ClientDomainUtils.hasWriteAccess(getCurrentWorkspace());
+    }
+    
     @Override
     public DomainObjectSelectionModel getSelectionModel() {
         return selectionModel;
@@ -203,9 +210,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public void saveCurrentWorkspace() throws Exception {
-        tmDomainMgr.save(currentWorkspace);
+        saveWorkspace(currentWorkspace);
     }
 
+    public void saveWorkspace(TmWorkspace workspace) throws Exception {
+        tmDomainMgr.save(workspace);
+    }
+    
     public TmSample getCurrentSample() {
         return currentSample;
     }
@@ -251,13 +262,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         currentSample = null;
         currentTagMap = null;
         setCurrentNeuron(null);
+        fireWorkspaceUnloaded(currentWorkspace);
     }
     
     public synchronized void loadSample(final TmSample sample) throws Exception {
         if (sample == null) {
             throw new IllegalArgumentException("Cannot load null sample");
         }
-        
         log.info("Loading sample {}", sample.getId());
         currentWorkspace = null;
         currentSample = sample;
@@ -268,7 +279,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         if (workspace == null) {
             throw new IllegalArgumentException("Cannot load null workspace");
         }
-
         log.info("Loading workspace {}", workspace.getId());
         currentWorkspace = workspace;
         currentSample = tmDomainMgr.getSample(workspace);
@@ -531,7 +541,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     /**
      * Create a new copy of the given workspace, owned by the current user.
-     * @param sampleId = workspace Id
+     * @param workspace = workspace object
      * @param name = name of new workspace
      * @throws Exception
      */
@@ -584,6 +594,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 
         final TmGeoAnnotation annotation = neuronManager.addGeometricAnnotation(
                 neuron, parentAnn.getId(), xyz.x(), xyz.y(), xyz.z());
+        annotation.setRadius(parentAnn.getRadius());
 
         log.info("Added annotation {} to neuron {}", annotation.getId(), neuron);
         
@@ -1110,6 +1121,21 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // create the new annotation, child of original parent
         final TmGeoAnnotation newAnnotation = neuronManager.addGeometricAnnotation(neuron,
                 annotation2.getId(), newPoint.x(), newPoint.y(), newPoint.z());
+        
+        // set radius of new point to an intermediate value
+        double newRadius = DefaultNeuron.radius;
+        if (annotation2.getRadius() != null) {
+            newRadius = annotation2.getRadius();
+            if (annotation1.getRadius() != null) {
+                double r1 = annotation1.getRadius();
+                double r2 = annotation2.getRadius();
+                newRadius = t * r2 + (1.0 - t) * r1;
+            }
+        }
+        else if (annotation1.getRadius() != null) {
+            newRadius = annotation1.getRadius();
+        }
+        newAnnotation.setRadius(newRadius);
 
         //  reparent existing annotation to new annotation
         neuronManager.reparentGeometricAnnotation(annotation1, newAnnotation.getId(), neuron);
@@ -1420,11 +1446,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * called from multiple threads, and the update is not atomic
      */
     public synchronized void setNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) throws Exception {
-        ModelTranslation.updateNeuronStyle(style, neuron);
-        neuronManager.saveNeuronMetadata(neuron);
-        // fire change to listeners
-        fireNeuronStyleChanged(neuron, style);
-        activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
+        if (neuron.getVisibility() != style.isVisible() || neuron.getColor() != style.getColor()) {
+            ModelTranslation.updateNeuronStyle(style, neuron);
+            neuronManager.saveNeuronMetadata(neuron);
+            // fire change to listeners
+            fireNeuronStyleChanged(neuron, style);
+            activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
+        }
     }
 
     public synchronized void setNeuronColors(List<TmNeuronMetadata> neuronList, Color color) throws Exception {
@@ -1755,6 +1783,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
 
+    void fireWorkspaceUnloaded(TmWorkspace workspace) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.workspaceUnloaded(workspace);
+        }
+    }
+    
     void fireWorkspaceLoaded(TmWorkspace workspace) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.workspaceLoaded(workspace);

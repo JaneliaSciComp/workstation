@@ -66,7 +66,65 @@ public abstract class TextureDataBuilder {
             textureData.setExplicitInternalFormat( GL2.GL_RGBA );
             textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_INT_8_8_8_8_REV );
         }
-        else {
+		else if (isLuminance  &&  (volumeFileLoader.getChannelCount() == 1)  &&  volumeFileLoader.getPixelBytes() == 2) {
+            //  Theory: I have two-byte masks -> just a two-byte alpha.
+            //GL_RGBA, GL_BGRA, GL_RED, GL_RG, GL_RGB, GL_BGR
+            textureData.setExplicitVoxelComponentOrder( GL2.GL_RED );
+            textureData.setExplicitInternalFormat( GL2.GL_INTENSITY16 );
+            textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
+            /*
+			//  Theory: I have two-byte masks -> just a two-byte alpha.
+            //GL_RGBA, GL_BGRA, GL_RED, GL_RG, GL_RGB, GL_BGR
+            // Black hole with one-sided line segment.  Also error java.lang.IndexOutOfBoundsException: Required 572896800 remaining bytes in buffer, only had 286448400
+            textureData.setExplicitVoxelComponentOrder( GL2.GL_RG );
+            textureData.setExplicitInternalFormat( GL2.GL_INTENSITY16 );
+            textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
+            */
+
+            /*
+            //  Theory: I have two-byte masks -> just a two-byte alpha.
+            //GL_RGBA, GL_BGRA, GL_RED, GL_RG, GL_RGB, GL_BGR
+            // Black hole.
+            textureData.setExplicitVoxelComponentOrder( GL2.GL_RED );
+            textureData.setExplicitInternalFormat( GL2.GL_ALPHA16 );
+            textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
+            */
+
+            /*
+			//  Theory: I have two-byte masks -> just a two-byte luminance, and no alpha.
+			textureData.setExplicitVoxelComponentOrder( GL2.GL_RED );
+            textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE16 );
+            textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
+            */
+
+			/*  Black hole
+			// Setup for SHORT luminance
+			//  Theory: I have two-byte masks -> just a two-byte luminance, and no alpha.
+			textureData.setExplicitVoxelComponentOrder( GL2.GL_LUMINANCE );
+            textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE );
+            textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
+			*/
+			
+			/*
+			   Black hole
+			
+			// Theory: red because one color needed.  Luminance because: masks;
+			// short, because: two-byte voxels.			
+            textureData.setExplicitVoxelComponentOrder( GL2.GL_RED );
+            textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE );
+            textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
+			*/
+			
+			/*
+			  This triggers exception: expecting twice as many bytes.
+			// Theory: need luminance/alpha everywhere.
+			// Problem: I think Luminance_Alpha implies two channels (4 bytes).
+			textureData.setExplicitVoxelComponentOrder( GL2.GL_LUMINANCE_ALPHA );
+            textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE_ALPHA );
+            textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
+			*/
+		}
+		else {
             if ( volumeFileLoader.getUnCachedFileName().contains( V3dMaskFileLoader.COMPARTMENT_MASK_INDEX ) ) {
                 textureData.setInverted( false );  // Do not invert the compartment mask.
             }

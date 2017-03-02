@@ -88,6 +88,10 @@ public class PanelController {
     
     private class PanelGlobalListener extends GlobalAnnotationAdapter {
         @Override
+        public void workspaceUnloaded(TmWorkspace workspace) {
+            workspaceLoaded(null);
+        }
+        @Override
         public void workspaceLoaded(TmWorkspace workspace) {
             annotationPanel.loadWorkspace(workspace);
             filteredAnnotationList.loadWorkspace(workspace);

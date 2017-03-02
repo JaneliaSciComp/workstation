@@ -172,7 +172,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         attributeMap.clear();
 
-        attrs = DomainUtils.getUniqueAttributes(domainObjectList.getDomainObjects());
+        attrs = DomainUtils.getDisplayAttributes(domainObjectList.getDomainObjects());
         attrs.add(0, annotationAttr);
 
         TableViewerConfiguration config = TableViewerConfiguration.loadConfig();
@@ -384,18 +384,9 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             return builder.toString();
         }
         else {
-            try {
-                DomainObjectAttribute attr = attributeMap.get(columnName);
-                return attr.getGetter().invoke(object);
-            }
-            catch (IllegalArgumentException e) {
-                // This happens if we have mixed objects and we try to get an attribute from one on another
-                return null;
-            }
-            catch(IllegalAccessException | InvocationTargetException e) {
-                log.error("Cannot get attribute {} for {}",columnName,object.getType(),e);
-                return null;
-            }
+            DomainObjectAttribute attr = attributeMap.get(columnName);
+            DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(object);
+            return proxy.get(attr.getLabel());
         }
     }
 

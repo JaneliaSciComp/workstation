@@ -805,7 +805,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     protected JMenuItem getNeuronAnnotatorItem() {
         if (multiple) return null;
         if (domainObject instanceof NeuronFragment) {
-            return new JMenuItem(new OpenInNeuronAnnotatorAction((NeuronFragment)domainObject));
+            return getNamedActionItem(new OpenInNeuronAnnotatorAction((NeuronFragment)domainObject));
         }
         return null;
     }
@@ -898,65 +898,60 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                 return null;
             }
 
-            HashSet<Long> fragmentIds = new HashSet<>();
+            HashSet<NeuronFragment> fragments = new LinkedHashSet<>();
             for (DomainObject domainObject : domainObjectList) {
                 if (!(domainObject instanceof NeuronFragment)) {
                     continue;
                 }
-                fragmentIds.add(domainObject.getId());
+                fragments.add((NeuronFragment)domainObject);
             }
-            if (fragmentIds.size()<2) {
+            if (fragments.size()<2) {
                 return null;
             }
 
-            JMenuItem mergeItem = new JMenuItem("  Merge " + fragmentIds.size() + " Selected Neurons");
-            NeuronFragment fragment = (NeuronFragment) domainObjectList.get(0);
+            JMenuItem mergeItem = new JMenuItem("  Merge " + fragments.size() + " Selected Neurons");
+            NeuronFragment fragment = (NeuronFragment) fragments.iterator().next();
             Reference sampleRef = fragment.getSample();
             final Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
 
             mergeItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     ActivityLogHelper.logUserAction("DomainObjectContextMenu.mergeSelectedNeurons");
-                    try {
-                        BackgroundWorker executeWorker = new TaskMonitoringWorker() {
+                    BackgroundWorker executeWorker = new TaskMonitoringWorker() {
 
-                            @Override
-                            public String getName() {
-                                return "Merge Neuron Fragments ";
-                            }
+                        @Override
+                        public String getName() {
+                            return "Merge Neuron Fragments ";
+                        }
 
-                            @Override
-                            protected void doStuff() throws Exception {
+                        @Override
+                        protected void doStuff() throws Exception {
 
-                                setStatus("Submitting task");
-                                long taskId = startMergeTask();
-                                setTaskId(taskId);
-                                setStatus("Grid execution");
+                            setStatus("Submitting task");
+                            long taskId = startMergeTask();
+                            setTaskId(taskId);
+                            setStatus("Grid execution");
 
-                                // Wait until task is finished
-                                super.doStuff();
+                            // Wait until task is finished
+                            super.doStuff();
 
-                                if (isCancelled()) throw new CancellationException();
-                                setStatus("Done merging");
-                            }
+                            if (isCancelled()) throw new CancellationException();
+                            setStatus("Done merging");
+                        }
 
-                            @Override
-                            public Callable<Void> getSuccessCallback() {
-                                return new Callable<Void>() {
-                                    @Override
-                                    public Void call() throws Exception {
-                                    	DomainMgr.getDomainMgr().getModel().invalidate(sample);
-                                        return null;
-                                    }
-                                };
-                            }
-                        };
+                        @Override
+                        public Callable<Void> getSuccessCallback() {
+                            return new Callable<Void>() {
+                                @Override
+                                public Void call() throws Exception {
+                                	DomainMgr.getDomainMgr().getModel().invalidate(sample);
+                                    return null;
+                                }
+                            };
+                        }
+                    };
 
-                        executeWorker.executeWithEvents();
-                    }
-                    catch (Exception e) {
-                        ConsoleApp.handleException(e);
-                    }
+                    executeWorker.executeWithEvents();
                 }
             });
             mergeItem.setEnabled(multiple);

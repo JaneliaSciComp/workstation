@@ -47,7 +47,6 @@ import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
-import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -348,6 +347,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
     
     private void setResult(final NeuronSeparation separation, final boolean isUserDriven, final StopWatch w) {
+        this.separation = separation;
         this.resultButton.setText(getLabel(separation));
         resultsPanel.showLoadingIndicator();
         

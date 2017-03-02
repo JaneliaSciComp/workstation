@@ -353,6 +353,7 @@ public class ToolMgr extends PreferenceManager {
         }
         
         String path = tool.getPath();
+        log.info("Running tool {} with path {} and arguments {}", toolName, path, arguments);
         
         if (SystemInfo.isMac && tool.getPath().endsWith(".app")) {
             Desktop.getDesktop().open(new File(path));
@@ -365,7 +366,7 @@ public class ToolMgr extends PreferenceManager {
             List<String> toolArgs = new ArrayList<>();
             for(String pathComponent : path.split(" ")) {
                 if (!foundArg && !pathComponent.startsWith("-")) {
-                    toolPathSb.append(pathComponent);
+                    toolPathSb.append(" ").append(pathComponent);
                 }
                 else {
                     toolArgs.add(pathComponent);
@@ -373,7 +374,7 @@ public class ToolMgr extends PreferenceManager {
                 }
             }
 
-            String toolPath = toolPathSb.toString();
+            String toolPath = toolPathSb.toString().trim();
             
             final File exeFile = new File(toolPath);
             if (!exeFile.exists()) {

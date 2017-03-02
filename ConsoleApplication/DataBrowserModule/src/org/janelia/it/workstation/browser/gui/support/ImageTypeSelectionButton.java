@@ -4,25 +4,29 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
-import com.google.common.collect.LinkedHashMultiset;
-import com.google.common.collect.Multiset;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
+import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Multiset;
 
 
 /**
@@ -106,6 +110,20 @@ public class ImageTypeSelectionButton extends DropDownButton {
                 Multiset<String> typeNames = DomainUtils.getTypeNames((HasFiles) source, only2d);
                 log.trace("Source has files: {}",typeNames);
                 countedTypeNames.addAll(typeNames);
+            }
+            log.trace("Source is: {}",source);
+            if (source instanceof PipelineResult) {
+                PipelineResult result = (PipelineResult)source;
+                NeuronSeparation separation = result.getLatestSeparationResult();
+                log.trace("Source has separation: {}",separation);
+                if (separation!=null) {
+                    Set<String> typeNames = new HashSet<>();
+                    typeNames.add(FileType.NeuronAnnotatorLabel.toString());
+                    typeNames.add(FileType.NeuronAnnotatorSignal.toString());
+                    typeNames.add(FileType.NeuronAnnotatorReference.toString());
+                    log.trace("Adding type names: {}",typeNames);
+                    countedTypeNames.addAll(typeNames);
+                }
             }
         }
         

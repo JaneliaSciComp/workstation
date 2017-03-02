@@ -1,19 +1,12 @@
-// 5.9.0
+// 5.10.0
 
 Workstation Browser
-* Shared annotations can now be searched for
+* Now defaults to direct non-proxy connection to fix slow performance over VPN
 * Spaces in paths are now supported on Windows
-* "View in Fiji" now works on Windows
 * Many other minor bug fixes (see JIRA)
 
 FlyLight
-* Fixed usability issue with LSMs being annotated instead of sample
+* No change
 
 MouseLight
-* Greatly improved neuron operation performance, supporting millions of anchors 
-* Newly created workspaces are now added to the Recently Opened folder
-* Reopening last workspace on startup now also restores viewer position
-* Improved Horta rendering performance to support up to a million anchors
-* Improve Horta model clearing when loading subsequent workspaces
-* Update Horta display after "transfer neurite" in LVV
-* Restore ability to drag and drop Ktx tiles in Horta
+* No change

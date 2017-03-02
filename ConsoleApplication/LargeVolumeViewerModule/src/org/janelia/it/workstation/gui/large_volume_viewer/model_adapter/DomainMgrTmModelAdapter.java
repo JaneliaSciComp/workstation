@@ -41,7 +41,7 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
 
     @Override
     public List<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) throws Exception {
-        log.info("Checking neurons for workspace: "+workspace);
+        log.info("Loading neurons for workspace: {}", workspace);
         List<TmNeuronMetadata> neurons = new ArrayList<>();
 
         try {            
@@ -51,7 +51,7 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
             
             if (ClientDomainUtils.hasWriteAccess(workspace)) {
                 if (ApplicationPanel.isVerifyNeurons()) {
-                    log.debug("Checking neuron data consistency");
+                    log.info("Checking neuron data consistency");
                         
                     // check neuron consistency and repair (some) problems
                     for (TmNeuronMetadata neuron: neuronList) {
