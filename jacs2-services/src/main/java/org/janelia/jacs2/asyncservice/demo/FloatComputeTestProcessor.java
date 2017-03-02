@@ -16,15 +16,16 @@ import javax.inject.Named;
 import java.util.Date;
 import java.util.PrimitiveIterator;
 import java.util.Random;
+import java.util.stream.DoubleStream;
 import java.util.stream.LongStream;
 
 /**
- * Created by murphys on 2/23/17.
+ * Created by murphys on 3/2/17.
  */
-@Named("integerComputeTest")
-public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> {
+@Named("floatComputeTest")
+public class FloatComputeTestProcessor extends AbstractServiceProcessor<Long> {
 
-    public static class IntegerComputeTestArgs extends ServiceArgs {
+    public static class FloatComputeTestArgs extends ServiceArgs {
         @Parameter(names = "-matrixSize", description = "Size of matrix NxN", required = false)
         Integer matrixSize;
         @Parameter(names = "-iterations", description = "Iterations per matrix multiply", required = false)
@@ -36,12 +37,12 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
 
     private long resultComputationTime;
 
-    private IntegerComputeTestProcessor.IntegerComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
-        return IntegerComputeTestProcessor.IntegerComputeTestArgs.parse(jacsServiceData.getArgsArray(), new IntegerComputeTestArgs());
+    private FloatComputeTestProcessor.FloatComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
+        return FloatComputeTestProcessor.FloatComputeTestArgs.parse(jacsServiceData.getArgsArray(), new FloatComputeTestProcessor.FloatComputeTestArgs());
     }
 
     @Inject
-    public IntegerComputeTestProcessor (
+    public FloatComputeTestProcessor (
             JacsServiceEngine jacsServiceEngine,
             ServiceComputationFactory computationFactory,
             JacsServiceDataPersistence jacsServiceDataPersistence,
@@ -55,7 +56,7 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
     @Override
     protected ServiceComputation<Long> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
         logger.debug("localProcessData() start");
-        IntegerComputeTestArgs args=getArgs(jacsServiceData);
+        FloatComputeTestProcessor.FloatComputeTestArgs args=getArgs(jacsServiceData);
         int matrixSize=DEFAULT_MATRIX_SIZE;
         if (args.matrixSize!=null) {
             matrixSize=args.matrixSize;
@@ -68,18 +69,18 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
         long startTime=new Date().getTime();
         jacsServiceData.getArgs();
         Random random = new Random(startTime);
-        LongStream longStream = random.longs(0L, 100L);
-        PrimitiveIterator.OfLong iterator=longStream.iterator();
-        long[] matrix1=new long[matrixSize*matrixSize];
-        long[] matrix2=new long[matrixSize*matrixSize];
-        long[] result=new long[matrixSize*matrixSize];
+        DoubleStream doubleStream = random.doubles(0L, 100L);
+        PrimitiveIterator.OfDouble iterator=doubleStream.iterator();
+        double[] matrix1=new double[matrixSize*matrixSize];
+        double[] matrix2=new double[matrixSize*matrixSize];
+        double[] result=new double[matrixSize*matrixSize];
         int position=0;
         // Create matrices
         logger.debug("Creating matrices");
         for (int i=0;i<matrixSize;i++) {
             for (int j=0;j<matrixSize;j++) {
-                matrix1[position]=iterator.nextLong();
-                matrix2[position]=iterator.nextLong();
+                matrix1[position]=iterator.nextDouble();
+                matrix2[position]=iterator.nextDouble();
                 position++;
             }
         }
@@ -117,7 +118,7 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
 
     @Override
     public ServiceMetaData getMetadata() {
-        return ServiceArgs.getMetadata(this.getClass(), new IntegerComputeTestArgs());
+        return ServiceArgs.getMetadata(this.getClass(), new FloatComputeTestProcessor.FloatComputeTestArgs());
     }
 
     @Override
