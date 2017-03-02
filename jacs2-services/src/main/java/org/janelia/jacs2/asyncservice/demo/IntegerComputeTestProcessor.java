@@ -20,15 +20,19 @@ import java.util.stream.LongStream;
 /**
  * Created by murphys on 2/23/17.
  */
-public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Integer> {
+public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> {
 
-    public final int MATRIX_SIZE=1000;
-
-
-    static class IntegerComputeTestArgs extends ServiceArgs {
-        @Parameter(names = "-matrixSize", description = "Size of matrix per dimension", required = false)
+    public static class IntegerComputeTestArgs extends ServiceArgs {
+        @Parameter(names = "-matrixSize", description = "Size of matrix NxN", required = false)
         Integer matrixSize;
+        @Parameter(names = "-iterations", description = "Iterations per matrix multiply", required = false)
+        Integer iterations;
     }
+
+    private final int DEFAULT_MATRIX_SIZE=1000;
+    private final int DEFAULT_ITERATIONS=1;
+
+    private long resultComputationTime;
 
     private IntegerComputeTestProcessor.IntegerComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
         return IntegerComputeTestProcessor.IntegerComputeTestArgs.parse(jacsServiceData.getArgsArray(), new IntegerComputeTestArgs());
@@ -47,36 +51,50 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Intege
     }
 
     @Override
-    protected ServiceComputation<Integer> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected ServiceComputation<Long> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+        IntegerComputeTestArgs args=getArgs(jacsServiceData);
+        int matrixSize=DEFAULT_MATRIX_SIZE;
+        if (args.matrixSize!=null) {
+            matrixSize=args.matrixSize;
+        }
+        int iterations=DEFAULT_ITERATIONS;
+        if (args.iterations!=null) {
+            iterations=args.iterations;
+        }
+        long startTime=new Date().getTime();
         jacsServiceData.getArgs();
-        Random random = new Random(new Date().getTime());
+        Random random = new Random(startTime);
         LongStream longStream = random.longs(0L, 100L);
         PrimitiveIterator.OfLong iterator=longStream.iterator();
-        long[] matrix1=new long[MATRIX_SIZE*MATRIX_SIZE];
-        long[] matrix2=new long[MATRIX_SIZE*MATRIX_SIZE];
-        long[] result=new long[MATRIX_SIZE*MATRIX_SIZE];
+        long[] matrix1=new long[matrixSize*matrixSize];
+        long[] matrix2=new long[matrixSize*matrixSize];
+        long[] result=new long[matrixSize*matrixSize];
         int position=0;
         // Create matrices
-        for (int i=0;i<MATRIX_SIZE;i++) {
-            for (int j=0;j<MATRIX_SIZE;j++) {
+        for (int i=0;i<matrixSize;i++) {
+            for (int j=0;j<matrixSize;j++) {
                 matrix1[position]=iterator.nextLong();
                 matrix2[position]=iterator.nextLong();
                 position++;
             }
         }
         // Do multiply
-        for (int column2=0;column2<MATRIX_SIZE;column2++) {
-            for (int row1=0;row1<MATRIX_SIZE;row1++) {
-                long sum=0L;
-                for (int column1=0;column1<MATRIX_SIZE;column1++) {
-                    for (int row2=0;row2<MATRIX_SIZE;row2++) {
-                        sum+=matrix1[column1*MATRIX_SIZE+row1]*matrix2[column2*MATRIX_SIZE+row2];
+        for (int i=0;i<iterations;i++) {
+            for (int column2=0;column2<matrixSize;column2++) {
+                for (int row1 = 0; row1 < matrixSize; row1++) {
+                    long sum = 0L;
+                    for (int column1 = 0; column1 < matrixSize; column1++) {
+                        for (int row2 = 0; row2 < matrixSize; row2++) {
+                            sum += matrix1[column1 * matrixSize + row1] * matrix2[column2 * matrixSize + row2];
+                        }
                     }
+                    result[column2 * matrixSize + row1] = sum;
                 }
-                result[column2*MATRIX_SIZE+row1]=sum;
             }
         }
-        return null;
+        long doneTime=new Date().getTime();
+        resultComputationTime=doneTime-startTime;
+        return computationFactory.newCompletedComputation(resultComputationTime);
     }
 
     @Override
@@ -85,22 +103,22 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Intege
     }
 
     @Override
-    protected Integer retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected Long retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
         return null;
     }
 
     @Override
     public ServiceMetaData getMetadata() {
-        return null;
+        return ServiceArgs.getMetadata(this.getClass(), new IntegerComputeTestArgs());
     }
 
     @Override
-    public Integer getResult(JacsServiceData jacsServiceData) {
-        return null;
+    public Long getResult(JacsServiceData jacsServiceData) {
+        return new Long(jacsServiceData.getStringifiedResult());
     }
 
     @Override
-    public void setResult(Integer result, JacsServiceData jacsServiceData) {
-
+    public void setResult(Long result, JacsServiceData jacsServiceData) {
+        jacsServiceData.setStringifiedResult(result.toString());
     }
 }
