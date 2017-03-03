@@ -207,12 +207,11 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
     }
 
     public ServiceComputation<T> thenSuspendUntil(ContinuationCond fn) {
-        FutureBasedServiceComputation<Boolean> waitFor = new FutureBasedServiceComputation<>(computationQueue, new ServiceComputationTask<>(null));
+        FutureBasedServiceComputation<Boolean> waitFor = new FutureBasedServiceComputation<>(computationQueue, new ServiceComputationTask<>(this));
         ServiceComputationTask<T> nextTask = new ServiceComputationTask<T>(waitFor);
         nextTask.push(this);
         nextTask.suspend();
         FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, nextTask);
-        this.task.push(waitFor);
         waitFor.submit((continuation) -> {
             if (fn.checkCond()) {
                 waitFor.complete(true);
