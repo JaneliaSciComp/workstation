@@ -11,16 +11,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class ServiceComputationQueue {
 
-    static void runTask(ServiceComputationTask<?> task) {
+    static boolean runTask(ServiceComputationTask<?> task) {
         CoroutineRunner r = new CoroutineRunner(task);
         for (;;) {
             if (!r.execute()) {
-                break;
+                return !task.isSuspended() && task.isDone();
             }
             try {
                 Thread.sleep(50L);
             } catch (InterruptedException e) {
-                break;
+                return false;
             }
         }
     }
@@ -55,8 +55,7 @@ public class ServiceComputationQueue {
                 ServiceComputationTask<?> task = taskQueue.take();
                 if (task.isReady()) {
                     taskExecutor.execute(() -> {
-                        ServiceComputationQueue.runTask(task);
-                        if (!task.isDone()) {
+                        if (!ServiceComputationQueue.runTask(task)) {
                             // if it's not done put it back in the queue
                             taskQueue.offer(task);
                         }

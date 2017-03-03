@@ -66,10 +66,6 @@ class ServiceComputationTask<T> implements Coroutine {
             } while (!head.compareAndSet(oldHead, newHead));
             return oldHead.item;
         }
-
-        void clear() {
-            for (E e = pop(); e != null; e = pop()) ;
-        }
     }
 
     private final CountDownLatch done = new CountDownLatch(1);
