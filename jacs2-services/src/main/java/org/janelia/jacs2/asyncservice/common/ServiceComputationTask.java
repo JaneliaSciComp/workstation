@@ -111,7 +111,16 @@ class ServiceComputationTask<T> implements Coroutine {
         } else {
             for (;;) {
                 if (isReady()) {
-                    break;
+                    if (resultSupplier != null) {
+                        try {
+                            complete(resultSupplier.get(continuation));
+                        } catch (Exception e) {
+                            completeExceptionally(e);
+                        }
+                        return;
+                    } else {
+                        throw new IllegalStateException("No result supplier has been provided");
+                    }
                 }
                 if (suspended) {
                     return;
@@ -122,28 +131,6 @@ class ServiceComputationTask<T> implements Coroutine {
                 } catch (InterruptedException e) {
                     return;
                 }
-            }
-            for (ServiceComputation<?> dep = depStack.top(); ;) {
-                if (dep == null) {
-                    break;
-                }
-                if (dep.isDone()) {
-                    // the current dependency completed successfully - go to the next one
-                    depStack.pop();
-                    dep = depStack.top();
-                } else {
-                    continuation.suspend();
-                }
-            }
-            if (resultSupplier != null) {
-                try {
-                    complete(resultSupplier.get(continuation));
-                } catch (Exception e) {
-                    completeExceptionally(e);
-                }
-                return;
-            } else {
-                throw new IllegalStateException("No result supplier has been provided");
             }
         }
     }
