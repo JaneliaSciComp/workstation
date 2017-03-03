@@ -98,7 +98,6 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                         return false;
                     }
                 })
-                .thenCompose(sd -> this.waitForDependencies(sd))
                 .thenCompose(sd -> this.processData(sd))
                 .thenCompose(sd -> this.postProcessData(sd))
                 .thenApply(sd -> {
