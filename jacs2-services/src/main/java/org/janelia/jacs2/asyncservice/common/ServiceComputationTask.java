@@ -106,6 +106,7 @@ class ServiceComputationTask<T> implements Coroutine {
     }
 
     void tryFire(Continuation continuation) {
+        resume();
         if (isDone()) {
             return;
         } else {
@@ -125,7 +126,6 @@ class ServiceComputationTask<T> implements Coroutine {
                     return;
                 }
                 continuation.suspend();
-                resume();
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
