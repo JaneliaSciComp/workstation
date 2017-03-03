@@ -214,8 +214,8 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
         FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, nextTask);
         waitFor.submit((continuation) -> {
             if (fn.checkCond()) {
-                waitFor.complete(true);
                 nextTask.resume();
+                waitFor.complete(true);
                 return true;
             }
             return false;
