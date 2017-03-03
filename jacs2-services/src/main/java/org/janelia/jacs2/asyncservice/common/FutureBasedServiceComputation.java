@@ -209,11 +209,11 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
         this.task.push(waitFor);
         waitFor.submit((continuation) -> {
             if (fn.checkCond()) {
-                return false;
+                waitFor.complete(true);
+                this.task.resume();
+                return true;
             }
-            waitFor.complete(true);
-            this.task.resume();
-            return true;
+            return false;
         });
         return this;
     }
