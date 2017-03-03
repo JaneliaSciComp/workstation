@@ -107,22 +107,17 @@ class ServiceComputationTask<T> implements Runnable {
             if (isReady() && !isSuspended()) {
                 if (resultSupplier != null) {
                     try {
-                        T r = resultSupplier.get();
-                        if (isSuspended()) {
-                            return;
-                        }
-                        complete(r);
+                        complete(resultSupplier.get());
+                    } catch (SuspendedException e) {
+                        return;
                     } catch (Exception e) {
-                        if (isSuspended()) {
-                            return;
-                        }
                         completeExceptionally(e);
                     }
                     return;
                 } else {
                     throw new IllegalStateException("No result supplier has been provided");
                 }
-            } else if (suspended) {
+            } else if (isSuspended()) {
                 return;
             }
             try {
