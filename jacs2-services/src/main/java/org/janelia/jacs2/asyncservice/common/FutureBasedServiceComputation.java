@@ -1,5 +1,8 @@
 package org.janelia.jacs2.asyncservice.common;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.function.BiConsumer;
@@ -15,6 +18,8 @@ import java.util.stream.Collectors;
  */
 public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
+    private static Logger LOG = LoggerFactory.getLogger(FutureBasedServiceComputation.class);
+
     private static <U> U waitForResult(ServiceComputation<U> computation) {
         for (;;) {
             if (computation.isDone()) {
@@ -23,6 +28,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
             try {
                 Thread.sleep(100L);
             } catch (InterruptedException e) {
+                LOG.error("Interrupt exception", e);
                 throw new SuspendedException(e);
             }
         }
@@ -211,12 +217,12 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
         FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, nextTask);
         waitFor.submit(() -> {
             if (fn.checkCond()) {
-                System.out.println("!!!!!!!!!!!!!!!! RESUME " + nextTask);
+                LOG.debug("Resume {}", nextTask);
                 nextTask.resume();
                 waitFor.complete(true);
                 return true;
             } else {
-                System.out.println("!!!!!!!!!!!!!!!! SUSPEND " + nextTask);
+                LOG.debug("Suspend {}", nextTask);
                 nextTask.suspend();
                 return false;
             }
