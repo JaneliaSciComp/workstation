@@ -18,7 +18,7 @@ public class ServiceComputationQueue {
                 break;
             }
             try {
-                Thread.sleep(500L);
+                Thread.sleep(50L);
             } catch (InterruptedException e) {
                 break;
             }

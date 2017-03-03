@@ -109,7 +109,6 @@ class ServiceComputationTask<T> implements Coroutine {
         if (isDone()) {
             return;
         } else {
-            resume();
             for (;;) {
                 if (isReady() && !suspended) {
                     if (resultSupplier != null) {
