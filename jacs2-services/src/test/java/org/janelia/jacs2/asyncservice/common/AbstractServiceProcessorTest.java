@@ -1,6 +1,7 @@
 package org.janelia.jacs2.asyncservice.common;
 
 import com.google.common.collect.ImmutableList;
+import com.offbynull.coroutines.user.CoroutineRunner;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -150,7 +151,7 @@ public class AbstractServiceProcessorTest {
         doAnswer((invocation -> {
             ServiceComputationTask task = invocation.getArgument(0);
             if (task != null) {
-                task.tryFire();
+                ServiceComputationQueue.runTask(task);
             }
             return null;
         })).when(serviceComputationQueue).submit(any(ServiceComputationTask.class));

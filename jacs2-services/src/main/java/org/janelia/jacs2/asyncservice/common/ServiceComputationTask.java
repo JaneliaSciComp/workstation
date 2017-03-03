@@ -1,11 +1,19 @@
 package org.janelia.jacs2.asyncservice.common;
 
+import com.offbynull.coroutines.user.Continuation;
+import com.offbynull.coroutines.user.Coroutine;
+
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-class ServiceComputationTask<T> {
+class ServiceComputationTask<T> implements Coroutine {
+
+    @FunctionalInterface
+    static interface ContinuationSupplier<T> {
+        T get(Continuation continuation);
+    }
 
     static class ComputeResult<T> {
         final T result;
@@ -67,7 +75,7 @@ class ServiceComputationTask<T> {
 
     private final CountDownLatch done = new CountDownLatch(1);
     private final Stack<ServiceComputation<?>> depStack = new Stack<>();
-    private Supplier<T> resultSupplier;
+    private ContinuationSupplier<T> resultSupplier;
     private ComputeResult<T> result;
 
     ServiceComputationTask(ServiceComputation<?> dep) {
@@ -84,17 +92,22 @@ class ServiceComputationTask<T> {
         completeExceptionally(exc);
     }
 
+    @Override
+    public void run(Continuation continuation) throws Exception {
+        tryFire(continuation);
+    }
+
     void push(ServiceComputation<?> dep) {
         if (dep != null) depStack.push(dep);
     }
 
-    void setResultSupplier(Supplier<T> resultSupplier) {
+    void setResultSupplier(ContinuationSupplier<T> resultSupplier) {
         this.resultSupplier = resultSupplier;
     }
 
-    boolean tryFire() {
+    void tryFire(Continuation continuation) {
         if (isDone()) {
-            return true;
+            return;
         } else {
             for (ServiceComputation<?> dep = depStack.top(); ;) {
                 if (dep == null) {
@@ -105,18 +118,18 @@ class ServiceComputationTask<T> {
                     depStack.pop();
                     dep = depStack.top();
                 } else {
-                    return false;
+                    continuation.suspend();
                 }
             }
             if (resultSupplier != null) {
                 try {
-                    complete(resultSupplier.get());
+                    complete(resultSupplier.get(continuation));
                 } catch (Exception e) {
                     completeExceptionally(e);
                 }
-                return true;
+                return;
             } else {
-                return false;
+                throw new IllegalStateException("No result supplier has been provided");
             }
         }
     }

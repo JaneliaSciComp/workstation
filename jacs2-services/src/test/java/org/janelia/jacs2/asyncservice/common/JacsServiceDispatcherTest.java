@@ -47,7 +47,7 @@ public class JacsServiceDispatcherTest {
         doAnswer((invocation -> {
             ServiceComputationTask task = invocation.getArgument(0);
             if (task != null) {
-                task.tryFire();
+                ServiceComputationQueue.runTask(task);
             }
             return null;
         })).when(serviceComputationQueue).submit(any(ServiceComputationTask.class));
