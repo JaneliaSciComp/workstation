@@ -49,6 +49,7 @@ public class FileCopyProcessorTest {
 
     @Before
     public void setUp() throws IOException {
+        Logger logger = mock(Logger.class);
         ExecutorService executor = mock(ExecutorService.class);
         doAnswer(invocation -> {
             Runnable r = invocation.getArgument(0);
@@ -56,9 +57,8 @@ public class FileCopyProcessorTest {
             return null;
         }).when(executor).execute(any(Runnable.class));
         computationQueue = new ServiceComputationQueue(executor, executor);
-        serviceComputationFactory = new ServiceComputationFactory(computationQueue);
+        serviceComputationFactory = new ServiceComputationFactory(computationQueue, logger);
 
-        Logger logger = mock(Logger.class);
         testProcessor = new FileCopyProcessor(
                 jacsServiceEngine,
                 serviceComputationFactory,

@@ -148,6 +148,7 @@ public class AbstractServiceProcessorTest {
 
     @Before
     public void setUp() {
+        logger = mock(Logger.class);
         ServiceComputationQueue serviceComputationQueue = mock(ServiceComputationQueue.class);
         doAnswer((invocation -> {
             ServiceComputationTask task = invocation.getArgument(0);
@@ -156,14 +157,13 @@ public class AbstractServiceProcessorTest {
             }
             return null;
         })).when(serviceComputationQueue).submit(any(ServiceComputationTask.class));
-        serviceComputationFactory = new ServiceComputationFactory(serviceComputationQueue);
+        serviceComputationFactory = new ServiceComputationFactory(serviceComputationQueue, logger);
 
         testJacsServiceData = new JacsServiceData();
         testJacsServiceData.setId(TEST_ID);
         jacsServiceEngine = mock(JacsServiceEngine.class);
         jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
 
-        logger = mock(Logger.class);
         testSuccessfullProcessor = new TestSuccessfulProcessor(
                 jacsServiceEngine,
                 serviceComputationFactory,
