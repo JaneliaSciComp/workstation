@@ -106,10 +106,10 @@ class ServiceComputationTask<T> implements Coroutine {
     }
 
     void tryFire(Continuation continuation) {
-        resume();
         if (isDone()) {
             return;
         } else {
+            resume();
             for (;;) {
                 if (isReady() && !suspended) {
                     if (resultSupplier != null) {
