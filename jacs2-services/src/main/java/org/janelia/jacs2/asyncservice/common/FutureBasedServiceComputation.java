@@ -211,32 +211,19 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
     }
 
     public ServiceComputation<T> thenSuspendUntil(ContinuationCond fn) {
-        ServiceComputationTask<T> nextTask = new ServiceComputationTask<T>(null);
-        nextTask.suspend();
-        FutureBasedServiceComputation<Boolean> waitFor = new FutureBasedServiceComputation<Boolean>(computationQueue, logger, new ServiceComputationTask<>(this)) {
-            @Override
-            public void complete(Boolean result) {
-                logger.info("Resume {}", nextTask);
-                nextTask.resume();
-                super.complete(result);
-            }
-
-            @Override
-            public void completeExceptionally(Throwable exc) {
-                logger.info("Resume {}", nextTask);
-                nextTask.resume();
-                super.completeExceptionally(exc);
-            }
-        };
-        nextTask.push(waitFor);
+        FutureBasedServiceComputation<Boolean> waitFor = new FutureBasedServiceComputation<Boolean>(computationQueue, logger, new ServiceComputationTask<>(this));
+        ServiceComputationTask<T> nextTask = new ServiceComputationTask<T>(waitFor);
         FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, logger, nextTask);
         waitFor.submit(() -> {
             if (fn.checkCond()) {
+                logger.info("Resume {}", nextTask);
+                nextTask.resume();
                 waitFor.complete(true);
                 return true;
             } else {
                 logger.info("Suspend {}", nextTask);
-                throw new SuspendedException();
+                nextTask.suspend();
+                return false;
             }
         });
         next.submit(() -> {
