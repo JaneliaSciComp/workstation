@@ -24,8 +24,11 @@ import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.gui.dialogs.DownloadDialog;
+import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.gui.support.DownloadItem;
 import org.janelia.it.workstation.browser.gui.support.FileDownloadWorker;
@@ -64,13 +67,22 @@ public final class DownloadWizardAction implements ActionListener {
         this.inputObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectedIds);
     }
     
-    public DownloadWizardAction(List<DomainObject> domainObjects, ResultDescriptor defaultResultDescriptor) {
+    public DownloadWizardAction(List<? extends DomainObject> domainObjects, ResultDescriptor defaultResultDescriptor) {
         this.inputObjects = domainObjects;
         this.defaultResultDescriptor = defaultResultDescriptor;
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
+
+        ActivityLogHelper.logUserAction("DownloadWizardAction.actionPerformed");
+        
+        Boolean legacy = (Boolean)ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.LEGACY_DOWNLOAD_DIALOG);
+        if (legacy!=null && legacy) {
+            DownloadDialog dialog = new DownloadDialog();
+            dialog.showDialog(inputObjects, defaultResultDescriptor);
+            return;
+        }
         
         // Hide the default wizard image, which does not look good on our dark background
         UIDefaults uiDefaults = UIManager.getDefaults();
@@ -125,23 +137,11 @@ public final class DownloadWizardAction implements ActionListener {
             }
         }
     }
-    
 
     private void download(List<DownloadItem> downloadItems) {
 
-        // TODO: move this to screen 5
-//        String filePattern = (String)filePatternCombo.getSelectedItem();
-//        boolean found = false;
-//        for (String pattern : STANDARD_FILE_PATTERNS) {
-//            if (pattern.equals(filePattern)) {
-//                found = true;
-//                break;
-//            }
-//        }
-//        if (!found) {
-//            ConsoleApp.getConsoleApp().setModelProperty(FILE_PATTERN_PROP_NAME, filePattern);
-//        }
-
+        ActivityLogHelper.logUserAction("DownloadWizardAction.beginDownload");
+        
         boolean started = false;
         int remaining = downloadItems.size();
         

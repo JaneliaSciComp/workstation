@@ -3,9 +3,9 @@ package org.janelia.it.workstation.browser.gui.dialogs.download;
 import javax.swing.event.ChangeListener;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.openide.WizardDescriptor;
 import org.openide.util.HelpCtx;
-import org.openide.util.NbPreferences;
 
 public class DownloadWizardPanel3 implements WizardDescriptor.Panel<WizardDescriptor> {
 
@@ -52,6 +52,7 @@ public class DownloadWizardPanel3 implements WizardDescriptor.Panel<WizardDescri
 
     @Override
     public void storeSettings(WizardDescriptor wiz) {
+        ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 3);
         DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
         state.setSplitChannels(getComponent().isSplitChannels());
         state.setOutputFormat(getComponent().getOutputFormat());

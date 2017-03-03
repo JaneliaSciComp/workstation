@@ -3,13 +3,20 @@ package org.janelia.it.workstation.browser.gui.dialogs.download;
 import javax.swing.event.ChangeListener;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
 import org.openide.util.ChangeSupport;
 import org.openide.util.HelpCtx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
 
+    private static final Logger log = LoggerFactory.getLogger(DownloadWizardPanel2.class);
+    
+    private final ChangeSupport changeSupport = new ChangeSupport(this);
+    
     private WizardDescriptor wiz;
     
     /**
@@ -58,8 +65,6 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
         return isValid;
     }
 
-    private ChangeSupport changeSupport = new ChangeSupport(this);
-    
     @Override
     public void addChangeListener(ChangeListener l) {
         changeSupport.addChangeListener(l);
@@ -70,12 +75,18 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
         changeSupport.removeChangeListener(l);
     }
     
+    private boolean firstException = true;
     public final void fireChangeEvent() {
         try {
             validate();
         }
         catch (WizardValidationException e) {
-            wiz.putProperty(WizardDescriptor.PROP_ERROR_MESSAGE, e.getMessage());
+            log.error("Validation error: "+e.getMessage());
+            // We don't create an error message when the panel appears, because the user hasn't done anything yet.
+            if (!firstException) {
+                wiz.putProperty(WizardDescriptor.PROP_ERROR_MESSAGE, e.getMessage());
+            }
+            firstException = false;
         }
         storeSettings(wiz);
         changeSupport.fireChange();
@@ -90,6 +101,7 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
 
     @Override
     public void storeSettings(WizardDescriptor wiz) {
+        ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 2);
         DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
         state.setArtifactDescriptors(getComponent().getArtifactDescriptors());
         // Updated serialized state

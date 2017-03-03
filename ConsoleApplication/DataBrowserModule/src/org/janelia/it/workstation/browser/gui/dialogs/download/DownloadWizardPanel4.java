@@ -8,15 +8,21 @@ import javax.swing.event.ChangeListener;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.support.DownloadItem;
 import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
 import org.openide.util.ChangeSupport;
 import org.openide.util.HelpCtx;
-import org.openide.util.NbPreferences;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DownloadWizardPanel4 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
 
+    private static final Logger log = LoggerFactory.getLogger(DownloadWizardPanel4.class);
+    
+    private final ChangeSupport changeSupport = new ChangeSupport(this);
+    
     private WizardDescriptor wiz;
     
     /**
@@ -78,8 +84,6 @@ public class DownloadWizardPanel4 implements WizardDescriptor.ValidatingPanel<Wi
         return isValid;
     }
 
-    private ChangeSupport changeSupport = new ChangeSupport(this);
-    
     @Override
     public void addChangeListener(ChangeListener l) {
         changeSupport.addChangeListener(l);
@@ -110,6 +114,7 @@ public class DownloadWizardPanel4 implements WizardDescriptor.ValidatingPanel<Wi
 
     @Override
     public void storeSettings(WizardDescriptor wiz) {
+        ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 4);
         DownloadWizardState state = (DownloadWizardState) wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
         state.setFlattenStructure(getComponent().isFlattenStructure());
         state.setFilenamePattern(getComponent().getFilenamePattern());

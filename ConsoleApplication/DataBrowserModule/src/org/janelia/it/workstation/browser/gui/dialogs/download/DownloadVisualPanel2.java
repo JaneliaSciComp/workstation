@@ -32,7 +32,6 @@ import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -247,14 +246,12 @@ public final class DownloadVisualPanel2 extends JPanel {
     }
 
     private void updateArtifactDescriptors() {
-        log.info("updating descriptors");
         artifactDescriptors = new ArrayList<>();
         for (ArtifactDescriptor artifactDescriptor : artifactCheckboxes.keySet()) {
             JCheckBox artifactCheckbox = artifactCheckboxes.get(artifactDescriptor);
             if (artifactCheckbox.isSelected()) {
                 
                 List<FileType> fileTypes = artifactDescriptor.getFileTypes();
-                log.info("clearing file types for "+artifactDescriptor);
                 fileTypes.clear();
                 
                 HashMap<FileType, JCheckBox> fileTypeMap = fileTypesCheckboxes.get(artifactDescriptor);

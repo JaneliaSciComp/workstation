@@ -26,6 +26,7 @@ import org.janelia.it.workstation.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.gui.dialogs.DownloadDialog;
+import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadWizardAction;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
@@ -199,13 +200,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         final ResultDescriptor descriptor = new ResultDescriptor(result);
         
         JMenuItem downloadItem = new JMenuItem("  Download...");
-        downloadItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) { 
-                DownloadDialog dialog = new DownloadDialog();
-                dialog.showDialog(Arrays.asList(sample), descriptor);
-            }
-        });
+        downloadItem.addActionListener(new DownloadWizardAction(Arrays.asList(sample), descriptor));
         
         if (path==null) {
         	downloadItem.setEnabled(false);

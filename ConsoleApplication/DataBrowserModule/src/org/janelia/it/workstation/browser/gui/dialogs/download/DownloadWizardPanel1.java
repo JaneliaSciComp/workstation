@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import javax.swing.event.ChangeListener;
 
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.openide.WizardDescriptor;
 import org.openide.util.HelpCtx;
 
@@ -50,6 +51,7 @@ public class DownloadWizardPanel1 implements WizardDescriptor.Panel<WizardDescri
 
     @Override
     public void storeSettings(WizardDescriptor wiz) {
+        ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 1);
         DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
         // These only need to be calculated once. We don't override settings if the user goes back in the wizard.
         if (state.getDownloadObjects()==null) {

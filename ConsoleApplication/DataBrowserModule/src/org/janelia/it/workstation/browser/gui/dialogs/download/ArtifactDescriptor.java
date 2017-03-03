@@ -16,6 +16,15 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+/**
+ * An artifact descriptor describes a particular type of resource that is relative to a single 
+ * domain object. For example, the LSMs relative to a sample, or the object itself. 
+ * 
+ * It also describes a set of file types of interest for that resource. For example, the MIPs, or
+ * the lossless stack.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 abstract class ArtifactDescriptor {
 

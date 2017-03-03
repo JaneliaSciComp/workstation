@@ -838,24 +838,9 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getDownloadItem() {
-
         String label = domainObjectList.size() > 1 ? "Download " + domainObjectList.size() + " Items..." : "Download...";
-
         JMenuItem menuItem = new JMenuItem("  "+label);
         menuItem.addActionListener(new DownloadWizardAction(domainObjectList, resultDescriptor));
-//        
-//        toggleHudMI.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                ActivityLogHelper.logUserAction("DomainObjectContextMenu.download", domainObject);
-//                //DownloadDialog dialog = new DownloadDialog();
-//                //dialog.showDialog(domainObjectList, resultDescriptor);
-//                
-//                DownloadWizardAction action = new DownloadWizardAction(domainObjectList, resultDescriptor);
-//                action.actionPerformed(e);
-//            }
-//        });
-
         return menuItem;
     }
 

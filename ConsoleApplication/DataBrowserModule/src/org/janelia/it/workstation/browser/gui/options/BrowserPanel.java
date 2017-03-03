@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.gui.options;
 
 import static org.janelia.it.workstation.browser.gui.options.OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY;
 import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.LEGACY_DOWNLOAD_DIALOG;
 import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY;
 import static org.janelia.it.workstation.browser.gui.options.OptionConstants.UNLOAD_IMAGES_PROPERTY;
 
@@ -28,6 +29,7 @@ final class BrowserPanel extends javax.swing.JPanel {
     private final BrowserOptionsPanelController controller;
     private final GroupedKeyValuePanel mainPanel;
     
+    private JCheckBox downloadDialogCheckbox;
     private JCheckBox unloadImagesCheckbox;
     private JCheckBox disableImageDrag;
     private JCheckBox showAnnotationTables;
@@ -93,6 +95,25 @@ final class BrowserPanel extends javax.swing.JPanel {
 //        }
 //
 //        mainPanel.addItem("2D Image Renderer", pnlRendererOptions);
+
+        // Download Dialog
+
+        downloadDialogCheckbox = new JCheckBox();
+        downloadDialogCheckbox.setText("Use the legacy download dialog instead of the wizard");
+        downloadDialogCheckbox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                controller.changed();
+            }
+        });
+        
+        if (app.getModelProperty(LEGACY_DOWNLOAD_DIALOG) == null) {
+            app.setModelProperty(LEGACY_DOWNLOAD_DIALOG, Boolean.FALSE);
+        }
+        else {
+            downloadDialogCheckbox.setSelected((Boolean) app.getModelProperty(LEGACY_DOWNLOAD_DIALOG));
+        }
+
+        mainPanel.addItem(downloadDialogCheckbox);
 
         // Unload Images
 
@@ -182,6 +203,11 @@ final class BrowserPanel extends javax.swing.JPanel {
 //            log.info("Saving renderer setting: "+newRenderer);
 //            sessionMgr.setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, newRenderer);
 //        }
+
+        if (downloadDialogCheckbox.isSelected() != (Boolean) app.getModelProperty(LEGACY_DOWNLOAD_DIALOG)) {
+            log.info("Saving legacy download dialog setting: "+downloadDialogCheckbox.isSelected());
+            app.setModelProperty(LEGACY_DOWNLOAD_DIALOG, downloadDialogCheckbox.isSelected());
+        }
         
         if (unloadImagesCheckbox.isSelected() != (Boolean) app.getModelProperty(UNLOAD_IMAGES_PROPERTY)) {
             log.info("Saving unload images setting: "+unloadImagesCheckbox.isSelected());

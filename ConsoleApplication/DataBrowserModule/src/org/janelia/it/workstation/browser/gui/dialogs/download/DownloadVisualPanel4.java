@@ -105,7 +105,6 @@ public final class DownloadVisualPanel4 extends JPanel {
         filePatternCombo = new JComboBox<>();
         filePatternCombo.setEditable(true);
         filePatternCombo.setToolTipText("Select a standard file naming pattern, or enter your own.");
-        filePatternCombo.addItemListener(changeListener);
         DefaultComboBoxModel<String> fpmodel = (DefaultComboBoxModel<String>) filePatternCombo.getModel();
         String userFilePattern = (String)ConsoleApp.getConsoleApp().getModelProperty(FILE_PATTERN_PROP_NAME);
         if (userFilePattern!=null) {
@@ -117,6 +116,7 @@ public final class DownloadVisualPanel4 extends JPanel {
         if (filenamePattern != null) {
             fpmodel.setSelectedItem(filenamePattern);
         }
+        filePatternCombo.addItemListener(changeListener);
 
         attrPanel.addItem("Naming pattern", filePatternCombo, "width 200:300:600, grow");
 
@@ -217,7 +217,8 @@ public final class DownloadVisualPanel4 extends JPanel {
     }
     
     public String getFilenamePattern() {
-        return (String)filePatternCombo.getSelectedItem();
+        DefaultComboBoxModel<String> fpmodel = (DefaultComboBoxModel<String>) filePatternCombo.getModel();
+        return (String)fpmodel.getSelectedItem();
     }
     
     public List<DownloadItem> getDownloadItems() {
