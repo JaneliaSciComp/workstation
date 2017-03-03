@@ -213,8 +213,6 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
     public ServiceComputation<T> thenSuspendUntil(ContinuationCond fn) {
         FutureBasedServiceComputation<Boolean> waitFor = new FutureBasedServiceComputation<Boolean>(computationQueue, logger, new ServiceComputationTask<>(this));
         ServiceComputationTask<T> nextTask = new ServiceComputationTask<T>(waitFor);
-        logger.info("Suspend {}", nextTask);
-        nextTask.suspend();
         FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, logger, nextTask);
         waitFor.submit(() -> {
             if (fn.checkCond()) {
@@ -223,7 +221,11 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
                 waitFor.complete(true);
                 return true;
             } else {
-                return false;
+                if (nextTask.isSuspended()) {
+                    logger.info("Suspend {}", nextTask);
+                    nextTask.suspend();
+                }
+                throw new SuspendedException();
             }
         });
         next.submit(() -> {
