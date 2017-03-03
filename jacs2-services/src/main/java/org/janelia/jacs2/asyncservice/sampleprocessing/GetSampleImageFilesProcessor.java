@@ -115,8 +115,7 @@ public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<
 
     @Override
     protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        // this could be made more resilient and really check for files but right now I don't see a need for it.
-        return true;
+        return checkForDependenciesCompletion(jacsServiceData);
     }
 
     @Override

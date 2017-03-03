@@ -122,22 +122,7 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         }
     }
 
-    protected void suspend(JacsServiceData jacsServiceData) {
-        if (!jacsServiceData.hasCompleted()) {
-            if (!jacsServiceData.hasBeenSuspended()) {
-                updateStateToSuspended(jacsServiceData);
-            }
-            throw new SuspendedException(jacsServiceData.toString());
-        }
-    }
-
-    private void updateStateToSuspended(JacsServiceData jacsServiceData) {
-        jacsServiceData.setState(JacsServiceState.SUSPENDED);
-        jacsServiceDataPersistence.save(jacsServiceData);
-        jacsServiceData.addEvent(JacsServiceEventTypes.SUSPEND, String.format("Suspended: %s", jacsServiceData.getName()));
-    }
-
-    private boolean checkForDependenciesCompletion(JacsServiceData jacsServiceData) {
+    protected boolean checkForDependenciesCompletion(JacsServiceData jacsServiceData) {
         List<JacsServiceData> running = new ArrayList<>();
         List<JacsServiceData> failed = new ArrayList<>();
         JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
@@ -170,6 +155,21 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
             throw new ComputationException(jacsServiceData, "Service " + jacsServiceData.getId() + " timed out");
         }
         return false;
+    }
+
+    protected void suspend(JacsServiceData jacsServiceData) {
+        if (!jacsServiceData.hasCompleted()) {
+            if (!jacsServiceData.hasBeenSuspended()) {
+                updateStateToSuspended(jacsServiceData);
+            }
+            throw new SuspendedException(jacsServiceData.toString());
+        }
+    }
+
+    private void updateStateToSuspended(JacsServiceData jacsServiceData) {
+        jacsServiceData.setState(JacsServiceState.SUSPENDED);
+        jacsServiceDataPersistence.save(jacsServiceData);
+        jacsServiceData.addEvent(JacsServiceEventTypes.SUSPEND, String.format("Suspended: %s", jacsServiceData.getName()));
     }
 
     protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
