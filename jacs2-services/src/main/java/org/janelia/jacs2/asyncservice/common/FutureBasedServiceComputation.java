@@ -23,9 +23,6 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
                 return computation.get();
             }
             continuation.suspend();
-            if (computation.isSuspended()) {
-                throw new SuspendedException();
-            }
         }
     }
 
