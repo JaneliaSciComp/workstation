@@ -45,6 +45,7 @@ public final class DownloadVisualPanel4 extends JPanel {
             "{Line}/{Sample Name}.{Extension}"
     };
 
+    private DownloadWizardPanel4 wizardPanel;
     private final Debouncer debouncer = new Debouncer();
     
     // GUI
@@ -64,8 +65,9 @@ public final class DownloadVisualPanel4 extends JPanel {
     
     // Outputs
     private List<DownloadItem> downloadItems = new ArrayList<>();
-    
-    public DownloadVisualPanel4() {
+
+    public DownloadVisualPanel4(DownloadWizardPanel4 wizardPanel) {
+        this.wizardPanel = wizardPanel;
         initComponents();
     }
 
@@ -139,8 +141,6 @@ public final class DownloadVisualPanel4 extends JPanel {
 
     private void populateDownloadItemList(final Callable<Void> success) {
 
-        log.info("Repopulating download item list");
-        
         if (!debouncer.queue(success)) {
             log.debug("Skipping populateDownloadItemList, since there is an operation already in progress");
             return;
@@ -157,20 +157,20 @@ public final class DownloadVisualPanel4 extends JPanel {
 
                 for(DownloadObject downloadObject : downloadObjects) {
                     DomainObject domainObject = downloadObject.getDomainObject();
-                    log.info("Inspecting download object '{}'", domainObject);
+                    log.debug("Inspecting download object '{}'", domainObject);
                     
                     for (ArtifactDescriptor artifactDescriptor : artifactDescriptors) {
-                        log.info("  Checking artifact descriptor '{}'", artifactDescriptor);
+                        log.debug("  Checking artifact descriptor '{}'", artifactDescriptor);
 
                         for(DomainObject describedObject : artifactDescriptor.getDescribedObjects(domainObject)) {
-                            log.info("    Checking described object '{}'", describedObject);
+                            log.debug("    Checking described object '{}'", describedObject);
                             ResultDescriptor resultDescriptor = null;
                             if (artifactDescriptor instanceof ResultArtifactDescriptor) {
                                 ResultArtifactDescriptor rad = (ResultArtifactDescriptor)artifactDescriptor;
                                 resultDescriptor = rad.getResultDescriptor();
                             }
                             for (FileType fileType : artifactDescriptor.getFileTypes()) {
-                                log.info("      Adding item for file type '{}'", fileType);
+                                log.debug("      Adding item for file type '{}'", fileType);
                                 DownloadItem downloadItem = new DownloadItem(downloadObject.getPath(), describedObject);
                                 downloadItem.init(resultDescriptor, fileType.name(), outputExtension, splitChannels, flattenStructure, filenamePattern);
                                 downloadItems.add(downloadItem);
@@ -182,19 +182,23 @@ public final class DownloadVisualPanel4 extends JPanel {
             
             @Override
             protected void hadSuccess() {
-
+                
                 int count = 0;
                 DefaultListModel<DownloadItem> dlm = (DefaultListModel<DownloadItem>) downloadItemList.getModel();
                 dlm.removeAllElements();
                 for (DownloadItem downloadItem : downloadItems) {
                     count += downloadItem.getSourceFile()!=null ? 1 : 0;
                     dlm.addElement(downloadItem);
-                    log.info("Adding item "+downloadItem.getTargetFile());
+                    log.debug("Adding item "+downloadItem.getTargetFile());
                 }
                 
+                // Update GUI
                 downloadItemList.updateUI();
-                
                 downloadItemCountLabel.setText(count+" files");
+                
+                // Update Wizard
+                triggerValidation();
+                
                 debouncer.success();
             }
 
@@ -218,6 +222,10 @@ public final class DownloadVisualPanel4 extends JPanel {
     
     public List<DownloadItem> getDownloadItems() {
         return downloadItems;
+    }
+
+    private void triggerValidation() {
+        wizardPanel.fireChangeEvent();
     }
     
     /**

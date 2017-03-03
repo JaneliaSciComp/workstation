@@ -11,8 +11,6 @@ import org.slf4j.LoggerFactory;
 
 public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
 
-    private static final Logger log = LoggerFactory.getLogger(DownloadWizardPanel2.class);
-    
     private WizardDescriptor wiz;
     
     /**
@@ -62,12 +60,6 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
     
     @Override
     public boolean isValid() {
-        // If it is always OK to press Next or Finish, then:
-        //return true;
-        // If it depends on some condition (form filled out...) and
-        // this condition changes (last form field filled in...) then
-        // use ChangeSupport to implement add/removeChangeListener below.
-        // WizardDescriptor.ERROR/WARNING/INFORMATION_MESSAGE will also be useful.
         return isValid;
     }
 
@@ -106,7 +98,6 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
         DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
         state.setArtifactDescriptors(getComponent().getArtifactDescriptors());
         //NbPreferences.forModule(DownloadWizardState.class).putBoolean("has3d", state.has3d());
-//        NbPreferences.forModule(DownloadWizardState.class).put("state", state.serialize());
     }
 
 }
