@@ -110,7 +110,7 @@ class ServiceComputationTask<T> implements Coroutine {
             return;
         } else {
             for (;;) {
-                if (isReady()) {
+                if (isReady() && !suspended) {
                     if (resultSupplier != null) {
                         try {
                             complete(resultSupplier.get(continuation));
@@ -121,8 +121,7 @@ class ServiceComputationTask<T> implements Coroutine {
                     } else {
                         throw new IllegalStateException("No result supplier has been provided");
                     }
-                }
-                if (suspended) {
+                } else if (suspended) {
                     return;
                 }
                 continuation.suspend();
