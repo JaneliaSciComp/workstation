@@ -105,12 +105,6 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
     }
 
     @Override
-    protected List<JacsServiceData> submitAllDependencies(JacsServiceData jacsServiceData) {
-        BasicMIPsAndMoviesArgs args = getArgs(jacsServiceData);
-        return ImmutableList.of(submitFijiService(args, jacsServiceData));
-    }
-
-    @Override
     protected ServiceComputation<JacsServiceData> processData(JacsServiceData jacsServiceData) {
         return createComputation(jacsServiceData)
                 .thenCompose(this::waitForDependencies)
@@ -122,6 +116,12 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
                     return jacsServiceData;
                 })
                 .thenCompose(this::waitForDependencies);
+    }
+
+    @Override
+    protected List<JacsServiceData> submitAllDependencies(JacsServiceData jacsServiceData) {
+        BasicMIPsAndMoviesArgs args = getArgs(jacsServiceData);
+        return ImmutableList.of(submitFijiService(args, jacsServiceData));
     }
 
     private Path getResultsDir(BasicMIPsAndMoviesArgs args) {
