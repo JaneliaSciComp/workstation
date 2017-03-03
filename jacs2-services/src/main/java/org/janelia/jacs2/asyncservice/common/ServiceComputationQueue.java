@@ -1,7 +1,5 @@
 package org.janelia.jacs2.asyncservice.common;
 
-
-import com.offbynull.coroutines.user.CoroutineRunner;
 import org.janelia.jacs2.cdi.qualifier.SuspendedTaskExecutor;
 
 import javax.inject.Inject;
@@ -12,17 +10,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ServiceComputationQueue {
 
     static boolean runTask(ServiceComputationTask<?> task) {
-        CoroutineRunner r = new CoroutineRunner(task);
-        for (;;) {
-            if (!r.execute()) {
-                return !task.isSuspended() && task.isDone();
-            }
-            try {
-                Thread.sleep(50L);
-            } catch (InterruptedException e) {
-                return false;
-            }
-        }
+        task.run();
+        return task.isDone();
     }
 
     private final ExecutorService taskExecutor;
