@@ -104,7 +104,7 @@ class ServiceComputationTask<T> implements Runnable {
             return;
         }
         for (;;) {
-            if (isReady()) {
+            if (isReady() && !isSuspended()) {
                 if (resultSupplier != null) {
                     try {
                         T r = resultSupplier.get();
