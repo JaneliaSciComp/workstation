@@ -1,23 +1,25 @@
 package org.janelia.jacs2.asyncservice.common;
 
 import org.janelia.jacs2.cdi.qualifier.SuspendedTaskExecutor;
+import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.concurrent.ExecutorService;
 
 @Singleton
 public class ServiceComputationFactory {
 
     private final ServiceComputationQueue computationQueue;
+    private final Logger logger;
 
     @Inject
-    public ServiceComputationFactory(ServiceComputationQueue computationQueue) {
+    public ServiceComputationFactory(ServiceComputationQueue computationQueue, Logger logger) {
         this.computationQueue = computationQueue;
+        this.logger = logger;
     }
 
     public <T> ServiceComputation<T> newComputation() {
-        return new FutureBasedServiceComputation<T>(computationQueue);
+        return new FutureBasedServiceComputation<T>(computationQueue, logger);
     }
 
     /**
@@ -27,7 +29,7 @@ public class ServiceComputationFactory {
      * @return
      */
     public <T> ServiceComputation<T> newCompletedComputation(T result) {
-        return new FutureBasedServiceComputation<>(computationQueue, result);
+        return new FutureBasedServiceComputation<>(computationQueue, logger, result);
     }
 
     /**
@@ -37,6 +39,6 @@ public class ServiceComputationFactory {
      * @return a ServiceComputation that has a result of type <T></T>
      */
     public <T> ServiceComputation<T> newFailedComputation(Throwable exc) {
-        return new FutureBasedServiceComputation<T>(computationQueue, exc);
+        return new FutureBasedServiceComputation<T>(computationQueue, logger, exc);
     }
 }

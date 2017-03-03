@@ -18,8 +18,6 @@ import java.util.stream.Collectors;
  */
 public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
-    private static Logger LOG = LoggerFactory.getLogger(FutureBasedServiceComputation.class);
-
     private static <U> U waitForResult(ServiceComputation<U> computation) {
         for (;;) {
             if (computation.isDone()) {
@@ -28,30 +26,31 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
             try {
                 Thread.sleep(100L);
             } catch (InterruptedException e) {
-                LOG.error("Interrupt exception", e);
                 throw new SuspendedException(e);
             }
         }
     }
 
     private final ServiceComputationQueue computationQueue;
+    private final Logger logger;
     private final ServiceComputationTask<T> task;
 
-    FutureBasedServiceComputation(ServiceComputationQueue computationQueue, ServiceComputationTask<T> task) {
+    FutureBasedServiceComputation(ServiceComputationQueue computationQueue, Logger logger, ServiceComputationTask<T> task) {
         this.computationQueue = computationQueue;
+        this.logger = logger;
         this.task = task;
     }
 
-    FutureBasedServiceComputation(ServiceComputationQueue computationQueue) {
-        this(computationQueue, new ServiceComputationTask<>(null));
+    FutureBasedServiceComputation(ServiceComputationQueue computationQueue, Logger logger) {
+        this(computationQueue, logger, new ServiceComputationTask<>(null));
     }
 
-    FutureBasedServiceComputation(ServiceComputationQueue computationQueue, T result) {
-        this(computationQueue, new ServiceComputationTask<>(null, result));
+    FutureBasedServiceComputation(ServiceComputationQueue computationQueue, Logger logger, T result) {
+        this(computationQueue, logger, new ServiceComputationTask<>(null, result));
     }
 
-    FutureBasedServiceComputation(ServiceComputationQueue computationQueue, Throwable exc) {
-        this(computationQueue, new ServiceComputationTask<>(null, exc));
+    FutureBasedServiceComputation(ServiceComputationQueue computationQueue, Logger logger, Throwable exc) {
+        this(computationQueue, logger, new ServiceComputationTask<>(null, exc));
     }
 
     @Override
@@ -102,7 +101,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
     @Override
     public ServiceComputation<T> exceptionally(Function<Throwable, ? extends T> fn) {
-        FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, new ServiceComputationTask<>(this));
+        FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
         next.submit(() -> {
             try {
                 T r = waitForResult(this);
@@ -117,7 +116,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
     @Override
     public <U> ServiceComputation<U> thenApply(Function<? super T, ? extends U> fn) {
-        FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(computationQueue, new ServiceComputationTask<>(this));
+        FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
         next.submit(() -> {
             try {
                 T r = waitForResult(this);
@@ -132,8 +131,8 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
     @Override
     public <U> ServiceComputation<U> thenCompose(Function<? super T, ? extends ServiceComputation<U>> fn) {
-        FutureBasedServiceComputation<ServiceComputation<U>> nextStage = new FutureBasedServiceComputation<>(computationQueue, new ServiceComputationTask<>(this));
-        FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(computationQueue, new ServiceComputationTask<>(nextStage));
+        FutureBasedServiceComputation<ServiceComputation<U>> nextStage = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
+        FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(nextStage));
         nextStage.submit(() -> {
             try {
                 T r = waitForResult(this);
@@ -158,7 +157,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
     @Override
     public ServiceComputation<T> whenComplete(BiConsumer<? super T, ? super Throwable> action) {
-        FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, new ServiceComputationTask<>(this));
+        FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
         next.submit(() -> {
             try {
                 T r = waitForResult(this);
@@ -177,7 +176,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
     public <U, V> ServiceComputation<V> thenCombine(ServiceComputation<U> otherComputation, BiFunction<? super T, ? super U, ? extends V> fn) {
         ServiceComputationTask<V> nextTask = new ServiceComputationTask<>(this);
         nextTask.push(otherComputation);
-        FutureBasedServiceComputation<V> next = new FutureBasedServiceComputation<>(computationQueue, nextTask);
+        FutureBasedServiceComputation<V> next = new FutureBasedServiceComputation<>(computationQueue, logger, nextTask);
         next.submit(() -> {
             try {
                 T r = waitForResult(this);
@@ -195,7 +194,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
     public <U> ServiceComputation<U> thenCombineAll(List<ServiceComputation<?>> otherComputations, BiFunction<? super T, List<?>, ? extends U> fn) {
         ServiceComputationTask<U> nextTask = new ServiceComputationTask<>(this);
         otherComputations.forEach(nextTask::push);
-        FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(computationQueue, nextTask);
+        FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(computationQueue, logger, nextTask);
         next.submit(() -> {
             try {
                 T r = waitForResult(this);
@@ -212,17 +211,17 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
     }
 
     public ServiceComputation<T> thenSuspendUntil(ContinuationCond fn) {
-        FutureBasedServiceComputation<Boolean> waitFor = new FutureBasedServiceComputation<>(computationQueue, new ServiceComputationTask<>(this));
+        FutureBasedServiceComputation<Boolean> waitFor = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
         ServiceComputationTask<T> nextTask = new ServiceComputationTask<T>(waitFor);
-        FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, nextTask);
+        FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, logger, nextTask);
         waitFor.submit(() -> {
             if (fn.checkCond()) {
-                LOG.debug("Resume {}", nextTask);
+                logger.debug("Resume {}", nextTask);
                 nextTask.resume();
                 waitFor.complete(true);
                 return true;
             } else {
-                LOG.debug("Suspend {}", nextTask);
+                logger.debug("Suspend {}", nextTask);
                 nextTask.suspend();
                 return false;
             }
