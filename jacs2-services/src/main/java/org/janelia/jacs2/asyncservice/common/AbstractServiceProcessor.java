@@ -69,6 +69,9 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                         .setState(serviceState)
                         .addArg(Stream.of(args).flatMap(arg -> Stream.of(arg.toStringArray())).toArray(String[]::new));
         executionContext.getWaitFor().forEach(sd -> jacsServiceDataBuilder.addDependency(sd));
+        if (executionContext.getParentServiceData() != null) {
+            executionContext.getParentServiceData().getDependeciesIds().forEach(did -> jacsServiceDataBuilder.addDependencyId(did));
+        }
         JacsServiceData jacsServiceData = jacsServiceDataBuilder.build();
         return jacsServiceEngine.submitSingleService(jacsServiceData);
     }
@@ -82,6 +85,18 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
                         this.submitAllDependencies(sd);
                     }
                     return sd;
+                })
+                .thenSuspendUntil(() -> {
+                    if (checkForDependenciesCompletion(jacsServiceData)) {
+                        if (jacsServiceData.hasBeenSuspended()) {
+                            jacsServiceData.setState(JacsServiceState.RUNNING);
+                            jacsServiceDataPersistence.save(jacsServiceData);
+                        }
+                        return true;
+                    } else {
+                        suspend(jacsServiceData);
+                        return false;
+                    }
                 })
                 .thenCompose(sd -> this.waitForDependencies(sd))
                 .thenCompose(sd -> this.processData(sd))

@@ -73,6 +73,11 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
         return task.isCompletedExceptionally();
     }
 
+    @Override
+    public boolean isSuspended() {
+        return task.isSuspended();
+    }
+
     public void complete(T result) {
         task.complete(result);
     }
@@ -196,6 +201,21 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
             return next.get();
         });
         return next;
+    }
+
+    public ServiceComputation<T> thenSuspendUntil(ContinuationCond fn) {
+        this.task.suspend();
+        FutureBasedServiceComputation<Boolean> waitFor = new FutureBasedServiceComputation<>(computationQueue, new ServiceComputationTask<>(null));
+        this.task.push(waitFor);
+        waitFor.submit((continuation) -> {
+            if (fn.checkCond()) {
+                return false;
+            }
+            waitFor.complete(true);
+            this.task.resume();
+            return true;
+        });
+        return this;
     }
 
     private void submit(ServiceComputationTask.ContinuationSupplier<T> fn) {

@@ -49,6 +49,11 @@ public class JacsServiceDataBuilder {
         return this;
     }
 
+    public JacsServiceDataBuilder addDependencyId(Number serviceDependencyId) {
+        serviceData.addServiceDependencyId(serviceDependencyId);
+        return this;
+    }
+
     public JacsServiceData build() {
         if (serviceContext != null) {
             serviceContext.addEvent(JacsServiceEventTypes.CREATE_CHILD_SERVICE, String.format("Create child service %s %s", serviceData.getName(), serviceData.getArgs()));

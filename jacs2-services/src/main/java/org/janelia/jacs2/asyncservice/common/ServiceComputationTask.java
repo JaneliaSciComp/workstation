@@ -76,6 +76,7 @@ class ServiceComputationTask<T> implements Coroutine {
     private final Stack<ServiceComputation<?>> depStack = new Stack<>();
     private ContinuationSupplier<T> resultSupplier;
     private ComputeResult<T> result;
+    private volatile boolean suspended;
 
     ServiceComputationTask(ServiceComputation<?> dep) {
         push(dep);
@@ -108,6 +109,20 @@ class ServiceComputationTask<T> implements Coroutine {
         if (isDone()) {
             return;
         } else {
+            for (;;) {
+                if (isReady()) {
+                    break;
+                }
+                if (suspended) {
+                    return;
+                }
+                continuation.suspend();
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
             for (ServiceComputation<?> dep = depStack.top(); ;) {
                 if (dep == null) {
                     break;
@@ -129,6 +144,21 @@ class ServiceComputationTask<T> implements Coroutine {
                 return;
             } else {
                 throw new IllegalStateException("No result supplier has been provided");
+            }
+        }
+    }
+
+    boolean isReady() {
+        for (ServiceComputation<?> dep = depStack.top(); ;) {
+            if (dep == null) {
+                return !suspended;
+            }
+            if (dep.isDone()) {
+                // the current dependency completed successfully - go to the next one
+                depStack.pop();
+                dep = depStack.top();
+            } else {
+                return false;
             }
         }
     }
@@ -158,5 +188,17 @@ class ServiceComputationTask<T> implements Coroutine {
     void completeExceptionally(Throwable exc) {
         this.result = new ComputeResult<>(null, exc);
         done.countDown();
+    }
+
+    boolean isSuspended() {
+        return suspended;
+    }
+
+    void suspend() {
+        suspended = true;
+    }
+
+    void resume() {
+        suspended = false;
     }
 }
