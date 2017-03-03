@@ -151,7 +151,7 @@ class ServiceComputationTask<T> implements Coroutine {
     boolean isReady() {
         for (ServiceComputation<?> dep = depStack.top(); ;) {
             if (dep == null) {
-                return !suspended;
+                return true;
             }
             if (dep.isDone()) {
                 // the current dependency completed successfully - go to the next one
