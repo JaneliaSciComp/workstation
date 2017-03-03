@@ -40,6 +40,18 @@ public class ServiceComputationQueue {
     private void executeTasks() {
         for (;;) {
             try {
+                cycleThroughAvailableTasks();
+                Thread.sleep(100L);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+    }
+
+    private void cycleThroughAvailableTasks() {
+        int n = taskQueue.size();
+        for (int i = 0; i < n; i++) {
+            try {
                 ServiceComputationTask<?> task = taskQueue.take();
                 if (task.isReady()) {
                     taskExecutor.execute(() -> {
@@ -53,7 +65,6 @@ public class ServiceComputationQueue {
                     // if the task is not ready put it back in the queue
                     taskQueue.offer(task);
                 }
-                Thread.sleep(500L);
             } catch (InterruptedException e) {
                 break;
             }
