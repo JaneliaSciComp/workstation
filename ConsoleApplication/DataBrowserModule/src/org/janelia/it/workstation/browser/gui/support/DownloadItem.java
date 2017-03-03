@@ -102,9 +102,11 @@ public class DownloadItem {
             // Try separation
             PipelineResult result = (PipelineResult)fileProvider;
             NeuronSeparation separation = result.getLatestSeparationResult();
-            sourceFilePath = DomainUtils.getFilepath(separation, fileType); 
-            if (sourceFilePath==null) {
-                sourceFilePath = getStaticPath(separation, fileType);
+            if (separation!=null) {
+                sourceFilePath = DomainUtils.getFilepath(separation, fileType); 
+                if (sourceFilePath==null) {
+                    sourceFilePath = getStaticPath(separation, fileType);
+                }
             }
         }
         

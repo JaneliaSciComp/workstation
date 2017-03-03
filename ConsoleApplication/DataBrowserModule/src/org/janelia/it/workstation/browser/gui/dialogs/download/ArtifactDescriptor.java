@@ -14,14 +14,17 @@ import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 abstract class ArtifactDescriptor {
 
-    private final List<FileType> fileTypes = new ArrayList<>();
-    
-    protected ArtifactDescriptor() {
-        fileTypes.add(FileType.FirstAvailable3d);
+    private List<FileType> fileTypes = new ArrayList<>();
+        
+    public void setFileTypes(List<FileType> fileTypes) {
+        this.fileTypes = fileTypes;
     }
-    
+
     public List<FileType> getFileTypes() {
         return fileTypes;
     }
@@ -29,11 +32,13 @@ abstract class ArtifactDescriptor {
     public abstract List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception;
     
     public abstract List<Object> getFileSources(DomainObject sourceObject) throws Exception;
-    
 }
 
 class SelfArtifactDescriptor extends ArtifactDescriptor {
 
+    public SelfArtifactDescriptor() {
+    }
+    
     public List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception {
         List<DomainObject> objects = new ArrayList<>();
         objects.add(sourceObject);
@@ -65,9 +70,20 @@ class SelfArtifactDescriptor extends ArtifactDescriptor {
 class LSMArtifactDescriptor extends ArtifactDescriptor {
 
     private String objective;
+
+    public LSMArtifactDescriptor() {
+    }
     
     public LSMArtifactDescriptor(String objective) {
         this.objective = objective;
+    }
+
+    public void setObjective(String objective) {
+        this.objective = objective;
+    }
+
+    public String getObjective() {
+        return objective;
     }
 
     public List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception {
@@ -127,7 +143,14 @@ class ResultArtifactDescriptor extends ArtifactDescriptor {
     
     private ResultDescriptor resultDescriptor;
 
+    public ResultArtifactDescriptor() {
+    }
+    
     public ResultArtifactDescriptor(ResultDescriptor resultDescriptor) {
+        this.resultDescriptor = resultDescriptor;
+    }
+
+    public void setResultDescriptor(ResultDescriptor resultDescriptor) {
         this.resultDescriptor = resultDescriptor;
     }
 
@@ -152,8 +175,6 @@ class ResultArtifactDescriptor extends ArtifactDescriptor {
         }
         return objects;
     }
-    
-    
     
     @Override
     public String toString() {

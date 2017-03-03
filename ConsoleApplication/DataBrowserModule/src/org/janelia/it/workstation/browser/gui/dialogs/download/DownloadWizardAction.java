@@ -14,7 +14,10 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.UIDefaults;
+import javax.swing.UIManager;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
@@ -68,24 +71,53 @@ public final class DownloadWizardAction implements ActionListener {
     
     @Override
     public void actionPerformed(ActionEvent e) {
+        
+        // Hide the default wizard image, which does not look good on our dark background
+        UIDefaults uiDefaults = UIManager.getDefaults();
+        uiDefaults.put("nb.wizard.hideimage", Boolean.TRUE); 
+        
+        // Create wizard
+        DownloadWizardIterator iterator = new DownloadWizardIterator();
+        WizardDescriptor wiz = new WizardDescriptor(iterator);
+        iterator.initialize(wiz); 
 
+        // Setup the initial state
         DownloadWizardState state = new DownloadWizardState();
         state.setInputObjects(inputObjects);
         state.setDefaultArtifactDescriptor(new ResultArtifactDescriptor(defaultResultDescriptor));
 
-        DownloadWizardIterator iterator = new DownloadWizardIterator();
-        WizardDescriptor wiz = new WizardDescriptor(iterator);
-        iterator.initialize(wiz); 
+        // Restore previous state from user's last usage
+        String artifactDescriptorString = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", null);
+        log.info("Setting last artifactDescriptorString: "+artifactDescriptorString);
+        state.setArtifactDescriptorString(artifactDescriptorString);
+        
+        String outputFormat = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "outputFormat", null);
+        log.info("Setting last outputFormat: "+outputFormat);
+        state.setOutputFormat(outputFormat);
+
+        boolean splitChannels = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "splitChannels", state.isSplitChannels());
+        log.info("Setting last splitChannels: "+splitChannels);
+        state.setSplitChannels(splitChannels);
+
+        boolean flattenStructure = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "flattenStructure", state.isFlattenStructure());
+        log.info("Setting last flattenStructure: "+flattenStructure);
+        state.setFlattenStructure(flattenStructure);
+
+        String filenamePattern = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "filenamePattern", null);
+        log.info("Setting last filenamePattern: "+filenamePattern);
+        state.setFilenamePattern(filenamePattern);
+        
+        // Install the state
         wiz.putProperty(DownloadWizardIterator.PROP_WIZARD_STATE, state);
 
-        // {0} will be replaced by
-        // WizardDescriptor.Panel.getComponent().getName()
+        // {0} will be replaced by WizardDescriptor.Panel.getComponent().getName()
         // {1} will be replaced by WizardDescriptor.Iterator.name()
         wiz.setTitleFormat(new MessageFormat("{0} ({1})"));
         wiz.setTitle("Download Files");
+        
+        // Show the wizard
         if (DialogDisplayer.getDefault().notify(wiz) == WizardDescriptor.FINISH_OPTION) {
-
-            // wiz.getProperty(name);
+            // Start downloading 
             DownloadWizardState endState = (DownloadWizardState) wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
             List<DownloadItem> downloadItems = endState.getDownloadItems();
             if (!downloadItems.isEmpty()) {

@@ -6,12 +6,14 @@ import java.util.Set;
 
 import javax.swing.event.ChangeListener;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.DownloadItem;
 import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
 import org.openide.util.ChangeSupport;
 import org.openide.util.HelpCtx;
+import org.openide.util.NbPreferences;
 
 public class DownloadWizardPanel4 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
 
@@ -108,19 +110,25 @@ public class DownloadWizardPanel4 implements WizardDescriptor.ValidatingPanel<Wi
 
     @Override
     public void storeSettings(WizardDescriptor wiz) {
-        DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
+        DownloadWizardState state = (DownloadWizardState) wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
+        state.setFlattenStructure(getComponent().isFlattenStructure());
+        state.setFilenamePattern(getComponent().getFilenamePattern());
         state.setDownloadItems(getComponent().getDownloadItems());
-        
-      String filePattern = (String)getComponent().getFilenamePattern();
-      boolean found = false;
-      for (String pattern : DownloadVisualPanel4.STANDARD_FILE_PATTERNS) {
-          if (pattern.equals(filePattern)) {
-              found = true;
-              break;
-          }
-      }
-      if (!found) {
-          ConsoleApp.getConsoleApp().setModelProperty(DownloadVisualPanel4.FILE_PATTERN_PROP_NAME, filePattern);
-      }   
+
+        // Updated serialized state
+        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "flattenStructure", state.isFlattenStructure());
+        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "filenamePattern", state.getFilenamePattern());
+
+        String filePattern = (String) getComponent().getFilenamePattern();
+        boolean found = false;
+        for (String pattern : DownloadVisualPanel4.STANDARD_FILE_PATTERNS) {
+            if (pattern.equals(filePattern)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            ConsoleApp.getConsoleApp().setModelProperty(DownloadVisualPanel4.FILE_PATTERN_PROP_NAME, filePattern);
+        }
     }
 }

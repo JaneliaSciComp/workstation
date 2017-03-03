@@ -2,12 +2,11 @@ package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import javax.swing.event.ChangeListener;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
 import org.openide.util.ChangeSupport;
 import org.openide.util.HelpCtx;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
 
@@ -93,7 +92,8 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
     public void storeSettings(WizardDescriptor wiz) {
         DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
         state.setArtifactDescriptors(getComponent().getArtifactDescriptors());
-        //NbPreferences.forModule(DownloadWizardState.class).putBoolean("has3d", state.has3d());
+        // Updated serialized state
+        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", state.getArtifactDescriptorString());
     }
 
 }

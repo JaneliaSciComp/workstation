@@ -2,8 +2,10 @@ package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import javax.swing.event.ChangeListener;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.openide.WizardDescriptor;
 import org.openide.util.HelpCtx;
+import org.openide.util.NbPreferences;
 
 public class DownloadWizardPanel3 implements WizardDescriptor.Panel<WizardDescriptor> {
 
@@ -53,6 +55,9 @@ public class DownloadWizardPanel3 implements WizardDescriptor.Panel<WizardDescri
         DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
         state.setSplitChannels(getComponent().isSplitChannels());
         state.setOutputFormat(getComponent().getOutputFormat());
+        // Updated serialized state
+        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "outputFormat", state.getOutputFormat());
+        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "splitChannels", state.isSplitChannels());
     }
 
 }

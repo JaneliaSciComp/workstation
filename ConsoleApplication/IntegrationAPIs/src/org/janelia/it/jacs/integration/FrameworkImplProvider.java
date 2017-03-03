@@ -138,11 +138,40 @@ public class FrameworkImplProvider {
     public static String getLocalPreferenceValue(Class<?> moduleClass, String key, String defaultValue) {
         return NbPreferences.forModule(moduleClass).get(key, defaultValue);   
     }
+
+    public static boolean getLocalPreferenceValue(Class<?> moduleClass, String key, boolean defaultValue) {
+        return NbPreferences.forModule(moduleClass).getBoolean(key, defaultValue);   
+    }
+
+    public static int getLocalPreferenceValue(Class<?> moduleClass, String key, int defaultValue) {
+        return NbPreferences.forModule(moduleClass).getInt(key, defaultValue);   
+    }
+
+    public static double getLocalPreferenceValue(Class<?> moduleClass, String key, double defaultValue) {
+        return NbPreferences.forModule(moduleClass).getDouble(key, defaultValue);   
+    }
     
     public static void setLocalPreferenceValue(Class<?> moduleClass, String key, String value) {
-        NbPreferences.forModule(moduleClass).put(key, value);
+        if (value==null) {
+            NbPreferences.forModule(moduleClass).remove(key);
+        }
+        else {
+            NbPreferences.forModule(moduleClass).put(key, value);
+        }
     }
-        
+
+    public static void setLocalPreferenceValue(Class<?> moduleClass, String key, boolean value) {
+        NbPreferences.forModule(moduleClass).putBoolean(key, value);
+    }
+
+    public static void setLocalPreferenceValue(Class<?> moduleClass, String key, int value) {
+        NbPreferences.forModule(moduleClass).putInt(key, value);
+    }
+    
+    public static void setLocalPreferenceValue(Class<?> moduleClass, String key, double value) {
+        NbPreferences.forModule(moduleClass).putDouble(key, value);
+    }
+    
     private static <T> T get(String path, Class<T> clazz) {
         Collection<? extends T> candidates = Lookups.forPath(path).lookupAll(clazz);
         for(T handler : candidates) {
