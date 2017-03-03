@@ -112,13 +112,14 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
     }
 
     protected ServiceComputation<JacsServiceData> waitForDependencies(JacsServiceData jacsServiceData) {
-        return computationFactory.<JacsServiceData>newComputation()
-                .supply(() -> {
-                    if (!checkForDependenciesCompletion(jacsServiceData)) {
-                        suspend(jacsServiceData);
-                    }
-                    return jacsServiceData;
-                });
+        try {
+            if (!checkForDependenciesCompletion(jacsServiceData)) {
+                suspend(jacsServiceData);
+            }
+            return createComputation(jacsServiceData);
+        } catch (Exception e) {
+            return computationFactory.newFailedComputation(e);
+        }
     }
 
     protected void suspend(JacsServiceData jacsServiceData) {
