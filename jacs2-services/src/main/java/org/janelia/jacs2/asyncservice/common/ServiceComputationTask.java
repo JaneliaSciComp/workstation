@@ -125,6 +125,7 @@ class ServiceComputationTask<T> implements Coroutine {
                     return;
                 }
                 continuation.suspend();
+                resume();
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
