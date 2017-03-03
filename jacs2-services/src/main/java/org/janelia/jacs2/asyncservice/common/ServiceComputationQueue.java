@@ -57,7 +57,11 @@ public class ServiceComputationQueue {
                     taskExecutor.execute(() -> {
                         if (!ServiceComputationQueue.runTask(task)) {
                             // if it's not done put it back in the queue
-                            taskQueue.offer(task);
+                            try {
+                                taskQueue.put(task);
+                            } catch (InterruptedException e) {
+                                throw new IllegalStateException(e);
+                            }
                         }
                     });
                 } else {
