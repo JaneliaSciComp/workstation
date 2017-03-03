@@ -13,8 +13,13 @@ public class ServiceComputationQueue {
 
     static void runTask(ServiceComputationTask<?> task) {
         CoroutineRunner r = new CoroutineRunner(task);
-        for (; ; ) {
+        for (;;) {
             if (!r.execute()) {
+                break;
+            }
+            try {
+                Thread.sleep(500L);
+            } catch (InterruptedException e) {
                 break;
             }
         }
@@ -37,6 +42,7 @@ public class ServiceComputationQueue {
             try {
                 ServiceComputationTask<?> task = taskQueue.take();
                 taskExecutor.execute(() -> ServiceComputationQueue.runTask(task));
+                Thread.sleep(500L);
             } catch (InterruptedException e) {
                 break;
             }

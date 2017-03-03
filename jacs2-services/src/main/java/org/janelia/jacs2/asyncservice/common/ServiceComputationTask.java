@@ -6,7 +6,6 @@ import com.offbynull.coroutines.user.Coroutine;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 
 class ServiceComputationTask<T> implements Coroutine {
 
