@@ -19,10 +19,6 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
      */
     private DownloadVisualPanel2 component;
 
-    // Get the visual component for the panel. In this template, the component
-    // is kept separate. This can be more efficient: if the wizard is created
-    // but never displayed, or not all panels are displayed, it is better to
-    // create only those which really need to be visible.
     @Override
     public DownloadVisualPanel2 getComponent() {
         if (component == null) {

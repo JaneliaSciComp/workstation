@@ -23,10 +23,6 @@ public class DownloadWizardPanel4 implements WizardDescriptor.ValidatingPanel<Wi
      */
     private DownloadVisualPanel4 component;
 
-    // Get the visual component for the panel. In this template, the component
-    // is kept separate. This can be more efficient: if the wizard is created
-    // but never displayed, or not all panels are displayed, it is better to
-    // create only those which really need to be visible.
     @Override
     public DownloadVisualPanel4 getComponent() {
         if (component == null) {
@@ -65,7 +61,7 @@ public class DownloadWizardPanel4 implements WizardDescriptor.ValidatingPanel<Wi
             isValid = false;
             throw new WizardValidationException(null, "Some output paths are duplicated. Try adding {GUID} to your file naming template.", null);
         }
-        // Check if there are any fils to download
+        // Check if there are any files to download
         if (uniquePaths.isEmpty()) {
             isValid = false;
             throw new WizardValidationException(null, "No files were identified for download.", null);

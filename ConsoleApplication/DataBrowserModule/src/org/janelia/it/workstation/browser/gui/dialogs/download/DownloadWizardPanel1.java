@@ -13,10 +13,6 @@ public class DownloadWizardPanel1 implements WizardDescriptor.Panel<WizardDescri
      */
     private DownloadVisualPanel1 component;
 
-    // Get the visual component for the panel. In this template, the component
-    // is kept separate. This can be more efficient: if the wizard is created
-    // but never displayed, or not all panels are displayed, it is better to
-    // create only those which really need to be visible.
     @Override
     public DownloadVisualPanel1 getComponent() {
         if (component == null) {
@@ -35,12 +31,7 @@ public class DownloadWizardPanel1 implements WizardDescriptor.Panel<WizardDescri
 
     @Override
     public boolean isValid() {
-        // If it is always OK to press Next or Finish, then:
         return true;
-        // If it depends on some condition (form filled out...) and
-        // this condition changes (last form field filled in...) then
-        // use ChangeSupport to implement add/removeChangeListener below.
-        // WizardDescriptor.ERROR/WARNING/INFORMATION_MESSAGE will also be useful.
     }
 
     @Override

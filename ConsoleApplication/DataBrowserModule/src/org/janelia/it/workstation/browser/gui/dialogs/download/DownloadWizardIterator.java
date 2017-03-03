@@ -13,13 +13,15 @@ import javax.swing.event.ChangeListener;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.openide.WizardDescriptor;
 import org.openide.util.ChangeSupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+/**
+ * Download wizard that guides the user through several possible steps to choose what to download 
+ * and how the output files are formatted.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public final class DownloadWizardIterator implements WizardDescriptor.Iterator<WizardDescriptor>, ChangeListener {
 
-    private static final Logger log = LoggerFactory.getLogger(DownloadWizardIterator.class);
-    
     public static final String PROP_WIZARD_STATE = "DownloadWizardStateProp";
     
     private ChangeSupport changeSupport = new ChangeSupport(this);
@@ -93,6 +95,11 @@ public final class DownloadWizardIterator implements WizardDescriptor.Iterator<W
         }
     }
 
+    /**
+     * If the user has not selected any 3d files for download, then there's 
+     * no reason to show them the 3d file processing wizard panel.
+     * @param has3d
+     */
     private void setHas3d(boolean has3d) {
         
         List<WizardDescriptor.Panel<WizardDescriptor>> lastPanels = currPanels;
@@ -186,7 +193,6 @@ public final class DownloadWizardIterator implements WizardDescriptor.Iterator<W
      */
     @Override
     public void stateChanged(ChangeEvent e) {
-        // Propagate state change from panels
         updateState();
         fireChangeEvent();
     }
