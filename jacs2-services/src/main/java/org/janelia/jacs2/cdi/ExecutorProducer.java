@@ -39,7 +39,7 @@ public class ExecutorProducer {
                 .setNameFormat("JACS-%d")
                 .setDaemon(true)
                 .build();
-        return Executors.newFixedThreadPool(threadPoolSize, threadFactory);
+        return Executors.newWorkStealingPool();
     }
 
     @SuspendedTaskExecutor
