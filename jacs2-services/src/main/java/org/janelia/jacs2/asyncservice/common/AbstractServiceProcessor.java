@@ -112,14 +112,22 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
     }
 
     protected ServiceComputation<JacsServiceData> waitForDependencies(JacsServiceData jacsServiceData) {
-        try {
-            if (!checkForDependenciesCompletion(jacsServiceData)) {
-                suspend(jacsServiceData);
-            }
-            return createComputation(jacsServiceData);
-        } catch (Exception e) {
-            return computationFactory.newFailedComputation(e);
-        }
+        return computationFactory.<JacsServiceData>newComputation()
+                .supply(() -> {
+                    for (;;) {
+                        if (checkForDependenciesCompletion(jacsServiceData)) {
+                            jacsServiceData.setState(JacsServiceState.RUNNING);
+                            jacsServiceDataPersistence.save(jacsServiceData);
+                            return jacsServiceData;
+                        }
+                        suspend(jacsServiceData);
+                        try {
+                            Thread.sleep(10000L);
+                        } catch (InterruptedException e) {
+                            logger.warn("Interrupt checking for dependencies thread", e);
+                        }
+                    }
+                });
     }
 
     protected boolean checkForDependenciesCompletion(JacsServiceData jacsServiceData) {
@@ -157,12 +165,11 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         return false;
     }
 
-    protected void suspend(JacsServiceData jacsServiceData) {
+    private void suspend(JacsServiceData jacsServiceData) {
         if (!jacsServiceData.hasCompleted()) {
             if (!jacsServiceData.hasBeenSuspended()) {
                 updateStateToSuspended(jacsServiceData);
             }
-            throw new SuspendedException(jacsServiceData.toString());
         }
     }
 
