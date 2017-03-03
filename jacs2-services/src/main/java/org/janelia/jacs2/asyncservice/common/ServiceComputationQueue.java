@@ -33,7 +33,7 @@ public class ServiceComputationQueue {
     public ServiceComputationQueue(ExecutorService taskExecutor, @SuspendedTaskExecutor ExecutorService queueInspector) {
         this.taskExecutor = taskExecutor;
         this.queueInspector = queueInspector;
-        taskQueue = new LinkedBlockingQueue<>();
+        taskQueue = new LinkedBlockingQueue<>(300);
         this.queueInspector.submit(() -> executeTasks());
     }
 
