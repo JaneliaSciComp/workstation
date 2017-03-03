@@ -222,6 +222,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
         });
         next.submit(continuation -> {
             try {
+                waitForResult(waitFor, continuation);
                 T r = waitForResult(this, continuation);
                 next.complete(r);
             } catch (Exception e) {
