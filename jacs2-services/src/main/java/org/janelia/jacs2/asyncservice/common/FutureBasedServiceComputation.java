@@ -236,7 +236,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
                 return true;
             } else {
                 logger.info("Suspend {}", nextTask);
-                return false;
+                throw new SuspendedException();
             }
         });
         next.submit(() -> {
