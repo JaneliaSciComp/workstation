@@ -62,7 +62,7 @@ public class ServiceComputationQueue {
                     });
                 } else {
                     // if the task is not ready put it back in the queue
-                    taskQueue.offer(task);
+                    taskQueue.put(task);
                 }
             } catch (InterruptedException e) {
                 break;
@@ -71,6 +71,10 @@ public class ServiceComputationQueue {
     }
 
     void submit(ServiceComputationTask<?> task) {
-        taskQueue.offer(task);
+        try {
+            taskQueue.put(task);
+        } catch (InterruptedException e) {
+            throw new SuspendedException(e);
+        }
     }
 }
