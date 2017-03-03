@@ -112,7 +112,9 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                                 throw new ComputationException(jacsServiceData, "No channel spec for LSM " + lsmf.getId());
                             }
                             Path resultsDir =  getResultsDir(args, ar.getName(), ar.getObjective(), lsmImageFile);
-                            return basicMIPsAndMoviesProcessor.create(new ServiceExecutionContext(jacsServiceData),
+                            return basicMIPsAndMoviesProcessor.create(new ServiceExecutionContext.Builder(jacsServiceData)
+                                            .waitFor(getSampleLsms)
+                                            .build(),
                                     new ServiceArg("-imgFile", lsmImageFile.getAbsolutePath()),
                                     new ServiceArg("-chanSpec", lsmf.getChanSpec()),
                                     new ServiceArg("-colorSpec", lsmf.getChannelColors()),
