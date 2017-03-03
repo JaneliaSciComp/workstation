@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -15,6 +16,7 @@ public interface ServiceComputation<T> {
     T get();
     boolean isDone();
     boolean isCompletedExceptionally();
+    boolean isSuspended();
     ServiceComputation<T> supply(Supplier<T> fn);
     ServiceComputation<T> exceptionally(Function<Throwable, ? extends T> fn);
     <U> ServiceComputation<U> thenApply(Function<? super T, ? extends U> fn);
@@ -22,4 +24,5 @@ public interface ServiceComputation<T> {
     ServiceComputation<T> whenComplete(BiConsumer<? super T, ? super Throwable> action);
     <U, V> ServiceComputation<V> thenCombine(ServiceComputation<U> otherComputation, BiFunction<? super T, ? super U, ? extends V> fn);
     <U> ServiceComputation<U> thenCombineAll(List<ServiceComputation<?>> otherComputations, BiFunction<? super T, List<?>, ? extends U> fn);
+    ServiceComputation<T> thenSuspendUntil(ContinuationCond fn);
 }

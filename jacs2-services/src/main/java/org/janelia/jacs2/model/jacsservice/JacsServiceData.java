@@ -292,6 +292,12 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         }
     }
 
+    public void addServiceDependencyId(Number dependencyId) {
+        if (dependencyId != null && !dependeciesIds.contains(dependencyId)) {
+            dependeciesIds.add(dependencyId);
+        }
+    }
+
     public JacsServiceData getParentService() {
         return parentService;
     }

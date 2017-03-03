@@ -41,7 +41,18 @@ public class ServiceComputationQueue {
         for (;;) {
             try {
                 ServiceComputationTask<?> task = taskQueue.take();
-                taskExecutor.execute(() -> ServiceComputationQueue.runTask(task));
+                if (task.isReady()) {
+                    taskExecutor.execute(() -> {
+                        ServiceComputationQueue.runTask(task);
+                        if (!task.isDone()) {
+                            // if it's not done put it back in the queue
+                            taskQueue.offer(task);
+                        }
+                    });
+                } else {
+                    // if the task is not ready put it back in the queue
+                    taskQueue.offer(task);
+                }
                 Thread.sleep(500L);
             } catch (InterruptedException e) {
                 break;
