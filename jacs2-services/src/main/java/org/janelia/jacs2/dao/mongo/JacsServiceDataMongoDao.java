@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.conversions.Bson;
@@ -49,17 +50,14 @@ public class JacsServiceDataMongoDao extends AbstractMongoDao<JacsServiceData> i
 
     @Override
     public JacsServiceData findServiceHierarchy(Number serviceId) {
-        List<JacsServiceData> serviceHierarchy = new ArrayList<>();
         JacsServiceData jacsServiceData = findById(serviceId);
         Preconditions.checkArgument(jacsServiceData != null, "Invalid service ID - no service found for " + serviceId);
-        serviceHierarchy.add(jacsServiceData);
         Number rootServiceId = jacsServiceData.getRootServiceId();
         Map<Number, JacsServiceData> fullServiceHierachy = new LinkedHashMap<>();
         if (rootServiceId == null) {
             rootServiceId = serviceId;
-            fullServiceHierachy.put(jacsServiceData.getId(), jacsServiceData);
         }
-        find(eq("rootServiceId", rootServiceId), createBsonSortCriteria(ImmutableList.of(new SortCriteria("_id"))), 0, -1, JacsServiceData.class)
+        find(Filters.or(eq("rootServiceId", rootServiceId), eq("_id", rootServiceId)), createBsonSortCriteria(ImmutableList.of(new SortCriteria("_id"))), 0, -1, JacsServiceData.class)
                 .forEach(sd -> {
                     fullServiceHierachy.put(sd.getId(), sd);
                 });
@@ -73,9 +71,7 @@ public class JacsServiceDataMongoDao extends AbstractMongoDao<JacsServiceData> i
             sd.getDependeciesIds().forEach(id -> sd.addServiceDependency(fullServiceHierachy.get(id)));
         });
 
-        jacsServiceData.getDependeciesIds().forEach(id -> jacsServiceData.addServiceDependency(fullServiceHierachy.get(id)));
-
-        return jacsServiceData;
+        return fullServiceHierachy.get(serviceId);
     }
 
     @Override
