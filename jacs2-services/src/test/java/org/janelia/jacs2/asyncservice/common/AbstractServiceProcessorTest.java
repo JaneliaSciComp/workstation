@@ -8,6 +8,7 @@ import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -232,7 +233,7 @@ public class AbstractServiceProcessorTest {
         verify(successful, never()).accept(any());
     }
 
-    @Test
+    @Ignore
     public void processingSuspended() {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
