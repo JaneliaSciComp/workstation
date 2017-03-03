@@ -1,17 +1,15 @@
 package org.janelia.jacs2.asyncservice.common;
 
-import com.offbynull.coroutines.user.Continuation;
-import com.offbynull.coroutines.user.Coroutine;
 
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-class ServiceComputationTask<T> implements Coroutine {
+class ServiceComputationTask<T> implements Runnable {
 
     @FunctionalInterface
     static interface ContinuationSupplier<T> {
-        T get(Continuation continuation);
+        T get();
     }
 
     static class ComputeResult<T> {
@@ -89,8 +87,8 @@ class ServiceComputationTask<T> implements Coroutine {
     }
 
     @Override
-    public void run(Continuation continuation) throws Exception {
-        tryFire(continuation);
+    public void run() {
+        tryFire();
     }
 
     void push(ServiceComputation<?> dep) {
@@ -101,31 +99,29 @@ class ServiceComputationTask<T> implements Coroutine {
         this.resultSupplier = resultSupplier;
     }
 
-    void tryFire(Continuation continuation) {
+    void tryFire() {
         if (isDone()) {
             return;
-        } else {
-            for (;;) {
-                if (isReady() && !suspended) {
-                    if (resultSupplier != null) {
-                        try {
-                            complete(resultSupplier.get(continuation));
-                        } catch (Exception e) {
-                            completeExceptionally(e);
-                        }
-                        return;
-                    } else {
-                        throw new IllegalStateException("No result supplier has been provided");
+        }
+        for (;;) {
+            if (isReady() && !suspended) {
+                if (resultSupplier != null) {
+                    try {
+                        complete(resultSupplier.get());
+                    } catch (Exception e) {
+                        completeExceptionally(e);
                     }
-                } else if (suspended) {
                     return;
+                } else {
+                    throw new IllegalStateException("No result supplier has been provided");
                 }
-                continuation.suspend();
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    return;
-                }
+            } else if (suspended) {
+                return;
+            }
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                return;
             }
         }
     }
