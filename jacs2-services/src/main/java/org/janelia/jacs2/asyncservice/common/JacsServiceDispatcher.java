@@ -2,7 +2,6 @@ package org.janelia.jacs2.asyncservice.common;
 
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
-import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.slf4j.Logger;
@@ -54,17 +53,13 @@ public class JacsServiceDispatcher {
                     .supply(() -> {
                         JacsServiceData service = queuedService;
                         logger.debug("Submit {}", service);
-                        if (service.hasNeverBeenProcessed()) {
-                            service.setState(JacsServiceState.SUBMITTED);
-                            updateServiceInfo(service);
-                        }
+                        service.setState(JacsServiceState.SUBMITTED);
+                        updateServiceInfo(service);
                         jacsServiceEngine.releaseSlot();
                         return service;
                     })
                     .thenCompose(sd -> serviceProcessor.process(sd))
-                    .whenComplete((r, exc) -> {
-                        jacsServiceQueue.completeService(queuedService);
-                    });
+                    .whenComplete((r, exc) -> jacsServiceQueue.completeService(queuedService));
         }
     }
 
