@@ -162,7 +162,7 @@ public class DownloadItem {
         MapUnion<String, Object> keyValues = new MapUnion<>();
         keyValues.addMap(proxy);
         keyValues.put(ATTR_LABEL_RESULT_NAME, resultName);
-        keyValues.put(ATTR_LABEL_FILE_NAME, new File(sourceFile).getName());
+        keyValues.put(ATTR_LABEL_FILE_NAME, FileUtil.getBasename(new File(sourceFile).getName()));
         keyValues.put(ATTR_LABEL_EXTENSION, targetExtension);
 
         if (domainObject instanceof Sample) {
@@ -181,7 +181,7 @@ public class DownloadItem {
         log.debug("Interpolated filepath: {}", filepath);
         
         // Strip extension, if any. We'll re-add it at the end.
-        StringBuilder sb = new StringBuilder(FileUtil.getBasename(filepath));
+        StringBuilder sb = new StringBuilder(filepath);
 
         if (splitChannels) {
             sb.append("_#");
@@ -190,8 +190,11 @@ public class DownloadItem {
         if (!StringUtils.isEmpty(targetExtension)) {
             sb.append(".").append(targetExtension);
         }
+        else {
+            sb.append(".").append(sourceExtension);
+        }
+        
         log.debug("Final file path: {}", sb);
-
         return sb.toString();
 
     }
