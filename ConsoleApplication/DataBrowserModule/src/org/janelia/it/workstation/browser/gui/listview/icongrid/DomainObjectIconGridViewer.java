@@ -452,22 +452,29 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     protected void updateHud(boolean toggle) {
 
+        if (!toggle && !Hud.isInitialized()) return;
+        
         Hud hud = Hud.getSingletonInstance();
         hud.setKeyListener(keyListener);
-        
-        List<DomainObject> selected = getSelectedObjects();
-        
-        if (selected.size() != 1) {
-            hud.hideDialog();
-            return;
-        }
-        
-        DomainObject domainObject = selected.get(0);
-        if (toggle) {
-            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
-        }
-        else {
-            hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), false);
+
+        try {
+            List<DomainObject> selected = getSelectedObjects();
+            
+            if (selected.size() != 1) {
+                hud.hideDialog();
+                return;
+            }
+            
+            DomainObject domainObject = selected.get(0);
+            if (toggle) {
+                hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
+            }
+            else {
+                hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), false);
+            }
+        } 
+        catch (Exception ex) {
+            ConsoleApp.handleException(ex);
         }
     }
     
