@@ -230,7 +230,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
 
     @Subscribe
     public void domainObjectChanged(DomainObjectChangeEvent event) {
-        if (searchResults.updateIfFound(event.getDomainObject())) {
+        if (searchResults!=null && searchResults.updateIfFound(event.getDomainObject())) {
             log.info("Updated search results with changed domain object: {}", event.getDomainObject());
         }
     }
