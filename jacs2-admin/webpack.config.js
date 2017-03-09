@@ -34,15 +34,20 @@ module.exports = {
         loader: 'babel',
         query: { presets: ['es2015', 'stage-0', 'react'] }
       }, {
-        test: /(\.scss|\.css)$/,
-        loader: ExtractTextPlugin.extract('style', 'css?sourceMap&modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss!sass')
+        test: /\.scss$/,
+        loader: ExtractTextPlugin.extract('css!sass')
       }
     ]
   },
   postcss: [autoprefixer],
   sassLoader: {
-    data: '@import "theme/_config.scss";',
-    includePaths: [path.resolve(__dirname, './src/app')]
+    includePaths: [
+    './node_modules',
+    // this is required only for NPM < 3.
+    // Dependencies are flat in NPM 3+ so pointing to
+    // the internal grommet/node_modules folder is not needed
+    './node_modules/grommet/node_modules'
+  ]
   },
   plugins: [
     new ExtractTextPlugin('bundle.css', { allChunks: true }),

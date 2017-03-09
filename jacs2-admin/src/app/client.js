@@ -21,33 +21,33 @@ const store = createStore(
 
 // view
 import { Router, IndexRoute, Route, Link, browserHistory } from 'react-router';
-import { Layout, AppBar, NavDrawer, Navigation, Panel, Sidebar } from 'react-toolbox';
-import theme from './App.scss';
+import App from 'grommet/components/App';
+import Split from 'grommet/components/Split';
+import Sidebar from 'grommet/components/Sidebar';
+import Section from 'grommet/components/Section';
+import 'grommet/scss/vanilla/index';
 
-var App = React.createClass({
+var Main = React.createClass({
     render: function() {
         return (
-            <Layout theme={theme}>
-                <NavDrawer
-                    permanentAt='xl'
-                    pinned>
-                    <Navigation type='vertical'>
+            <App centered={true}>
+                <Split fixed={true}>
+                    <Sidebar>
                         <ul>
-                            <li><Link to="/servicesQueue">Services Queue</Link></li>
-                            <li><Link to="/servicesPerformance">Services Performance</Link></li>
+                            <li><Link to="/Services">Services Queue</Link></li>
+                            <li><Link to="/Pipes">Services Performance</Link></li>
                             <li><Link to="/servicesDetail">Services Detail</Link></li>
                             <li><Link to="/pipesQueue">Pipes Queue</Link></li>
                             <li><Link to="/pipesDetail">Pipes Detail</Link></li>
                             <li><Link to="/serviceRegistry">Service Registry</Link></li>
                             <li><Link to="/servicesAPI">Service API Detail</Link></li>
                         </ul>
-                    </Navigation>
-                </NavDrawer>
-                <Panel>
-                    <AppBar leftIcon='menu' />
-                     {this.props.children}
-                </Panel>
-            </Layout>
+                    </Sidebar>
+                    <Section>
+                        {this.props.children}
+                    </Section>
+                </Split>
+            </App>
         );
     }
 });
@@ -77,7 +77,7 @@ const history = syncHistoryWithStore(browserHistory, store)
 ReactDOM.render(
 <Provider store={store}>
     <Router history={history}>
-        <Route path="/" component={App}>
+        <Route path="/" component={Main}>
             <IndexRoute component={Services}/>
             <Route path="services" component={Services}/>
             <Route path="pipes" component={Pipes} />

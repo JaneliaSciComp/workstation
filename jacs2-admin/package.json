@@ -2,7 +2,9 @@
   "name": "jacs_admin_ui",
   "version": "0.0.1",
   "description": "calls webpack to bundle a reactjs-react-router-fetch app that calls the V2 service REST endpoints",
-  "scripts": {},
+  "scripts": {
+    "start": "webpack-dev-server"
+  },
   "babel": {
     "presets": [
       "es2015"
@@ -33,7 +35,6 @@
     "react-dom": "~15.3.0",
     "react-fetch": "0.0.9",
     "react-router": "^3.0.2",
-    "react-toolbox": "~1.1.2",
     "react-transform-catch-errors": "~1.0.0",
     "react-transform-hmr": "~1.0.1",
     "sass-lint": "~1.7.0",
@@ -43,12 +44,11 @@
     "webpack-dev-middleware": "~1.6.1"
   },
   "dependencies": {
+    "babel-runtime": "^6.23.0",
+    "grommet": "^1.2.1",
     "react-redux": "^5.0.2",
     "react-router-redux": "^4.0.8",
     "redux": "^3.6.0",
     "redux-thunk": "^2.2.0"
-  },
-  "scripts": {
-    "start": "webpack-dev-server"  
   }
 }
