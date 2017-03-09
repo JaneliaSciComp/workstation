@@ -439,6 +439,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     protected void updateHud(boolean toggle) {
 
+        if (!toggle && !Hud.isInitialized()) return;
+        
         Hud hud = Hud.getSingletonInstance();
         hud.setKeyListener(keyListener);
                 

@@ -6,7 +6,6 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -304,7 +303,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     public void activate() {
-        Hud.getSingletonInstance().setKeyListener(keyListener);
     }
 
     @Override
@@ -399,7 +397,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     @Override
     protected void updateHud(boolean toggle) {
 
+        if (!toggle && !Hud.isInitialized()) return;
+        
         Hud hud = Hud.getSingletonInstance();
+        hud.setKeyListener(keyListener);
+        
         try {
             List<DomainObject> selected = getSelectedObjects();
 
@@ -415,7 +417,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             else {
                 hud.setObject(domainObject, null, null, false);
             }
-        } catch (Exception ex) {
+        } 
+        catch (Exception ex) {
             ConsoleApp.handleException(ex);
         }
     }
