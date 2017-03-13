@@ -18,17 +18,10 @@ import java.util.stream.Collectors;
 public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
     private static <U> U waitForResult(ServiceComputation<U> computation) {
-        for (;;) {
-            if (computation.isDone()) {
-                return computation.get();
-            } else if (computation.isSuspended()) {
-                throw new SuspendedException();
-            }
-            try {
-                Thread.sleep(100L);
-            } catch (InterruptedException e) {
-                throw new SuspendedException(e);
-            }
+        if (computation.isDone()) {
+            return computation.get();
+        } else {
+            throw new SuspendedException();
         }
     }
 
