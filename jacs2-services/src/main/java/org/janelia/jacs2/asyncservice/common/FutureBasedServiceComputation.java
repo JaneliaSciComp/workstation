@@ -21,6 +21,8 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
         for (;;) {
             if (computation.isDone()) {
                 return computation.get();
+            } else if (computation.isSuspended()) {
+                throw new SuspendedException();
             }
             try {
                 Thread.sleep(100L);
@@ -105,6 +107,8 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
             try {
                 T r = waitForResult(this);
                 next.complete(r);
+            } catch (SuspendedException e) {
+                throw e;
             } catch (Exception e) {
                 next.complete(fn.apply(e));
             }
@@ -120,6 +124,8 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
             try {
                 T r = waitForResult(this);
                 next.complete(fn.apply(r));
+            } catch (SuspendedException e) {
+                throw e;
             } catch (Exception e) {
                 next.completeExceptionally(e);
             }
@@ -136,6 +142,8 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
             try {
                 T r = waitForResult(this);
                 nextStage.complete(fn.apply(r));
+            } catch (SuspendedException e) {
+                throw e;
             } catch (Exception e) {
                 nextStage.completeExceptionally(e);
             }
@@ -146,6 +154,8 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
                 ServiceComputation<U> computation = waitForResult(nextStage);
                 U result = waitForResult(computation);
                 next.complete(result);
+            } catch (SuspendedException e) {
+                throw e;
             } catch (Exception e) {
                 next.completeExceptionally(e);
             }
@@ -162,6 +172,8 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
                 T r = waitForResult(this);
                 action.accept(r, null);
                 next.complete(r);
+            } catch (SuspendedException e) {
+                throw e;
             } catch (Exception e) {
                 action.accept(null, e);
                 next.completeExceptionally(e);
@@ -181,6 +193,8 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
                 T r = waitForResult(this);
                 U u = waitForResult(otherComputation);
                 next.complete(fn.apply(r, u));
+            } catch (SuspendedException e) {
+                throw e;
             } catch (Exception e) {
                 next.completeExceptionally(e);
             }
@@ -201,6 +215,8 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
                         .map(ServiceComputation::get)
                         .collect(Collectors.toList());
                 next.complete(fn.apply(r, otherResults));
+            } catch (SuspendedException e) {
+                throw e;
             } catch (Exception e) {
                 next.completeExceptionally(e);
             }
@@ -232,6 +248,8 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
                 waitForResult(waitFor);
                 T r = waitForResult(this);
                 next.complete(r);
+            } catch (SuspendedException e) {
+                throw e;
             } catch (Exception e) {
                 next.completeExceptionally(e);
             }
