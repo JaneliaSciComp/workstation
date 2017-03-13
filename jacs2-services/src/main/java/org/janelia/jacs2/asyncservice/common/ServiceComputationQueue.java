@@ -1,6 +1,6 @@
 package org.janelia.jacs2.asyncservice.common;
 
-import org.janelia.jacs2.cdi.qualifier.SuspendedTaskExecutor;
+import org.janelia.jacs2.cdi.qualifier.TaskQueuePoll;
 
 import javax.inject.Inject;
 import java.util.concurrent.BlockingQueue;
@@ -19,7 +19,7 @@ public class ServiceComputationQueue {
     private final BlockingQueue<ServiceComputationTask<?>> taskQueue;
 
     @Inject
-    public ServiceComputationQueue(ExecutorService taskExecutor, @SuspendedTaskExecutor ExecutorService queueInspector) {
+    public ServiceComputationQueue(ExecutorService taskExecutor, @TaskQueuePoll ExecutorService queueInspector) {
         this.taskExecutor = taskExecutor;
         this.queueInspector = queueInspector;
         taskQueue = new LinkedBlockingQueue<>();

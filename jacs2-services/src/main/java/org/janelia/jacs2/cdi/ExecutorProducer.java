@@ -2,7 +2,7 @@ package org.janelia.jacs2.cdi;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
-import org.janelia.jacs2.cdi.qualifier.SuspendedTaskExecutor;
+import org.janelia.jacs2.cdi.qualifier.TaskQueuePoll;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Default;
@@ -42,10 +42,10 @@ public class ExecutorProducer {
         return Executors.newFixedThreadPool(threadPoolSize, threadFactory);
     }
 
-    @SuspendedTaskExecutor
+    @TaskQueuePoll
     @Singleton
     @Produces
-    public ExecutorService createSuspendedTasksExecutorService() {
+    public ExecutorService createTaskQueuePollExecutorService() {
         if (suspendedTasksThreadPoolSize == null || suspendedTasksThreadPoolSize == 0) {
             suspendedTasksThreadPoolSize = DEFAULT_THREAD_POOL_SIZE;
         }
@@ -62,7 +62,7 @@ public class ExecutorProducer {
         executorService.awaitTermination(10, TimeUnit.MINUTES);
     }
 
-    public void shutdownSuspendedTasksExecutor(@Disposes @SuspendedTaskExecutor ExecutorService executorService) throws InterruptedException {
+    public void shutdownSuspendedTasksExecutor(@Disposes @TaskQueuePoll ExecutorService executorService) throws InterruptedException {
         logger.info("Shutting down {}", executorService);
         executorService.shutdown();
         executorService.awaitTermination(10, TimeUnit.MINUTES);

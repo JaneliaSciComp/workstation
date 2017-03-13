@@ -9,5 +9,5 @@ import java.lang.annotation.Target;
 @Qualifier
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
-public @interface SuspendedTaskExecutor {
+public @interface TaskQueuePoll {
 }
