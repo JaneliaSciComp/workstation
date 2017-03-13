@@ -22,7 +22,7 @@ public class ServiceComputationQueue {
     public ServiceComputationQueue(ExecutorService taskExecutor, @SuspendedTaskExecutor ExecutorService queueInspector) {
         this.taskExecutor = taskExecutor;
         this.queueInspector = queueInspector;
-        taskQueue = new LinkedBlockingQueue<>(300);
+        taskQueue = new LinkedBlockingQueue<>();
         this.queueInspector.submit(() -> executeTasks());
     }
 
