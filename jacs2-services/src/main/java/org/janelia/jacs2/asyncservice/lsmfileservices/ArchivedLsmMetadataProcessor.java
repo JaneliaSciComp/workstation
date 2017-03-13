@@ -85,14 +85,14 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
     }
 
     @Override
-    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         ArchivedLsmMetadataArgs args = getArgs(jacsServiceData);
         File lsmMetadataFile = getOutputFile(args);
         File workingLsmFile = getWorkingLsmFile(jacsServiceData, lsmMetadataFile);
         JacsServiceData fileCopyInvocation = fileCopyProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
                 new ServiceArg("-src", getInputFile(args).getAbsolutePath()),
                 new ServiceArg("-dst", workingLsmFile.getAbsolutePath()));
-        ServiceComputation<File> lsmMetadataInvocation = lsmFileMetadataProcessor.process(new ServiceExecutionContext.Builder(jacsServiceData)
+        JacsServiceData lsmMetadataInvocation = lsmFileMetadataProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
                         .waitFor(fileCopyInvocation)
                         .build(),
                 new ServiceArg("-inputLSM", workingLsmFile.getAbsolutePath()),
@@ -101,7 +101,7 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
     }
 
     @Override
-    protected ServiceComputation<File> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+    protected ServiceComputation<File> processing(JacsServiceData jacsServiceData) {
         return createComputation(this.waitForResult(jacsServiceData));
     }
 

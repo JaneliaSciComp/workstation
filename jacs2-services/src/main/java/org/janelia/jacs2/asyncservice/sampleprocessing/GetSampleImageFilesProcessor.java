@@ -76,7 +76,7 @@ public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<
     }
 
     @Override
-    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
         Path destinationDirectory = Paths.get(args.sampleDataDir);
 
@@ -102,13 +102,13 @@ public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<
                             sif.setObjective(ar.getObjective());
                             return sif;
                         }))
-                .map(sif -> fileCopyProcessor.process(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
+                .map(sif -> fileCopyProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
                         new ServiceArg("-src", sif.getArchiveFilePath()),
                         new ServiceArg("-dst", sif.getWorkingFilePath())))
                 .collect(Collectors.toList());
     }
 
-    protected ServiceComputation<List<SampleImageFile>> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+    protected ServiceComputation<List<SampleImageFile>> processing(JacsServiceData jacsServiceData) {
         return createComputation(this.waitForResult(jacsServiceData));
     }
 

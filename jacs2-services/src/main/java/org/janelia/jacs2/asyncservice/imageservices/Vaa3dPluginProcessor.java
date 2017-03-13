@@ -98,13 +98,13 @@ public class Vaa3dPluginProcessor extends AbstractServiceProcessor<File> {
     }
 
     @Override
-    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         Vaa3dPluginArgs args = getArgs(jacsServiceData);
         return ImmutableList.of(submitVaa3dService(args, jacsServiceData));
     }
 
     @Override
-    protected ServiceComputation<File> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+    protected ServiceComputation<File> processing(JacsServiceData jacsServiceData) {
         return createComputation(this.waitForResult(jacsServiceData));
     }
 
@@ -125,7 +125,7 @@ public class Vaa3dPluginProcessor extends AbstractServiceProcessor<File> {
         return new File(args.pluginOutput);
     }
 
-    private ServiceComputation<Void> submitVaa3dService(Vaa3dPluginArgs args, JacsServiceData jacsServiceData) {
+    private JacsServiceData submitVaa3dService(Vaa3dPluginArgs args, JacsServiceData jacsServiceData) {
         StringJoiner vaa3Args = new StringJoiner(" ")
                 .add("-x").add(args.plugin)
                 .add("-f").add(args.pluginFunc)
@@ -134,7 +134,7 @@ public class Vaa3dPluginProcessor extends AbstractServiceProcessor<File> {
         if (CollectionUtils.isNotEmpty(args.pluginParams)) {
             vaa3Args.add(StringUtils.wrap(args.pluginParams.stream().collect(Collectors.joining(" ")), '"'));
         }
-        return vaa3dProcessor.process(new ServiceExecutionContext(jacsServiceData),
+        return vaa3dProcessor.submit(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-vaa3dArgs", vaa3Args.toString()));
     }
 

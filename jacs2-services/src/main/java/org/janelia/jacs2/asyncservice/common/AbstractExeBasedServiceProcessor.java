@@ -5,8 +5,6 @@ import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
-import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
-import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.model.jacsservice.ProcessingLocation;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.slf4j.Logger;
@@ -43,13 +41,13 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
     }
 
     @Override
-    protected ServiceComputation<T> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+    protected ServiceComputation<T> processing(JacsServiceData jacsServiceData) {
         return invokeExternalProcess(jacsServiceData)
                 .thenApply(this::waitForResult);
     }
 
     @Override
-    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         return ImmutableList.of();
     }
 

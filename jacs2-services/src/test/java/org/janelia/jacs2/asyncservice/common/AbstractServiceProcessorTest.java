@@ -65,12 +65,12 @@ public class AbstractServiceProcessorTest {
         }
 
         @Override
-        protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
+        protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
             return ImmutableList.of();
         }
 
         @Override
-        protected ServiceComputation<Void> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+        protected ServiceComputation<Void> processing(JacsServiceData jacsServiceData) {
             return createComputation(this.waitForResult(jacsServiceData));
         }
 
@@ -124,12 +124,12 @@ public class AbstractServiceProcessorTest {
         }
 
         @Override
-        protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
+        protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
             return ImmutableList.of();
         }
 
         @Override
-        protected ServiceComputation<Void> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+        protected ServiceComputation<Void> processing(JacsServiceData jacsServiceData) {
             return createComputation(this.waitForResult(jacsServiceData));
         }
 
