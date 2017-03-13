@@ -109,11 +109,6 @@ public class Vaa3dPluginProcessor extends AbstractServiceProcessor<File> {
     }
 
     @Override
-    protected ServiceComputation<File> postProcessing(JacsServiceData jacsServiceData, File result) {
-        return createComputation(result);
-    }
-
-    @Override
     protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         Vaa3dPluginArgs args = getArgs(jacsServiceData);
         return Files.exists(Paths.get(args.pluginOutput));

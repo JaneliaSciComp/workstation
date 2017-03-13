@@ -116,7 +116,9 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
 
     protected abstract ServiceComputation<T> processing(JacsServiceData jacsServiceData);
 
-    protected abstract ServiceComputation<T> postProcessing(JacsServiceData jacsServiceData, T result);
+    protected ServiceComputation<T> postProcessing(JacsServiceData jacsServiceData, T result) {
+        return createComputation(result);
+    }
 
     protected <U> ServiceComputation<U> createComputation(U data) {
         return computationFactory.newCompletedComputation(data);

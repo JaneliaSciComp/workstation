@@ -125,11 +125,6 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
     }
 
     @Override
-    protected ServiceComputation<List<File>> postProcessing(JacsServiceData jacsServiceData, List<File> result) {
-        return createComputation(result);
-    }
-
-    @Override
     protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         return checkForDependenciesCompletion(jacsServiceData);
     }

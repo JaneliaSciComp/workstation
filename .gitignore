@@ -15,6 +15,7 @@ bin
 Distribution
 build
 eclipseBuild
+node_modules
 local
 target
 ear

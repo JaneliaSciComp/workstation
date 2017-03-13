@@ -1,6 +1,7 @@
 package org.janelia.jacs2.asyncservice.demo;
 
 import com.beust.jcommander.Parameter;
+import com.google.common.collect.ImmutableList;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.*;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
@@ -14,6 +15,7 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Date;
+import java.util.List;
 import java.util.PrimitiveIterator;
 import java.util.Random;
 import java.util.stream.LongStream;
@@ -36,10 +38,6 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
 
     private long resultComputationTime;
 
-    private IntegerComputeTestProcessor.IntegerComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
-        return IntegerComputeTestProcessor.IntegerComputeTestArgs.parse(jacsServiceData.getArgsArray(), new IntegerComputeTestArgs());
-    }
-
     @Inject
     public IntegerComputeTestProcessor (
             JacsServiceEngine jacsServiceEngine,
@@ -53,8 +51,28 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
     }
 
     @Override
-    protected ServiceComputation<Long> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        logger.debug("localProcessData() start");
+    public ServiceMetaData getMetadata() {
+        return ServiceArgs.getMetadata(this.getClass(), new IntegerComputeTestArgs());
+    }
+
+    @Override
+    public Long getResult(JacsServiceData jacsServiceData) {
+        return new Long(jacsServiceData.getStringifiedResult());
+    }
+
+    @Override
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
+    }
+
+    @Override
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+        return ImmutableList.of();
+    }
+
+    @Override
+    protected ServiceComputation<Long> processing(JacsServiceData jacsServiceData) {
+        logger.debug("processing() start");
         IntegerComputeTestArgs args=getArgs(jacsServiceData);
         int matrixSize=DEFAULT_MATRIX_SIZE;
         if (args.matrixSize!=null) {
@@ -106,27 +124,22 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         return true;
     }
 
     @Override
-    protected Long retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected Long retrieveResult(JacsServiceData jacsServiceData) {
         return null;
-    }
-
-    @Override
-    public ServiceMetaData getMetadata() {
-        return ServiceArgs.getMetadata(this.getClass(), new IntegerComputeTestArgs());
-    }
-
-    @Override
-    public Long getResult(JacsServiceData jacsServiceData) {
-        return new Long(jacsServiceData.getStringifiedResult());
     }
 
     @Override
     public void setResult(Long result, JacsServiceData jacsServiceData) {
         jacsServiceData.setStringifiedResult(result.toString());
     }
+
+    private IntegerComputeTestProcessor.IntegerComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
+        return IntegerComputeTestProcessor.IntegerComputeTestArgs.parse(jacsServiceData.getArgsArray(), new IntegerComputeTestArgs());
+    }
+
 }

@@ -130,11 +130,6 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
     }
 
     @Override
-    protected ServiceComputation<Void> postProcessing(JacsServiceData jacsServiceData, Void result) {
-        return createComputation(result);
-    }
-
-    @Override
     protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         return checkForDependenciesCompletion(jacsServiceData);
     }

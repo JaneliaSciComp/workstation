@@ -101,11 +101,6 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
     }
 
     @Override
-    protected ServiceComputation<List<SampleImageMetadataFile>> postProcessing(JacsServiceData jacsServiceData, List<SampleImageMetadataFile> result) {
-        return createComputation(result);
-    }
-
-    @Override
     protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         return checkForDependenciesCompletion(jacsServiceData);
     }

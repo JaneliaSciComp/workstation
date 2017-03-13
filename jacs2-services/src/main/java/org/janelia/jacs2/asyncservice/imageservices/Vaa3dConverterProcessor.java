@@ -102,11 +102,6 @@ public class Vaa3dConverterProcessor extends AbstractServiceProcessor<File> {
     }
 
     @Override
-    protected ServiceComputation<File> postProcessing(JacsServiceData jacsServiceData, File result) {
-        return createComputation(result);
-    }
-
-    @Override
     protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         Vaa3dConverterArgs args = getArgs(jacsServiceData);
         return Files.exists(Paths.get(args.outputFileName));

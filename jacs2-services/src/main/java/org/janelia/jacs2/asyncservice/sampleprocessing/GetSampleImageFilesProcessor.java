@@ -113,11 +113,6 @@ public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<
     }
 
     @Override
-    protected ServiceComputation<List<SampleImageFile>> postProcessing(JacsServiceData jacsServiceData, List<SampleImageFile> result) {
-        return createComputation(result);
-    }
-
-    @Override
     protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         return checkForDependenciesCompletion(jacsServiceData);
     }

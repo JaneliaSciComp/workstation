@@ -51,11 +51,6 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
         return ImmutableList.of();
     }
 
-    @Override
-    protected ServiceComputation<T> postProcessing(JacsServiceData jacsServiceData, T result) {
-        return createComputation(result);
-    }
-
     protected abstract ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData);
 
     protected abstract Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData);

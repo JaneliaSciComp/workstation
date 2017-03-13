@@ -75,11 +75,6 @@ public class AbstractServiceProcessorTest {
         }
 
         @Override
-        protected ServiceComputation<Void> postProcessing(JacsServiceData jacsServiceData, Void result) {
-            return createComputation(result);
-        }
-
-        @Override
         protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
             return true;
         }
@@ -131,11 +126,6 @@ public class AbstractServiceProcessorTest {
         @Override
         protected ServiceComputation<Void> processing(JacsServiceData jacsServiceData) {
             return createComputation(this.waitForResult(jacsServiceData));
-        }
-
-        @Override
-        protected ServiceComputation<Void> postProcessing(JacsServiceData jacsServiceData, Void result) {
-            return createComputation(result);
         }
 
         @Override
