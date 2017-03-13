@@ -47,6 +47,7 @@ public class JacsServiceDispatcher {
                 // then try to acquire a slot otherwise let this pass through
                 if (!jacsServiceEngine.acquireSlot()) {
                     logger.info("No available processing slots");
+                    jacsServiceQueue.abortService(queuedService);
                     continue; // no slot available
                 }
             }

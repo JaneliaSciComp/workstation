@@ -10,6 +10,7 @@ public interface JacsServiceQueue {
     JacsServiceData enqueueService(JacsServiceData jacsServiceData);
     JacsServiceData dequeService();
     void refreshServiceQueue();
+    void abortService(JacsServiceData jacsServiceData);
     void completeService(JacsServiceData jacsServiceData);
     int getReadyServicesSize();
     int getPendingServicesSize();
