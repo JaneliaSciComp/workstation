@@ -63,11 +63,11 @@ public class JacsServiceDispatcher {
                     })
                     .thenCompose(sd -> serviceProcessor.process(sd))
                     .whenComplete((r, exc) -> {
-                        jacsServiceQueue.completeService(queuedService);
                         if (!queuedService.hasParentServiceId()) {
                             // release the slot acquired before the service was started
                             jacsServiceEngine.releaseSlot();
                         }
+                        jacsServiceQueue.completeService(queuedService);
                     });
         }
     }

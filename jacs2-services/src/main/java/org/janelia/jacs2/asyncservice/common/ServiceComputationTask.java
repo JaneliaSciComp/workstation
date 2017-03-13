@@ -104,7 +104,7 @@ class ServiceComputationTask<T> implements Runnable {
             return;
         }
         for (;;) {
-            if (isReady() && !isSuspended()) {
+            if (isReady()) {
                 if (resultSupplier != null) {
                     try {
                         complete(resultSupplier.get());
@@ -163,11 +163,13 @@ class ServiceComputationTask<T> implements Runnable {
     void complete(T result) {
         this.result = new ComputeResult<>(result, null);
         done.countDown();
+        this.resume();
     }
 
     void completeExceptionally(Throwable exc) {
         this.result = new ComputeResult<>(null, exc);
         done.countDown();
+        this.resume();
     }
 
     boolean isSuspended() {
