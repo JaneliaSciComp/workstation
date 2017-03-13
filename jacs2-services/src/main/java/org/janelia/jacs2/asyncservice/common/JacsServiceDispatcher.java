@@ -36,16 +36,19 @@ public class JacsServiceDispatcher {
     void dispatchServices() {
         logger.debug("Dispatch services");
         for (int i = 0; i < DISPATCH_BATCH_SIZE; i++) {
-            if (!jacsServiceEngine.acquireSlot()) {
-                logger.info("No available processing slots");
-                return; // no slot available
-            }
             JacsServiceData queuedService = jacsServiceQueue.dequeService();
             logger.debug("Dequeued service {}", queuedService);
             if (queuedService == null) {
                 // nothing to do
-                jacsServiceEngine.releaseSlot();
                 return;
+            }
+            if (!queuedService.hasParentServiceId()) {
+                // if this is a root service, i.e. no other currently running service depends on it
+                // then try to acquire a slot otherwise let this pass through
+                if (!jacsServiceEngine.acquireSlot()) {
+                    logger.info("No available processing slots");
+                    return; // no slot available
+                }
             }
             logger.info("Dispatch service {}", queuedService);
             ServiceProcessor<?> serviceProcessor = jacsServiceEngine.getServiceProcessor(queuedService);
@@ -55,11 +58,16 @@ public class JacsServiceDispatcher {
                         logger.debug("Submit {}", service);
                         service.setState(JacsServiceState.SUBMITTED);
                         updateServiceInfo(service);
-                        jacsServiceEngine.releaseSlot();
                         return service;
                     })
                     .thenCompose(sd -> serviceProcessor.process(sd))
-                    .whenComplete((r, exc) -> jacsServiceQueue.completeService(queuedService));
+                    .whenComplete((r, exc) -> {
+                        jacsServiceQueue.completeService(queuedService);
+                        if (!queuedService.hasParentServiceId()) {
+                            // release the slot acquired before the service was started
+                            jacsServiceEngine.releaseSlot();
+                        }
+                    });
         }
     }
 
