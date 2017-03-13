@@ -9,4 +9,8 @@ FlyLight
 * No change
 
 MouseLight
-* No change
+* Allow merging of neurites within a neuron in Horta.
+* Use better radii when adding anchors in LVV.
+* Avoid Horta IndexOutOfBoundsException in NeuronVbo.updateNeuronVisibility (JW-28009).
+* Improve quality of Ktx tile rendering, to reduce popping during zoom.
+* Hide Horta editing options when the workspace is read-only.
