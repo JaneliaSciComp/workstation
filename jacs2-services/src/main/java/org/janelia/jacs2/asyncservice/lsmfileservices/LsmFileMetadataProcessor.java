@@ -79,24 +79,24 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
         try {
             LsmFileMetadataArgs args = getArgs(jacsServiceData);
             if (StringUtils.isBlank(args.inputLSMFile)) {
-                return createFailure(jacsServiceData, new ComputationException(jacsServiceData, "Input LSM file name must be specified"));
+                return createFailure(new ComputationException(jacsServiceData, "Input LSM file name must be specified"));
             } else if (StringUtils.isBlank(args.outputLSMMetadata)) {
-                return createFailure(jacsServiceData, new ComputationException(jacsServiceData, "Output LSM metadata name must be specified"));
+                return createFailure(new ComputationException(jacsServiceData, "Output LSM metadata name must be specified"));
             } else {
                 File outputFile = getOutputFile(args);
                 try {
                     Files.createDirectories(outputFile.getParentFile().toPath());
                 } catch (IOException e) {
-                    return createFailure(jacsServiceData, e);
+                    return createFailure(e);
                 }
                 return createComputation(jacsServiceData);
             }
         } catch (Exception e) {
-            return createFailure(jacsServiceData, e);
+            return createFailure(e);
         }
     }
 

@@ -64,24 +64,19 @@ public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
         try {
             SampleServiceArgs args = getArgs(jacsServiceData);
             Path destinationDirectory = Paths.get(args.sampleDataDir);
             Files.createDirectories(destinationDirectory);
         } catch (Exception e) {
-            createFailure(jacsServiceData, e);
+            createFailure(e);
         }
         return createComputation(jacsServiceData);
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processData(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData);
-    }
-
-    @Override
-    protected List<JacsServiceData> submitAllDependencies(JacsServiceData jacsServiceData) {
+    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
         Path destinationDirectory = Paths.get(args.sampleDataDir);
 
@@ -107,10 +102,19 @@ public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<
                             sif.setObjective(ar.getObjective());
                             return sif;
                         }))
-                .map(sif -> fileCopyProcessor.create(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
+                .map(sif -> fileCopyProcessor.process(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
                         new ServiceArg("-src", sif.getArchiveFilePath()),
                         new ServiceArg("-dst", sif.getWorkingFilePath())))
                 .collect(Collectors.toList());
+    }
+
+    protected ServiceComputation<List<SampleImageFile>> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+        return createComputation(this.waitForResult(jacsServiceData));
+    }
+
+    @Override
+    protected ServiceComputation<List<SampleImageFile>> postProcessing(JacsServiceData jacsServiceData, List<SampleImageFile> result) {
+        return createComputation(result);
     }
 
     @Override

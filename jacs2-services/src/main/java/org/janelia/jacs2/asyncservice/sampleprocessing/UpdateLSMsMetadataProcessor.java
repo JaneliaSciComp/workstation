@@ -64,9 +64,14 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
     }
 
     @Override
-    protected List<JacsServiceData> submitAllDependencies(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
+    }
+
+    @Override
+    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
-        JacsServiceData getSampleLsmMetadataService = getSampleLsmsMetadataProcessor.create(new ServiceExecutionContext(jacsServiceData),
+        ServiceComputation<List<SampleImageMetadataFile>> getSampleLsmMetadataService = getSampleLsmsMetadataProcessor.process(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
                 new ServiceArg("-sampleDataDir", args.sampleDataDir));
@@ -75,12 +80,7 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData);
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> processData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<Void> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
         SampleServiceArgs args = getArgs(jacsServiceData);
         List<AnatomicalArea> anatomicalAreas =
                 sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
@@ -92,7 +92,6 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
                 .forEach(lsmf -> {
                     File lsmImageFile = SampleServicesUtils.getImageFile(destinationDirectory, lsmf);
                     File lsmMetadataFile = SampleServicesUtils.getImageMetadataFile(args.sampleDataDir, lsmImageFile);
-                    sampleDataService.updateLSMMetadataFile(lsmf, lsmMetadataFile.getAbsolutePath());
 
                     // read the metadata from the metadata file
                     try {
@@ -122,16 +121,22 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
                         if (lsmUpdated) {
                             sampleDataService.updateLSM(lsmf);
                         }
+                        sampleDataService.updateLSMMetadataFile(lsmf, lsmMetadataFile.getAbsolutePath());
                     } catch (IOException e) {
                         throw new ComputationException(jacsServiceData, e);
                     }
                 });
-        return createComputation(jacsServiceData);
+        return createComputation(null);
+    }
+
+    @Override
+    protected ServiceComputation<Void> postProcessing(JacsServiceData jacsServiceData, Void result) {
+        return createComputation(result);
     }
 
     @Override
     protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        return true;
+        return checkForDependenciesCompletion(jacsServiceData);
     }
 
     @Override

@@ -80,6 +80,27 @@ public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File
     }
 
     @Override
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
+    }
+
+    @Override
+    protected Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData) {
+        return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
+    }
+
+    @Override
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
+        File mergedLsmResultFile = getMergedLsmResultFile(jacsServiceData);
+        return mergedLsmResultFile.exists();
+    }
+
+    @Override
+    protected File retrieveResult(JacsServiceData jacsServiceData) {
+        return getMergedLsmResultFile(jacsServiceData);
+    }
+
+    @Override
     protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
         ChannelMergeArgs args = getArgs(jacsServiceData);
         ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
@@ -106,22 +127,6 @@ public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-    }
-
-    @Override
-    protected Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData) {
-        return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
-    }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        File mergedLsmResultFile = getMergedLsmResultFile(jacsServiceData);
-        return mergedLsmResultFile.exists();
-    }
-
-    @Override
-    protected File retrieveResult(JacsServiceData jacsServiceData) {
-        return getMergedLsmResultFile(jacsServiceData);
     }
 
     @Override

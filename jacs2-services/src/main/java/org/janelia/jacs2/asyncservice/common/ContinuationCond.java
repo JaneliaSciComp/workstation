@@ -1,6 +1,6 @@
 package org.janelia.jacs2.asyncservice.common;
 
 @FunctionalInterface
-interface ContinuationCond {
+public interface ContinuationCond {
     boolean checkCond();
 }

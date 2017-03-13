@@ -8,6 +8,7 @@ import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.asyncservice.utils.X11Utils;
@@ -64,6 +65,11 @@ public class Vaa3dProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
     @Override
     public void setResult(Void result, JacsServiceData jacsServiceData) {
+    }
+
+    @Override
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
     }
 
     @Override

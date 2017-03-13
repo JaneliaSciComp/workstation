@@ -80,20 +80,15 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
         return createComputation(jacsServiceData);
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processData(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData);
-    }
-
-    @Override
-    protected List<JacsServiceData> submitAllDependencies(JacsServiceData jacsServiceData) {
+    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
         SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
 
-        JacsServiceData getSampleLsms = getSampleImageFilesProcessor.create(new ServiceExecutionContext(jacsServiceData),
+        JacsServiceData getSampleLsms = getSampleImageFilesProcessor.submit(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
                 new ServiceArg("-sampleDataDir", args.sampleDataDir));
@@ -101,18 +96,17 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
         List<AnatomicalArea> anatomicalAreas =
                 sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
 
-        List<JacsServiceData> basicMipMapsServices = anatomicalAreas.stream()
+        return anatomicalAreas.stream()
                 .flatMap(ar -> ar.getTileLsmPairs()
                         .stream()
                         .flatMap(lsmp -> lsmp.getLsmFiles().stream())
                         .map(lsmf -> {
                             File lsmImageFile = SampleServicesUtils.getImageFile(Paths.get(args.sampleDataDir), lsmf);
-
                             if (!lsmf.isChanSpecDefined()) {
                                 throw new ComputationException(jacsServiceData, "No channel spec for LSM " + lsmf.getId());
                             }
                             Path resultsDir =  getResultsDir(args, ar.getName(), ar.getObjective(), lsmImageFile);
-                            return basicMIPsAndMoviesProcessor.create(new ServiceExecutionContext.Builder(jacsServiceData)
+                            return basicMIPsAndMoviesProcessor.process(new ServiceExecutionContext.Builder(jacsServiceData)
                                             .waitFor(getSampleLsms)
                                             .build(),
                                     new ServiceArg("-imgFile", lsmImageFile.getAbsolutePath()),
@@ -124,15 +118,20 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                                     new ServiceArg("-resultsDir", resultsDir.toString()));
                         }))
                 .collect(Collectors.toList());
-        return new ImmutableList.Builder<JacsServiceData>()
-                .add(getSampleLsms)
-                .addAll(basicMipMapsServices)
-                .build();
+    }
+
+    protected ServiceComputation<List<File>> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+        return createComputation(this.waitForResult(jacsServiceData));
+    }
+
+    @Override
+    protected ServiceComputation<List<File>> postProcessing(JacsServiceData jacsServiceData, List<File> result) {
+        return createComputation(result);
     }
 
     @Override
     protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        return true;
+        return checkForDependenciesCompletion(jacsServiceData);
     }
 
     @Override

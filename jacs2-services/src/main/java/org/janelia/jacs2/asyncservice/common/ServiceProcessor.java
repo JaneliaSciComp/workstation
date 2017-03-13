@@ -7,4 +7,5 @@ public interface ServiceProcessor<T> {
     ServiceMetaData getMetadata();
     ServiceComputation<T> process(JacsServiceData jacsServiceData);
     ServiceComputation<T> process(ServiceExecutionContext executionContext, ServiceArg ...args);
+    JacsServiceData submit(ServiceExecutionContext executionContext, ServiceArg... args);
 }

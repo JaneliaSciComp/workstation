@@ -1,7 +1,6 @@
 package org.janelia.jacs2.asyncservice.sampleprocessing;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.ImmutableList;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
@@ -65,19 +64,14 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
         return createComputation(jacsServiceData);
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processData(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData);
-    }
-
-    @Override
-    protected List<JacsServiceData> submitAllDependencies(JacsServiceData jacsServiceData) {
+    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
-        JacsServiceData getSampleLsms = getSampleImageFilesProcessor.create(new ServiceExecutionContext(jacsServiceData),
+        JacsServiceData getSampleLsms = getSampleImageFilesProcessor.submit(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
                 new ServiceArg("-sampleDataDir", args.sampleDataDir));
@@ -85,7 +79,7 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
         List<AnatomicalArea> anatomicalAreas =
                 sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
 
-        List<JacsServiceData> lsmMetadataServices = anatomicalAreas.stream()
+        return anatomicalAreas.stream()
                 .flatMap(ar -> ar.getTileLsmPairs()
                         .stream()
                         .flatMap(lsmp -> lsmp.getLsmFiles().stream())
@@ -93,22 +87,27 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
                             File lsmImageFile = SampleServicesUtils.getImageFile(Paths.get(args.sampleDataDir), lsmf);
                             File lsmMetadataFile = SampleServicesUtils.getImageMetadataFile(args.sampleDataDir, lsmImageFile);
 
-                            return lsmFileMetadataProcessor.create(new ServiceExecutionContext.Builder(jacsServiceData)
+                            return lsmFileMetadataProcessor.process(new ServiceExecutionContext.Builder(jacsServiceData)
                                             .waitFor(getSampleLsms)
                                             .build(),
                                     new ServiceArg("-inputLSM", lsmImageFile.getAbsolutePath()),
                                     new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath()));
                         }))
                 .collect(Collectors.toList());
-        return new ImmutableList.Builder<JacsServiceData>()
-                    .add(getSampleLsms)
-                    .addAll(lsmMetadataServices)
-                    .build();
+    }
+
+    protected ServiceComputation<List<SampleImageMetadataFile>> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+        return createComputation(this.waitForResult(jacsServiceData));
+    }
+
+    @Override
+    protected ServiceComputation<List<SampleImageMetadataFile>> postProcessing(JacsServiceData jacsServiceData, List<SampleImageMetadataFile> result) {
+        return createComputation(result);
     }
 
     @Override
     protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        return true;
+        return checkForDependenciesCompletion(jacsServiceData);
     }
 
     @Override

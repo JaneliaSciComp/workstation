@@ -1,7 +1,6 @@
 package org.janelia.jacs2.asyncservice.common;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.CompletionException;
@@ -221,7 +220,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
                 waitFor.complete(true);
                 return true;
             } else {
-                if (nextTask.isSuspended()) {
+                if (!nextTask.isSuspended()) {
                     logger.debug("Suspend {}", nextTask);
                     nextTask.suspend();
                 }

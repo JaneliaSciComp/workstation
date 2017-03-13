@@ -40,6 +40,11 @@ public class AbstractExeBasedServiceProcessorTest {
         }
 
         @Override
+        protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+            return createComputation(jacsServiceData);
+        }
+
+        @Override
         protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
             return true;
         }
