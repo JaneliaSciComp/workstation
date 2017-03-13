@@ -94,7 +94,7 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
         BasicMIPsAndMoviesArgs args = getArgs(jacsServiceData);
         try {
             Files.createDirectories(getResultsDir(args));
@@ -104,28 +104,78 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
         return createComputation(jacsServiceData);
     }
 
-    @Override
-    protected ServiceComputation<JacsServiceData> processData(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData)
-                .thenCompose(this::waitForDependencies)
-                .thenApply(this::retrieveResultWhenReady)
-                .thenApply(fileResults -> {
-                    fileResults.stream()
-                            .filter(f -> f.getName().endsWith(".avi"))
-                            .forEach(f -> mpegConverterProcessor.create(new ServiceExecutionContext(jacsServiceData), new ServiceArg("-input", f.getAbsolutePath())));
-                    return jacsServiceData;
-                })
-                .thenCompose(this::waitForDependencies);
+    private Path getResultsDir(BasicMIPsAndMoviesArgs args) {
+        return Paths.get(args.resultsDir, com.google.common.io.Files.getNameWithoutExtension(args.imageFile));
     }
 
     @Override
-    protected List<JacsServiceData> submitAllDependencies(JacsServiceData jacsServiceData) {
+    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
         BasicMIPsAndMoviesArgs args = getArgs(jacsServiceData);
         return ImmutableList.of(submitFijiService(args, jacsServiceData));
     }
 
-    private Path getResultsDir(BasicMIPsAndMoviesArgs args) {
-        return Paths.get(args.resultsDir, com.google.common.io.Files.getNameWithoutExtension(args.imageFile));
+    private ServiceComputation<Void> submitFijiService(BasicMIPsAndMoviesArgs args, JacsServiceData jacsServiceData) {
+        if (StringUtils.isBlank(args.chanSpec)) {
+            throw new ComputationException(jacsServiceData,  "No channel spec for " + args.imageFile);
+        }
+        Path temporaryOutputDir = getServicePath(scratchLocation, jacsServiceData, com.google.common.io.Files.getNameWithoutExtension(args.imageFile));
+        return fijiMacroProcessor.process(new ServiceExecutionContext(jacsServiceData),
+                new ServiceArg("-macro", basicMIPsAndMoviesMacro),
+                new ServiceArg("-macroArgs", getBasicMIPsAndMoviesArgs(args, temporaryOutputDir)),
+                new ServiceArg("-temporaryOutput", temporaryOutputDir.toString()),
+                new ServiceArg("-finalOutput", getResultsDir(args).toString()),
+                new ServiceArg("-resultsPatterns", "*.png"),
+                new ServiceArg("-resultsPatterns", "*.avi"));
+    }
+
+    private String getBasicMIPsAndMoviesArgs(BasicMIPsAndMoviesArgs args, Path outputDir) {
+        List<FijiColor> colors = FijiUtils.getColorSpec(args.colorSpec, args.chanSpec);
+        if (colors.isEmpty()) {
+            colors = FijiUtils.getDefaultColorSpec(args.chanSpec, "RGB", '1');
+        }
+        String colorSpec = colors.stream().map(c -> String.valueOf(c.getCode())).collect(Collectors.joining(","));
+        String divSpec = colors.stream().map(c -> String.valueOf(c.getDivisor())).collect(Collectors.joining(","));
+        StringJoiner builder = new StringJoiner(",");
+        builder.add(outputDir.toString()); // output directory
+        builder.add(com.google.common.io.Files.getNameWithoutExtension(args.imageFile)); // output prefix 1
+        builder.add(""); // output prefix 2
+        builder.add(args.imageFile); // input file 1
+        builder.add(""); // input file 2
+        builder.add(args.laser == null ? "" : args.laser.toString());
+        builder.add(args.gain == null ? "" : args.gain.toString());
+        builder.add(args.chanSpec);
+        builder.add(colorSpec);
+        builder.add(divSpec);
+        builder.add(StringUtils.defaultIfBlank(args.options, DEFAULT_OPTIONS));
+        return builder.toString();
+    }
+
+    @Override
+    protected ServiceComputation<List<File>> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+        return createComputation(jacsServiceData)
+                .thenApply(this::waitForResult)
+                .thenApply(fileResults -> {
+                    fileResults.stream()
+                            .filter(f -> f.getName().endsWith(".avi"))
+                            .forEach(f -> mpegConverterProcessor.submit(new ServiceExecutionContext(jacsServiceData), new ServiceArg("-input", f.getAbsolutePath())));
+                    return jacsServiceData;
+                })
+                .thenSuspendUntil(() -> this.checkSuspendCondition(jacsServiceData))
+                .thenApply(this::waitForResult);
+    }
+
+    @Override
+    protected ServiceComputation<List<File>> postProcessing(JacsServiceData jacsServiceData, List<File> result) {
+        return createComputation(result)
+                .thenApply(r -> {
+                    try {
+                        Path temporaryOutputDir = getServicePath(scratchLocation, jacsServiceData);
+                        FileUtils.deletePath(temporaryOutputDir);
+                        return r;
+                    } catch (Exception e) {
+                        throw new ComputationException(jacsServiceData, e);
+                    }
+                });
     }
 
     @Override
@@ -157,57 +207,6 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
             throw new UncheckedIOException(e);
         }
         return results;
-    }
-
-    private JacsServiceData submitFijiService(BasicMIPsAndMoviesArgs args, JacsServiceData jacsServiceData) {
-        if (StringUtils.isBlank(args.chanSpec)) {
-            throw new ComputationException(jacsServiceData,  "No channel spec for " + args.imageFile);
-        }
-        Path temporaryOutputDir = getServicePath(scratchLocation, jacsServiceData, com.google.common.io.Files.getNameWithoutExtension(args.imageFile));
-        return fijiMacroProcessor.create(new ServiceExecutionContext(jacsServiceData),
-                new ServiceArg("-macro", basicMIPsAndMoviesMacro),
-                new ServiceArg("-macroArgs", getBasicMIPsAndMoviesArgs(args, temporaryOutputDir)),
-                new ServiceArg("-temporaryOutput", temporaryOutputDir.toString()),
-                new ServiceArg("-finalOutput", getResultsDir(args).toString()),
-                new ServiceArg("-resultsPatterns", "*.png"),
-                new ServiceArg("-resultsPatterns", "*.avi"));
-    }
-
-    private String getBasicMIPsAndMoviesArgs(BasicMIPsAndMoviesArgs args, Path outputDir) {
-        List<FijiColor> colors = FijiUtils.getColorSpec(args.colorSpec, args.chanSpec);
-        if (colors.isEmpty()) {
-            colors = FijiUtils.getDefaultColorSpec(args.chanSpec, "RGB", '1');
-        }
-        String colorSpec = colors.stream().map(c -> String.valueOf(c.getCode())).collect(Collectors.joining(","));
-        String divSpec = colors.stream().map(c -> String.valueOf(c.getDivisor())).collect(Collectors.joining(","));
-        StringJoiner builder = new StringJoiner(",");
-        builder.add(outputDir.toString()); // output directory
-        builder.add(com.google.common.io.Files.getNameWithoutExtension(args.imageFile)); // output prefix 1
-        builder.add(""); // output prefix 2
-        builder.add(args.imageFile); // input file 1
-        builder.add(""); // input file 2
-        builder.add(args.laser == null ? "" : args.laser.toString());
-        builder.add(args.gain == null ? "" : args.gain.toString());
-        builder.add(args.chanSpec);
-        builder.add(colorSpec);
-        builder.add(divSpec);
-        builder.add(StringUtils.defaultIfBlank(args.options, DEFAULT_OPTIONS));
-        return builder.toString();
-    }
-
-
-    @Override
-    protected ServiceComputation<JacsServiceData> postProcessData(JacsServiceData jacsServiceData) {
-        return computationFactory.<JacsServiceData>newComputation()
-                .supply(() -> {
-                    try {
-                        Path temporaryOutputDir = getServicePath(scratchLocation, jacsServiceData);
-                        FileUtils.deletePath(temporaryOutputDir);
-                        return jacsServiceData;
-                    } catch (Exception e) {
-                        throw new ComputationException(jacsServiceData, e);
-                    }
-                });
     }
 
     private BasicMIPsAndMoviesArgs getArgs(JacsServiceData jacsServiceData) {

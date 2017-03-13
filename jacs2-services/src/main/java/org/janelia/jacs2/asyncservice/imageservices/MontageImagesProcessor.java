@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -83,6 +84,11 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
     @Override
     public void setResult(File result, JacsServiceData jacsServiceData) {
         jacsServiceData.setStringifiedResult(ServiceDataUtils.fileToString(result));
+    }
+
+    @Override
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
     }
 
     @Override

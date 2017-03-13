@@ -2,6 +2,7 @@ package org.janelia.jacs2.asyncservice.fileservices;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
@@ -27,6 +28,7 @@ import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Map;
 
 @Named("fileCopy")
@@ -77,50 +79,38 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
         try {
             FileCopyArgs args = getArgs(jacsServiceData);
             if (StringUtils.isBlank(args.sourceFilename)) {
-                return createFailure(jacsServiceData, new ComputationException(jacsServiceData, "Source file name must be specified"));
+                return createFailure(new ComputationException(jacsServiceData, "Source file name must be specified"));
             } else if (StringUtils.isBlank(args.targetFilename)) {
-                return createFailure(jacsServiceData, new ComputationException(jacsServiceData, "Target file name must be specified"));
+                return createFailure(new ComputationException(jacsServiceData, "Target file name must be specified"));
             } else {
                 File targetFile = getTargetFile(args);
                 try {
                     Files.createDirectories(targetFile.getParentFile().toPath());
                 } catch (IOException e) {
-                    return createFailure(jacsServiceData, e);
+                    return createFailure(e);
                 }
                 return createComputation(jacsServiceData);
             }
         } catch (Exception e) {
-            return createFailure(jacsServiceData, e);
+            return createFailure(e);
         }
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processData(JacsServiceData jacsServiceData) {
-        FileCopyArgs args = getArgs(jacsServiceData);
-        File destFile = getTargetFile(args);
-        if (destFile.exists()) {
-            logger.info("Nothing to do since the destination file '{}' already exists", destFile);
-            return createComputation(jacsServiceData);
-        } else {
-            return super.processData(jacsServiceData);
-        }
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> postProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<File> postProcessing(JacsServiceData jacsServiceData, File result) {
         try {
             FileCopyArgs args = getArgs(jacsServiceData);
             if (args.deleteSourceFile) {
                 File sourceFile = getSourceFile(args);
                 Files.deleteIfExists(sourceFile.toPath());
             }
-            return createComputation(jacsServiceData);
+            return createComputation(result);
         } catch (Exception e) {
-            return createFailure(jacsServiceData, e);
+            return createFailure(e);
         }
     }
 

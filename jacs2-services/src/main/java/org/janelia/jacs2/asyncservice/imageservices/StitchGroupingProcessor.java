@@ -80,7 +80,7 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
         StitchGroupingArgs  args = getArgs(jacsServiceData);
         try {
             Files.createDirectories(Paths.get(args.resultDir));
@@ -88,6 +88,17 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
             throw new ComputationException(jacsServiceData, e);
         }
         return computationFactory.newCompletedComputation(jacsServiceData);
+    }
+
+    @Override
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
+        File mergedLsmResultFile = getGroupResultFile(jacsServiceData);
+        return mergedLsmResultFile.exists();
+    }
+
+    @Override
+    protected File retrieveResult(JacsServiceData jacsServiceData) {
+        return getGroupResultFile(jacsServiceData);
     }
 
     @Override
@@ -121,17 +132,6 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
     @Override
     protected Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData) {
         return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
-    }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        File mergedLsmResultFile = getGroupResultFile(jacsServiceData);
-        return mergedLsmResultFile.exists();
-    }
-
-    @Override
-    protected File retrieveResult(JacsServiceData jacsServiceData) {
-        return getGroupResultFile(jacsServiceData);
     }
 
     @Override

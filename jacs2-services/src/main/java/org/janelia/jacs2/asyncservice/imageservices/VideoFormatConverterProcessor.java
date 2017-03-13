@@ -85,16 +85,16 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
         try {
             ConverterArgs args = getArgs(jacsServiceData);
             if (StringUtils.isBlank(args.input)) {
-                createFailure(jacsServiceData, new ComputationException(jacsServiceData, "Input must be specified"));
+                createFailure(new ComputationException(jacsServiceData, "Input must be specified"));
             }
             File outputFile = getOutputFile(args);
             Files.createDirectories(outputFile.getParentFile().toPath());
         } catch (IOException e) {
-            return createFailure(jacsServiceData, e);
+            return createFailure(e);
         }
         return createComputation(jacsServiceData);
     }

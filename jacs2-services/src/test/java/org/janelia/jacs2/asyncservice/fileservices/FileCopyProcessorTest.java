@@ -84,7 +84,7 @@ public class FileCopyProcessorTest {
                     .addArg("-src", "/home/testSource")
                     .addArg("-dst", testDestFile.getAbsolutePath())
                     .build();
-        ServiceComputation<JacsServiceData> preprocessStage = testProcessor.preProcessData(testServiceData);
+        ServiceComputation<JacsServiceData> preprocessStage = testProcessor.prepareProcessing(testServiceData);
         assertTrue(preprocessStage.isDone());
     }
 
@@ -112,7 +112,7 @@ public class FileCopyProcessorTest {
    }
 
     private void verifyCompletionWithException(JacsServiceData testServiceData) throws ExecutionException, InterruptedException {
-        ServiceComputation<JacsServiceData> preprocessStage = testProcessor.preProcessData(testServiceData);
+        ServiceComputation<JacsServiceData> preprocessStage = testProcessor.prepareProcessing(testServiceData);
 
         assertTrue(preprocessStage.isCompletedExceptionally());
     }
@@ -128,7 +128,7 @@ public class FileCopyProcessorTest {
                 .addArg("-convert8")
                 .build();
         assertTrue(Files.exists(testSourcePath));
-        ServiceComputation<JacsServiceData> doneStage = testProcessor.postProcessData(testServiceData);
+        ServiceComputation<File> doneStage = testProcessor.postProcessing(testServiceData, testDestFile);
         assertTrue(doneStage.isDone());
         assertTrue(Files.notExists(testSourcePath));
     }
@@ -144,7 +144,7 @@ public class FileCopyProcessorTest {
                     .addArg("-mv")
                     .addArg("-convert8")
                     .build();
-            ServiceComputation<JacsServiceData> postProcessing = testProcessor.postProcessData(testServiceData);
+            ServiceComputation<File> postProcessing = testProcessor.postProcessing(testServiceData, testDestFile);
             assertTrue(postProcessing.isCompletedExceptionally());
             assertTrue(Files.exists(testSourcePath));
         } finally {
@@ -162,7 +162,7 @@ public class FileCopyProcessorTest {
                     .addArg("-dst", testDestFile.getAbsolutePath())
                     .addArg("-convert8")
                     .build();
-            ServiceComputation<JacsServiceData> postProcessing = testProcessor.postProcessData(testServiceData);
+            ServiceComputation<File> postProcessing = testProcessor.postProcessing(testServiceData, testDestFile);
             assertTrue(postProcessing.isDone());
             assertTrue(Files.exists(testSourcePath));
         } finally {

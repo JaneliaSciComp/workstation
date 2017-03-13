@@ -1,6 +1,5 @@
 package org.janelia.jacs2.asyncservice.common;
 
-import org.janelia.jacs2.cdi.qualifier.SuspendedTaskExecutor;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
