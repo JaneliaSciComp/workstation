@@ -95,11 +95,11 @@ public class JacsServiceDispatcherTest {
     @Test
     public void dispatchServiceWhenNoSlotsAreAvailable() {
         jacsServiceEngine.setProcessingSlotsCount(0);
-        submitTestService("test");
+        JacsServiceData testService = submitTestService("test");
         when(jacsServiceDataPersistence.findServicesByState(any(Set.class), any(PageRequest.class)))
                 .thenReturn(new PageResult<>());
         testDispatcher.dispatchServices();
-        verify(logger).info("No available processing slots");
+        verify(logger).debug("Abort service {} for now because there are not enough processing slots", testService);
     }
 
     @Test

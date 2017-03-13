@@ -46,7 +46,7 @@ public class JacsServiceDispatcher {
                 // if this is a root service, i.e. no other currently running service depends on it
                 // then try to acquire a slot otherwise let this pass through
                 if (!jacsServiceEngine.acquireSlot()) {
-                    logger.info("No available processing slots");
+                    logger.debug("Abort service {} for now because there are not enough processing slots", queuedService);
                     jacsServiceQueue.abortService(queuedService);
                     continue; // no slot available
                 }
