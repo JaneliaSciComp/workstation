@@ -85,7 +85,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
     }
 
     @Override
-    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
 
         JacsServiceData getSampleLsms = getSampleImageFilesProcessor.submit(new ServiceExecutionContext(jacsServiceData),
@@ -106,7 +106,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                                 throw new ComputationException(jacsServiceData, "No channel spec for LSM " + lsmf.getId());
                             }
                             Path resultsDir =  getResultsDir(args, ar.getName(), ar.getObjective(), lsmImageFile);
-                            return basicMIPsAndMoviesProcessor.process(new ServiceExecutionContext.Builder(jacsServiceData)
+                            return basicMIPsAndMoviesProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
                                             .waitFor(getSampleLsms)
                                             .build(),
                                     new ServiceArg("-imgFile", lsmImageFile.getAbsolutePath()),
@@ -120,7 +120,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<Li
                 .collect(Collectors.toList());
     }
 
-    protected ServiceComputation<List<File>> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+    protected ServiceComputation<List<File>> processing(JacsServiceData jacsServiceData) {
         return createComputation(this.waitForResult(jacsServiceData));
     }
 

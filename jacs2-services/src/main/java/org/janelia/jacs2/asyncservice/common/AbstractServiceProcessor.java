@@ -22,16 +22,6 @@ import java.util.stream.Stream;
 
 public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T> {
 
-    private static class SubComputationResults {
-        final JacsServiceData jacsServiceData;
-        final List<?> results;
-
-        public SubComputationResults(JacsServiceData jacsServiceData, List<?> results) {
-            this.jacsServiceData = jacsServiceData;
-            this.results = results;
-        }
-    }
-
     protected static final int N_RETRIES_FOR_RESULT = 60;
     protected static final long WAIT_BETWEEN_RETRIES_FOR_RESULT = 1000; // 1s
 
@@ -80,9 +70,9 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         jacsServiceData.setProcessStartTime(new Date());
         jacsServiceDataPersistence.save(jacsServiceData);
         return prepareProcessing(jacsServiceData)
-                .thenCombineAll(this.invokeServiceDependencies(jacsServiceData), SubComputationResults::new)
+                .thenApply(sd -> this.submitServiceDependencies(sd))
                 .thenSuspendUntil(() -> this.checkSuspendCondition(jacsServiceData))
-                .thenCompose(scr -> this.processing(scr.jacsServiceData, scr.results))
+                .thenCompose(scr -> this.processing(jacsServiceData))
                 .thenApply(r -> {
                     JacsServiceData updatedSD = jacsServiceDataPersistence.findById(jacsServiceData.getId());
                     this.setResult(r, updatedSD);
@@ -122,9 +112,9 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
 
     protected abstract ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData);
 
-    protected abstract List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData);
+    protected abstract List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData);
 
-    protected abstract ServiceComputation<T> processing(JacsServiceData jacsServiceData, List<?> dependencyResults);
+    protected abstract ServiceComputation<T> processing(JacsServiceData jacsServiceData);
 
     protected abstract ServiceComputation<T> postProcessing(JacsServiceData jacsServiceData, T result);
 

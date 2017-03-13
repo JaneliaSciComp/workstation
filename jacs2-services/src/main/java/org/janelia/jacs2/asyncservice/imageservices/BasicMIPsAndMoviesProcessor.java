@@ -109,17 +109,17 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
     }
 
     @Override
-    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         BasicMIPsAndMoviesArgs args = getArgs(jacsServiceData);
         return ImmutableList.of(submitFijiService(args, jacsServiceData));
     }
 
-    private ServiceComputation<Void> submitFijiService(BasicMIPsAndMoviesArgs args, JacsServiceData jacsServiceData) {
+    private JacsServiceData submitFijiService(BasicMIPsAndMoviesArgs args, JacsServiceData jacsServiceData) {
         if (StringUtils.isBlank(args.chanSpec)) {
             throw new ComputationException(jacsServiceData,  "No channel spec for " + args.imageFile);
         }
         Path temporaryOutputDir = getServicePath(scratchLocation, jacsServiceData, com.google.common.io.Files.getNameWithoutExtension(args.imageFile));
-        return fijiMacroProcessor.process(new ServiceExecutionContext(jacsServiceData),
+        return fijiMacroProcessor.submit(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-macro", basicMIPsAndMoviesMacro),
                 new ServiceArg("-macroArgs", getBasicMIPsAndMoviesArgs(args, temporaryOutputDir)),
                 new ServiceArg("-temporaryOutput", temporaryOutputDir.toString()),
@@ -151,7 +151,7 @@ public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<F
     }
 
     @Override
-    protected ServiceComputation<List<File>> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+    protected ServiceComputation<List<File>> processing(JacsServiceData jacsServiceData) {
         return createComputation(jacsServiceData)
                 .thenApply(this::waitForResult)
                 .thenApply(fileResults -> {

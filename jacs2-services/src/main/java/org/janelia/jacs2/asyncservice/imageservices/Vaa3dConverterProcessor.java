@@ -91,13 +91,13 @@ public class Vaa3dConverterProcessor extends AbstractServiceProcessor<File> {
     }
 
     @Override
-    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         Vaa3dConverterArgs args = getArgs(jacsServiceData);
         return ImmutableList.of(submitVaa3dCmdService(args, jacsServiceData));
     }
 
     @Override
-    protected ServiceComputation<File> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+    protected ServiceComputation<File> processing(JacsServiceData jacsServiceData) {
         return createComputation(this.waitForResult(jacsServiceData));
     }
 
@@ -118,12 +118,12 @@ public class Vaa3dConverterProcessor extends AbstractServiceProcessor<File> {
         return new File(args.outputFileName);
     }
 
-    private ServiceComputation<Void> submitVaa3dCmdService(Vaa3dConverterArgs args, JacsServiceData jacsServiceData) {
+    private JacsServiceData submitVaa3dCmdService(Vaa3dConverterArgs args, JacsServiceData jacsServiceData) {
         StringJoiner vaa3dCmdArgs = new StringJoiner(" ")
                 .add(args.convertCmd)
                 .add(args.inputFileName)
                 .add(args.outputFileName);
-        return vaa3dCmdProcessor.process(new ServiceExecutionContext(jacsServiceData),
+        return vaa3dCmdProcessor.submit(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-vaa3dCmd", "image-loader"),
                 new ServiceArg("-vaa3dCmdArgs", vaa3dCmdArgs.toString()));
     }

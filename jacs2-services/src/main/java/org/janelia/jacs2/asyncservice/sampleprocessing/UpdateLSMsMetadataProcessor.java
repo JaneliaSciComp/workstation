@@ -69,9 +69,9 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
     }
 
     @Override
-    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
-        ServiceComputation<List<SampleImageMetadataFile>> getSampleLsmMetadataService = getSampleLsmsMetadataProcessor.process(new ServiceExecutionContext(jacsServiceData),
+        JacsServiceData getSampleLsmMetadataService = getSampleLsmsMetadataProcessor.submit(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
                 new ServiceArg("-sampleDataDir", args.sampleDataDir));
@@ -80,7 +80,7 @@ public class UpdateLSMsMetadataProcessor extends AbstractServiceProcessor<Void> 
     }
 
     @Override
-    protected ServiceComputation<Void> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+    protected ServiceComputation<Void> processing(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
         List<AnatomicalArea> anatomicalAreas =
                 sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);

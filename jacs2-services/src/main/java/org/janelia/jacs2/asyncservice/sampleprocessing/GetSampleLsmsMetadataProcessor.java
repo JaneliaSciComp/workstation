@@ -69,7 +69,7 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
     }
 
     @Override
-    protected List<ServiceComputation<?>> invokeServiceDependencies(JacsServiceData jacsServiceData) {
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
         JacsServiceData getSampleLsms = getSampleImageFilesProcessor.submit(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-sampleId", args.sampleId.toString()),
@@ -87,7 +87,7 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
                             File lsmImageFile = SampleServicesUtils.getImageFile(Paths.get(args.sampleDataDir), lsmf);
                             File lsmMetadataFile = SampleServicesUtils.getImageMetadataFile(args.sampleDataDir, lsmImageFile);
 
-                            return lsmFileMetadataProcessor.process(new ServiceExecutionContext.Builder(jacsServiceData)
+                            return lsmFileMetadataProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
                                             .waitFor(getSampleLsms)
                                             .build(),
                                     new ServiceArg("-inputLSM", lsmImageFile.getAbsolutePath()),
@@ -96,7 +96,7 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
                 .collect(Collectors.toList());
     }
 
-    protected ServiceComputation<List<SampleImageMetadataFile>> processing(JacsServiceData jacsServiceData, List<?> dependencyResults) {
+    protected ServiceComputation<List<SampleImageMetadataFile>> processing(JacsServiceData jacsServiceData) {
         return createComputation(this.waitForResult(jacsServiceData));
     }
 
