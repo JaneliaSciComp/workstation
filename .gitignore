@@ -16,6 +16,7 @@ Distribution
 build
 eclipseBuild
 node_modules
+npm-debug.log
 local
 target
 ear
