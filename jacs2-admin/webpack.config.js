@@ -7,7 +7,6 @@ module.exports = {
   context: __dirname,
   devtool: 'inline-source-map',
   devServer: {
-     address: 'localhost',
      contentBase: path.join(__dirname, "build"),
      port: 3000
   },
@@ -20,44 +19,37 @@ module.exports = {
     publicPath: '/'
   },
   resolve: {
-    extensions: ['', '.scss', '.css', '.js', '.json'],
-    modulesDirectories: [
+    extensions: ['.scss', '.css', '.js', '.json'],
+    modules: [
       'node_modules',
       path.resolve(__dirname, './node_modules')
     ]
   },
   module: {
-    loaders: [
+    rules: [
       {
         test: /(\.js|\.jsx)$/,
         exclude: /(node_modules)/,
-        loader: 'babel',
+        loader: 'babel-loader',
         query: { presets: ['es2015', 'stage-0', 'react'] }
       }, {
+        loader: 'postcss-loader',
+      },
+      {
         test: /\.scss$/,
-        loader: ExtractTextPlugin.extract('css!sass')
+        loader: 'sass-loader'
       }
     ]
   },
-  postcss: [autoprefixer],
-  sassLoader: {
-    includePaths: [
-    './node_modules',
-    // this is required only for NPM < 3.
-    // Dependencies are flat in NPM 3+ so pointing to
-    // the internal grommet/node_modules folder is not needed
-    './node_modules/grommet/node_modules'
-  ]
-  },
   plugins: [
-    new ExtractTextPlugin('bundle.css', { allChunks: true }),
-    new webpack.optimize.OccurenceOrderPlugin(),
+    new ExtractTextPlugin({ filename: 'bundle.css', disable: false, allChunks: true }),
+    new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.optimize.CommonsChunkPlugin({
       name: 'vendor',
       filename: 'vendor.bundle.js',
       minChunks: Infinity
     }),
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.NoErrorsPlugin()
+    new webpack.NoEmitOnErrorsPlugin()
   ]
 };
