@@ -49,7 +49,7 @@ public class BasicMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServicePr
         @Parameter(names = "-gain", description = "Gain", required = false)
         Integer gain;
         @Parameter(names = "-resultsDir", description = "Results directory", required = false)
-        public String resultsDir;
+        String resultsDir;
         @Parameter(names = "-options", description = "Options", required = false)
         String options = "mips:movies:legends:bcomp";
     }
