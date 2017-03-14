@@ -110,3 +110,9 @@ curl --request POST --url http://goinac-ws1:8080/jacs/jacs-api/v2/async-services
 `
 curl --request POST --url http://goinac-ws1:8080/jacs/jacs-api/v2/async-services/fijiMacro --header 'acc: application/json' --header 'cache-control: no-cache' --header 'content-type: application/json' --header 'postman-token: 224b8f88-fd54-69f9-457f-0ec5e6c23a1f' --data '{"processingLocation": "CLUSTER",	"args": ["-macro", "Basic_MIP_StackAvi.ijm" , "-macroArgs", "/home/goinac/Work/jacs-2/tt/missing/mips,FLPO_20160121130448632_61713,,/home/goinac/Work/jacs-2/tt/missing/FLPO_20160121130448632_61713.lsm,,,,r,1,2,mips:movies:legends:bcomp"],"resources": {"gridAccountId": "jacs", "gridPE": "batch 8", "gridResourceLimits": "haswell=true,h_rt=1200" }}'
 `
+
+* Run the aligner
+
+`
+curl --request POST --url http://goinac-ws1:8080/jacs/jacs-api/v2/async-services/align --header 'acc: application/json' --header 'cache-control: no-cache' --header 'content-type: application/json' --data '{"processingLocation": "LOCAL", "args": ["-i1File", "/nrs/scicompsoft/yuy/flylight/brains/issue/A4_ZB4_T1_CEN_20160318_24_40X_R1.v3draw", "-i1Channels", "4", "-i1Ref", "4", "-i1Res", "0.4413x0.4413x0.44", "-config", "/nrs/scicompsoft/yuy/brainaligner/systemvars.apconf", "-templateDir", "/nrs/scicompsoft/yuy/configured_templates", "-toolsDir", "/nrs/scicompsoft/yuy/Toolkits", "-mountingProtocol", "DPX PBS Mounting", "-gender", "f", "-resultsDir", "/home/goinac/Work/jacs-2/tt/missing/align"]}'
+`
