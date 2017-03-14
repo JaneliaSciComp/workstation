@@ -22,20 +22,20 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class AbstractServiceProcessorTest {
+public class AbstractBasicLifeCycleServiceProcessorTest {
 
     private static final String TEST_WORKING_DIR = "testDir";
     private static final Number TEST_ID = 1L;
 
-    static class TestSuccessfulProcessor extends AbstractServiceProcessor<Void> {
+    static class TestSuccessfulProcessorBasicLifeCycle extends AbstractBasicLifeCycleServiceProcessor<Void> {
 
         private long timeout = -1;
 
-        public TestSuccessfulProcessor(JacsServiceEngine jacsServiceEngine,
-                                       ServiceComputationFactory computationFactory,
-                                       JacsServiceDataPersistence jacsServiceDataPersistence,
-                                       String defaultWorkingDir,
-                                       Logger logger) {
+        public TestSuccessfulProcessorBasicLifeCycle(JacsServiceEngine jacsServiceEngine,
+                                                     ServiceComputationFactory computationFactory,
+                                                     JacsServiceDataPersistence jacsServiceDataPersistence,
+                                                     String defaultWorkingDir,
+                                                     Logger logger) {
             super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         }
 
@@ -89,13 +89,13 @@ public class AbstractServiceProcessorTest {
         }
     }
 
-    static class TestFailedProcessor extends AbstractServiceProcessor<Void> {
+    static class TestFailedProcessorBasicLifeCycle extends AbstractBasicLifeCycleServiceProcessor<Void> {
 
-        public TestFailedProcessor(JacsServiceEngine jacsServiceEngine,
-                                   ServiceComputationFactory computationFactory,
-                                   JacsServiceDataPersistence jacsServiceDataPersistence,
-                                   String defaultWorkingDir,
-                                   Logger logger) {
+        public TestFailedProcessorBasicLifeCycle(JacsServiceEngine jacsServiceEngine,
+                                                 ServiceComputationFactory computationFactory,
+                                                 JacsServiceDataPersistence jacsServiceDataPersistence,
+                                                 String defaultWorkingDir,
+                                                 Logger logger) {
             super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         }
 
@@ -144,8 +144,8 @@ public class AbstractServiceProcessorTest {
     private ServiceComputationFactory serviceComputationFactory;
     private Logger logger;
 
-    private TestSuccessfulProcessor testSuccessfullProcessor;
-    private TestFailedProcessor testFailedProcessor;
+    private TestSuccessfulProcessorBasicLifeCycle testSuccessfullProcessor;
+    private TestFailedProcessorBasicLifeCycle testFailedProcessor;
 
     private JacsServiceData testJacsServiceData;
 
@@ -173,13 +173,13 @@ public class AbstractServiceProcessorTest {
         jacsServiceEngine = mock(JacsServiceEngine.class);
         jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
 
-        testSuccessfullProcessor = new TestSuccessfulProcessor(
+        testSuccessfullProcessor = new TestSuccessfulProcessorBasicLifeCycle(
                 jacsServiceEngine,
                 serviceComputationFactory,
                 jacsServiceDataPersistence,
                 TEST_WORKING_DIR,
                 logger);
-        testFailedProcessor = new TestFailedProcessor(
+        testFailedProcessor = new TestFailedProcessorBasicLifeCycle(
             jacsServiceEngine,
                 serviceComputationFactory,
                 jacsServiceDataPersistence,

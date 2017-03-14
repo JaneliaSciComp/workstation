@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
-import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
@@ -32,7 +32,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 @Named("vaa3dPlugin")
-public class Vaa3dPluginProcessor extends AbstractServiceProcessor<File> {
+public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
 
     static class Vaa3dPluginArgs extends ServiceArgs {
         @Parameter(names = {"-x", "-plugin"}, description = "Vaa3d plugin name", required = true)

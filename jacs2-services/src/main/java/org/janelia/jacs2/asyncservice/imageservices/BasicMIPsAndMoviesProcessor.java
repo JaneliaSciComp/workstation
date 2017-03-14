@@ -4,7 +4,7 @@ import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
-import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
@@ -35,7 +35,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 @Named("basicMIPsAndMovies")
-public class BasicMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<File>> {
+public class BasicMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServiceProcessor<List<File>> {
 
     static class BasicMIPsAndMoviesArgs extends ServiceArgs {
         @Parameter(names = "-imgFile", description = "The name of the image file", required = true)

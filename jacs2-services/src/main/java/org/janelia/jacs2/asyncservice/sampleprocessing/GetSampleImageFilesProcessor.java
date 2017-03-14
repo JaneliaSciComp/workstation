@@ -13,7 +13,7 @@ import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.ProcessingLocation;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.dataservice.sample.SampleDataService;
-import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Named("getSampleImageFiles")
-public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<SampleImageFile>> {
+public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceProcessor<List<SampleImageFile>> {
 
     private final SampleDataService sampleDataService;
     private final FileCopyProcessor fileCopyProcessor;

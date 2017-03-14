@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServiceProcessor<T> {
+public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicLifeCycleServiceProcessor<T> {
 
     protected static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 

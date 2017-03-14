@@ -13,7 +13,7 @@ import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.sample.SampleDataService;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
-import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Named("getSampleMIPsAndMovies")
-public class GetSampleMIPsAndMoviesProcessor extends AbstractServiceProcessor<List<File>> {
+public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServiceProcessor<List<File>> {
 
     static class SampleMIPsAndMoviesArgs extends SampleServiceArgs {
         @Parameter(names = "-options", description = "Options", required = false)
