@@ -33,10 +33,9 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
     private long resultComputationTime;
 
     @Inject
-    public IntegerComputeTestProcessor(
-            JacsServiceEngine jacsServiceEngine,
-            ServiceComputationFactory computationFactory,
-            Logger logger) {
+    public IntegerComputeTestProcessor(JacsServiceEngine jacsServiceEngine,
+                                       ServiceComputationFactory computationFactory,
+                                       Logger logger) {
         super(jacsServiceEngine, computationFactory, logger);
     }
 
