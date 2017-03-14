@@ -50,7 +50,7 @@ public class AlignmentProcessor extends AbstractExeBasedServiceProcessor<List<Fi
         String input1Ref;
         @Parameter(names = "-i1Res", description = "The resolution of the first input file", required = true)
         String input1Res;
-        @Parameter(names = "-i1Dims", description = "The dimensions of the first input file", required = true)
+        @Parameter(names = "-i1Dims", description = "The dimensions of the first input file", required = false)
         String input1Dims;
         @Parameter(names = {"-e", "-i1Neurons"}, description = "Input1 neurons file", required = false)
         String input1Neurons;
@@ -82,7 +82,7 @@ public class AlignmentProcessor extends AbstractExeBasedServiceProcessor<List<Fi
         boolean zFlip = false;
         @Parameter(names = "-fslOutputType", description = "FSL output type", required = false)
         String fslOutputType = "NIFTI_GZ";
-        @Parameter(names = "-resultsDir", description = "Results directory", required = false)
+        @Parameter(names = {"-o", "-w", "-resultsDir"}, description = "Results directory", required = false)
         String resultsDir;
     }
 
@@ -182,10 +182,10 @@ public class AlignmentProcessor extends AbstractExeBasedServiceProcessor<List<Fi
                     .addArgFlag("-k", args.toolsDir)
                     .addArgFlag("-w", getResultsDir(args).toString())
                     .addArgFlag("-i", String.join(",",
-                            args.input1File, args.input1Channels, args.input1Ref, args.input1Res, args.input1Dims));
+                            args.input1File, args.input1Channels, args.input1Ref, args.input1Res, StringUtils.defaultIfBlank(args.input1Dims, "")));
             if (StringUtils.isNotBlank(args.input2File)) {
                 scriptWriter.addArgFlag("-j", String.join(",",
-                        args.input2File, args.input2Channels, args.input2Ref, args.input2Res, args.input2Dims));
+                        args.input2File, args.input2Channels, args.input2Ref, args.input2Res, StringUtils.defaultIfBlank(args.input2Dims, "")));
             }
             scriptWriter
                     .addArgFlag("-m", args.mountingProtocol)
