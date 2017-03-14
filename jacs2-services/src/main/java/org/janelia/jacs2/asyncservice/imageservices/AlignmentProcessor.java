@@ -1,6 +1,7 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.Parameter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
@@ -33,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -181,14 +183,12 @@ public class AlignmentProcessor extends AbstractExeBasedServiceProcessor<List<Fi
                     .addArgFlag("-t", args.templateDir)
                     .addArgFlag("-k", args.toolsDir)
                     .addArgFlag("-w", getResultsDir(args).toString())
-                    .addArgFlag("-i", String.join(",",
-                            args.input1File, args.input1Channels, args.input1Ref, args.input1Res, StringUtils.defaultIfBlank(args.input1Dims, "")));
+                    .addArgFlag("-i", createInputArg(args.input1File, args.input1Channels, args.input1Ref, args.input1Res, args.input1Dims));
             if (StringUtils.isNotBlank(args.input2File)) {
-                scriptWriter.addArgFlag("-j", String.join(",",
-                        args.input2File, args.input2Channels, args.input2Ref, args.input2Res, StringUtils.defaultIfBlank(args.input2Dims, "")));
+                scriptWriter.addArgFlag("-j", createInputArg(args.input2File, args.input2Channels, args.input2Ref, args.input2Res, args.input2Dims));
             }
             scriptWriter
-                    .addArgFlag("-m", args.mountingProtocol)
+                    .addArgFlag("-m", StringUtils.wrap(args.mountingProtocol, '\''))
                     .addArgFlag("-s", args.step);
             if (StringUtils.isNotBlank(args.gender)) {
                 scriptWriter.addArgFlag("-g", args.gender);
@@ -206,6 +206,26 @@ public class AlignmentProcessor extends AbstractExeBasedServiceProcessor<List<Fi
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    private String createInputArg(String file, String channels, String ref, String res, String dims) {
+        List<String> inputArgs = new LinkedList<>();
+        if (StringUtils.isNotBlank(dims)) {
+            inputArgs.add(dims);
+        }
+        if (StringUtils.isNotBlank(res) || !inputArgs.isEmpty()) {
+            inputArgs.add(0, StringUtils.defaultIfBlank(res, ""));
+        }
+        if (StringUtils.isNotBlank(ref) || !inputArgs.isEmpty()) {
+            inputArgs.add(0, StringUtils.defaultIfBlank(ref, ""));
+        }
+        if (StringUtils.isNotBlank(channels) || !inputArgs.isEmpty()) {
+            inputArgs.add(0, StringUtils.defaultIfBlank(channels, ""));
+        }
+        if (StringUtils.isNotBlank(file) || !inputArgs.isEmpty()) {
+            inputArgs.add(0, StringUtils.defaultIfBlank(file, ""));
+        }
+        return String.join(",", inputArgs);
     }
 
     @Override
