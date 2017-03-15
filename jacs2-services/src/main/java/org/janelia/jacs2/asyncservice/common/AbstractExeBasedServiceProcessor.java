@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicLifeCycleServiceProcessor<T> {
+public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicLifeCycleServiceProcessor<T> implements ServiceCommand {
 
     protected static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 
@@ -38,6 +38,19 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicL
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.serviceRunners = serviceRunners;
         this.executablesBaseDir = executablesBaseDir;
+    }
+
+    @Override
+    public void execute(JacsServiceData jacsServiceData) {
+        ExternalCodeBlock script = prepareExternalScript(jacsServiceData);
+        Map<String, String> env = prepareEnvironment(jacsServiceData);
+        getProcessRunner(jacsServiceData.getProcessingLocation()).runCmds(
+                script,
+                env,
+                getWorkingDirectory(jacsServiceData).toString(),
+                this::outputStreamHandler,
+                this::errStreamHandler,
+                jacsServiceData);
     }
 
     @Override
@@ -73,7 +86,8 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicL
         Preconditions.checkArgument(StringUtils.isNotBlank(addedValue), "Cannot update environment variable " + varName + " with a null or empty value");
         Optional<String> currentValue = getEnvVar(varName);
         if (currentValue.isPresent()) {
-            return currentValue.get().endsWith(":")  ? currentValue.get() + addedValue : currentValue.get() + ":" + addedValue;
+            // prepend the new value
+            return addedValue + ":" + currentValue.get();
         } else {
             return addedValue;
         }
@@ -116,17 +130,9 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicL
     }
 
     protected ServiceComputation<JacsServiceData> invokeExternalProcess(JacsServiceData jacsServiceData) {
-        ExternalCodeBlock script = prepareExternalScript(jacsServiceData);
-        Map<String, String> env = prepareEnvironment(jacsServiceData);
         return computationFactory.<JacsServiceData>newComputation()
                 .supply(() -> {
-                    getProcessRunner(jacsServiceData.getProcessingLocation()).runCmds(
-                            script,
-                            env,
-                            getWorkingDirectory(jacsServiceData).toString(),
-                            this::outputStreamHandler,
-                            this::errStreamHandler,
-                            jacsServiceData);
+                    execute(jacsServiceData);
                     return jacsServiceData;
                 });
     }
