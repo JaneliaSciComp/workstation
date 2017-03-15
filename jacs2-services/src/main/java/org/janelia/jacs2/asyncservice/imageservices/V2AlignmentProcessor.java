@@ -37,8 +37,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-@Named("align")
-public class AlignmentProcessor extends AbstractExeBasedServiceProcessor<List<File>> {
+@Named("v2align")
+public class V2AlignmentProcessor extends AbstractExeBasedServiceProcessor<List<File>> {
 
     static class AlignmentArgs extends ServiceArgs {
         @Parameter(names = {"-nthreads"}, description = "Number of ITK threads")
@@ -91,15 +91,15 @@ public class AlignmentProcessor extends AbstractExeBasedServiceProcessor<List<Fi
     private final String libraryPath;
 
     @Inject
-    AlignmentProcessor(JacsServiceEngine jacsServiceEngine,
-                       ServiceComputationFactory computationFactory,
-                       JacsServiceDataPersistence jacsServiceDataPersistence,
-                       @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                       @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-                       @Any Instance<ExternalProcessRunner> serviceRunners,
-                       @PropertyValue(name = "Alignment.Script.Path") String alignmentScript,
-                       @PropertyValue(name = "Alignment.Library.Path") String libraryPath,
-                       Logger logger) {
+    V2AlignmentProcessor(JacsServiceEngine jacsServiceEngine,
+                         ServiceComputationFactory computationFactory,
+                         JacsServiceDataPersistence jacsServiceDataPersistence,
+                         @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                         @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
+                         @Any Instance<ExternalProcessRunner> serviceRunners,
+                         @PropertyValue(name = "Alignment.Script.Path") String alignmentScript,
+                         @PropertyValue(name = "Alignment.Library.Path") String libraryPath,
+                         Logger logger) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
         this.alignmentScript = alignmentScript;
         this.libraryPath = libraryPath;
