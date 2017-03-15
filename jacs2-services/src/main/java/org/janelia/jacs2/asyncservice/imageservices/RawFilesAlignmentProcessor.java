@@ -90,6 +90,8 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         String resultsDir;
     }
 
+    private final NiftiConverterProcessor niftiConverterProcessor;
+
     @Inject
     RawFilesAlignmentProcessor(JacsServiceEngine jacsServiceEngine,
                                ServiceComputationFactory computationFactory,
@@ -97,8 +99,10 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                                @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
                                @Any Instance<ExternalProcessRunner> serviceRunners,
-                               Logger logger) {
+                               Logger logger,
+                               NiftiConverterProcessor niftiConverterProcessor) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        this.niftiConverterProcessor = niftiConverterProcessor;
     }
 
     @Override

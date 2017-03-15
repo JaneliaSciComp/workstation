@@ -27,7 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-@Named("vaa3dConverter")
+@Named("niftiConverter")
 public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
 
     static class Vaa3dNiftiConverterArgs extends ServiceArgs {
