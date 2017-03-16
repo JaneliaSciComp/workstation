@@ -37,7 +37,7 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
 
     @Override
     public ServiceComputation<T> process(ServiceExecutionContext executionContext, ServiceArg... args) {
-        JacsServiceData serviceData = submit(executionContext, JacsServiceState.SUBMITTED, args);
+        JacsServiceData serviceData = submit(executionContext, args);
         return process(serviceData);
     }
 

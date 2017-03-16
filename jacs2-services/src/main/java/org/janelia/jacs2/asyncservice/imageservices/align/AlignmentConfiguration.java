@@ -1,4 +1,4 @@
-package org.janelia.jacs2.asyncservice.imageservices;
+package org.janelia.jacs2.asyncservice.imageservices.align;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -11,163 +11,163 @@ public class AlignmentConfiguration {
 
     public static class Templates {
         @XmlElement(name = "atlasFBTX")
-        String fbTxAtlas;
+        public String fbTxAtlas;
         @XmlElement(name = "tgtFBTX")
-        String fbTx;
+        public String fbTx;
         @XmlElement(name = "tgtFBTXmarkers")
-        String fbTxMarkers;
+        public String fbTxMarkers;
         @XmlElement(name = "tgtFBFX")
-        String fbFx;
+        public String fbFx;
         @XmlElement(name = "tgtFBFXmarkers")
-        String fbFxMarkers;
+        public String fbFxMarkers;
         @XmlElement(name = "tgtFBSXIS")
-        String fbSxIs;
+        public String fbSxIs;
         @XmlElement(name = "tgtFBSXISmarkers")
-        String fbSxIsMarkers;
+        public String fbSxIsMarkers;
         @XmlElement(name = "tgtFBSXAS")
-        String fbSxAs;
+        public String fbSxAs;
         @XmlElement(name = "tgtFBSXASmarkers")
-        String fbSxAsMarkers;
+        public String fbSxAsMarkers;
         @XmlElement(name = "tgtFBRCTX")
-        String fbCtx;
+        public String fbCtx;
         @XmlElement(name = "IDENTITYMATRIX")
-        String identityMatrix;
+        public String identityMatrix;
         @XmlElement(name = "tgtFROLSX")
-        String frolSx;
+        public String frolSx;
         @XmlElement(name = "FROLCROPMATRIX")
-        String frolCropMatrix;
+        public String frolCropMatrix;
         @XmlElement(name = "FROLROTMATRIX")
-        String frolTMatrix;
+        public String frolTMatrix;
         @XmlElement(name = "FROLINVROTMATRIX")
-        String frolInvRotMatrix;
+        public String frolInvRotMatrix;
         @XmlElement(name = "CMPBND")
-        String cmpBnd;
+        public String cmpBnd;
         @XmlElement(name = "ORICMPBND")
-        String orCmpBnd;
+        public String orCmpBnd;
         @XmlElement(name = "TMPMIPNULL")
-        String mipNull;
+        public String mipNull;
         @XmlElement(name = "LCRMASK")
-        String mask;
+        public String mask;
         @XmlElement(name = "tgtFBTXDPX")
-        String fbTxDpx;
+        public String fbTxDpx;
         @XmlElement(name = "tgtFBSXDPX")
-        String fbSxDpx;
+        public String fbSxDpx;
         @XmlElement(name = "tgtFBTXRECDPX")
-        String fbTxRecDpx;
+        public String fbTxRecDpx;
         @XmlElement(name = "tgtFBSXRECDPX")
-        String fbSxRecDpx;
+        public String fbSxRecDpx;
         @XmlElement(name = "tgtFBTXDPXEXT")
-        String fbTxDpxExt;
+        public String fbTxDpxExt;
         @XmlElement(name = "tgtFBSXDPXEXT")
-        String fbSxDpxExt;
+        public String fbSxDpxExt;
         @XmlElement(name = "tgtFBSXDPXSS")
-        String fbSxDpxSs;
+        public String fbSxDpxSs;
         @XmlElement(name = "tgtFBSXRECDPXSS")
-        String fbSxRecDpxSs;
+        public String fbSxRecDpxSs;
         @XmlElement(name = "tgtFBSXRECDPXRS")
-        String fbSxRECDpxRS;
+        public String fbSxRecDpxRS;
         @XmlElement(name = "tgtMFBTXDPX")
-        String mfbTxDpx;
+        public String mfbTxDpx;
         @XmlElement(name = "tgtMFBTXRECDPX")
-        String mfbTxRecDpx;
+        public String mfbTxRecDpx;
         @XmlElement(name = "tgtMFBTXDPXEXT")
-        String mfbTxDpxExt;
+        public String mfbTxDpxExt;
         @XmlElement(name = "tgtMFBSXDPX")
-        String mfbSxDpx;
+        public String mfbSxDpx;
         @XmlElement(name = "tgtMFBSXRECDPX")
-        String mfbSxRECDpx;
+        public String mfbSxRecDpx;
         @XmlElement(name = "tgtMFBSXDPXEXT")
-        String MFBSxDpxEXT;
+        public String mfbSxDpxExt;
         @XmlElement(name = "tgtVNC20xAFemale")
-        String fVnc20xA;
+        public String fVnc20xA;
         @XmlElement(name = "tgtVNC20xAMale")
-        String mVnc20xA;
+        public String mVnc20xA;
         @XmlElement(name = "wfYTOA")
-        String fyToa;
+        public String fyToa;
         @XmlElement(name = "wfYSXmarkers")
-        String fySxMarkers;
+        public String fySxMarkers;
         @XmlElement(name = "wfASXmarkers")
-        String faSxMarkers;
+        public String faSxMarkers;
         @XmlElement(name = "tgtCBMCFO")
-        String cbmCfo;
+        public String cbmCfo;
         @XmlElement(name = "tgtCBMCFOEXT")
-        String cbmCfoExt;
+        public String cbmCfoExt;
     }
 
     public static class Toolkits {
         @XmlElement(name = "ANTS")
-        String ants;
+        public String ants;
         @XmlElement(name = "FSLFLIRT")
-        String flirt;
+        public String flirt;
         @XmlElement(name = "WARP")
-        String warpMultiTransform;
+        public String warpMultiTransform;
         @XmlElement(name = "SMPL")
-        String resample;
+        public String resample;
         @XmlElement(name = "ANTSMT")
-        String registration;
+        public String registration;
         @XmlElement(name = "WARPMT")
-        String transform;
+        public String transform;
         @XmlElement(name = "CNVT")
-        String convertTransformation;
+        public String convertTransformation;
         @XmlElement(name = "Vaa3D")
-        String vaa3d;
+        public String vaa3d;
         @XmlElement(name = "JBA")
-        String brainAligner;
+        public String brainAligner;
         @XmlElement(name = "MAGICK")
-        String imageMagick;
+        public String imageMagick;
         @XmlElement(name = "CMTK")
-        String cmtk;
+        public String cmtk;
         @XmlElement(name = "Fiji")
-        String fiji;
+        public String fiji;
         @XmlElement(name = "VNCScripts")
-        String vncScripts;
+        public String vncScripts;
     }
 
     public static class Misc {
         @XmlElement(name = "REFNO")
-        int refNo;
+        public int refNo;
 
         @XmlElement(name = "VSZX_20X_IS")
-        double vSzIsX20x;
+        public double vSzIsX20x;
         @XmlElement(name = "VSZY_20X_IS")
-        double vSzIsY20x;
+        public double vSzIsY20x;
         @XmlElement(name = "VSZZ_20X_IS")
-        double vSzIsZ20x;
+        public double vSzIsZ20x;
 
         @XmlElement(name = "VSZX_63X_IS")
-        double vSzIsX63x;
+        public double vSzIsX63x;
         @XmlElement(name = "VSZY_63X_IS")
-        double vSzIsY63x;
+        public double vSzIsY63x;
         @XmlElement(name = "VSZZ_63X_IS")
-        double vSzIsZ63x;
+        public double vSzIsZ63x;
 
         @XmlElement(name = "VSZX_63X_AS")
-        double vSzAsX63x;
+        public double vSzAsX63x;
         @XmlElement(name = "VSZY_63X_AS")
-        double vSzAsY63x;
+        public double vSzAsY63x;
         @XmlElement(name = "VSZZ_63X_AS")
-        double vSzAsZ63x;
+        public double vSzAsZ63x;
 
         @XmlElement(name = "VSZX_20X_IS_DPX")
-        double vSzIsDpX20x;
+        public double vSzIsDpX20x;
         @XmlElement(name = "VSZY_20X_IS_DPX")
-        double vSzIsDpY20x;
+        public double vSzIsDpY20x;
         @XmlElement(name = "VSZZ_20X_IS_DPX")
-        double vSzIsDpZ20x;
+        public double vSzIsDpZ20x;
 
         @XmlElement(name = "VSZX_63X_IS_DPX")
-        double vSzIsDpX63x;
+        public double vSzIsDpX63x;
         @XmlElement(name = "VSZY_63X_IS_DPX")
-        double vSzIsDpY63x;
+        public double vSzIsDpY63x;
         @XmlElement(name = "VSZZ_63X_IS_DPX")
-        double vSzIsDpZ63x;
+        public double vSzIsDpZ63x;
     }
 
     @XmlElement(name = "Templates")
-    Templates templates;
+    public Templates templates = new Templates();
     @XmlElement(name = "Toolkits")
-    Toolkits toolkits;
+    public Toolkits toolkits = new Toolkits();
     @XmlElement(name = "MISC")
-    Misc misc;
+    public Misc misc = new Misc();
 }
 

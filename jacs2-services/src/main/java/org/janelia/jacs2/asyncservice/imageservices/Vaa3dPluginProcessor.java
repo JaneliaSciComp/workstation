@@ -10,6 +10,7 @@ import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProces
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceCommand;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
@@ -17,6 +18,7 @@ import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
+import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
@@ -32,7 +34,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 @Named("vaa3dPlugin")
-public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
+public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor<File> implements ServiceCommand {
 
     static class Vaa3dPluginArgs extends ServiceArgs {
         @Parameter(names = {"-x", "-plugin"}, description = "Vaa3d plugin name", required = true)
@@ -79,19 +81,15 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
     protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
         try {
             Vaa3dPluginArgs args = getArgs(jacsServiceData);
-            if (StringUtils.isBlank(args.pluginInput)) {
-                return createFailure(new ComputationException(jacsServiceData, "Plugin input name must be specified"));
-            } else if (StringUtils.isBlank(args.pluginOutput)) {
-                return createFailure(new ComputationException(jacsServiceData, "Plugin output name must be specified"));
-            } else {
+            if (StringUtils.isNotBlank(args.pluginOutput)) {
                 File pluginOutput = new File(args.pluginOutput);
                 try {
                     Files.createDirectories(pluginOutput.getParentFile().toPath());
                 } catch (IOException e) {
-                    throw new ComputationException(jacsServiceData, e);
+                    return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, e));
                 }
-                return createComputation(jacsServiceData);
             }
+            return createComputation(jacsServiceData);
         } catch (Exception e) {
             return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, e));
         }
@@ -100,7 +98,7 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         Vaa3dPluginArgs args = getArgs(jacsServiceData);
-        return ImmutableList.of(submitVaa3dService(args, jacsServiceData));
+        return ImmutableList.of(submitVaa3dService(args, jacsServiceData, JacsServiceState.QUEUED));
     }
 
     @Override
@@ -120,17 +118,23 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
         return new File(args.pluginOutput);
     }
 
-    private JacsServiceData submitVaa3dService(Vaa3dPluginArgs args, JacsServiceData jacsServiceData) {
+    private JacsServiceData submitVaa3dService(Vaa3dPluginArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dServiceState) {
         StringJoiner vaa3Args = new StringJoiner(" ")
                 .add("-x").add(args.plugin)
                 .add("-f").add(args.pluginFunc)
                 .add("-i").add(args.pluginInput)
                 .add("-o").add(args.pluginOutput);
         if (CollectionUtils.isNotEmpty(args.pluginParams)) {
-            vaa3Args.add(StringUtils.wrap(args.pluginParams.stream().collect(Collectors.joining(" ")), '"'));
+            vaa3Args.add("-p").add(StringUtils.wrap(args.pluginParams.stream().collect(Collectors.joining(" ")), '"'));
         }
-        return vaa3dProcessor.submit(new ServiceExecutionContext(jacsServiceData),
+        return vaa3dProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData).state(vaa3dServiceState).build(),
                 new ServiceArg("-vaa3dArgs", vaa3Args.toString()));
+    }
+
+    @Override
+    public void execute(JacsServiceData jacsServiceData) {
+        Vaa3dPluginArgs args = getArgs(jacsServiceData);
+        vaa3dProcessor.execute(submitVaa3dService(args, jacsServiceData, JacsServiceState.RUNNING));
     }
 
     private Vaa3dPluginArgs getArgs(JacsServiceData jacsServiceData) {

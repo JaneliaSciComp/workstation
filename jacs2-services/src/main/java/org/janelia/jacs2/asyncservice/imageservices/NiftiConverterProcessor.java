@@ -9,6 +9,7 @@ import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProces
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceCommand;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
@@ -16,6 +17,7 @@ import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
+import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
@@ -28,7 +30,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Named("niftiConverter")
-public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
+public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProcessor<File> implements ServiceCommand {
 
     static class Vaa3dNiftiConverterArgs extends ServiceArgs {
         @Parameter(names = "-input", description = "Input file", required = true)
@@ -90,7 +92,7 @@ public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProces
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         Vaa3dNiftiConverterArgs args = getArgs(jacsServiceData);
-        return ImmutableList.of(submitVaa3dPluginService(args, jacsServiceData));
+        return ImmutableList.of(submitVaa3dPluginService(args, jacsServiceData, JacsServiceState.QUEUED));
     }
 
     @Override
@@ -110,13 +112,19 @@ public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProces
         return new File(args.outputFileName);
     }
 
-    private JacsServiceData submitVaa3dPluginService(Vaa3dNiftiConverterArgs args, JacsServiceData jacsServiceData) {
-        return vaa3dPluginProcessor.submit(new ServiceExecutionContext(jacsServiceData),
+    private JacsServiceData submitVaa3dPluginService(Vaa3dNiftiConverterArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dPluginServiceState) {
+        return vaa3dPluginProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData).state(vaa3dPluginServiceState).build(),
                 new ServiceArg("-plugin", "ireg"),
                 new ServiceArg("-pluginFunc", "NiftiImageConverter"),
                 new ServiceArg("-input", args.inputFileName),
                 new ServiceArg("-output", args.outputFileName)
         );
+    }
+
+    @Override
+    public void execute(JacsServiceData jacsServiceData) {
+        Vaa3dNiftiConverterArgs args = getArgs(jacsServiceData);
+        vaa3dPluginProcessor.execute(submitVaa3dPluginService(args, jacsServiceData, JacsServiceState.RUNNING));
     }
 
     private Vaa3dNiftiConverterArgs getArgs(JacsServiceData jacsServiceData) {

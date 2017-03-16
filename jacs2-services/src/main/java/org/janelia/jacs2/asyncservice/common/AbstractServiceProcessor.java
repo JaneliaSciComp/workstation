@@ -25,28 +25,27 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
 
     @Override
     public ServiceComputation<T> process(ServiceExecutionContext executionContext, ServiceArg... args) {
-        JacsServiceData serviceData = createJacsServiceData(executionContext, JacsServiceState.CREATED, args);
+        executionContext.setServiceState(JacsServiceState.SUBMITTED);
+        JacsServiceData serviceData = submit(executionContext, args);
         return process(serviceData);
     }
 
     @Override
     public JacsServiceData submit(ServiceExecutionContext executionContext, ServiceArg... args) {
-        return submit(executionContext, JacsServiceState.QUEUED, args);
-    }
-
-    protected JacsServiceData submit(ServiceExecutionContext executionContext, JacsServiceState serviceState, ServiceArg... args) {
-        JacsServiceData jacsServiceData = createJacsServiceData(executionContext, serviceState, args);
+        JacsServiceData jacsServiceData = createJacsServiceData(executionContext, args);
         return jacsServiceEngine.submitSingleService(jacsServiceData);
     }
 
-    protected JacsServiceData createJacsServiceData(ServiceExecutionContext executionContext, JacsServiceState serviceState, ServiceArg... args) {
+    protected JacsServiceData createJacsServiceData(ServiceExecutionContext executionContext, ServiceArg... args) {
         ServiceMetaData smd = getMetadata();
         JacsServiceDataBuilder jacsServiceDataBuilder =
                 new JacsServiceDataBuilder(executionContext.getParentServiceData())
                         .setName(smd.getServiceName())
                         .setProcessingLocation(executionContext.getProcessingLocation())
-                        .setState(serviceState)
                         .addArg(Stream.of(args).flatMap(arg -> Stream.of(arg.toStringArray())).toArray(String[]::new));
+        if (executionContext.getServiceState() != null) {
+            jacsServiceDataBuilder.setState(executionContext.getServiceState());
+        }
         executionContext.getWaitFor().forEach(sd -> jacsServiceDataBuilder.addDependency(sd));
         if (executionContext.getParentServiceData() != null) {
             executionContext.getParentServiceData().getDependeciesIds().forEach(did -> jacsServiceDataBuilder.addDependencyId(did));
