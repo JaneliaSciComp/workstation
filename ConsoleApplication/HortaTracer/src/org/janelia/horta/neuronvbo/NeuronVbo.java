@@ -222,7 +222,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
             // Has the color actually changed?
             final int COLOR_OFFSET = 4; // red color begins at 5th value
             int offset = neuronOffsets.get(neuron) * FLOATS_PER_VERTEX + COLOR_OFFSET;
-            int max_offset = offset + (sv-1) * FLOATS_PER_VERTEX;
+            int max_offset = offset + (sv-1) * FLOATS_PER_VERTEX + 2;
             if (max_offset >= vertexBuffer.limit()) {
                 // Hmm. The actual buffer is no longer big enough to hold this neuron.
                 log.info("vertex buffer object is too small. rebuild queued (after updateNeuronColor())");
