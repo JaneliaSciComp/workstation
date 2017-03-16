@@ -229,26 +229,32 @@ public class NeuronVbo implements Iterable<NeuronModel>
                 buffersNeedRebuild = true;
                 return true;
             }
-            if ( (vertexBuffer.get(offset+0) == rgb[0])
-                    && (vertexBuffer.get(offset+1) == rgb[1])
-                    && (vertexBuffer.get(offset+2) == rgb[2]) )
-            {
-                return bChanged; // color has not changed
-            }
-            log.info("old neuron color was [{},{},{}]", 
-                    vertexBuffer.get(offset+0), 
-                    vertexBuffer.get(offset+1), 
-                    vertexBuffer.get(offset+2));
-            log.info("new neuron color = [{},{},{}]", rgb[0], rgb[1], rgb[2]);
-            for (int v = 0; v < sv; ++v) {
-                int index = offset + v * FLOATS_PER_VERTEX;
-                for (int r = 0; r < 3; ++r) {
-                    vertexBuffer.put(index + r, rgb[r]);
-                    // assert(vertexBuffer.get(index + r) == rgb[r]);
+            try {
+                if ( (vertexBuffer.get(offset+0) == rgb[0])
+                        && (vertexBuffer.get(offset+1) == rgb[1])
+                        && (vertexBuffer.get(offset+2) == rgb[2]) )
+                {
+                    return bChanged; // color has not changed
                 }
+                log.info("old neuron color was [{},{},{}]", 
+                        vertexBuffer.get(offset+0), 
+                        vertexBuffer.get(offset+1), 
+                        vertexBuffer.get(offset+2));
+                log.info("new neuron color = [{},{},{}]", rgb[0], rgb[1], rgb[2]);
+                for (int v = 0; v < sv; ++v) {
+                    int index = offset + v * FLOATS_PER_VERTEX;
+                    for (int r = 0; r < 3; ++r) {
+                        vertexBuffer.put(index + r, rgb[r]);
+                        // assert(vertexBuffer.get(index + r) == rgb[r]);
+                    }
+                }
+                buffersNeedUpdate = true;
+                bChanged = true;
+            } catch (IndexOutOfBoundsException exc) {
+                log.info("stale vertex buffer object accessed with bogus index {}. Queueing rebuild.", offset);
+                buffersNeedRebuild = true;
+                return true;
             }
-            buffersNeedUpdate = true;
-            bChanged = true;
         }
         else {
             buffersNeedRebuild = true;
@@ -286,13 +292,19 @@ public class NeuronVbo implements Iterable<NeuronModel>
                 buffersNeedRebuild = true;
                 return true;
             }
-            if (vertexBuffer.get(offset) != visFloat) { // visibility actually changed
-                for (int v = 0; v < sv; ++v) {
-                    int index = offset + v * FLOATS_PER_VERTEX;
-                    vertexBuffer.put(index, visFloat);
+            try {
+                if (vertexBuffer.get(offset) != visFloat) { // visibility actually changed
+                    for (int v = 0; v < sv; ++v) {
+                        int index = offset + v * FLOATS_PER_VERTEX;
+                        vertexBuffer.put(index, visFloat);
+                    }
+                    buffersNeedUpdate = true;
+                    bChanged = true;
                 }
-                buffersNeedUpdate = true;
-                bChanged = true;
+            } catch (IndexOutOfBoundsException exc) {
+                log.info("stale vertex buffer object accessed with bogus index {}. Queueing rebuild.", offset);
+                buffersNeedRebuild = true;
+                return true;
             }
         }
         else {
