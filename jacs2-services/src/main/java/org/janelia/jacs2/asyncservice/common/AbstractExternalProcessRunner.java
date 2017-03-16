@@ -37,8 +37,11 @@ abstract class AbstractExternalProcessRunner implements ExternalProcessRunner {
             Files.createDirectories(workingDirectory);
             Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwxrwx---");
             String scriptFileName = sd.getName() + "_" + sd.getId().toString() + ".sh";
-            File scriptFile = Files.createFile(workingDirectory.resolve(scriptFileName), PosixFilePermissions.asFileAttribute(perms)).toFile();
-
+            Path scriptFilePath = workingDirectory.resolve(scriptFileName);
+            if (Files.exists(scriptFilePath)) {
+                return scriptFilePath.toFile().getAbsolutePath();
+            }
+            File scriptFile = Files.createFile(scriptFilePath, PosixFilePermissions.asFileAttribute(perms)).toFile();
             scriptWriter = new ScriptWriter(new BufferedWriter(new FileWriter(scriptFile)));
             scriptWriter.add(externalCode.toString());
             sd.addEvent(JacsServiceEventTypes.CREATED_RUNNING_SCRIPT, String.format("Created the running script for %s: %s", sd.getName(), sd.getArgs()));

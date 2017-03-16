@@ -156,7 +156,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     private JacsServiceData convertNeuronsFileToRawFormat(String neuronsFile, JacsServiceData jacsServiceData) {
         if ("v3draw".equals(com.google.common.io.Files.getFileExtension(neuronsFile))) {
             try {
-                Files.createLink(getWorkingNeuronsFile(neuronsFile, jacsServiceData), Paths.get(neuronsFile));
+                Files.createSymbolicLink(getWorkingNeuronsFile(neuronsFile, jacsServiceData), Paths.get(neuronsFile));
                 return null;
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
@@ -196,7 +196,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
             vaa3dPluginProcessor.execute(zFlipSubjectsServiceData);
         } else {
             try {
-                Files.createLink(getWorkingSubjectFile(args, jacsServiceData), Paths.get(args.input1File));
+                Files.createSymbolicLink(getWorkingSubjectFile(args, jacsServiceData), Paths.get(args.input1File));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -228,7 +228,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
             vaa3dPluginProcessor.execute(isotropicSamplingServiceData);
         } else {
             try {
-                Files.createLink(isotropicSubjectFile, Paths.get(args.input1File));
+                Files.createSymbolicLink(isotropicSubjectFile, Paths.get(args.input1File));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
