@@ -41,9 +41,9 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
         String plugin;
         @Parameter(names = {"-f", "-pluginFunc"}, description = "Vaa3d plugin function", required = true)
         String pluginFunc;
-        @Parameter(names = {"-i", "-input"}, description = "Plugin input", required = true)
+        @Parameter(names = {"-i", "-input"}, description = "Plugin input", required = false)
         String pluginInput;
-        @Parameter(names = {"-o", "-output"}, description = "Plugin output", required = true)
+        @Parameter(names = {"-o", "-output"}, description = "Plugin output", required = false)
         String pluginOutput;
         @Parameter(names = {"-p", "-pluginParams"}, description = "Plugin parameters")
         List<String> pluginParams = new ArrayList<>();
