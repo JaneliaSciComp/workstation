@@ -118,19 +118,19 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
 
         List<ServiceArg> alignmentArgs = new LinkedList<>();
         if (args.nthreads > 0) alignmentArgs.add(new ServiceArg("-nthreads", String.valueOf(args.nthreads)));
-        if (StringUtils.isBlank(input1.name)) alignmentArgs.add(new ServiceArg("-i1File", input1.name));
-        if (StringUtils.isBlank(input1.channels)) alignmentArgs.add(new ServiceArg("-i1Channels", input1.channels));
-        if (StringUtils.isBlank(input1.ref)) alignmentArgs.add(new ServiceArg("-i1Ref", input1.ref));
-        if (StringUtils.isBlank(input1.res)) alignmentArgs.add(new ServiceArg("-i1Res", input1.res));
-        if (StringUtils.isBlank(input1.dims)) alignmentArgs.add(new ServiceArg("-i1Dims", input1.dims));
-        if (StringUtils.isBlank(args.input1Neurons)) alignmentArgs.add(new ServiceArg("-i1Neurons", args.input1Neurons));
+        if (StringUtils.isNotBlank(input1.name)) alignmentArgs.add(new ServiceArg("-i1File", input1.name));
+        if (StringUtils.isNotBlank(input1.channels)) alignmentArgs.add(new ServiceArg("-i1Channels", input1.channels));
+        if (StringUtils.isNotBlank(input1.ref)) alignmentArgs.add(new ServiceArg("-i1Ref", input1.ref));
+        if (StringUtils.isNotBlank(input1.res)) alignmentArgs.add(new ServiceArg("-i1Res", input1.res));
+        if (StringUtils.isNotBlank(input1.dims)) alignmentArgs.add(new ServiceArg("-i1Dims", input1.dims));
+        if (StringUtils.isNotBlank(args.input1Neurons)) alignmentArgs.add(new ServiceArg("-i1Neurons", args.input1Neurons));
 
-        if (StringUtils.isBlank(input2.name)) alignmentArgs.add(new ServiceArg("-i2File", input2.name));
-        if (StringUtils.isBlank(input2.channels)) alignmentArgs.add(new ServiceArg("-i1Channels", input2.channels));
-        if (StringUtils.isBlank(input2.ref)) alignmentArgs.add(new ServiceArg("-i2Ref", input2.ref));
-        if (StringUtils.isBlank(input2.res)) alignmentArgs.add(new ServiceArg("-i2Res", input2.res));
-        if (StringUtils.isBlank(input2.dims)) alignmentArgs.add(new ServiceArg("-i2Dims", input2.dims));
-        if (StringUtils.isBlank(args.input2Neurons)) alignmentArgs.add(new ServiceArg("-i1Neurons", args.input2Neurons));
+        if (StringUtils.isNotBlank(input2.name)) alignmentArgs.add(new ServiceArg("-i2File", input2.name));
+        if (StringUtils.isNotBlank(input2.channels)) alignmentArgs.add(new ServiceArg("-i1Channels", input2.channels));
+        if (StringUtils.isNotBlank(input2.ref)) alignmentArgs.add(new ServiceArg("-i2Ref", input2.ref));
+        if (StringUtils.isNotBlank(input2.res)) alignmentArgs.add(new ServiceArg("-i2Res", input2.res));
+        if (StringUtils.isNotBlank(input2.dims)) alignmentArgs.add(new ServiceArg("-i2Dims", input2.dims));
+        if (StringUtils.isNotBlank(args.input2Neurons)) alignmentArgs.add(new ServiceArg("-i1Neurons", args.input2Neurons));
 
         alignmentArgs.add(new ServiceArg("-config", args.configFile));
         alignmentArgs.add(new ServiceArg("-templateDir", args.templateDir));
@@ -140,7 +140,7 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
 
 
         if (args.zFlip) alignmentArgs.add(new ServiceArg("-zflip"));
-        if (StringUtils.isBlank(args.fslOutputType)) alignmentArgs.add(new ServiceArg("-fslOutputType", args.fslOutputType));
+        if (StringUtils.isNotBlank(args.fslOutputType)) alignmentArgs.add(new ServiceArg("-fslOutputType", args.fslOutputType));
         alignmentArgs.add(new ServiceArg("-resultsDir", args.resultsDir));
 
         if ("m".equals(args.gender)) {
