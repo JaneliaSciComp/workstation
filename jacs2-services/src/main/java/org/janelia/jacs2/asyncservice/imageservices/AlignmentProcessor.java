@@ -100,8 +100,8 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
 
     @Override
     protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-        AlignmentArgs args = getArgs(jacsServiceData);
         try {
+            AlignmentArgs args = getArgs(jacsServiceData);
             Files.createDirectories(getResultsDir(args));
         } catch (IOException e) {
             throw new ComputationException(jacsServiceData, e);
