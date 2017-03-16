@@ -171,11 +171,12 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     private JacsServiceData convertTargetExtToNiftiImage(AlignmentArgs args, JacsServiceData jacsServiceData) {
-        logger.info("Convert {} into a nifti image", args.targetExtTemplate);
+        Path targetExtFile = getTargetExtFile(args);
+        logger.info("Convert {} into a nifti image", targetExtFile);
         JacsServiceData niftiConverterServiceData = niftiConverterProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.RUNNING)
                         .build(),
-                new ServiceArg("-input", args.targetExtTemplate),
+                new ServiceArg("-input", targetExtFile.toString()),
                 new ServiceArg("-output", getNiftiTargetExtFile(args, jacsServiceData).toString()));
 
         niftiConverterProcessor.execute(niftiConverterServiceData);
@@ -242,7 +243,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 new ServiceArg("-pluginFunc", "resizeImage"),
                 new ServiceArg("-output", getWorkingResizedSubjectFile(args, jacsServiceData).toString()),
                 new ServiceArg("-pluginParams", String.format("#s %s", getWorkingIsotropicSubjectFile(args, jacsServiceData))),
-                new ServiceArg("-pluginParams", String.format("#t %s", args.targetExtTemplate)),
+                new ServiceArg("-pluginParams", String.format("#t %s", getTargetExtFile(args))),
                 new ServiceArg("-pluginParams", "#y 1")
         );
         vaa3dPluginProcessor.execute(resizeSubjectServiceData);
@@ -302,6 +303,10 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
 
     private Path getResultsDir(AlignmentArgs args) {
         return Paths.get(args.resultsDir, com.google.common.io.Files.getNameWithoutExtension(args.input1File));
+    }
+
+    private Path getTargetExtFile(AlignmentArgs args) {
+        return Paths.get(args.templateDir, args.targetExtTemplate);
     }
 
     private Path getNiftiTargetExtFile(AlignmentArgs args, JacsServiceData jacsServiceData) {

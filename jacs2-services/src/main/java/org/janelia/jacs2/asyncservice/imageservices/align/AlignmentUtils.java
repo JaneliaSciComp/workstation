@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.OutputKeys;
 import java.io.File;
 import java.util.Iterator;
 
@@ -15,6 +16,7 @@ public class AlignmentUtils {
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(AlignmentConfiguration.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+            jaxbUnmarshaller.setProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
             return (AlignmentConfiguration) jaxbUnmarshaller.unmarshal(new File(configFile));
         } catch (JAXBException e) {
             throw new IllegalArgumentException(e);
