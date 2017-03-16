@@ -16,7 +16,6 @@ public class AlignmentUtils {
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(AlignmentConfiguration.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            jaxbUnmarshaller.setProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
             return (AlignmentConfiguration) jaxbUnmarshaller.unmarshal(new File(configFile));
         } catch (JAXBException e) {
             throw new IllegalArgumentException(e);
