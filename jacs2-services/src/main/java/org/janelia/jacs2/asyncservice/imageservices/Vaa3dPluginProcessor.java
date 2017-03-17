@@ -133,8 +133,10 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
 
     @Override
     public void execute(JacsServiceData jacsServiceData) {
-        Vaa3dPluginArgs args = getArgs(jacsServiceData);
-        vaa3dProcessor.execute(submitVaa3dService(args, jacsServiceData, JacsServiceState.RUNNING));
+        execute(sd -> {
+            Vaa3dPluginArgs args = getArgs(sd);
+            vaa3dProcessor.execute(submitVaa3dService(args, sd, JacsServiceState.RUNNING));
+        }, jacsServiceData);
     }
 
     private Vaa3dPluginArgs getArgs(JacsServiceData jacsServiceData) {

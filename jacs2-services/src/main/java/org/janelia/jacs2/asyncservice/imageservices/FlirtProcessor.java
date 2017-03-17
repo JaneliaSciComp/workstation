@@ -11,7 +11,6 @@ import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
-import org.janelia.jacs2.asyncservice.utils.X11Utils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
@@ -22,9 +21,6 @@ import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -123,6 +119,8 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<Void> {
         boolean use2D;
         @Parameter(names = "-verbose", description = "Verbosity level - 0 is least and default")
         int verbose = 0;
+        @Parameter(names = "-fslOutputType", description = "FSL output type", required = false)
+        String fslOutputType = "NIFTI_GZ";
     }
 
     private final String executable;
@@ -183,64 +181,62 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<Void> {
     }
 
     private void createScript(JacsServiceData jacsServiceData, FlirtArgs args, ScriptWriter scriptWriter) {
-        try {
-            Path workingDir = getWorkingDirectory(jacsServiceData);
-            X11Utils.setDisplayPort(workingDir.toString(), scriptWriter);
-            scriptWriter.addWithArgs(getExecutable())
-                    .addArgFlag("-in", args.inputVol)
-                    .addArgFlag("-ref", args.referenceVol)
-                    .addArgFlag("-out", args.outputVol)
-                    .addArgFlag("-init", args.inputAffine)
-                    .addArgFlag("-omat", args.outputAffine)
-                    .addArgFlag("-datatype", args.dataType)
-                    .addArgFlag("-cost", args.cost)
-                    .addArgFlag("-searchcost", args.searchCost)
-                    .addArgFlag("-usesqform", args.useSqForm)
-                    .addArgFlag("-displayinit", args.displayInitialMatrix)
-                    .addArgFlag("-anglerep", args.angleRep)
-                    .addArgFlag("-interp", args.interpolation)
-                    .addArgFlag("-sincwidth", args.width)
-                    .addArgFlag("-sincwindow", args.sincWindow)
-                    .addArgFlag("-bins", args.bins)
-                    .addArgFlag("-dof", args.dofTransforms)
-                    .addArgFlag("-noresample", args.noResample)
-                    .addArgFlag("-forcescaling", args.forceScaling)
-                    .addArgFlag("-minsampling", args.voxDim)
-                    .addArgFlag("-applyxfm", args.applyXFm)
-                    .addArgFlag("-applyisoxfm", args.applyisoxfm)
-                    .addArgFlag("-paddingsize", args.paddingSize)
-                    .addArgFlag("-searchrx", args.searchRX, " ")
-                    .addArgFlag("-searchry", args.searchRY, " ")
-                    .addArgFlag("-searchrz", args.searchRZ, " ")
-                    .addArgFlag("-nosearch", args.noSearch)
-                    .addArgFlag("-coarsesearch", args.coarseSearch)
-                    .addArgFlag("-finesearch", args.fineSearch)
-                    .addArgFlag("-schedule", args.schedule)
-                    .addArgFlag("-refweight", args.refweight)
-                    .addArgFlag("-inweight", args.imweight)
-                    .addArgFlag("-wmseg", args.wmseg)
-                    .addArgFlag("-wmcoords", args.vmcoords)
-                    .addArgFlag("-wmnorms", args.wmNorms)
-                    .addArgFlag("-fieldmap", args.fieldMap)
-                    .addArgFlag("-fieldmapmask", args.fieldMapMask)
-                    .addArgFlag("-pedir", args.phaseEncodingDir)
-                    .addArgFlag("-echospacing", args.echoSpacing)
-                    .addArgFlag("-bbrtype", args.bbrCostType)
-                    .addArgFlag("-bbrslope", args.bbrSlope)
-                    .addArgFlag("-setbackground", args.background)
-                    .addArgFlag("-noclamp", args.noClamp)
-                    .addArgFlag("-noresampblur", args.noSampleBlur)
-                    .addArgFlag("-2D", args.use2D)
-                    .addArgFlag("-verbose", args.verbose)
-                    .endArgs("");
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        scriptWriter.addWithArgs(getExecutable())
+                .addArgFlag("-in", args.inputVol)
+                .addArgFlag("-ref", args.referenceVol)
+                .addArgFlag("-out", args.outputVol)
+                .addArgFlag("-init", args.inputAffine)
+                .addArgFlag("-omat", args.outputAffine)
+                .addArgFlag("-datatype", args.dataType)
+                .addArgFlag("-cost", args.cost)
+                .addArgFlag("-searchcost", args.searchCost)
+                .addArgFlag("-usesqform", args.useSqForm)
+                .addArgFlag("-displayinit", args.displayInitialMatrix)
+                .addArgFlag("-anglerep", args.angleRep)
+                .addArgFlag("-interp", args.interpolation)
+                .addArgFlag("-sincwidth", args.width)
+                .addArgFlag("-sincwindow", args.sincWindow)
+                .addArgFlag("-bins", args.bins)
+                .addArgFlag("-dof", args.dofTransforms)
+                .addArgFlag("-noresample", args.noResample)
+                .addArgFlag("-forcescaling", args.forceScaling)
+                .addArgFlag("-minsampling", args.voxDim)
+                .addArgFlag("-applyxfm", args.applyXFm)
+                .addArgFlag("-applyisoxfm", args.applyisoxfm)
+                .addArgFlag("-paddingsize", args.paddingSize)
+                .addArgFlag("-searchrx", args.searchRX, " ")
+                .addArgFlag("-searchry", args.searchRY, " ")
+                .addArgFlag("-searchrz", args.searchRZ, " ")
+                .addArgFlag("-nosearch", args.noSearch)
+                .addArgFlag("-coarsesearch", args.coarseSearch)
+                .addArgFlag("-finesearch", args.fineSearch)
+                .addArgFlag("-schedule", args.schedule)
+                .addArgFlag("-refweight", args.refweight)
+                .addArgFlag("-inweight", args.imweight)
+                .addArgFlag("-wmseg", args.wmseg)
+                .addArgFlag("-wmcoords", args.vmcoords)
+                .addArgFlag("-wmnorms", args.wmNorms)
+                .addArgFlag("-fieldmap", args.fieldMap)
+                .addArgFlag("-fieldmapmask", args.fieldMapMask)
+                .addArgFlag("-pedir", args.phaseEncodingDir)
+                .addArgFlag("-echospacing", args.echoSpacing)
+                .addArgFlag("-bbrtype", args.bbrCostType)
+                .addArgFlag("-bbrslope", args.bbrSlope)
+                .addArgFlag("-setbackground", args.background)
+                .addArgFlag("-noclamp", args.noClamp)
+                .addArgFlag("-noresampblur", args.noSampleBlur)
+                .addArgFlag("-2D", args.use2D)
+                .addArgFlag("-verbose", args.verbose)
+                .endArgs("");
     }
 
     @Override
     protected Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData) {
-        return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
+        FlirtArgs args = getArgs(jacsServiceData);
+        return ImmutableMap.of(
+                DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath),
+                "FSLOUTPUTTYPE", args.fslOutputType)
+                ;
     }
 
     private FlirtArgs getArgs(JacsServiceData jacsServiceData) {

@@ -2,7 +2,6 @@ package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableList;
-import org.apache.commons.collections4.IterableUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
@@ -316,7 +315,8 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 new ServiceArg("-searchry", 2, "-180", "180"),
                 new ServiceArg("-searchrz", 2, "-180", "180"),
                 new ServiceArg("-dof", "12"),
-                new ServiceArg("-datatype", "char")
+                new ServiceArg("-datatype", "char"),
+                new ServiceArg("-fslOutputType", args.fslOutputType)
         );
         flirtProcessor.execute(rotateServiceData);
         return rotateServiceData;

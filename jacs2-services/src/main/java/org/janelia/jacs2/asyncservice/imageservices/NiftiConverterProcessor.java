@@ -123,8 +123,10 @@ public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProces
 
     @Override
     public void execute(JacsServiceData jacsServiceData) {
-        Vaa3dNiftiConverterArgs args = getArgs(jacsServiceData);
-        vaa3dPluginProcessor.execute(submitVaa3dPluginService(args, jacsServiceData, JacsServiceState.RUNNING));
+        execute(sd -> {
+            Vaa3dNiftiConverterArgs args = getArgs(sd);
+            vaa3dPluginProcessor.execute(submitVaa3dPluginService(args, sd, JacsServiceState.RUNNING));
+        }, jacsServiceData);
     }
 
     private Vaa3dNiftiConverterArgs getArgs(JacsServiceData jacsServiceData) {

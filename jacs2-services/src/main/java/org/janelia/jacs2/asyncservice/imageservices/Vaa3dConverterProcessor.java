@@ -127,8 +127,10 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
 
     @Override
     public void execute(JacsServiceData jacsServiceData) {
-        Vaa3dConverterArgs args = getArgs(jacsServiceData);
-        vaa3dCmdProcessor.execute(submitVaa3dCmdService(args, jacsServiceData, JacsServiceState.RUNNING));
+        execute(sd -> {
+            Vaa3dConverterArgs args = getArgs(sd);
+            vaa3dCmdProcessor.execute(submitVaa3dCmdService(args, sd, JacsServiceState.RUNNING));
+        }, jacsServiceData);
     }
 
     private Vaa3dConverterArgs getArgs(JacsServiceData jacsServiceData) {
