@@ -57,15 +57,13 @@ public class ResultPage implements AnnotatedDomainObjectList {
     }
     
     private synchronized Map<Long, DomainObject> getDomainObjectByIdMap() {
-        synchronized (domainObjectById) {
-            if (domainObjectById==null) {
-                this.domainObjectById = new HashMap<>();
-                for(DomainObject domainObject : domainObjects) {
-                    domainObjectById.put(domainObject.getId(), domainObject);
-                }
+        if (domainObjectById==null) {
+            this.domainObjectById = new HashMap<>();
+            for(DomainObject domainObject : domainObjects) {
+                domainObjectById.put(domainObject.getId(), domainObject);
             }
-            return domainObjectById;
         }
+        return domainObjectById;
     }
     
     @Override
