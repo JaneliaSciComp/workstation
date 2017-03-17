@@ -332,7 +332,9 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         logger.info("Estimate rotations {}", rotationsMatFile);
         AlignmentUtils.convertAffineMatToInsightMat(rotationsMatFile, insightRotationsFile);
         JacsServiceData estimateRotationsServiceData = vaa3dPluginProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .waitFor(deps)
                         .state(JacsServiceState.RUNNING)
+                        .description("Estimate rotations")
                         .build(),
                 new ServiceArg("-plugin", "ireg"),
                 new ServiceArg("-pluginFunc", "extractRotMat"),

@@ -50,7 +50,8 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         JacsServiceDataBuilder jacsServiceDataBuilder =
                 new JacsServiceDataBuilder(executionContext.getParentServiceData())
                         .setName(smd.getServiceName())
-                        .setProcessingLocation(executionContext.getProcessingLocation());
+                        .setProcessingLocation(executionContext.getProcessingLocation())
+                        .setDescription(executionContext.getDescription());
         if (executionContext.getParentServiceData() != null) {
             jacsServiceDataBuilder.setWorkspace(getWorkingDirectory(executionContext.getParentServiceData()).toString());
         }

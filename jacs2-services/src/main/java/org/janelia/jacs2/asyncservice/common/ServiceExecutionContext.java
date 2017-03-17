@@ -33,6 +33,11 @@ public class ServiceExecutionContext {
             return this;
         }
 
+        public Builder description(String description) {
+            serviceExecutionContext.description = description;
+            return this;
+        }
+
         public ServiceExecutionContext build() {
             return serviceExecutionContext;
         }
@@ -41,6 +46,7 @@ public class ServiceExecutionContext {
     private final JacsServiceData parentServiceData;
     private ProcessingLocation processingLocation;
     private JacsServiceState serviceState;
+    private String description;
     private List<JacsServiceData> waitFor = new ArrayList<>();
 
     public ServiceExecutionContext(JacsServiceData parentServiceData) {
@@ -69,5 +75,9 @@ public class ServiceExecutionContext {
 
     public void setServiceState(JacsServiceState serviceState) {
         this.serviceState = serviceState;
+    }
+
+    public String getDescription() {
+        return description;
     }
 }
