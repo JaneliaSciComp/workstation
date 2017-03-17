@@ -9,10 +9,8 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-import org.janelia.it.jacs.model.domain.enums.PipelineStatus;
 import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
-import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
 import org.janelia.it.jacs.model.domain.sample.StatusTransition;
@@ -25,11 +23,9 @@ import org.slf4j.LoggerFactory;
 public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
 
     private static final Logger log = LoggerFactory.getLogger(SampleFacadeImpl.class);
-    private RESTClientManager manager;
 
     public SampleFacadeImpl() {
         super(log);
-        this.manager = RESTClientManager.getInstance();
     }
 
     @Override

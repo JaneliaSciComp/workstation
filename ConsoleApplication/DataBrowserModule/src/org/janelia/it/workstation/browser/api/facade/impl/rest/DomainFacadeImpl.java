@@ -24,11 +24,8 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
 
     private static final Logger log = LoggerFactory.getLogger(DomainFacadeImpl.class);
 
-    private RESTClientManager manager;
-    
     public DomainFacadeImpl() {
         super(log);
-        this.manager = RESTClientManager.getInstance();
     }
 
     @Override
