@@ -2,6 +2,7 @@ package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableList;
+import org.apache.commons.collections4.IterableUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
@@ -96,6 +97,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     private final Vaa3dConverterProcessor vaa3dConverterProcessor;
     private final Vaa3dPluginProcessor vaa3dPluginProcessor;
     private final NiftiConverterProcessor niftiConverterProcessor;
+    private final FlirtProcessor flirtProcessor;
 
     @Inject
     RawFilesAlignmentProcessor(JacsServiceEngine jacsServiceEngine,
@@ -107,11 +109,13 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                                Logger logger,
                                Vaa3dConverterProcessor vaa3dConverterProcessor,
                                Vaa3dPluginProcessor vaa3dPluginProcessor,
-                               NiftiConverterProcessor niftiConverterProcessor) {
+                               NiftiConverterProcessor niftiConverterProcessor,
+                               FlirtProcessor flirtProcessor) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.vaa3dConverterProcessor = vaa3dConverterProcessor;
         this.vaa3dPluginProcessor = vaa3dPluginProcessor;
         this.niftiConverterProcessor = niftiConverterProcessor;
+        this.flirtProcessor = flirtProcessor;
     }
 
     @Override
@@ -154,18 +158,19 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         convertToNiftiImage(getWorkingResizedSubjectRefChannelFile(args, jacsServiceData), getNiftiResizedSubjectRefChannelFile(args, jacsServiceData), jacsServiceData);
         double downsampleFactor = 0.125;
         // downsample the target with ration 1/8
-        downsampleImage(
+        JacsServiceData targetDownsampleServiceData = downsampleImage(
                 getNiftiTargetExtFile(args, jacsServiceData),
                 getNiftiTargetExtDownsampleFile(args, jacsServiceData),
                 downsampleFactor,
                 jacsServiceData);
         // downsample the subject with ration 1/8
-        downsampleImage(
+        JacsServiceData subjectDownsampleServiceData = downsampleImage(
                 getNiftiResizedSubjectRefChannelFile(args, jacsServiceData),
                 getNiftiResizedSubjectRefChannelDownsampleFile(args, jacsServiceData),
                 downsampleFactor,
                 jacsServiceData);
-
+        // get the rotations
+        rotateImage(args, jacsServiceData, targetDownsampleServiceData, subjectDownsampleServiceData);
         return ImmutableList.of(); // FIXME!!!!
     }
 
@@ -296,6 +301,27 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return downsampleServiceData;
     }
 
+    private JacsServiceData rotateImage(AlignmentArgs args, JacsServiceData jacsServiceData, JacsServiceData... deps) {
+        Path rotationsMatFile = getSubjectRotationsMatrixFile(args, jacsServiceData);
+        logger.info("Find rotations {}", rotationsMatFile);
+        JacsServiceData rotateServiceData = flirtProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .state(JacsServiceState.RUNNING)
+                        .waitFor(deps)
+                        .build(),
+                new ServiceArg("-in", getNiftiResizedSubjectRefChannelDownsampleFile(args, jacsServiceData).toString()),
+                new ServiceArg("-ref", getNiftiTargetExtDownsampleFile(args, jacsServiceData).toString()),
+                new ServiceArg("-omat", rotationsMatFile.toString()),
+                new ServiceArg("-cost", "mutualinfo"),
+                new ServiceArg("-searchrx", 2, "-180", "180"),
+                new ServiceArg("-searchry", 2, "-180", "180"),
+                new ServiceArg("-searchrz", 2, "-180", "180"),
+                new ServiceArg("-dof", "12"),
+                new ServiceArg("-datatype", "char")
+        );
+        flirtProcessor.execute(rotateServiceData);
+        return rotateServiceData;
+    }
+
     @Override
     protected ServiceComputation<List<File>> processing(JacsServiceData jacsServiceData) {
         return createComputation(this.waitForResult(jacsServiceData));
@@ -374,6 +400,10 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
 
     private Path getNiftiResizedSubjectRefChannelDownsampleFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
         return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "RsRefChn_ds.nii");
+    }
+
+    private Path getSubjectRotationsMatrixFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-Rotations.mat");
     }
 
     private AlignmentArgs getArgs(JacsServiceData jacsServiceData) {

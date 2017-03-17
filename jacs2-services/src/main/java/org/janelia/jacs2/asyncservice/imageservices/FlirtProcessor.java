@@ -33,7 +33,7 @@ import java.util.Map;
 public class FlirtProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
     static class FlirtArgs extends ServiceArgs {
-        @Parameter(names = "-in", description = "Input volume")
+        @Parameter(names = {"-in", "-input"}, description = "Input volume")
         String inputVol;
         @Parameter(names = {"-o", "-out"}, description = "Output volume")
         String outputVol;
@@ -60,7 +60,7 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<Void> {
         @Parameter(names = "-sincwidth", description = "Full-width in voxels")
         int width;
         @Parameter(names = "-sincwindow", description = "{rectangular,hanning,blackman}")
-        String dincWindow;
+        String sincWindow;
         @Parameter(names = "-bins", description = "Number of histogram bins")
         int bins = 256;
         @Parameter(names = "-dof", description = "Number of transform dofs")
@@ -192,6 +192,46 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<Void> {
                     .addArgFlag("-out", args.outputVol)
                     .addArgFlag("-init", args.inputAffine)
                     .addArgFlag("-omat", args.outputAffine)
+                    .addArgFlag("-datatype", args.dataType)
+                    .addArgFlag("-cost", args.cost)
+                    .addArgFlag("-searchcost", args.searchCost)
+                    .addArgFlag("-usesqform", args.useSqForm)
+                    .addArgFlag("-displayinit", args.displayInitialMatrix)
+                    .addArgFlag("-anglerep", args.angleRep)
+                    .addArgFlag("-interp", args.interpolation)
+                    .addArgFlag("-sincwidth", args.width)
+                    .addArgFlag("-sincwindow", args.sincWindow)
+                    .addArgFlag("-bins", args.bins)
+                    .addArgFlag("-dof", args.dofTransforms)
+                    .addArgFlag("-noresample", args.noResample)
+                    .addArgFlag("-forcescaling", args.forceScaling)
+                    .addArgFlag("-minsampling", args.voxDim)
+                    .addArgFlag("-applyxfm", args.applyXFm)
+                    .addArgFlag("-applyisoxfm", args.applyisoxfm)
+                    .addArgFlag("-paddingsize", args.paddingSize)
+                    .addArgFlag("-searchrx", args.searchRX, " ")
+                    .addArgFlag("-searchry", args.searchRY, " ")
+                    .addArgFlag("-searchrz", args.searchRZ, " ")
+                    .addArgFlag("-nosearch", args.noSearch)
+                    .addArgFlag("-coarsesearch", args.coarseSearch)
+                    .addArgFlag("-finesearch", args.fineSearch)
+                    .addArgFlag("-schedule", args.schedule)
+                    .addArgFlag("-refweight", args.refweight)
+                    .addArgFlag("-inweight", args.imweight)
+                    .addArgFlag("-wmseg", args.wmseg)
+                    .addArgFlag("-wmcoords", args.vmcoords)
+                    .addArgFlag("-wmnorms", args.wmNorms)
+                    .addArgFlag("-fieldmap", args.fieldMap)
+                    .addArgFlag("-fieldmapmask", args.fieldMapMask)
+                    .addArgFlag("-pedir", args.phaseEncodingDir)
+                    .addArgFlag("-echospacing", args.echoSpacing)
+                    .addArgFlag("-bbrtype", args.bbrCostType)
+                    .addArgFlag("-bbrslope", args.bbrSlope)
+                    .addArgFlag("-setbackground", args.background)
+                    .addArgFlag("-noclamp", args.noClamp)
+                    .addArgFlag("-noresampblur", args.noSampleBlur)
+                    .addArgFlag("-2D", args.use2D)
+                    .addArgFlag("-verbose", args.verbose)
                     .endArgs("");
         } catch (IOException e) {
             throw new UncheckedIOException(e);
