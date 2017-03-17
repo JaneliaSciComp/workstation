@@ -94,13 +94,17 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
 
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
-        Vaa3dConverterArgs args = getArgs(jacsServiceData);
-        return ImmutableList.of(submit(createVaa3dCmdServiceData(args, jacsServiceData, JacsServiceState.QUEUED)));
+        return ImmutableList.of();
     }
 
     @Override
     protected ServiceComputation<File> processing(JacsServiceData jacsServiceData) {
-        return createComputation(this.waitForResult(jacsServiceData));
+        Vaa3dConverterArgs args = getArgs(jacsServiceData);
+        return createComputation(createVaa3dCmdServiceData(args, jacsServiceData, jacsServiceData.getState()))
+                .thenApply(sd -> {
+                    vaa3dCmdProcessor.execute(sd);
+                    return this.waitForResult(jacsServiceData);
+                });
     }
 
     @Override

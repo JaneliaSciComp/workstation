@@ -97,13 +97,17 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
 
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
-        Vaa3dPluginArgs args = getArgs(jacsServiceData);
-        return ImmutableList.of(submit(createVaa3dServiceData(args, jacsServiceData, JacsServiceState.QUEUED)));
+        return ImmutableList.of();
     }
 
     @Override
     protected ServiceComputation<File> processing(JacsServiceData jacsServiceData) {
-        return createComputation(this.waitForResult(jacsServiceData));
+        Vaa3dPluginArgs args = getArgs(jacsServiceData);
+        return createComputation(createVaa3dServiceData(args, jacsServiceData, jacsServiceData.getState()))
+                .thenApply(sd -> {
+                    vaa3dProcessor.execute(sd);
+                    return this.waitForResult(jacsServiceData);
+                });
     }
 
     @Override
@@ -127,7 +131,8 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
         if (CollectionUtils.isNotEmpty(args.pluginParams)) {
             vaa3Args.add("-p").add(StringUtils.wrap(args.pluginParams.stream().collect(Collectors.joining(" ")), '"'));
         }
-        return vaa3dProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).state(vaa3dServiceState).build(),
+        return vaa3dProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .state(vaa3dServiceState).build(),
                 new ServiceArg("-vaa3dArgs", vaa3Args.toString()));
     }
 
