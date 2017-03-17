@@ -1,8 +1,6 @@
 package org.janelia.jacs2.asyncservice.common;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
@@ -10,10 +8,7 @@ import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.slf4j.Logger;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -23,16 +18,14 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
     protected static final long WAIT_BETWEEN_RETRIES_FOR_RESULT = 1000; // 1s
 
     protected final JacsServiceDataPersistence jacsServiceDataPersistence;
-    protected final String defaultWorkingDir;
 
     public AbstractBasicLifeCycleServiceProcessor(JacsServiceEngine jacsServiceEngine,
                                                   ServiceComputationFactory computationFactory,
                                                   JacsServiceDataPersistence jacsServiceDataPersistence,
                                                   String defaultWorkingDir,
                                                   Logger logger) {
-        super(jacsServiceEngine, computationFactory, logger);
+        super(jacsServiceEngine, computationFactory, defaultWorkingDir, logger);
         this.jacsServiceDataPersistence = jacsServiceDataPersistence;
-        this.defaultWorkingDir = defaultWorkingDir;
     }
 
     @Override
@@ -156,26 +149,6 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
         jacsServiceData.addEvent(JacsServiceEventTypes.CANCELED, "Canceled because results could not be retrieved after " + N_RETRIES_FOR_RESULT + " retries");
         jacsServiceDataPersistence.update(jacsServiceData);
         throw new ComputationException(jacsServiceData, "Results could not be retrieved after " + N_RETRIES_FOR_RESULT + " retries");
-    }
-
-    protected Path getWorkingDirectory(JacsServiceData jacsServiceData) {
-        String workingDir;
-        if (StringUtils.isNotBlank(jacsServiceData.getWorkspace())) {
-            workingDir = jacsServiceData.getWorkspace();
-        } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
-            workingDir = defaultWorkingDir;
-        } else {
-            workingDir = System.getProperty("java.io.tmpdir");
-        }
-        return getServicePath(workingDir, jacsServiceData);
-    }
-
-    protected Path getServicePath(String baseDir, JacsServiceData jacsServiceData, String... more) {
-        List<String> pathElems = new ImmutableList.Builder<String>()
-                .add(jacsServiceData.getName() + "_" + jacsServiceData.getId().toString())
-                .addAll(Arrays.asList(more))
-                .build();
-        return Paths.get(baseDir, pathElems.toArray(new String[0])).toAbsolutePath();
     }
 
     protected boolean checkSuspendCondition(JacsServiceData jacsServiceData) {

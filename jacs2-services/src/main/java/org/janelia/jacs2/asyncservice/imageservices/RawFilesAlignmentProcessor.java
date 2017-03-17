@@ -151,7 +151,20 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         JacsServiceData resizeSubject = resizeSubjectToTarget(args, jacsServiceData);
         extractRefFromSubject(args, jacsServiceData, resizeSubject);
         // convert the ref channel to Nifti
-        convertToNiftiImage(getWorkingResizedSubjectRefChannelFile(args, jacsServiceData), getNiftiResizedSubjectRefChannel(args, jacsServiceData), jacsServiceData);
+        convertToNiftiImage(getWorkingResizedSubjectRefChannelFile(args, jacsServiceData), getNiftiResizedSubjectRefChannelFile(args, jacsServiceData), jacsServiceData);
+        double downsampleFactor = 0.125;
+        // downsample the target with ration 1/8
+        downsampleImage(
+                getNiftiTargetExtFile(args, jacsServiceData),
+                getNiftiTargetExtDownsampleFile(args, jacsServiceData),
+                downsampleFactor,
+                jacsServiceData);
+        // downsample the subject with ration 1/8
+        downsampleImage(
+                getNiftiResizedSubjectRefChannelFile(args, jacsServiceData),
+                getNiftiResizedSubjectRefChannelDownsampleFile(args, jacsServiceData),
+                downsampleFactor,
+                jacsServiceData);
 
         return ImmutableList.of(); // FIXME!!!!
     }
@@ -266,6 +279,23 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return extractRefServiceData;
     }
 
+    private JacsServiceData downsampleImage(Path input, Path output, double downsampleFactor, JacsServiceData jacsServiceData) {
+        logger.info("Downsample {} -> {}", input, output);
+        JacsServiceData downsampleServiceData = vaa3dPluginProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .state(JacsServiceState.RUNNING)
+                        .build(),
+                new ServiceArg("-plugin", "ireg"),
+                new ServiceArg("-pluginFunc", "resamplebyspacing"),
+                new ServiceArg("-input", input.toString()),
+                new ServiceArg("-output", output.toString()),
+                new ServiceArg("-pluginParams", String.format("#x %f", downsampleFactor)),
+                new ServiceArg("-pluginParams", String.format("#y %f", downsampleFactor)),
+                new ServiceArg("-pluginParams", String.format("#z %f", downsampleFactor))
+        );
+        vaa3dPluginProcessor.execute(downsampleServiceData);
+        return downsampleServiceData;
+    }
+
     @Override
     protected ServiceComputation<List<File>> processing(JacsServiceData jacsServiceData) {
         return createComputation(this.waitForResult(jacsServiceData));
@@ -314,6 +344,10 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.targetExtTemplate) + "_c0.nii");
     }
 
+    private Path getNiftiTargetExtDownsampleFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.targetExtTemplate) + "_ds.nii");
+    }
+
     private Path getWorkingNeuronsFile(String neuronsFile, JacsServiceData jacsServiceData) {
         return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(neuronsFile) + "-Sx.v3draw");
     }
@@ -334,8 +368,12 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-RsRefChn.v3draw");
     }
 
-    private Path getNiftiResizedSubjectRefChannel(AlignmentArgs args, JacsServiceData jacsServiceData) {
+    private Path getNiftiResizedSubjectRefChannelFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
         return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-RsRefChn_c0.nii");
+    }
+
+    private Path getNiftiResizedSubjectRefChannelDownsampleFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "RsRefChn_ds.nii");
     }
 
     private AlignmentArgs getArgs(JacsServiceData jacsServiceData) {

@@ -35,8 +35,9 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
     @Inject
     public IntegerComputeTestProcessor(JacsServiceEngine jacsServiceEngine,
                                        ServiceComputationFactory computationFactory,
+                                       String defaultWorkingDir,
                                        Logger logger) {
-        super(jacsServiceEngine, computationFactory, logger);
+        super(jacsServiceEngine, computationFactory, defaultWorkingDir, logger);
     }
 
     @Override
