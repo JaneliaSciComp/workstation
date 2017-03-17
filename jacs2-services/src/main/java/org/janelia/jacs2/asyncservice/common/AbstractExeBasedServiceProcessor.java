@@ -150,7 +150,6 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicL
                 this::outputStreamHandler,
                 this::errStreamHandler,
                 jacsServiceData);
-        success(jacsServiceData, Optional.ofNullable(retrieveResult(jacsServiceData)));
     }
 
     private ExternalProcessRunner getProcessRunner(ProcessingLocation processingLocation) {

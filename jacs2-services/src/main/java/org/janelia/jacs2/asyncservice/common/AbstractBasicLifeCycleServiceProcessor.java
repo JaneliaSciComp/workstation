@@ -161,9 +161,8 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
         try {
             execFn.accept(jacsServiceData);
             success(jacsServiceData, Optional.ofNullable(retrieveResult(jacsServiceData)));
-        } catch (ComputationException e) {
+        } catch (Exception e) {
             fail(jacsServiceData, e);
-            throw e;
         }
     }
 
