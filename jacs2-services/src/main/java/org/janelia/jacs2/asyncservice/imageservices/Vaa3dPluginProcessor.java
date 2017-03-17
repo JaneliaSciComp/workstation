@@ -97,17 +97,13 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
 
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
-        return ImmutableList.of();
+        Vaa3dPluginArgs args = getArgs(jacsServiceData);
+        return ImmutableList.of(submitVaa3dService(args, jacsServiceData, jacsServiceData.getState()));
     }
 
     @Override
     protected ServiceComputation<File> processing(JacsServiceData jacsServiceData) {
-        Vaa3dPluginArgs args = getArgs(jacsServiceData);
-        return createComputation(createVaa3dServiceData(args, jacsServiceData, jacsServiceData.getState()))
-                .thenApply(sd -> {
-                    vaa3dProcessor.execute(sd);
-                    return this.waitForResult(jacsServiceData);
-                });
+        return createComputation(this.waitForResult(jacsServiceData));
     }
 
     @Override
@@ -122,7 +118,7 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
         return new File(args.pluginOutput);
     }
 
-    private JacsServiceData createVaa3dServiceData(Vaa3dPluginArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dServiceState) {
+    private JacsServiceData submitVaa3dService(Vaa3dPluginArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dServiceState) {
         StringJoiner vaa3Args = new StringJoiner(" ")
                 .add("-x").add(args.plugin)
                 .add("-f").add(args.pluginFunc)
@@ -131,16 +127,16 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
         if (CollectionUtils.isNotEmpty(args.pluginParams)) {
             vaa3Args.add("-p").add(StringUtils.wrap(args.pluginParams.stream().collect(Collectors.joining(" ")), '"'));
         }
-        return vaa3dProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+        return submit(vaa3dProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(vaa3dServiceState).build(),
-                new ServiceArg("-vaa3dArgs", vaa3Args.toString()));
+                new ServiceArg("-vaa3dArgs", vaa3Args.toString())));
     }
 
     @Override
     public void execute(JacsServiceData jacsServiceData) {
         execute(sd -> {
             Vaa3dPluginArgs args = getArgs(sd);
-            vaa3dProcessor.execute(createVaa3dServiceData(args, sd, JacsServiceState.RUNNING));
+            vaa3dProcessor.execute(submitVaa3dService(args, sd, JacsServiceState.RUNNING));
         }, jacsServiceData);
     }
 

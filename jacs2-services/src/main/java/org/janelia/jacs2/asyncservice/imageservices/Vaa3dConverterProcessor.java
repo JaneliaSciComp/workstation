@@ -94,17 +94,13 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
 
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
-        return ImmutableList.of();
+        Vaa3dConverterArgs args = getArgs(jacsServiceData);
+        return ImmutableList.of(submitVaa3dCmdService(args, jacsServiceData, JacsServiceState.QUEUED));
     }
 
     @Override
     protected ServiceComputation<File> processing(JacsServiceData jacsServiceData) {
-        Vaa3dConverterArgs args = getArgs(jacsServiceData);
-        return createComputation(createVaa3dCmdServiceData(args, jacsServiceData, jacsServiceData.getState()))
-                .thenApply(sd -> {
-                    vaa3dCmdProcessor.execute(sd);
-                    return this.waitForResult(jacsServiceData);
-                });
+        return createComputation(this.waitForResult(jacsServiceData));
     }
 
     @Override
@@ -119,21 +115,21 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
         return new File(args.outputFileName);
     }
 
-    private JacsServiceData createVaa3dCmdServiceData(Vaa3dConverterArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dCmdServiceState) {
+    private JacsServiceData submitVaa3dCmdService(Vaa3dConverterArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dCmdServiceState) {
         StringJoiner vaa3dCmdArgs = new StringJoiner(" ")
                 .add(args.convertCmd)
                 .add(args.inputFileName)
                 .add(args.outputFileName);
-        return vaa3dCmdProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).state(vaa3dCmdServiceState).build(),
+        return submit(vaa3dCmdProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).state(vaa3dCmdServiceState).build(),
                 new ServiceArg("-vaa3dCmd", "image-loader"),
-                new ServiceArg("-vaa3dCmdArgs", vaa3dCmdArgs.toString()));
+                new ServiceArg("-vaa3dCmdArgs", vaa3dCmdArgs.toString())));
     }
 
     @Override
     public void execute(JacsServiceData jacsServiceData) {
         execute(sd -> {
             Vaa3dConverterArgs args = getArgs(sd);
-            vaa3dCmdProcessor.execute(createVaa3dCmdServiceData(args, sd, JacsServiceState.RUNNING));
+            vaa3dCmdProcessor.execute(submitVaa3dCmdService(args, sd, JacsServiceState.RUNNING));
         }, jacsServiceData);
     }
 
