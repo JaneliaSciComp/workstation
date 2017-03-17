@@ -184,21 +184,23 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 throw new UncheckedIOException(e);
             }
         } else {
-            return vaa3dConverterProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+            JacsServiceData convertToRawServiceData = submit(vaa3dConverterProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                             .state(JacsServiceState.RUNNING)
                             .build(),
                     new ServiceArg("-input", neuronsFile),
-                    new ServiceArg("-output", getWorkingNeuronsFile(neuronsFile, jacsServiceData).toString()));
+                    new ServiceArg("-output", getWorkingNeuronsFile(neuronsFile, jacsServiceData).toString())));
+            vaa3dConverterProcessor.execute(convertToRawServiceData);
+            return convertToRawServiceData;
         }
     }
 
     private JacsServiceData convertToNiftiImage(Path input, Path output, JacsServiceData jacsServiceData) {
         logger.info("Convert {} into a nifti image - {}", input, output);
-        JacsServiceData niftiConverterServiceData = niftiConverterProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+        JacsServiceData niftiConverterServiceData = submit(niftiConverterProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.RUNNING)
                         .build(),
                 new ServiceArg("-input", input.toString()),
-                new ServiceArg("-output", output.toString()));
+                new ServiceArg("-output", output.toString())));
         niftiConverterProcessor.execute(niftiConverterServiceData);
         return niftiConverterServiceData;
     }
@@ -206,13 +208,13 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     private void zFlipSubject(AlignmentArgs args, JacsServiceData jacsServiceData) {
         if (args.zFlip) {
             logger.info("Flip {} along the z axis", args.input1File);
-            JacsServiceData zFlipSubjectsServiceData = vaa3dPluginProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+            JacsServiceData zFlipSubjectsServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                             .state(JacsServiceState.RUNNING)
                             .build(),
                     new ServiceArg("-plugin", "ireg"),
                     new ServiceArg("-pluginFunc", "zflip"),
                     new ServiceArg("-input", args.input1File),
-                    new ServiceArg("-output", getWorkingSubjectFile(args, jacsServiceData).toString()));
+                    new ServiceArg("-output", getWorkingSubjectFile(args, jacsServiceData).toString())));
             vaa3dPluginProcessor.execute(zFlipSubjectsServiceData);
         } else {
             try {
@@ -234,7 +236,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         if (Math.abs(isx - 1.) >  0.01
                 || Math.abs(isy - 1.) >  0.01
                 || Math.abs(isz - 1.) >  0.01) {
-            JacsServiceData isotropicSamplingServiceData = vaa3dPluginProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+            JacsServiceData isotropicSamplingServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                             .state(JacsServiceState.RUNNING)
                             .build(),
                     new ServiceArg("-plugin", "ireg"),
@@ -244,7 +246,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                     new ServiceArg("-pluginParams", String.format("#x %f", isx)),
                     new ServiceArg("-pluginParams", String.format("#y %f", isy)),
                     new ServiceArg("-pluginParams", String.format("#z %f", isz))
-            );
+            ));
             vaa3dPluginProcessor.execute(isotropicSamplingServiceData);
         } else {
             try {
@@ -256,7 +258,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     private JacsServiceData resizeSubjectToTarget(AlignmentArgs args, JacsServiceData jacsServiceData) {
-        JacsServiceData resizeSubjectServiceData = vaa3dPluginProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+        JacsServiceData resizeSubjectServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.RUNNING)
                         .build(),
                 new ServiceArg("-plugin", "ireg"),
@@ -265,13 +267,13 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 new ServiceArg("-pluginParams", String.format("#s %s", getWorkingIsotropicSubjectFile(args, jacsServiceData))),
                 new ServiceArg("-pluginParams", String.format("#t %s", getTargetExtFile(args))),
                 new ServiceArg("-pluginParams", "#y 1")
-        );
+        ));
         vaa3dPluginProcessor.execute(resizeSubjectServiceData);
         return resizeSubjectServiceData;
     }
 
     private JacsServiceData extractRefFromSubject(AlignmentArgs args, JacsServiceData jacsServiceData, JacsServiceData ...waitFor) {
-        JacsServiceData extractRefServiceData = vaa3dPluginProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+        JacsServiceData extractRefServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.RUNNING)
                         .waitFor(waitFor)
                         .build(),
@@ -280,14 +282,14 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 new ServiceArg("-input", getWorkingResizedSubjectFile(args, jacsServiceData).toString()),
                 new ServiceArg("-output", getWorkingResizedSubjectRefChannelFile(args, jacsServiceData).toString()),
                 new ServiceArg("-pluginParams", String.format("#c %s", args.input1Ref))
-        );
+        ));
         vaa3dPluginProcessor.execute(extractRefServiceData);
         return extractRefServiceData;
     }
 
     private JacsServiceData downsampleImage(Path input, Path output, double downsampleFactor, JacsServiceData jacsServiceData) {
         logger.info("Downsample {} -> {}", input, output);
-        JacsServiceData downsampleServiceData = vaa3dPluginProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+        JacsServiceData downsampleServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.RUNNING)
                         .build(),
                 new ServiceArg("-plugin", "ireg"),
@@ -297,7 +299,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 new ServiceArg("-pluginParams", String.format("#x %f", downsampleFactor)),
                 new ServiceArg("-pluginParams", String.format("#y %f", downsampleFactor)),
                 new ServiceArg("-pluginParams", String.format("#z %f", downsampleFactor))
-        );
+        ));
         vaa3dPluginProcessor.execute(downsampleServiceData);
         return downsampleServiceData;
     }
@@ -305,7 +307,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     private JacsServiceData rotateImage(AlignmentArgs args, JacsServiceData jacsServiceData, JacsServiceData... deps) {
         Path rotationsMatFile = getSubjectRotationsMatrixFile(args, jacsServiceData);
         logger.info("Find rotations {}", rotationsMatFile);
-        JacsServiceData rotateServiceData = flirtProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+        JacsServiceData rotateServiceData = submit(flirtProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.RUNNING)
                         .waitFor(deps)
                         .build(),
@@ -319,7 +321,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 new ServiceArg("-dof", "12"),
                 new ServiceArg("-datatype", "char"),
                 new ServiceArg("-fslOutputType", args.fslOutputType)
-        );
+        ));
         flirtProcessor.execute(rotateServiceData);
         return rotateServiceData;
     }
@@ -331,7 +333,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
 
         logger.info("Estimate rotations {}", rotationsMatFile);
         AlignmentUtils.convertAffineMatToInsightMat(rotationsMatFile, insightRotationsFile);
-        JacsServiceData estimateRotationsServiceData = vaa3dPluginProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+        JacsServiceData estimateRotationsServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .waitFor(deps)
                         .state(JacsServiceState.RUNNING)
                         .description("Estimate rotations")
@@ -340,7 +342,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 new ServiceArg("-pluginFunc", "extractRotMat"),
                 new ServiceArg("-input", insightRotationsFile.toString()),
                 new ServiceArg("-output", affineRotationsFile.toString())
-        );
+        ));
         vaa3dPluginProcessor.execute(estimateRotationsServiceData);
         return estimateRotationsServiceData;
     }

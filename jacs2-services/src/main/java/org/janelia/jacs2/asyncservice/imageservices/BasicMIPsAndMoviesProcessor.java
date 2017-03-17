@@ -119,13 +119,13 @@ public class BasicMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServicePr
             throw new ComputationException(jacsServiceData,  "No channel spec for " + args.imageFile);
         }
         Path temporaryOutputDir = getServicePath(scratchLocation, jacsServiceData, com.google.common.io.Files.getNameWithoutExtension(args.imageFile));
-        return fijiMacroProcessor.submit(new ServiceExecutionContext(jacsServiceData),
+        return submit(fijiMacroProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-macro", basicMIPsAndMoviesMacro),
                 new ServiceArg("-macroArgs", getBasicMIPsAndMoviesArgs(args, temporaryOutputDir)),
                 new ServiceArg("-temporaryOutput", temporaryOutputDir.toString()),
                 new ServiceArg("-finalOutput", getResultsDir(args).toString()),
                 new ServiceArg("-resultsPatterns", "*.png"),
-                new ServiceArg("-resultsPatterns", "*.avi"));
+                new ServiceArg("-resultsPatterns", "*.avi")));
     }
 
     private String getBasicMIPsAndMoviesArgs(BasicMIPsAndMoviesArgs args, Path outputDir) {
@@ -157,7 +157,7 @@ public class BasicMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServicePr
                 .thenApply(fileResults -> {
                     fileResults.stream()
                             .filter(f -> f.getName().endsWith(".avi"))
-                            .forEach(f -> mpegConverterProcessor.submit(new ServiceExecutionContext(jacsServiceData), new ServiceArg("-input", f.getAbsolutePath())));
+                            .forEach(f -> submit(mpegConverterProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData), new ServiceArg("-input", f.getAbsolutePath()))));
                     return jacsServiceData;
                 })
                 .thenSuspendUntil(() -> this.checkSuspendCondition(jacsServiceData))

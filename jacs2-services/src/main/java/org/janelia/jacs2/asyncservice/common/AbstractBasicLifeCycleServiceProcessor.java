@@ -31,13 +31,6 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
     }
 
     @Override
-    public ServiceComputation<T> process(ServiceExecutionContext executionContext, ServiceArg... args) {
-        JacsServiceData serviceData = submit(executionContext, args);
-        return process(serviceData);
-    }
-
-
-    @Override
     public ServiceComputation<T> process(JacsServiceData jacsServiceData) {
         jacsServiceData.setProcessStartTime(new Date());
         jacsServiceDataPersistence.save(jacsServiceData);

@@ -88,10 +88,10 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
 
-        JacsServiceData getSampleLsms = getSampleImageFilesProcessor.submit(new ServiceExecutionContext(jacsServiceData),
+        JacsServiceData getSampleLsms = submit(getSampleImageFilesProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
-                new ServiceArg("-sampleDataDir", args.sampleDataDir));
+                new ServiceArg("-sampleDataDir", args.sampleDataDir)));
 
         List<AnatomicalArea> anatomicalAreas =
                 sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
@@ -106,7 +106,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
                                 throw new ComputationException(jacsServiceData, "No channel spec for LSM " + lsmf.getId());
                             }
                             Path resultsDir =  getResultsDir(args, ar.getName(), ar.getObjective(), lsmImageFile);
-                            return basicMIPsAndMoviesProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+                            return submit(basicMIPsAndMoviesProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                                             .waitFor(getSampleLsms)
                                             .build(),
                                     new ServiceArg("-imgFile", lsmImageFile.getAbsolutePath()),
@@ -115,7 +115,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
                                     new ServiceArg("-laser", null), // no laser info in the lsm
                                     new ServiceArg("-gain", null), // no gain info in the lsm
                                     new ServiceArg("-options", args.options),
-                                    new ServiceArg("-resultsDir", resultsDir.toString()));
+                                    new ServiceArg("-resultsDir", resultsDir.toString())));
                         }))
                 .collect(Collectors.toList());
     }

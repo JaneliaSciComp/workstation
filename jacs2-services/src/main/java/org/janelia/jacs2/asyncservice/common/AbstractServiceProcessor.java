@@ -32,20 +32,12 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         this.logger = logger;
     }
 
-    @Override
-    public ServiceComputation<T> process(ServiceExecutionContext executionContext, ServiceArg... args) {
-        executionContext.setServiceState(JacsServiceState.SUBMITTED);
-        JacsServiceData serviceData = submit(executionContext, args);
-        return process(serviceData);
-    }
-
-    @Override
-    public JacsServiceData submit(ServiceExecutionContext executionContext, ServiceArg... args) {
-        JacsServiceData jacsServiceData = createJacsServiceData(executionContext, args);
+    protected JacsServiceData submit(JacsServiceData jacsServiceData) {
         return jacsServiceEngine.submitSingleService(jacsServiceData);
     }
 
-    protected JacsServiceData createJacsServiceData(ServiceExecutionContext executionContext, ServiceArg... args) {
+    @Override
+    public JacsServiceData createServiceData(ServiceExecutionContext executionContext, ServiceArg... args) {
         ServiceMetaData smd = getMetadata();
         JacsServiceDataBuilder jacsServiceDataBuilder =
                 new JacsServiceDataBuilder(executionContext.getParentServiceData())

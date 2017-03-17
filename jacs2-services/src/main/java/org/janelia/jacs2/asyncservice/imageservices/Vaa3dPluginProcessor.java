@@ -98,7 +98,7 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         Vaa3dPluginArgs args = getArgs(jacsServiceData);
-        return ImmutableList.of(submitVaa3dService(args, jacsServiceData, JacsServiceState.QUEUED));
+        return ImmutableList.of(submit(createVaa3dServiceData(args, jacsServiceData, JacsServiceState.QUEUED)));
     }
 
     @Override
@@ -118,7 +118,7 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
         return new File(args.pluginOutput);
     }
 
-    private JacsServiceData submitVaa3dService(Vaa3dPluginArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dServiceState) {
+    private JacsServiceData createVaa3dServiceData(Vaa3dPluginArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dServiceState) {
         StringJoiner vaa3Args = new StringJoiner(" ")
                 .add("-x").add(args.plugin)
                 .add("-f").add(args.pluginFunc)
@@ -127,7 +127,7 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
         if (CollectionUtils.isNotEmpty(args.pluginParams)) {
             vaa3Args.add("-p").add(StringUtils.wrap(args.pluginParams.stream().collect(Collectors.joining(" ")), '"'));
         }
-        return vaa3dProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData).state(vaa3dServiceState).build(),
+        return vaa3dProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).state(vaa3dServiceState).build(),
                 new ServiceArg("-vaa3dArgs", vaa3Args.toString()));
     }
 
@@ -135,7 +135,7 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
     public void execute(JacsServiceData jacsServiceData) {
         execute(sd -> {
             Vaa3dPluginArgs args = getArgs(sd);
-            vaa3dProcessor.execute(submitVaa3dService(args, sd, JacsServiceState.RUNNING));
+            vaa3dProcessor.execute(createVaa3dServiceData(args, sd, JacsServiceState.RUNNING));
         }, jacsServiceData);
     }
 

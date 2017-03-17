@@ -2,12 +2,10 @@ package org.janelia.jacs2.asyncservice.imageservices.align;
 
 import com.google.common.base.Splitter;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.asyncservice.utils.FileUtils;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.OutputKeys;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -70,10 +68,10 @@ public class AlignmentUtils {
     }
 
     public static void convertAffineMatToInsightMat(Path affineMatFile, Path insightMatFile) {
-        Matrix<Double> affineMat = readAffineMat(affineMatFile);
         PrintWriter insightWriter = null;
         try  {
-            insightWriter = new PrintWriter(new FileWriter(insightMatFile.toFile()));
+            Matrix<Double> affineMat = readAffineMat(affineMatFile);
+            insightWriter = new PrintWriter(Files.newBufferedWriter(insightMatFile));
             insightWriter.println("#Insight Transform File V1.0");
             insightWriter.println("#Transform 0");
             insightWriter.println("Transform: MatrixOffsetTransformBase_double_3_3");
@@ -94,15 +92,21 @@ public class AlignmentUtils {
     private static Matrix<Double> readAffineMat(Path affineMatFile) {
         try {
             Matrix<Double> affineMat = new Matrix<>(4, 4);
-            List<String> rows = Files.readAllLines(affineMatFile);
-            if (rows.size() < 4) {
+            List<String> rowLines = Files.readAllLines(affineMatFile);
+            if (rowLines.size() < 4) {
                 throw new IllegalArgumentException("Expected to read 4 lines from the affine matrix file");
             }
-            for (int row = 0; row < 4 && row < rows.size(); row++) {
-                Iterator<String> colItr = Splitter.on(' ').split(rows.get(row)).iterator();
-                for (int col = 0; col < 4 && colItr.hasNext();) {
+            Iterator<String> rowItr = rowLines.iterator();
+            for (int row = 0; row < 4 && rowItr.hasNext(); ) {
+                String rowLine = rowItr.next().trim();
+                if (StringUtils.isEmpty(rowLine)) {
+                    continue;
+                }
+                Iterator<String> colItr = Splitter.on(" ").omitEmptyStrings().split(rowLine).iterator();
+                for (int col = 0; col < 4 && colItr.hasNext(); col++) {
                     affineMat.setElem(row, col, Double.parseDouble(colItr.next()));
                 }
+                row++;
             }
             return affineMat;
         } catch (IOException e) {

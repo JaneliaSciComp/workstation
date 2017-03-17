@@ -92,7 +92,7 @@ public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProces
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         Vaa3dNiftiConverterArgs args = getArgs(jacsServiceData);
-        return ImmutableList.of(submitVaa3dPluginService(args, jacsServiceData, JacsServiceState.QUEUED));
+        return ImmutableList.of(submit(createVaa3dPluginServiceData(args, jacsServiceData, JacsServiceState.QUEUED)));
     }
 
     @Override
@@ -112,8 +112,8 @@ public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProces
         return new File(args.outputFileName);
     }
 
-    private JacsServiceData submitVaa3dPluginService(Vaa3dNiftiConverterArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dPluginServiceState) {
-        return vaa3dPluginProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData).state(vaa3dPluginServiceState).build(),
+    private JacsServiceData createVaa3dPluginServiceData(Vaa3dNiftiConverterArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dPluginServiceState) {
+        return vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).state(vaa3dPluginServiceState).build(),
                 new ServiceArg("-plugin", "ireg"),
                 new ServiceArg("-pluginFunc", "NiftiImageConverter"),
                 new ServiceArg("-input", args.inputFileName),
@@ -125,7 +125,7 @@ public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProces
     public void execute(JacsServiceData jacsServiceData) {
         execute(sd -> {
             Vaa3dNiftiConverterArgs args = getArgs(sd);
-            vaa3dPluginProcessor.execute(submitVaa3dPluginService(args, sd, JacsServiceState.RUNNING));
+            vaa3dPluginProcessor.execute(createVaa3dPluginServiceData(args, sd, JacsServiceState.RUNNING));
         }, jacsServiceData);
     }
 

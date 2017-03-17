@@ -57,6 +57,10 @@ and to build the application you simply run:
 
 `JACS2_CONFIG_TEST=$PWD/my-config-test.properties ./gradlew clean build installDist`
 
+Note:
+
+When using the environment variable to reference the configuration use the full path in order to guarantee that the right properties are being used.
+
 ### Package the application
 
 `./gradlew installDist`

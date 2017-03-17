@@ -95,7 +95,7 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         Vaa3dConverterArgs args = getArgs(jacsServiceData);
-        return ImmutableList.of(submitVaa3dCmdService(args, jacsServiceData, JacsServiceState.QUEUED));
+        return ImmutableList.of(submit(createVaa3dCmdServiceData(args, jacsServiceData, JacsServiceState.QUEUED)));
     }
 
     @Override
@@ -115,12 +115,12 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
         return new File(args.outputFileName);
     }
 
-    private JacsServiceData submitVaa3dCmdService(Vaa3dConverterArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dCmdServiceState) {
+    private JacsServiceData createVaa3dCmdServiceData(Vaa3dConverterArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dCmdServiceState) {
         StringJoiner vaa3dCmdArgs = new StringJoiner(" ")
                 .add(args.convertCmd)
                 .add(args.inputFileName)
                 .add(args.outputFileName);
-        return vaa3dCmdProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData).state(vaa3dCmdServiceState).build(),
+        return vaa3dCmdProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).state(vaa3dCmdServiceState).build(),
                 new ServiceArg("-vaa3dCmd", "image-loader"),
                 new ServiceArg("-vaa3dCmdArgs", vaa3dCmdArgs.toString()));
     }
@@ -129,7 +129,7 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
     public void execute(JacsServiceData jacsServiceData) {
         execute(sd -> {
             Vaa3dConverterArgs args = getArgs(sd);
-            vaa3dCmdProcessor.execute(submitVaa3dCmdService(args, sd, JacsServiceState.RUNNING));
+            vaa3dCmdProcessor.execute(createVaa3dCmdServiceData(args, sd, JacsServiceState.RUNNING));
         }, jacsServiceData);
     }
 

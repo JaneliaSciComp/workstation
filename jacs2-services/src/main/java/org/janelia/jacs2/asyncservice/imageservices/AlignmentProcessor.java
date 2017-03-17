@@ -153,10 +153,10 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
             alignmentArgs.add(new ServiceArg("-targetExtTemplate", alignConfig.templates.cbmCfoExt));
         }
 
-        JacsServiceData alignServiceData = rawFilesAlignmentProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+        JacsServiceData alignServiceData = submit(rawFilesAlignmentProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.QUEUED)
                         .build(),
-                alignmentArgs.toArray(new ServiceArg[alignmentArgs.size()]));
+                alignmentArgs.toArray(new ServiceArg[alignmentArgs.size()])));
 
         return ImmutableList.of(alignServiceData);
     }
