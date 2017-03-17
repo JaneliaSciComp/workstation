@@ -70,12 +70,12 @@ public class AlignmentUtils {
     public static void convertAffineMatToInsightMat(Path affineMatFile, Path insightMatFile) {
         PrintWriter insightWriter = null;
         try  {
-            Matrix<Double> affineMat = readAffineMat(affineMatFile);
+            Matrix<String> affineMat = readAffineMat(affineMatFile);
             insightWriter = new PrintWriter(Files.newBufferedWriter(insightMatFile));
             insightWriter.println("#Insight Transform File V1.0");
             insightWriter.println("#Transform 0");
             insightWriter.println("Transform: MatrixOffsetTransformBase_double_3_3");
-            insightWriter.printf("Parameters: %f %f %f %f1 %f %f %f %f %f 0 0 0\n",
+            insightWriter.printf("Parameters: %s %s %s %s %s %s %s %s %s 0 0 0\n",
                     affineMat.getElem(0, 0), affineMat.getElem(1, 0), affineMat.getElem(2, 0),
                     affineMat.getElem(0, 1), affineMat.getElem(1, 1), affineMat.getElem(2, 1),
                     affineMat.getElem(0, 2), affineMat.getElem(1, 2), affineMat.getElem(2, 2));
@@ -89,9 +89,9 @@ public class AlignmentUtils {
         }
     }
 
-    private static Matrix<Double> readAffineMat(Path affineMatFile) {
+    private static Matrix<String> readAffineMat(Path affineMatFile) {
         try {
-            Matrix<Double> affineMat = new Matrix<>(4, 4);
+            Matrix<String> affineMat = new Matrix<>(4, 4);
             List<String> rowLines = Files.readAllLines(affineMatFile);
             if (rowLines.size() < 4) {
                 throw new IllegalArgumentException("Expected to read 4 lines from the affine matrix file");
@@ -104,7 +104,7 @@ public class AlignmentUtils {
                 }
                 Iterator<String> colItr = Splitter.on(" ").omitEmptyStrings().split(rowLine).iterator();
                 for (int col = 0; col < 4 && colItr.hasNext(); col++) {
-                    affineMat.setElem(row, col, Double.parseDouble(colItr.next()));
+                    affineMat.setElem(row, col, colItr.next());
                 }
                 row++;
             }
