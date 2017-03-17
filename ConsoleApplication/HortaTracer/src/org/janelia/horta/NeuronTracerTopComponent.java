@@ -892,7 +892,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 prefs.getInt("startupRenderFilter", volumeState.filteringOrder);
         setCubifyVoxels(prefs.getBoolean("bCubifyVoxels", doCubifyVoxels));
         volumeCache.setUpdateCache(
-                prefs.getBoolean("bCacheHortaTiles", volumeCache.isUpdateCache()));
+                prefs.getBoolean("bCacheHortaTiles", doesUpdateVolumeCache()));
         setPreferKtx(prefs.getBoolean("bPreferKtxTiles", isPreferKtx()));
     }
     
@@ -928,7 +928,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         prefs.putInt("startupProjectionMode", volumeState.projectionMode);
         prefs.putInt("startupRenderFilter", volumeState.filteringOrder);
         prefs.putBoolean("bCubifyVoxels", doCubifyVoxels);
-        prefs.putBoolean("bCacheHortaTiles", volumeCache.isUpdateCache());
+        prefs.putBoolean("bCacheHortaTiles", doesUpdateVolumeCache());
         prefs.putBoolean("bPreferKtxTiles", isPreferKtx());
     }
 
@@ -1154,7 +1154,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 
                 Vector3 mouseXyz = worldXyzForScreenXy(popupMenuScreenPoint);
                 Vector3 focusXyz = sceneWindow.getVantage().getFocusPosition();
-                HortaMenuContext menuContext = new HortaMenuContext(
+                final HortaMenuContext menuContext = new HortaMenuContext(
                         topMenu,
                         popupMenuScreenPoint,
                         mouseXyz,
@@ -1238,7 +1238,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 if (currentSource != null) 
                 {
                     JCheckBoxMenuItem enableVolumeCacheMenu = new JCheckBoxMenuItem(
-                            "Auto-load Image Tiles", volumeCache.isUpdateCache());
+                            "Auto-load Image Tiles", doesUpdateVolumeCache());
                     topMenu.add(enableVolumeCacheMenu);
                     enableVolumeCacheMenu.addActionListener(new AbstractAction() {
                         @Override
@@ -1246,12 +1246,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                         {
                             JCheckBoxMenuItem item = (JCheckBoxMenuItem)e.getSource();
                             volumeCache.toggleUpdateCache();
-                            item.setSelected(volumeCache.isUpdateCache());
-                            TetVolumeActor.getInstance().setAutoUpdate(volumeCache.isUpdateCache());
+                            item.setSelected(doesUpdateVolumeCache());
+                            TetVolumeActor.getInstance().setAutoUpdate(doesUpdateVolumeCache());
                         }
                     });
 
-                    topMenu.add(new AbstractAction("Load Image Tile Here") {
+                    topMenu.add(new AbstractAction("Load Image Tile At Focus") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             loadTileAtCurrentFocusAsynchronous();
@@ -2045,13 +2045,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
     }
     
-    public void loadTileAtFocus() throws IOException
+    public void loadPersistentTileAtFocus() throws IOException
     {
         Vector3 focus = getVantage().getFocusPosition();
-        loadTileAtLocation(focus);
+        loadPersistentTileAtLocation(focus);
     }
     
-    public void loadTileAtLocation(Vector3 location) throws IOException
+    public void loadPersistentTileAtLocation(Vector3 location) throws IOException
     {
         if (ktxSource == null) {
             BlockTileSource source = promptUserForKtxFolder();
@@ -2059,7 +2059,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 return;
             setKtxSource(source);
         }
-        loader.loadKtxTileAtLocation(ktxSource, location);
+        loader.loadKtxTileAtLocation(ktxSource, location, true);
     }
     
     private BlockTileSource promptUserForKtxFolder() {

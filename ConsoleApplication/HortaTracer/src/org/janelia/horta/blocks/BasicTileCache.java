@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,6 +99,19 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
     
     abstract LoadRunner<TILE_KEY, TILE_DATA> getLoadRunner();
 
+    public int getBlockCount() {
+        return nearVolumeMetadata.size();
+    }
+    
+    public synchronized void addDesiredTile(TILE_KEY key) {
+        if (nearVolumeMetadata.contains(key))
+            return; // already queued
+        nearVolumeMetadata.add(key);
+        if (nearVolumeInRam.containsKey(key))
+            return; // already loaded
+        queueLoad(key, getLoadRunner());
+    }
+    
     public synchronized void updateDesiredTiles(List<TILE_KEY> desiredTiles) 
     {
         List<TILE_KEY> newTiles = new ArrayList<>();
