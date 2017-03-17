@@ -169,7 +169,9 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 downsampleFactor,
                 jacsServiceData);
         // get the rotations
-        rotateImage(args, jacsServiceData, targetDownsampleServiceData, subjectDownsampleServiceData);
+        JacsServiceData rotateServiceData = rotateImage(args, jacsServiceData, targetDownsampleServiceData, subjectDownsampleServiceData);
+        estimateRotations(args, jacsServiceData, rotateServiceData);
+
         return ImmutableList.of(); // FIXME!!!!
     }
 
@@ -322,6 +324,25 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return rotateServiceData;
     }
 
+    private JacsServiceData estimateRotations(AlignmentArgs args, JacsServiceData jacsServiceData, JacsServiceData... deps) {
+        Path rotationsMatFile = getSubjectRotationsMatrixFile(args, jacsServiceData);
+        Path insightRotationsFile = getSubjectInsightRotationsMatrixFile(args, jacsServiceData);
+        Path affineRotationsFile = getSubjectAffineRotationsMatrixFile(args, jacsServiceData);
+
+        logger.info("Estimate rotations {}", rotationsMatFile);
+        AlignmentUtils.convertAffineMatToInsightMat(rotationsMatFile, insightRotationsFile);
+        JacsServiceData estimateRotationsServiceData = vaa3dPluginProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .state(JacsServiceState.RUNNING)
+                        .build(),
+                new ServiceArg("-plugin", "ireg"),
+                new ServiceArg("-pluginFunc", "extractRotMat"),
+                new ServiceArg("-input", insightRotationsFile.toString()),
+                new ServiceArg("-output", affineRotationsFile.toString())
+        );
+        vaa3dPluginProcessor.execute(estimateRotationsServiceData);
+        return estimateRotationsServiceData;
+    }
+
     @Override
     protected ServiceComputation<List<File>> processing(JacsServiceData jacsServiceData) {
         return createComputation(this.waitForResult(jacsServiceData));
@@ -404,6 +425,14 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
 
     private Path getSubjectRotationsMatrixFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
         return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-Rotations.mat");
+    }
+
+    private Path getSubjectInsightRotationsMatrixFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-Rotations.txt");
+    }
+
+    private Path getSubjectAffineRotationsMatrixFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-RotationsAffine.mat");
     }
 
     private AlignmentArgs getArgs(JacsServiceData jacsServiceData) {

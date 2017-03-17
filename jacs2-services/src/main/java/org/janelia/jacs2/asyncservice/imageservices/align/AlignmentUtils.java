@@ -2,13 +2,21 @@ package org.janelia.jacs2.asyncservice.imageservices.align;
 
 import com.google.common.base.Splitter;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.utils.FileUtils;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.OutputKeys;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.List;
 
 public class AlignmentUtils {
 
@@ -61,4 +69,44 @@ public class AlignmentUtils {
         return alignmentInput;
     }
 
+    public static void convertAffineMatToInsightMat(Path affineMatFile, Path insightMatFile) {
+        Matrix<Double> affineMat = readAffineMat(affineMatFile);
+        PrintWriter insightWriter = null;
+        try  {
+            insightWriter = new PrintWriter(new FileWriter(insightMatFile.toFile()));
+            insightWriter.println("#Insight Transform File V1.0");
+            insightWriter.println("#Transform 0");
+            insightWriter.println("Transform: MatrixOffsetTransformBase_double_3_3");
+            insightWriter.printf("Parameters: %f %f %f %f1 %f %f %f %f %f 0 0 0\n",
+                    affineMat.getElem(0, 0), affineMat.getElem(1, 0), affineMat.getElem(2, 0),
+                    affineMat.getElem(0, 1), affineMat.getElem(1, 1), affineMat.getElem(2, 1),
+                    affineMat.getElem(0, 2), affineMat.getElem(1, 2), affineMat.getElem(2, 2));
+            insightWriter.println("FixedParameters: 0 0 0");
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } finally {
+            if (insightWriter != null) {
+                insightWriter.close();
+            }
+        }
+    }
+
+    private static Matrix<Double> readAffineMat(Path affineMatFile) {
+        try {
+            Matrix<Double> affineMat = new Matrix<>(4, 4);
+            List<String> rows = Files.readAllLines(affineMatFile);
+            if (rows.size() < 4) {
+                throw new IllegalArgumentException("Expected to read 4 lines from the affine matrix file");
+            }
+            for (int row = 0; row < 4 && row < rows.size(); row++) {
+                Iterator<String> colItr = Splitter.on(' ').split(rows.get(row)).iterator();
+                for (int col = 0; col < 4 && colItr.hasNext();) {
+                    affineMat.setElem(row, col, Double.parseDouble(colItr.next()));
+                }
+            }
+            return affineMat;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
 }
