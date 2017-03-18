@@ -97,6 +97,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     private final Vaa3dPluginProcessor vaa3dPluginProcessor;
     private final NiftiConverterProcessor niftiConverterProcessor;
     private final FlirtProcessor flirtProcessor;
+    private final AntsToolProcessor antsToolProcessor;
 
     @Inject
     RawFilesAlignmentProcessor(JacsServiceEngine jacsServiceEngine,
@@ -109,12 +110,14 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                                Vaa3dConverterProcessor vaa3dConverterProcessor,
                                Vaa3dPluginProcessor vaa3dPluginProcessor,
                                NiftiConverterProcessor niftiConverterProcessor,
-                               FlirtProcessor flirtProcessor) {
+                               FlirtProcessor flirtProcessor,
+                               AntsToolProcessor antsToolProcessor) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.vaa3dConverterProcessor = vaa3dConverterProcessor;
         this.vaa3dPluginProcessor = vaa3dPluginProcessor;
         this.niftiConverterProcessor = niftiConverterProcessor;
         this.flirtProcessor = flirtProcessor;
+        this.antsToolProcessor = antsToolProcessor;
     }
 
     @Override
@@ -148,7 +151,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         AlignmentArgs args = getArgs(jacsServiceData);
         convertNeuronsFileToRawFormat(args.input1Neurons, jacsServiceData);
         // convert the target to Nifti
-        convertToNiftiImage(getTargetExtFile(args), getNiftiTargetExtFile(args, jacsServiceData), jacsServiceData);
+        JacsServiceData targetExtToNiftiServiceData = convertToNiftiImage(getTargetExtFile(args), getNiftiTargetExtFile(args, jacsServiceData), jacsServiceData);
         zFlipSubject(args, jacsServiceData);
         isotropicSubjectSampling(args, jacsServiceData);
         JacsServiceData resizeSubject = resizeSubjectToTarget(args, jacsServiceData);
@@ -174,7 +177,9 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         // rotate the subject
         JacsServiceData rotateSubjectServiceData = rotateSubject(args, jacsServiceData, affinePrepServiceData);
         // convert rotated subject to Nifti
-        convertToNiftiImage(getSubjectAffineRotationsMatrixFile(args, jacsServiceData), getNiftiRotatedSubjectRefChannelFile(args, jacsServiceData), jacsServiceData, rotateSubjectServiceData);
+        JacsServiceData subjectToNiftiServiceData = convertToNiftiImage(getSubjectAffineRotationsMatrixFile(args, jacsServiceData), getNiftiRotatedSubjectRefChannelFile(args, jacsServiceData), jacsServiceData, rotateSubjectServiceData);
+        // global alignment of the subject to target
+        globalAlignSubjectToTarget(args, jacsServiceData, targetExtToNiftiServiceData, subjectToNiftiServiceData);
 
         return ImmutableList.of(); // FIXME!!!!
     }
@@ -207,6 +212,22 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 new ServiceArg("-output", output.toString())));
         niftiConverterProcessor.execute(niftiConverterServiceData);
         return niftiConverterServiceData;
+    }
+
+    private JacsServiceData globalAlignSubjectToTarget(AlignmentArgs args, JacsServiceData jacsServiceData, JacsServiceData... deps) {
+        logger.info("Align subject to target");
+        JacsServiceData alignSubjectToTargetServiceData = submit(antsToolProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .state(JacsServiceState.RUNNING)
+                        .build(),
+                new ServiceArg("-metric",
+                        String.format("MI[%s %s %d %d]",
+                                getNiftiTargetExtFile(args, jacsServiceData),
+                                getNiftiRotatedSubjectRefChannelFile(args, jacsServiceData),
+                                1,
+                                32))
+                ));
+        antsToolProcessor.execute(alignSubjectToTargetServiceData);
+        return alignSubjectToTargetServiceData;
     }
 
     private void zFlipSubject(AlignmentArgs args, JacsServiceData jacsServiceData) {

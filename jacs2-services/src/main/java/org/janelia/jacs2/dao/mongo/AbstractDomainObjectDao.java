@@ -6,7 +6,6 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.janelia.jacs2.cdi.ObjectMapperFactory;
 import org.janelia.jacs2.dao.DomainObjectDao;

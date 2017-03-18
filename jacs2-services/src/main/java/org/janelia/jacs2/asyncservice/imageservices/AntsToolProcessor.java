@@ -27,6 +27,8 @@ import java.util.Map;
 public class AntsToolProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
     static class AntsToolArgs extends ServiceArgs {
+        @Parameter(names = {"--dims", "-dims"}, description = "Scene dimensionality")
+        int dims = 3;
         @Parameter(names = {"-x", "--mask-image", "-mask"}, description = "Mask file name that defines the region of interest")
         String mask;
         @Parameter(names = {"-m", "--image-metric", "-metric"}, description = "Image metric")
@@ -153,6 +155,7 @@ public class AntsToolProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
     private void createScript(AntsToolArgs args, ScriptWriter scriptWriter) {
         scriptWriter.addWithArgs(getExecutable())
+                .addArg(String.valueOf(args.dims))
                 .addArgFlag("-x", args.mask)
                 .addArgFlag("-m", args.imageMetric)
                 .addArgFlag("-o", args.output)
