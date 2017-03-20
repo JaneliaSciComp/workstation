@@ -25,11 +25,9 @@ import org.slf4j.LoggerFactory;
 public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFacade {
 
     private static final Logger log = LoggerFactory.getLogger(WorkspaceFacadeImpl.class);
-    private RESTClientManager manager;
     
     public WorkspaceFacadeImpl() {
         super(log);
-        this.manager = RESTClientManager.getInstance();
     }
 
     /**

@@ -203,7 +203,7 @@ public class NeuronTraceLoader {
         return brickInfo;
     }
 
-    public void loadKtxTileAtLocation(BlockTileSource ktxSource, Vector3 location) 
+    protected void loadKtxTileAtLocation(BlockTileSource ktxSource, Vector3 location, final boolean loadPersistent) 
             throws IOException
     {
         if (ktxSource == null)
@@ -212,29 +212,46 @@ public class NeuronTraceLoader {
         if (centerKey == null)
             return;
         
-        final KtxBlockLoadRunner loader = new KtxBlockLoadRunner(ktxSource, centerKey);
-        loader.addObserver(new Observer() {
-            @Override
-            public void update(Observable o, Object arg) {
-                if (loader.state != KtxBlockLoadRunner.State.LOADED)
-                    return;
-                TetVolumeActor parentActor = TetVolumeActor.getInstance();
-                parentActor.addChild(loader.blockActor);
-                if ( ! neuronMPRenderer.containsVolumeActor(parentActor) ) { // just add singleton actor once...
-                    parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
-                    neuronMPRenderer.addVolumeActor(parentActor);
+        if (loadPersistent) {
+            final KtxBlockLoadRunner loader = new KtxBlockLoadRunner(ktxSource, centerKey);
+            loader.addObserver(new Observer() {
+                @Override
+                public void update(Observable o, Object arg) {
+                    if (loader.state != KtxBlockLoadRunner.State.LOADED)
+                        return;
+                    TetVolumeActor parentActor = TetVolumeActor.getInstance();
+                    parentActor.addPersistentBlock(loader.blockActor);
+                    if ( ! neuronMPRenderer.containsVolumeActor(parentActor) ) { // just add singleton actor once...
+                        parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
+                        neuronMPRenderer.addVolumeActor(parentActor);
+                    }
+                    neuronMPRenderer.setIntensityBufferDirty();
+                    nttc.redrawNow();
                 }
-                neuronMPRenderer.setIntensityBufferDirty();
-                nttc.redrawNow();
+            });
+            loader.run();
+        }
+        else {
+            TetVolumeActor parentActor = TetVolumeActor.getInstance();
+            if ( ! neuronMPRenderer.containsVolumeActor(parentActor) ) { // just add singleton actor once...
+                parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
+                neuronMPRenderer.addVolumeActor(parentActor);
             }
-        });
-        loader.run();
+            parentActor.addTransientBlock(centerKey);
+        }
     }
     
-    public void loadKtxTileAtCurrentFocus(BlockTileSource ktxSource) 
+    public void loadPersistentKtxTileAtCurrentFocus(BlockTileSource ktxSource) 
             throws IOException
     {
         Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
-        loadKtxTileAtLocation(ktxSource, focus);
+        loadKtxTileAtLocation(ktxSource, focus, true);
+    }
+    
+    public void loadTransientKtxTileAtCurrentFocus(BlockTileSource ktxSource) 
+            throws IOException
+    {
+        Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
+        loadKtxTileAtLocation(ktxSource, focus, false);
     }
 }
