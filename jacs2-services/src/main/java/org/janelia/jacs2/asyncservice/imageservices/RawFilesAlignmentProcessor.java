@@ -45,6 +45,9 @@ import java.util.List;
 public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<List<File>> {
 
     private static final String MAX_AFFINE_ITERATIONS = "10000x10000x10000x10000";
+    private static final int TARSXEXTDX = 1933;
+    private static final int TARSXEXTDY = 1713;
+    private static final int TARSXEXTDZ = 640;
 
     static class AlignmentArgs extends ServiceArgs {
         @Parameter(names = {"-nthreads"}, description = "Number of ITK threads")
@@ -151,45 +154,65 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         AlignmentArgs args = getArgs(jacsServiceData);
-        convertNeuronsFileToRawFormat(args.input1Neurons, jacsServiceData);
+        AlignmentConfiguration alignConfig = AlignmentUtils.parseAlignConfig(args.configFile);
+        ImageCoordinates inputResolution = AlignmentUtils.parseCoordinates(args.input1Res);
+
+        Path subjectFile = getWorkingSubjectFile(args, jacsServiceData); // => SUBSX
+        Path labelsFile = getWorkingLabelsFile(args, jacsServiceData); // => SUBSXNEURONS
+        Path isotropicSubjectFile = getWorkingIsotropicSubjectFile(args, jacsServiceData); // => SUBSXIS
+        Path targetExtFile = getTargetExtFile(args); // => TARSXEXT
+        Path targetExtNiftiFile = getNiftiTargetExtFile(args, jacsServiceData); // => TARSXNII
+        Path targetExtDownsampledFile = getNiftiTargetExtDownsampleFile(args, jacsServiceData); // => FDS
+        Path resizedSubjectFile = getWorkingResizedSubjectFile(args, jacsServiceData); // => SUBSXRS
+        Path resizedSubjectRefFile = getWorkingResizedSubjectRefChannelFile(args, jacsServiceData); // => SUBSXRSRFC
+        Path resizedSubjectRefNiftiFile = getNiftiResizedSubjectRefChannelFile(args, jacsServiceData); // => SUBSXRSRFCNII
+        Path resizedSubjectRefDownsampledFile = getNiftiResizedSubjectRefChannelDownsampleFile(args, jacsServiceData); // => MDS
+        Path rotationsMatFile = getSubjectRotationsMatrixFile(args, jacsServiceData); // => RCMAT
+        Path insightRotationsFile = getSubjectInsightRotationsMatrixFile(args, jacsServiceData); // => RCOUT
+        Path rotationsAffineFile = getSubjectAffineRotationsMatrixFile(args, jacsServiceData); // => $RCAFFINE
+        Path rotatedSubjectFile = getRotatedSubjectRefChannelFile(args, jacsServiceData); // => SUBSXRFCROT
+        Path rotatedSubjectNiftiFile = getNiftiRotatedSubjectRefChannelFile(args, jacsServiceData); // => SUBNII
+        Path symmetricTransformFile = getSymmetricTransformFile(args, jacsServiceData); // => SIMMETRIC
+        Path rotatedSubjectRecenteredFile = getWorkingResizedRotatedRecenteredSubjectFile(args, jacsServiceData); // => SUBSXRSROT
+        Path symmetricAffineTransformFile = getSubjectAffineRotationsMatrixFile(args, jacsServiceData); // => AFFINEMATRIX
+        Path rotatedSubjectGlobalAllignedFile = getRotatedGlobalAlignedSubjectRefChannelFile(args, jacsServiceData); // => SUBSXRSROTGA
+
+        JacsServiceData neuronsToRawServiceData = convertNeuronsFileToRawFormat(Paths.get(args.input1Neurons), labelsFile, jacsServiceData);
         // convert the target to Nifti
-        JacsServiceData targetExtToNiftiServiceData = convertToNiftiImage(getTargetExtFile(args), getNiftiTargetExtFile(args, jacsServiceData), jacsServiceData);
-        zFlipSubject(args, jacsServiceData);
-        isotropicSubjectSampling(args, jacsServiceData);
-        JacsServiceData resizeSubject = resizeSubjectToTarget(args, jacsServiceData);
-        extractRefFromSubject(args, jacsServiceData, resizeSubject);
+        JacsServiceData targetExtToNiftiServiceData = convertToNiftiImage(targetExtFile, targetExtNiftiFile, jacsServiceData);
+        JacsServiceData flippedSubjectServiceData = zFlipSubject(Paths.get(args.input1File), subjectFile, args.zFlip, jacsServiceData);
+        isotropicSubjectSampling(subjectFile, alignConfig, inputResolution, isotropicSubjectFile, jacsServiceData, flippedSubjectServiceData);
+        JacsServiceData resizeSubjectServiceData = resizeSubjectToTarget(isotropicSubjectFile, targetExtFile, resizedSubjectFile, jacsServiceData);
+        extractRefFromSubject(resizedSubjectFile, resizedSubjectRefFile, args.input1Ref, jacsServiceData, resizeSubjectServiceData);
         // convert the ref channel to Nifti
-        convertToNiftiImage(getWorkingResizedSubjectRefChannelFile(args, jacsServiceData), getNiftiResizedSubjectRefChannelFile(args, jacsServiceData), jacsServiceData);
+        convertToNiftiImage(resizedSubjectRefFile, resizedSubjectRefNiftiFile, jacsServiceData);
         double downsampleFactor = 0.125;
         // downsample the target with ration 1/8
-        JacsServiceData targetDownsampleServiceData = downsampleImage(
-                getNiftiTargetExtFile(args, jacsServiceData),
-                getNiftiTargetExtDownsampleFile(args, jacsServiceData),
-                downsampleFactor,
-                jacsServiceData);
+        JacsServiceData targetDownsampleServiceData = downsampleImage(targetExtNiftiFile, targetExtDownsampledFile, downsampleFactor, jacsServiceData);
         // downsample the subject with ration 1/8
-        JacsServiceData subjectDownsampleServiceData = downsampleImage(
-                getNiftiResizedSubjectRefChannelFile(args, jacsServiceData),
-                getNiftiResizedSubjectRefChannelDownsampleFile(args, jacsServiceData),
-                downsampleFactor,
-                jacsServiceData);
-        // get the rotations
-        JacsServiceData estimateRotationsServiceData = findRotationMatrix(args, jacsServiceData, targetDownsampleServiceData, subjectDownsampleServiceData);
-        JacsServiceData affinePrepServiceData = prepareAffineTransformation(args, jacsServiceData, estimateRotationsServiceData);
+        JacsServiceData subjectDownsampleServiceData = downsampleImage(resizedSubjectRefNiftiFile, resizedSubjectRefDownsampledFile,  downsampleFactor, jacsServiceData);
+        // find the rotations with FLIRT
+        // $FLIRT -in $MDS -ref $FDS -omat $RCMAT -cost mutualinfo -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -dof 12 -datatype char
+        JacsServiceData estimateRotationsServiceData = findRotationMatrix(resizedSubjectRefDownsampledFile, targetExtDownsampledFile, rotationsMatFile, args.fslOutputType,
+                jacsServiceData, targetDownsampleServiceData, subjectDownsampleServiceData);
+        JacsServiceData affinePrepServiceData = prepareAffineTransformation(rotationsMatFile, insightRotationsFile, rotationsAffineFile, jacsServiceData, estimateRotationsServiceData);
         // rotate the subject
-        JacsServiceData rotateSubjectServiceData = rotateSubject(args, jacsServiceData, affinePrepServiceData);
+        JacsServiceData rotateSubjectServiceData = rotateSubject(resizedSubjectRefFile, targetExtFile, rotationsAffineFile, rotatedSubjectFile, jacsServiceData, affinePrepServiceData);
         // convert rotated subject to Nifti
-        JacsServiceData subjectToNiftiServiceData = convertToNiftiImage(getSubjectAffineRotationsMatrixFile(args, jacsServiceData), getNiftiRotatedSubjectRefChannelFile(args, jacsServiceData), jacsServiceData, rotateSubjectServiceData);
+        JacsServiceData subjectToNiftiServiceData = convertToNiftiImage(rotatedSubjectFile, rotatedSubjectNiftiFile, jacsServiceData, rotateSubjectServiceData);
         // global alignment of the subject to target
-        globalAlignSubjectToTarget(args, jacsServiceData, targetExtToNiftiServiceData, subjectToNiftiServiceData);
-
+        JacsServiceData globalAlignServiceData = globalAlignSubjectToTarget(targetExtNiftiFile, rotatedSubjectNiftiFile, symmetricTransformFile, jacsServiceData, subjectToNiftiServiceData);
+        // rotate recentered object
+        JacsServiceData rotateRecenteredServiceData = applyIWarp2Transformation(resizedSubjectFile, rotationsAffineFile, rotatedSubjectRecenteredFile, jacsServiceData, resizeSubjectServiceData);
+        // affine transform rotated subject
+        applyIWarp2Transformation(rotatedSubjectRecenteredFile, symmetricAffineTransformFile, rotatedSubjectGlobalAllignedFile, jacsServiceData, rotateRecenteredServiceData, globalAlignServiceData);
         return ImmutableList.of(); // FIXME!!!!
     }
 
-    private JacsServiceData convertNeuronsFileToRawFormat(String neuronsFile, JacsServiceData jacsServiceData) {
-        if ("v3draw".equals(com.google.common.io.Files.getFileExtension(neuronsFile))) {
+    private JacsServiceData convertNeuronsFileToRawFormat(Path neuronsFile, Path labelsFile, JacsServiceData jacsServiceData) {
+        if ("v3draw".equals(com.google.common.io.Files.getFileExtension(labelsFile.toString()))) {
             try {
-                Files.createSymbolicLink(getWorkingNeuronsFile(neuronsFile, jacsServiceData), Paths.get(neuronsFile));
+                Files.createSymbolicLink(labelsFile, neuronsFile);
                 return null;
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
@@ -198,8 +221,8 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
             JacsServiceData convertToRawServiceData = submit(vaa3dConverterProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                             .state(JacsServiceState.RUNNING)
                             .build(),
-                    new ServiceArg("-input", neuronsFile),
-                    new ServiceArg("-output", getWorkingNeuronsFile(neuronsFile, jacsServiceData).toString())));
+                    new ServiceArg("-input", neuronsFile.toString()),
+                    new ServiceArg("-output", labelsFile.toString())));
             vaa3dConverterProcessor.execute(convertToRawServiceData);
             return convertToRawServiceData;
         }
@@ -216,43 +239,42 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return niftiConverterServiceData;
     }
 
-    private void zFlipSubject(AlignmentArgs args, JacsServiceData jacsServiceData) {
-        if (args.zFlip) {
-            logger.info("Flip {} along the z axis", args.input1File);
+    private JacsServiceData zFlipSubject(Path inputFile, Path subjectFile, boolean zFlip, JacsServiceData jacsServiceData) {
+        if (zFlip) {
+            logger.info("Flip {} along the z axis", inputFile);
             JacsServiceData zFlipSubjectsServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                             .state(JacsServiceState.RUNNING)
                             .build(),
                     new ServiceArg("-plugin", "ireg"),
                     new ServiceArg("-pluginFunc", "zflip"),
-                    new ServiceArg("-input", args.input1File),
-                    new ServiceArg("-output", getWorkingSubjectFile(args, jacsServiceData).toString())));
+                    new ServiceArg("-input", inputFile.toString()),
+                    new ServiceArg("-output", subjectFile.toString())));
             vaa3dPluginProcessor.execute(zFlipSubjectsServiceData);
+            return zFlipSubjectsServiceData;
         } else {
             try {
-                Files.createSymbolicLink(getWorkingSubjectFile(args, jacsServiceData), Paths.get(args.input1File));
+                Files.createSymbolicLink(subjectFile, inputFile);
+                return null;
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
         }
     }
 
-    private void isotropicSubjectSampling(AlignmentArgs args, JacsServiceData jacsServiceData) {
-        Path workingSubjectFile = getWorkingSubjectFile(args, jacsServiceData);
-        Path isotropicSubjectFile = getWorkingIsotropicSubjectFile(args, jacsServiceData);
-        AlignmentConfiguration alignConfig = AlignmentUtils.parseAlignConfig(args.configFile);
-        ImageCoordinates res = AlignmentUtils.parseCoordinates(args.input1Res);
-        double isx = res.x / alignConfig.misc.vSzIsX63x;
-        double isy = res.y / alignConfig.misc.vSzIsY63x;
-        double isz = res.z / alignConfig.misc.vSzIsZ63x;
+    private void isotropicSubjectSampling(Path subjectFile, AlignmentConfiguration alignConfig, ImageCoordinates imageResolution, Path isotropicSubjectFile, JacsServiceData jacsServiceData, JacsServiceData... deps) {
+        double isx = imageResolution.x / alignConfig.misc.vSzIsX63x;
+        double isy = imageResolution.y / alignConfig.misc.vSzIsY63x;
+        double isz = imageResolution.z / alignConfig.misc.vSzIsZ63x;
         if (Math.abs(isx - 1.) >  0.01
                 || Math.abs(isy - 1.) >  0.01
                 || Math.abs(isz - 1.) >  0.01) {
             JacsServiceData isotropicSamplingServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                            .waitFor(deps)
                             .state(JacsServiceState.RUNNING)
                             .build(),
                     new ServiceArg("-plugin", "ireg"),
                     new ServiceArg("-pluginFunc", "isampler"),
-                    new ServiceArg("-input", workingSubjectFile.toString()),
+                    new ServiceArg("-input", subjectFile.toString()),
                     new ServiceArg("-output", isotropicSubjectFile.toString()),
                     new ServiceArg("-pluginParams", String.format("#x %f", isx)),
                     new ServiceArg("-pluginParams", String.format("#y %f", isy)),
@@ -261,38 +283,38 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
             vaa3dPluginProcessor.execute(isotropicSamplingServiceData);
         } else {
             try {
-                Files.createSymbolicLink(isotropicSubjectFile, Paths.get(args.input1File));
+                Files.createSymbolicLink(isotropicSubjectFile, subjectFile);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
         }
     }
 
-    private JacsServiceData resizeSubjectToTarget(AlignmentArgs args, JacsServiceData jacsServiceData) {
+    private JacsServiceData resizeSubjectToTarget(Path isotropicSubjectFile, Path targetExtFile, Path resizedSubjectFile, JacsServiceData jacsServiceData) {
         JacsServiceData resizeSubjectServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.RUNNING)
                         .build(),
                 new ServiceArg("-plugin", "ireg"),
                 new ServiceArg("-pluginFunc", "resizeImage"),
-                new ServiceArg("-output", getWorkingResizedSubjectFile(args, jacsServiceData).toString()),
-                new ServiceArg("-pluginParams", String.format("#s %s", getWorkingIsotropicSubjectFile(args, jacsServiceData))),
-                new ServiceArg("-pluginParams", String.format("#t %s", getTargetExtFile(args))),
+                new ServiceArg("-output", resizedSubjectFile.toString()),
+                new ServiceArg("-pluginParams", String.format("#s %s", isotropicSubjectFile)),
+                new ServiceArg("-pluginParams", String.format("#t %s", targetExtFile)),
                 new ServiceArg("-pluginParams", "#y 1")
         ));
         vaa3dPluginProcessor.execute(resizeSubjectServiceData);
         return resizeSubjectServiceData;
     }
 
-    private JacsServiceData extractRefFromSubject(AlignmentArgs args, JacsServiceData jacsServiceData, JacsServiceData ...waitFor) {
+    private JacsServiceData extractRefFromSubject(Path resizedSubjectFile, Path resizedSubjectRefFile, String refChannel, JacsServiceData jacsServiceData, JacsServiceData ...waitFor) {
         JacsServiceData extractRefServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.RUNNING)
                         .waitFor(waitFor)
                         .build(),
                 new ServiceArg("-plugin", "refExtract"),
                 new ServiceArg("-pluginFunc", "refExtract"),
-                new ServiceArg("-input", getWorkingResizedSubjectFile(args, jacsServiceData).toString()),
-                new ServiceArg("-output", getWorkingResizedSubjectRefChannelFile(args, jacsServiceData).toString()),
-                new ServiceArg("-pluginParams", String.format("#c %s", args.input1Ref))
+                new ServiceArg("-input", resizedSubjectFile.toString()),
+                new ServiceArg("-output", resizedSubjectRefFile.toString()),
+                new ServiceArg("-pluginParams", String.format("#c %s", refChannel))
         ));
         vaa3dPluginProcessor.execute(extractRefServiceData);
         return extractRefServiceData;
@@ -315,15 +337,14 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return downsampleServiceData;
     }
 
-    private JacsServiceData findRotationMatrix(AlignmentArgs args, JacsServiceData jacsServiceData, JacsServiceData... deps) {
-        Path rotationsMatFile = getSubjectRotationsMatrixFile(args, jacsServiceData);
+    private JacsServiceData findRotationMatrix(Path resizedSubjectRefDownsampledFile, Path targetExtDownsampledFile, Path rotationsMatFile, String fslOutputType, JacsServiceData jacsServiceData, JacsServiceData... deps) {
         logger.info("Find rotations {}", rotationsMatFile);
         JacsServiceData rotateServiceData = submit(flirtProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.RUNNING)
                         .waitFor(deps)
                         .build(),
-                new ServiceArg("-in", getNiftiResizedSubjectRefChannelDownsampleFile(args, jacsServiceData).toString()),
-                new ServiceArg("-ref", getNiftiTargetExtDownsampleFile(args, jacsServiceData).toString()),
+                new ServiceArg("-in", resizedSubjectRefDownsampledFile .toString()),
+                new ServiceArg("-ref", targetExtDownsampledFile.toString()),
                 new ServiceArg("-omat", rotationsMatFile.toString()),
                 new ServiceArg("-cost", "mutualinfo"),
                 new ServiceArg("-searchrx", 2, "-180", "180"),
@@ -331,17 +352,13 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 new ServiceArg("-searchrz", 2, "-180", "180"),
                 new ServiceArg("-dof", "12"),
                 new ServiceArg("-datatype", "char"),
-                new ServiceArg("-fslOutputType", args.fslOutputType)
+                new ServiceArg("-fslOutputType", fslOutputType)
         ));
         flirtProcessor.execute(rotateServiceData);
         return rotateServiceData;
     }
 
-    private JacsServiceData prepareAffineTransformation(AlignmentArgs args, JacsServiceData jacsServiceData, JacsServiceData... deps) {
-        Path rotationsMatFile = getSubjectRotationsMatrixFile(args, jacsServiceData);
-        Path insightRotationsFile = getSubjectInsightRotationsMatrixFile(args, jacsServiceData);
-        Path affineRotationsFile = getSubjectAffineRotationsMatrixFile(args, jacsServiceData);
-
+    private JacsServiceData prepareAffineTransformation(Path rotationsMatFile, Path insightRotationsFile, Path affineRotationsFile, JacsServiceData jacsServiceData, JacsServiceData... deps) {
         logger.info("Estimate rotations {}", rotationsMatFile);
         AlignmentUtils.convertAffineMatToInsightMat(rotationsMatFile, insightRotationsFile);
         JacsServiceData estimateRotationsServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
@@ -358,9 +375,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return estimateRotationsServiceData;
     }
 
-    private JacsServiceData rotateSubject(AlignmentArgs args, JacsServiceData jacsServiceData, JacsServiceData... deps) {
-        Path subjectFile = getWorkingResizedSubjectRefChannelFile(args, jacsServiceData);
-        logger.info("Rotate subject {}", subjectFile);
+    private JacsServiceData rotateSubject(Path resizedSubjectRefFile, Path targetExtFile, Path transformationsFile, Path rotatedSubjectFile, JacsServiceData jacsServiceData, JacsServiceData... deps) {
         JacsServiceData estimateRotationsServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .waitFor(deps)
                         .state(JacsServiceState.RUNNING)
@@ -368,16 +383,16 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                         .build(),
                 new ServiceArg("-plugin", "ireg"),
                 new ServiceArg("-pluginFunc", "warp"),
-                new ServiceArg("-output", getRotatedSubjectRefChannelFile(args, jacsServiceData).toString()),
-                new ServiceArg("-pluginParams", String.format("#s %s", subjectFile)),
-                new ServiceArg("-pluginParams", String.format("#t %s", getTargetExtFile(args))),
-                new ServiceArg("-pluginParams", String.format("#a %s", getSubjectAffineRotationsMatrixFile(args, jacsServiceData)))
+                new ServiceArg("-output", rotatedSubjectFile.toString()),
+                new ServiceArg("-pluginParams", String.format("#s %s", resizedSubjectRefFile)),
+                new ServiceArg("-pluginParams", String.format("#t %s", targetExtFile)),
+                new ServiceArg("-pluginParams", String.format("#a %s", transformationsFile))
         ));
         vaa3dPluginProcessor.execute(estimateRotationsServiceData);
         return estimateRotationsServiceData;
     }
 
-    private JacsServiceData globalAlignSubjectToTarget(AlignmentArgs args, JacsServiceData jacsServiceData, JacsServiceData... deps) {
+    private JacsServiceData globalAlignSubjectToTarget(Path targetExtNiftiFile, Path rotatedSubjectNiftiFile, Path symmetricTransformFile, JacsServiceData jacsServiceData, JacsServiceData... deps) {
         logger.info("Align subject to target");
         JacsServiceData alignSubjectToTargetServiceData = submit(antsToolProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.RUNNING)
@@ -385,16 +400,36 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 new ServiceArg("-dims", "3"),
                 new ServiceArg("-metric",
                         String.format("MI[%s %s %d %d]",
-                                getNiftiTargetExtFile(args, jacsServiceData),
-                                getNiftiRotatedSubjectRefChannelFile(args, jacsServiceData),
+                                targetExtNiftiFile,
+                                rotatedSubjectNiftiFile,
                                 1,
                                 32)),
-                new ServiceArg("-output", getSymmetricTransformFile(args, jacsServiceData).toString()),
+                new ServiceArg("-output", symmetricTransformFile.toString()),
                 new ServiceArg("-iterations", "0"),
                 new ServiceArg("-affineIterations", MAX_AFFINE_ITERATIONS)
         ));
         antsToolProcessor.execute(alignSubjectToTargetServiceData);
         return alignSubjectToTargetServiceData;
+    }
+
+    private JacsServiceData applyIWarp2Transformation(Path subjectFile, Path transformationFile, Path outputFile, JacsServiceData jacsServiceData, JacsServiceData... deps) {
+        logger.info("Apply transformation {} to {} => {}", transformationFile, subjectFile, outputFile);
+        JacsServiceData estimateRotationsServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .waitFor(deps)
+                        .state(JacsServiceState.RUNNING)
+                        .description("Rotate subject")
+                        .build(),
+                new ServiceArg("-plugin", "ireg"),
+                new ServiceArg("-pluginFunc", "iwarp2"),
+                new ServiceArg("-output", outputFile.toString()),
+                new ServiceArg("-pluginParams", String.format("#s %s", subjectFile)),
+                new ServiceArg("-pluginParams", String.format("#a %s", transformationFile)),
+                new ServiceArg("-pluginParams", String.format("#dx %d", TARSXEXTDX)),
+                new ServiceArg("-pluginParams", String.format("#dy %s", TARSXEXTDY)),
+                new ServiceArg("-pluginParams", String.format("#dz %s", TARSXEXTDZ))
+        ));
+        vaa3dPluginProcessor.execute(estimateRotationsServiceData);
+        return estimateRotationsServiceData;
     }
 
     @Override
@@ -449,8 +484,8 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.targetExtTemplate) + "_ds.nii");
     }
 
-    private Path getWorkingNeuronsFile(String neuronsFile, JacsServiceData jacsServiceData) {
-        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(neuronsFile) + "-Sx.v3draw");
+    private Path getWorkingLabelsFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1Neurons) + "-Sx.v3draw");
     }
 
     private Path getWorkingSubjectFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
@@ -463,6 +498,10 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
 
     private Path getWorkingResizedSubjectFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
         return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-Rs.v3draw");
+    }
+
+    private Path getWorkingResizedRotatedRecenteredSubjectFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-RsRotated.v3draw");
     }
 
     private Path getWorkingResizedSubjectRefChannelFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
@@ -499,6 +538,14 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
 
     private Path getSymmetricTransformFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
         return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-txmi.txt");
+    }
+
+    private Path getSymmetricAffineTransformFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-txmiAffine.txt");
+    }
+
+    private Path getRotatedGlobalAlignedSubjectRefChannelFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-RsRotGlobalAligned.v3draw");
     }
 
     private AlignmentArgs getArgs(JacsServiceData jacsServiceData) {
