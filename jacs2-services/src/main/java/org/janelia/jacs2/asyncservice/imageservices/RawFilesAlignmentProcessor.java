@@ -183,14 +183,16 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         JacsServiceData flippedSubjectServiceData = zFlipSubject(Paths.get(args.input1File), subjectFile, args.zFlip, jacsServiceData);
         isotropicSubjectSampling(subjectFile, alignConfig, inputResolution, isotropicSubjectFile, jacsServiceData, flippedSubjectServiceData);
         JacsServiceData resizeSubjectServiceData = resizeSubjectToTarget(isotropicSubjectFile, targetExtFile, resizedSubjectFile, jacsServiceData);
-        extractRefFromSubject(resizedSubjectFile, resizedSubjectRefFile, args.input1Ref, jacsServiceData, resizeSubjectServiceData);
+        JacsServiceData extractRefChannelServiceData = extractRefFromSubject(resizedSubjectFile, resizedSubjectRefFile, args.input1Ref, jacsServiceData, resizeSubjectServiceData);
         // convert the ref channel to Nifti
-        convertToNiftiImage(resizedSubjectRefFile, resizedSubjectRefNiftiFile, jacsServiceData);
+        JacsServiceData resizedSubjectToNiftiServiceData = convertToNiftiImage(resizedSubjectRefFile, resizedSubjectRefNiftiFile, jacsServiceData, extractRefChannelServiceData);
         double downsampleFactor = 0.125;
         // downsample the target with ration 1/8
-        JacsServiceData targetDownsampleServiceData = downsampleImage(targetExtNiftiFile, targetExtDownsampledFile, downsampleFactor, jacsServiceData);
+        JacsServiceData targetDownsampleServiceData = downsampleImage(targetExtNiftiFile, targetExtDownsampledFile, downsampleFactor, jacsServiceData,
+                targetExtToNiftiServiceData);
         // downsample the subject with ration 1/8
-        JacsServiceData subjectDownsampleServiceData = downsampleImage(resizedSubjectRefNiftiFile, resizedSubjectRefDownsampledFile,  downsampleFactor, jacsServiceData);
+        JacsServiceData subjectDownsampleServiceData = downsampleImage(resizedSubjectRefNiftiFile, resizedSubjectRefDownsampledFile,  downsampleFactor, jacsServiceData,
+                resizedSubjectToNiftiServiceData);
         // find the rotations with FLIRT
         // $FLIRT -in $MDS -ref $FDS -omat $RCMAT -cost mutualinfo -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -dof 12 -datatype char
         JacsServiceData estimateRotationsServiceData = findRotationMatrix(resizedSubjectRefDownsampledFile, targetExtDownsampledFile, rotationsMatFile, args.fslOutputType,
@@ -305,10 +307,10 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return resizeSubjectServiceData;
     }
 
-    private JacsServiceData extractRefFromSubject(Path resizedSubjectFile, Path resizedSubjectRefFile, String refChannel, JacsServiceData jacsServiceData, JacsServiceData ...waitFor) {
+    private JacsServiceData extractRefFromSubject(Path resizedSubjectFile, Path resizedSubjectRefFile, String refChannel, JacsServiceData jacsServiceData, JacsServiceData... deps) {
         JacsServiceData extractRefServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.RUNNING)
-                        .waitFor(waitFor)
+                        .waitFor(deps)
                         .build(),
                 new ServiceArg("-plugin", "refExtract"),
                 new ServiceArg("-pluginFunc", "refExtract"),
@@ -320,9 +322,10 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return extractRefServiceData;
     }
 
-    private JacsServiceData downsampleImage(Path input, Path output, double downsampleFactor, JacsServiceData jacsServiceData) {
+    private JacsServiceData downsampleImage(Path input, Path output, double downsampleFactor, JacsServiceData jacsServiceData, JacsServiceData... deps) {
         logger.info("Downsample {} -> {}", input, output);
         JacsServiceData downsampleServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .waitFor(deps)
                         .state(JacsServiceState.RUNNING)
                         .build(),
                 new ServiceArg("-plugin", "ireg"),
