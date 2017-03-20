@@ -83,6 +83,11 @@ public class InMemoryJacsServiceQueue implements JacsServiceQueue {
     }
 
     @Override
+    public void abortService(JacsServiceData jacsServiceData) {
+        submittedServicesSet.remove(jacsServiceData.getId());
+    }
+
+    @Override
     public void completeService(JacsServiceData jacsServiceData) {
         submittedServicesSet.remove(jacsServiceData.getId());
     }

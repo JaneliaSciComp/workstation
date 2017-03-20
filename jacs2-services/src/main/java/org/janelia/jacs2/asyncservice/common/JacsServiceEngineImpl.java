@@ -7,7 +7,6 @@ import org.janelia.jacs2.asyncservice.ServiceRegistry;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
-import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
@@ -112,14 +111,11 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
                             .filter(s -> s.getArgs().equals(serviceArgs.getArgs()))
                             .findFirst();
             if (existingChildService.isPresent()) {
-                serviceArgs.addEvent(JacsServiceEventTypes.REQUEUE_SERVICE, String.format("Requeue service %s %s for %d", serviceArgs.getName(), serviceArgs.getArgs(), serviceArgs.getParentServiceId()));
                 return existingChildService.get(); // do not resubmit
             }
-            serviceArgs.addEvent(JacsServiceEventTypes.ENQUEUE_SERVICE, String.format("Enqueue child service %s %s for %d", serviceArgs.getName(), serviceArgs.getArgs(), serviceArgs.getParentServiceId()));
-        } else {
-            serviceArgs.addEvent(JacsServiceEventTypes.ENQUEUE_SERVICE, String.format("Enqueue service %s %s", serviceArgs.getName(), serviceArgs.getArgs()));
         }
-        return jacsServiceQueue.enqueueService(serviceArgs);
+        jacsServiceDataPersistence.saveHierarchy(serviceArgs);
+        return serviceArgs;
     }
 
     @Override

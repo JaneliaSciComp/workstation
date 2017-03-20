@@ -1,21 +1,24 @@
 package org.janelia.jacs2.asyncservice.common;
 
+import org.slf4j.Logger;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.concurrent.ExecutorService;
 
 @Singleton
 public class ServiceComputationFactory {
 
-    private final ExecutorService executor;
+    private final ServiceComputationQueue computationQueue;
+    private final Logger logger;
 
     @Inject
-    public ServiceComputationFactory(ExecutorService executor) {
-        this.executor = executor;
+    public ServiceComputationFactory(ServiceComputationQueue computationQueue, Logger logger) {
+        this.computationQueue = computationQueue;
+        this.logger = logger;
     }
 
     public <T> ServiceComputation<T> newComputation() {
-        return new FutureBasedServiceComputation<>(executor);
+        return new FutureBasedServiceComputation<T>(computationQueue, logger);
     }
 
     /**
@@ -25,16 +28,16 @@ public class ServiceComputationFactory {
      * @return
      */
     public <T> ServiceComputation<T> newCompletedComputation(T result) {
-        return new FutureBasedServiceComputation<>(executor, result);
+        return new FutureBasedServiceComputation<>(computationQueue, logger, result);
     }
 
     /**
      * Create a completed failed computation.
      * @param exc exception thrown during the computation
-     * @param <T>
-     * @return
+     * @param <T> result type
+     * @return a ServiceComputation that has a result of type <T></T>
      */
     public <T> ServiceComputation<T> newFailedComputation(Throwable exc) {
-        return new FutureBasedServiceComputation<T>(executor, exc);
+        return new FutureBasedServiceComputation<T>(computationQueue, logger, exc);
     }
 }

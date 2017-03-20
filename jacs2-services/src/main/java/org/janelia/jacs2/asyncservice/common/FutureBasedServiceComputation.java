@@ -1,8 +1,9 @@
 package org.janelia.jacs2.asyncservice.common;
 
+import org.slf4j.Logger;
+
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.CompletionException;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -16,92 +17,243 @@ import java.util.stream.Collectors;
  */
 public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
-    private final ExecutorService executor;
-    private CompletableFuture<T> future;
-
-    FutureBasedServiceComputation(ExecutorService executor) {
-        this.executor = executor;
+    private static <U> U waitForResult(ServiceComputation<U> computation) {
+        if (computation.isDone()) {
+            return computation.get();
+        } else {
+            throw new SuspendedException();
+        }
     }
 
-    FutureBasedServiceComputation(ExecutorService executor, T result) {
-        this.executor = executor;
-        future = CompletableFuture.completedFuture(result);
+    private final ServiceComputationQueue computationQueue;
+    private final Logger logger;
+    private final ServiceComputationTask<T> task;
+
+    FutureBasedServiceComputation(ServiceComputationQueue computationQueue, Logger logger, ServiceComputationTask<T> task) {
+        this.computationQueue = computationQueue;
+        this.logger = logger;
+        this.task = task;
     }
 
-    FutureBasedServiceComputation(ExecutorService executor, Throwable exc) {
-        this.executor = executor;
-        future = new CompletableFuture<>();
-        future.completeExceptionally(exc);
+    FutureBasedServiceComputation(ServiceComputationQueue computationQueue, Logger logger) {
+        this(computationQueue, logger, new ServiceComputationTask<>(null));
     }
 
-    private FutureBasedServiceComputation(ExecutorService executor, CompletableFuture<T> future) {
-        this.executor = executor;
-        this.future = future;
+    FutureBasedServiceComputation(ServiceComputationQueue computationQueue, Logger logger, T result) {
+        this(computationQueue, logger, new ServiceComputationTask<>(null, result));
+    }
+
+    FutureBasedServiceComputation(ServiceComputationQueue computationQueue, Logger logger, Throwable exc) {
+        this(computationQueue, logger, new ServiceComputationTask<>(null, exc));
     }
 
     @Override
     public T get() {
-        try {
-            return future.get();
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
+        ServiceComputationTask.ComputeResult<T> result = task.get();
+        if (result.exc != null) {
+            if (result.exc instanceof ComputationException) {
+                throw (ComputationException) result.exc;
+            } else if (result.exc instanceof SuspendedException) {
+                throw (SuspendedException) result.exc;
+            } else if (result.exc instanceof CompletionException) {
+                throw (CompletionException) result.exc;
+            } else {
+                throw new CompletionException(result.exc);
+            }
         }
+        return result.result;
     }
 
     @Override
     public boolean isDone() {
-        return future.isDone();
+        return task.isDone();
     }
 
     @Override
     public boolean isCompletedExceptionally() {
-        return future.isCompletedExceptionally();
+        return task.isCompletedExceptionally();
+    }
+
+    @Override
+    public boolean isSuspended() {
+        return task.isSuspended();
     }
 
     public void complete(T result) {
-        future.complete(result);
+        task.complete(result);
     }
 
     public void completeExceptionally(Throwable exc) {
-        future.completeExceptionally(exc);
+        task.completeExceptionally(exc);
     }
 
     @Override
     public ServiceComputation<T> supply(Supplier<T> fn) {
-        future = CompletableFuture.supplyAsync(fn, executor);
+        submit(fn::get);
         return this;
     }
 
     @Override
     public ServiceComputation<T> exceptionally(Function<Throwable, ? extends T> fn) {
-        return new FutureBasedServiceComputation<>(executor, future.exceptionally(fn));
+        FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
+        next.submit(() -> {
+            try {
+                T r = waitForResult(this);
+                next.complete(r);
+            } catch (SuspendedException e) {
+                throw e;
+            } catch (Exception e) {
+                next.complete(fn.apply(e));
+            }
+            return next.get();
+        });
+        return next;
     }
 
     @Override
     public <U> ServiceComputation<U> thenApply(Function<? super T, ? extends U> fn) {
-        CompletableFuture<U> newFuture = future.thenApplyAsync(fn, executor);
-        return new FutureBasedServiceComputation<>(executor, newFuture);
+        FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
+        next.submit(() -> {
+            try {
+                T r = waitForResult(this);
+                next.complete(fn.apply(r));
+            } catch (SuspendedException e) {
+                throw e;
+            } catch (Exception e) {
+                next.completeExceptionally(e);
+            }
+            return next.get();
+         });
+        return next;
     }
 
     @Override
     public <U> ServiceComputation<U> thenCompose(Function<? super T, ? extends ServiceComputation<U>> fn) {
-        return new FutureBasedServiceComputation<>(executor, future.thenCompose(t -> CompletableFuture.supplyAsync(() -> fn.apply(t).get(), executor)));
+        FutureBasedServiceComputation<ServiceComputation<U>> nextStage = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
+        FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(nextStage));
+        nextStage.submit(() -> {
+            try {
+                T r = waitForResult(this);
+                nextStage.complete(fn.apply(r));
+            } catch (SuspendedException e) {
+                throw e;
+            } catch (Exception e) {
+                nextStage.completeExceptionally(e);
+            }
+            return nextStage.get();
+        });
+        next.submit(() -> {
+            try {
+                ServiceComputation<U> computation = waitForResult(nextStage);
+                U result = waitForResult(computation);
+                next.complete(result);
+            } catch (SuspendedException e) {
+                throw e;
+            } catch (Exception e) {
+                next.completeExceptionally(e);
+            }
+            return next.get();
+        });
+        return next;
     }
 
     @Override
     public ServiceComputation<T> whenComplete(BiConsumer<? super T, ? super Throwable> action) {
-        return new FutureBasedServiceComputation<T>(executor, future.whenCompleteAsync(action, executor));
+        FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
+        next.submit(() -> {
+            try {
+                T r = waitForResult(this);
+                action.accept(r, null);
+                next.complete(r);
+            } catch (SuspendedException e) {
+                throw e;
+            } catch (Exception e) {
+                action.accept(null, e);
+                next.completeExceptionally(e);
+            }
+            return next.get();
+        });
+        return next;
+    }
+
+    @Override
+    public <U, V> ServiceComputation<V> thenCombine(ServiceComputation<U> otherComputation, BiFunction<? super T, ? super U, ? extends V> fn) {
+        ServiceComputationTask<V> nextTask = new ServiceComputationTask<>(this);
+        nextTask.push(otherComputation);
+        FutureBasedServiceComputation<V> next = new FutureBasedServiceComputation<>(computationQueue, logger, nextTask);
+        next.submit(() -> {
+            try {
+                T r = waitForResult(this);
+                U u = waitForResult(otherComputation);
+                next.complete(fn.apply(r, u));
+            } catch (SuspendedException e) {
+                throw e;
+            } catch (Exception e) {
+                next.completeExceptionally(e);
+            }
+            return next.get();
+        });
+        return next;
     }
 
     @Override
     public <U> ServiceComputation<U> thenCombineAll(List<ServiceComputation<?>> otherComputations, BiFunction<? super T, List<?>, ? extends U> fn) {
-        CompletableFuture newFuture = CompletableFuture.supplyAsync(() -> {
-            List<Object> otherResults = otherComputations.stream()
-                    .map(ServiceComputation::get)
-                    .collect(Collectors.toList());
-            return fn.apply(this.get(), otherResults);
-        }, executor);
-        return new FutureBasedServiceComputation<>(executor, newFuture);
+        ServiceComputationTask<U> nextTask = new ServiceComputationTask<>(this);
+        otherComputations.forEach(nextTask::push);
+        FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(computationQueue, logger, nextTask);
+        next.submit(() -> {
+            try {
+                T r = waitForResult(this);
+                List<Object> otherResults = otherComputations.stream()
+                        .map(oc -> waitForResult(oc))
+                        .collect(Collectors.toList());
+                next.complete(fn.apply(r, otherResults));
+            } catch (SuspendedException e) {
+                throw e;
+            } catch (Exception e) {
+                next.completeExceptionally(e);
+            }
+            return next.get();
+        });
+        return next;
+    }
+
+    public ServiceComputation<T> thenSuspendUntil(ContinuationCond fn) {
+        FutureBasedServiceComputation<Boolean> waitFor = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
+        ServiceComputationTask<T> nextTask = new ServiceComputationTask<T>(waitFor);
+        FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, logger, nextTask);
+        waitFor.submit(() -> {
+            if (fn.checkCond()) {
+                logger.debug("Resume {}", nextTask);
+                nextTask.resume();
+                waitFor.complete(true);
+                return true;
+            } else {
+                if (!nextTask.isSuspended()) {
+                    logger.debug("Suspend {}", nextTask);
+                    nextTask.suspend();
+                }
+                throw new SuspendedException();
+            }
+        });
+        next.submit(() -> {
+            try {
+                waitForResult(waitFor);
+                T r = waitForResult(this);
+                next.complete(r);
+            } catch (SuspendedException e) {
+                throw e;
+            } catch (Exception e) {
+                next.completeExceptionally(e);
+            }
+            return next.get();
+        });
+        return next;
+    }
+
+    private void submit(ServiceComputationTask.ContinuationSupplier<T> fn) {
+        task.setResultSupplier(fn);
+        computationQueue.submit(task);
     }
 
 }

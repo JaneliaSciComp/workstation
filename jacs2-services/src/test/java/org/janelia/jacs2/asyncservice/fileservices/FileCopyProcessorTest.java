@@ -2,6 +2,7 @@ package org.janelia.jacs2.asyncservice.fileservices;
 
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
+import org.janelia.jacs2.asyncservice.common.ServiceComputationQueue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -18,24 +19,23 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class FileCopyProcessorTest {
 
     private JacsServiceEngine jacsServiceEngine;
+    private ServiceComputationQueue computationQueue;
     private ServiceComputationFactory serviceComputationFactory;
     private JacsServiceDataPersistence jacsServiceDataPersistence;
     private Instance<ExternalProcessRunner> serviceRunners;
@@ -49,16 +49,16 @@ public class FileCopyProcessorTest {
 
     @Before
     public void setUp() throws IOException {
+        Logger logger = mock(Logger.class);
         ExecutorService executor = mock(ExecutorService.class);
-
-        when(executor.submit(any(Runnable.class))).thenAnswer(invocation -> {
+        doAnswer(invocation -> {
             Runnable r = invocation.getArgument(0);
             r.run();
             return null;
-        });
+        }).when(executor).execute(any(Runnable.class));
+        computationQueue = new ServiceComputationQueue(executor, executor);
+        serviceComputationFactory = new ServiceComputationFactory(computationQueue, logger);
 
-        serviceComputationFactory = new ServiceComputationFactory(executor);
-        Logger logger = mock(Logger.class);
         testProcessor = new FileCopyProcessor(
                 jacsServiceEngine,
                 serviceComputationFactory,
@@ -84,9 +84,8 @@ public class FileCopyProcessorTest {
                     .addArg("-src", "/home/testSource")
                     .addArg("-dst", testDestFile.getAbsolutePath())
                     .build();
-        ServiceComputation<File> preprocessStage = testProcessor.preProcessData(testServiceData);
+        ServiceComputation<JacsServiceData> preprocessStage = testProcessor.prepareProcessing(testServiceData);
         assertTrue(preprocessStage.isDone());
-        assertThat(preprocessStage.get().getAbsolutePath(), equalTo(testDestFile.getAbsolutePath()));
     }
 
     @Test
@@ -113,7 +112,7 @@ public class FileCopyProcessorTest {
    }
 
     private void verifyCompletionWithException(JacsServiceData testServiceData) throws ExecutionException, InterruptedException {
-        ServiceComputation<File> preprocessStage = testProcessor.preProcessData(testServiceData);
+        ServiceComputation<JacsServiceData> preprocessStage = testProcessor.prepareProcessing(testServiceData);
 
         assertTrue(preprocessStage.isCompletedExceptionally());
     }
@@ -129,7 +128,7 @@ public class FileCopyProcessorTest {
                 .addArg("-convert8")
                 .build();
         assertTrue(Files.exists(testSourcePath));
-        ServiceComputation<File> doneStage = testProcessor.postProcessData(testSourcePath.toFile(), testServiceData);
+        ServiceComputation<File> doneStage = testProcessor.postProcessing(testServiceData, testDestFile);
         assertTrue(doneStage.isDone());
         assertTrue(Files.notExists(testSourcePath));
     }
@@ -145,7 +144,7 @@ public class FileCopyProcessorTest {
                     .addArg("-mv")
                     .addArg("-convert8")
                     .build();
-            ServiceComputation<File> postProcessing = testProcessor.postProcessData(testDestFile, testServiceData);
+            ServiceComputation<File> postProcessing = testProcessor.postProcessing(testServiceData, testDestFile);
             assertTrue(postProcessing.isCompletedExceptionally());
             assertTrue(Files.exists(testSourcePath));
         } finally {
@@ -163,7 +162,7 @@ public class FileCopyProcessorTest {
                     .addArg("-dst", testDestFile.getAbsolutePath())
                     .addArg("-convert8")
                     .build();
-            ServiceComputation<File> postProcessing = testProcessor.postProcessData(testDestFile, testServiceData);
+            ServiceComputation<File> postProcessing = testProcessor.postProcessing(testServiceData, testDestFile);
             assertTrue(postProcessing.isDone());
             assertTrue(Files.exists(testSourcePath));
         } finally {

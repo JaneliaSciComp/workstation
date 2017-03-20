@@ -3,7 +3,6 @@ package org.janelia.jacs2.asyncservice.sampleprocessing;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
-import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
@@ -14,7 +13,7 @@ import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.ProcessingLocation;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.dataservice.sample.SampleDataService;
-import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
@@ -24,17 +23,14 @@ import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Named("getSampleImageFiles")
-public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<SampleImageFile>> {
+public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceProcessor<List<SampleImageFile>> {
 
     private final SampleDataService sampleDataService;
     private final FileCopyProcessor fileCopyProcessor;
@@ -68,20 +64,30 @@ public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<
     }
 
     @Override
-    protected ServiceComputation<List<SampleImageFile>> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+        try {
+            SampleServiceArgs args = getArgs(jacsServiceData);
+            Path destinationDirectory = Paths.get(args.sampleDataDir);
+            Files.createDirectories(destinationDirectory);
+        } catch (Exception e) {
+            createFailure(e);
+        }
+        return createComputation(jacsServiceData);
+    }
+
+    @Override
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
+        Path destinationDirectory = Paths.get(args.sampleDataDir);
+
         List<AnatomicalArea> anatomicalAreas =
                 sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
         if (anatomicalAreas.isEmpty()) {
-            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "No anatomical areas found for " +
-                    args.sampleId +
-                    (StringUtils.isBlank(args.sampleObjective) ? "" : "-" + args.sampleObjective)));
+            throw new ComputationException(jacsServiceData, "No anatomical areas found for " + args.sampleId +
+                            (StringUtils.isBlank(args.sampleObjective) ? "" : "-" + args.sampleObjective));
         }
-        Path destinationDirectory = Paths.get(args.sampleDataDir);
-        Map<String, SampleImageFile> indexedSampleImageFiles = new LinkedHashMap<>();
-        List<ServiceComputation<?>> fcs = new ArrayList<>();
         // invoke child file copy services for all LSM files
-        anatomicalAreas.stream()
+        return anatomicalAreas.stream()
                 .flatMap(ar -> ar.getTileLsmPairs()
                         .stream()
                         .flatMap(lsmp -> lsmp.getLsmFiles().stream())
@@ -89,48 +95,55 @@ public class GetSampleImageFilesProcessor extends AbstractServiceProcessor<List<
                             SampleImageFile sif = new SampleImageFile();
                             sif.setId(lsmf.getId());
                             sif.setArchiveFilePath(lsmf.getFilepath());
-                            sif.setWorkingFilePath(getTargetImageFile(destinationDirectory, lsmf).getAbsolutePath());
+                            sif.setWorkingFilePath(SampleServicesUtils.getImageFile(destinationDirectory, lsmf).getAbsolutePath());
                             sif.setArea(ar.getName());
                             sif.setChanSpec(lsmf.getChanSpec());
                             sif.setColorSpec(lsmf.getChannelColors());
                             sif.setObjective(ar.getObjective());
                             return sif;
                         }))
-                .forEach(sif -> {
-                    ServiceComputation<?> fc = fileCopyProcessor.invokeAsync(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
-                            new ServiceArg("-src", sif.getArchiveFilePath()),
-                            new ServiceArg("-dst", sif.getWorkingFilePath()))
-                            .thenCompose(this::waitForCompletion)
-                            .thenApply(fileCopyProcessor::getResult);
-                    indexedSampleImageFiles.put(sif.getWorkingFilePath(), sif);
-                    fcs.add(fc);
-                });
-        return computationFactory.newCompletedComputation(jacsServiceData)
-                .thenCombineAll(fcs, (sd, results) -> results.stream().map(r -> indexedSampleImageFiles.get(((File) r).getAbsolutePath())).collect(Collectors.toList()))
-                .thenApply(results -> this.applyResult(results, jacsServiceData));
+                .map(sif -> submit(fileCopyProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
+                        new ServiceArg("-src", sif.getArchiveFilePath()),
+                        new ServiceArg("-dst", sif.getWorkingFilePath()))))
+                .collect(Collectors.toList());
+    }
+
+    protected ServiceComputation<List<SampleImageFile>> processing(JacsServiceData jacsServiceData) {
+        return createComputation(this.waitForResult(jacsServiceData));
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        throw new UnsupportedOperationException();
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
+        return checkForDependenciesCompletion(jacsServiceData);
     }
 
     @Override
-    protected List<SampleImageFile> retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        throw new UnsupportedOperationException();
+    protected List<SampleImageFile> retrieveResult(JacsServiceData jacsServiceData) {
+        SampleServiceArgs args = getArgs(jacsServiceData);
+        List<AnatomicalArea> anatomicalAreas =
+                sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
+        Path destinationDirectory = Paths.get(args.sampleDataDir);
+        // invoke child file copy services for all LSM files
+        return anatomicalAreas.stream()
+                .flatMap(ar -> ar.getTileLsmPairs()
+                        .stream()
+                        .flatMap(lsmp -> lsmp.getLsmFiles().stream())
+                        .map(lsmf -> {
+                            SampleImageFile sif = new SampleImageFile();
+                            sif.setId(lsmf.getId());
+                            sif.setArchiveFilePath(lsmf.getFilepath());
+                            sif.setWorkingFilePath(SampleServicesUtils.getImageFile(destinationDirectory, lsmf).getAbsolutePath());
+                            sif.setArea(ar.getName());
+                            sif.setChanSpec(lsmf.getChanSpec());
+                            sif.setColorSpec(lsmf.getChannelColors());
+                            sif.setObjective(ar.getObjective());
+                            return sif;
+                        }))
+                .collect(Collectors.toList());
     }
 
     private SampleServiceArgs getArgs(JacsServiceData jacsServiceData) {
         return SampleServiceArgs.parse(jacsServiceData.getArgsArray(), new SampleServiceArgs());
     }
 
-    private File getTargetImageFile(Path destDir, Image image) {
-        String fileName = new File(image.getFilepath()).getName();
-        if (fileName.endsWith(".bz2")) {
-            fileName = fileName.substring(0, fileName.length() - ".bz2".length());
-        } else if (fileName.endsWith(".gz")) {
-            fileName = fileName.substring(0, fileName.length() - ".gz".length());
-        }
-        return new File(destDir.toFile(), fileName);
-    }
 }

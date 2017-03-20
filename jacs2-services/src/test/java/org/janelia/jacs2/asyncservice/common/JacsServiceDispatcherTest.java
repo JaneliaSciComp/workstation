@@ -11,13 +11,11 @@ import org.janelia.jacs2.asyncservice.ServiceRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -45,19 +43,20 @@ public class JacsServiceDispatcherTest {
 
     @Before
     public void setUp() {
-        ExecutorService executor = mock(ExecutorService.class);
-
-        doAnswer(invocation -> {
-            Runnable r = invocation.getArgument(0);
-            r.run();
+        logger = mock(Logger.class);
+        ServiceComputationQueue serviceComputationQueue = mock(ServiceComputationQueue.class);
+        doAnswer((invocation -> {
+            ServiceComputationTask task = invocation.getArgument(0);
+            if (task != null) {
+                ServiceComputationQueue.runTask(task);
+            }
             return null;
-        }).when(executor).execute(any(Runnable.class));
+        })).when(serviceComputationQueue).submit(any(ServiceComputationTask.class));
+        serviceComputationFactory = new ServiceComputationFactory(serviceComputationQueue, logger);
 
-        serviceComputationFactory = new ServiceComputationFactory(executor);
         jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
         serviceRegistrarSource = mock(Instance.class);
         serviceRegistry = mock(ServiceRegistry.class);
-        logger = mock(Logger.class);
         jacsServiceQueue = new InMemoryJacsServiceQueue(jacsServiceDataPersistence, 10, logger);
         jacsServiceEngine = new JacsServiceEngineImpl(jacsServiceDataPersistence, jacsServiceQueue, serviceRegistrarSource, 10, logger);
         testDispatcher = new JacsServiceDispatcher(serviceComputationFactory,
@@ -76,7 +75,7 @@ public class JacsServiceDispatcherTest {
 
     @Test
     public void serviceAsyncSubmit() {
-        JacsServiceData serviceData = submitTestService("test");
+        JacsServiceData serviceData = enqueueTestService("test");
 
         assertThat(serviceData.getId(), equalTo(TEST_ID));
     }
@@ -88,22 +87,24 @@ public class JacsServiceDispatcherTest {
         return testService;
     }
 
-    private JacsServiceData submitTestService(String serviceName) {
+    private JacsServiceData enqueueTestService(String serviceName) {
         JacsServiceData testService = createTestService(null, serviceName);
-        return jacsServiceEngine.submitSingleService(testService);
+        return jacsServiceQueue.enqueueService(testService);
     }
 
     @Test
     public void dispatchServiceWhenNoSlotsAreAvailable() {
         jacsServiceEngine.setProcessingSlotsCount(0);
-        submitTestService("test");
+        JacsServiceData testService = enqueueTestService("test");
+        when(jacsServiceDataPersistence.findServicesByState(any(Set.class), any(PageRequest.class)))
+                .thenReturn(new PageResult<>());
         testDispatcher.dispatchServices();
-        verify(logger).info("No available processing slots");
+        verify(logger).debug("Abort service {} for now because there are not enough processing slots", testService);
     }
 
     @Test
     public void runSubmittedService() {
-        JacsServiceData testServiceData = submitTestService("submittedService");
+        JacsServiceData testServiceData = enqueueTestService("submittedService");
 
         when(jacsServiceDataPersistence.findServicesByState(any(Set.class), any(PageRequest.class)))
                 .thenReturn(new PageResult<>());
@@ -171,7 +172,7 @@ public class JacsServiceDispatcherTest {
 
     @Test
     public void serviceProcessingError() {
-        JacsServiceData testServiceData = submitTestService("submittedService");
+        JacsServiceData testServiceData = enqueueTestService("submittedService");
         when(jacsServiceDataPersistence.findServicesByState(any(Set.class), any(PageRequest.class)))
                 .thenReturn(new PageResult<>());
         ComputationException processException = new ComputationException(testServiceData, "test exception");

@@ -22,6 +22,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     @JsonProperty("_id")
     private Number id;
     private String name;
+    private String description;
     private String version;
     private ProcessingLocation processingLocation;
     private JacsServiceState state = JacsServiceState.CREATED;
@@ -38,7 +39,9 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     private Number parentServiceId;
     private Number rootServiceId;
     private List<JacsServiceEvent> events;
+    private Date processStartTime = new Date();
     private Date creationDate = new Date();
+    private Date modificationDate = new Date();
     @JsonIgnore
     private JacsServiceData parentService;
     @JsonIgnore
@@ -60,6 +63,14 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getVersion() {
@@ -200,6 +211,22 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         this.creationDate = creationDate;
     }
 
+    public Date getProcessStartTime() {
+        return processStartTime;
+    }
+
+    public void setProcessStartTime(Date processStartTime) {
+        this.processStartTime = processStartTime;
+    }
+
+    public Date getModificationDate() {
+        return modificationDate;
+    }
+
+    public void setModificationDate(Date modificationDate) {
+        this.modificationDate = modificationDate;
+    }
+
     public Map<String, String> getEnv() {
         return env;
     }
@@ -274,6 +301,12 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         }
     }
 
+    public void addServiceDependencyId(Number dependencyId) {
+        if (dependencyId != null && !dependeciesIds.contains(dependencyId)) {
+            dependeciesIds.add(dependencyId);
+        }
+    }
+
     public JacsServiceData getParentService() {
         return parentService;
     }
@@ -327,12 +360,24 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         return ReflectionToStringBuilder.toStringExclude(this, ImmutableList.of("dependencies"));
     }
 
+    public boolean hasNeverBeenProcessed() {
+        return state == JacsServiceState.CREATED || state == JacsServiceState.QUEUED;
+    }
+
+    public boolean hasCompleted() {
+        return hasCompletedSuccessfully() || hasCompletedUnsuccessfully();
+    }
+
     public boolean hasCompletedUnsuccessfully() {
         return state == JacsServiceState.CANCELED || state == JacsServiceState.ERROR || state == JacsServiceState.TIMEOUT;
     }
 
     public boolean hasCompletedSuccessfully() {
         return state == JacsServiceState.SUCCESSFUL;
+    }
+
+    public boolean hasBeenSuspended() {
+        return state == JacsServiceState.SUSPENDED;
     }
 
     public Long getServiceTimeout() {
@@ -359,4 +404,5 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
             s.setPriority(s.priority() + priorityDiff);
         });
     }
+
 }

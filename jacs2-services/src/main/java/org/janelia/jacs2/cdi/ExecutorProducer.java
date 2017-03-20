@@ -2,6 +2,7 @@ package org.janelia.jacs2.cdi;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
+import org.janelia.jacs2.cdi.qualifier.TaskQueuePoll;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Default;
@@ -24,6 +25,9 @@ public class ExecutorProducer {
     @PropertyValue(name = "service.executor.ThreadPoolSize")
     @Inject
     private Integer threadPoolSize;
+    @PropertyValue(name = "service.suspendedTasksExecutor.ThreadPoolSize")
+    @Inject
+    private Integer suspendedTasksThreadPoolSize;
 
     @Singleton
     @Produces
@@ -38,7 +42,27 @@ public class ExecutorProducer {
         return Executors.newFixedThreadPool(threadPoolSize, threadFactory);
     }
 
+    @TaskQueuePoll
+    @Singleton
+    @Produces
+    public ExecutorService createTaskQueuePollExecutorService() {
+        if (suspendedTasksThreadPoolSize == null || suspendedTasksThreadPoolSize == 0) {
+            suspendedTasksThreadPoolSize = DEFAULT_THREAD_POOL_SIZE;
+        }
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("JACS-suspended-%d")
+                .setDaemon(true)
+                .build();
+        return Executors.newScheduledThreadPool(suspendedTasksThreadPoolSize, threadFactory);
+    }
+
     public void shutdownExecutor(@Disposes @Default ExecutorService executorService) throws InterruptedException {
+        logger.info("Shutting down {}", executorService);
+        executorService.shutdown();
+        executorService.awaitTermination(10, TimeUnit.MINUTES);
+    }
+
+    public void shutdownSuspendedTasksExecutor(@Disposes @TaskQueuePoll ExecutorService executorService) throws InterruptedException {
         logger.info("Shutting down {}", executorService);
         executorService.shutdown();
         executorService.awaitTermination(10, TimeUnit.MINUTES);

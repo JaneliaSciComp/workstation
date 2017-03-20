@@ -2,7 +2,6 @@ package org.janelia.jacs2.asyncservice.common;
 
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
-import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.slf4j.Logger;
@@ -37,31 +36,37 @@ public class JacsServiceDispatcher {
     void dispatchServices() {
         logger.debug("Dispatch services");
         for (int i = 0; i < DISPATCH_BATCH_SIZE; i++) {
-            if (!jacsServiceEngine.acquireSlot()) {
-                logger.info("No available processing slots");
-                return; // no slot available
-            }
             JacsServiceData queuedService = jacsServiceQueue.dequeService();
             logger.debug("Dequeued service {}", queuedService);
             if (queuedService == null) {
                 // nothing to do
-                jacsServiceEngine.releaseSlot();
                 return;
+            }
+            if (!queuedService.hasParentServiceId()) {
+                // if this is a root service, i.e. no other currently running service depends on it
+                // then try to acquire a slot otherwise let this pass through
+                if (!jacsServiceEngine.acquireSlot()) {
+                    logger.debug("Abort service {} for now because there are not enough processing slots", queuedService);
+                    jacsServiceQueue.abortService(queuedService);
+                    continue; // no slot available
+                }
             }
             logger.info("Dispatch service {}", queuedService);
             ServiceProcessor<?> serviceProcessor = jacsServiceEngine.getServiceProcessor(queuedService);
             serviceComputationFactory.<JacsServiceData>newComputation()
                     .supply(() -> {
-                        JacsServiceData updatedService = queuedService;
-                        logger.debug("Submit {}", updatedService);
-                        updatedService.addEvent(JacsServiceEventTypes.DEQUEUE_SERVICE, "Dequeued");
-                        updatedService.setState(JacsServiceState.SUBMITTED);
-                        updateServiceInfo(updatedService);
-                        jacsServiceEngine.releaseSlot();
-                        return updatedService;
+                        JacsServiceData service = queuedService;
+                        logger.debug("Submit {}", service);
+                        service.setState(JacsServiceState.SUBMITTED);
+                        updateServiceInfo(service);
+                        return service;
                     })
                     .thenCompose(sd -> serviceProcessor.process(sd))
                     .whenComplete((r, exc) -> {
+                        if (!queuedService.hasParentServiceId()) {
+                            // release the slot acquired before the service was started
+                            jacsServiceEngine.releaseSlot();
+                        }
                         jacsServiceQueue.completeService(queuedService);
                     });
         }

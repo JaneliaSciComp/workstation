@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -86,16 +87,21 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
+    }
+
+    @Override
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         MontageImagesArgs args = getArgs(jacsServiceData);
-        File targetImage = new File(args.target);
+        File targetImage = getTargetImage(args);
         return targetImage.exists();
     }
 
     @Override
-    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected File retrieveResult(JacsServiceData jacsServiceData) {
         MontageImagesArgs args = getArgs(jacsServiceData);
-        File targetImage = new File(args.target);
+        File targetImage = getTargetImage(args);
         return targetImage;
     }
 
@@ -138,6 +144,10 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
         MontageImagesArgs args = new MontageImagesArgs();
         new JCommander(args).parse(jacsServiceData.getArgsArray());
         return args;
+    }
+
+    private File getTargetImage(MontageImagesArgs args) {
+        return new File(args.target);
     }
 
     private String getExecutable() {

@@ -1,13 +1,3 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath group: 'com.offbynull.coroutines',  name: 'gradle-plugin',  version: '1.2.2'
-    }
-}
-
 allprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
@@ -19,15 +9,9 @@ project.ext {
         eclipseBuildDir = 'eclipseBuild'
 }
 
-
 subprojects {
     apply plugin: 'eclipse'
     apply from: "${rootDir}/deps.gradle"
-    apply plugin: "coroutines"
-
-    coroutines {
-        debugMode = false
-    }
 
     sourceSets {
         integrationTest {

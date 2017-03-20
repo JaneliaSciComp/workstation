@@ -2,6 +2,7 @@ package org.janelia.jacs2.asyncservice.lsmfileservices;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
@@ -10,10 +11,9 @@ import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.fileservices.FileCopyProcessor;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
-import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.model.jacsservice.ProcessingLocation;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
-import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
@@ -30,7 +30,7 @@ import java.nio.file.Files;
 import java.util.List;
 
 @Named("archivedLsmMetadata")
-public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File> {
+public class ArchivedLsmMetadataProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
 
     static class ArchivedLsmMetadataArgs extends ServiceArgs {
         @Parameter(names = "-archivedLSM", description = "Archived LSM file name", required = true)
@@ -73,45 +73,41 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
         ArchivedLsmMetadataArgs args = getArgs(jacsServiceData);
         if (StringUtils.isBlank(args.archiveLSMFile)) {
-            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "Input LSM file name must be specified"));
+            return createFailure(new ComputationException(jacsServiceData, "Input LSM file name must be specified"));
         } else if (StringUtils.isBlank(args.outputLSMMetadata)) {
-            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "Output LSM metadata name must be specified"));
+            return createFailure(new ComputationException(jacsServiceData, "Output LSM metadata name must be specified"));
+        } else {
+            return createComputation(jacsServiceData);
         }
-        File lsmMetadataFile = getOutputFile(args);
-        File workingLsmFile = getWorkingLsmFile(jacsServiceData, lsmMetadataFile);
-        return fileCopyProcessor.invokeAsync(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
-                new ServiceArg("-src", getInputFile(args).getAbsolutePath()),
-                new ServiceArg("-dst", workingLsmFile.getAbsolutePath()))
-                .thenCompose(fcsd -> lsmFileMetadataProcessor.invokeAsync(new ServiceExecutionContext.Builder(jacsServiceData)
-                                .processingLocation(ProcessingLocation.CLUSTER)
-                                .waitFor(fcsd)
-                                .build(),
-                                new ServiceArg("-inputLSM", workingLsmFile.getAbsolutePath()),
-                                new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())));
     }
 
     @Override
-    protected ServiceComputation<File> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        JacsServiceData lsmMetadataSD = (JacsServiceData) preProcessingResult;
-        // wait for the child services to complete and set the result to the result of the last computation (LSM metadata)
-        return this.waitForCompletion(lsmMetadataSD)
-                .thenApply(sd -> {
-                    File localLsmMetadataFile = new File(sd.getStringifiedResult());
-                    setResult(localLsmMetadataFile, jacsServiceData);
-                    return localLsmMetadataFile;
-                })
-                .exceptionally(exc -> {
-                    jacsServiceData.setState(JacsServiceState.CANCELED);
-                    return null;
-                });
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+        ArchivedLsmMetadataArgs args = getArgs(jacsServiceData);
+        File lsmMetadataFile = getOutputFile(args);
+        File workingLsmFile = getWorkingLsmFile(jacsServiceData, lsmMetadataFile);
+        JacsServiceData fileCopyInvocation = submit(fileCopyProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
+                new ServiceArg("-src", getInputFile(args).getAbsolutePath()),
+                new ServiceArg("-dst", workingLsmFile.getAbsolutePath())));
+        JacsServiceData lsmMetadataInvocation = submit(lsmFileMetadataProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .waitFor(fileCopyInvocation)
+                        .build(),
+                new ServiceArg("-inputLSM", workingLsmFile.getAbsolutePath()),
+                new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())));
+        return ImmutableList.of(lsmMetadataInvocation);
     }
 
-    protected ServiceComputation<File> postProcessData(File processingResult, JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(processingResult)
-                .thenApply(f -> {
+    @Override
+    protected ServiceComputation<File> processing(JacsServiceData jacsServiceData) {
+        return createComputation(this.waitForResult(jacsServiceData));
+    }
+
+    protected ServiceComputation<File> postProcessing(JacsServiceData jacsServiceData, File result) {
+        return createComputation(result)
+                .thenApply(r -> {
                     try {
                         ArchivedLsmMetadataArgs args = getArgs(jacsServiceData);
                         if (!args.keepIntermediateLSM) {
@@ -124,7 +120,7 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
                                 logger.error("Error deleting the working LSM file {}", workingLsmFile, e);
                             }
                         }
-                        return f;
+                        return r;
                     } catch (Exception e) {
                         throw new ComputationException(jacsServiceData, e);
                     }
@@ -132,17 +128,16 @@ public class ArchivedLsmMetadataProcessor extends AbstractServiceProcessor<File>
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         ArchivedLsmMetadataArgs args = getArgs(jacsServiceData);
         File lsmMetadataFile = getOutputFile(args);
         return lsmMetadataFile.exists();
     }
 
     @Override
-    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected File retrieveResult(JacsServiceData jacsServiceData) {
         ArchivedLsmMetadataArgs args = getArgs(jacsServiceData);
-        File lsmMetadataFile = getOutputFile(args);
-        return lsmMetadataFile;
+        return getOutputFile(args);
     }
 
     private File getWorkingLsmFile(JacsServiceData jacsServiceData, File lsmMetadataFile) {

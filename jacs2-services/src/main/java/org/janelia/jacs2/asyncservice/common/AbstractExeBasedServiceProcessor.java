@@ -1,6 +1,7 @@
 package org.janelia.jacs2.asyncservice.common;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
@@ -15,11 +16,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServiceProcessor<T> {
+public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicLifeCycleServiceProcessor<T> implements ServiceCommand {
 
     protected static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 
@@ -39,9 +42,19 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
     }
 
     @Override
-    protected ServiceComputation<T> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    public void execute(JacsServiceData jacsServiceData) {
+        execute(this::runExternalProcess, jacsServiceData);
+    }
+
+    @Override
+    protected ServiceComputation<T> processing(JacsServiceData jacsServiceData) {
         return invokeExternalProcess(jacsServiceData)
-                .thenCompose(r -> this.collectResult(preProcessingResult, jacsServiceData));
+                .thenApply(this::waitForResult);
+    }
+
+    @Override
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+        return ImmutableList.of();
     }
 
     protected abstract ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData);
@@ -53,9 +66,18 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
     }
 
     protected String getFullExecutableName(String... execPathComponents) {
+        String baseDir;
+        String[] pathComponents;
+        if (execPathComponents.length > 0 && StringUtils.startsWith(execPathComponents[0], "/")) {
+            baseDir = execPathComponents[0];
+            pathComponents = Arrays.copyOfRange(execPathComponents, 1, execPathComponents.length);
+        } else {
+            baseDir = executablesBaseDir;
+            pathComponents = execPathComponents;
+        }
         Path cmdPath;
-        if (StringUtils.isNotBlank(executablesBaseDir)) {
-            cmdPath = Paths.get(executablesBaseDir, execPathComponents);
+        if (StringUtils.isNotBlank(baseDir)) {
+            cmdPath = Paths.get(baseDir, pathComponents);
         } else {
             cmdPath = Paths.get("", execPathComponents);
         }
@@ -66,7 +88,8 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
         Preconditions.checkArgument(StringUtils.isNotBlank(addedValue), "Cannot update environment variable " + varName + " with a null or empty value");
         Optional<String> currentValue = getEnvVar(varName);
         if (currentValue.isPresent()) {
-            return currentValue.get().endsWith(":")  ? currentValue.get() + addedValue : currentValue.get() + ":" + addedValue;
+            // prepend the new value
+            return addedValue + ":" + currentValue.get();
         } else {
             return addedValue;
         }
@@ -108,20 +131,24 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractServic
         }
     }
 
-    protected ServiceComputation<Void> invokeExternalProcess(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> invokeExternalProcess(JacsServiceData jacsServiceData) {
+        return computationFactory.<JacsServiceData>newComputation()
+                .supply(() -> {
+                    runExternalProcess(jacsServiceData);
+                    return jacsServiceData;
+                });
+    }
+
+    protected void runExternalProcess(JacsServiceData jacsServiceData) {
         ExternalCodeBlock script = prepareExternalScript(jacsServiceData);
         Map<String, String> env = prepareEnvironment(jacsServiceData);
-        return computationFactory.<Void>newComputation()
-                .supply(() -> {
-                    getProcessRunner(jacsServiceData.getProcessingLocation()).runCmds(
-                            script,
-                            env,
-                            getWorkingDirectory(jacsServiceData).toString(),
-                            this::outputStreamHandler,
-                            this::errStreamHandler,
-                            jacsServiceData);
-                    return null;
-                });
+        getProcessRunner(jacsServiceData.getProcessingLocation()).runCmds(
+                script,
+                env,
+                getWorkingDirectory(jacsServiceData).toString(),
+                this::outputStreamHandler,
+                this::errStreamHandler,
+                jacsServiceData);
     }
 
     private ExternalProcessRunner getProcessRunner(ProcessingLocation processingLocation) {

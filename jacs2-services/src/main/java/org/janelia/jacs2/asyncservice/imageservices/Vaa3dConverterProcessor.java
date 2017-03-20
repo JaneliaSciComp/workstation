@@ -2,12 +2,14 @@ package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
-import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceCommand;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
@@ -15,6 +17,7 @@ import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
+import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
@@ -24,10 +27,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.StringJoiner;
 
 @Named("vaa3dConverter")
-public class Vaa3dConverterProcessor extends AbstractServiceProcessor<File> {
+public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProcessor<File> implements ServiceCommand {
 
     static class Vaa3dConverterArgs extends ServiceArgs {
         @Parameter(names = "-convertCmd", description = "Convert command. Valid values are: []")
@@ -67,57 +71,66 @@ public class Vaa3dConverterProcessor extends AbstractServiceProcessor<File> {
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
         try {
             Vaa3dConverterArgs args = getArgs(jacsServiceData);
             if (StringUtils.isBlank(args.inputFileName)) {
-                return computationFactory.newFailedComputation(
-                        new ComputationException(jacsServiceData, "Input file name must be specified"));
+                return createFailure(new ComputationException(jacsServiceData, "Input file name must be specified"));
             } else if (StringUtils.isBlank(args.outputFileName)) {
-                return computationFactory.newFailedComputation(
-                        new ComputationException(jacsServiceData, "Output file name must be specified"));
+                return createFailure(new ComputationException(jacsServiceData, "Output file name must be specified"));
             } else {
                 File outputFile = new File(args.outputFileName);
                 try {
                     Files.createDirectories(outputFile.getParentFile().toPath());
                 } catch (IOException e) {
-                    throw new ComputationException(jacsServiceData, e);
+                    return createFailure(e);
                 }
-                return computationFactory.newCompletedComputation(jacsServiceData);
+                return createComputation(jacsServiceData);
             }
         } catch (Exception e) {
-            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, e));
+            return createFailure(e);
         }
     }
 
     @Override
-    protected ServiceComputation<File> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         Vaa3dConverterArgs args = getArgs(jacsServiceData);
-        return submitVaa3dCmdService(args, jacsServiceData)
-                .thenCompose(sd -> this.waitForCompletion(sd))
-                .thenCompose(sd -> this.collectResult(preProcessingResult, jacsServiceData));
+        return ImmutableList.of(submitVaa3dCmdService(args, jacsServiceData, JacsServiceState.QUEUED));
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected ServiceComputation<File> processing(JacsServiceData jacsServiceData) {
+        return createComputation(this.waitForResult(jacsServiceData));
+    }
+
+    @Override
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         Vaa3dConverterArgs args = getArgs(jacsServiceData);
         return Files.exists(Paths.get(args.outputFileName));
     }
 
     @Override
-    protected File retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected File retrieveResult(JacsServiceData jacsServiceData) {
         Vaa3dConverterArgs args = getArgs(jacsServiceData);
         return new File(args.outputFileName);
     }
 
-    private ServiceComputation<JacsServiceData> submitVaa3dCmdService(Vaa3dConverterArgs args, JacsServiceData jacsServiceData) {
+    private JacsServiceData submitVaa3dCmdService(Vaa3dConverterArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dCmdServiceState) {
         StringJoiner vaa3dCmdArgs = new StringJoiner(" ")
                 .add(args.convertCmd)
                 .add(args.inputFileName)
                 .add(args.outputFileName);
-        return vaa3dCmdProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
+        return submit(vaa3dCmdProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).state(vaa3dCmdServiceState).build(),
                 new ServiceArg("-vaa3dCmd", "image-loader"),
-                new ServiceArg("-vaa3dCmdArgs", vaa3dCmdArgs.toString()));
+                new ServiceArg("-vaa3dCmdArgs", vaa3dCmdArgs.toString())));
+    }
+
+    @Override
+    public void execute(JacsServiceData jacsServiceData) {
+        execute(sd -> {
+            Vaa3dConverterArgs args = getArgs(sd);
+            vaa3dCmdProcessor.execute(submitVaa3dCmdService(args, sd, JacsServiceState.RUNNING));
+        }, jacsServiceData);
     }
 
     private Vaa3dConverterArgs getArgs(JacsServiceData jacsServiceData) {

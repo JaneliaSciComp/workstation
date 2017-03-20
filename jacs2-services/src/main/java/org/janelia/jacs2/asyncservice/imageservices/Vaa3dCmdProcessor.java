@@ -8,6 +8,7 @@ import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
@@ -32,7 +33,7 @@ public class Vaa3dCmdProcessor extends AbstractExeBasedServiceProcessor<Void> {
         String vaa3dCmdArgs;
     }
 
-    private final String vaa3dExecutable;
+    private final String executable;
     private final String libraryPath;
 
     @Inject
@@ -42,11 +43,11 @@ public class Vaa3dCmdProcessor extends AbstractExeBasedServiceProcessor<Void> {
                       @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                       @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
                       @Any Instance<ExternalProcessRunner> serviceRunners,
-                      @PropertyValue(name = "VAA3D.Bin.Path") String vaa3dExecutable,
+                      @PropertyValue(name = "VAA3D.Bin.Path") String executable,
                       @PropertyValue(name = "VAA3D.Library.Path") String libraryPath,
                       Logger logger) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
-        this.vaa3dExecutable = vaa3dExecutable;
+        this.executable = executable;
         this.libraryPath = libraryPath;
     }
 
@@ -65,12 +66,17 @@ public class Vaa3dCmdProcessor extends AbstractExeBasedServiceProcessor<Void> {
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
+    }
+
+    @Override
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         return true;
     }
 
     @Override
-    protected Void retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected Void retrieveResult(JacsServiceData jacsServiceData) {
         return null;
     }
 
@@ -85,7 +91,7 @@ public class Vaa3dCmdProcessor extends AbstractExeBasedServiceProcessor<Void> {
     }
 
     private void createScript(Vaa3dCmdArgs args, ScriptWriter scriptWriter) {
-        scriptWriter.addWithArgs(getVaa3dExecutable())
+        scriptWriter.addWithArgs(getExecutable())
                 .addArgs("-cmd", args.vaa3dCmd)
                 .addArg(args.vaa3dCmdArgs).endArgs("");
     }
@@ -101,8 +107,8 @@ public class Vaa3dCmdProcessor extends AbstractExeBasedServiceProcessor<Void> {
         return args;
     }
 
-    private String getVaa3dExecutable() {
-        return getFullExecutableName(vaa3dExecutable);
+    private String getExecutable() {
+        return getFullExecutableName(executable);
     }
 
 }

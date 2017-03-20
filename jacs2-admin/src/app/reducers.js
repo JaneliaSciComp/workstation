@@ -3,7 +3,7 @@ import {
   RELOAD_SERVICES_QUEUE, RECEIVE_SERVICES_QUEUE
 } from './actions'
 
-function servicesQueue(state = {
+export function servicesRegistry(state = {
   didInvalidate: false,
   services: []
 }, action) {
@@ -22,10 +22,3 @@ function servicesQueue(state = {
       return state
   }
 }
-
-
-export const rootReducer = combineReducers({
-  servicesQueue
-});
-
-export default rootReducer

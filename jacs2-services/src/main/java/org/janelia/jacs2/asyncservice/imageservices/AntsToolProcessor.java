@@ -8,6 +8,7 @@ import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
@@ -26,6 +27,8 @@ import java.util.Map;
 public class AntsToolProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
     static class AntsToolArgs extends ServiceArgs {
+        @Parameter(names = {"--dims", "-dims"}, description = "Scene dimensionality")
+        int dims = 3;
         @Parameter(names = {"-x", "--mask-image", "-mask"}, description = "Mask file name that defines the region of interest")
         String mask;
         @Parameter(names = {"-m", "--image-metric", "-metric"}, description = "Image metric")
@@ -126,12 +129,17 @@ public class AntsToolProcessor extends AbstractExeBasedServiceProcessor<Void> {
     }
 
     @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
+    }
+
+    @Override
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
         return true;
     }
 
     @Override
-    protected Void retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected Void retrieveResult(JacsServiceData jacsServiceData) {
         return null;
     }
 
@@ -147,6 +155,7 @@ public class AntsToolProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
     private void createScript(AntsToolArgs args, ScriptWriter scriptWriter) {
         scriptWriter.addWithArgs(getExecutable())
+                .addArg(String.valueOf(args.dims))
                 .addArgFlag("-x", args.mask)
                 .addArgFlag("-m", args.imageMetric)
                 .addArgFlag("-o", args.output)

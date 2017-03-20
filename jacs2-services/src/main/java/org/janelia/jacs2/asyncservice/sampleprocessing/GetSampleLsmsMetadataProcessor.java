@@ -1,17 +1,17 @@
 package org.janelia.jacs2.asyncservice.sampleprocessing;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.commons.collections4.CollectionUtils;
+import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.lsmfileservices.LsmFileMetadataProcessor;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
+import org.janelia.jacs2.dataservice.sample.SampleDataService;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
-import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
-import org.janelia.jacs2.asyncservice.common.ComputationException;
+import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
@@ -21,13 +21,15 @@ import org.slf4j.Logger;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.util.ArrayList;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Named("getSampleLsmMetadata")
-public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<List<SampleImageMetadataFile>> {
+public class GetSampleLsmsMetadataProcessor extends AbstractBasicLifeCycleServiceProcessor<List<SampleImageMetadataFile>> {
 
+    private final SampleDataService sampleDataService;
     private final GetSampleImageFilesProcessor getSampleImageFilesProcessor;
     private final LsmFileMetadataProcessor lsmFileMetadataProcessor;
 
@@ -36,10 +38,12 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
                                    ServiceComputationFactory computationFactory,
                                    JacsServiceDataPersistence jacsServiceDataPersistence,
                                    @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                                   SampleDataService sampleDataService,
                                    Logger logger,
                                    GetSampleImageFilesProcessor getSampleImageFilesProcessor,
                                    LsmFileMetadataProcessor lsmFileMetadataProcessor) {
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        this.sampleDataService = sampleDataService;
         this.getSampleImageFilesProcessor = getSampleImageFilesProcessor;
         this.lsmFileMetadataProcessor = lsmFileMetadataProcessor;
     }
@@ -60,64 +64,80 @@ public class GetSampleLsmsMetadataProcessor extends AbstractServiceProcessor<Lis
     }
 
     @Override
-    protected ServiceComputation<List<SampleImageFile>> preProcessData(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
+    }
+
+    @Override
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
-        return getSampleImageFilesProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
+        JacsServiceData getSampleLsms = submit(getSampleImageFilesProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
-                new ServiceArg("-sampleDataDir", args.sampleDataDir))
-                .thenCompose(this::waitForCompletion)
-                .thenApply(getSampleImageFilesProcessor::getResult);
+                new ServiceArg("-sampleDataDir", args.sampleDataDir)));
+
+        List<AnatomicalArea> anatomicalAreas =
+                sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
+
+        return anatomicalAreas.stream()
+                .flatMap(ar -> ar.getTileLsmPairs()
+                        .stream()
+                        .flatMap(lsmp -> lsmp.getLsmFiles().stream())
+                        .map(lsmf -> {
+                            File lsmImageFile = SampleServicesUtils.getImageFile(Paths.get(args.sampleDataDir), lsmf);
+                            File lsmMetadataFile = SampleServicesUtils.getImageMetadataFile(args.sampleDataDir, lsmImageFile);
+
+                            return submit(lsmFileMetadataProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                                            .waitFor(getSampleLsms)
+                                            .build(),
+                                    new ServiceArg("-inputLSM", lsmImageFile.getAbsolutePath()),
+                                    new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())));
+                        }))
+                .collect(Collectors.toList());
+    }
+
+    protected ServiceComputation<List<SampleImageMetadataFile>> processing(JacsServiceData jacsServiceData) {
+        return createComputation(this.waitForResult(jacsServiceData));
     }
 
     @Override
-    protected ServiceComputation<List<SampleImageMetadataFile>> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
+        return checkForDependenciesCompletion(jacsServiceData);
+    }
+
+    @Override
+    protected List<SampleImageMetadataFile> retrieveResult(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
-        List<SampleImageFile> sampleLSMs = (List<SampleImageFile>) preProcessingResult;
-        if (CollectionUtils.isEmpty(sampleLSMs)) {
-            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData, "No sample image file was found"));
-        }
-        List<ServiceComputation<?>> lsmMetadataComputations = submitAllLSMMetadataServices(sampleLSMs, args.sampleDataDir, jacsServiceData);
-        return computationFactory.newCompletedComputation(jacsServiceData)
-                .thenCombineAll(lsmMetadataComputations, (sd, sampleLSMMetadataResults) -> sampleLSMMetadataResults.stream().map(r -> (SampleImageMetadataFile) r).collect(Collectors.toList()))
-                .thenApply(results -> this.applyResult(results, jacsServiceData));
-    }
+        List<AnatomicalArea> anatomicalAreas =
+                sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
+        Path destinationDirectory = Paths.get(args.sampleDataDir);
+        // invoke child file copy services for all LSM files
+        return anatomicalAreas.stream()
+                .flatMap(ar -> ar.getTileLsmPairs()
+                        .stream()
+                        .flatMap(lsmp -> lsmp.getLsmFiles().stream())
+                        .map(lsmf -> {
+                            SampleImageFile sif = new SampleImageFile();
+                            sif.setId(lsmf.getId());
+                            sif.setArchiveFilePath(lsmf.getFilepath());
+                            sif.setWorkingFilePath(SampleServicesUtils.getImageFile(destinationDirectory, lsmf).getAbsolutePath());
+                            sif.setArea(ar.getName());
+                            sif.setChanSpec(lsmf.getChanSpec());
+                            sif.setColorSpec(lsmf.getChannelColors());
+                            sif.setObjective(ar.getObjective());
 
-    @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected List<SampleImageMetadataFile> retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        throw new UnsupportedOperationException();
-    }
-
-    private List<ServiceComputation<?>> submitAllLSMMetadataServices(List<SampleImageFile> lsmFiles, String outputDir, JacsServiceData jacsServiceData) {
-        List<ServiceComputation<?>> lsmMetadataComputations = new ArrayList<>();
-        lsmFiles.forEach(lsmf -> {
-            File lsmMetadataFile = getOutputFileName(outputDir, new File(lsmf.getWorkingFilePath()));
-            lsmMetadataComputations.add(
-                    lsmFileMetadataProcessor.invokeAsync(new ServiceExecutionContext(jacsServiceData),
-                            new ServiceArg("-inputLSM", lsmf.getWorkingFilePath()),
-                            new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath()))
-                            .thenCompose(this::waitForCompletion)
-                            .thenApply(lsmFileMetadataProcessor::getResult)
-                            .thenApply(f -> {
-                                SampleImageMetadataFile lsmMetadata = new SampleImageMetadataFile();
-                                lsmMetadata.setSampleImageFile(lsmf);
-                                lsmMetadata.setMetadataFilePath(f.getAbsolutePath());
-                                return lsmMetadata;
-                            }));
-        });
-        return lsmMetadataComputations;
+                            SampleImageMetadataFile lsmMetadata = new SampleImageMetadataFile();
+                            File lsmImageFile = SampleServicesUtils.getImageFile(Paths.get(args.sampleDataDir), lsmf);
+                            File lsmMetadataFile = SampleServicesUtils.getImageMetadataFile(args.sampleDataDir, lsmImageFile);
+                            lsmMetadata.setSampleImageFile(sif);
+                            lsmMetadata.setMetadataFilePath(lsmMetadataFile.getAbsolutePath());
+                            return lsmMetadata;
+                        }))
+                .collect(Collectors.toList());
     }
 
     private SampleServiceArgs getArgs(JacsServiceData jacsServiceData) {
         return SampleServiceArgs.parse(jacsServiceData.getArgsArray(), new SampleServiceArgs());
     }
 
-    private File getOutputFileName(String outputDir, File inputFile) {
-        return new File(outputDir, inputFile.getName().replaceAll("\\s+", "_") + ".json");
-    }
 }
