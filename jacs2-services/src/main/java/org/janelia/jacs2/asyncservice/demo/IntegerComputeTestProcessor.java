@@ -24,36 +24,37 @@ import java.util.stream.LongStream;
 @Named("integerComputeTest")
 public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> {
 
+    private static final int DEFAULT_MATRIX_SIZE=700;
+    private static final int DEFAULT_ITERATIONS=10;
+
     public static class IntegerComputeTestArgs extends ServiceArgs {
         @Parameter(names = "-matrixSize", description = "Size of matrix NxN", required = false)
-        Integer matrixSize;
+        Integer matrixSize=DEFAULT_MATRIX_SIZE;
         @Parameter(names = "-iterations", description = "Iterations per matrix multiply", required = false)
-        Integer iterations;
+        Integer iterations=DEFAULT_ITERATIONS;
     }
-
-    private final int DEFAULT_MATRIX_SIZE=700;
-    private final int DEFAULT_ITERATIONS=10;
 
     private long resultComputationTime;
 
-    private IntegerComputeTestProcessor.IntegerComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
-        return IntegerComputeTestProcessor.IntegerComputeTestArgs.parse(jacsServiceData.getArgsArray(), new IntegerComputeTestArgs());
+    private IntegerComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
+        return IntegerComputeTestArgs.parse(jacsServiceData.getArgsArray(), new IntegerComputeTestArgs());
     }
 
     @Inject
-    public IntegerComputeTestProcessor (
-            JacsServiceEngine jacsServiceEngine,
+    public IntegerComputeTestProcessor (JacsServiceEngine jacsServiceEngine,
             ServiceComputationFactory computationFactory,
-            JacsServiceDataPersistence jacsServiceDataPersistence,
             @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-            @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-            @Any Instance<ExternalProcessRunner> serviceRunners,
             Logger logger) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        super(jacsServiceEngine, computationFactory, defaultWorkingDir, logger);
     }
 
     @Override
-    protected ServiceComputation<Long> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    public ServiceMetaData getMetadata() {
+        return ServiceArgs.getMetadata(this.getClass(), new IntegerComputeTestProcessor.IntegerComputeTestArgs());
+    }
+
+    @Override
+    public ServiceComputation<Long> process(JacsServiceData jacsServiceData) {
         logger.debug("localProcessData() start");
         IntegerComputeTestArgs args=getArgs(jacsServiceData);
         int matrixSize=DEFAULT_MATRIX_SIZE;
@@ -105,28 +106,4 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
         return computationFactory.newCompletedComputation(resultComputationTime);
     }
 
-    @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        return true;
-    }
-
-    @Override
-    protected Long retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        return null;
-    }
-
-    @Override
-    public ServiceMetaData getMetadata() {
-        return ServiceArgs.getMetadata(this.getClass(), new IntegerComputeTestArgs());
-    }
-
-    @Override
-    public Long getResult(JacsServiceData jacsServiceData) {
-        return new Long(jacsServiceData.getStringifiedResult());
-    }
-
-    @Override
-    public void setResult(Long result, JacsServiceData jacsServiceData) {
-        jacsServiceData.setStringifiedResult(result.toString());
-    }
 }
