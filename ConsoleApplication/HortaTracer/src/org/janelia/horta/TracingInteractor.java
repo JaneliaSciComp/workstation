@@ -1022,6 +1022,7 @@ public class TracingInteractor extends MouseAdapter
         public boolean mergeNeurites() {
             if (!canMergeNeurite())
                 return false;
+            /*
             Object[] options = {"Merge", "Cancel"};
             int answer = JOptionPane.showOptionDialog(
                     volumeProjection.getMouseableComponent(),
@@ -1036,6 +1037,7 @@ public class TracingInteractor extends MouseAdapter
                     options[1]); // default button
             if (answer != JOptionPane.YES_OPTION)
                 return false;
+            */
 
             MergeNeuriteCommand cmd = new MergeNeuriteCommand(defaultWorkspace, hoveredVertex, parentVertex);
             if (cmd.execute()) {

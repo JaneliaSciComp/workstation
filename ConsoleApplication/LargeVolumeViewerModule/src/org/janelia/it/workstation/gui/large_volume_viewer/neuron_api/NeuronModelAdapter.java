@@ -113,6 +113,8 @@ public class NeuronModelAdapter implements NeuronModel
     }
         
     public NeuronVertex getVertexForAnnotation(TmGeoAnnotation annotation) {
+        if (annotation == null)
+            return null;
         return vertexes.getVertexByGuid(annotation.getId());
     }
     
@@ -168,6 +170,19 @@ public class NeuronModelAdapter implements NeuronModel
         return result;
     }
     
+    @Override
+    public boolean transferNeurite(NeuronVertex anchor) {
+        if (! (anchor instanceof NeuronVertexAdapter))
+            return false;
+        NeuronVertexAdapter nva = (NeuronVertexAdapter)anchor;
+        try {
+            neuronSet.annotationModel.moveNeurite(nva.getTmGeoAnnotation(), neuron);
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }        
+    }
+
     @Override
     public boolean splitNeurite(NeuronVertex anchor1, NeuronVertex anchor2) {
         if (! (anchor1 instanceof NeuronVertexAdapter))
