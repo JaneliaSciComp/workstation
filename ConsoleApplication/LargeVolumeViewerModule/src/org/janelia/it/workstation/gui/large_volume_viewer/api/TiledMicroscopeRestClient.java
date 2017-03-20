@@ -28,6 +28,7 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
@@ -357,6 +358,63 @@ public class TiledMicroscopeRestClient {
         }
     }
 
+    public Collection<TmSession> getTmSessions() throws Exception {
+        Response response = getMouselightEndpoint("/session")
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response, "getTmSessions")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(new GenericType<List<TmSession>>() {});
+    }
+
+    public Collection<TmSession> getTmSessionsForSample(Long sampleId) throws Exception {
+        Response response = getMouselightEndpoint("/session")
+                .queryParam("sampleId", sampleId)
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response, "getTmSessions")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(new GenericType<List<TmSession>>() {});
+    }
+    
+    public TmSession create(TmSession tmSession) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(tmSession);
+        Response response = getMouselightEndpoint("/session")
+                .request("application/json")
+                .put(Entity.json(query));
+        if (checkBadResponse(response, "create: "+tmSession)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(TmSession.class);
+    }
+    
+    public TmSession update(TmSession tmSession) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setDomainObject(tmSession);
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        Response response = getMouselightEndpoint("/session")
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response, "update: " + tmSession)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(TmSession.class);
+    }
+
+    public void remove(TmSession tmSession) throws Exception {
+        Response response = getMouselightEndpoint("/session")
+                .queryParam("sessionId", tmSession.getId())
+                .request("application/json")
+                .delete();
+        if (checkBadResponse(response.getStatus(), "remove: " + tmSession)) {
+            throw new WebApplicationException(response);
+        }
+    }
+    
     protected boolean checkBadResponse(Response response, String failureError) {
         int responseStatus = response.getStatus();
         Response.Status status = Response.Status.fromStatusCode(response.getStatus());

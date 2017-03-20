@@ -15,6 +15,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
@@ -52,6 +53,10 @@ public class TiledMicroscopeDomainMgr {
     }
     
     private final DomainModel model = DomainMgr.getDomainMgr().getModel();
+
+    // *****************************************************************************************************************
+    // SAMPLES
+    // *****************************************************************************************************************
 
     public List<String> getSamplePaths() throws Exception {
         return client.getTmSamplePaths();
@@ -106,6 +111,10 @@ public class TiledMicroscopeDomainMgr {
         client.remove(sample);
         model.notifyDomainObjectRemoved(sample);
     }
+
+    // *****************************************************************************************************************
+    // WORKSPACES
+    // *****************************************************************************************************************
 
     public List<TmWorkspace> getWorkspaces(Long sampleId) throws Exception {
         Collection<TmWorkspace> workspaces = client.getTmWorkspacesForSample(sampleId);
@@ -188,7 +197,11 @@ public class TiledMicroscopeDomainMgr {
         client.remove(workspace);
         model.notifyDomainObjectRemoved(workspace);
     }
-    
+
+    // *****************************************************************************************************************
+    // NEURONS
+    // *****************************************************************************************************************
+
     public List<TmNeuronMetadata> getWorkspaceNeurons(Long workspaceId) throws Exception {
         log.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
@@ -266,6 +279,77 @@ public class TiledMicroscopeDomainMgr {
         log.debug("bulkEditTags({})", neurons);
         client.changeTags(neurons, tags, tagState);
     }
+
+    // *****************************************************************************************************************
+    // SESSIONS
+    // *****************************************************************************************************************
+
+    public List<TmSession> getSessions(Long sampleId) throws Exception {
+        Collection<TmSession> sessions = client.getTmSessionsForSample(sampleId);
+        List<TmSession> canonicalObjects = DomainMgr.getDomainMgr().getModel().putOrUpdate(sessions, false);
+        Collections.sort(canonicalObjects, new DomainObjectComparator());
+        return canonicalObjects;
+    }
+
+    public TmSession getSession(Long sessionId) throws Exception {
+        log.debug("getSession(sessionId={})",sessionId);
+        TmSession session = model.getDomainObject(TmSession.class, sessionId);
+        if (session==null) {
+            throw new Exception("Session with id="+sessionId+" does not exist");
+        }
+        return session;
+    }
+    
+    public TmSession createSession(Long sampleId, String name, String externalId) throws Exception {
+        log.debug("createSession(sampleId={}, name={})", sampleId, name);
+        TmSample sample = getSample(sampleId);
+        if (sample==null) {
+            throw new IllegalArgumentException("TM sample does not exist: "+sampleId);
+        }
+        
+        Reference sampleRef = Reference.createFor(TmSample.class, sampleId);
+        
+        TmSession session = new TmSession();
+        session.setOwnerKey(AccessManager.getSubjectKey());
+        session.setName(name);
+        session.setSampleRef(sampleRef);
+        session.setExternalSessionId(externalId);
+        session = save(session);
+        
+        // Server should have put the session in the Sessions root folder. Refresh the Sessions folder to show it in the explorer.
+        TreeNode folder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_SESSIONS_FOLDER, true);
+        model.invalidate(folder);
+        
+        // Also invalidate the sample, so that the Explorer tree can be updated 
+        model.invalidate(sample);
+        
+        return session;
+    }
+
+    public TmSession save(TmSession session) throws Exception {
+        log.debug("save({})", session);
+        TmSession canonicalObject;
+        synchronized (this) {
+            canonicalObject = model.putOrUpdate(session.getId()==null ? client.create(session) : client.update(session));
+        }
+        if (session.getId()==null) {
+            model.notifyDomainObjectCreated(canonicalObject);
+        }
+        else {
+            model.notifyDomainObjectChanged(canonicalObject);
+        }
+        return canonicalObject;
+    }
+
+    public void remove(TmSession session) throws Exception {
+        log.debug("remove({})", session);
+        client.remove(session);
+        model.notifyDomainObjectRemoved(session);
+    }
+
+    // *****************************************************************************************************************
+    // BYTES
+    // *****************************************************************************************************************
 
     public CoordinateToRawTransform getCoordToRawTransform(String basePath) throws Exception {
         log.debug("getCoordToRawTransform({})", basePath);
