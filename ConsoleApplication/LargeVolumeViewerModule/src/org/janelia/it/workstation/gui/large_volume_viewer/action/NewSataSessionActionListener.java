@@ -18,6 +18,11 @@ import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVol
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This action creates a SATA annotation session on top of an existing TM Sample. 
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public final class NewSataSessionActionListener implements ActionListener {
 
     private static final Logger log = LoggerFactory.getLogger(NewSataSessionActionListener.class);

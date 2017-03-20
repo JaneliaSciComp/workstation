@@ -33,6 +33,12 @@ import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceN
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This action creates a workspace on top of an existing TM Sample and populates it with neurons from a
+ * folder of SWC files found on the server-side. 
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public final class NewWorkspaceFromSWCActionListener implements ActionListener {
 
     private static final Logger log = LoggerFactory.getLogger(NewWorkspaceFromSWCActionListener.class);
