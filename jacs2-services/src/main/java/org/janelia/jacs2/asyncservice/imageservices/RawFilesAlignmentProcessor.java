@@ -210,7 +210,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     private JacsServiceData convertNeuronsFileToRawFormat(Path neuronsFile, Path labelsFile, JacsServiceData jacsServiceData) {
-        if ("v3draw".equals(com.google.common.io.Files.getFileExtension(labelsFile.toString()))) {
+        if ("v3draw".equals(com.google.common.io.Files.getFileExtension(neuronsFile.toString()))) {
             try {
                 Files.createSymbolicLink(labelsFile, neuronsFile);
                 return null;
