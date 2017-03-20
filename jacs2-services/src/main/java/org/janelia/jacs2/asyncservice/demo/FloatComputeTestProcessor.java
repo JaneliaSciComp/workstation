@@ -25,38 +25,39 @@ import java.util.stream.LongStream;
 @Named("floatComputeTest")
 public class FloatComputeTestProcessor extends AbstractServiceProcessor<Long> {
 
-    public static class FloatComputeTestArgs extends ServiceArgs {
+    private final static int DEFAULT_MATRIX_SIZE=700;
+    private final static int DEFAULT_ITERATIONS=10;
+
+    static class FloatComputeTestArgs extends ServiceArgs {
         @Parameter(names = "-matrixSize", description = "Size of matrix NxN", required = false)
-        Integer matrixSize;
+        Integer matrixSize=DEFAULT_MATRIX_SIZE;
         @Parameter(names = "-iterations", description = "Iterations per matrix multiply", required = false)
-        Integer iterations;
+        Integer iterations=DEFAULT_ITERATIONS;
     }
 
-    private final int DEFAULT_MATRIX_SIZE=700;
-    private final int DEFAULT_ITERATIONS=10;
+    private FloatComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
+        return FloatComputeTestArgs.parse(jacsServiceData.getArgsArray(), new FloatComputeTestArgs());
+    }
 
     private long resultComputationTime;
 
-    private FloatComputeTestProcessor.FloatComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
-        return FloatComputeTestProcessor.FloatComputeTestArgs.parse(jacsServiceData.getArgsArray(), new FloatComputeTestProcessor.FloatComputeTestArgs());
-    }
-
     @Inject
-    public FloatComputeTestProcessor (
-            JacsServiceEngine jacsServiceEngine,
+    public FloatComputeTestProcessor (JacsServiceEngine jacsServiceEngine,
             ServiceComputationFactory computationFactory,
-            JacsServiceDataPersistence jacsServiceDataPersistence,
             @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-            @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-            @Any Instance<ExternalProcessRunner> serviceRunners,
             Logger logger) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        super(jacsServiceEngine, computationFactory, defaultWorkingDir, logger);
     }
 
     @Override
-    protected ServiceComputation<Long> localProcessData(Object preProcessingResult, JacsServiceData jacsServiceData) {
+    public ServiceMetaData getMetadata() {
+        return ServiceArgs.getMetadata(this.getClass(), new FloatComputeTestArgs());
+    }
+
+    @Override
+    public ServiceComputation<Long> process(JacsServiceData jacsServiceData) {
         logger.debug("localProcessData() start");
-        FloatComputeTestProcessor.FloatComputeTestArgs args=getArgs(jacsServiceData);
+        FloatComputeTestArgs args=getArgs(jacsServiceData);
         int matrixSize=DEFAULT_MATRIX_SIZE;
         if (args.matrixSize!=null) {
             matrixSize=args.matrixSize;
@@ -106,28 +107,6 @@ public class FloatComputeTestProcessor extends AbstractServiceProcessor<Long> {
         return computationFactory.newCompletedComputation(resultComputationTime);
     }
 
-    @Override
-    protected boolean isResultAvailable(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        return true;
-    }
 
-    @Override
-    protected Long retrieveResult(Object preProcessingResult, JacsServiceData jacsServiceData) {
-        return null;
-    }
 
-    @Override
-    public ServiceMetaData getMetadata() {
-        return ServiceArgs.getMetadata(this.getClass(), new FloatComputeTestProcessor.FloatComputeTestArgs());
-    }
-
-    @Override
-    public Long getResult(JacsServiceData jacsServiceData) {
-        return new Long(jacsServiceData.getStringifiedResult());
-    }
-
-    @Override
-    public void setResult(Long result, JacsServiceData jacsServiceData) {
-        jacsServiceData.setStringifiedResult(result.toString());
-    }
 }
