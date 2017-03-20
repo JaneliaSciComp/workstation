@@ -174,7 +174,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         Path rotatedSubjectNiftiFile = getNiftiRotatedSubjectRefChannelFile(args, jacsServiceData); // => SUBNII
         Path symmetricTransformFile = getSymmetricTransformFile(args, jacsServiceData); // => SIMMETRIC
         Path rotatedSubjectRecenteredFile = getWorkingResizedRotatedRecenteredSubjectFile(args, jacsServiceData); // => SUBSXRSROT
-        Path symmetricAffineTransformFile = getSubjectAffineRotationsMatrixFile(args, jacsServiceData); // => AFFINEMATRIX
+        Path symmetricAffineTransformFile = getSymmetricAffineTransformFile(args, jacsServiceData); // => AFFINEMATRIX
         Path rotatedSubjectGlobalAllignedFile = getRotatedGlobalAlignedSubjectRefChannelFile(args, jacsServiceData); // => SUBSXRSROTGA
 
         JacsServiceData neuronsToRawServiceData = convertNeuronsFileToRawFormat(Paths.get(args.input1Neurons), labelsFile, jacsServiceData);
@@ -537,7 +537,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     private Path getSymmetricTransformFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
-        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-txmi.txt");
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-txmi");
     }
 
     private Path getSymmetricAffineTransformFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
