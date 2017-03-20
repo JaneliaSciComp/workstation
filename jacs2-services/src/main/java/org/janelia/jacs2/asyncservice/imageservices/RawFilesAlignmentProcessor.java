@@ -277,6 +277,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
             JacsServiceData isotropicSamplingServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                             .waitFor(deps)
                             .state(JacsServiceState.RUNNING)
+                            .description("Isotropic sampling 63x subject")
                             .build(),
                     new ServiceArg("-plugin", "ireg"),
                     new ServiceArg("-pluginFunc", "isampler"),
@@ -368,7 +369,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return rotateServiceData;
     }
 
-    private JacsServiceData prepareAffineTransformation(Path rotationsMatFile, Path insightRotationsFile, Path affineRotationsFile, JacsServiceData jacsServiceData, JacsServiceData... deps) {
+    private JacsServiceData prepareAffineTransformation(Path rotationsMatFile, Path insightRotationsFile, Path rotationsAffineFile, JacsServiceData jacsServiceData, JacsServiceData... deps) {
         logger.info("Estimate rotations {}", rotationsMatFile);
         AlignmentUtils.convertAffineMatToInsightMat(rotationsMatFile, insightRotationsFile);
         JacsServiceData estimateRotationsServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
@@ -379,7 +380,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 new ServiceArg("-plugin", "ireg"),
                 new ServiceArg("-pluginFunc", "extractRotMat"),
                 new ServiceArg("-input", insightRotationsFile.toString()),
-                new ServiceArg("-output", affineRotationsFile.toString())
+                new ServiceArg("-output", rotationsAffineFile.toString())
         ));
         vaa3dPluginProcessor.execute(estimateRotationsServiceData);
         return estimateRotationsServiceData;
@@ -535,7 +536,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     private Path getSubjectAffineRotationsMatrixFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
-        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-RotationsAffine.mat");
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-RotationsAffine.txt");
     }
 
     private Path getRotatedSubjectRefChannelFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
