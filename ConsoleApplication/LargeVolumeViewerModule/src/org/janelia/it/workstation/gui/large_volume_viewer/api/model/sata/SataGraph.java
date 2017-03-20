@@ -4,7 +4,7 @@ public class SataGraph {
     
     private String id;
     private String samplePath;
-    private String status;
+    private SataGraphStatus status;
 
     public String getId() {
         return id;
@@ -22,11 +22,11 @@ public class SataGraph {
         this.samplePath = samplePath;
     }
 
-    public String getStatus() {
+    public SataGraphStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(SataGraphStatus status) {
         this.status = status;
     }
     

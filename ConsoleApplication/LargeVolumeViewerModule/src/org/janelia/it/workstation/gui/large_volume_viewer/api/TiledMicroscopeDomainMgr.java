@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +25,11 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.model.DomainObjectComparator;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataDecision;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataGraph;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataGraphStatus;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataSession;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataSessionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,9 +53,11 @@ public class TiledMicroscopeDomainMgr {
     }
 
     private final TiledMicroscopeRestClient client;
+    private final SataWorkflowRestClient sataClient;
     
     private TiledMicroscopeDomainMgr() {
         client = new TiledMicroscopeRestClient();
+        sataClient = new SataWorkflowRestClient();
     }
     
     private final DomainModel model = DomainMgr.getDomainMgr().getModel();
@@ -300,21 +308,31 @@ public class TiledMicroscopeDomainMgr {
         return session;
     }
     
-    public TmSession createSession(Long sampleId, String name, String externalId) throws Exception {
-        log.debug("createSession(sampleId={}, name={})", sampleId, name);
-        TmSample sample = getSample(sampleId);
-        if (sample==null) {
-            throw new IllegalArgumentException("TM sample does not exist: "+sampleId);
+    public TmSession createSession(TmSample sample, String name) throws Exception {
+        log.debug("createSession(sampleId={}, name={})", sample.getId(), name);
+        
+        // Get or create graph in SATA
+        SataGraph graph = sataClient.getLatestGraph(sample.getFilepath());
+        if (graph==null) {
+            graph = new SataGraph();
+            graph.setSamplePath(sample.getFilepath());
+            graph = sataClient.create(graph);
         }
         
-        Reference sampleRef = Reference.createFor(TmSample.class, sampleId);
+        // Create new session in SATA
+        SataSession session = sataClient.createSession(graph, SataSessionType.AffinityLearning);
         
-        TmSession session = new TmSession();
-        session.setOwnerKey(AccessManager.getSubjectKey());
-        session.setName(name);
-        session.setSampleRef(sampleRef);
-        session.setExternalSessionId(externalId);
-        session = save(session);
+        // Create session tracking object in JACS
+        Reference sampleRef = Reference.createFor(sample);
+        TmSession tmSession = new TmSession();
+        tmSession.setOwnerKey(AccessManager.getSubjectKey());
+        tmSession.setName(name);
+        tmSession.setSampleRef(sampleRef);
+        tmSession.setExternalSessionId(session.getId());
+        tmSession = save(tmSession);
+        
+        // Cache the SATA session for later use
+        sessionMapping.put(tmSession, session);
         
         // Server should have put the session in the Sessions root folder. Refresh the Sessions folder to show it in the explorer.
         TreeNode folder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_SESSIONS_FOLDER, true);
@@ -323,9 +341,39 @@ public class TiledMicroscopeDomainMgr {
         // Also invalidate the sample, so that the Explorer tree can be updated 
         model.invalidate(sample);
         
-        return session;
+        return tmSession;
+    }
+    
+    private Map<TmSession, SataSession> sessionMapping = new HashMap<>();
+    private SataSession getSataSession(TmSession tmSession) throws Exception {
+        SataSession sataSession = sessionMapping.get(tmSession);
+        if (sataSession==null) {
+            log.info("Session not cached, attempting to retrieve from SATA");
+            sataSession = sataClient.getSession(tmSession.getExternalSessionId());
+            sessionMapping.put(tmSession, sataSession);
+        }
+        return sataSession;
+    }
+    
+    public SataDecision getNextDecision(TmSession tmSession) throws Exception {
+        log.debug("getNextDecision(sessionId={})", tmSession.getId());
+        return sataClient.getNextDecision(tmSession.getExternalSessionId());
+    }
+    
+    public void startGraphUpdate(TmSession tmSession) throws Exception {
+        SataSession session = getSataSession(tmSession);
+        sataClient.startGraphUpdate(session.getGraphId());
     }
 
+    public SataGraphStatus getGraphStatus(TmSession tmSession) throws Exception {
+        SataSession session = getSataSession(tmSession);
+        SataGraph graph = sataClient.getGraph(session.getGraphId());
+        if (graph!=null) {
+            return graph.getStatus();
+        }
+        return SataGraphStatus.Unknown;
+    }
+    
     public TmSession save(TmSession session) throws Exception {
         log.debug("save({})", session);
         TmSession canonicalObject;
