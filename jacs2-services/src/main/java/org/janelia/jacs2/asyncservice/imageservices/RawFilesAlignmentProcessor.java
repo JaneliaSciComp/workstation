@@ -44,6 +44,8 @@ import java.util.List;
 @Named("alignRaw")
 public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<List<File>> {
 
+    private static final String MAX_AFFINE_ITERATIONS = "10000x10000x10000x10000";
+
     static class AlignmentArgs extends ServiceArgs {
         @Parameter(names = {"-nthreads"}, description = "Number of ITK threads")
         Integer nthreads = 16;
@@ -214,22 +216,6 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return niftiConverterServiceData;
     }
 
-    private JacsServiceData globalAlignSubjectToTarget(AlignmentArgs args, JacsServiceData jacsServiceData, JacsServiceData... deps) {
-        logger.info("Align subject to target");
-        JacsServiceData alignSubjectToTargetServiceData = submit(antsToolProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
-                        .state(JacsServiceState.RUNNING)
-                        .build(),
-                new ServiceArg("-metric",
-                        String.format("MI[%s %s %d %d]",
-                                getNiftiTargetExtFile(args, jacsServiceData),
-                                getNiftiRotatedSubjectRefChannelFile(args, jacsServiceData),
-                                1,
-                                32))
-                ));
-        antsToolProcessor.execute(alignSubjectToTargetServiceData);
-        return alignSubjectToTargetServiceData;
-    }
-
     private void zFlipSubject(AlignmentArgs args, JacsServiceData jacsServiceData) {
         if (args.zFlip) {
             logger.info("Flip {} along the z axis", args.input1File);
@@ -391,6 +377,26 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return estimateRotationsServiceData;
     }
 
+    private JacsServiceData globalAlignSubjectToTarget(AlignmentArgs args, JacsServiceData jacsServiceData, JacsServiceData... deps) {
+        logger.info("Align subject to target");
+        JacsServiceData alignSubjectToTargetServiceData = submit(antsToolProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .state(JacsServiceState.RUNNING)
+                        .build(),
+                new ServiceArg("-dims", "3"),
+                new ServiceArg("-metric",
+                        String.format("MI[%s %s %d %d]",
+                                getNiftiTargetExtFile(args, jacsServiceData),
+                                getNiftiRotatedSubjectRefChannelFile(args, jacsServiceData),
+                                1,
+                                32)),
+                new ServiceArg("-output", getSymmetricTransformFile(args, jacsServiceData).toString()),
+                new ServiceArg("-iterations", "0"),
+                new ServiceArg("-affineIterations", MAX_AFFINE_ITERATIONS)
+        ));
+        antsToolProcessor.execute(alignSubjectToTargetServiceData);
+        return alignSubjectToTargetServiceData;
+    }
+
     @Override
     protected ServiceComputation<List<File>> processing(JacsServiceData jacsServiceData) {
         return createComputation(this.waitForResult(jacsServiceData));
@@ -489,6 +495,10 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
 
     private Path getNiftiRotatedSubjectRefChannelFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
         return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-RsRefChnRot_c0.nii");
+    }
+
+    private Path getSymmetricTransformFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-txmi.txt");
     }
 
     private AlignmentArgs getArgs(JacsServiceData jacsServiceData) {
