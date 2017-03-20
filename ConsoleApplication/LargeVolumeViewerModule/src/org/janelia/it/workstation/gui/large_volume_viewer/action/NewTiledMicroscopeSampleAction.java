@@ -1,7 +1,8 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.nb_action;
+package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import javax.swing.JFrame;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NewTiledMicroscopeSampleDialog;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;

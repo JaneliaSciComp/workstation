@@ -1,9 +1,12 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.nodes;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.openide.nodes.ChildFactory;
@@ -16,7 +19,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TmSampleChildFactory extends ChildFactory<TmWorkspace> {
+public class TmSampleChildFactory extends ChildFactory<DomainObject> {
 
     private final static Logger log = LoggerFactory.getLogger(TmSampleChildFactory.class);
     
@@ -31,26 +34,25 @@ public class TmSampleChildFactory extends ChildFactory<TmWorkspace> {
     }
 
     public boolean hasNodeChildren() {
-        // TODO: check if sample has workspaces
+        // TODO: check if sample has workspaces or sessions
         return true;
     }
 
     @Override
-    protected boolean createKeys(List<TmWorkspace> list) {
+    protected boolean createKeys(List<DomainObject> list) {
         try {
             if (sample==null) return false;
-
-            log.debug("Creating children keys for {}",sample.getName());
-            
             TiledMicroscopeDomainMgr mgr = TiledMicroscopeDomainMgr.getDomainMgr();
-            List<TmWorkspace> children = mgr.getWorkspaces(sample.getId());
-            log.debug("Got children: {}",children);
 
-            List<TmWorkspace> temp = new ArrayList<>();
-            for (TmWorkspace obj : children) {
-                temp.add(obj);
-            }
-            list.addAll(temp);
+            log.debug("Creating workspace children keys for {}",sample.getName());
+            List<TmWorkspace> workspaces = mgr.getWorkspaces(sample.getId());
+            log.debug("Got workspace children: {}",workspaces);
+            list.addAll(workspaces);
+            
+            log.debug("Creating session children keys for {}",sample.getName());
+            List<TmSession> sessions = mgr.getSessions(sample.getId());
+            log.debug("Got session children: {}",sessions);
+            list.addAll(sessions);
         }
         catch (Exception ex) {
             log.error("Error creating tree node child keys",ex);
@@ -60,10 +62,14 @@ public class TmSampleChildFactory extends ChildFactory<TmWorkspace> {
     }
 
     @Override
-    protected Node createNodeForKey(TmWorkspace key) {
+    protected Node createNodeForKey(DomainObject key) {
         log.debug("Creating node for '{}'",key.getName());
         try {
-            return new TmWorkspaceNode(this, key);
+            DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(key);
+            if (provider!=null) {
+                return provider.getNode(key, this);
+            }
+            return null;
         }
         catch (Exception e) {
             log.error("Error creating node for '"+key+"'", e);

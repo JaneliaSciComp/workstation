@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.launch;
+package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -15,13 +15,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.tiledMicroscope.SwcImportTask;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
@@ -31,27 +30,25 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
-import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Use this with a known sample, to create a tiled microscope workspace, and load it with SWC input.
- * 
- * @author fosterl
- */
-@ServiceProvider(service = DomainObjectAcceptor.class, path = DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH)
-public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
-    
-    private static final Logger log = LoggerFactory.getLogger(LoadedWorkspaceCreator.class);
+public final class NewWorkspaceFromSWCActionListener implements ActionListener {
 
-    private static final int MENU_ORDER = 500;
-   
+    private static final Logger log = LoggerFactory.getLogger(NewWorkspaceFromSWCActionListener.class);
+    
+    private TmSample sample;
+
+    public NewWorkspaceFromSWCActionListener(TmSample sample) {
+        this.sample = sample;
+    }
+
     @Override
-    public void acceptDomainObject(DomainObject domainObject) {
+    public void actionPerformed(ActionEvent e) {
+
+        ActivityLogHelper.logUserAction("NewSataSessionActionListener.actionPerformed");
 
         final JFrame mainFrame = ConsoleApp.getMainFrame();
-        final TmSample sample = (TmSample)domainObject;
 
         SimpleWorker worker = new SimpleWorker() {
             
@@ -61,7 +58,7 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
             @Override
             protected void doStuff() throws Exception {
 
-                EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
+                EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog("Workspace Name");
                 String workspaceName = dialog.showForSample(sample);
                 if (workspaceName==null) {
                     log.info("Aborting workspace creation: no valid name was provided by the user");
@@ -187,35 +184,4 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
         };
         worker.execute();
     }
-
-    @Override
-    public String getActionLabel() {
-        return "  Load Linux SWC Folder into New Workspace on Sample";
-    }
-
-    @Override
-    public boolean isCompatible(DomainObject e) {
-        return e != null && (e instanceof TmSample);
-    }
-
-    @Override
-    public boolean isEnabled(DomainObject e) {
-        return true;
-    }
-    
-    @Override
-    public Integer getOrder() {
-        return MENU_ORDER;
-    }
-
-    @Override
-    public boolean isPrecededBySeparator() {
-        return false;
-    }
-
-    @Override
-    public boolean isSucceededBySeparator() {
-        return false;
-    }
-
 }

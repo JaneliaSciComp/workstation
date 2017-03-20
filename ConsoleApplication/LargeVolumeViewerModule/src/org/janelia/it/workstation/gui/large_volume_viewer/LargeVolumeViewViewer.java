@@ -12,6 +12,7 @@ import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
@@ -184,6 +185,9 @@ public class LargeVolumeViewViewer extends JPanel {
                         }
                         else if (initialObject instanceof TmWorkspace) {
                             annotationModel.loadWorkspace((TmWorkspace)initialObject);
+                        }
+                        else if (initialObject instanceof TmSession) {
+                            annotationModel.loadSession((TmSession)initialObject);
                         }
                     }
 

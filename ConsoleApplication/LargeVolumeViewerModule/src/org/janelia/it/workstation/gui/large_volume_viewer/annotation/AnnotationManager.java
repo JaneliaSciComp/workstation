@@ -34,7 +34,6 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
@@ -44,6 +43,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NewWorkspaceActionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
@@ -1131,55 +1131,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
         }
 
-        EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
-        final String workspaceName = dialog.showForSample(getAnnotationModel().getCurrentSample());
-        
-        if (workspaceName==null) {
-            log.info("Aborting workspace creation: no valid name was provided by the user");
-            return;
-        }
-
-        // create it in another thread
-        // there is no doubt a better way to get these parameters in:
-        final Long finalSampleId = sampleID;
-        SimpleWorker creator = new SimpleWorker() {
-            
-            private TmWorkspace workspace;
-            
-            @Override
-            protected void doStuff() throws Exception {
-                
-                log.info("Creating new workspace with name '{}' for {}",workspaceName,finalSampleId);
-                
-                // now we can create the workspace
-                this.workspace = annotationModel.createWorkspace(finalSampleId, workspaceName);
-                log.info("Created workspace with id={}",workspace.getId());
-
-                // Reuse the existing color model 
-                if (existingWorkspace) {
-                    workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
-                    annotationModel.saveWorkspace(workspace);
-                    log.info("Copied existing color model");
-                }
-            }
-
-            @Override
-            protected void hadSuccess() {
-                LargeVolumeViewerTopComponent.getInstance().openLargeVolumeViewer(workspace);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
-            }
-        };
-        creator.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Creating new workspace...", ""));
-        creator.execute();
+        TmSample sample = annotationModel.getCurrentSample();
+        NewWorkspaceActionListener action = new NewWorkspaceActionListener(sample);
+        action.actionPerformed(null);
     }
 
     public void saveWorkspaceCopy() {
 
-        EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
+        EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog("Workspace Name");
         final String workspaceName = dialog.showForSample(getAnnotationModel().getCurrentSample());
         
         if (workspaceName==null) {

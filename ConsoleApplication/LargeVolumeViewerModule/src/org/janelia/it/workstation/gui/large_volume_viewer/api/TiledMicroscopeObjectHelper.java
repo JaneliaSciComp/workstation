@@ -3,8 +3,10 @@ package org.janelia.it.workstation.gui.large_volume_viewer.api;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.large_volume_viewer.nodes.TmSampleNode;
+import org.janelia.it.workstation.gui.large_volume_viewer.nodes.TmSessionNode;
 import org.janelia.it.workstation.gui.large_volume_viewer.nodes.TmWorkspaceNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
@@ -31,6 +33,9 @@ public class TiledMicroscopeObjectHelper implements DomainObjectHelper {
         else if (TmWorkspace.class.isAssignableFrom(clazz)) {
             return true;
         }
+        else if (TmSession.class.isAssignableFrom(clazz)) {
+            return true;
+        }
         return false;
     }
     
@@ -41,6 +46,9 @@ public class TiledMicroscopeObjectHelper implements DomainObjectHelper {
         }
         else if (TmWorkspace.class.isAssignableFrom(domainObject.getClass())) {
             return new TmWorkspaceNode(parentChildFactory, (TmWorkspace)domainObject);
+        }
+        else if (TmSession.class.isAssignableFrom(domainObject.getClass())) {
+            return new TmSessionNode(parentChildFactory, (TmSession)domainObject);
         }
         else {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);
@@ -55,6 +63,9 @@ public class TiledMicroscopeObjectHelper implements DomainObjectHelper {
         else if (TmWorkspace.class.isAssignableFrom(domainObject.getClass())) {
             return "workspace_large.png";
         }
+        else if (TmSession.class.isAssignableFrom(domainObject.getClass())) {
+            return "monitor_large.png";
+        }
         else {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);
         }
@@ -68,6 +79,9 @@ public class TiledMicroscopeObjectHelper implements DomainObjectHelper {
         }
         else if (TmWorkspace.class.isAssignableFrom(domainObject.getClass())) {
             mgr.remove((TmWorkspace)domainObject);
+        }
+        else if (TmSession.class.isAssignableFrom(domainObject.getClass())) {
+            mgr.remove((TmSession)domainObject);
         }
         else {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);

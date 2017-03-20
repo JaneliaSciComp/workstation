@@ -1,11 +1,23 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.nodes;
 
 import java.awt.Image;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
+import org.janelia.it.workstation.browser.actions.ServiceAcceptorActionHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
+import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
+import org.janelia.it.workstation.browser.nb_action.RemoveAction;
+import org.janelia.it.workstation.browser.nb_action.RenameAction;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NewSampleAnnotationsAction;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.slf4j.Logger;
@@ -101,5 +113,39 @@ public class TmSampleNode extends AbstractDomainObjectNode<TmSample> {
     @Override
     public boolean canDestroy() {
         return true;
+    }
+
+    @Override
+    public Action[] getActions(boolean context) {
+        List<Action> actions = new ArrayList<>();
+        actions.add(PopupLabelAction.get());
+        actions.add(null);
+        actions.add(new CopyToClipboardAction("Name", getName()));
+        actions.add(new CopyToClipboardAction("GUID", getId()+""));
+        actions.add(null);
+        actions.add(new OpenInViewerAction());
+        actions.add(new OpenInNewViewerAction());
+        actions.add(null);
+        actions.add(new ViewDetailsAction());
+        actions.add(new ChangePermissionsAction());
+        actions.add(AddToFolderAction.get());
+        actions.add(RenameAction.get());
+        actions.add(RemoveAction.get());
+        actions.add(NewSampleAnnotationsAction.get());
+        
+        actions.add(null);
+        for (AbstractAction action : ServiceAcceptorActionHelper.getOpenForContextActions(getDomainObject())) {
+            if (action==null) {
+                actions.add(null);
+            }
+            else {
+                String name = (String)action.getValue(Action.NAME);
+                if (name!=null) {
+                    action.putValue(Action.NAME, name.trim());
+                }
+                actions.add(action);
+            }
+        }
+        return actions.toArray(new Action[actions.size()]);
     }
 }

@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.nb_action;
+package org.janelia.it.workstation.gui.large_volume_viewer.dialogs;
 
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;

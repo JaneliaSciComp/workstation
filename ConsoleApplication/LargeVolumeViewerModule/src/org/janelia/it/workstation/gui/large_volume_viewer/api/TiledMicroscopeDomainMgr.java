@@ -308,8 +308,19 @@ public class TiledMicroscopeDomainMgr {
         return session;
     }
     
-    public TmSession createSession(TmSample sample, String name) throws Exception {
-        log.debug("createSession(sampleId={}, name={})", sample.getId(), name);
+    public TmSample getSample(TmSession session) throws Exception {
+        log.debug("getSample({})",session);
+        return getSample(session.getSampleRef().getTargetId());
+    }
+    
+    public TmSession createSession(Long sampleId, String name) throws Exception {
+        log.debug("createSession(sampleId={}, name={})", sampleId, name);
+        TmSample sample = getSample(sampleId);
+        if (sample==null) {
+            throw new IllegalArgumentException("TM sample does not exist: "+sampleId);
+        }
+        
+        Reference sampleRef = Reference.createFor(TmSample.class, sampleId);
         
         // Get or create graph in SATA
         SataGraph graph = sataClient.getLatestGraph(sample.getFilepath());
@@ -323,7 +334,6 @@ public class TiledMicroscopeDomainMgr {
         SataSession session = sataClient.createSession(graph, SataSessionType.AffinityLearning);
         
         // Create session tracking object in JACS
-        Reference sampleRef = Reference.createFor(sample);
         TmSession tmSession = new TmSession();
         tmSession.setOwnerKey(AccessManager.getSubjectKey());
         tmSession.setName(name);

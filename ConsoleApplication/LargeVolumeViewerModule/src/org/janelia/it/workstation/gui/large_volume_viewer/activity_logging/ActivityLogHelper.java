@@ -60,6 +60,7 @@ public class ActivityLogHelper {
     private static final CategoryString LVV_RENAME_NEURON_CATEGORY_STRING       = new CategoryString("renameNeuron");
     private static final CategoryString LVV_DELETE_NEURON_CATEGORY_STRING       = new CategoryString("deleteNeuron");
     private static final CategoryString LVV_CREATE_WORKSPACE_CATEGORY_STRING    = new CategoryString("createWorkspace");
+    private static final CategoryString LVV_CREATE_SESSION_CATEGORY_STRING    = new CategoryString("createSession");
     private static final CategoryString LVV_ADD_ANCHORED_PATH_CATEGORY_STRING   = new CategoryString("addAnchoredPath");
     private static final CategoryString LVV_REMOVE_ANCHORED_PATH_CATEGORY_STRING = new CategoryString("removeAnchoredPath");
     private static final CategoryString LVV_SET_NOTE_CATEGORY_STRING            = new CategoryString("setNote");
@@ -340,6 +341,14 @@ public class ActivityLogHelper {
     }
 
     public void logCreateWorkspace(Long workspaceID) {
+        AccessManager.getAccessManager().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_CREATE_WORKSPACE_CATEGORY_STRING,
+                new ActionString(workspaceID.toString())
+        );
+    }
+
+    public void logCreateSession(Long workspaceID) {
         AccessManager.getAccessManager().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_CREATE_WORKSPACE_CATEGORY_STRING,

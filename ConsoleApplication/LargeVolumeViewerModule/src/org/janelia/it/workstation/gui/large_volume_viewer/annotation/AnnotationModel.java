@@ -15,6 +15,7 @@ import java.util.Set;
 
 import javax.swing.SwingUtilities;
 
+import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -25,6 +26,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
@@ -63,7 +65,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
 import Jama.Matrix;
-import org.janelia.console.viewerapi.model.DefaultNeuron;
 
 /**
  * This class is responsible for handling requests from the AnnotationManager.  those
@@ -299,6 +300,18 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // Clear neuron selection
         log.info("Clearing current neuron for workspace {}", workspace.getId());
         setCurrentNeuron(null);   
+    }
+
+    public synchronized void loadSession(final TmSession session) throws Exception {
+        if (session == null) {
+            throw new IllegalArgumentException("Cannot load null session");
+        }
+        log.info("Loading session {}", session.getId());
+        currentWorkspace = null;
+        currentSample = tmDomainMgr.getSample(session);
+        currentTagMap = null;
+        
+        // TODO: implement SATA session support
     }
     
     public void loadComplete() { 
@@ -537,6 +550,18 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         TmWorkspace workspace = tmDomainMgr.createWorkspace(sampleId, name);
         activityLog.logCreateWorkspace(workspace.getId());
         return workspace;
+    }
+
+    /**
+     * Create a new semi-automated tracing session for the given sample, owned by the current user.
+     * @param sampleId = tiled microscope sample ID
+     * @param name = name of new session
+     * @throws Exception
+     */
+    public synchronized TmSession createSession(Long sampleId, String name) throws Exception {
+        TmSession session = tmDomainMgr.createSession(sampleId, name);
+        activityLog.logCreateWorkspace(session.getId());
+        return session;
     }
 
     /**

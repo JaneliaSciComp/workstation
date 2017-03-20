@@ -11,7 +11,7 @@ import org.openide.nodes.Node;
 
 /**
  * This action allows the user to create new domain objects underneath an 
- * existing TreeNode, but right-clicking on it and choosing New from the 
+ * existing TreeNode, by right-clicking on it and choosing New from the 
  * context menu.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>

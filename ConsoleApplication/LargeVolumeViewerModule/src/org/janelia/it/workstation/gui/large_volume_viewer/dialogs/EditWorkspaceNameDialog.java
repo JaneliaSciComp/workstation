@@ -47,9 +47,9 @@ public class EditWorkspaceNameDialog extends ModalDialog {
     private boolean save = false;
     private String name;
     
-    public EditWorkspaceNameDialog() {
+    public EditWorkspaceNameDialog(String title) {
 
-        setTitle("Workspace Name");
+        setTitle(title);
 
         attrPanel = new JPanel(new MigLayout(
                 "wrap 4, ins 10, fill"
