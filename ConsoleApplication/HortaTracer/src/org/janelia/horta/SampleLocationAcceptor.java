@@ -121,7 +121,12 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     else { // Load ktx files here
                         progress.switchToIndeterminate(); // TODO: enhance tile loading with a progress listener
                         progress.setDisplayName("Loading KTX brain tile image...");
-                        loader.loadKtxTileAtCurrentFocus(ktxSource);
+                        if (nttc.doesUpdateVolumeCache()) {
+                            loader.loadTransientKtxTileAtCurrentFocus(ktxSource);
+                        }
+                        else {
+                            loader.loadPersistentKtxTileAtCurrentFocus(ktxSource);                            
+                        }
                     }
                     nttc.redrawNow();
                 } catch (final IOException ex) {

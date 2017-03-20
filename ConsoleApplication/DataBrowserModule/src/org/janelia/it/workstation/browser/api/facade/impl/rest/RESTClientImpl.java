@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 
 public class RESTClientImpl {
 
+    protected final RESTClientManager manager = RESTClientManager.getInstance();
     private final Logger log;
 
     protected RESTClientImpl(Logger log) {

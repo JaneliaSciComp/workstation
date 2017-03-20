@@ -34,6 +34,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -56,12 +57,14 @@ import org.janelia.geometry3d.camera.BasicViewSlab;
 import org.janelia.geometry3d.camera.ConstViewSlab;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.GL3Actor;
+import org.janelia.gltools.GL3Resource;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.gltools.texture.Texture2d;
 import org.janelia.horta.blocks.BlockChooser;
 import org.janelia.horta.blocks.BlockDisplayUpdater;
+import org.janelia.horta.blocks.BlockTileKey;
 import org.janelia.horta.blocks.BlockTileResolution;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.Finest8DisplayBlockChooser;
@@ -109,6 +112,8 @@ implements DepthSlabClipper
     private final BlockChooser chooser1 = new OneFineDisplayBlockChooser(); // for proof-of-concept and debugging
     private final BlockChooser chooser8 = new Finest8DisplayBlockChooser();
     private final BlockDisplayUpdater blockDisplayUpdater = new BlockDisplayUpdater(chooser8);
+    
+    private final Collection<GL3Resource> obsoleteActors = new ArrayList<>();
 
     // Singleton actor has private constructor
     private TetVolumeActor() {
@@ -136,6 +141,16 @@ implements DepthSlabClipper
         });
     }
 
+    public Object3d addPersistentBlock(Object3d child) {
+        // logger.info("Special Ktx volume block added");
+        return addChild(child);
+    }
+    
+    public void addTransientBlock(BlockTileKey key) {
+        // logger.info("Special Ktx volume block added");
+        dynamicTiles.addDesiredTile(key);
+    }
+    
     public void setVolumeState(VolumeState volumeState) {
         this.volumeState = volumeState;
     }
@@ -173,6 +188,10 @@ implements DepthSlabClipper
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) 
     {
         dynamicTiles.disposeObsoleteTiles(gl);
+        for (GL3Resource res : obsoleteActors) {
+            res.dispose(gl);
+        }
+        obsoleteActors.clear();
         
         // 1) Initial fail-fast checks
         if (! isVisible())
@@ -437,7 +456,20 @@ implements DepthSlabClipper
     }
 
     public int getBlockCount() {
-        return getChildren().size();
+        int result = getChildren().size();
+        result += dynamicTiles.getBlockCount();
+        return result;
+    }
+    
+    public void clearAllBlocks() {
+        dynamicTiles.updateDesiredTiles(Collections.<BlockTileKey>emptyList());
+        for (Object3d actor : getChildren()) {
+            if (! (actor instanceof GL3Resource))
+                continue;
+            GL3Resource res = (GL3Resource)actor;
+            obsoleteActors.add(res);
+        }
+        getChildren().clear();
     }
 
     public void setAutoUpdate(boolean updateCache) {

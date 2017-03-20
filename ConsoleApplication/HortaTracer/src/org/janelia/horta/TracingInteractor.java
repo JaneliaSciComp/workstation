@@ -62,6 +62,7 @@ import org.janelia.console.viewerapi.actions.DeleteNeuronAction;
 import org.janelia.console.viewerapi.actions.RecolorNeuronAction;
 import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
 import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
+import org.janelia.console.viewerapi.commands.MergeNeuriteCommand;
 import org.janelia.console.viewerapi.commands.MoveNeuronAnchorCommand;
 import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
@@ -1004,27 +1005,17 @@ public class TracingInteractor extends MouseAdapter
                     null, 
                     options,
                     options[1]); // default button
-            if (answer == JOptionPane.YES_OPTION) 
-            {
-                // merging is not undoable, and thus taints previous edits 
-                if (undoRedoManager != null)    
-                    undoRedoManager.discardAllEdits();
-                
-                // TODO: Create Undo-able command for mergeNeurite, and activate it from context menu
-                // 3/18/2016 reverse order of merge, with respect to traditional LVV behavior
-                boolean merged = parentNeuron.mergeNeurite(hoveredVertex, parentVertex);
-                if (!merged) {
-                    JOptionPane.showMessageDialog(
-                            volumeProjection.getMouseableComponent(),
-                            "merge failed",
-                            "merge failed",
-                            JOptionPane.WARNING_MESSAGE
-                    );
-                    return false;
+            if (answer != JOptionPane.YES_OPTION)
+                return false;
+
+            MergeNeuriteCommand cmd = new MergeNeuriteCommand(defaultWorkspace, hoveredVertex, parentVertex);
+            if (cmd.execute()) {
+                log.info("User merged neurites in Horta");
+                if (undoRedoManager != null) {
+                    // undoRedoManager.discardAllEdits(); // (redundant) because this cannot be undone...
+                    undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
                 }
-                else {
-                    return true;
-                }
+                return true;
             }
             else {
                 return false;
