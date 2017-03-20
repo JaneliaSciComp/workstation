@@ -64,6 +64,7 @@ import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
 import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.commands.MergeNeuriteCommand;
 import org.janelia.console.viewerapi.commands.MoveNeuronAnchorCommand;
+import org.janelia.console.viewerapi.commands.SplitNeuriteCommand;
 import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
@@ -247,7 +248,7 @@ public class TracingInteractor extends MouseAdapter
                     // System.out.println("Append took " + elapsed + "milliseconds"); // 1200 ms -- way too long
                 }
                 else if (context.canMergeNeurite()) { // Maybe merge two neurons
-                    context.mergeNeurite();
+                    context.mergeNeurites();
                 }
                 else if (context.canCreateNeuron()) {
                     context.createNeuron();
@@ -979,6 +980,34 @@ public class TracingInteractor extends MouseAdapter
                     hoveredNeuron).actionPerformed(null);
         }
         
+        public boolean canSplitNeurite() {
+            if (parentNeuron == null) return false;
+            if (hoveredVertex == null) return false;
+            if (parentVertex == null) return false;
+            if (hoveredVertex == parentVertex) return false;
+            if (hoveredNeuron != parentNeuron) return false;
+            // TODO: ensure the two anchors/vertices are connected
+            if (defaultWorkspace.isReadOnly()) return false;
+            return true;
+        }
+        
+        public boolean splitNeurite() {
+            if (!canSplitNeurite())
+                return false;
+
+            SplitNeuriteCommand cmd = new SplitNeuriteCommand(defaultWorkspace, hoveredVertex, parentVertex);
+            if (cmd.execute()) {
+                log.info("User split neurites in Horta");
+                if (undoRedoManager != null) {
+                    undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
+                }
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        
         public boolean canMergeNeurite() {
             if (parentNeuron == null) return false;
             if (hoveredVertex == null) return false;
@@ -990,7 +1019,7 @@ public class TracingInteractor extends MouseAdapter
             return true;
         }
         
-        public boolean mergeNeurite() {
+        public boolean mergeNeurites() {
             if (!canMergeNeurite())
                 return false;
             Object[] options = {"Merge", "Cancel"};

@@ -67,6 +67,7 @@ extends Hideable
     // Custom methods to help hook into LVV model from Horta
     NeuronVertex appendVertex(NeuronVertex parentVertex, float[] micronXyz, float radius);
     boolean mergeNeurite(NeuronVertex source, NeuronVertex target);
+    boolean splitNeurite(NeuronVertex anchor1, NeuronVertex anchor2);
     boolean moveVertex(NeuronVertex vertex, float[] micronXyz);
     boolean updateVertexRadius(NeuronVertex vertex, float micronRadius);
     

@@ -332,5 +332,10 @@ public class BasicNeuronModel implements NeuronModel
     public NeuronVertex getVertexByGuid(Long guid) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    @Override
+    public boolean splitNeurite(NeuronVertex anchor1, NeuronVertex anchor2) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }

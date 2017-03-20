@@ -169,6 +169,40 @@ public class NeuronModelAdapter implements NeuronModel
     }
     
     @Override
+    public boolean splitNeurite(NeuronVertex anchor1, NeuronVertex anchor2) {
+        if (! (anchor1 instanceof NeuronVertexAdapter))
+            return false;
+        if (! (anchor2 instanceof NeuronVertexAdapter))
+            return false;
+        NeuronVertexAdapter nva1 = (NeuronVertexAdapter)anchor1;
+        NeuronVertexAdapter nva2 = (NeuronVertexAdapter)anchor2;
+        
+        Long id1 = nva1.getTmGeoAnnotation().getId();
+        Long id2 = nva2.getTmGeoAnnotation().getId();
+        Long parentId1 = nva1.getTmGeoAnnotation().getParentId();
+        Long parentId2 = nva2.getTmGeoAnnotation().getParentId();
+        // Which anchor is the parent, which the child?
+        // Set newRootId to the child in the relationship.
+        Long newRootId = null;
+        if (parentId1.equals(id2)) {
+            newRootId = id1;
+        }
+        else if (parentId2.equals(id1)) {
+            newRootId = id2;
+        }
+        
+        if (newRootId == null)
+            return false; // anchors not connected, or anchor's id is null
+        
+        try {
+            neuronSet.annotationModel.splitNeurite(neuronId, newRootId);
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    @Override
     public boolean mergeNeurite(NeuronVertex source, NeuronVertex target) {
         if (! (source instanceof NeuronVertexAdapter))
             return false;
