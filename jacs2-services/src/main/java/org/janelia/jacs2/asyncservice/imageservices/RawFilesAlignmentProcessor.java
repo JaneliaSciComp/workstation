@@ -36,6 +36,8 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * RawFilesAlignmentProcessor executes the alignment "pipeline" and assumes all files are already
@@ -178,8 +180,9 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         Path symmetricAffineTransformFile = getSymmetricAffineTransformFile(args, jacsServiceData); // => AFFINEMATRIX
         Path rotatedSubjectGlobalAllignedFile = getRotatedGlobalAlignedSubjectRefChannelFile(args, jacsServiceData); // => SUBSXRSROTGA
         Path resizedSubjectGlobalAlignedFile = getResizedGlobalAlignedSubjectRefChannelFile(args, jacsServiceData); // => SUBSXRSROTGARS
-        Path resizedSubjectGlobalAlignedNiftiCh0File = getNiftiResizedGlobalAlignedSubjectChannelFile(args, 0, jacsServiceData); // => MOVINGNIICI
+        List<Path> resizedSubjectGlobalAlignedNiftiFiles = getNiftiResizedGlobalAlignedSubjectChannelFiles(args, args.input1Channels, jacsServiceData); // => MOVINGNIICI, MOVINGNIICII, MOVINGNIICIII, MOVINGNIICIV
         Path resizedTargetExtFile = getResizedTargetExtFile(args, jacsServiceData); // => TARSXRS
+        Path resizedTargetExtNiftiFile = getNiftiResizedTargetExtFile(args, jacsServiceData); // => FIXEDNII
 
         createWorkingCopy(Paths.get(args.templateDir, args.targetTemplate), targetFile);
         createWorkingCopy(Paths.get(args.templateDir, args.targetExtTemplate), targetExtFile);
@@ -219,7 +222,8 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         // affine transform rotated subject
         JacsServiceData globalAlignedServiceData = applyIWarp2Transformation(rotatedSubjectRecenteredFile, symmetricAffineTransformFile, rotatedSubjectGlobalAllignedFile, jacsServiceData, rotateRecenteredServiceData, globalAlignServiceData);
         JacsServiceData voiServiceData = getVOI(rotatedSubjectGlobalAllignedFile, targetFile, jacsServiceData, globalAlignedServiceData);
-        convertToNiftiImage(resizedSubjectGlobalAlignedFile, resizedSubjectGlobalAlignedNiftiCh0File, jacsServiceData, voiServiceData);
+        convertToNiftiImage(resizedSubjectGlobalAlignedFile, resizedSubjectGlobalAlignedNiftiFiles, jacsServiceData, voiServiceData);
+        convertToNiftiImage(resizedTargetExtFile, resizedTargetExtNiftiFile, jacsServiceData, voiServiceData);
         return ImmutableList.of(); // FIXME!!!!
     }
 
@@ -255,10 +259,25 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     private JacsServiceData convertToNiftiImage(Path input, Path output, JacsServiceData jacsServiceData, JacsServiceData... deps) {
         logger.info("Convert {} into a nifti image - {}", input, output);
         JacsServiceData niftiConverterServiceData = submit(niftiConverterProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .waitFor(deps)
                         .state(JacsServiceState.RUNNING)
                         .build(),
                 new ServiceArg("-input", input.toString()),
-                new ServiceArg("-output", output.toString())));
+                new ServiceArg("-output", output == null ? null : output.toString()) // generate the default output
+        ));
+        niftiConverterProcessor.execute(niftiConverterServiceData);
+        return niftiConverterServiceData;
+    }
+
+    private JacsServiceData convertToNiftiImage(Path input, List<Path> outputs, JacsServiceData jacsServiceData, JacsServiceData... deps) {
+        logger.info("Convert {} into a nifti image - {}", input, outputs);
+        JacsServiceData niftiConverterServiceData = submit(niftiConverterProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .waitFor(deps)
+                        .state(JacsServiceState.RUNNING)
+                        .build(),
+                new ServiceArg("-input", input.toString()),
+                new ServiceArg("-output", outputs.stream().map(Path::toString).collect(Collectors.joining(" ")))
+        ));
         niftiConverterProcessor.execute(niftiConverterServiceData);
         return niftiConverterServiceData;
     }
@@ -601,12 +620,19 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-RsRotGlobalAligned_rs.v3draw");
     }
 
-    private Path getNiftiResizedGlobalAlignedSubjectChannelFile(AlignmentArgs args, int channelNo, JacsServiceData jacsServiceData) {
-        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + String.format("-RsGlobalAligned_rs_c%d.nii", channelNo));
+    private List<Path> getNiftiResizedGlobalAlignedSubjectChannelFiles(AlignmentArgs args, int nchannels, JacsServiceData jacsServiceData) {
+        return IntStream
+                .range(0, nchannels)
+                .mapToObj(channelNo -> Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + String.format("-RsGlobalAligned_rs_c%d.nii", channelNo)))
+                .collect(Collectors.toList());
     }
 
     private Path getResizedTargetExtFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
         return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.targetExtTemplate) + "_rs.vdraw");
+    }
+
+    private Path getNiftiResizedTargetExtFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.targetExtTemplate) + "_rs_c0.nii");
     }
 
     private AlignmentArgs getArgs(JacsServiceData jacsServiceData) {
