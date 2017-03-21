@@ -173,7 +173,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         Path resizedTargetFile = getResizedTargetFile(args, jacsServiceData); // => TARSXRS
         Path resizedTargetNiftiFile = getNiftiResizedTargetFile(args, jacsServiceData); // => FIXEDNII, FIX
         Path localSymmetricTransformFilePrefix = getLocalSymmetricTransformFilePrefix(args, jacsServiceData); // => SIMMETRIC ccmi
-        Path resizedSubjectGlobalAlignedRefChannelNiftiFile = getNiftiResizedGlobalAlignedSubjectChannelFile(args, args.input1Ref, jacsServiceData); // => MOVINGNIICR, MOV
+        Path resizedSubjectGlobalAlignedRefChannelNiftiFile = getNiftiResizedGlobalAlignedSubjectChannelFile(args, args.input1Ref - 1, jacsServiceData); // => MOVINGNIICR, MOV
 
         createWorkingCopy(Paths.get(args.templateDir, args.targetTemplate), targetFile);
         createWorkingCopy(Paths.get(args.templateDir, args.targetExtTemplate), targetExtFile);
@@ -642,7 +642,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     private Path getNiftiResizedGlobalAlignedSubjectChannelFile(AlignmentArgs args, int channelNo, JacsServiceData jacsServiceData) {
-        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + String.format("-RsGlobalAligned_rs_c%d.nii", channelNo));
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + String.format("-RsRotGlobalAligned_rs_c%d.nii", channelNo));
     }
 
     private Path getResizedTargetFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
