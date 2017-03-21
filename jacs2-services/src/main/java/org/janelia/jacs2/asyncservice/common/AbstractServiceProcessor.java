@@ -66,15 +66,13 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
     }
 
     protected Path getWorkingDirectory(JacsServiceData jacsServiceData) {
-        String workingDir;
         if (StringUtils.isNotBlank(jacsServiceData.getWorkspace())) {
-            workingDir = jacsServiceData.getWorkspace();
+            return Paths.get(jacsServiceData.getWorkspace());
         } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
-            workingDir = defaultWorkingDir;
+            return getServicePath(defaultWorkingDir, jacsServiceData);
         } else {
-            workingDir = System.getProperty("java.io.tmpdir");
+            return getServicePath(System.getProperty("java.io.tmpdir"), jacsServiceData);
         }
-        return getServicePath(workingDir, jacsServiceData);
     }
 
     protected Path getServicePath(String baseDir, JacsServiceData jacsServiceData, String... more) {

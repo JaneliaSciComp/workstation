@@ -416,7 +416,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                         .build(),
                 new ServiceArg("-dims", "3"),
                 new ServiceArg("-metric",
-                        String.format("MI[%s %s %d %d]",
+                        String.format("MI[%s, %s, %d, %d]",
                                 targetExtNiftiFile,
                                 rotatedSubjectNiftiFile,
                                 1,
