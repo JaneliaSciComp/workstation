@@ -1715,6 +1715,24 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 indicatedNeuron));
                     }
 
+                    if (interactorContext.canMergeNeurite()) {
+                        topMenu.add(new AbstractAction("Merge neurites...") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.mergeNeurites();
+                            }
+                        });
+                    }
+                    
+                    if (interactorContext.canSplitNeurite()) {
+                        topMenu.add(new AbstractAction("Split neurite...") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.splitNeurite();
+                            }
+                        });
+                    }
+                    
                     // Delete Neuron DANGER!
                     if (interactorContext.canDeleteNeuron()) {
                         // Extra separator due to danger...
