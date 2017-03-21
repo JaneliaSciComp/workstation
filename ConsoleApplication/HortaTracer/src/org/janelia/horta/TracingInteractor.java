@@ -1022,22 +1022,24 @@ public class TracingInteractor extends MouseAdapter
         public boolean mergeNeurites() {
             if (!canMergeNeurite())
                 return false;
-            /*
-            Object[] options = {"Merge", "Cancel"};
-            int answer = JOptionPane.showOptionDialog(
-                    volumeProjection.getMouseableComponent(),
-                    String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
-                            parentNeuron.getName(),
-                            hoveredNeuron.getName()),
-                    "Merge neurites?", 
-                    JOptionPane.YES_NO_OPTION, 
-                    JOptionPane.QUESTION_MESSAGE, 
-                    null, 
-                    options,
-                    options[1]); // default button
-            if (answer != JOptionPane.YES_OPTION)
-                return false;
-            */
+            
+            final boolean doConfirmMerge = false;
+            if (doConfirmMerge) {
+                Object[] options = {"Merge", "Cancel"};
+                int answer = JOptionPane.showOptionDialog(
+                        volumeProjection.getMouseableComponent(),
+                        String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
+                                parentNeuron.getName(),
+                                hoveredNeuron.getName()),
+                        "Merge neurites?", 
+                        JOptionPane.YES_NO_OPTION, 
+                        JOptionPane.QUESTION_MESSAGE, 
+                        null, 
+                        options,
+                        options[1]); // default button
+                if (answer != JOptionPane.YES_OPTION)
+                    return false;
+            }
 
             MergeNeuriteCommand cmd = new MergeNeuriteCommand(defaultWorkspace, hoveredVertex, parentVertex);
             if (cmd.execute()) {
@@ -1046,6 +1048,9 @@ public class TracingInteractor extends MouseAdapter
                     // undoRedoManager.discardAllEdits(); // (redundant) because this cannot be undone...
                     undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
                 }
+                // TODO: maybe walk down merged subtree to next branch or tip
+                selectParent(hoveredVertex);
+                
                 return true;
             }
             else {
@@ -1080,6 +1085,10 @@ public class TracingInteractor extends MouseAdapter
         
         public void selectParent() {
             new SelectParentAnchorAction(defaultWorkspace, hoveredVertex).actionPerformed(null);
+        }
+
+        public void selectParent(NeuronVertex vertex) {
+            new SelectParentAnchorAction(defaultWorkspace, vertex).actionPerformed(null);
         }
 
         boolean canUpdateAnchorRadius() {
