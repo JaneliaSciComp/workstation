@@ -71,7 +71,7 @@ public class ExternalLocalProcessRunner extends AbstractExternalProcessRunner {
                 throw new ComputationException(serviceContext, "Process error: " + processStderrHandler.getResult());
             }
             serviceContext.addEvent(JacsServiceEventTypes.PROCESSING_COMPLETED, String.format("Completed %s", processingScript));
-//            deleteProcessingScript(processingScript);
+//!!!!            deleteProcessingScript(processingScript);
         } catch (InterruptedException e) {
             serviceContext.setState(JacsServiceState.ERROR);
             serviceContext.addEvent(JacsServiceEventTypes.PROCESSING_ERROR, String.format("Interrupted processing %s - %s", processingScript, e.getMessage()));

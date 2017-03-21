@@ -133,7 +133,7 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
                 .add("-x").add(args.plugin)
                 .add("-f").add(args.pluginFunc);
         if (CollectionUtils.isNotEmpty(args.pluginInputs)) {
-            vaa3Args.add("-i").add(args.pluginParams.stream().collect(Collectors.joining(" ")));
+            vaa3Args.add("-i").add(args.pluginInputs.stream().collect(Collectors.joining(" ")));
         }
         if (CollectionUtils.isNotEmpty(args.pluginOutputs)) {
             vaa3Args.add("-o").add(args.pluginOutputs.stream().collect(Collectors.joining(" ")));
