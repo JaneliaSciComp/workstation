@@ -399,7 +399,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                         .description("Rotate subject")
                         .build(),
                 new ServiceArg("-plugin", "ireg"),
-                new ServiceArg("-pluginFunc", "warp"),
+                new ServiceArg("-pluginFunc", "iwarp"),
                 new ServiceArg("-output", rotatedSubjectFile.toString()),
                 new ServiceArg("-pluginParams", String.format("#s %s", resizedSubjectRefFile)),
                 new ServiceArg("-pluginParams", String.format("#t %s", targetExtFile)),
