@@ -121,9 +121,13 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
     private JacsServiceData submitVaa3dService(Vaa3dPluginArgs args, JacsServiceData jacsServiceData, JacsServiceState vaa3dServiceState) {
         StringJoiner vaa3Args = new StringJoiner(" ")
                 .add("-x").add(args.plugin)
-                .add("-f").add(args.pluginFunc)
-                .add("-i").add(args.pluginInput)
-                .add("-o").add(args.pluginOutput);
+                .add("-f").add(args.pluginFunc);
+        if (StringUtils.isNotBlank(args.pluginInput)) {
+            vaa3Args.add("-i").add(args.pluginInput);
+        }
+        if (StringUtils.isNotBlank(args.pluginOutput)) {
+            vaa3Args.add("-o").add(args.pluginOutput);
+        }
         if (CollectionUtils.isNotEmpty(args.pluginParams)) {
             vaa3Args.add("-p").add(StringUtils.wrap(args.pluginParams.stream().collect(Collectors.joining(" ")), '"'));
         }

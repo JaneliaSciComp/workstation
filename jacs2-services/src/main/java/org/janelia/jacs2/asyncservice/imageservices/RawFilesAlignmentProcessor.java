@@ -160,8 +160,8 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         Path subjectFile = getWorkingSubjectFile(args, jacsServiceData); // => SUBSX
         Path labelsFile = getWorkingLabelsFile(args, jacsServiceData); // => SUBSXNEURONS
         Path isotropicSubjectFile = getWorkingIsotropicSubjectFile(args, jacsServiceData); // => SUBSXIS
-        Path targetFile = getTargetFile(args); // => TARSX
-        Path targetExtFile = getTargetExtFile(args); // => TARSXEXT
+        Path targetFile = getWorkingTargetFile(args, jacsServiceData); // => TARSX
+        Path targetExtFile = getWorkingTargetExtFile(args, jacsServiceData); // => TARSXEXT
         Path targetExtNiftiFile = getNiftiTargetExtFile(args, jacsServiceData); // => TARSXNII
         Path targetExtDownsampledFile = getNiftiTargetExtDownsampleFile(args, jacsServiceData); // => FDS
         Path resizedSubjectFile = getWorkingResizedSubjectFile(args, jacsServiceData); // => SUBSXRS
@@ -181,6 +181,8 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         Path resizedSubjectGlobalAlignedNiftiCh0File = getNiftiResizedGlobalAlignedSubjectChannelFile(args, 0, jacsServiceData); // => MOVINGNIICI
         Path resizedTargetExtFile = getResizedTargetExtFile(args, jacsServiceData); // => TARSXRS
 
+        createWorkingCopy(Paths.get(args.templateDir, args.targetTemplate), targetFile);
+        createWorkingCopy(Paths.get(args.templateDir, args.targetExtTemplate), targetExtFile);
         // ensureRawFileWdiffName "$Vaa3D" "$WORKDIR" "$SUBSXNEURONS" "${SUBSXNEURONS%.*}_SX.v3draw" SUBSXNEURONS
         JacsServiceData neuronsToRawServiceData = convertNeuronsFileToRawFormat(Paths.get(args.input1Neurons), labelsFile, jacsServiceData);
         // convert the target to Nifti
@@ -219,6 +221,15 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         JacsServiceData voiServiceData = getVOI(rotatedSubjectGlobalAllignedFile, targetFile, jacsServiceData, globalAlignedServiceData);
         convertToNiftiImage(resizedSubjectGlobalAlignedFile, resizedSubjectGlobalAlignedNiftiCh0File, jacsServiceData, voiServiceData);
         return ImmutableList.of(); // FIXME!!!!
+    }
+
+    private void createWorkingCopy(Path inputFile, Path outputFile) {
+        try {
+            Files.createSymbolicLink(outputFile, inputFile);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
     }
 
     private JacsServiceData convertNeuronsFileToRawFormat(Path neuronsFile, Path labelsFile, JacsServiceData jacsServiceData) {
@@ -450,7 +461,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     private JacsServiceData getVOI(Path subjectFile, Path targetFile, JacsServiceData jacsServiceData, JacsServiceData... deps) {
-        logger.info("Resize subject {} to original target", subjectFile);
+        logger.info("Resize subject {} to original target {}", subjectFile, targetFile);
         JacsServiceData resizeSubjectServiceData = submit(vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .waitFor(deps)
                         .state(JacsServiceState.RUNNING)
@@ -505,12 +516,12 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return Paths.get(args.resultsDir, com.google.common.io.Files.getNameWithoutExtension(args.input1File));
     }
 
-    private Path getTargetFile(AlignmentArgs args) {
-        return Paths.get(args.templateDir, args.targetTemplate);
+    private Path getWorkingTargetFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.targetTemplate) + ".v3draw");
     }
 
-    private Path getTargetExtFile(AlignmentArgs args) {
-        return Paths.get(args.templateDir, args.targetExtTemplate);
+    private Path getWorkingTargetExtFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.targetExtTemplate) + ".v3draw");
     }
 
     private Path getNiftiTargetExtFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
@@ -586,7 +597,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     private Path getResizedGlobalAlignedSubjectRefChannelFile(AlignmentArgs args, JacsServiceData jacsServiceData) {
-        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-RsGlobalAligned_rs.v3draw");
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(args.input1File) + "-RsRotGlobalAligned_rs.v3draw");
     }
 
     private Path getNiftiResizedGlobalAlignedSubjectChannelFile(AlignmentArgs args, int channelNo, JacsServiceData jacsServiceData) {
