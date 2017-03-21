@@ -37,6 +37,7 @@ public class EditWorkspaceNameDialog extends ModalDialog {
 
     private static final String DEFAULT_NAME = "new workspace";
     
+    private final String defaultOverride;
     private final JPanel attrPanel;
     private JTextField sampleDateField;
     private JTextField neuronCodeField;
@@ -48,8 +49,13 @@ public class EditWorkspaceNameDialog extends ModalDialog {
     private String name;
     
     public EditWorkspaceNameDialog(String title) {
+        this(title, DEFAULT_NAME);
+    }
+    
+    public EditWorkspaceNameDialog(String title, String defaultOverride) {
 
         setTitle(title);
+        this.defaultOverride = defaultOverride;
 
         attrPanel = new JPanel(new MigLayout(
                 "wrap 4, ins 10, fill"
@@ -130,7 +136,7 @@ public class EditWorkspaceNameDialog extends ModalDialog {
         attrPanel.add(overrideCheckbox,"span 4");
         
         nameField = new JTextField();
-        nameField.setText(DEFAULT_NAME);
+        nameField.setText(defaultOverride);
         nameField.setEnabled(false);
         attrPanel.add(nameField,"span 4, grow");
         

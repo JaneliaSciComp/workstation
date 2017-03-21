@@ -328,7 +328,10 @@ public class TiledMicroscopeDomainMgr {
             graph = new SataGraph();
             graph.setSamplePath(sample.getFilepath());
             graph = sataClient.create(graph);
+            log.info("Created graph with id="+graph.getId());
         }
+        
+        log.info("Creating session for graph with id="+graph.getId());
         
         // Create new session in SATA
         SataSession session = sataClient.createSession(graph, SataSessionType.AffinityLearning);

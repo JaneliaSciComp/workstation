@@ -11,10 +11,12 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
@@ -46,18 +48,34 @@ public final class NewWorkspaceActionListener implements ActionListener {
             return;
         }
 
-        AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        final AnnotationModel annotationModel = annotationMgr.getAnnotationModel();
-        final boolean existingWorkspace = annotationModel.getCurrentWorkspace() != null;
+        // This must be called from the EDT
+        final LargeVolumeViewerTopComponent tc = LargeVolumeViewerTopComponent.getInstance();
+        
+        if (tc.getAnnotationMgr()!=null) {
+            AnnotationModel annotationModel = tc.getAnnotationMgr().getAnnotationModel();
+            if (annotationModel!=null) {
+                // ask the user if they really want a new workspace if one is active
+                if (annotationModel.getCurrentWorkspace() != null) {
+                    int ans = JOptionPane.showConfirmDialog(
+                            ComponentUtil.getLVVMainWindow(),
+                            "You already have an active workspace!  Close and create another?",
+                            "Workspace exists",
+                            JOptionPane.YES_NO_OPTION);
+                    if (ans == JOptionPane.NO_OPTION) {
+                        return;
+                    }
+                }
+            }
+        }
         
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog("Workspace Name");
-        final String workspaceName = dialog.showForSample(annotationModel.getCurrentSample());
+        final String workspaceName = dialog.showForSample(sample);
         
         if (workspaceName==null) {
             log.info("Aborting workspace creation: no valid name was provided by the user");
             return;
         }
-
+                    
         final Long finalSampleId = sample.getId();
         SimpleWorker creator = new SimpleWorker() {
             
@@ -69,15 +87,18 @@ public final class NewWorkspaceActionListener implements ActionListener {
                 log.info("Creating new workspace with name '{}' for {}",workspaceName,finalSampleId);
                 
                 // now we can create the workspace
-                this.workspace = annotationModel.createWorkspace(finalSampleId, workspaceName);
+                this.workspace = TiledMicroscopeDomainMgr.getDomainMgr().createWorkspace(finalSampleId, workspaceName);
                 log.info("Created workspace with id={}",workspace.getId());
 
                 // Reuse the existing color model 
-                if (existingWorkspace) {
-                    QuadViewUi quadViewUi = LargeVolumeViewerTopComponent.getInstance().getLvvv().getQuadViewUi();
-                    workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
-                    annotationModel.saveWorkspace(workspace);
-                    log.info("Copied existing color model");
+                QuadViewUi quadViewUi = tc.getQuadViewUi();
+                if (quadViewUi!=null) {
+                    AnnotationModel annotationModel = tc.getAnnotationMgr().getAnnotationModel();
+                    if (annotationModel.getCurrentWorkspace() != null) {
+                        workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
+                        annotationModel.saveWorkspace(workspace);
+                        log.info("Copied existing color model");
+                    }
                 }
             }
 

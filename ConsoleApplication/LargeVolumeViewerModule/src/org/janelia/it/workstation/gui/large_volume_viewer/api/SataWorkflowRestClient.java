@@ -63,7 +63,7 @@ public class SataWorkflowRestClient {
     }
     
     public List<SataGraph> getGraphs() throws Exception {
-        Response response = getEndpoint("/graph")
+        Response response = getEndpoint("/graph/")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
@@ -89,7 +89,7 @@ public class SataWorkflowRestClient {
     }
     
     public SataGraph create(SataGraph graph) throws Exception {
-        Response response = getEndpoint("/graph")
+        Response response = getEndpoint("/graph/")
                 .request("application/json")
                 .post(Entity.json(graph));
         checkBadResponse(response, "createGraph");
@@ -108,7 +108,7 @@ public class SataWorkflowRestClient {
         SataSession session = new SataSession();
         session.setGraphId(graph.getId());
         session.setSessionType(sessionType.getLabel());
-        Response response = getEndpoint("/session")
+        Response response = getEndpoint("/session/")
                 .request("application/json")
                 .post(Entity.json(session));
         checkBadResponse(response, "createSession");

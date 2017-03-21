@@ -553,18 +553,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     /**
-     * Create a new semi-automated tracing session for the given sample, owned by the current user.
-     * @param sampleId = tiled microscope sample ID
-     * @param name = name of new session
-     * @throws Exception
-     */
-    public synchronized TmSession createSession(Long sampleId, String name) throws Exception {
-        TmSession session = tmDomainMgr.createSession(sampleId, name);
-        activityLog.logCreateWorkspace(session.getId());
-        return session;
-    }
-
-    /**
      * Create a new copy of the given workspace, owned by the current user.
      * @param workspace = workspace object
      * @param name = name of new workspace

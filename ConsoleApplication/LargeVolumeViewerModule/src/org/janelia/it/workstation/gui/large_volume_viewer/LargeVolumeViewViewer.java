@@ -98,6 +98,15 @@ public class LargeVolumeViewViewer extends JPanel {
                         logger.error("Error getting sample for "+workspace, e);
                     }
                 }
+                else if (initialObject instanceof TmSession) {
+                    TmSession session = (TmSession) initialObject;
+                    try {
+                        sliceSample = TiledMicroscopeDomainMgr.getDomainMgr().getSample(session);
+                    }
+                    catch (Exception e) {
+                        logger.error("Error getting sample for "+session, e);
+                    }
+                }
             }
 
             @Override
@@ -105,7 +114,7 @@ public class LargeVolumeViewViewer extends JPanel {
             	
                 if (sliceSample == null) {
                     JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
-                            "Could not find sample entity for this workspace!",
+                            "Could not find the supporting sample",
                             "Could not open workspace",
                             JOptionPane.ERROR_MESSAGE);
                     return;

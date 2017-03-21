@@ -11,8 +11,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
@@ -44,19 +43,14 @@ public final class NewSataSessionActionListener implements ActionListener {
             return;
         }
 
-        AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        final AnnotationModel annotationModel = annotationMgr.getAnnotationModel();
-        
-        EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog("Session Name");
-        final String sessionName = dialog.showForSample(annotationModel.getCurrentSample());
+        EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog("Session Name", "new session");
+        final String sessionName = dialog.showForSample(sample);
         
         if (sessionName==null) {
             log.info("Aborting session creation: no valid name was provided by the user");
             return;
         }
 
-        // create it in another thread
-        // there is no doubt a better way to get these parameters in:
         final Long finalSampleId = sample.getId();
         SimpleWorker creator = new SimpleWorker() {
             
@@ -64,13 +58,10 @@ public final class NewSataSessionActionListener implements ActionListener {
             
             @Override
             protected void doStuff() throws Exception {
-                
                 log.info("Creating new workspace with name '{}' for {}",sessionName,finalSampleId);
-                
                 // now we can create the workspace
-                this.session = annotationModel.createSession(finalSampleId, sessionName);
+                this.session = TiledMicroscopeDomainMgr.getDomainMgr().createSession(finalSampleId, sessionName);
                 log.info("Created workspace with id={}",session.getId());
-
             }
 
             @Override

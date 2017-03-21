@@ -354,7 +354,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     @Subscribe
-    public void objectsInvalidated(DomainObjectRemoveEvent event) {
+    public void objectsRemoved(DomainObjectRemoveEvent event) {
 
         final List<Long[]> expanded = beanTreeView.getExpandedPaths();
         DomainObject domainObject = event.getDomainObject();
@@ -388,6 +388,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             refresh(false, true, null);
         }
         else {
+            log.info("Saving expansion state");
             final List<Long[]> expanded = beanTreeView.getExpandedPaths();
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             for(DomainObject domainObject : event.getDomainObjects()) {
@@ -416,6 +417,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
+                    log.info("Restoring expansion state");
                     beanTreeView.expand(expanded);
                 }
             });

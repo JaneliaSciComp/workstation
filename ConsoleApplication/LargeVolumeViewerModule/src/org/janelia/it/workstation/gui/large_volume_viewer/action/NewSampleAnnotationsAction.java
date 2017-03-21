@@ -33,7 +33,7 @@ public final class NewSampleAnnotationsAction extends NodePresenterAction {
         TmSampleNode node = (TmSampleNode)selected.get(0);
         TmSample sample = node.getSample();
         
-        JMenu newMenu = new JMenu("New");
+        JMenu newMenu = new JMenu("New Annotation Session");
         
         JMenuItem menuItem = new JMenuItem("Workspace");
         menuItem.addActionListener(new NewWorkspaceActionListener(sample));

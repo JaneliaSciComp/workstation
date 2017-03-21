@@ -1118,19 +1118,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        // ask the user if they really want a new workspace if one is active
-        final boolean existingWorkspace = annotationModel.getCurrentWorkspace() != null;
-        if (existingWorkspace) {
-            int ans = JOptionPane.showConfirmDialog(
-                    ComponentUtil.getLVVMainWindow(),
-                    "You already have an active workspace!  Close and create another?",
-                    "Workspace exists",
-                    JOptionPane.YES_NO_OPTION);
-            if (ans == JOptionPane.NO_OPTION) {
-                return;
-            }
-        }
-
         TmSample sample = annotationModel.getCurrentSample();
         NewWorkspaceActionListener action = new NewWorkspaceActionListener(sample);
         action.actionPerformed(null);

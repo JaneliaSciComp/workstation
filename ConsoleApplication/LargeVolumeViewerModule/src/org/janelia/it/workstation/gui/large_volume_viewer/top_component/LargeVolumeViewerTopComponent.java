@@ -18,6 +18,7 @@ import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
+import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
@@ -121,6 +122,10 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         // Update "Recently Opened" history
         String strRef = Reference.createFor(domainObject).toString();
         StateMgr.getStateMgr().updateRecentlyOpenedHistory(strRef);
+        
+        // Ensure that its showing
+        open();
+        requestActive();
     }
 
     /**
@@ -189,6 +194,10 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     
     public LargeVolumeViewViewer getLvvv() {
         return lvvv;
+    }
+
+    public QuadViewUi getQuadViewUi() {
+        return lvvv.hasQuadViewUi() ? lvvv.getQuadViewUi() : null;
     }
     
     public AnnotationManager getAnnotationMgr() {
