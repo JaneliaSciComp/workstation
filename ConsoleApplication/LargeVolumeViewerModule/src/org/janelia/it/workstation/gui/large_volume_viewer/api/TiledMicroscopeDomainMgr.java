@@ -369,16 +369,23 @@ public class TiledMicroscopeDomainMgr {
     }
     
     public SataDecision getNextDecision(TmSession tmSession) throws Exception {
-        log.debug("getNextDecision(sessionId={})", tmSession.getId());
+        log.debug("getNextDecision(sessionId={})", tmSession.getExternalSessionId());
         return sataClient.getNextDecision(tmSession.getExternalSessionId());
     }
     
+    public SataDecision saveDecision(SataDecision decision) throws Exception {
+        log.debug("saveDecision(decisionId={})", decision.getId());
+        return sataClient.updateDecision(decision);
+    }
+    
     public void startGraphUpdate(TmSession tmSession) throws Exception {
+        log.debug("startGraphUpdate(sessionId={})", tmSession.getExternalSessionId());
         SataSession session = getSataSession(tmSession);
         sataClient.startGraphUpdate(session.getGraphId());
     }
 
     public SataGraphStatus getGraphStatus(TmSession tmSession) throws Exception {
+        log.debug("getGraphStatus(sessionId={})", tmSession.getExternalSessionId());
         SataSession session = getSataSession(tmSession);
         SataGraph graph = sataClient.getGraph(session.getGraphId());
         if (graph!=null) {
