@@ -225,11 +225,12 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
 
     private void createWorkingCopy(Path inputFile, Path outputFile) {
         try {
+            Path outputDir = outputFile.getParent();
+            Files.createDirectories(outputDir);
             Files.createSymbolicLink(outputFile, inputFile);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-
     }
 
     private JacsServiceData convertNeuronsFileToRawFormat(Path neuronsFile, Path labelsFile, JacsServiceData jacsServiceData) {
