@@ -6,6 +6,7 @@ import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
+import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
@@ -35,8 +36,9 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
     @Inject
     public IntegerComputeTestProcessor(JacsServiceEngine jacsServiceEngine,
                                        ServiceComputationFactory computationFactory,
+                                       @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                        Logger logger) {
-        super(jacsServiceEngine, computationFactory, logger);
+        super(jacsServiceEngine, computationFactory, defaultWorkingDir, logger);
     }
 
     @Override

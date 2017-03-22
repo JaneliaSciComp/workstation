@@ -37,8 +37,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-@Named("v2align")
-public class V2AlignmentProcessor extends AbstractExeBasedServiceProcessor<List<File>> {
+@Named("alignV1")
+public class AlignmentProcessorV1 extends AbstractExeBasedServiceProcessor<List<File>> {
 
     static class AlignmentArgs extends ServiceArgs {
         @Parameter(names = {"-nthreads"}, description = "Number of ITK threads")
@@ -91,7 +91,7 @@ public class V2AlignmentProcessor extends AbstractExeBasedServiceProcessor<List<
     private final String libraryPath;
 
     @Inject
-    V2AlignmentProcessor(JacsServiceEngine jacsServiceEngine,
+    AlignmentProcessorV1(JacsServiceEngine jacsServiceEngine,
                          ServiceComputationFactory computationFactory,
                          JacsServiceDataPersistence jacsServiceDataPersistence,
                          @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,

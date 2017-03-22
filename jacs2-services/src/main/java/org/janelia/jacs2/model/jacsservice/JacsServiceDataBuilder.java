@@ -54,6 +54,16 @@ public class JacsServiceDataBuilder {
         return this;
     }
 
+    public JacsServiceDataBuilder setWorkspace(String workspace) {
+        serviceData.setWorkspace(workspace);
+        return this;
+    }
+
+    public JacsServiceDataBuilder setDescription(String description) {
+        serviceData.setDescription(description);
+        return this;
+    }
+
     public JacsServiceData build() {
         if (serviceContext != null) {
             serviceContext.addEvent(JacsServiceEventTypes.CREATE_CHILD_SERVICE, String.format("Create child service %s %s", serviceData.getName(), serviceData.getArgs()));

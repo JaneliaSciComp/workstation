@@ -132,7 +132,8 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
                 return existingChildService.get(); // do not resubmit
             }
         }
-        return jacsServiceQueue.enqueueService(serviceArgs);
+        jacsServiceDataPersistence.saveHierarchy(serviceArgs);
+        return serviceArgs;
     }
 
     @Override

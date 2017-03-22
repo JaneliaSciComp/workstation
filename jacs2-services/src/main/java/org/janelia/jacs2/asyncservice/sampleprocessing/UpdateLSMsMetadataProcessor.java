@@ -71,10 +71,10 @@ public class UpdateLSMsMetadataProcessor extends AbstractBasicLifeCycleServicePr
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
-        JacsServiceData getSampleLsmMetadataService = getSampleLsmsMetadataProcessor.submit(new ServiceExecutionContext(jacsServiceData),
+        JacsServiceData getSampleLsmMetadataService = submit(getSampleLsmsMetadataProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
-                new ServiceArg("-sampleDataDir", args.sampleDataDir));
+                new ServiceArg("-sampleDataDir", args.sampleDataDir)));
 
         return ImmutableList.of(getSampleLsmMetadataService);
     }

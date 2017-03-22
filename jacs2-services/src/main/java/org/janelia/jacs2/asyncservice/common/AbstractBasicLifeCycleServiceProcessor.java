@@ -1,8 +1,6 @@
 package org.janelia.jacs2.asyncservice.common;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
@@ -10,12 +8,11 @@ import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.slf4j.Logger;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends AbstractServiceProcessor<T> {
 
@@ -23,56 +20,31 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
     protected static final long WAIT_BETWEEN_RETRIES_FOR_RESULT = 1000; // 1s
 
     protected final JacsServiceDataPersistence jacsServiceDataPersistence;
-    protected final String defaultWorkingDir;
 
     public AbstractBasicLifeCycleServiceProcessor(JacsServiceEngine jacsServiceEngine,
                                                   ServiceComputationFactory computationFactory,
                                                   JacsServiceDataPersistence jacsServiceDataPersistence,
                                                   String defaultWorkingDir,
                                                   Logger logger) {
-        super(jacsServiceEngine, computationFactory, logger);
+        super(jacsServiceEngine, computationFactory, defaultWorkingDir, logger);
         this.jacsServiceDataPersistence = jacsServiceDataPersistence;
-        this.defaultWorkingDir = defaultWorkingDir;
     }
-
-    @Override
-    public ServiceComputation<T> process(ServiceExecutionContext executionContext, ServiceArg... args) {
-        JacsServiceData serviceData = submit(executionContext, JacsServiceState.SUBMITTED, args);
-        return process(serviceData);
-    }
-
 
     @Override
     public ServiceComputation<T> process(JacsServiceData jacsServiceData) {
         jacsServiceData.setProcessStartTime(new Date());
         jacsServiceDataPersistence.save(jacsServiceData);
         return prepareProcessing(jacsServiceData)
-                .thenApply(sd -> this.submitServiceDependencies(sd))
+                .thenApply(this::submitServiceDependencies)
                 .thenSuspendUntil(() -> this.checkSuspendCondition(jacsServiceData))
                 .thenCompose(scr -> this.processing(jacsServiceData))
                 .thenApply(r -> {
-                    JacsServiceData updatedSD = jacsServiceDataPersistence.findById(jacsServiceData.getId());
-                    this.setResult(r, updatedSD);
-                    updatedSD.setState(JacsServiceState.SUCCESSFUL);
-                    updatedSD.addEvent(JacsServiceEventTypes.COMPLETED, "Completed successfully");
-                    jacsServiceDataPersistence.save(updatedSD);
+                    success(jacsServiceData, Optional.ofNullable(r));
                     return r;
                 })
                 .thenCompose(r -> this.postProcessing(jacsServiceData, r))
                 .exceptionally(exc -> {
-                    logger.error("Processing error executing {}:{}", jacsServiceData.getId(), jacsServiceData.getName(), exc);
-                    JacsServiceData updatedSD = jacsServiceDataPersistence.findById(jacsServiceData.getId());
-                    if (!updatedSD.hasCompleted()) {
-                        if (exc instanceof SuspendedException) {
-                            if (!updatedSD.hasCompleted() && !updatedSD.hasBeenSuspended()) {
-                                updateStateToSuspended(updatedSD);
-                            }
-                        } else if (!updatedSD.hasCompletedUnsuccessfully()) {
-                            updatedSD.addEvent(JacsServiceEventTypes.FAILED, String.format("Failed: %s", exc.getMessage()));
-                            updatedSD.setState(JacsServiceState.ERROR);
-                            jacsServiceDataPersistence.save(updatedSD);
-                        }
-                    }
+                    fail(jacsServiceData, exc);
                     return null;
                 })
                 ;
@@ -158,26 +130,6 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
         throw new ComputationException(jacsServiceData, "Results could not be retrieved after " + N_RETRIES_FOR_RESULT + " retries");
     }
 
-    protected Path getWorkingDirectory(JacsServiceData jacsServiceData) {
-        String workingDir;
-        if (StringUtils.isNotBlank(jacsServiceData.getWorkspace())) {
-            workingDir = jacsServiceData.getWorkspace();
-        } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
-            workingDir = defaultWorkingDir;
-        } else {
-            workingDir = System.getProperty("java.io.tmpdir");
-        }
-        return getServicePath(workingDir, jacsServiceData);
-    }
-
-    protected Path getServicePath(String baseDir, JacsServiceData jacsServiceData, String... more) {
-        List<String> pathElems = new ImmutableList.Builder<String>()
-                .add(jacsServiceData.getName() + "_" + jacsServiceData.getId().toString())
-                .addAll(Arrays.asList(more))
-                .build();
-        return Paths.get(baseDir, pathElems.toArray(new String[0])).toAbsolutePath();
-    }
-
     protected boolean checkSuspendCondition(JacsServiceData jacsServiceData) {
         if (checkForDependenciesCompletion(jacsServiceData)) {
             if (jacsServiceData.hasBeenSuspended()) {
@@ -205,4 +157,42 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
         jacsServiceData.addEvent(JacsServiceEventTypes.SUSPEND, String.format("Suspended: %s", jacsServiceData.getName()));
     }
 
+    protected void execute(Consumer<JacsServiceData> execFn, JacsServiceData jacsServiceData) {
+        try {
+            execFn.accept(jacsServiceData);
+            success(jacsServiceData, Optional.ofNullable(retrieveResult(jacsServiceData)));
+        } catch (Exception e) {
+            fail(jacsServiceData, e);
+        }
+    }
+
+    protected void success(JacsServiceData jacsServiceData, Optional<T> result) {
+        JacsServiceData updatedSD = jacsServiceDataPersistence.findById(jacsServiceData.getId());
+        if (!updatedSD.hasCompletedUnsuccessfully()) {
+            if (result.isPresent()) {
+                this.setResult(result.get(), updatedSD);
+            }
+            updatedSD.setState(JacsServiceState.SUCCESSFUL);
+            updatedSD.addEvent(JacsServiceEventTypes.COMPLETED, "Completed successfully");
+            jacsServiceDataPersistence.save(updatedSD);
+        } else {
+            logger.warn("Attempted to overwrite failed state with success for {}", jacsServiceData);
+        }
+    }
+
+    protected void fail(JacsServiceData jacsServiceData, Throwable exc) {
+        logger.error("Processing error executing {}:{}", jacsServiceData.getId(), jacsServiceData.getName(), exc);
+        JacsServiceData updatedSD = jacsServiceDataPersistence.findById(jacsServiceData.getId());
+        if (!updatedSD.hasCompleted()) {
+            if (exc instanceof SuspendedException) {
+                if (!updatedSD.hasCompleted() && !updatedSD.hasBeenSuspended()) {
+                    updateStateToSuspended(updatedSD);
+                }
+            } else if (!updatedSD.hasCompletedUnsuccessfully()) {
+                updatedSD.addEvent(JacsServiceEventTypes.FAILED, String.format("Failed: %s", exc.getMessage()));
+                updatedSD.setState(JacsServiceState.ERROR);
+                jacsServiceDataPersistence.save(updatedSD);
+            }
+        }
+    }
 }

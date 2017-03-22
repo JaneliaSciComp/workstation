@@ -33,7 +33,6 @@ public abstract class AbstractMongoDaoITest<T extends HasIdentifier> extends Abs
     protected static ObjectMapperFactory testObjectMapperFactory = ObjectMapperFactory.instance();
 
     protected MongoDatabase testMongoDatabase;
-//    protected ObjectMapper objectMapper = testObjectMapperFactory.newObjectMapper().setSerializationInclusion(JsonInclude.Include.ALWAYS);
     protected TimebasedIdentifierGenerator idGenerator = new TimebasedIdentifierGenerator(0);
     protected Random dataGenerator = new Random();
 

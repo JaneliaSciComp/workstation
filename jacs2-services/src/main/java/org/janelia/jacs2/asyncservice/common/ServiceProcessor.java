@@ -5,7 +5,6 @@ import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 
 public interface ServiceProcessor<T> {
     ServiceMetaData getMetadata();
+    JacsServiceData createServiceData(ServiceExecutionContext executionContext, ServiceArg... args);
     ServiceComputation<T> process(JacsServiceData jacsServiceData);
-    ServiceComputation<T> process(ServiceExecutionContext executionContext, ServiceArg ...args);
-    JacsServiceData submit(ServiceExecutionContext executionContext, ServiceArg... args);
 }

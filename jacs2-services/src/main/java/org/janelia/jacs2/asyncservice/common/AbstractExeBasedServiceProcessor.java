@@ -16,12 +16,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicLifeCycleServiceProcessor<T> {
+public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicLifeCycleServiceProcessor<T> implements ServiceCommand {
 
     protected static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 
@@ -38,6 +39,11 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicL
         super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.serviceRunners = serviceRunners;
         this.executablesBaseDir = executablesBaseDir;
+    }
+
+    @Override
+    public void execute(JacsServiceData jacsServiceData) {
+        execute(this::runExternalProcess, jacsServiceData);
     }
 
     @Override
@@ -60,9 +66,18 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicL
     }
 
     protected String getFullExecutableName(String... execPathComponents) {
+        String baseDir;
+        String[] pathComponents;
+        if (execPathComponents.length > 0 && StringUtils.startsWith(execPathComponents[0], "/")) {
+            baseDir = execPathComponents[0];
+            pathComponents = Arrays.copyOfRange(execPathComponents, 1, execPathComponents.length);
+        } else {
+            baseDir = executablesBaseDir;
+            pathComponents = execPathComponents;
+        }
         Path cmdPath;
-        if (StringUtils.isNotBlank(executablesBaseDir)) {
-            cmdPath = Paths.get(executablesBaseDir, execPathComponents);
+        if (StringUtils.isNotBlank(baseDir)) {
+            cmdPath = Paths.get(baseDir, pathComponents);
         } else {
             cmdPath = Paths.get("", execPathComponents);
         }
@@ -73,7 +88,8 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicL
         Preconditions.checkArgument(StringUtils.isNotBlank(addedValue), "Cannot update environment variable " + varName + " with a null or empty value");
         Optional<String> currentValue = getEnvVar(varName);
         if (currentValue.isPresent()) {
-            return currentValue.get().endsWith(":")  ? currentValue.get() + addedValue : currentValue.get() + ":" + addedValue;
+            // prepend the new value
+            return addedValue + ":" + currentValue.get();
         } else {
             return addedValue;
         }
@@ -116,19 +132,23 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicL
     }
 
     protected ServiceComputation<JacsServiceData> invokeExternalProcess(JacsServiceData jacsServiceData) {
-        ExternalCodeBlock script = prepareExternalScript(jacsServiceData);
-        Map<String, String> env = prepareEnvironment(jacsServiceData);
         return computationFactory.<JacsServiceData>newComputation()
                 .supply(() -> {
-                    getProcessRunner(jacsServiceData.getProcessingLocation()).runCmds(
-                            script,
-                            env,
-                            getWorkingDirectory(jacsServiceData).toString(),
-                            this::outputStreamHandler,
-                            this::errStreamHandler,
-                            jacsServiceData);
+                    runExternalProcess(jacsServiceData);
                     return jacsServiceData;
                 });
+    }
+
+    protected void runExternalProcess(JacsServiceData jacsServiceData) {
+        ExternalCodeBlock script = prepareExternalScript(jacsServiceData);
+        Map<String, String> env = prepareEnvironment(jacsServiceData);
+        getProcessRunner(jacsServiceData.getProcessingLocation()).runCmds(
+                script,
+                env,
+                getWorkingDirectory(jacsServiceData).toString(),
+                this::outputStreamHandler,
+                this::errStreamHandler,
+                jacsServiceData);
     }
 
     private ExternalProcessRunner getProcessRunner(ProcessingLocation processingLocation) {

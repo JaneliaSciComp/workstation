@@ -89,7 +89,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
     @Override
     public ServiceComputation<T> supply(Supplier<T> fn) {
-        submit((() -> fn.get()));
+        submit(fn::get);
         return this;
     }
 
@@ -205,7 +205,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
             try {
                 T r = waitForResult(this);
                 List<Object> otherResults = otherComputations.stream()
-                        .map(ServiceComputation::get)
+                        .map(oc -> waitForResult(oc))
                         .collect(Collectors.toList());
                 next.complete(fn.apply(r, otherResults));
             } catch (SuspendedException e) {

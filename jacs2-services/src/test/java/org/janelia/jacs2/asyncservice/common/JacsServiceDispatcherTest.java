@@ -75,7 +75,7 @@ public class JacsServiceDispatcherTest {
 
     @Test
     public void serviceAsyncSubmit() {
-        JacsServiceData serviceData = submitTestService("test");
+        JacsServiceData serviceData = enqueueTestService("test");
 
         assertThat(serviceData.getId(), equalTo(TEST_ID));
     }
@@ -87,15 +87,15 @@ public class JacsServiceDispatcherTest {
         return testService;
     }
 
-    private JacsServiceData submitTestService(String serviceName) {
+    private JacsServiceData enqueueTestService(String serviceName) {
         JacsServiceData testService = createTestService(null, serviceName);
-        return jacsServiceEngine.submitSingleService(testService);
+        return jacsServiceQueue.enqueueService(testService);
     }
 
     @Test
     public void dispatchServiceWhenNoSlotsAreAvailable() {
         jacsServiceEngine.setProcessingSlotsCount(0);
-        JacsServiceData testService = submitTestService("test");
+        JacsServiceData testService = enqueueTestService("test");
         when(jacsServiceDataPersistence.findServicesByState(any(Set.class), any(PageRequest.class)))
                 .thenReturn(new PageResult<>());
         testDispatcher.dispatchServices();
@@ -104,7 +104,7 @@ public class JacsServiceDispatcherTest {
 
     @Test
     public void runSubmittedService() {
-        JacsServiceData testServiceData = submitTestService("submittedService");
+        JacsServiceData testServiceData = enqueueTestService("submittedService");
 
         when(jacsServiceDataPersistence.findServicesByState(any(Set.class), any(PageRequest.class)))
                 .thenReturn(new PageResult<>());
@@ -172,7 +172,7 @@ public class JacsServiceDispatcherTest {
 
     @Test
     public void serviceProcessingError() {
-        JacsServiceData testServiceData = submitTestService("submittedService");
+        JacsServiceData testServiceData = enqueueTestService("submittedService");
         when(jacsServiceDataPersistence.findServicesByState(any(Set.class), any(PageRequest.class)))
                 .thenReturn(new PageResult<>());
         ComputationException processException = new ComputationException(testServiceData, "test exception");

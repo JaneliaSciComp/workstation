@@ -1,12 +1,15 @@
 package org.janelia.jacs2.asyncservice.utils;
 
 import com.google.common.collect.Iterables;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ScriptWriter {
 
@@ -72,10 +75,32 @@ public class ScriptWriter {
         return this;
     }
 
+    public ScriptWriter addArgFlag(String argFlag, int argValue) {
+        try {
+            if (argValue != 0) {
+                w.append(' ').append(argFlag).append(' ').append(String.valueOf(argValue));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return this;
+    }
+
     public ScriptWriter addArgFlag(String argFlag, Boolean argValue) {
         try {
             if (argValue) {
                 w.append(' ').append(argFlag);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return this;
+    }
+
+    public ScriptWriter addArgFlag(String argFlag, List<Integer> argValue, String separator) {
+        try {
+            if (CollectionUtils.isNotEmpty(argValue)) {
+                w.append(' ').append(argFlag).append(' ').append(argValue.stream().map(String::valueOf).collect(Collectors.joining(separator)));
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -138,4 +163,5 @@ public class ScriptWriter {
             throw new UncheckedIOException(e);
         }
     }
+
 }

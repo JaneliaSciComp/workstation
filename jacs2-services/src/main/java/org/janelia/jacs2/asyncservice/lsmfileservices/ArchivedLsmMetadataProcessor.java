@@ -89,14 +89,14 @@ public class ArchivedLsmMetadataProcessor extends AbstractBasicLifeCycleServiceP
         ArchivedLsmMetadataArgs args = getArgs(jacsServiceData);
         File lsmMetadataFile = getOutputFile(args);
         File workingLsmFile = getWorkingLsmFile(jacsServiceData, lsmMetadataFile);
-        JacsServiceData fileCopyInvocation = fileCopyProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
+        JacsServiceData fileCopyInvocation = submit(fileCopyProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
                 new ServiceArg("-src", getInputFile(args).getAbsolutePath()),
-                new ServiceArg("-dst", workingLsmFile.getAbsolutePath()));
-        JacsServiceData lsmMetadataInvocation = lsmFileMetadataProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+                new ServiceArg("-dst", workingLsmFile.getAbsolutePath())));
+        JacsServiceData lsmMetadataInvocation = submit(lsmFileMetadataProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .waitFor(fileCopyInvocation)
                         .build(),
                 new ServiceArg("-inputLSM", workingLsmFile.getAbsolutePath()),
-                new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath()));
+                new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())));
         return ImmutableList.of(lsmMetadataInvocation);
     }
 

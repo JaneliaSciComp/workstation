@@ -71,10 +71,10 @@ public class GetSampleLsmsMetadataProcessor extends AbstractBasicLifeCycleServic
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
-        JacsServiceData getSampleLsms = getSampleImageFilesProcessor.submit(new ServiceExecutionContext(jacsServiceData),
+        JacsServiceData getSampleLsms = submit(getSampleImageFilesProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
-                new ServiceArg("-sampleDataDir", args.sampleDataDir));
+                new ServiceArg("-sampleDataDir", args.sampleDataDir)));
 
         List<AnatomicalArea> anatomicalAreas =
                 sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
@@ -87,11 +87,11 @@ public class GetSampleLsmsMetadataProcessor extends AbstractBasicLifeCycleServic
                             File lsmImageFile = SampleServicesUtils.getImageFile(Paths.get(args.sampleDataDir), lsmf);
                             File lsmMetadataFile = SampleServicesUtils.getImageMetadataFile(args.sampleDataDir, lsmImageFile);
 
-                            return lsmFileMetadataProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData)
+                            return submit(lsmFileMetadataProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                                             .waitFor(getSampleLsms)
                                             .build(),
                                     new ServiceArg("-inputLSM", lsmImageFile.getAbsolutePath()),
-                                    new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath()));
+                                    new ServiceArg("-outputLSMMetadata", lsmMetadataFile.getAbsolutePath())));
                         }))
                 .collect(Collectors.toList());
     }

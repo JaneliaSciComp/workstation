@@ -102,9 +102,9 @@ public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceP
                             sif.setObjective(ar.getObjective());
                             return sif;
                         }))
-                .map(sif -> fileCopyProcessor.submit(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
+                .map(sif -> submit(fileCopyProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
                         new ServiceArg("-src", sif.getArchiveFilePath()),
-                        new ServiceArg("-dst", sif.getWorkingFilePath())))
+                        new ServiceArg("-dst", sif.getWorkingFilePath()))))
                 .collect(Collectors.toList());
     }
 
