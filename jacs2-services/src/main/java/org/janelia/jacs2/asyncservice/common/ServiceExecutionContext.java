@@ -5,7 +5,9 @@ import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.model.jacsservice.ProcessingLocation;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ServiceExecutionContext {
 
@@ -38,6 +40,11 @@ public class ServiceExecutionContext {
             return this;
         }
 
+        public Builder addResource(String name, String value) {
+            serviceExecutionContext.resources.put(name, value);
+            return this;
+        }
+
         public ServiceExecutionContext build() {
             return serviceExecutionContext;
         }
@@ -48,6 +55,7 @@ public class ServiceExecutionContext {
     private JacsServiceState serviceState;
     private String description;
     private List<JacsServiceData> waitFor = new ArrayList<>();
+    private Map<String, String> resources = new LinkedHashMap<>();
 
     public ServiceExecutionContext(JacsServiceData parentServiceData) {
         this.parentServiceData = parentServiceData;
@@ -73,11 +81,11 @@ public class ServiceExecutionContext {
         return serviceState;
     }
 
-    public void setServiceState(JacsServiceState serviceState) {
-        this.serviceState = serviceState;
-    }
-
     public String getDescription() {
         return description;
+    }
+
+    public Map<String, String> getResources() {
+        return resources;
     }
 }
