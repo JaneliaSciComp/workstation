@@ -3,6 +3,7 @@ package org.janelia.jacs2.asyncservice.imageservices;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
@@ -22,48 +23,37 @@ import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Named("warpTool")
 public class WarpToolProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
     static class AntsToolArgs extends ServiceArgs {
-        @Parameter(names = {"-d", "--dimensionality", "-dims"}, description = "Scene dimensionality")
+        @Parameter(names = {"-d", "-dims"}, description = "Scene dimensionality")
         int dims = 3;
-        @Parameter(names = {"-e", "--input-image-type", "-inputImageType"}, description = "The image dimensionality: 0/1/2/3 - scalar, vector, tensor, time series")
-        Integer inputImageType;
-        @Parameter(names = {"-i", "--input", "-input"}, description = "Input image name")
+        @Parameter(names = {"-i", "-input"}, description = "Input moving image")
         String input;
-        @Parameter(names = {"-o", "--output-naming", "-output"},
-                description = "Output name: " +
-                        "[" +
-                        "warpedOutputFileName, " +
-                        "compositeDisplacementField,<printOutCompositeWarpFile=0>, " +
-                        "Linear[genericAffineTransformFile,<calculateInverse=0> " +
-                        "]")
+        @Parameter(names = {"-o", "-output"}, description = "Output image")
         String output;
-        @Parameter(names = {"-r", "--reference-image", "-reference"}, description = "Reference image name")
-        String reference;
-        @Parameter(names = {"-n", "--interpolation", "-interpolation"},
-                description = "Interpolation options: " +
-                        "Linear," +
-                        " NearestNeighbor," +
-                        " MultiLabel[<sigma=imageSpacing>,<alpha=4.0>]," +
-                        "Gaussian[<sigma=imageSpacing>,<alpha=1.0>]," +
-                        "BSpline[<order=3>]," +
-                        "CosineWindowedSinc," +
-                        "WelchWindowedSinc," +
-                        "HammingWindowedSinc," +
-                        "LanczosWindowedSinc," +
-                        "GenericLabel[<interpolator=Linear>]")
-        String interpolation;
-        @Parameter(names = {"-t", "--transform", "-transform"},
-                description = "Transform file name <transformFileName> or [<transformFileName>, <useInverse>]")
-        String transformFile;
-        @Parameter(names = {"-f", "--default-value", "-defaultValue"}, description = "Default voxel value")
-        int defaultValue;
-        @Parameter(names = {"-z", "--static-cast-for-R", "-staticCase"}, description = "Static cast in ReadTransform")
-        double staticCost;
+        @Parameter(names = {"-r", "-R", "-reference"}, description = "Reference image name")
+        List<String> references;
+        @Parameter(names = {"-n", "--use-NN"}, description = "Nearest neighbor interpolation")
+        boolean nearestNeighborInterpolation;
+        @Parameter(names = {"--use-BSpline", "-bspline"}, description = "B-Spline interpolation")
+        boolean bSplineInterpolation;
+        @Parameter(names = {"--tightest-bounding-box"}, description = "Tightest bounding box")
+        boolean tightestBoundingBox;
+        @Parameter(names = {"--reslice-by-header"}, description = "Reslice by header")
+        boolean resliceByHeader;
+        @Parameter(names = {"--use-ML", "-sigma"}, description = "Anti aliasing interpolation with Gaussian standard deviation sigma. " +
+                "Examples: " +
+                "--use-ML 0.4mm " +
+                "--use-ML 0.8x0.8x0.8vox")
+        String sigma;
+        @Parameter(names = {"-inverse"}, description = "Inverse transformation")
+        List<String> inverse;
     }
 
     private final String executable;
@@ -126,23 +116,32 @@ public class WarpToolProcessor extends AbstractExeBasedServiceProcessor<Void> {
     private void createScript(AntsToolArgs args, ScriptWriter scriptWriter) {
         scriptWriter.addWithArgs(getExecutable())
                 .addArg(String.valueOf(args.dims));
-        if (args.inputImageType != null) {
-            scriptWriter.addArgFlag("-e", args.inputImageType.toString());
-        }
         if (StringUtils.isNotBlank(args.input)) {
-            scriptWriter.addArgFlag("-i", args.input);
+            scriptWriter.addArg(args.input);
         }
         if (StringUtils.isNotBlank(args.output)) {
-            scriptWriter.addArgFlag("-o", args.output);
+            scriptWriter.addArg(args.output);
         }
-        if (StringUtils.isNotBlank(args.reference)) {
-            scriptWriter.addArgFlag("-r", args.reference);
+        if (CollectionUtils.isNotEmpty(args.references)) {
+            scriptWriter.addArgFlag("-R", args.references.stream().collect(Collectors.joining(" ")));
         }
-        if (StringUtils.isNotBlank(args.interpolation)) {
-            scriptWriter.addArgFlag("-n", args.interpolation);
+        if (CollectionUtils.isNotEmpty(args.inverse)) {
+            scriptWriter.addArgFlag("-i", args.inverse.stream().collect(Collectors.joining(" ")));
         }
-        if (StringUtils.isNotBlank(args.transformFile)) {
-            scriptWriter.addArgFlag("-t", args.transformFile);
+        if (StringUtils.isNotBlank(args.sigma)) {
+            scriptWriter.addArgFlag("--use-ML", args.sigma);
+        }
+        if (args.nearestNeighborInterpolation) {
+            scriptWriter.addArg("--use-NN");
+        }
+        if (args.bSplineInterpolation) {
+            scriptWriter.addArg("--use-BSpline");
+        }
+        if (args.tightestBoundingBox) {
+            scriptWriter.addArg("--tightest-bounding-box");
+        }
+        if (args.resliceByHeader) {
+            scriptWriter.addArg("--reslice-by-header");
         }
         scriptWriter.endArgs("");
     }

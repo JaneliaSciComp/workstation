@@ -4,7 +4,6 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
@@ -36,6 +35,8 @@ public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProces
         List<String> inputFileNames = new ArrayList<>();
         @Parameter(names = "-output", description = "Output file", required = true)
         List<String> outputFileNames;
+        @Parameter(names = {"-p", "-pluginParams"}, description = "Other plugin parameters")
+        List<String> pluginParams = new ArrayList<>();
     }
 
     private final Vaa3dPluginProcessor vaa3dPluginProcessor;
@@ -113,7 +114,8 @@ public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProces
                 new ServiceArg("-plugin", "ireg"),
                 new ServiceArg("-pluginFunc", "NiftiImageConverter"),
                 new ServiceArg("-input", String.join(",", args.inputFileNames)),
-                new ServiceArg("-output", String.join(",", args.outputFileNames))
+                new ServiceArg("-output", String.join(",", args.outputFileNames)),
+                new ServiceArg("-pluginParams", String.join(",", args.pluginParams))
         ));
     }
 
