@@ -1,13 +1,15 @@
 package org.janelia.jacs2.asyncservice;
 
+import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import java.util.List;
+
 
 public class ServerStats {
     private int runningServicesCount;
-    private int waitingServices;
     private int availableSlots;
     private int waitingCapacity;
-    private List<Number> runningServices;
+    private List<JacsServiceData> waitingServices;
+    private List<JacsServiceData>  runningServices;
 
     public int getRunningServicesCount() {
         return runningServicesCount;
@@ -15,14 +17,6 @@ public class ServerStats {
 
     public void setRunningServicesCount(int runningServicesCount) {
         this.runningServicesCount = runningServicesCount;
-    }
-
-    public int getWaitingServices() {
-        return waitingServices;
-    }
-
-    public void setWaitingServices(int waitingServices) {
-        this.waitingServices = waitingServices;
     }
 
     public int getAvailableSlots() {
@@ -41,11 +35,17 @@ public class ServerStats {
         this.waitingCapacity = waitingCapacity;
     }
 
-    public List<Number> getRunningServices() {
+    public List<JacsServiceData>  getRunningServices() {
         return runningServices;
     }
 
-    public void setRunningServices(List<Number> runningServices) {
+    public void setRunningServices(List<JacsServiceData>  runningServices) {
         this.runningServices = runningServices;
     }
+
+    public List<JacsServiceData> getWaitingServices() {
+        return waitingServices;
+    }
+
+    public void setWaitingServices(List<JacsServiceData>  waitingServices) { this.waitingServices = waitingServices; }
 }
