@@ -59,20 +59,23 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
 
         for(DomainObject domainObject : domainObjects) {
 
-            // first check to make sure this Object only has one ancestor references; if it does pop up a dialog before removal
-            List<Reference> refList = model.getContainerReferences(domainObject);
-            if (refList==null || refList.size()<=1) {
-                listToDelete.add(domainObject);
+            DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
+            if (provider!=null && provider.supportsRemoval(domainObject)) {
+                // first check to make sure this Object only has one ancestor references; if it does pop up a dialog before removal
+                List<Reference> refList = model.getContainerReferences(domainObject);
+                if (refList==null || refList.size()<=1) {
+                    listToDelete.add(domainObject);
+                }
+                else {
+                    log.info("{} has multiple references: {}", domainObject, refList);
+                }
             }
             else {
-                log.info("{} has multiple references: {}", domainObject, refList);
+                log.info("Removal not supported for {}", domainObject);
             }
+            
             removeFromFolders.put(treeNode,domainObject);
         }
-
-        // TODO: Currently, this alerts the user that e.g. neuron fragments will be deleted permanently, even though they're 
-        // still referenced by their sample. This needs a better solution which takes into account all types of parent/child 
-        // relationships, not only folders.
         
         if (!listToDelete.isEmpty()) {
             int deleteConfirmation = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(),
@@ -91,15 +94,14 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
                 // Remove any actual objects that are no longer referenced
                 if (!listToDelete.isEmpty()) {
                     log.info("Looking for provider to deleting object entirely: {}", listToDelete);
-                    for(DomainObject domainObject : domainObjects) {
+                    for(DomainObject domainObject : listToDelete) {
                         DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
                         if (provider!=null) {
-                            log.info("Found DomainObjectHelper provider: "+provider);
+                            log.info("Using DomainObjectHelper {} to delete object {}", provider, domainObject);
                             provider.remove(domainObject);
                         }
                         else {
-                            log.info("No DomainObjectHelper found for {}, using default remove function",domainObject);
-                            DomainMgr.getDomainMgr().getModel().remove(Arrays.asList(domainObject));
+                            log.warn("No DomainObjectHelper found for {}, cannot delete.",domainObject);
                         }
                     }
                 }
