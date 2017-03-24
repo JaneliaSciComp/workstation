@@ -14,6 +14,7 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Date;
+import java.util.List;
 import java.util.PrimitiveIterator;
 import java.util.Random;
 import java.util.stream.DoubleStream;
@@ -23,7 +24,7 @@ import java.util.stream.LongStream;
  * Created by murphys on 3/2/17.
  */
 @Named("floatComputeTest")
-public class FloatComputeTestProcessor extends AbstractServiceProcessor<Long> {
+public class FloatComputeTestProcessor extends AbstractBasicLifeCycleServiceProcessor<Long> {
 
     private final static int DEFAULT_MATRIX_SIZE=700;
     private final static int DEFAULT_ITERATIONS=10;
@@ -33,6 +34,8 @@ public class FloatComputeTestProcessor extends AbstractServiceProcessor<Long> {
         Integer matrixSize=DEFAULT_MATRIX_SIZE;
         @Parameter(names = "-iterations", description = "Iterations per matrix multiply", required = false)
         Integer iterations=DEFAULT_ITERATIONS;
+        @Parameter(names = "-testName", description = "Optional unique test name", required = false)
+        String testName="Default Test Name";
     }
 
     private FloatComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
@@ -43,10 +46,11 @@ public class FloatComputeTestProcessor extends AbstractServiceProcessor<Long> {
 
     @Inject
     public FloatComputeTestProcessor (JacsServiceEngine jacsServiceEngine,
-            ServiceComputationFactory computationFactory,
-            @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-            Logger logger) {
-        super(jacsServiceEngine, computationFactory, defaultWorkingDir, logger);
+                                      ServiceComputationFactory computationFactory,
+                                      JacsServiceDataPersistence jacsServiceDataPersistence,
+                                      @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                                      Logger logger) {
+        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
     }
 
     @Override
@@ -55,7 +59,27 @@ public class FloatComputeTestProcessor extends AbstractServiceProcessor<Long> {
     }
 
     @Override
-    public ServiceComputation<Long> process(JacsServiceData jacsServiceData) {
+    protected Long getResult(JacsServiceData jacsServiceData) {
+        return null;
+    }
+
+    @Override
+    protected void setResult(Long result, JacsServiceData jacsServiceData) {
+
+    }
+
+    @Override
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
+    }
+
+    @Override
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+        return null;
+    }
+
+    @Override
+    public ServiceComputation<Long> processing(JacsServiceData jacsServiceData) {
         logger.debug("localProcessData() start");
         FloatComputeTestArgs args=getArgs(jacsServiceData);
         int matrixSize=DEFAULT_MATRIX_SIZE;
@@ -107,6 +131,15 @@ public class FloatComputeTestProcessor extends AbstractServiceProcessor<Long> {
         return computationFactory.newCompletedComputation(resultComputationTime);
     }
 
+    @Override
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
+        return false;
+    }
+
+    @Override
+    protected Long retrieveResult(JacsServiceData jacsServiceData) {
+        return null;
+    }
 
 
 }

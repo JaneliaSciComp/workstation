@@ -14,6 +14,7 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Date;
+import java.util.List;
 import java.util.PrimitiveIterator;
 import java.util.Random;
 import java.util.stream.LongStream;
@@ -22,7 +23,7 @@ import java.util.stream.LongStream;
  * Created by murphys on 2/23/17.
  */
 @Named("integerComputeTest")
-public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> {
+public class IntegerComputeTestProcessor extends AbstractBasicLifeCycleServiceProcessor<Long> {
 
     private static final int DEFAULT_MATRIX_SIZE=700;
     private static final int DEFAULT_ITERATIONS=10;
@@ -32,6 +33,8 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
         Integer matrixSize=DEFAULT_MATRIX_SIZE;
         @Parameter(names = "-iterations", description = "Iterations per matrix multiply", required = false)
         Integer iterations=DEFAULT_ITERATIONS;
+        @Parameter(names = "-testName", description = "Optional unique test name", required = false)
+        String testName="Default Test Name";
     }
 
     private long resultComputationTime;
@@ -42,10 +45,11 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
 
     @Inject
     public IntegerComputeTestProcessor (JacsServiceEngine jacsServiceEngine,
-            ServiceComputationFactory computationFactory,
-            @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-            Logger logger) {
-        super(jacsServiceEngine, computationFactory, defaultWorkingDir, logger);
+                                        ServiceComputationFactory computationFactory,
+                                        JacsServiceDataPersistence jacsServiceDataPersistence,
+                                        @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                                        Logger logger) {
+        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
     }
 
     @Override
@@ -54,7 +58,27 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
     }
 
     @Override
-    public ServiceComputation<Long> process(JacsServiceData jacsServiceData) {
+    protected Long getResult(JacsServiceData jacsServiceData) {
+        return null;
+    }
+
+    @Override
+    protected void setResult(Long result, JacsServiceData jacsServiceData) {
+
+    }
+
+    @Override
+    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+        return createComputation(jacsServiceData);
+    }
+
+    @Override
+    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+        return null;
+    }
+
+    @Override
+    public ServiceComputation<Long> processing(JacsServiceData jacsServiceData) {
         logger.debug("localProcessData() start");
         IntegerComputeTestArgs args=getArgs(jacsServiceData);
         int matrixSize=DEFAULT_MATRIX_SIZE;
@@ -104,6 +128,16 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
         resultComputationTime=doneTime-startTime;
         logger.debug("localProcessData() end, elapsed time ms="+resultComputationTime);
         return computationFactory.newCompletedComputation(resultComputationTime);
+    }
+
+    @Override
+    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
+        return false;
+    }
+
+    @Override
+    protected Long retrieveResult(JacsServiceData jacsServiceData) {
+        return null;
     }
 
 }
