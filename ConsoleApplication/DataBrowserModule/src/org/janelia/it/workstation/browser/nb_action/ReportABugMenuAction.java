@@ -31,11 +31,12 @@ public final class ReportABugMenuAction extends AbstractAction {
         
         JFrame parentFrame = WindowLocator.getMainFrame();
         String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
+        String subject = "Bug Report from "+AccessManager.getUsername();
         
         MailDialogueBox popup = MailDialogueBox.newDialog(parentFrame, email)
                 .withTitle("Create A Ticket")
                 .withPromptText("Problem Description:")
-                .withEmailSubject("Bug Report")
+                .withEmailSubject(subject)
                 .appendStandardPrefix()
                 .append("\n\nMessage:\n");
         
