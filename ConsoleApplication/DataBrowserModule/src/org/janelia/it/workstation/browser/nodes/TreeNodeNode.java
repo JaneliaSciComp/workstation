@@ -100,32 +100,20 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                             //    code just throws those non-node children at the end every time there's a reordering, 
                             //    but eventually we'll want to make it preserve the ordering. 
 
-                            DomainModel model = DomainMgr.getDomainMgr().getModel();
-                            
                             log.info("Reordering nodes with new permutation: {}", Arrays.toString(order));
         
                             // Get current children for the node
                             final List<Reference> children = getTreeNode().getChildren();
-                            
-                            // Build lookup of all the existing child indexes
-                            Map<DomainObject,Integer> oldIndexes = new HashMap<>();
-                            int k = 0;
-                            for(Reference ref : children) {
-                                DomainObject domainObject = model.getDomainObject(ref);
-                                oldIndexes.put(domainObject, k);
-                                log.debug("Curr {} = {}", k, domainObject.getName());
-                                k++;
-                            }
-                            
+                                                        
                             // Build new list of ordered nodes
-                            Map<DomainObject, Integer> newPositions = new HashMap<>();
+                            Map<Reference, Integer> newPositions = new HashMap<>();
                             for(int i=0; i<nodes.length; i++) {
                                 Node node = nodes[i];
-                                int newPos = order[i];
                                 if (node instanceof DomainObjectNode) {
+                                    int newPos = order[i];
                                     DomainObjectNode<?> domainObjectNode = (DomainObjectNode<?>)node;
                                     DomainObject domainObject = domainObjectNode.getDomainObject();
-                                    newPositions.put(domainObject, newPos);
+                                    newPositions.put(Reference.createFor(domainObject), newPos);
                                     log.debug("Setting node {} at {}", domainObject.getName(), newPos);
                                 }
                                 else {
@@ -136,11 +124,10 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                             // Add the objects which are not represented as nodes
                             int nextIndex = newPositions.size();
                             for(Reference ref : children) {
-                                DomainObject domainObject = model.getDomainObject(ref);
-                                if (!newPositions.containsKey(domainObject)) {
+                                if (!newPositions.containsKey(ref)) {
                                     int newPos = nextIndex++;
-                                    newPositions.put(domainObject, newPos);
-                                    log.debug("Setting non-node {} at {}", domainObject.getName(), newPos);
+                                    newPositions.put(ref, newPos);
+                                    log.debug("Setting non-node {} at {}", ref, newPos);
                                 }
                             }
                             
@@ -148,13 +135,12 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                             int[] trueOrder = new int[children.size()];
                             int i = 0;
                             for(Reference ref : children) {
-                                DomainObject domainObject = model.getDomainObject(ref);
-                                int newPos = newPositions.get(domainObject);
+                                int newPos = newPositions.get(ref);
                                 trueOrder[i++] = newPos; 
                             }
         
                             log.info("Reordering children with new permutation: {}", Arrays.toString(trueOrder));
-                            model.reorderChildren(getTreeNode(), trueOrder);
+                            DomainMgr.getDomainMgr().getModel().reorderChildren(getTreeNode(), trueOrder);
                         }
                         @Override
                         protected void hadSuccess() {
