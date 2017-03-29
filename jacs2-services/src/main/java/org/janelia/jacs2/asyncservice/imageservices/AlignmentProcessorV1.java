@@ -3,15 +3,15 @@ package org.janelia.jacs2.asyncservice.imageservices;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
-import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
+import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractFileListServiceResultHandler;
+import org.janelia.jacs2.asyncservice.utils.FileUtils;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.asyncservice.utils.X11Utils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Named("alignV1")
 public class AlignmentProcessorV1 extends AbstractExeBasedServiceProcessor<List<File>> {
@@ -91,16 +92,15 @@ public class AlignmentProcessorV1 extends AbstractExeBasedServiceProcessor<List<
     private final String libraryPath;
 
     @Inject
-    AlignmentProcessorV1(JacsServiceEngine jacsServiceEngine,
-                         ServiceComputationFactory computationFactory,
+    AlignmentProcessorV1(ServiceComputationFactory computationFactory,
                          JacsServiceDataPersistence jacsServiceDataPersistence,
+                         @Any Instance<ExternalProcessRunner> serviceRunners,
                          @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                          @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-                         @Any Instance<ExternalProcessRunner> serviceRunners,
                          @PropertyValue(name = "Alignment.Script.Path") String alignmentScript,
                          @PropertyValue(name = "Alignment.Library.Path") String libraryPath,
                          Logger logger) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+        super(computationFactory, jacsServiceDataPersistence, serviceRunners, defaultWorkingDir, executablesBaseDir, logger);
         this.alignmentScript = alignmentScript;
         this.libraryPath = libraryPath;
     }
@@ -111,55 +111,35 @@ public class AlignmentProcessorV1 extends AbstractExeBasedServiceProcessor<List<
     }
 
     @Override
-    public List<File> getResult(JacsServiceData jacsServiceData) {
-        return ServiceDataUtils.stringToFileList(jacsServiceData.getStringifiedResult());
+    public ServiceResultHandler<List<File>> getResultHandler() {
+        return new AbstractFileListServiceResultHandler() {
+            final String resultsPattern = "glob:**/*.{v3draw}";
+
+            @Override
+            public boolean isResultReady(JacsServiceData jacsServiceData) {
+                AlignmentArgs args = getArgs(jacsServiceData);
+                return FileUtils.lookupFiles(getResultsDir(args), 1, resultsPattern).count() > 0;
+            }
+
+            @Override
+            public List<File> collectResult(JacsServiceData jacsServiceData) {
+                AlignmentArgs args = getArgs(jacsServiceData);
+                return FileUtils.lookupFiles(getResultsDir(args), 1, resultsPattern)
+                        .map(fp -> fp.toFile())
+                        .collect(Collectors.toList());
+            }
+        };
     }
 
     @Override
-    public void setResult(List<File> result, JacsServiceData jacsServiceData) {
-        jacsServiceData.setStringifiedResult(ServiceDataUtils.fileListToString(result));
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+    protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
         AlignmentArgs args = getArgs(jacsServiceData);
         try {
             Files.createDirectories(getResultsDir(args));
         } catch (IOException e) {
             throw new ComputationException(jacsServiceData, e);
         }
-        return createComputation(jacsServiceData);
-    }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        AlignmentArgs args = getArgs(jacsServiceData);
-        // count v3dpbd
-        try {
-            String resultsPattern = "glob:**/*.{v3dpbd}";
-            PathMatcher inputFileMatcher =
-                    FileSystems.getDefault().getPathMatcher(resultsPattern);
-            long nFiles = Files.find(getResultsDir(args), 1, (p, a) -> inputFileMatcher.matches(p)).count();
-            return nFiles > 0;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    @Override
-    protected List<File> retrieveResult(JacsServiceData jacsServiceData) {
-        AlignmentArgs args = getArgs(jacsServiceData);
-        // collect all v3dpbd
-        List<File> results = new ArrayList<>();
-        try {
-            String resultsPattern = "glob:**/*.{v3dpbd}";
-            PathMatcher inputFileMatcher =
-                    FileSystems.getDefault().getPathMatcher(resultsPattern);
-            Files.find(getResultsDir(args), 1, (p, a) -> inputFileMatcher.matches(p)).forEach(p -> results.add(p.toFile()));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        return results;
+        return jacsServiceData;
     }
 
     @Override
@@ -240,11 +220,7 @@ public class AlignmentProcessorV1 extends AbstractExeBasedServiceProcessor<List<
     }
 
     private String getAlignmentScript(AlignmentArgs args) {
-        if (alignmentScript.startsWith("/")) {
-            return alignmentScript;
-        } else {
-            return getFullExecutableName(alignmentScript);
-        }
+        return getFullExecutableName(alignmentScript);
     }
 
     private Path getResultsDir(AlignmentArgs args) {

@@ -1,7 +1,7 @@
 package org.janelia.jacs2.asyncservice.common;
 
 import com.google.common.collect.ImmutableList;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.VoidServiceResultHandler;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
@@ -29,14 +29,11 @@ public class AbstractBasicLifeCycleServiceProcessorTest {
 
     static class TestSuccessfulProcessorBasicLifeCycle extends AbstractBasicLifeCycleServiceProcessor<Void> {
 
-        private long timeout = -1;
-
-        public TestSuccessfulProcessorBasicLifeCycle(JacsServiceEngine jacsServiceEngine,
-                                                     ServiceComputationFactory computationFactory,
+        public TestSuccessfulProcessorBasicLifeCycle(ServiceComputationFactory computationFactory,
                                                      JacsServiceDataPersistence jacsServiceDataPersistence,
                                                      String defaultWorkingDir,
                                                      Logger logger) {
-            super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+            super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         }
 
         @Override
@@ -45,23 +42,8 @@ public class AbstractBasicLifeCycleServiceProcessorTest {
         }
 
         @Override
-        public Void getResult(JacsServiceData jacsServiceData) {
-            return null;
-        }
-
-        @Override
-        public void setResult(Void result, JacsServiceData jacsServiceData) {
-        }
-
-        @Override
-        protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-            if (timeout > 0) {
-                try {
-                    Thread.sleep(timeout);
-                } catch (InterruptedException e) {
-                }
-            }
-            return createComputation(jacsServiceData);
+        public ServiceResultHandler<Void> getResultHandler() {
+            return new VoidServiceResultHandler();
         }
 
         @Override
@@ -70,33 +52,18 @@ public class AbstractBasicLifeCycleServiceProcessorTest {
         }
 
         @Override
-        protected ServiceComputation<Void> processing(JacsServiceData jacsServiceData) {
-            return createComputation(this.waitForResult(jacsServiceData));
-        }
-
-        @Override
-        protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-            return true;
-        }
-
-        @Override
-        protected Void retrieveResult(JacsServiceData jacsServiceData) {
-            return null;
-        }
-
-        public void setTimeout(long timeout) {
-            this.timeout = timeout;
+        protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
+            return computationFactory.newCompletedComputation(jacsServiceData);
         }
     }
 
     static class TestFailedProcessorBasicLifeCycle extends AbstractBasicLifeCycleServiceProcessor<Void> {
 
-        public TestFailedProcessorBasicLifeCycle(JacsServiceEngine jacsServiceEngine,
-                                                 ServiceComputationFactory computationFactory,
+        public TestFailedProcessorBasicLifeCycle(ServiceComputationFactory computationFactory,
                                                  JacsServiceDataPersistence jacsServiceDataPersistence,
                                                  String defaultWorkingDir,
                                                  Logger logger) {
-            super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+            super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         }
 
         @Override
@@ -105,42 +72,18 @@ public class AbstractBasicLifeCycleServiceProcessorTest {
         }
 
         @Override
-        public Void getResult(JacsServiceData jacsServiceData) {
-            return null;
+        public ServiceResultHandler<Void> getResultHandler() {
+            return new VoidServiceResultHandler();
         }
 
         @Override
-        public void setResult(Void result, JacsServiceData jacsServiceData) {
+        protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
+            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData));
         }
 
-        @Override
-        protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-            return createComputation(jacsServiceData);
-        }
-
-        @Override
-        protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
-            return ImmutableList.of();
-        }
-
-        @Override
-        protected ServiceComputation<Void> processing(JacsServiceData jacsServiceData) {
-            return createComputation(this.waitForResult(jacsServiceData));
-        }
-
-        @Override
-        protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-            return false;
-        }
-
-        @Override
-        protected Void retrieveResult(JacsServiceData jacsServiceData) {
-            return null;
-        }
     }
 
     private JacsServiceDataPersistence jacsServiceDataPersistence;
-    private JacsServiceEngine jacsServiceEngine;
     private ServiceComputationFactory serviceComputationFactory;
     private Logger logger;
 
@@ -170,17 +113,14 @@ public class AbstractBasicLifeCycleServiceProcessorTest {
 
         testJacsServiceData = new JacsServiceData();
         testJacsServiceData.setId(TEST_ID);
-        jacsServiceEngine = mock(JacsServiceEngine.class);
         jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
 
         testSuccessfullProcessor = new TestSuccessfulProcessorBasicLifeCycle(
-                jacsServiceEngine,
                 serviceComputationFactory,
                 jacsServiceDataPersistence,
                 TEST_WORKING_DIR,
                 logger);
         testFailedProcessor = new TestFailedProcessorBasicLifeCycle(
-            jacsServiceEngine,
                 serviceComputationFactory,
                 jacsServiceDataPersistence,
                 TEST_WORKING_DIR,
@@ -272,6 +212,35 @@ public class AbstractBasicLifeCycleServiceProcessorTest {
         verify(successful).accept(any());
         verify(failure, never()).accept(any());
         assertThat(testJacsServiceData.getState(), equalTo(JacsServiceState.SUCCESSFUL));
+    }
+
+    @Test
+    public void processingTimeout() {
+        Consumer successful = mock(Consumer.class);
+        Consumer failure = mock(Consumer.class);
+
+        JacsServiceData testJacsServiceDataDependency = new JacsServiceData();
+        testJacsServiceDataDependency.setId(TEST_ID.longValue() + 1);
+        testJacsServiceDataDependency.setState(JacsServiceState.RUNNING);
+
+        testJacsServiceData.addServiceDependency(testJacsServiceDataDependency);
+        testJacsServiceData.setServiceTimeout(1L);
+
+        when(jacsServiceDataPersistence.findById(TEST_ID)).thenReturn(testJacsServiceData);
+        when(jacsServiceDataPersistence.findServiceHierarchy(TEST_ID))
+                .thenReturn(testJacsServiceData);
+
+        testSuccessfullProcessor.process(testJacsServiceData)
+                .whenComplete((r, e) -> {
+                    if (e == null) {
+                        successful.accept(r);
+                    } else {
+                        failure.accept(e);
+                    }
+                });
+        verify(successful, never()).accept(any());
+        verify(failure).accept(any());
+        assertThat(testJacsServiceData.getState(), equalTo(JacsServiceState.TIMEOUT));
     }
 
     @Test

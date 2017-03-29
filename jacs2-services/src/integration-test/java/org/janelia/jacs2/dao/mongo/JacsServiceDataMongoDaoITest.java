@@ -28,6 +28,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServiceData> {
@@ -44,6 +45,16 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
     public void tearDown() {
         // delete the data that was created for testing
         deleteAll(testDao, testData);
+    }
+
+    @Test
+    public void findByNullId() {
+        assertNull(testDao.findById(null));
+    }
+
+    @Test
+    public void findHierarchyByNullId() {
+        assertNull(testDao.findServiceHierarchy(null));
     }
 
     @Test

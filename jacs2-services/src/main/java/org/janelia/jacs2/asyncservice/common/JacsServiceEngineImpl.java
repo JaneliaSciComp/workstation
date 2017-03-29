@@ -15,7 +15,10 @@ import org.slf4j.Logger;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.Semaphore;
 
 @Singleton
@@ -121,17 +124,6 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
 
     @Override
     public JacsServiceData submitSingleService(JacsServiceData serviceArgs) {
-        if (serviceArgs.hasParentServiceId()) {
-            List<JacsServiceData> childServices = jacsServiceDataPersistence.findChildServices(serviceArgs.getParentServiceId());
-            Optional<JacsServiceData> existingChildService =
-                    childServices.stream()
-                            .filter(s -> s.getName().equals(serviceArgs.getName()))
-                            .filter(s -> s.getArgs().equals(serviceArgs.getArgs()))
-                            .findFirst();
-            if (existingChildService.isPresent()) {
-                return existingChildService.get(); // do not resubmit
-            }
-        }
         jacsServiceDataPersistence.saveHierarchy(serviceArgs);
         return serviceArgs;
     }

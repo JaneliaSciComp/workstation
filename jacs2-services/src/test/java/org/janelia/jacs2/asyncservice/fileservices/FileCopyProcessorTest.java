@@ -1,22 +1,25 @@
 package org.janelia.jacs2.asyncservice.fileservices;
 
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationQueue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
-import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -34,7 +37,9 @@ import static org.mockito.Mockito.mock;
 
 public class FileCopyProcessorTest {
 
-    private JacsServiceEngine jacsServiceEngine;
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
+
     private ServiceComputationQueue computationQueue;
     private ServiceComputationFactory serviceComputationFactory;
     private JacsServiceDataPersistence jacsServiceDataPersistence;
@@ -59,13 +64,11 @@ public class FileCopyProcessorTest {
         computationQueue = new ServiceComputationQueue(executor, executor);
         serviceComputationFactory = new ServiceComputationFactory(computationQueue, logger);
 
-        testProcessor = new FileCopyProcessor(
-                jacsServiceEngine,
-                serviceComputationFactory,
+        testProcessor = new FileCopyProcessor(serviceComputationFactory,
                 jacsServiceDataPersistence,
+                serviceRunners,
                 defaultWorkingDir,
                 executablesBaseDir,
-                serviceRunners,
                 libraryPath,
                 scriptName,
                 logger);
@@ -84,8 +87,8 @@ public class FileCopyProcessorTest {
                     .addArg("-src", "/home/testSource")
                     .addArg("-dst", testDestFile.getAbsolutePath())
                     .build();
-        ServiceComputation<JacsServiceData> preprocessStage = testProcessor.prepareProcessing(testServiceData);
-        assertTrue(preprocessStage.isDone());
+        testProcessor.prepareProcessing(testServiceData);
+        assertTrue(testDestFile.getParentFile().exists());
     }
 
     @Test
@@ -112,9 +115,8 @@ public class FileCopyProcessorTest {
    }
 
     private void verifyCompletionWithException(JacsServiceData testServiceData) throws ExecutionException, InterruptedException {
-        ServiceComputation<JacsServiceData> preprocessStage = testProcessor.prepareProcessing(testServiceData);
-
-        assertTrue(preprocessStage.isCompletedExceptionally());
+        expectedException.expect(ComputationException.class);
+        testProcessor.prepareProcessing(testServiceData);
     }
 
     @Test
@@ -128,8 +130,7 @@ public class FileCopyProcessorTest {
                 .addArg("-convert8")
                 .build();
         assertTrue(Files.exists(testSourcePath));
-        ServiceComputation<File> doneStage = testProcessor.postProcessing(testServiceData, testDestFile);
-        assertTrue(doneStage.isDone());
+        testProcessor.postProcessing(new JacsServiceResult<>(testServiceData, testDestFile));
         assertTrue(Files.notExists(testSourcePath));
     }
 
@@ -144,8 +145,8 @@ public class FileCopyProcessorTest {
                     .addArg("-mv")
                     .addArg("-convert8")
                     .build();
-            ServiceComputation<File> postProcessing = testProcessor.postProcessing(testServiceData, testDestFile);
-            assertTrue(postProcessing.isCompletedExceptionally());
+            expectedException.expect(UncheckedIOException.class);
+            testProcessor.postProcessing(new JacsServiceResult<>(testServiceData, testDestFile));
             assertTrue(Files.exists(testSourcePath));
         } finally {
             Files.deleteIfExists(testSourcePath);
@@ -162,8 +163,7 @@ public class FileCopyProcessorTest {
                     .addArg("-dst", testDestFile.getAbsolutePath())
                     .addArg("-convert8")
                     .build();
-            ServiceComputation<File> postProcessing = testProcessor.postProcessing(testServiceData, testDestFile);
-            assertTrue(postProcessing.isDone());
+            testProcessor.postProcessing(new JacsServiceResult<>(testServiceData, testDestFile));
             assertTrue(Files.exists(testSourcePath));
         } finally {
             Files.deleteIfExists(testSourcePath);

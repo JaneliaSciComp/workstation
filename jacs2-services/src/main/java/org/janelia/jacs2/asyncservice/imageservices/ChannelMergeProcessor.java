@@ -3,14 +3,15 @@ package org.janelia.jacs2.asyncservice.imageservices;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.DefaultServiceErrorChecker;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
-import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
+import org.janelia.jacs2.asyncservice.common.ServiceErrorChecker;
+import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractSingleFileServiceResultHandler;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.asyncservice.utils.X11Utils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
@@ -50,16 +51,15 @@ public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File
     private final String libraryPath;
 
     @Inject
-    ChannelMergeProcessor(JacsServiceEngine jacsServiceEngine,
-                          ServiceComputationFactory computationFactory,
+    ChannelMergeProcessor(ServiceComputationFactory computationFactory,
                           JacsServiceDataPersistence jacsServiceDataPersistence,
+                          @Any Instance<ExternalProcessRunner> serviceRunners,
                           @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                           @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-                          @Any Instance<ExternalProcessRunner> serviceRunners,
                           @PropertyValue(name = "LSMMerge.ScriptPath") String lsmMergeScript,
                           @PropertyValue(name = "VAA3D.Library.Path") String libraryPath,
                           Logger logger) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+        super(computationFactory, jacsServiceDataPersistence, serviceRunners, defaultWorkingDir, executablesBaseDir, logger);
         this.lsmMergeScript = lsmMergeScript;
         this.libraryPath = libraryPath;
     }
@@ -70,34 +70,44 @@ public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File
     }
 
     @Override
-    public File getResult(JacsServiceData jacsServiceData) {
-        return ServiceDataUtils.stringToFile(jacsServiceData.getStringifiedResult());
+    public ServiceResultHandler<File> getResultHandler() {
+        return new AbstractSingleFileServiceResultHandler() {
+
+            @Override
+            public boolean isResultReady(JacsServiceData jacsServiceData) {
+                File outputFile = getMergedLsmResultFile(jacsServiceData);
+                return outputFile.exists();
+            }
+
+            @Override
+            public File collectResult(JacsServiceData jacsServiceData) {
+                return getMergedLsmResultFile(jacsServiceData);
+            }
+        };
     }
 
     @Override
-    public void setResult(File result, JacsServiceData jacsServiceData) {
-        jacsServiceData.setStringifiedResult(ServiceDataUtils.fileToString(result));
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData);
+    public ServiceErrorChecker getErrorChecker() {
+        return new DefaultServiceErrorChecker(logger) {
+            @Override
+            protected boolean hasErrors(String l) {
+                boolean result = super.hasErrors(l);
+                if (result) {
+                    return true;
+                }
+                if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(fail to call the plugin).*)")) {
+                    logger.error(l);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        };
     }
 
     @Override
     protected Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData) {
         return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
-    }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        File mergedLsmResultFile = getMergedLsmResultFile(jacsServiceData);
-        return mergedLsmResultFile.exists();
-    }
-
-    @Override
-    protected File retrieveResult(JacsServiceData jacsServiceData) {
-        return getMergedLsmResultFile(jacsServiceData);
     }
 
     @Override
@@ -126,20 +136,6 @@ public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File
                     .endArgs("");
         } catch (IOException e) {
             throw new UncheckedIOException(e);
-        }
-    }
-
-    @Override
-    protected boolean hasErrors(String l) {
-        boolean result = super.hasErrors(l);
-        if (result) {
-            return true;
-        }
-        if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(fail to call the plugin).*)")) {
-            logger.error(l);
-            return true;
-        } else {
-            return false;
         }
     }
 

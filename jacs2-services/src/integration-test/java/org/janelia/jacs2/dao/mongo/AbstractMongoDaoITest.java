@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Random;
 
 public abstract class AbstractMongoDaoITest<T extends HasIdentifier> extends AbstractITest {
-    protected static final String TEST_OWNER_KEY = "user:test";
-
     private static MongoClient testMongoClient;
     protected static ObjectMapperFactory testObjectMapperFactory = ObjectMapperFactory.instance();
 

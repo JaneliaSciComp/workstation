@@ -4,32 +4,30 @@ import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.DefaultServiceErrorChecker;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceErrorChecker;
 import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
+import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractFileListServiceResultHandler;
 import org.janelia.jacs2.asyncservice.imageservices.BasicMIPsAndMoviesProcessor;
+import org.janelia.jacs2.asyncservice.utils.FileUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.sample.SampleDataService;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
-import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,15 +48,14 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
     private final BasicMIPsAndMoviesProcessor basicMIPsAndMoviesProcessor;
 
     @Inject
-    GetSampleMIPsAndMoviesProcessor(JacsServiceEngine jacsServiceEngine,
-                                    ServiceComputationFactory computationFactory,
+    GetSampleMIPsAndMoviesProcessor(ServiceComputationFactory computationFactory,
                                     JacsServiceDataPersistence jacsServiceDataPersistence,
                                     @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                     SampleDataService sampleDataService,
-                                    Logger logger,
                                     GetSampleImageFilesProcessor getSampleImageFilesProcessor,
-                                    BasicMIPsAndMoviesProcessor basicMIPsAndMoviesProcessor) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+                                    BasicMIPsAndMoviesProcessor basicMIPsAndMoviesProcessor,
+                                    Logger logger) {
+        super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.sampleDataService = sampleDataService;
         this.getSampleImageFilesProcessor = getSampleImageFilesProcessor;
         this.basicMIPsAndMoviesProcessor = basicMIPsAndMoviesProcessor;
@@ -70,28 +67,58 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
     }
 
     @Override
-    public List<File> getResult(JacsServiceData jacsServiceData) {
-        return ServiceDataUtils.stringToFileList(jacsServiceData.getStringifiedResult());
+    public ServiceResultHandler<List<File>> getResultHandler() {
+        return new AbstractFileListServiceResultHandler() {
+            final String resultsPattern = "glob:**/*.{png,avi,mp4}";
+
+            @Override
+            public boolean isResultReady(JacsServiceData jacsServiceData) {
+                return areAllDependenciesDone(jacsServiceData);
+            }
+
+            @Override
+            public List<File> collectResult(JacsServiceData jacsServiceData) {
+                SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
+                List<AnatomicalArea> anatomicalAreas =
+                        sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
+                List<File> results = new ArrayList<>();
+                anatomicalAreas.stream()
+                        .flatMap(ar -> ar.getTileLsmPairs()
+                                .stream()
+                                .flatMap(lsmp -> lsmp.getLsmFiles().stream())
+                                .map(lsmf -> {
+                                    File lsmImageFile = SampleServicesUtils.getImageFile(Paths.get(args.sampleDataDir), lsmf);
+
+                                    if (!lsmf.isChanSpecDefined()) {
+                                        throw new ComputationException(jacsServiceData, "No channel spec for LSM " + lsmf.getId());
+                                    }
+                                    return getResultsDir(args, ar.getName(), ar.getObjective(), lsmImageFile);
+                                }))
+                        .forEach(resultsDir -> {
+                            FileUtils.lookupFiles(resultsDir, 1, resultsPattern).forEach(p -> results.add(p.toFile()));
+                        });
+                return results;
+            }
+        };
     }
 
     @Override
-    public void setResult(List<File> result, JacsServiceData jacsServiceData) {
-        jacsServiceData.setStringifiedResult(ServiceDataUtils.fileListToString(result));
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData);
+    public ServiceErrorChecker getErrorChecker() {
+        return new DefaultServiceErrorChecker(logger);
     }
 
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
 
-        JacsServiceData getSampleLsms = submit(getSampleImageFilesProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData),
+        JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
+
+        JacsServiceData getSampleLsmsServiceRef = getSampleImageFilesProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
-                new ServiceArg("-sampleDataDir", args.sampleDataDir)));
+                new ServiceArg("-sampleDataDir", args.sampleDataDir)
+        );
+        JacsServiceData getSampleLsmsService = submitDependencyIfNotPresent(jacsServiceDataHierarchy, getSampleLsmsServiceRef);
 
         List<AnatomicalArea> anatomicalAreas =
                 sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
@@ -106,8 +133,8 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
                                 throw new ComputationException(jacsServiceData, "No channel spec for LSM " + lsmf.getId());
                             }
                             Path resultsDir =  getResultsDir(args, ar.getName(), ar.getObjective(), lsmImageFile);
-                            return submit(basicMIPsAndMoviesProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
-                                            .waitFor(getSampleLsms)
+                            JacsServiceData basicMipMapsService = basicMIPsAndMoviesProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                                            .waitFor(getSampleLsmsService)
                                             .build(),
                                     new ServiceArg("-imgFile", lsmImageFile.getAbsolutePath()),
                                     new ServiceArg("-chanSpec", lsmf.getChanSpec()),
@@ -115,51 +142,16 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
                                     new ServiceArg("-laser", null), // no laser info in the lsm
                                     new ServiceArg("-gain", null), // no gain info in the lsm
                                     new ServiceArg("-options", args.options),
-                                    new ServiceArg("-resultsDir", resultsDir.toString())));
+                                    new ServiceArg("-resultsDir", resultsDir.toString())
+                            );
+                            return submitDependencyIfNotPresent(jacsServiceDataHierarchy, basicMipMapsService);
                         }))
                 .collect(Collectors.toList());
     }
 
-    protected ServiceComputation<List<File>> processing(JacsServiceData jacsServiceData) {
-        return createComputation(this.waitForResult(jacsServiceData));
-    }
-
     @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        return checkForDependenciesCompletion(jacsServiceData);
-    }
-
-    @Override
-    protected List<File> retrieveResult(JacsServiceData jacsServiceData) {
-        SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
-        // collect all AVIs, PNGs and MP4s
-        String resultsPattern = "glob:**/*.{png,avi,mp4}";
-        PathMatcher inputFileMatcher =
-                FileSystems.getDefault().getPathMatcher(resultsPattern);
-        List<AnatomicalArea> anatomicalAreas =
-                sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
-
-        List<File> results = new ArrayList<>();
-        anatomicalAreas.stream()
-                .flatMap(ar -> ar.getTileLsmPairs()
-                        .stream()
-                        .flatMap(lsmp -> lsmp.getLsmFiles().stream())
-                        .map(lsmf -> {
-                            File lsmImageFile = SampleServicesUtils.getImageFile(Paths.get(args.sampleDataDir), lsmf);
-
-                            if (!lsmf.isChanSpecDefined()) {
-                                throw new ComputationException(jacsServiceData, "No channel spec for LSM " + lsmf.getId());
-                            }
-                            return getResultsDir(args, ar.getName(), ar.getObjective(), lsmImageFile);
-                        }))
-                .forEach(resultsDir -> {
-                    try {
-                        Files.find(resultsDir, 1, (p, a) -> inputFileMatcher.matches(p)).forEach(p -> results.add(p.toFile()));
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                });
-        return results;
+    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
+        return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
     private Path getResultsDir(SampleMIPsAndMoviesArgs args, String area, String objective, File lsmImageFile) {

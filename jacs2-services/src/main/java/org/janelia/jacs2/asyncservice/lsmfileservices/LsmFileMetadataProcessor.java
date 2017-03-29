@@ -4,19 +4,18 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractSingleFileServiceResultHandler;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
-import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
-import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
@@ -47,17 +46,16 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
     private final String scriptName;
 
     @Inject
-    LsmFileMetadataProcessor(JacsServiceEngine jacsServiceEngine,
-                             ServiceComputationFactory computationFactory,
+    LsmFileMetadataProcessor(ServiceComputationFactory computationFactory,
                              JacsServiceDataPersistence jacsServiceDataPersistence,
+                             @Any Instance<ExternalProcessRunner> serviceRunners,
                              @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                              @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-                             @Any Instance<ExternalProcessRunner> serviceRunners,
                              @PropertyValue(name = "Perl.Path") String perlExecutable,
                              @PropertyValue(name = "Sage.Perllib") String perlModule,
                              @PropertyValue(name = "LSMJSONDump.CMD") String scriptName,
                              Logger logger) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+        super(computationFactory, jacsServiceDataPersistence, serviceRunners, defaultWorkingDir, executablesBaseDir, logger);
         this.perlExecutable = perlExecutable;
         this.perlModule = perlModule;
         this.scriptName = scriptName;
@@ -69,46 +67,38 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
     }
 
     @Override
-    public File getResult(JacsServiceData jacsServiceData) {
-        return ServiceDataUtils.stringToFile(jacsServiceData.getStringifiedResult());
+    public ServiceResultHandler<File> getResultHandler() {
+        return new AbstractSingleFileServiceResultHandler() {
+
+            @Override
+            public boolean isResultReady(JacsServiceData jacsServiceData) {
+                File outputFile = getOutputFile(getArgs(jacsServiceData));
+                return outputFile.exists();
+            }
+
+            @Override
+            public File collectResult(JacsServiceData jacsServiceData) {
+                return getOutputFile(getArgs(jacsServiceData));
+            }
+        };
     }
 
     @Override
-    public void setResult(File result, JacsServiceData jacsServiceData) {
-        jacsServiceData.setStringifiedResult(ServiceDataUtils.fileToString(result));
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+    protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
         try {
             LsmFileMetadataArgs args = getArgs(jacsServiceData);
             if (StringUtils.isBlank(args.inputLSMFile)) {
-                return createFailure(new ComputationException(jacsServiceData, "Input LSM file name must be specified"));
+                throw new ComputationException(jacsServiceData, "Input LSM file name must be specified");
             } else if (StringUtils.isBlank(args.outputLSMMetadata)) {
-                return createFailure(new ComputationException(jacsServiceData, "Output LSM metadata name must be specified"));
+                throw new ComputationException(jacsServiceData, "Output LSM metadata name must be specified");
             } else {
                 File outputFile = getOutputFile(args);
-                try {
-                    Files.createDirectories(outputFile.getParentFile().toPath());
-                } catch (IOException e) {
-                    return createFailure(e);
-                }
-                return createComputation(jacsServiceData);
+                Files.createDirectories(outputFile.getParentFile().toPath());
             }
-        } catch (Exception e) {
-            return createFailure(e);
+        } catch (IOException e) {
+            throw new ComputationException(jacsServiceData, e);
         }
-    }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        File lsmMetadataFile = getOutputFile(getArgs(jacsServiceData));
-        return lsmMetadataFile.exists();
-    }
-
-    @Override
-    protected File retrieveResult(JacsServiceData jacsServiceData) {
-        return getOutputFile(getArgs(jacsServiceData));
+        return jacsServiceData;
     }
 
     @Override

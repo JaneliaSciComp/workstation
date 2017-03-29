@@ -1,9 +1,12 @@
 package org.janelia.jacs2.asyncservice.common;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.VoidServiceResultHandler;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
+import org.janelia.jacs2.model.jacsservice.ProcessingLocation;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,10 +15,14 @@ import org.slf4j.Logger;
 import javax.enterprise.inject.Instance;
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.Consumer;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class AbstractExeBasedServiceProcessorTest {
 
@@ -24,14 +31,13 @@ public class AbstractExeBasedServiceProcessorTest {
 
     private static class TestExternalProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
-        public TestExternalProcessor(JacsServiceEngine jacsServiceEngine,
-                                     ServiceComputationFactory computationFactory,
+        public TestExternalProcessor(ServiceComputationFactory computationFactory,
                                      JacsServiceDataPersistence jacsServiceDataPersistence,
                                      Instance<ExternalProcessRunner> serviceRunners,
                                      String defaultWorkingDir,
                                      String executablesBaseDir,
                                      Logger logger) {
-            super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+            super(computationFactory, jacsServiceDataPersistence, serviceRunners, defaultWorkingDir, executablesBaseDir, logger);
         }
 
         @Override
@@ -40,18 +46,8 @@ public class AbstractExeBasedServiceProcessorTest {
         }
 
         @Override
-        protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-            return createComputation(jacsServiceData);
-        }
-
-        @Override
-        protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-            return true;
-        }
-
-        @Override
-        protected Void retrieveResult(JacsServiceData jacsServiceData) {
-            return null;
+        public ServiceResultHandler<Void> getResultHandler() {
+            return new VoidServiceResultHandler();
         }
 
         @Override
@@ -63,28 +59,35 @@ public class AbstractExeBasedServiceProcessorTest {
         protected Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData) {
             return Collections.emptyMap();
         }
-
-        @Override
-        public Void getResult(JacsServiceData jacsServiceData) {
-            return null;
-        }
-
-        @Override
-        public void setResult(Void result, JacsServiceData jacsServiceData) {
-        }
     }
 
     private AbstractExeBasedServiceProcessor<?> testProcessor;
+    private ExternalProcessRunner processRunner;
 
     @Before
     public void setUp() {
-        JacsServiceEngine jacsServiceEngine = mock(JacsServiceEngine.class);
-        ServiceComputationFactory serviceComputationFactory = mock(ServiceComputationFactory.class);
+        ServiceComputationQueue serviceComputationQueue = mock(ServiceComputationQueue.class);
+        doAnswer(invocation -> {
+            ServiceComputationTask task = invocation.getArgument(0);
+            if (task != null) {
+                for (;;) {
+                    ServiceComputationQueue.runTask(task);
+                    if (task.isDone()) {
+                        break;
+                    }
+                    Thread.sleep(10L);
+                }
+            }
+            return null;
+        }).when(serviceComputationQueue).submit(any(ServiceComputationTask.class));
+        Logger logger = mock(Logger.class);
+        ServiceComputationFactory serviceComputationFactory = new ServiceComputationFactory(serviceComputationQueue, logger);
         JacsServiceDataPersistence jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
         Instance<ExternalProcessRunner> serviceRunners = mock(Instance.class);
-        Logger logger = mock(Logger.class);
+        processRunner = mock(ExternalProcessRunner.class);
+        when(processRunner.supports(ProcessingLocation.LOCAL)).thenReturn(true);
+        when(serviceRunners.iterator()).thenReturn(ImmutableList.of(processRunner).iterator());
         testProcessor = new TestExternalProcessor(
-                            jacsServiceEngine,
                             serviceComputationFactory,
                             jacsServiceDataPersistence,
                             serviceRunners,
@@ -94,17 +97,74 @@ public class AbstractExeBasedServiceProcessorTest {
     }
 
     @Test
-    public void checkOutputErrors() {
-        ImmutableMap<String, Boolean> testData =
-                new ImmutableMap.Builder<String, Boolean>()
-                        .put("This has an error here", true)
-                        .put("This has an ERROR here", true)
-                        .put("This has an exception here", true)
-                        .put("No Exception", true)
-                        .put("OK here", false)
-                        .put("\n", false)
-                        .build();
-        testData.forEach((l, r) -> assertThat(testProcessor.hasErrors(l), equalTo(r)));
+    public void processing() {
+        JacsServiceData testServiceData = new JacsServiceData();
+        testServiceData.setName("test");
+        testServiceData.setProcessingLocation(ProcessingLocation.LOCAL);
+        ExeJobInfo jobInfo = mock(ExeJobInfo.class);
+        when(jobInfo.isDone()).thenReturn(true);
+        when(processRunner.runCmds(any(ExternalCodeBlock.class), any(Map.class), any(String.class), any(JacsServiceData.class))).thenReturn(jobInfo);
+
+        Consumer successful = mock(Consumer.class);
+        Consumer failure = mock(Consumer.class);
+        testProcessor.processing(testServiceData)
+            .whenComplete((r, e) -> {
+                if (e == null) {
+                    successful.accept(r);
+                } else {
+                    failure.accept(e);
+                }
+            });
+        verify(failure, never()).accept(any());
+        verify(successful).accept(any());
     }
 
+    @Test
+    public void processingError() {
+        JacsServiceData testServiceData = new JacsServiceData();
+        testServiceData.setName("test");
+        testServiceData.setServiceTimeout(10L);
+        testServiceData.setProcessingLocation(ProcessingLocation.LOCAL);
+        ExeJobInfo jobInfo = mock(ExeJobInfo.class);
+        when(jobInfo.isDone()).thenReturn(true);
+        when(jobInfo.hasFailed()).thenReturn(true);
+        when(processRunner.runCmds(any(ExternalCodeBlock.class), any(Map.class), any(String.class), any(JacsServiceData.class))).thenReturn(jobInfo);
+
+        Consumer successful = mock(Consumer.class);
+        Consumer failure = mock(Consumer.class);
+        testProcessor.processing(testServiceData)
+                .whenComplete((r, e) -> {
+                    if (e == null) {
+                        successful.accept(r);
+                    } else {
+                        failure.accept(e);
+                    }
+                });
+        verify(failure).accept(any());
+        verify(successful, never()).accept(any());
+    }
+
+    @Test
+    public void processingTimeout() {
+        JacsServiceData testServiceData = new JacsServiceData();
+        testServiceData.setName("test");
+        testServiceData.setServiceTimeout(10L);
+        testServiceData.setProcessingLocation(ProcessingLocation.LOCAL);
+        ExeJobInfo jobInfo = mock(ExeJobInfo.class);
+        when(jobInfo.isDone()).thenReturn(false);
+        when(processRunner.runCmds(any(ExternalCodeBlock.class), any(Map.class), any(String.class), any(JacsServiceData.class))).thenReturn(jobInfo);
+
+        Consumer successful = mock(Consumer.class);
+        Consumer failure = mock(Consumer.class);
+        testProcessor.processing(testServiceData)
+                .whenComplete((r, e) -> {
+                    if (e == null) {
+                        successful.accept(r);
+                    } else {
+                        failure.accept(e);
+                    }
+                });
+        verify(failure).accept(any());
+        verify(successful, never()).accept(any());
+    }
 }

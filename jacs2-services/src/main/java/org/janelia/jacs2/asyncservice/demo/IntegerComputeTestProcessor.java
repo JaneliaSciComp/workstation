@@ -1,11 +1,12 @@
 package org.janelia.jacs2.asyncservice.demo;
 
 import com.beust.jcommander.Parameter;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
+import org.janelia.jacs2.asyncservice.common.ServiceErrorChecker;
+import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
@@ -31,14 +32,15 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
         Integer iterations = DEFAULT_ITERATIONS;
     }
 
+    private final ServiceComputationFactory computationFactory;
     private long resultComputationTime;
 
     @Inject
-    public IntegerComputeTestProcessor(JacsServiceEngine jacsServiceEngine,
-                                       ServiceComputationFactory computationFactory,
+    public IntegerComputeTestProcessor(ServiceComputationFactory computationFactory,
                                        @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                        Logger logger) {
-        super(jacsServiceEngine, computationFactory, defaultWorkingDir, logger);
+        super(defaultWorkingDir, logger);
+        this.computationFactory = computationFactory;
     }
 
     @Override
@@ -91,6 +93,16 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
         resultComputationTime = doneTime - startTime;
         logger.debug("localProcessData() end");
         return computationFactory.newCompletedComputation(resultComputationTime);
+    }
+
+    @Override
+    public ServiceResultHandler<Long> getResultHandler() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ServiceErrorChecker getErrorChecker() {
+        throw new UnsupportedOperationException();
     }
 
     private IntegerComputeTestArgs getArgs(JacsServiceData jacsServiceData) {

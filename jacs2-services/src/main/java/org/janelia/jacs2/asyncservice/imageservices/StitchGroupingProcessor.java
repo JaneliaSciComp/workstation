@@ -1,39 +1,32 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.Parameter;
-import com.google.common.collect.ImmutableMap;
-import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
-import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
-import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
-import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
+import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
-import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
-import org.janelia.jacs2.asyncservice.utils.X11Utils;
+import org.janelia.jacs2.asyncservice.common.ServiceErrorChecker;
+import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
+import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractSingleFileServiceResultHandler;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
+import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 @Named("stitchGrouping")
-public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<File> {
+public class StitchGroupingProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
 
     static class StitchGroupingArgs extends ServiceArgs {
         @Parameter(names = "-referenceChannelIndex", description = "Reference channel index", required = true)
@@ -46,22 +39,16 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
 
     private static final String DEFAULT_GROUP_RESULT_FILE_NAME = "igroups.txt";
 
-    private final String vaa3dExecutable;
-    private final String libraryPath;
+    private final Vaa3dPluginProcessor vaa3dPluginProcessor;
 
     @Inject
-    StitchGroupingProcessor(JacsServiceEngine jacsServiceEngine,
-                            ServiceComputationFactory computationFactory,
+    StitchGroupingProcessor(ServiceComputationFactory computationFactory,
                             JacsServiceDataPersistence jacsServiceDataPersistence,
                             @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                            @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-                            @Any Instance<ExternalProcessRunner> serviceRunners,
-                            @PropertyValue(name = "VAA3D.Bin.Path") String vaa3dExecutable,
-                            @PropertyValue(name = "VAA3D.Library.Path") String libraryPath,
+                            Vaa3dPluginProcessor vaa3dPluginProcessor,
                             Logger logger) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
-        this.vaa3dExecutable = vaa3dExecutable;
-        this.libraryPath = libraryPath;
+        super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        this.vaa3dPluginProcessor= vaa3dPluginProcessor;
     }
 
     @Override
@@ -70,90 +57,63 @@ public class StitchGroupingProcessor extends AbstractExeBasedServiceProcessor<Fi
     }
 
     @Override
-    public File getResult(JacsServiceData jacsServiceData) {
-        return ServiceDataUtils.stringToFile(jacsServiceData.getStringifiedResult());
+    public ServiceResultHandler<File> getResultHandler() {
+        return new AbstractSingleFileServiceResultHandler() {
+
+            @Override
+            public boolean isResultReady(JacsServiceData jacsServiceData) {
+                File outputFile = getGroupResultFile(jacsServiceData);
+                return outputFile.exists();
+            }
+
+            @Override
+            public File collectResult(JacsServiceData jacsServiceData) {
+                return getGroupResultFile(jacsServiceData);
+            }
+        };
     }
 
     @Override
-    public void setResult(File result, JacsServiceData jacsServiceData) {
-        jacsServiceData.setStringifiedResult(ServiceDataUtils.fileToString(result));
+    public ServiceErrorChecker getErrorChecker() {
+        return vaa3dPluginProcessor.getErrorChecker();
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-        StitchGroupingArgs  args = getArgs(jacsServiceData);
+    protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
         try {
+            StitchGroupingArgs  args = getArgs(jacsServiceData);
             Files.createDirectories(Paths.get(args.resultDir));
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new ComputationException(jacsServiceData, e);
         }
-        return computationFactory.newCompletedComputation(jacsServiceData);
+        return jacsServiceData;
     }
 
     @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        File mergedLsmResultFile = getGroupResultFile(jacsServiceData);
-        return mergedLsmResultFile.exists();
-    }
-
-    @Override
-    protected File retrieveResult(JacsServiceData jacsServiceData) {
-        return getGroupResultFile(jacsServiceData);
-    }
-
-    @Override
-    protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
         StitchGroupingArgs args = getArgs(jacsServiceData);
-        ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
-        ScriptWriter externalScriptWriter = externalScriptCode.getCodeWriter();
-        createScript(jacsServiceData, args, externalScriptWriter);
-        externalScriptWriter.close();
-        return externalScriptCode;
+        JacsServiceData vaa3dPluginService = createVaa3dPluginService(args, jacsServiceData);
+        return vaa3dPluginProcessor.process(vaa3dPluginService)
+                .thenApply(voidResult -> {
+                    jacsServiceData.setOutputPath(vaa3dPluginService.getOutputPath());
+                    jacsServiceData.setErrorPath(vaa3dPluginService.getErrorPath());
+                    return jacsServiceData;
+                });
     }
 
-    private void createScript(JacsServiceData jacsServiceData, StitchGroupingArgs args, ScriptWriter scriptWriter) {
-        try {
-            Path workingDir = getWorkingDirectory(jacsServiceData);
-            X11Utils.setDisplayPort(workingDir.toString(), scriptWriter);
-            File resultDir = new File(args.resultDir);
-            Files.createDirectories(resultDir.toPath());
-            scriptWriter.addWithArgs(getExecutable())
-                    .addArgs("-x", "imageStitch.so")
-                    .addArgs("-f", "istitch-grouping")
-                    .addArgs("-p", "#c", String.valueOf(args.referenceChannelIndex))
-                    .addArgs("-i", args.inputDir)
-                    .addArgs("-o", args.resultDir)
-                    .endArgs("");
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    @Override
-    protected Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData) {
-        return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
-    }
-
-    @Override
-    protected boolean hasErrors(String l) {
-        boolean result = super.hasErrors(l);
-        if (result) {
-            return true;
-        }
-        if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(fail to call the plugin).*)")) {
-            logger.error(l);
-            return true;
-        } else {
-            return false;
-        }
+    private JacsServiceData createVaa3dPluginService(StitchGroupingArgs args, JacsServiceData jacsServiceData) {
+        return vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .state(JacsServiceState.RUNNING).build(),
+                new ServiceArg("-plugin", "imageStitch.so"),
+                new ServiceArg("-pluginFunc", "istitch-grouping"),
+                new ServiceArg("-input", args.inputDir),
+                new ServiceArg("-output", args.resultDir),
+                new ServiceArg("-pluginParams", String.format("#c %d", args.referenceChannelIndex))
+        );
     }
 
     private StitchGroupingArgs getArgs(JacsServiceData jacsServiceData) {
         return StitchGroupingArgs.parse(jacsServiceData.getArgsArray(), new StitchGroupingArgs());
-    }
-
-    private String getExecutable() {
-        return getFullExecutableName(vaa3dExecutable);
     }
 
     private File getGroupResultFile(JacsServiceData jacsServiceData) {

@@ -4,19 +4,18 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractSingleFileServiceResultHandler;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
-import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
-import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
@@ -55,16 +54,15 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
     private final String libraryPath;
 
     @Inject
-    VideoFormatConverterProcessor(JacsServiceEngine jacsServiceEngine,
-                                  ServiceComputationFactory computationFactory,
+    VideoFormatConverterProcessor(ServiceComputationFactory computationFactory,
                                   JacsServiceDataPersistence jacsServiceDataPersistence,
+                                  @Any Instance<ExternalProcessRunner> serviceRunners,
                                   @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                   @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-                                  @Any Instance<ExternalProcessRunner> serviceRunners,
                                   @PropertyValue(name = "FFMPEG.Bin.Path") String executable,
                                   @PropertyValue(name = "VAA3D.Library.Path") String libraryPath,
                                   Logger logger) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+        super(computationFactory, jacsServiceDataPersistence, serviceRunners, defaultWorkingDir, executablesBaseDir, logger);
         this.executable = executable;
         this.libraryPath = libraryPath;
     }
@@ -75,40 +73,39 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
     }
 
     @Override
-    public File getResult(JacsServiceData jacsServiceData) {
-        return ServiceDataUtils.stringToFile(jacsServiceData.getStringifiedResult());
-    }
-
-    @Override
-    public void setResult(File result, JacsServiceData jacsServiceData) {
-        jacsServiceData.setStringifiedResult(ServiceDataUtils.fileToString(result));
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+    protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
         try {
             ConverterArgs args = getArgs(jacsServiceData);
             if (StringUtils.isBlank(args.input)) {
-                createFailure(new ComputationException(jacsServiceData, "Input must be specified"));
+                throw new ComputationException(jacsServiceData, "Input must be specified");
             }
             File outputFile = getOutputFile(args);
             Files.createDirectories(outputFile.getParentFile().toPath());
-        } catch (IOException e) {
-            return createFailure(e);
+        } catch (ComputationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ComputationException(jacsServiceData, e);
         }
-        return createComputation(jacsServiceData);
+        return jacsServiceData;
     }
 
     @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        File destFile = getOutputFile(getArgs(jacsServiceData));
-        return Files.exists(destFile.toPath());
+    public ServiceResultHandler<File> getResultHandler() {
+        return new AbstractSingleFileServiceResultHandler() {
 
-    }
+            @Override
+            public boolean isResultReady(JacsServiceData jacsServiceData) {
+                ConverterArgs args = getArgs(jacsServiceData);
+                File outputFile = getOutputFile(args);
+                return outputFile.exists();
+            }
 
-    @Override
-    protected File retrieveResult(JacsServiceData jacsServiceData) {
-        return getOutputFile(getArgs(jacsServiceData));
+            @Override
+            public File collectResult(JacsServiceData jacsServiceData) {
+                ConverterArgs args = getArgs(jacsServiceData);
+                return getOutputFile(args);
+            }
+        };
     }
 
     @Override

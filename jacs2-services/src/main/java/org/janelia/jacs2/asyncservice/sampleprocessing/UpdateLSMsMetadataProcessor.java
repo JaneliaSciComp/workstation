@@ -4,17 +4,20 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.DefaultServiceErrorChecker;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceErrorChecker;
 import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
+import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.VoidServiceResultHandler;
 import org.janelia.jacs2.asyncservice.sampleprocessing.zeiss.LSMDetectionChannel;
 import org.janelia.jacs2.asyncservice.sampleprocessing.zeiss.LSMMetadata;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.dataservice.sample.SampleDataService;
-import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
@@ -37,14 +40,13 @@ public class UpdateLSMsMetadataProcessor extends AbstractBasicLifeCycleServicePr
     private final GetSampleLsmsMetadataProcessor getSampleLsmsMetadataProcessor;
 
     @Inject
-    UpdateLSMsMetadataProcessor(JacsServiceEngine jacsServiceEngine,
-                                ServiceComputationFactory computationFactory,
+    UpdateLSMsMetadataProcessor(ServiceComputationFactory computationFactory,
                                 JacsServiceDataPersistence jacsServiceDataPersistence,
                                 @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                 SampleDataService sampleDataService,
-                                Logger logger,
-                                GetSampleLsmsMetadataProcessor getSampleLsmsMetadataProcessor) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+                                GetSampleLsmsMetadataProcessor getSampleLsmsMetadataProcessor,
+                                Logger logger) {
+        super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.sampleDataService = sampleDataService;
         this.getSampleLsmsMetadataProcessor = getSampleLsmsMetadataProcessor;
     }
@@ -55,32 +57,34 @@ public class UpdateLSMsMetadataProcessor extends AbstractBasicLifeCycleServicePr
     }
 
     @Override
-    public Void getResult(JacsServiceData jacsServiceData) {
-        return null;
-    }
-
-    @Override
-    public void setResult(Void result, JacsServiceData jacsServiceData) {
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData);
+    public ServiceResultHandler<Void> getResultHandler() {
+        return new VoidServiceResultHandler() {
+            @Override
+            public boolean isResultReady(JacsServiceData jacsServiceData) {
+                return areAllDependenciesDone(jacsServiceData);
+            }
+        };
     }
 
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
-        JacsServiceData getSampleLsmMetadataService = submit(getSampleLsmsMetadataProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData),
+
+        JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
+
+        JacsServiceData getSampleLsmMetadataServiceRef = getSampleLsmsMetadataProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
-                new ServiceArg("-sampleDataDir", args.sampleDataDir)));
+                new ServiceArg("-sampleDataDir", args.sampleDataDir)
+        );
+
+        JacsServiceData getSampleLsmMetadataService = submitDependencyIfNotPresent(jacsServiceDataHierarchy, getSampleLsmMetadataServiceRef);
 
         return ImmutableList.of(getSampleLsmMetadataService);
     }
 
     @Override
-    protected ServiceComputation<Void> processing(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
         List<AnatomicalArea> anatomicalAreas =
                 sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
@@ -126,17 +130,7 @@ public class UpdateLSMsMetadataProcessor extends AbstractBasicLifeCycleServicePr
                         throw new ComputationException(jacsServiceData, e);
                     }
                 });
-        return createComputation(null);
-    }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        return checkForDependenciesCompletion(jacsServiceData);
-    }
-
-    @Override
-    protected Void retrieveResult(JacsServiceData jacsServiceData) {
-        return null;
+        return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
     private SampleServiceArgs getArgs(JacsServiceData jacsServiceData) {
