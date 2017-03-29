@@ -79,7 +79,8 @@ public class IntegerComputeTestProcessor extends AbstractBasicLifeCycleServicePr
 
     @Override
     public ServiceComputation<Long> processing(JacsServiceData jacsServiceData) {
-        logger.debug("localProcessData() start");
+        String serviceName=getArgs(jacsServiceData).testName;
+        logger.debug(serviceName+" start");
         IntegerComputeTestArgs args=getArgs(jacsServiceData);
         int matrixSize=DEFAULT_MATRIX_SIZE;
         if (args.matrixSize!=null) {
@@ -126,7 +127,7 @@ public class IntegerComputeTestProcessor extends AbstractBasicLifeCycleServicePr
         }
         long doneTime=new Date().getTime();
         resultComputationTime=doneTime-startTime;
-        logger.debug("localProcessData() end, elapsed time ms="+resultComputationTime);
+        logger.debug(serviceName+" end, elapsed time ms="+resultComputationTime);
         return computationFactory.newCompletedComputation(resultComputationTime);
     }
 

@@ -62,6 +62,8 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
 
     @Override
     public ServiceComputation<Long> processing(JacsServiceData jacsServiceData) {
+        String serviceName=getArgs(jacsServiceData).testName;
+        logger.info(serviceName+" start processing");
         long startTime=new Date().getTime();
         Level1ComputeTestArgs args=getArgs(jacsServiceData);
 
@@ -70,7 +72,7 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
             JacsServiceData integerComputeTestProcessorServiceData =
                     integerComputeTestProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData));
             integerComputeTestProcessorServiceData.addArg("-testName");
-            integerComputeTestProcessorServiceData.addArg("IntegerV3Test"+i);
+            integerComputeTestProcessorServiceData.addArg(args.testName+".IntegerTest"+i);
             logger.info("adding integerComputeTest to list id="+integerComputeTestProcessorServiceData.getId());
             integerComputeTests.add(integerComputeTestProcessorServiceData);
         }
@@ -80,7 +82,7 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
             JacsServiceData floatComputeTestProcessorServiceData =
                     floatComputeTestProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData));
             floatComputeTestProcessorServiceData.addArg("-testName");
-            floatComputeTestProcessorServiceData.addArg("FloatV3Test"+i);
+            floatComputeTestProcessorServiceData.addArg(args.testName+".FloatTest"+i);
             logger.info("adding floatComputeTest to list id="+floatComputeTestProcessorServiceData.getId());
             floatComputeTests.add(floatComputeTestProcessorServiceData);
         }
@@ -107,6 +109,7 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
 
         long endTime=new Date().getTime();
         resultComputationTime=endTime-startTime;
+        logger.info(serviceName+" end processing, processing time= "+resultComputationTime);
         return computationFactory.newCompletedComputation(resultComputationTime);
     }
 
@@ -151,7 +154,7 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
                 logger.info("service id="+j.getId()+" has completed");
                 return;
             } else {
-                logger.info("service id="+j.getId()+" has not completed");
+//                logger.info("service id="+j.getId()+" has not completed");
             }
         }
     }
