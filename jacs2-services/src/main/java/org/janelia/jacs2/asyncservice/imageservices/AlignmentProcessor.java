@@ -113,7 +113,7 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
         } catch (IOException e) {
             throw new ComputationException(jacsServiceData, e);
         }
-        return jacsServiceData;
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override

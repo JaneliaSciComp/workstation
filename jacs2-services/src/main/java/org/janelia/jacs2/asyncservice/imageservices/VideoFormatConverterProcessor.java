@@ -24,7 +24,6 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
 
@@ -86,7 +85,7 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
         } catch (Exception e) {
             throw new ComputationException(jacsServiceData, e);
         }
-        return jacsServiceData;
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override

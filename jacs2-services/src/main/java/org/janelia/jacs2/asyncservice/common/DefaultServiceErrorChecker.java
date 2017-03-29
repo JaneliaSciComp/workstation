@@ -6,6 +6,7 @@ import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.slf4j.Logger;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +28,7 @@ public class DefaultServiceErrorChecker implements ServiceErrorChecker {
         InputStream outputStream = null;
         InputStream errorStream = null;
         try {
-            if (StringUtils.isNotBlank(jacsServiceData.getOutputPath())) {
+            if (StringUtils.isNotBlank(jacsServiceData.getOutputPath()) && new File(jacsServiceData.getOutputPath()).exists()) {
                 outputStream = new FileInputStream(jacsServiceData.getOutputPath());
                 streamHandler(outputStream, s -> {
                     if (hasErrors(s)) {
@@ -37,7 +38,7 @@ public class DefaultServiceErrorChecker implements ServiceErrorChecker {
                     if (StringUtils.isNotBlank(s)) logger.debug(s);
                 });
             }
-            if (StringUtils.isNotBlank(jacsServiceData.getErrorPath())) {
+            if (StringUtils.isNotBlank(jacsServiceData.getErrorPath()) && new File(jacsServiceData.getErrorPath()).exists()) {
                 errorStream = new FileInputStream(jacsServiceData.getErrorPath());
                 streamHandler(errorStream, s -> {
                     if (hasErrors(s)) {
@@ -82,11 +83,6 @@ public class DefaultServiceErrorChecker implements ServiceErrorChecker {
     }
 
     protected boolean hasErrors(String l) {
-        if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(error|exception).*)")) {
-            return true;
-        } else {
-            return false;
-        }
+        return StringUtils.isNotBlank(l) && l.matches("(?i:.*(error|exception).*)");
     }
-
 }

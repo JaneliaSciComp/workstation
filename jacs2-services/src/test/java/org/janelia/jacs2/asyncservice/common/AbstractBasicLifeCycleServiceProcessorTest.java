@@ -112,6 +112,7 @@ public class AbstractBasicLifeCycleServiceProcessorTest {
         serviceComputationFactory = new ServiceComputationFactory(serviceComputationQueue, logger);
 
         testJacsServiceData = new JacsServiceData();
+        testJacsServiceData.setName("test");
         testJacsServiceData.setId(TEST_ID);
         jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
 

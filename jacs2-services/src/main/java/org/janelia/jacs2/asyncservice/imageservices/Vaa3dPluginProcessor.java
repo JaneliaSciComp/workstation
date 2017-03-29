@@ -117,7 +117,7 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
         } catch (Exception e) {
             throw new ComputationException(jacsServiceData, e);
         }
-        return jacsServiceData;
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override
@@ -125,11 +125,7 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
         Vaa3dPluginArgs args = getArgs(jacsServiceData);
         JacsServiceData vaa3dService = createVaa3dService(args, jacsServiceData);
         return vaa3dProcessor.process(vaa3dService)
-                .thenApply(voidResult -> {
-                    jacsServiceData.setOutputPath(vaa3dService.getOutputPath());
-                    jacsServiceData.setErrorPath(vaa3dService.getErrorPath());
-                    return jacsServiceData;
-                });
+                .thenApply(voidResult -> jacsServiceData);
     }
 
     private JacsServiceData createVaa3dService(Vaa3dPluginArgs args, JacsServiceData jacsServiceData) {
@@ -146,6 +142,8 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
             vaa3Args.add("-p").add(StringUtils.wrap(args.pluginParams.stream().collect(Collectors.joining(" ")), '"'));
         }
         return vaa3dProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .setErrorPath(jacsServiceData.getErrorPath())
+                        .setOutputPath(jacsServiceData.getOutputPath())
                         .state(JacsServiceState.RUNNING).build(),
                 new ServiceArg("-vaa3dArgs", vaa3Args.toString())
         );

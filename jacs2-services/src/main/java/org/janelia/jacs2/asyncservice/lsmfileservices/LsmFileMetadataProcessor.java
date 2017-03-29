@@ -98,7 +98,7 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
         } catch (IOException e) {
             throw new ComputationException(jacsServiceData, e);
         }
-        return jacsServiceData;
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override

@@ -108,7 +108,7 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
         if (StringUtils.isBlank(args.macroName)) {
             throw new ComputationException(jacsServiceData, "FIJI macro must be specified");
         }
-        return jacsServiceData;
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override

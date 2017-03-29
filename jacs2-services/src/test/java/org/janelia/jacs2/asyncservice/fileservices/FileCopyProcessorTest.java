@@ -84,9 +84,10 @@ public class FileCopyProcessorTest {
     public void successfulPreprocessing() throws ExecutionException, InterruptedException {
         File testDestFile = new File(testDirectory, "testDest");
         JacsServiceData testServiceData = new JacsServiceDataBuilder(null)
-                    .addArg("-src", "/home/testSource")
-                    .addArg("-dst", testDestFile.getAbsolutePath())
-                    .build();
+                .setName("fileCopy")
+                .addArg("-src", "/home/testSource")
+                .addArg("-dst", testDestFile.getAbsolutePath())
+                .build();
         testProcessor.prepareProcessing(testServiceData);
         assertTrue(testDestFile.getParentFile().exists());
     }
@@ -95,6 +96,7 @@ public class FileCopyProcessorTest {
     public void missingRequiredParameter() throws ExecutionException, InterruptedException {
         File testDestFile = new File(testDirectory, "testDest");
         JacsServiceData testServiceData = new JacsServiceDataBuilder(null)
+                .setName("fileCopy")
                 .addArg("-dst", testDestFile.getAbsolutePath())
                 .build();
         verifyCompletionWithException(testServiceData);

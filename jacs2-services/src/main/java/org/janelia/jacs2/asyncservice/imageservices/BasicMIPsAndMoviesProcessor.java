@@ -109,7 +109,7 @@ public class BasicMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServicePr
         } catch (IOException e) {
             throw new ComputationException(jacsServiceData, e);
         }
-        return jacsServiceData;
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override

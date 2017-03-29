@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.StringJoiner;
 
@@ -97,7 +96,7 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
         } catch (Exception e) {
             throw new ComputationException(jacsServiceData, e);
         }
-        return jacsServiceData;
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override
@@ -105,11 +104,7 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
         Vaa3dConverterArgs args = getArgs(jacsServiceData);
         JacsServiceData vaa3dService = createVaa3dCmdService(args, jacsServiceData);
         return vaa3dCmdProcessor.process(vaa3dService)
-                .thenApply(voidResult -> {
-                    jacsServiceData.setOutputPath(vaa3dService.getOutputPath());
-                    jacsServiceData.setErrorPath(vaa3dService.getErrorPath());
-                    return jacsServiceData;
-                });
+                .thenApply(voidResult -> jacsServiceData);
     }
 
     private JacsServiceData createVaa3dCmdService(Vaa3dConverterArgs args, JacsServiceData jacsServiceData) {
@@ -117,7 +112,10 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
                 .add(args.convertCmd)
                 .add(args.inputFileName)
                 .add(args.outputFileName);
-        return vaa3dCmdProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).state(JacsServiceState.RUNNING).build(),
+        return vaa3dCmdProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .setErrorPath(jacsServiceData.getErrorPath())
+                        .setOutputPath(jacsServiceData.getOutputPath())
+                        .state(JacsServiceState.RUNNING).build(),
                 new ServiceArg("-vaa3dCmd", "image-loader"),
                 new ServiceArg("-vaa3dCmdArgs", vaa3dCmdArgs.toString()));
     }

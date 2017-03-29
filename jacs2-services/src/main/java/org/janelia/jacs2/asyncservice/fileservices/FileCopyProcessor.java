@@ -103,7 +103,7 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
         } catch (Exception e) {
             throw new ComputationException(jacsServiceData, e);
         }
-        return jacsServiceData;
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override

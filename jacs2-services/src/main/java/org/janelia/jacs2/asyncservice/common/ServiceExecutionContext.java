@@ -35,6 +35,16 @@ public class ServiceExecutionContext {
             return this;
         }
 
+        public Builder setOutputPath(String outputPath) {
+            serviceExecutionContext.outputPath = outputPath;
+            return this;
+        }
+
+        public Builder setErrorPath(String errorPath) {
+            serviceExecutionContext.errorPath = errorPath;
+            return this;
+        }
+
         public Builder description(String description) {
             serviceExecutionContext.description = description;
             return this;
@@ -52,6 +62,8 @@ public class ServiceExecutionContext {
 
     private final JacsServiceData parentServiceData;
     private ProcessingLocation processingLocation;
+    private String outputPath;
+    private String errorPath;
     private JacsServiceState serviceState;
     private String description;
     private List<JacsServiceData> waitFor = new ArrayList<>();
@@ -69,16 +81,20 @@ public class ServiceExecutionContext {
         return processingLocation;
     }
 
-    public void setProcessingLocation(ProcessingLocation processingLocation) {
-        this.processingLocation = processingLocation;
-    }
-
     public List<JacsServiceData> getWaitFor() {
         return waitFor;
     }
 
     public JacsServiceState getServiceState() {
         return serviceState;
+    }
+
+    public String getOutputPath() {
+        return outputPath;
+    }
+
+    public String getErrorPath() {
+        return errorPath;
     }
 
     public String getDescription() {

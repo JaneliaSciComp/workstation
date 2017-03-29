@@ -37,6 +37,12 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         if (executionContext.getServiceState() != null) {
             jacsServiceDataBuilder.setState(executionContext.getServiceState());
         }
+        if (StringUtils.isNotBlank(executionContext.getOutputPath())) {
+            jacsServiceDataBuilder.setOutputPath(executionContext.getOutputPath());
+        }
+        if (StringUtils.isNotBlank(executionContext.getErrorPath())) {
+            jacsServiceDataBuilder.setErrorPath(executionContext.getErrorPath());
+        }
         jacsServiceDataBuilder.copyResourcesFrom(executionContext.getResources());
         executionContext.getWaitFor().forEach(jacsServiceDataBuilder::addDependency);
         if (executionContext.getParentServiceData() != null) {
@@ -52,6 +58,24 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
             return getServicePath(defaultWorkingDir, jacsServiceData);
         } else {
             return getServicePath(System.getProperty("java.io.tmpdir"), jacsServiceData);
+        }
+    }
+
+    protected void setOutputPath(JacsServiceData jacsServiceData) {
+        if (StringUtils.isBlank(jacsServiceData.getOutputPath())) {
+            jacsServiceData.setOutputPath(getServicePath(
+                    getWorkingDirectory(jacsServiceData).toString(),
+                    jacsServiceData,
+                    String.format("%s-stdout.txt", jacsServiceData.getName(), jacsServiceData.hasId() ? "-" + jacsServiceData.getId() : "")).toString());
+        }
+    }
+
+    protected void setErrorPath(JacsServiceData jacsServiceData) {
+        if (StringUtils.isBlank(jacsServiceData.getOutputPath())) {
+            jacsServiceData.setOutputPath(getServicePath(
+                    getWorkingDirectory(jacsServiceData).toString(),
+                    jacsServiceData,
+                    String.format("%s-stderr.txt", jacsServiceData.getName(), jacsServiceData.hasId() ? "-" + jacsServiceData.getId() : "")).toString());
         }
     }
 

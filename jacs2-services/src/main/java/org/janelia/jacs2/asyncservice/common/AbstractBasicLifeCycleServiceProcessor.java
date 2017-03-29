@@ -56,6 +56,8 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
     }
 
     protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
+        setOutputPath(jacsServiceData);
+        setErrorPath(jacsServiceData);
         return jacsServiceData;
     }
 

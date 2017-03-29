@@ -61,6 +61,16 @@ public class JacsServiceDataBuilder {
         return this;
     }
 
+    public JacsServiceDataBuilder setOutputPath(String outputPath) {
+        serviceData.setOutputPath(outputPath);
+        return this;
+    }
+
+    public JacsServiceDataBuilder setErrorPath(String errorPath) {
+        serviceData.setErrorPath(errorPath);
+        return this;
+    }
+
     public JacsServiceDataBuilder setDescription(String description) {
         serviceData.setDescription(description);
         return this;
