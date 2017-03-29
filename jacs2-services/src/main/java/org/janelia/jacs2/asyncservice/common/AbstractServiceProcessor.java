@@ -71,8 +71,8 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
     }
 
     protected void setErrorPath(JacsServiceData jacsServiceData) {
-        if (StringUtils.isBlank(jacsServiceData.getOutputPath())) {
-            jacsServiceData.setOutputPath(getServicePath(
+        if (StringUtils.isBlank(jacsServiceData.getErrorPath())) {
+            jacsServiceData.setErrorPath(getServicePath(
                     getWorkingDirectory(jacsServiceData).toString(),
                     jacsServiceData,
                     String.format("%s-stderr.txt", jacsServiceData.getName(), jacsServiceData.hasId() ? "-" + jacsServiceData.getId() : "")).toString());
