@@ -113,6 +113,7 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
                 .add(args.inputFileName)
                 .add(args.outputFileName);
         return vaa3dCmdProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .setServiceName(jacsServiceData.getName())
                         .setErrorPath(jacsServiceData.getErrorPath())
                         .setOutputPath(jacsServiceData.getOutputPath())
                         .state(JacsServiceState.RUNNING).build(),

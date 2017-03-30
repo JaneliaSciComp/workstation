@@ -35,6 +35,11 @@ public class ServiceExecutionContext {
             return this;
         }
 
+        public Builder setServiceName(String serviceName) {
+            serviceExecutionContext.serviceName = serviceName;
+            return this;
+        }
+
         public Builder setOutputPath(String outputPath) {
             serviceExecutionContext.outputPath = outputPath;
             return this;
@@ -62,6 +67,7 @@ public class ServiceExecutionContext {
 
     private final JacsServiceData parentServiceData;
     private ProcessingLocation processingLocation;
+    private String serviceName;
     private String outputPath;
     private String errorPath;
     private JacsServiceState serviceState;
@@ -87,6 +93,10 @@ public class ServiceExecutionContext {
 
     public JacsServiceState getServiceState() {
         return serviceState;
+    }
+
+    public String getServiceName() {
+        return serviceName;
     }
 
     public String getOutputPath() {

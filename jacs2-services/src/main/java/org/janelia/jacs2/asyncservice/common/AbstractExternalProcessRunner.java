@@ -56,18 +56,27 @@ abstract class AbstractExternalProcessRunner implements ExternalProcessRunner {
         String nameSuffix = "";
         if (sd.hasId()) {
             nameSuffix = sd.getId().toString();
+            Path scriptPath = checkScriptFile(dir, sd.getName(), nameSuffix);
+            if (scriptPath != null) return scriptPath;
         } else if (sd.hasParentServiceId()) {
             nameSuffix = sd.getParentServiceId().toString();
         } else {
             nameSuffix = String.valueOf(System.currentTimeMillis());
         }
         for (int i = 1; i <= MAX_SUBSCRIPT_INDEX; i++) {
-            String nameCandidate = sd.getName() + "_" + nameSuffix + "_" + i + ".sh";
-            Path scriptFilePath = dir.resolve(nameCandidate);
-            if (!Files.exists(scriptFilePath)) {
-                return scriptFilePath;
-            }
+            Path scriptFilePath = checkScriptFile(dir, sd.getName(), nameSuffix + "_" + i);
+            if (scriptFilePath != null) return scriptFilePath;
         }
         throw new ComputationException(sd, "Could not create unique script name for " + sd.getName());
+    }
+
+    private Path checkScriptFile(Path dir, String name, String suffix) {
+        String nameCandidate = name + "_" + suffix + ".sh";
+        Path scriptFilePath = dir.resolve(nameCandidate);
+        if (!Files.exists(scriptFilePath)) {
+            return scriptFilePath;
+        } else {
+            return null;
+        }
     }
 }

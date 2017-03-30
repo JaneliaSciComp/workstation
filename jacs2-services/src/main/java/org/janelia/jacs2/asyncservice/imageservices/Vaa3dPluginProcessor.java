@@ -85,21 +85,7 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
 
     @Override
     public ServiceErrorChecker getErrorChecker() {
-        return new DefaultServiceErrorChecker(logger) {
-            @Override
-            protected boolean hasErrors(String l) {
-                boolean result = super.hasErrors(l);
-                if (result) {
-                    return true;
-                }
-                if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(fail to call the plugin).*)")) {
-                    logger.error(l);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        };
+        return vaa3dProcessor.getErrorChecker();
     }
 
     @Override
@@ -142,9 +128,11 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
             vaa3Args.add("-p").add(StringUtils.wrap(args.pluginParams.stream().collect(Collectors.joining(" ")), '"'));
         }
         return vaa3dProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .setServiceName(jacsServiceData.getName())
                         .setErrorPath(jacsServiceData.getErrorPath())
                         .setOutputPath(jacsServiceData.getOutputPath())
-                        .state(JacsServiceState.RUNNING).build(),
+                        .state(JacsServiceState.RUNNING)
+                        .build(),
                 new ServiceArg("-vaa3dArgs", vaa3Args.toString())
         );
     }

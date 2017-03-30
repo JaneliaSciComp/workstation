@@ -27,9 +27,13 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         ServiceMetaData smd = getMetadata();
         JacsServiceDataBuilder jacsServiceDataBuilder =
                 new JacsServiceDataBuilder(executionContext.getParentServiceData())
-                        .setName(smd.getServiceName())
                         .setProcessingLocation(executionContext.getProcessingLocation())
                         .setDescription(executionContext.getDescription());
+        if (executionContext.getServiceName() != null) {
+            jacsServiceDataBuilder.setName(executionContext.getServiceName());
+        } else {
+            jacsServiceDataBuilder.setName(smd.getServiceName());
+        }
         if (executionContext.getParentServiceData() != null) {
             jacsServiceDataBuilder.setWorkspace(getWorkingDirectory(executionContext.getParentServiceData()).toString());
         }
