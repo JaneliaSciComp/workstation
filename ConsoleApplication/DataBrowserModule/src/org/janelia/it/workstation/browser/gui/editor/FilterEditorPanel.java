@@ -749,8 +749,10 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         try {
-            if (filter==null) return;
-            if (event.isTotalInvalidation()) {
+            if (filter==null || filter.getId()==null) {
+                refreshSearchResults(false);
+            }
+            else if (event.isTotalInvalidation()) {
                 log.info("Total invalidation, reloading...");
                 reload();
             }
