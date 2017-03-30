@@ -18,7 +18,6 @@ import org.janelia.jacs2.asyncservice.utils.FileUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
-import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
@@ -88,6 +87,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     private final Vaa3dConverterProcessor vaa3dConverterProcessor;
     private final Vaa3dPluginProcessor vaa3dPluginProcessor;
     private final NiftiConverterProcessor niftiConverterProcessor;
+    private final AffineToInsightConverterProcessor affineToInsightConverterProcessor;
     private final FlirtProcessor flirtProcessor;
     private final AntsToolProcessor antsToolProcessor;
     private final WarpToolProcessor warpToolProcessor;
@@ -100,6 +100,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                                Vaa3dConverterProcessor vaa3dConverterProcessor,
                                Vaa3dPluginProcessor vaa3dPluginProcessor,
                                NiftiConverterProcessor niftiConverterProcessor,
+                               AffineToInsightConverterProcessor affineToInsightConverterProcessor,
                                FlirtProcessor flirtProcessor,
                                AntsToolProcessor antsToolProcessor,
                                WarpToolProcessor warpToolProcessor,
@@ -108,6 +109,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         this.vaa3dConverterProcessor = vaa3dConverterProcessor;
         this.vaa3dPluginProcessor = vaa3dPluginProcessor;
         this.niftiConverterProcessor = niftiConverterProcessor;
+        this.affineToInsightConverterProcessor = affineToInsightConverterProcessor;
         this.flirtProcessor = flirtProcessor;
         this.antsToolProcessor = antsToolProcessor;
         this.warpToolProcessor = warpToolProcessor;
@@ -447,9 +449,16 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
 
     private JacsServiceData prepareAffineTransformation(Path rotationsMatFile, Path insightRotationsFile, Path rotationsAffineFile, JacsServiceData jacsServiceData, JacsServiceData... deps) {
         logger.info("Estimate rotations {}", rotationsMatFile);
-        AlignmentUtils.convertAffineMatToInsightMat(rotationsMatFile, insightRotationsFile);
+        JacsServiceData affineToInsightServiceData = affineToInsightConverterProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .waitFor(deps)
+                        .description("Convert affine rotation matrix to insight format")
+                        .build(),
+                new ServiceArg("-input", insightRotationsFile.toString()),
+                new ServiceArg("-output", rotationsAffineFile.toString())
+        );
         JacsServiceData estimateRotationsServiceData = vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .waitFor(deps)
+                        .waitFor(affineToInsightServiceData)
                         .description("Estimate rotations")
                         .build(),
                 new ServiceArg("-plugin", "ireg"),
