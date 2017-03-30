@@ -1,6 +1,10 @@
 // 5.11.0
 
 Workstation Browser
+* Refresh now works for unsaved filters
+* Open in Neuron Annotator fixed for separations with curated neurons
+* Neuron Annotator now displays neurons in the correct order
+* Fixed issue with Data Explorer sometimes not displaying Home folders for admins
 * Other minor bug fixes (see JIRA)
 
 MouseLight
