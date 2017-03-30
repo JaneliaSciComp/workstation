@@ -84,7 +84,7 @@ public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProces
         if (CollectionUtils.isEmpty(args.inputFileNames)) {
             throw new ComputationException(jacsServiceData, "An input file name must be specified");
         }
-        return jacsServiceData;
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override
