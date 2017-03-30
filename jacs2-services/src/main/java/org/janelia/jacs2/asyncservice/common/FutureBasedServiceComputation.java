@@ -130,9 +130,9 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
         return next;
     }
 
-    private <U> void applyStage(FutureBasedServiceComputation<U> c, Supplier<T> stageResultSupplier, Function<? super T, ? extends U> fn) {
+    private <U, V> void applyStage(FutureBasedServiceComputation<V> c, Supplier<U> stageResultSupplier, Function<? super U, ? extends V> fn) {
         try {
-            T r = stageResultSupplier.get();
+            U r = stageResultSupplier.get();
             c.complete(fn.apply(r));
         } catch (SuspendedException e) {
             throw e;
@@ -146,26 +146,11 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
         FutureBasedServiceComputation<ServiceComputation<U>> nextStage = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
         FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(nextStage));
         nextStage.submit(() -> {
-            try {
-                T r = waitForResult(this);
-                nextStage.complete(fn.apply(r));
-            } catch (SuspendedException e) {
-                throw e;
-            } catch (Exception e) {
-                nextStage.completeExceptionally(e);
-            }
+            applyStage(nextStage, () -> waitForResult(this), fn);
             return nextStage.get();
         });
         next.submit(() -> {
-            try {
-                ServiceComputation<U> computation = waitForResult(nextStage);
-                U result = waitForResult(computation);
-                next.complete(result);
-            } catch (SuspendedException e) {
-                throw e;
-            } catch (Exception e) {
-                next.completeExceptionally(e);
-            }
+            applyStage(next, () -> waitForResult(nextStage), FutureBasedServiceComputation::waitForResult);
             return next.get();
         });
         return next;
@@ -192,9 +177,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
     @Override
     public <U, V> ServiceComputation<V> thenCombine(ServiceComputation<U> otherComputation, BiFunction<? super T, ? super U, ? extends V> fn) {
-        ServiceComputationTask<V> nextTask = new ServiceComputationTask<>(this);
-        nextTask.push(otherComputation);
-        FutureBasedServiceComputation<V> next = new FutureBasedServiceComputation<>(computationQueue, logger, nextTask);
+        FutureBasedServiceComputation<V> next = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
         next.submit(() -> {
             try {
                 T r = waitForResult(this);
@@ -212,14 +195,12 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
     @Override
     public <U> ServiceComputation<U> thenCombineAll(List<ServiceComputation<?>> otherComputations, BiFunction<? super T, List<?>, ? extends U> fn) {
-        ServiceComputationTask<U> nextTask = new ServiceComputationTask<>(this);
-        otherComputations.forEach(nextTask::push);
-        FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(computationQueue, logger, nextTask);
+        FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
         next.submit(() -> {
             try {
                 T r = waitForResult(this);
                 List<Object> otherResults = otherComputations.stream()
-                        .map(oc -> waitForResult(oc))
+                        .map(FutureBasedServiceComputation::waitForResult)
                         .collect(Collectors.toList());
                 next.complete(fn.apply(r, otherResults));
             } catch (SuspendedException e) {
