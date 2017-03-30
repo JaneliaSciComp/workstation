@@ -40,13 +40,12 @@ public class Level2ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
     private final Level1ComputeTestProcessor level1ComputeTestProcessor;
 
     @Inject
-    public Level2ComputeTestProcessor(JacsServiceEngine jacsServiceEngine,
-                                      ServiceComputationFactory computationFactory,
+    public Level2ComputeTestProcessor(ServiceComputationFactory computationFactory,
                                       JacsServiceDataPersistence jacsServiceDataPersistence,
                                       @PropertyValue(name="service.DefaultWorkingDir") String defaultWorkingDir,
                                       Logger logger,
                                       Level1ComputeTestProcessor level1ComputeTestProcessor) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.level1ComputeTestProcessor=level1ComputeTestProcessor;
     }
 
@@ -56,7 +55,12 @@ public class Level2ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     @Override
-    public ServiceComputation<Long> processing(JacsServiceData jacsServiceData) {
+    public ServiceResultHandler<Long> getResultHandler() {
+        return null;
+    }
+
+    @Override
+    public ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
         String serviceName=getArgs(jacsServiceData).testName;
         logger.info(serviceName+" start processing");
         long startTime=new Date().getTime();
@@ -75,7 +79,7 @@ public class Level2ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
         int iTest=0;
         for (JacsServiceData j : levelComputeTests) {
             logger.info("submitting level 1 ComputeTest "+iTest+" id="+j.getId());
-            j=submit(j);
+            jacsServiceDataPersistence.saveHierarchy(j);
             logger.info("waiting for level 1 ComputeTest "+iTest+" id="+j.getId());
             waitFor(j);
             logger.info("finished level 1 ComputeTest "+iTest+" id="+j.getId()+" of "+levelComputeTests.size());
@@ -85,36 +89,11 @@ public class Level2ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
         long endTime=new Date().getTime();
         resultComputationTime=endTime-startTime;
         logger.info(serviceName+" end processing, time="+resultComputationTime);
-        return computationFactory.newCompletedComputation(resultComputationTime);
-    }
-
-    @Override
-    protected Long getResult(JacsServiceData jacsServiceData) {
-        return null;
-    }
-
-    @Override
-    protected void setResult(Long result, JacsServiceData jacsServiceData) {
-
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData);
+        return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
-        return null;
-    }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        return false;
-    }
-
-    @Override
-    protected Long retrieveResult(JacsServiceData jacsServiceData) {
         return null;
     }
 

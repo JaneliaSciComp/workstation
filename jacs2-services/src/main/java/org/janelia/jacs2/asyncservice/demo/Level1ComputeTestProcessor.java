@@ -43,14 +43,13 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
     private final FloatComputeTestProcessor floatComputeTestProcessor;
 
     @Inject
-    public Level1ComputeTestProcessor(JacsServiceEngine jacsServiceEngine,
-                                      ServiceComputationFactory computationFactory,
+    public Level1ComputeTestProcessor(ServiceComputationFactory computationFactory,
                                       JacsServiceDataPersistence jacsServiceDataPersistence,
                                       @PropertyValue(name="service.DefaultWorkingDir") String defaultWorkingDir,
                                       Logger logger,
                                       IntegerComputeTestProcessor integerComputeTestProcessor,
                                       FloatComputeTestProcessor floatComputeTestProcessor) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.integerComputeTestProcessor=integerComputeTestProcessor;
         this.floatComputeTestProcessor=floatComputeTestProcessor;
     }
@@ -61,7 +60,12 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     @Override
-    public ServiceComputation<Long> processing(JacsServiceData jacsServiceData) {
+    public ServiceResultHandler<Long> getResultHandler() {
+        return null;
+    }
+
+    @Override
+    public ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
         String serviceName=getArgs(jacsServiceData).testName;
         logger.info(serviceName+" start processing");
         long startTime=new Date().getTime();
@@ -95,7 +99,8 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
                     IntegerComputeTestProcessor.getArgs(j);
             String jName=jArgs.testName;
             logger.info("submitting integerComputeTest "+jName);
-            submittedJsdList.add(submit(j));
+            jacsServiceDataPersistence.saveHierarchy(j);
+            submittedJsdList.add(j);
         }
 
         iTest=0;
@@ -116,7 +121,8 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
                     FloatComputeTestProcessor.getArgs(j);
             String jName=jArgs.testName;
             logger.info("submitting floatComputeTest "+jName);
-            submittedJsdList.add(submit(j));
+            jacsServiceDataPersistence.saveHierarchy(j);
+            submittedJsdList.add(j);
         }
 
         for (JacsServiceData j : submittedJsdList) {
@@ -132,36 +138,11 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
         long endTime=new Date().getTime();
         resultComputationTime=endTime-startTime;
         logger.info(serviceName+" end processing, processing time= "+resultComputationTime);
-        return computationFactory.newCompletedComputation(resultComputationTime);
-    }
-
-    @Override
-    protected Long getResult(JacsServiceData jacsServiceData) {
-        return null;
-    }
-
-    @Override
-    protected void setResult(Long result, JacsServiceData jacsServiceData) {
-
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData);
+        return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
-        return null;
-    }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        return false;
-    }
-
-    @Override
-    protected Long retrieveResult(JacsServiceData jacsServiceData) {
         return null;
     }
 

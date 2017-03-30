@@ -44,12 +44,11 @@ public class IntegerComputeTestProcessor extends AbstractBasicLifeCycleServicePr
     }
 
     @Inject
-    public IntegerComputeTestProcessor (JacsServiceEngine jacsServiceEngine,
-                                        ServiceComputationFactory computationFactory,
+    public IntegerComputeTestProcessor (ServiceComputationFactory computationFactory,
                                         JacsServiceDataPersistence jacsServiceDataPersistence,
                                         @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                         Logger logger) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
     }
 
     @Override
@@ -58,18 +57,8 @@ public class IntegerComputeTestProcessor extends AbstractBasicLifeCycleServicePr
     }
 
     @Override
-    protected Long getResult(JacsServiceData jacsServiceData) {
+    public ServiceResultHandler<Long> getResultHandler() {
         return null;
-    }
-
-    @Override
-    protected void setResult(Long result, JacsServiceData jacsServiceData) {
-
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData);
     }
 
     @Override
@@ -78,7 +67,7 @@ public class IntegerComputeTestProcessor extends AbstractBasicLifeCycleServicePr
     }
 
     @Override
-    public ServiceComputation<Long> processing(JacsServiceData jacsServiceData) {
+    public ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
         String serviceName=getArgs(jacsServiceData).testName;
         logger.debug(serviceName+" start");
         IntegerComputeTestArgs args=getArgs(jacsServiceData);
@@ -128,17 +117,7 @@ public class IntegerComputeTestProcessor extends AbstractBasicLifeCycleServicePr
         long doneTime=new Date().getTime();
         resultComputationTime=doneTime-startTime;
         logger.debug(serviceName+" end, elapsed time ms="+resultComputationTime);
-        return computationFactory.newCompletedComputation(resultComputationTime);
-    }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        return false;
-    }
-
-    @Override
-    protected Long retrieveResult(JacsServiceData jacsServiceData) {
-        return null;
+        return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
 }

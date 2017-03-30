@@ -1,7 +1,6 @@
 package org.janelia.jacs2.asyncservice.demo;
 
 import com.beust.jcommander.Parameter;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.*;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -9,8 +8,6 @@ import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Date;
@@ -18,7 +15,6 @@ import java.util.List;
 import java.util.PrimitiveIterator;
 import java.util.Random;
 import java.util.stream.DoubleStream;
-import java.util.stream.LongStream;
 
 /**
  * Created by murphys on 3/2/17.
@@ -45,12 +41,11 @@ public class FloatComputeTestProcessor extends AbstractBasicLifeCycleServiceProc
     private long resultComputationTime;
 
     @Inject
-    public FloatComputeTestProcessor (JacsServiceEngine jacsServiceEngine,
-                                      ServiceComputationFactory computationFactory,
+    public FloatComputeTestProcessor (ServiceComputationFactory computationFactory,
                                       JacsServiceDataPersistence jacsServiceDataPersistence,
                                       @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                       Logger logger) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
     }
 
     @Override
@@ -59,19 +54,10 @@ public class FloatComputeTestProcessor extends AbstractBasicLifeCycleServiceProc
     }
 
     @Override
-    protected Long getResult(JacsServiceData jacsServiceData) {
+    public ServiceResultHandler<Long> getResultHandler() {
         return null;
     }
 
-    @Override
-    protected void setResult(Long result, JacsServiceData jacsServiceData) {
-
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData);
-    }
 
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
@@ -79,7 +65,7 @@ public class FloatComputeTestProcessor extends AbstractBasicLifeCycleServiceProc
     }
 
     @Override
-    public ServiceComputation<Long> processing(JacsServiceData jacsServiceData) {
+    public ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
         String serviceName=getArgs(jacsServiceData).testName;
         logger.debug(serviceName +" start");
         FloatComputeTestArgs args=getArgs(jacsServiceData);
@@ -129,18 +115,7 @@ public class FloatComputeTestProcessor extends AbstractBasicLifeCycleServiceProc
         long doneTime=new Date().getTime();
         resultComputationTime=doneTime-startTime;
         logger.debug(serviceName+" end, elapsed time ms="+resultComputationTime);
-        return computationFactory.newCompletedComputation(resultComputationTime);
+        return computationFactory.newCompletedComputation(jacsServiceData);
     }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        return false;
-    }
-
-    @Override
-    protected Long retrieveResult(JacsServiceData jacsServiceData) {
-        return null;
-    }
-
 
 }
