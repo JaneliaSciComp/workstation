@@ -5,15 +5,19 @@ import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.DefaultServiceErrorChecker;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
+import org.janelia.jacs2.asyncservice.common.ServiceErrorChecker;
+import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.VoidServiceResultHandler;
 import org.janelia.jacs2.asyncservice.utils.ScriptUtils;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.asyncservice.utils.X11Utils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
-import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
@@ -54,16 +58,15 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
     private final String fijiMacrosPath;
 
     @Inject
-    FijiMacroProcessor(JacsServiceEngine jacsServiceEngine,
-                       ServiceComputationFactory computationFactory,
+    FijiMacroProcessor(ServiceComputationFactory computationFactory,
                        JacsServiceDataPersistence jacsServiceDataPersistence,
+                       @Any Instance<ExternalProcessRunner> serviceRunners,
                        @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                        @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-                       @Any Instance<ExternalProcessRunner> serviceRunners,
                        @PropertyValue(name = "Fiji.Bin.Path") String fijiExecutable,
                        @PropertyValue(name = "Fiji.Macro.Path") String fijiMacrosPath,
                        Logger logger) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+        super(computationFactory, jacsServiceDataPersistence, serviceRunners, defaultWorkingDir, executablesBaseDir, logger);
         this.fijiExecutable = fijiExecutable;
         this.fijiMacrosPath = fijiMacrosPath;
     }
@@ -74,32 +77,38 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
     }
 
     @Override
-    public Void getResult(JacsServiceData jacsServiceData) {
-        return null;
+    public ServiceResultHandler<Void> getResultHandler() {
+        return new VoidServiceResultHandler();
     }
 
     @Override
-    public void setResult(Void result, JacsServiceData jacsServiceData) {
+    public ServiceErrorChecker getErrorChecker() {
+        return new DefaultServiceErrorChecker(logger) {
+            @Override
+            protected boolean hasErrors(String l) {
+                if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(error|exception).*)")) {
+                    if (l.contains("Cannot write XdndAware property") ||
+                            l.contains("java.rmi.ConnectException") ||
+                            l.contains("java.net.ConnectException")) {
+                        logger.warn(l);
+                        return false;
+                    }
+                    logger.error(l);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        };
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+    protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
         FijiMacroArgs args = getArgs(jacsServiceData);
         if (StringUtils.isBlank(args.macroName)) {
-            return createFailure(new ComputationException(jacsServiceData, "FIJI macro must be specified"));
-        } else {
-            return createComputation(jacsServiceData);
+            throw new ComputationException(jacsServiceData, "FIJI macro must be specified");
         }
-    }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        return true;
-    }
-
-    @Override
-    protected Void retrieveResult(JacsServiceData jacsServiceData) {
-        return null;
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override
@@ -112,8 +121,7 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
         return externalScriptCode;
     }
 
-    private void createScript(JacsServiceData jacsServiceData, FijiMacroArgs args,
-                              ScriptWriter scriptWriter) {
+    private void createScript(JacsServiceData jacsServiceData, FijiMacroArgs args, ScriptWriter scriptWriter) {
         try {
             if (StringUtils.isNotBlank(args.temporaryOutput)) {
                 Files.createDirectories(Paths.get(args.temporaryOutput));
@@ -155,21 +163,6 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
     @Override
     protected Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData) {
         return ImmutableMap.of();
-    }
-
-    protected boolean hasErrors(String l) {
-        if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(error|exception).*)")) {
-            if (l.contains("Cannot write XdndAware property") ||
-                    l.contains("java.rmi.ConnectException") ||
-                    l.contains("java.net.ConnectException")) {
-                logger.warn(l);
-                return false;
-            }
-            logger.error(l);
-            return true;
-        } else {
-            return false;
-        }
     }
 
     private FijiMacroArgs getArgs(JacsServiceData jacsServiceData) {

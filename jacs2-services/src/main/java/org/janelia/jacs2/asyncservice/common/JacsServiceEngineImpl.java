@@ -7,15 +7,18 @@ import org.janelia.jacs2.asyncservice.ServiceRegistry;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
+import org.janelia.jacs2.model.jacsservice.JacsServiceState;
+import org.janelia.jacs2.model.page.PageRequest;
+import org.janelia.jacs2.model.page.PageResult;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Optional;
 import java.util.concurrent.Semaphore;
 
 @Singleton
@@ -46,11 +49,28 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
     @Override
     public ServerStats getServerStats() {
         ServerStats stats = new ServerStats();
-        stats.setWaitingCapacity(jacsServiceQueue.getMaxReadyCapacity());
-        stats.setWaitingServices(jacsServiceQueue.getReadyServicesSize());
+
+        // queued
         stats.setAvailableSlots(getAvailableSlots());
+        int waitingCapacity = jacsServiceQueue.getMaxReadyCapacity();
+        JacsServiceState queued[] = {JacsServiceState.QUEUED};
+        PageRequest servicePageRequest = new PageRequest();
+        servicePageRequest.setPageSize(waitingCapacity);
+        PageResult<JacsServiceData> waitingServiceInfo = jacsServiceDataPersistence.findServicesByState(
+                EnumSet.of(JacsServiceState.QUEUED),
+                servicePageRequest);
+
+        stats.setWaitingCapacity(waitingCapacity);
+        stats.setWaitingServices(waitingServiceInfo.getResultList());
+
+        // running
+        servicePageRequest.setPageSize(jacsServiceQueue.getPendingServicesSize());
+        PageResult<JacsServiceData> runningServiceInfo = jacsServiceDataPersistence.findServicesByState(
+                EnumSet.of(JacsServiceState.RUNNING),
+                servicePageRequest);
         stats.setRunningServicesCount(jacsServiceQueue.getPendingServicesSize());
-        stats.setRunningServices(jacsServiceQueue.getPendingServices());
+        stats.setRunningServices(runningServiceInfo.getResultList());
+
         return stats;
     }
 
@@ -103,17 +123,6 @@ public class JacsServiceEngineImpl implements JacsServiceEngine {
 
     @Override
     public JacsServiceData submitSingleService(JacsServiceData serviceArgs) {
-        if (serviceArgs.hasParentServiceId()) {
-            List<JacsServiceData> childServices = jacsServiceDataPersistence.findChildServices(serviceArgs.getParentServiceId());
-            Optional<JacsServiceData> existingChildService =
-                    childServices.stream()
-                            .filter(s -> s.getName().equals(serviceArgs.getName()))
-                            .filter(s -> s.getArgs().equals(serviceArgs.getArgs()))
-                            .findFirst();
-            if (existingChildService.isPresent()) {
-                return existingChildService.get(); // do not resubmit
-            }
-        }
         jacsServiceDataPersistence.saveHierarchy(serviceArgs);
         return serviceArgs;
     }

@@ -1,5 +1,7 @@
 package org.janelia.jacs2.model.jacsservice;
 
+import java.util.Map;
+
 public class JacsServiceDataBuilder {
 
     private final JacsServiceData serviceContext;
@@ -59,8 +61,23 @@ public class JacsServiceDataBuilder {
         return this;
     }
 
+    public JacsServiceDataBuilder setOutputPath(String outputPath) {
+        serviceData.setOutputPath(outputPath);
+        return this;
+    }
+
+    public JacsServiceDataBuilder setErrorPath(String errorPath) {
+        serviceData.setErrorPath(errorPath);
+        return this;
+    }
+
     public JacsServiceDataBuilder setDescription(String description) {
         serviceData.setDescription(description);
+        return this;
+    }
+
+    public JacsServiceDataBuilder copyResourcesFrom(Map<String, String> resources) {
+        serviceData.getResources().putAll(resources);
         return this;
     }
 

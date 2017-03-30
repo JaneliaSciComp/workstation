@@ -51,7 +51,9 @@ public class JacsServiceDataMongoDao extends AbstractMongoDao<JacsServiceData> i
     @Override
     public JacsServiceData findServiceHierarchy(Number serviceId) {
         JacsServiceData jacsServiceData = findById(serviceId);
-        Preconditions.checkArgument(jacsServiceData != null, "Invalid service ID - no service found for " + serviceId);
+        if (jacsServiceData == null) {
+            return null;
+        }
         Number rootServiceId = jacsServiceData.getRootServiceId();
         Map<Number, JacsServiceData> fullServiceHierachy = new LinkedHashMap<>();
         if (rootServiceId == null) {

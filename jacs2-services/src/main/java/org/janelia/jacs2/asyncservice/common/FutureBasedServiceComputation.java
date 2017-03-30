@@ -65,6 +65,16 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
     }
 
     @Override
+    public boolean cancel() {
+        return task.cancel();
+    }
+
+    @Override
+    public boolean isCanceled() {
+        return task.isCanceled();
+    }
+
+    @Override
     public boolean isDone() {
         return task.isDone();
     }
@@ -114,17 +124,21 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
     public <U> ServiceComputation<U> thenApply(Function<? super T, ? extends U> fn) {
         FutureBasedServiceComputation<U> next = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
         next.submit(() -> {
-            try {
-                T r = waitForResult(this);
-                next.complete(fn.apply(r));
-            } catch (SuspendedException e) {
-                throw e;
-            } catch (Exception e) {
-                next.completeExceptionally(e);
-            }
+            applyStage(next, () -> waitForResult(this), fn);
             return next.get();
          });
         return next;
+    }
+
+    private <U> void applyStage(FutureBasedServiceComputation<U> c, Supplier<T> stageResultSupplier, Function<? super T, ? extends U> fn) {
+        try {
+            T r = stageResultSupplier.get();
+            c.complete(fn.apply(r));
+        } catch (SuspendedException e) {
+            throw e;
+        } catch (Exception e) {
+            c.completeExceptionally(e);
+        }
     }
 
     @Override
@@ -220,7 +234,7 @@ public class FutureBasedServiceComputation<T> implements ServiceComputation<T> {
 
     public ServiceComputation<T> thenSuspendUntil(ContinuationCond fn) {
         FutureBasedServiceComputation<Boolean> waitFor = new FutureBasedServiceComputation<>(computationQueue, logger, new ServiceComputationTask<>(this));
-        ServiceComputationTask<T> nextTask = new ServiceComputationTask<T>(waitFor);
+        ServiceComputationTask<T> nextTask = new ServiceComputationTask<>(waitFor);
         FutureBasedServiceComputation<T> next = new FutureBasedServiceComputation<>(computationQueue, logger, nextTask);
         waitFor.submit(() -> {
             if (fn.checkCond()) {

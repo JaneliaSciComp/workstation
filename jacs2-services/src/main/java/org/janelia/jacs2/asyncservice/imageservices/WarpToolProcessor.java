@@ -5,13 +5,13 @@ import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
-import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
+import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.VoidServiceResultHandler;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -60,16 +60,15 @@ public class WarpToolProcessor extends AbstractExeBasedServiceProcessor<Void> {
     private final String libraryPath;
 
     @Inject
-    WarpToolProcessor(JacsServiceEngine jacsServiceEngine,
-                      ServiceComputationFactory computationFactory,
+    WarpToolProcessor(ServiceComputationFactory computationFactory,
                       JacsServiceDataPersistence jacsServiceDataPersistence,
+                      @Any Instance<ExternalProcessRunner> serviceRunners,
                       @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                       @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-                      @Any Instance<ExternalProcessRunner> serviceRunners,
                       @PropertyValue(name = "WARP.Bin.Path") String executable,
                       @PropertyValue(name = "WARP.Library.Path") String libraryPath,
                       Logger logger) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+        super(computationFactory, jacsServiceDataPersistence, serviceRunners, defaultWorkingDir, executablesBaseDir, logger);
         this.executable = executable;
         this.libraryPath = libraryPath;
     }
@@ -80,27 +79,8 @@ public class WarpToolProcessor extends AbstractExeBasedServiceProcessor<Void> {
     }
 
     @Override
-    public Void getResult(JacsServiceData jacsServiceData) {
-        return null;
-    }
-
-    @Override
-    public void setResult(Void result, JacsServiceData jacsServiceData) {
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData);
-    }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        return true;
-    }
-
-    @Override
-    protected Void retrieveResult(JacsServiceData jacsServiceData) {
-        return null;
+    public ServiceResultHandler<Void> getResultHandler() {
+        return new VoidServiceResultHandler();
     }
 
     @Override

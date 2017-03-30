@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -391,6 +392,13 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     @JsonIgnore
     public long timeout() {
         return serviceTimeout != null && serviceTimeout > 0L ? serviceTimeout : -1;
+    }
+
+    public Optional<JacsServiceData> findSimilarDependency(JacsServiceData dependency) {
+        return dependencies.stream()
+                        .filter(s -> s.getName().equals(dependency.getName()))
+                        .filter(s -> s.getArgs().equals(dependency.getArgs()))
+                        .findFirst();
     }
 
     /**

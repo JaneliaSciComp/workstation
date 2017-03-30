@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,6 +19,8 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
 
 abstract class AbstractExternalProcessRunner implements ExternalProcessRunner {
+    private static final int MAX_SUBSCRIPT_INDEX = 100;
+
     protected final JacsServiceDataPersistence jacsServiceDataPersistence;
     protected final Logger logger;
 
@@ -36,11 +37,7 @@ abstract class AbstractExternalProcessRunner implements ExternalProcessRunner {
             Path workingDirectory = Paths.get(workingDirName);
             Files.createDirectories(workingDirectory);
             Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwxrwx---");
-            String scriptFileName = sd.getName() + "_" + sd.getId().toString() + ".sh";
-            Path scriptFilePath = workingDirectory.resolve(scriptFileName);
-            if (Files.exists(scriptFilePath)) {
-                return scriptFilePath.toFile().getAbsolutePath();
-            }
+            Path scriptFilePath = createScriptFileName(sd, workingDirectory);
             File scriptFile = Files.createFile(scriptFilePath, PosixFilePermissions.asFileAttribute(perms)).toFile();
             scriptWriter = new ScriptWriter(new BufferedWriter(new FileWriter(scriptFile)));
             scriptWriter.add(externalCode.toString());
@@ -55,11 +52,31 @@ abstract class AbstractExternalProcessRunner implements ExternalProcessRunner {
         }
     }
 
-    protected void deleteProcessingScript(String processingScript) {
-        try {
-            java.nio.file.Files.deleteIfExists(new File(processingScript).toPath());
-        } catch (IOException e) {
-            logger.warn("Error deleting the processing script {}", processingScript, e);
+    private Path createScriptFileName(JacsServiceData sd, Path dir) {
+        String nameSuffix = "";
+        if (sd.hasId()) {
+            nameSuffix = sd.getId().toString();
+            Path scriptPath = checkScriptFile(dir, sd.getName(), nameSuffix);
+            if (scriptPath != null) return scriptPath;
+        } else if (sd.hasParentServiceId()) {
+            nameSuffix = sd.getParentServiceId().toString();
+        } else {
+            nameSuffix = String.valueOf(System.currentTimeMillis());
+        }
+        for (int i = 1; i <= MAX_SUBSCRIPT_INDEX; i++) {
+            Path scriptFilePath = checkScriptFile(dir, sd.getName(), nameSuffix + "_" + i);
+            if (scriptFilePath != null) return scriptFilePath;
+        }
+        throw new ComputationException(sd, "Could not create unique script name for " + sd.getName());
+    }
+
+    private Path checkScriptFile(Path dir, String name, String suffix) {
+        String nameCandidate = name + "_" + suffix + ".sh";
+        Path scriptFilePath = dir.resolve(nameCandidate);
+        if (!Files.exists(scriptFilePath)) {
+            return scriptFilePath;
+        } else {
+            return null;
         }
     }
 }

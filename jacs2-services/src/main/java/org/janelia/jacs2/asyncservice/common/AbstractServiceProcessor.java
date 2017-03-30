@@ -2,7 +2,6 @@ package org.janelia.jacs2.asyncservice.common;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
@@ -11,28 +10,16 @@ import org.slf4j.Logger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Stream;
 
 public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T> {
 
-    protected final JacsServiceEngine jacsServiceEngine;
-    protected final ServiceComputationFactory computationFactory;
     protected final String defaultWorkingDir;
     protected final Logger logger;
 
-    public AbstractServiceProcessor(JacsServiceEngine jacsServiceEngine,
-                                    ServiceComputationFactory computationFactory,
-                                    String defaultWorkingDir,
-                                    Logger logger) {
-        this.jacsServiceEngine = jacsServiceEngine;
-        this.computationFactory= computationFactory;
+    public AbstractServiceProcessor(String defaultWorkingDir, Logger logger) {
         this.defaultWorkingDir = defaultWorkingDir;
         this.logger = logger;
-    }
-
-    protected JacsServiceData submit(JacsServiceData jacsServiceData) {
-        return jacsServiceEngine.submitSingleService(jacsServiceData);
     }
 
     @Override
@@ -40,9 +27,13 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         ServiceMetaData smd = getMetadata();
         JacsServiceDataBuilder jacsServiceDataBuilder =
                 new JacsServiceDataBuilder(executionContext.getParentServiceData())
-                        .setName(smd.getServiceName())
                         .setProcessingLocation(executionContext.getProcessingLocation())
                         .setDescription(executionContext.getDescription());
+        if (executionContext.getServiceName() != null) {
+            jacsServiceDataBuilder.setName(executionContext.getServiceName());
+        } else {
+            jacsServiceDataBuilder.setName(smd.getServiceName());
+        }
         if (executionContext.getParentServiceData() != null) {
             jacsServiceDataBuilder.setWorkspace(getWorkingDirectory(executionContext.getParentServiceData()).toString());
         }
@@ -50,19 +41,18 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         if (executionContext.getServiceState() != null) {
             jacsServiceDataBuilder.setState(executionContext.getServiceState());
         }
-        executionContext.getWaitFor().forEach(sd -> jacsServiceDataBuilder.addDependency(sd));
+        if (StringUtils.isNotBlank(executionContext.getOutputPath())) {
+            jacsServiceDataBuilder.setOutputPath(executionContext.getOutputPath());
+        }
+        if (StringUtils.isNotBlank(executionContext.getErrorPath())) {
+            jacsServiceDataBuilder.setErrorPath(executionContext.getErrorPath());
+        }
+        jacsServiceDataBuilder.copyResourcesFrom(executionContext.getResources());
+        executionContext.getWaitFor().forEach(jacsServiceDataBuilder::addDependency);
         if (executionContext.getParentServiceData() != null) {
-            executionContext.getParentServiceData().getDependeciesIds().forEach(did -> jacsServiceDataBuilder.addDependencyId(did));
+            executionContext.getParentServiceData().getDependeciesIds().forEach(jacsServiceDataBuilder::addDependencyId);
         }
         return jacsServiceDataBuilder.build();
-    }
-
-    protected <U> ServiceComputation<U> createComputation(U data) {
-        return computationFactory.newCompletedComputation(data);
-    }
-
-    protected <U> ServiceComputation<U> createFailure(Throwable exc) {
-        return computationFactory.newFailedComputation(exc);
     }
 
     protected Path getWorkingDirectory(JacsServiceData jacsServiceData) {
@@ -75,13 +65,32 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         }
     }
 
+    protected void setOutputPath(JacsServiceData jacsServiceData) {
+        if (StringUtils.isBlank(jacsServiceData.getOutputPath())) {
+            jacsServiceData.setOutputPath(getServicePath(
+                    getWorkingDirectory(jacsServiceData).toString(),
+                    jacsServiceData,
+                    String.format("%s-stdout.txt", jacsServiceData.getName(), jacsServiceData.hasId() ? "-" + jacsServiceData.getId() : "")).toString());
+        }
+    }
+
+    protected void setErrorPath(JacsServiceData jacsServiceData) {
+        if (StringUtils.isBlank(jacsServiceData.getErrorPath())) {
+            jacsServiceData.setErrorPath(getServicePath(
+                    getWorkingDirectory(jacsServiceData).toString(),
+                    jacsServiceData,
+                    String.format("%s-stderr.txt", jacsServiceData.getName(), jacsServiceData.hasId() ? "-" + jacsServiceData.getId() : "")).toString());
+        }
+    }
+
     protected Path getServicePath(String baseDir, JacsServiceData jacsServiceData, String... more) {
-        List<String> pathElems = new ImmutableList.Builder<String>()
-                .add(jacsServiceData.getName())
-                .add(jacsServiceData.getId().toString())
-                .addAll(Arrays.asList(more))
-                .build();
-        return Paths.get(baseDir, pathElems.toArray(new String[0])).toAbsolutePath();
+        ImmutableList.Builder<String> pathElemsBuilder = ImmutableList.<String>builder()
+                .add(jacsServiceData.getName());
+        if (jacsServiceData.hasId()) {
+            pathElemsBuilder.add(jacsServiceData.getId().toString());
+        }
+        pathElemsBuilder.addAll(Arrays.asList(more));
+        return Paths.get(baseDir, pathElemsBuilder.build().toArray(new String[0])).toAbsolutePath();
     }
 
 }

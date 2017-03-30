@@ -1,6 +1,7 @@
 package org.janelia.jacs2.asyncservice.common;
 
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -8,7 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 class ServiceComputationTask<T> implements Runnable {
 
     @FunctionalInterface
-    static interface ContinuationSupplier<T> {
+    interface ContinuationSupplier<T> {
         T get();
     }
 
@@ -71,6 +72,7 @@ class ServiceComputationTask<T> implements Runnable {
     private ContinuationSupplier<T> resultSupplier;
     private ComputeResult<T> result;
     private volatile boolean suspended;
+    private volatile boolean canceled;
 
     ServiceComputationTask(ServiceComputation<?> dep) {
         push(dep);
@@ -88,7 +90,7 @@ class ServiceComputationTask<T> implements Runnable {
 
     @Override
     public void run() {
-        tryFire();
+        exec();
     }
 
     void push(ServiceComputation<?> dep) {
@@ -99,7 +101,7 @@ class ServiceComputationTask<T> implements Runnable {
         this.resultSupplier = resultSupplier;
     }
 
-    void tryFire() {
+    void exec() {
         if (isDone()) {
             return;
         }
@@ -129,6 +131,9 @@ class ServiceComputationTask<T> implements Runnable {
     }
 
     boolean isReady() {
+        if (isCanceled()) {
+            return true;
+        }
         for (ServiceComputation<?> dep = depStack.top(); ;) {
             if (dep == null) {
                 return true;
@@ -153,7 +158,7 @@ class ServiceComputationTask<T> implements Runnable {
     }
 
     boolean isDone() {
-        return result != null;
+        return canceled || result != null;
     }
 
     boolean isCompletedExceptionally() {
@@ -182,5 +187,19 @@ class ServiceComputationTask<T> implements Runnable {
 
     void resume() {
         suspended = false;
+    }
+
+    boolean cancel() {
+        if (isDone()) {
+            return false;
+        } else {
+            completeExceptionally(new CancellationException());
+            canceled = true;
+            return true;
+        }
+    }
+
+    boolean isCanceled() {
+        return canceled;
     }
 }

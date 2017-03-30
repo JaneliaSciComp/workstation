@@ -3,17 +3,16 @@ package org.janelia.jacs2.asyncservice.imageservices;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
+import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
-import org.janelia.jacs2.asyncservice.common.ServiceComputation;
+import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractSingleFileServiceResultHandler;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
-import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
@@ -55,17 +54,16 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
     private final String libraryPath;
 
     @Inject
-    MontageImagesProcessor(JacsServiceEngine jacsServiceEngine,
-                           ServiceComputationFactory computationFactory,
+    MontageImagesProcessor(ServiceComputationFactory computationFactory,
                            JacsServiceDataPersistence jacsServiceDataPersistence,
+                           @Any Instance<ExternalProcessRunner> serviceRunners,
                            @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                            @PropertyValue(name = "Executables.ModuleBase") String executablesBaseDir,
-                           @Any Instance<ExternalProcessRunner> serviceRunners,
                            @PropertyValue(name = "ImageMagick.Bin.Path") String montageToolLocation,
                            @PropertyValue(name = "ImageMagick.Montage.Name") String montageToolName,
                            @PropertyValue(name = "ImageMagick.Lib.Path") String libraryPath,
                            Logger logger) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, executablesBaseDir, serviceRunners, logger);
+        super(computationFactory, jacsServiceDataPersistence, serviceRunners, defaultWorkingDir, executablesBaseDir, logger);
         this.montageToolLocation = montageToolLocation;
         this.montageToolName = montageToolName;
         this.libraryPath = libraryPath;
@@ -77,32 +75,22 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
     }
 
     @Override
-    public File getResult(JacsServiceData jacsServiceData) {
-        return ServiceDataUtils.stringToFile(jacsServiceData.getStringifiedResult());
-    }
+    public ServiceResultHandler<File> getResultHandler() {
+        return new AbstractSingleFileServiceResultHandler() {
 
-    @Override
-    public void setResult(File result, JacsServiceData jacsServiceData) {
-        jacsServiceData.setStringifiedResult(ServiceDataUtils.fileToString(result));
-    }
+            @Override
+            public boolean isResultReady(JacsServiceData jacsServiceData) {
+                MontageImagesArgs args = getArgs(jacsServiceData);
+                File targetImage = getTargetImage(args);
+                return targetImage.exists();
+            }
 
-    @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
-        return createComputation(jacsServiceData);
-    }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        MontageImagesArgs args = getArgs(jacsServiceData);
-        File targetImage = getTargetImage(args);
-        return targetImage.exists();
-    }
-
-    @Override
-    protected File retrieveResult(JacsServiceData jacsServiceData) {
-        MontageImagesArgs args = getArgs(jacsServiceData);
-        File targetImage = getTargetImage(args);
-        return targetImage;
+            @Override
+            public File collectResult(JacsServiceData jacsServiceData) {
+                MontageImagesArgs args = getArgs(jacsServiceData);
+                return getTargetImage(args);
+            }
+        };
     }
 
     @Override

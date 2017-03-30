@@ -5,7 +5,9 @@ import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 import org.janelia.jacs2.model.jacsservice.ProcessingLocation;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ServiceExecutionContext {
 
@@ -33,8 +35,28 @@ public class ServiceExecutionContext {
             return this;
         }
 
+        public Builder setServiceName(String serviceName) {
+            serviceExecutionContext.serviceName = serviceName;
+            return this;
+        }
+
+        public Builder setOutputPath(String outputPath) {
+            serviceExecutionContext.outputPath = outputPath;
+            return this;
+        }
+
+        public Builder setErrorPath(String errorPath) {
+            serviceExecutionContext.errorPath = errorPath;
+            return this;
+        }
+
         public Builder description(String description) {
             serviceExecutionContext.description = description;
+            return this;
+        }
+
+        public Builder addResource(String name, String value) {
+            serviceExecutionContext.resources.put(name, value);
             return this;
         }
 
@@ -45,9 +67,13 @@ public class ServiceExecutionContext {
 
     private final JacsServiceData parentServiceData;
     private ProcessingLocation processingLocation;
+    private String serviceName;
+    private String outputPath;
+    private String errorPath;
     private JacsServiceState serviceState;
     private String description;
     private List<JacsServiceData> waitFor = new ArrayList<>();
+    private Map<String, String> resources = new LinkedHashMap<>();
 
     public ServiceExecutionContext(JacsServiceData parentServiceData) {
         this.parentServiceData = parentServiceData;
@@ -61,10 +87,6 @@ public class ServiceExecutionContext {
         return processingLocation;
     }
 
-    public void setProcessingLocation(ProcessingLocation processingLocation) {
-        this.processingLocation = processingLocation;
-    }
-
     public List<JacsServiceData> getWaitFor() {
         return waitFor;
     }
@@ -73,11 +95,23 @@ public class ServiceExecutionContext {
         return serviceState;
     }
 
-    public void setServiceState(JacsServiceState serviceState) {
-        this.serviceState = serviceState;
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public String getOutputPath() {
+        return outputPath;
+    }
+
+    public String getErrorPath() {
+        return errorPath;
     }
 
     public String getDescription() {
         return description;
+    }
+
+    public Map<String, String> getResources() {
+        return resources;
     }
 }

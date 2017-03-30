@@ -3,18 +3,19 @@ package org.janelia.jacs2.asyncservice.imageservices;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
+import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractFileListServiceResultHandler;
 import org.janelia.jacs2.asyncservice.imageservices.align.AlignmentConfiguration;
 import org.janelia.jacs2.asyncservice.imageservices.align.AlignmentInput;
 import org.janelia.jacs2.asyncservice.imageservices.align.AlignmentUtils;
+import org.janelia.jacs2.asyncservice.utils.FileUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
@@ -26,15 +27,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Named("align")
 public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<List<File>> {
@@ -73,13 +71,12 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
     private final RawFilesAlignmentProcessor rawFilesAlignmentProcessor;
 
     @Inject
-    AlignmentProcessor(JacsServiceEngine jacsServiceEngine,
-                       ServiceComputationFactory computationFactory,
+    AlignmentProcessor(ServiceComputationFactory computationFactory,
                        JacsServiceDataPersistence jacsServiceDataPersistence,
                        @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                        RawFilesAlignmentProcessor rawFilesAlignmentProcessor,
                        Logger logger) {
-        super(jacsServiceEngine, computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
+        super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         this.rawFilesAlignmentProcessor = rawFilesAlignmentProcessor;
     }
 
@@ -89,24 +86,34 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
     }
 
     @Override
-    public List<File> getResult(JacsServiceData jacsServiceData) {
-        return ServiceDataUtils.stringToFileList(jacsServiceData.getStringifiedResult());
+    public ServiceResultHandler<List<File>> getResultHandler() {
+        return new AbstractFileListServiceResultHandler() {
+            final String resultsPattern = "glob:**/*.{v3draw}";
+
+            @Override
+            public boolean isResultReady(JacsServiceData jacsServiceData) {
+                return areAllDependenciesDone(jacsServiceData);
+            }
+
+            @Override
+            public List<File> collectResult(JacsServiceData jacsServiceData) {
+                AlignmentArgs args = getArgs(jacsServiceData);
+                return FileUtils.lookupFiles(getResultsDir(args), 1, resultsPattern)
+                        .map(Path::toFile)
+                        .collect(Collectors.toList());
+            }
+        };
     }
 
     @Override
-    public void setResult(List<File> result, JacsServiceData jacsServiceData) {
-        jacsServiceData.setStringifiedResult(ServiceDataUtils.fileListToString(result));
-    }
-
-    @Override
-    protected ServiceComputation<JacsServiceData> prepareProcessing(JacsServiceData jacsServiceData) {
+    protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
         try {
             AlignmentArgs args = getArgs(jacsServiceData);
             Files.createDirectories(getResultsDir(args));
         } catch (IOException e) {
             throw new ComputationException(jacsServiceData, e);
         }
-        return createComputation(jacsServiceData);
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override
@@ -153,38 +160,21 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
             alignmentArgs.add(new ServiceArg("-targetExtTemplate", alignConfig.templates.cbmCfoExt));
         }
 
-        JacsServiceData alignServiceData = submit(rawFilesAlignmentProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+        JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
+
+        JacsServiceData alignServiceDataRef = rawFilesAlignmentProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.QUEUED)
                         .build(),
-                alignmentArgs.toArray(new ServiceArg[alignmentArgs.size()])));
+                alignmentArgs.toArray(new ServiceArg[alignmentArgs.size()]));
+
+        JacsServiceData alignServiceData = submitDependencyIfNotPresent(jacsServiceDataHierarchy, alignServiceDataRef);
 
         return ImmutableList.of(alignServiceData);
     }
 
     @Override
-    protected ServiceComputation<List<File>> processing(JacsServiceData jacsServiceData) {
-        return createComputation(this.waitForResult(jacsServiceData));
-    }
-
-    @Override
-    protected boolean isResultAvailable(JacsServiceData jacsServiceData) {
-        return checkForDependenciesCompletion(jacsServiceData);
-    }
-
-    @Override
-    protected List<File> retrieveResult(JacsServiceData jacsServiceData) {
-        AlignmentArgs args = getArgs(jacsServiceData);
-        // collect all v3dpbd
-        List<File> results = new ArrayList<>();
-        try {
-            String resultsPattern = "glob:**/*.{v3dpbd}";
-            PathMatcher inputFileMatcher =
-                    FileSystems.getDefault().getPathMatcher(resultsPattern);
-            Files.find(getResultsDir(args), 1, (p, a) -> inputFileMatcher.matches(p)).forEach(p -> results.add(p.toFile()));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        return results;
+    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
+        return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
     private Path getResultsDir(AlignmentArgs args) {

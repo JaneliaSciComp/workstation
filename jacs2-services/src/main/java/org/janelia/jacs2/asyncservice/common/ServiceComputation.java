@@ -14,6 +14,8 @@ import java.util.function.Supplier;
  */
 public interface ServiceComputation<T> {
     T get();
+    boolean cancel();
+    boolean isCanceled();
     boolean isDone();
     boolean isCompletedExceptionally();
     boolean isSuspended();
