@@ -34,12 +34,12 @@ public class IntegerComputeTestProcessor extends AbstractBasicLifeCycleServicePr
         @Parameter(names = "-iterations", description = "Iterations per matrix multiply", required = false)
         Integer iterations=DEFAULT_ITERATIONS;
         @Parameter(names = "-testName", description = "Optional unique test name", required = false)
-        String testName="Default Test Name";
+        String testName="IntegerComputeTest";
     }
 
     private long resultComputationTime;
 
-    private IntegerComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
+    public static IntegerComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
         return IntegerComputeTestArgs.parse(jacsServiceData.getArgsArray(), new IntegerComputeTestArgs());
     }
 

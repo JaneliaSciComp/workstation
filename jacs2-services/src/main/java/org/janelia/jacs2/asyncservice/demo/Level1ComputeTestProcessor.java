@@ -30,12 +30,12 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
         @Parameter(names="-floatServiceCount", description="Number of concurrent FloatComputeTest", required=false)
         Integer floatServiceCount=DEFAULT_FLOAT_SERVICES;
         @Parameter(names = "-testName", description = "Optional unique test name", required=false)
-        String testName="Default Test Name";
+        String testName="Level1ComputeTest";
     }
 
     private long resultComputationTime;
 
-    private Level1ComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
+    public static Level1ComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
         return Level1ComputeTestArgs.parse(jacsServiceData.getArgsArray(), new Level1ComputeTestArgs());
     }
 
@@ -88,22 +88,44 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
         }
 
         int iTest=0;
+        List<JacsServiceData> submittedJsdList=new ArrayList<>();
+
         for (JacsServiceData j : integerComputeTests) {
-            logger.info("submitting integerComputeTest "+iTest+" id="+j.getId());
-            j=submit(j);
-            logger.info("waiting for integerComputeTest "+iTest+" id="+j.getId());
+            IntegerComputeTestProcessor.IntegerComputeTestArgs jArgs=
+                    IntegerComputeTestProcessor.getArgs(j);
+            String jName=jArgs.testName;
+            logger.info("submitting integerComputeTest "+jName);
+            submittedJsdList.add(submit(j));
+        }
+
+        iTest=0;
+        for (JacsServiceData j : submittedJsdList) {
+            IntegerComputeTestProcessor.IntegerComputeTestArgs jArgs=
+                    IntegerComputeTestProcessor.getArgs(j);
+            String jName=jArgs.testName;
+            logger.info("waiting for integerComputeTest "+jName);
             waitFor(j);
-            logger.info("finished integerComputeTest "+iTest+" id="+j.getId()+" of "+integerComputeTests.size());
+            logger.info("finished integerComputeTest "+jName);
             iTest++;
         }
 
         int fTest=0;
+        submittedJsdList.clear();
         for (JacsServiceData j : floatComputeTests) {
-            logger.info("submitting floatComputeTest "+fTest+" id="+j.getId());
-            j=submit(j);
-            logger.info("waiting for floatComputeTest "+fTest+" id="+j.getId());
+            FloatComputeTestProcessor.FloatComputeTestArgs jArgs=
+                    FloatComputeTestProcessor.getArgs(j);
+            String jName=jArgs.testName;
+            logger.info("submitting floatComputeTest "+jName);
+            submittedJsdList.add(submit(j));
+        }
+
+        for (JacsServiceData j : submittedJsdList) {
+            FloatComputeTestProcessor.FloatComputeTestArgs jArgs=
+                    FloatComputeTestProcessor.getArgs(j);
+            String jName=jArgs.testName;
+            logger.info("waiting for floatComputeTest "+jName);
             waitFor(j);
-            logger.info("finished floatComputeTest "+fTest+" id="+j.getId()+" of "+floatComputeTests.size());
+            logger.info("finished floatComputeTest "+jName);
             fTest++;
         }
 

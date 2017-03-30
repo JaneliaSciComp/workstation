@@ -28,12 +28,12 @@ public class Level2ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
         @Parameter(names="-levelCount", description="Number of concurrent child level tests", required=false)
         Integer levelCount=DEFAULT_COUNT;
         @Parameter(names = "-testName", description = "Optional unique test name", required=false)
-        String testName="Default Test Name";
+        String testName="Level2ComputeTest";
     }
 
     private long resultComputationTime;
 
-    private Level2ComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
+    public static Level2ComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
         return Level2ComputeTestArgs.parse(jacsServiceData.getArgsArray(), new Level2ComputeTestArgs());
     }
 

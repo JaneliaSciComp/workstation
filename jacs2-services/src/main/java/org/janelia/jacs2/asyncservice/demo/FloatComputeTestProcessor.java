@@ -35,10 +35,10 @@ public class FloatComputeTestProcessor extends AbstractBasicLifeCycleServiceProc
         @Parameter(names = "-iterations", description = "Iterations per matrix multiply", required = false)
         Integer iterations=DEFAULT_ITERATIONS;
         @Parameter(names = "-testName", description = "Optional unique test name", required = false)
-        String testName="Default Test Name";
+        String testName="FloatComputeTest";
     }
 
-    private FloatComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
+    public static FloatComputeTestArgs getArgs(JacsServiceData jacsServiceData) {
         return FloatComputeTestArgs.parse(jacsServiceData.getArgsArray(), new FloatComputeTestArgs());
     }
 
