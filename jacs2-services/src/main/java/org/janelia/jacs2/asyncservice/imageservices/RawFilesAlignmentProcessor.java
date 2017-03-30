@@ -220,7 +220,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         // convert rotated subject to Nifti
         JacsServiceData subjectToNiftiServiceData = convertToNiftiImage(rotatedSubjectFile, rotatedSubjectNiftiFile, jacsServiceDataHierarchy, rotateSubjectServiceData);
         // global alignment of the subject to target
-        JacsServiceData globalAlignServiceData = globalAlignSubjectToTarget(targetExtNiftiFile, rotatedSubjectNiftiFile, globalSymmetricTransformFile, jacsServiceDataHierarchy, subjectToNiftiServiceData);
+        JacsServiceData globalAlignServiceData = globalAlignSubjectToTarget(targetExtNiftiFile, rotatedSubjectNiftiFile, globalSymmetricTransformFile, jacsServiceDataHierarchy, targetExtToNiftiServiceData, subjectToNiftiServiceData);
         // rotate recentered object
         JacsServiceData rotateRecenteredServiceData = applyIWarp2Transformation(resizedSubjectFile, rotationsAffineFile, rotatedSubjectRecenteredFile, jacsServiceDataHierarchy, resizeSubjectServiceData);
         // affine transform rotated subject
@@ -428,13 +428,13 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return submitDependencyIfNotPresent(jacsServiceData, downsampleServiceData);
     }
 
-    private JacsServiceData findRotationMatrix(Path resizedSubjectRefDownsampledFile, Path targetExtDownsampledFile, Path rotationsMatFile, String fslOutputType, JacsServiceData jacsServiceData, JacsServiceData... deps) {
+    private JacsServiceData findRotationMatrix(Path subjectFile, Path targetFile, Path rotationsMatFile, String fslOutputType, JacsServiceData jacsServiceData, JacsServiceData... deps) {
         logger.info("Find rotations {}", rotationsMatFile);
         JacsServiceData rotateServiceData = flirtProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .waitFor(deps)
                         .build(),
-                new ServiceArg("-in", resizedSubjectRefDownsampledFile.toString()),
-                new ServiceArg("-ref", targetExtDownsampledFile.toString()),
+                new ServiceArg("-in", subjectFile.toString()),
+                new ServiceArg("-ref", targetFile.toString()),
                 new ServiceArg("-omat", rotationsMatFile.toString()),
                 new ServiceArg("-cost", "mutualinfo"),
                 new ServiceArg("-searchrx", 2, "-180", "180"),
@@ -484,15 +484,16 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return submitDependencyIfNotPresent(jacsServiceData, estimateRotationsServiceData);
     }
 
-    private JacsServiceData globalAlignSubjectToTarget(Path targetExtNiftiFile, Path rotatedSubjectNiftiFile, Path symmetricTransformFile, JacsServiceData jacsServiceData, JacsServiceData... deps) {
+    private JacsServiceData globalAlignSubjectToTarget(Path targetNiftiFile, Path subjectNiftiFile, Path symmetricTransformFile, JacsServiceData jacsServiceData, JacsServiceData... deps) {
         logger.info("Align subject to target");
         JacsServiceData alignSubjectToTargetServiceData = antsToolProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .waitFor(deps)
                         .build(),
                 new ServiceArg("-dims", "3"),
                 new ServiceArg("-metric",
                         String.format("MI[%s, %s, %d, %d]",
-                                targetExtNiftiFile,
-                                rotatedSubjectNiftiFile,
+                                targetNiftiFile,
+                                subjectNiftiFile,
                                 1,
                                 32)),
                 new ServiceArg("-output", symmetricTransformFile.toString()),
