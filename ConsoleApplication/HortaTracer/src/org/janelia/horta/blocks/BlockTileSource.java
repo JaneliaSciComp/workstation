@@ -47,8 +47,6 @@ public interface BlockTileSource {
 
     public ConstVector3 getBlockCentroid(BlockTileKey centerBlock);
 
-    public boolean blockExists(BlockTileKey key) throws IOException;
-    
     public BlockTileData loadBlock(BlockTileKey key) throws IOException, InterruptedException;
     
     public URL getRootUrl();
