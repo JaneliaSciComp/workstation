@@ -1,10 +1,10 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata;
+package org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw;
 
-public class SataGraph {
+public class DtwGraph {
     
     private String id;
     private String samplePath;
-    private SataGraphStatus status;
+    private DtwGraphStatus status;
 
     public String getId() {
         return id;
@@ -22,11 +22,11 @@ public class SataGraph {
         this.samplePath = samplePath;
     }
 
-    public SataGraphStatus getStatus() {
+    public DtwGraphStatus getStatus() {
         return status;
     }
 
-    public void setStatus(SataGraphStatus status) {
+    public void setStatus(DtwGraphStatus status) {
         this.status = status;
     }
     

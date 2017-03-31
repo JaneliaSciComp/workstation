@@ -1,8 +1,8 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata;
+package org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw;
 
 import java.util.List;
 
-public class SataBranch {
+public class DtwBranch {
 
     private String id;
     private List<String> nodeLocations;

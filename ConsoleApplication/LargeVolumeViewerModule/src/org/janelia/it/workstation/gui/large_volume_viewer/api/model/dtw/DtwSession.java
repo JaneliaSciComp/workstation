@@ -1,8 +1,8 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata;
+package org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw;
 
 import java.util.Date;
 
-public class SataSession {
+public class DtwSession {
 
     private String id;
     private String graphId;

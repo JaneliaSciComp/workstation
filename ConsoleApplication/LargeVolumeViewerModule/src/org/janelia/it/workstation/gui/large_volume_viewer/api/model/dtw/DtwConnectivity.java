@@ -1,8 +1,8 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata;
+package org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw;
 
 import java.util.List;
 
-public class SataConnectivity {
+public class DtwConnectivity {
 
     private List<List<String>> connections;
     private Double probability;

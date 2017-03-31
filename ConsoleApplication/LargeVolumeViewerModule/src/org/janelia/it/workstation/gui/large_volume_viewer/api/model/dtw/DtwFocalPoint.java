@@ -1,6 +1,6 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata;
+package org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw;
 
-public class SataFocalPoint {
+public class DtwFocalPoint {
 
     private String centerLocation;
     private String normalVector;

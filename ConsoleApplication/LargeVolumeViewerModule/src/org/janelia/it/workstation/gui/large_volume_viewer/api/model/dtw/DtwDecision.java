@@ -1,17 +1,17 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata;
+package org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw;
 
 import java.util.Date;
 import java.util.List;
 
-public class SataDecision {
+public class DtwDecision {
 
     private String id;
     private String sessionId;
     private Date orderDate;
     private Date fillDate;
-    private SataFocalPoint viewingFocus;
-    private List<SataBranch> branches;
-    private List<SataConnectivity> choices;
+    private DtwFocalPoint viewingFocus;
+    private List<DtwBranch> branches;
+    private List<DtwConnectivity> choices;
 
     public String getId() {
         return id;
@@ -45,27 +45,27 @@ public class SataDecision {
         this.fillDate = fillDate;
     }
 
-    public SataFocalPoint getViewingFocus() {
+    public DtwFocalPoint getViewingFocus() {
         return viewingFocus;
     }
 
-    public void setViewingFocus(SataFocalPoint viewingFocus) {
+    public void setViewingFocus(DtwFocalPoint viewingFocus) {
         this.viewingFocus = viewingFocus;
     }
 
-    public List<SataBranch> getBranches() {
+    public List<DtwBranch> getBranches() {
         return branches;
     }
 
-    public void setBranches(List<SataBranch> branches) {
+    public void setBranches(List<DtwBranch> branches) {
         this.branches = branches;
     }
 
-    public List<SataConnectivity> getChoices() {
+    public List<DtwConnectivity> getChoices() {
         return choices;
     }
 
-    public void setChoices(List<SataConnectivity> choices) {
+    public void setChoices(List<DtwConnectivity> choices) {
         this.choices = choices;
     }
 

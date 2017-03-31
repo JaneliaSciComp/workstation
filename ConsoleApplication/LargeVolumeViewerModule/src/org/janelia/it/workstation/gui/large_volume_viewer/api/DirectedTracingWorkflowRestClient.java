@@ -14,10 +14,10 @@ import javax.ws.rs.core.Response;
 
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataDecision;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataGraph;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataSession;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataSessionType;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw.DtwDecision;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw.DtwGraph;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw.DtwSession;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw.DtwSessionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,15 +35,15 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SataWorkflowRestClient {
+public class DirectedTracingWorkflowRestClient {
 
-    private static final Logger log = LoggerFactory.getLogger(SataWorkflowRestClient.class);
+    private static final Logger log = LoggerFactory.getLogger(DirectedTracingWorkflowRestClient.class);
 
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("mouselight.sata.rest.url");
+    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("mouselight.dtw.rest.url");
 
     private final Client client;
 
-    public SataWorkflowRestClient() {
+    public DirectedTracingWorkflowRestClient() {
         log.info("Using server URL: {}",REMOTE_API_URL);
         JacksonJsonProvider provider = new JacksonJaxbJsonProvider();
         ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
@@ -62,82 +62,82 @@ public class SataWorkflowRestClient {
         return client.target(REMOTE_API_URL + suffix).queryParam("subjectKey", AccessManager.getSubjectKey());
     }
     
-    public List<SataGraph> getGraphs() throws Exception {
+    public List<DtwGraph> getGraphs() throws Exception {
         Response response = getEndpoint("/graph/")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
         checkBadResponse(response, "getGraphs");
-        return response.readEntity(new GenericType<List<SataGraph>>() {});
+        return response.readEntity(new GenericType<List<DtwGraph>>() {});
     }
 
-    public SataGraph getGraph(String graphId) throws Exception {
+    public DtwGraph getGraph(String graphId) throws Exception {
         Response response = getEndpoint("/graph/"+graphId)
                 .request("application/json")
                 .get();
         checkBadResponse(response, "getGraphById");
-        return response.readEntity(SataGraph.class);
+        return response.readEntity(DtwGraph.class);
     }
     
-    public SataGraph getLatestGraph(String samplePath) throws Exception {
+    public DtwGraph getLatestGraph(String samplePath) throws Exception {
         Response response = getEndpoint("/graph/findLatest")
                 .queryParam("samplePath", samplePath)
                 .request("application/json")
                 .get();
         checkBadResponse(response, "findLatestGraph");
-        return response.readEntity(SataGraph.class);
+        return response.readEntity(DtwGraph.class);
     }
     
-    public SataGraph create(SataGraph graph) throws Exception {
+    public DtwGraph create(DtwGraph graph) throws Exception {
         Response response = getEndpoint("/graph/")
                 .request("application/json")
                 .post(Entity.json(graph));
         checkBadResponse(response, "createGraph");
-        return response.readEntity(SataGraph.class);
+        return response.readEntity(DtwGraph.class);
     }
 
-    public SataGraph startGraphUpdate(String graphId) throws Exception {
+    public DtwGraph startGraphUpdate(String graphId) throws Exception {
         Response response = getEndpoint("/graph/"+graphId+"/update")
                 .request("application/json")
                 .post(Entity.json(null));
         checkBadResponse(response, "updateGraph");
-        return response.readEntity(SataGraph.class);
+        return response.readEntity(DtwGraph.class);
     }
     
-    public SataSession createSession(SataGraph graph, SataSessionType sessionType) throws Exception {
-        SataSession session = new SataSession();
+    public DtwSession createSession(DtwGraph graph, DtwSessionType sessionType) throws Exception {
+        DtwSession session = new DtwSession();
         session.setGraphId(graph.getId());
         session.setSessionType(sessionType.getLabel());
         Response response = getEndpoint("/session/")
                 .request("application/json")
                 .post(Entity.json(session));
         checkBadResponse(response, "createSession");
-        return response.readEntity(SataSession.class);
+        return response.readEntity(DtwSession.class);
     }
 
-    public SataSession getSession(String sessionId) throws Exception {
+    public DtwSession getSession(String sessionId) throws Exception {
         Response response = getEndpoint("/session/"+sessionId)
                 .request("application/json")
                 .get();
         checkBadResponse(response, "getSession");
-        return response.readEntity(SataSession.class);
+        return response.readEntity(DtwSession.class);
     }
     
-    public SataDecision getNextDecision(String sessionId) throws Exception {
+    public DtwDecision getNextDecision(String sessionId) throws Exception {
         Response response = getEndpoint("/session/"+sessionId+"/next")
                 .request("application/json")
                 .get();
         checkBadResponse(response, "getNextDecision");
-        return response.readEntity(SataDecision.class);
+        return response.readEntity(DtwDecision.class);
     }
     
-    public SataDecision updateDecision(SataDecision decision) throws Exception {
+    public DtwDecision updateDecision(DtwDecision decision) throws Exception {
         WebTarget target = getEndpoint("/session/"+decision.getSessionId()+"/decision/"+decision.getId());
         Response response = target
                 .request("application/json")
                 .post(Entity.json(decision));
         checkBadResponse(response, "updateDecision");
-        return response.readEntity(SataDecision.class);
+        return response.readEntity(DtwDecision.class);
     }
     
     protected void checkBadResponse(Response response, String failureError) {

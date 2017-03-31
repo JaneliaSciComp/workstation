@@ -25,11 +25,11 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.model.DomainObjectComparator;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataDecision;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataGraph;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataGraphStatus;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataSession;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.model.sata.SataSessionType;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw.DtwDecision;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw.DtwGraph;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw.DtwGraphStatus;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw.DtwSession;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw.DtwSessionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,11 +53,11 @@ public class TiledMicroscopeDomainMgr {
     }
 
     private final TiledMicroscopeRestClient client;
-    private final SataWorkflowRestClient sataClient;
+    private final DirectedTracingWorkflowRestClient sataClient;
     
     private TiledMicroscopeDomainMgr() {
         client = new TiledMicroscopeRestClient();
-        sataClient = new SataWorkflowRestClient();
+        sataClient = new DirectedTracingWorkflowRestClient();
     }
     
     private final DomainModel model = DomainMgr.getDomainMgr().getModel();
@@ -323,9 +323,9 @@ public class TiledMicroscopeDomainMgr {
         Reference sampleRef = Reference.createFor(TmSample.class, sampleId);
         
         // Get or create graph in SATA
-        SataGraph graph = sataClient.getLatestGraph(sample.getFilepath());
+        DtwGraph graph = sataClient.getLatestGraph(sample.getFilepath());
         if (graph==null) {
-            graph = new SataGraph();
+            graph = new DtwGraph();
             graph.setSamplePath(sample.getFilepath());
             graph = sataClient.create(graph);
             log.info("Created graph with id="+graph.getId());
@@ -334,7 +334,7 @@ public class TiledMicroscopeDomainMgr {
         log.info("Creating session for graph with id="+graph.getId());
         
         // Create new session in SATA
-        SataSession session = sataClient.createSession(graph, SataSessionType.AffinityLearning);
+        DtwSession session = sataClient.createSession(graph, DtwSessionType.AffinityLearning);
         
         // Create session tracking object in JACS
         TmSession tmSession = new TmSession();
@@ -357,9 +357,9 @@ public class TiledMicroscopeDomainMgr {
         return tmSession;
     }
     
-    private Map<TmSession, SataSession> sessionMapping = new HashMap<>();
-    private SataSession getSataSession(TmSession tmSession) throws Exception {
-        SataSession sataSession = sessionMapping.get(tmSession);
+    private Map<TmSession, DtwSession> sessionMapping = new HashMap<>();
+    private DtwSession getSataSession(TmSession tmSession) throws Exception {
+        DtwSession sataSession = sessionMapping.get(tmSession);
         if (sataSession==null) {
             log.info("Session not cached, attempting to retrieve from SATA");
             sataSession = sataClient.getSession(tmSession.getExternalSessionId());
@@ -368,30 +368,30 @@ public class TiledMicroscopeDomainMgr {
         return sataSession;
     }
     
-    public SataDecision getNextDecision(TmSession tmSession) throws Exception {
+    public DtwDecision getNextDecision(TmSession tmSession) throws Exception {
         log.debug("getNextDecision(sessionId={})", tmSession.getExternalSessionId());
         return sataClient.getNextDecision(tmSession.getExternalSessionId());
     }
     
-    public SataDecision saveDecision(SataDecision decision) throws Exception {
+    public DtwDecision saveDecision(DtwDecision decision) throws Exception {
         log.debug("saveDecision(decisionId={})", decision.getId());
         return sataClient.updateDecision(decision);
     }
     
     public void startGraphUpdate(TmSession tmSession) throws Exception {
         log.debug("startGraphUpdate(sessionId={})", tmSession.getExternalSessionId());
-        SataSession session = getSataSession(tmSession);
+        DtwSession session = getSataSession(tmSession);
         sataClient.startGraphUpdate(session.getGraphId());
     }
 
-    public SataGraphStatus getGraphStatus(TmSession tmSession) throws Exception {
+    public DtwGraphStatus getGraphStatus(TmSession tmSession) throws Exception {
         log.debug("getGraphStatus(sessionId={})", tmSession.getExternalSessionId());
-        SataSession session = getSataSession(tmSession);
-        SataGraph graph = sataClient.getGraph(session.getGraphId());
+        DtwSession session = getSataSession(tmSession);
+        DtwGraph graph = sataClient.getGraph(session.getGraphId());
         if (graph!=null) {
             return graph.getStatus();
         }
-        return SataGraphStatus.Unknown;
+        return DtwGraphStatus.Unknown;
     }
     
     public TmSession save(TmSession session) throws Exception {
