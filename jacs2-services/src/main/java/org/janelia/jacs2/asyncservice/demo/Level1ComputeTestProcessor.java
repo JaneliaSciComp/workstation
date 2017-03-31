@@ -61,7 +61,26 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
 
     @Override
     public ServiceResultHandler<Long> getResultHandler() {
-        return null;
+        return new ServiceResultHandler<Long>() {
+            @Override
+            public boolean isResultReady(JacsServiceData jacsServiceData) {
+                return true;
+            }
+
+            @Override
+            public Long collectResult(JacsServiceData jacsServiceData) {
+                return null;
+            }
+
+            @Override
+            public void updateServiceDataResult(JacsServiceData jacsServiceData, Long result) {
+            }
+
+            @Override
+            public Long getServiceDataResult(JacsServiceData jacsServiceData) {
+                return null;
+            }
+        };
     }
 
     @Override
@@ -71,95 +90,42 @@ public class Level1ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
         long startTime=new Date().getTime();
         Level1ComputeTestArgs args=getArgs(jacsServiceData);
 
-        List<JacsServiceData> integerComputeTests=new ArrayList<>();
-        for (int i=0;i<args.integerServiceCount;i++) {
-            JacsServiceData integerComputeTestProcessorServiceData =
-                    integerComputeTestProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData));
-            integerComputeTestProcessorServiceData.addArg("-testName");
-            integerComputeTestProcessorServiceData.addArg(args.testName+".IntegerTest"+i);
-            logger.info("adding integerComputeTest to list id="+integerComputeTestProcessorServiceData.getId());
-            integerComputeTests.add(integerComputeTestProcessorServiceData);
-        }
+        return computationFactory.newCompletedComputation(jacsServiceData)
+                .thenApply(jsd -> {
+                    for (int i=0;i<args.integerServiceCount;i++) {
+                        String testName=args.testName+".IntegerTest"+i;
+                        JacsServiceData j = integerComputeTestProcessor.createServiceData(new ServiceExecutionContext(jsd));
+                        j.addArg("-testName");
+                        j.addArg(testName);
+                        logger.info("adding integerComputeTest "+testName);
+                        jacsServiceDataPersistence.saveHierarchy(j);
+                    }
+                    return jsd;
+                }).thenSuspendUntil(() -> !suspendUntilAllDependenciesComplete(jacsServiceData))
+                .thenApply(jsd -> {
+                    for (int i=0;i<args.floatServiceCount;i++) {
+                        String testName=args.testName+".FloatTest"+i;
+                        JacsServiceData j = floatComputeTestProcessor.createServiceData(new ServiceExecutionContext(jsd));
+                        j.addArg("-testName");
+                        j.addArg(testName);
+                        logger.info("adding floatComputeTest "+testName);
+                        jacsServiceDataPersistence.saveHierarchy(j);
+                    }
+                    return jsd;
+                }).thenSuspendUntil(() -> !suspendUntilAllDependenciesComplete(jacsServiceData))
+                .thenApply(jsd -> {
+                    logger.info("All tests complete for service "+serviceName);
+                    long endTime=new Date().getTime();
+                    resultComputationTime=endTime-startTime;
+                    logger.info(serviceName+" end processing, processing time= "+resultComputationTime);
+                    return jsd;
+                });
 
-        List<JacsServiceData> floatComputeTests=new ArrayList<>();
-        for (int i=0;i<args.floatServiceCount;i++) {
-            JacsServiceData floatComputeTestProcessorServiceData =
-                    floatComputeTestProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData));
-            floatComputeTestProcessorServiceData.addArg("-testName");
-            floatComputeTestProcessorServiceData.addArg(args.testName+".FloatTest"+i);
-            logger.info("adding floatComputeTest to list id="+floatComputeTestProcessorServiceData.getId());
-            floatComputeTests.add(floatComputeTestProcessorServiceData);
-        }
-
-        int iTest=0;
-        List<JacsServiceData> submittedJsdList=new ArrayList<>();
-
-        for (JacsServiceData j : integerComputeTests) {
-            IntegerComputeTestProcessor.IntegerComputeTestArgs jArgs=
-                    IntegerComputeTestProcessor.getArgs(j);
-            String jName=jArgs.testName;
-            logger.info("submitting integerComputeTest "+jName);
-            jacsServiceDataPersistence.saveHierarchy(j);
-            submittedJsdList.add(j);
-        }
-
-        iTest=0;
-        for (JacsServiceData j : submittedJsdList) {
-            IntegerComputeTestProcessor.IntegerComputeTestArgs jArgs=
-                    IntegerComputeTestProcessor.getArgs(j);
-            String jName=jArgs.testName;
-            logger.info("waiting for integerComputeTest "+jName);
-            waitFor(j);
-            logger.info("finished integerComputeTest "+jName);
-            iTest++;
-        }
-
-        int fTest=0;
-        submittedJsdList.clear();
-        for (JacsServiceData j : floatComputeTests) {
-            FloatComputeTestProcessor.FloatComputeTestArgs jArgs=
-                    FloatComputeTestProcessor.getArgs(j);
-            String jName=jArgs.testName;
-            logger.info("submitting floatComputeTest "+jName);
-            jacsServiceDataPersistence.saveHierarchy(j);
-            submittedJsdList.add(j);
-        }
-
-        for (JacsServiceData j : submittedJsdList) {
-            FloatComputeTestProcessor.FloatComputeTestArgs jArgs=
-                    FloatComputeTestProcessor.getArgs(j);
-            String jName=jArgs.testName;
-            logger.info("waiting for floatComputeTest "+jName);
-            waitFor(j);
-            logger.info("finished floatComputeTest "+jName);
-            fTest++;
-        }
-
-        long endTime=new Date().getTime();
-        resultComputationTime=endTime-startTime;
-        logger.info(serviceName+" end processing, processing time= "+resultComputationTime);
-        return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         return null;
-    }
-
-    private void waitFor(JacsServiceData j) {
-        for (;;) {
-            try {
-                Thread.sleep(500);
-            } catch (Exception ex) {
-            }
-            j = jacsServiceDataPersistence.findById(j.getId());
-            if (j.hasCompleted()) {
-                logger.info("service id="+j.getId()+" has completed");
-                return;
-            } else {
-//                logger.info("service id="+j.getId()+" has not completed");
-            }
-        }
     }
 
 }

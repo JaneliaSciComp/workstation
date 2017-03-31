@@ -58,7 +58,27 @@ public class IntegerComputeTestProcessor extends AbstractBasicLifeCycleServicePr
 
     @Override
     public ServiceResultHandler<Long> getResultHandler() {
-        return null;
+        return new ServiceResultHandler<Long>() {
+            @Override
+            public boolean isResultReady(JacsServiceData jacsServiceData) {
+                return true;
+            }
+
+            @Override
+            public Long collectResult(JacsServiceData jacsServiceData) {
+                return null;
+            }
+
+            @Override
+            public void updateServiceDataResult(JacsServiceData jacsServiceData, Long result) {
+
+            }
+
+            @Override
+            public Long getServiceDataResult(JacsServiceData jacsServiceData) {
+                return null;
+            }
+        };
     }
 
     @Override

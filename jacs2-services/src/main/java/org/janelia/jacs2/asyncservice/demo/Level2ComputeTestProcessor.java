@@ -56,61 +56,62 @@ public class Level2ComputeTestProcessor extends AbstractBasicLifeCycleServicePro
 
     @Override
     public ServiceResultHandler<Long> getResultHandler() {
-        return null;
+        return new ServiceResultHandler<Long>() {
+            @Override
+            public boolean isResultReady(JacsServiceData jacsServiceData) {
+                return true;
+            }
+
+            @Override
+            public Long collectResult(JacsServiceData jacsServiceData) {
+                return null;
+            }
+
+            @Override
+            public void updateServiceDataResult(JacsServiceData jacsServiceData, Long result) {
+
+            }
+
+            @Override
+            public Long getServiceDataResult(JacsServiceData jacsServiceData) {
+                return null;
+            }
+        };
     }
 
     @Override
     public ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        String serviceName=getArgs(jacsServiceData).testName;
-        logger.info(serviceName+" start processing");
-        long startTime=new Date().getTime();
-        Level2ComputeTestArgs args=getArgs(jacsServiceData);
+        String serviceName = getArgs(jacsServiceData).testName;
+        logger.info(serviceName + " start processing");
+        long startTime = new Date().getTime();
+        Level2ComputeTestArgs args = getArgs(jacsServiceData);
 
-        List<JacsServiceData> levelComputeTests=new ArrayList<>();
-        for (int i=0;i<args.levelCount;i++) {
-            JacsServiceData jsd =
-                    level1ComputeTestProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData));
-            jsd.addArg("-testName");
-            jsd.addArg(args.testName+".Level1Test"+i);
-            logger.info("adding level1ComputeTest to list id="+jsd.getId());
-            levelComputeTests.add(jsd);
-        }
+        return computationFactory.newCompletedComputation(jacsServiceData)
+                .thenApply(jsd -> {
+                    for (int i = 0; i < args.levelCount; i++) {
+                        String testName = args.testName + ".Level1Test" + i;
+                        JacsServiceData j =
+                                level1ComputeTestProcessor.createServiceData(new ServiceExecutionContext(jsd));
+                        j.addArg("-testName");
+                        j.addArg(testName);
+                        logger.info("adding level1ComputeTest " + testName);
+                        jacsServiceDataPersistence.saveHierarchy(j);
+                    }
+                    return jsd;
+                })
+                .thenSuspendUntil(() -> !suspendUntilAllDependenciesComplete(jacsServiceData))
+                .thenApply(jsd -> {
+                    long endTime = new Date().getTime();
+                    resultComputationTime = endTime - startTime;
+                    logger.info(serviceName + " end processing, time=" + resultComputationTime);
+                    return jsd;
+                });
 
-        int iTest=0;
-        for (JacsServiceData j : levelComputeTests) {
-            logger.info("submitting level 1 ComputeTest "+iTest+" id="+j.getId());
-            jacsServiceDataPersistence.saveHierarchy(j);
-            logger.info("waiting for level 1 ComputeTest "+iTest+" id="+j.getId());
-            waitFor(j);
-            logger.info("finished level 1 ComputeTest "+iTest+" id="+j.getId()+" of "+levelComputeTests.size());
-            iTest++;
-        }
-
-        long endTime=new Date().getTime();
-        resultComputationTime=endTime-startTime;
-        logger.info(serviceName+" end processing, time="+resultComputationTime);
-        return computationFactory.newCompletedComputation(jacsServiceData);
     }
 
     @Override
     protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         return null;
-    }
-
-    private void waitFor(JacsServiceData j) {
-        for (;;) {
-            try {
-                Thread.sleep(500);
-            } catch (Exception ex) {
-            }
-            j = jacsServiceDataPersistence.findById(j.getId());
-            if (j.hasCompleted()) {
-                logger.info("service id="+j.getId()+" has completed");
-                return;
-            } else {
-//                logger.info("service id="+j.getId()+" has not completed");
-            }
-        }
     }
 
 }
