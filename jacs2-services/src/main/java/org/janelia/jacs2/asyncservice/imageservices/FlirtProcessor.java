@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -155,16 +156,15 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<List<File>>
     @Override
     public ServiceResultHandler<List<File>> getResultHandler() {
         return new AbstractFileListServiceResultHandler() {
-//            final String resultsPattern = "glob:**/*.{png,avi,mp4}";
 
             @Override
             public boolean isResultReady(JacsServiceData jacsServiceData) {
                 FlirtArgs args = getArgs(jacsServiceData);
-                Path outputAffine = getOutputAffine(args, jacsServiceData);
+                Path outputAffine = getOutputAffine(args);
                 if (outputAffine != null && !outputAffine.toFile().exists()) {
                     return false;
                 }
-                Path outputVolume = getOutputVolume(args, jacsServiceData);
+                Path outputVolume = getOutputVolume(args);
                 if (outputVolume != null && !outputVolume.toFile().exists()) {
                     return false;
                 }
@@ -175,11 +175,11 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<List<File>>
             public List<File> collectResult(JacsServiceData jacsServiceData) {
                 FlirtArgs args = getArgs(jacsServiceData);
                 List<File> results = new LinkedList<>();
-                Path outputAffine = getOutputAffine(args, jacsServiceData);
+                Path outputAffine = getOutputAffine(args);
                 if (outputAffine != null) {
                     results.add(outputAffine.toFile());
                 }
-                Path outputVolume = getOutputVolume(args, jacsServiceData);
+                Path outputVolume = getOutputVolume(args);
                 if (outputVolume != null) {
                     results.add(outputVolume.toFile());
                 }
@@ -191,7 +191,7 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<List<File>>
     @Override
     protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
         FlirtArgs args = getArgs(jacsServiceData);
-        Path outputAffine = getOutputAffine(args, jacsServiceData);
+        Path outputAffine = getOutputAffine(args);
         if (outputAffine != null) {
             try {
                 Files.createDirectories(outputAffine.getParent());
@@ -199,7 +199,7 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<List<File>>
                 throw new ComputationException(jacsServiceData, e);
             }
         }
-        Path outputVolume = getOutputVolume(args, jacsServiceData);
+        Path outputVolume = getOutputVolume(args);
         if (outputVolume != null) {
             try {
                 Files.createDirectories(outputVolume.getParent());
@@ -285,17 +285,17 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<List<File>>
         return args;
     }
 
-    private Path getOutputAffine(FlirtArgs args, JacsServiceData jacsServiceData) {
+    private Path getOutputAffine(FlirtArgs args) {
         if (StringUtils.isNotBlank(args.outputAffine)) {
-            return getServicePath(args.outputAffine, jacsServiceData);
+            return Paths.get(args.outputAffine);
         } else {
             return null;
         }
     }
 
-    private Path getOutputVolume(FlirtArgs args, JacsServiceData jacsServiceData) {
+    private Path getOutputVolume(FlirtArgs args) {
         if (StringUtils.isNotBlank(args.outputVol)) {
-            return getServicePath(args.outputVol, jacsServiceData);
+            return Paths.get(args.outputVol);
         } else {
             return null;
         }
