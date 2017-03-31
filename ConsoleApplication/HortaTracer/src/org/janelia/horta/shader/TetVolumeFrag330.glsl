@@ -381,6 +381,13 @@ void clipRayToOpaqueDepthBuffer(in vec3 x0, in vec3 x1, inout float maxRay)
 
 void main() 
 {
+    const bool debugView = false;
+    if (debugView) {
+        fragColor = vec4(1, 0, 0, 1);
+        coreDepth = vec2(1, 0.5);
+        return;
+    }
+
     // Ray parameters
     vec3 x0 = cameraPosInTexCoord; // origin
     vec3 x1 = fragTexCoord - x0; // direction
