@@ -252,11 +252,16 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 "Find the rotations",
                 jacsServiceDataHierarchy,
                 targetDownsampleServiceData, subjectDownsampleServiceData);
-        // $Vaa3D -x ireg -f extractRotMat -i $RCOUT -o $RCAFFINE
-        JacsServiceData affinePrepServiceData = prepareAffineTransformation(rotationsMatFile, insightRotationsFile, rotationsAffineFile,
-                "Prepare affine transformations",
+        // Convert the affine matrix to insight
+        JacsServiceData affine2InsightServiceData = convertAffineToInsight(rotationsMatFile, insightRotationsFile,
+                "Convert affine matrix to insight",
                 jacsServiceDataHierarchy,
                 estimateRotationsServiceData);
+        // $Vaa3D -x ireg -f extractRotMat -i $RCOUT -o $RCAFFINE
+        JacsServiceData affinePrepServiceData = prepareAffineTransformation(insightRotationsFile, rotationsAffineFile,
+                "Prepare affine transformations",
+                jacsServiceDataHierarchy,
+                affine2InsightServiceData);
         // rotate the subject
         // $Vaa3D -x ireg -f iwarp -o $SUBSXRFCROT -p "#s $SUBSXRSRFC #t $TARSXEXT #a $RCAFFINE"
         JacsServiceData rotateSubjectServiceData = rotateSubject(resizedSubjectRefChannelFile, targetExtFile, rotationsAffineFile, rotatedResizedSubjectRefChannelFile,
@@ -565,22 +570,26 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return submitDependencyIfNotPresent(jacsServiceData, rotateServiceData);
     }
 
-    private JacsServiceData prepareAffineTransformation(Path rotationsMatFile, Path insightRotationsFile, Path rotationsAffineFile,
-                                                        String description,
-                                                        JacsServiceData jacsServiceData, JacsServiceData... deps) {
-        logger.info("Estimate rotations {}", rotationsMatFile);
+    private JacsServiceData convertAffineToInsight(Path rotationsMatFile, Path insightRotationsFile,
+                                                   String description,
+                                                   JacsServiceData jacsServiceData, JacsServiceData... deps) {
         JacsServiceData affineToInsightServiceData = affineToInsightConverterProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
-                        .description("Convert affine rotation matrix to insight format")
+                        .description(description)
                         .waitFor(deps)
                         .build(),
                 new ServiceArg("-input", rotationsMatFile.toString()),
                 new ServiceArg("-output", insightRotationsFile.toString())
         );
         submitDependencyIfNotPresent(jacsServiceData, affineToInsightServiceData);
+        return affineToInsightServiceData;
+    }
+
+    private JacsServiceData prepareAffineTransformation(Path insightRotationsFile, Path rotationsAffineFile,
+                                                        String description,
+                                                        JacsServiceData jacsServiceData, JacsServiceData... deps) {
         JacsServiceData estimateRotationsServiceData = vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .description(description)
                         .waitFor(deps)
-                        .waitFor(affineToInsightServiceData)
                         .build(),
                 new ServiceArg("-plugin", "ireg"),
                 new ServiceArg("-pluginFunc", "extractRotMat"),

@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Optional;
 import java.util.Set;
 
 abstract class AbstractExternalProcessRunner implements ExternalProcessRunner {
@@ -53,30 +54,33 @@ abstract class AbstractExternalProcessRunner implements ExternalProcessRunner {
     }
 
     private Path createScriptFileName(JacsServiceData sd, Path dir) {
-        String nameSuffix = "";
+        String nameSuffix;
         if (sd.hasId()) {
             nameSuffix = sd.getId().toString();
-            Path scriptPath = checkScriptFile(dir, sd.getName(), nameSuffix);
-            if (scriptPath != null) return scriptPath;
+            Optional<Path> scriptPath = checkScriptFile(dir, sd.getName(), nameSuffix);
+            if (scriptPath.isPresent()) return scriptPath.get();
         } else if (sd.hasParentServiceId()) {
             nameSuffix = sd.getParentServiceId().toString();
         } else {
             nameSuffix = String.valueOf(System.currentTimeMillis());
         }
         for (int i = 1; i <= MAX_SUBSCRIPT_INDEX; i++) {
-            Path scriptFilePath = checkScriptFile(dir, sd.getName(), nameSuffix + "_" + i);
-            if (scriptFilePath != null) return scriptFilePath;
+            Optional<Path> scriptFilePath = checkScriptFile(dir, sd.getName(), nameSuffix + "_" + i);
+            if (scriptFilePath.isPresent()) return scriptFilePath.get();
         }
         throw new ComputationException(sd, "Could not create unique script name for " + sd.getName());
     }
 
-    private Path checkScriptFile(Path dir, String name, String suffix) {
+    /**
+     * Create a candidate for the script name and check if it exists and set it only if such file is not found.
+     */
+    private Optional<Path> checkScriptFile(Path dir, String name, String suffix) {
         String nameCandidate = name + "_" + suffix + ".sh";
         Path scriptFilePath = dir.resolve(nameCandidate);
-        if (!Files.exists(scriptFilePath)) {
-            return scriptFilePath;
+        if (Files.exists(scriptFilePath)) {
+            return Optional.empty();
         } else {
-            return null;
+            return Optional.of(scriptFilePath);
         }
     }
 }
