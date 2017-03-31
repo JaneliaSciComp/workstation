@@ -1,8 +1,6 @@
 package org.janelia.jacs2.asyncservice.common;
 
-import com.google.common.base.Equivalence;
 import org.apache.commons.collections4.CollectionUtils;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
@@ -13,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 
 public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends AbstractServiceProcessor<T> {
 
@@ -55,11 +55,6 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
                         success(jacsServiceData);
                     }
                 });
-    }
-
-    @Override
-    public ServiceErrorChecker getErrorChecker() {
-        return new DefaultServiceErrorChecker(logger);
     }
 
     protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
@@ -195,6 +190,38 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
         } else {
             jacsServiceDataPersistence.saveHierarchy(dependency);
             return dependency;
+        }
+    }
+
+    protected void sleep(long millis) {
+        sleep(millis, new CyclicBarrier(2));
+    }
+
+    protected void sleep(long millis, CyclicBarrier barrier) {
+        long startTime = System.currentTimeMillis();
+        long sleepUntil = startTime + millis;
+        ServiceComputation<Void> sc = computationFactory.<Void>newCompletedComputation(null)
+                .thenSuspendUntil(() -> {
+                    long currentTime = System.currentTimeMillis();
+                    return currentTime >= sleepUntil;
+                })
+                .thenApply(r -> {
+                    try {
+                        barrier.await();
+                    } catch (InterruptedException e) {
+                        return null;
+                    } catch (BrokenBarrierException e) {
+                        return null;
+                    }
+                    return null;
+                })
+                ;
+        try {
+            barrier.await();
+        } catch (InterruptedException e) {
+            return;
+        } catch (BrokenBarrierException e) {
+            return;
         }
     }
 }
