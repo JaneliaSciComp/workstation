@@ -576,6 +576,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 new ServiceArg("-input", rotationsMatFile.toString()),
                 new ServiceArg("-output", insightRotationsFile.toString())
         );
+        submitDependencyIfNotPresent(jacsServiceData, affineToInsightServiceData);
         JacsServiceData estimateRotationsServiceData = vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .description(description)
                         .waitFor(deps)
