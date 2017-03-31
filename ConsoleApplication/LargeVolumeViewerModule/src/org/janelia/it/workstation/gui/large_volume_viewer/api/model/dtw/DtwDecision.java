@@ -3,6 +3,14 @@ package org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Decision DTO for communicating with the Directed Tracing Workflow Service.
+ * 
+ * Represents a decision which was requested by the DTW Service, and which the user 
+ * updates with their selected choice.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public class DtwDecision {
 
     private String id;
@@ -12,6 +20,7 @@ public class DtwDecision {
     private DtwFocalPoint viewingFocus;
     private List<DtwBranch> branches;
     private List<DtwConnectivity> choices;
+    private Integer choiceIndex;
 
     public String getId() {
         return id;
@@ -67,6 +76,14 @@ public class DtwDecision {
 
     public void setChoices(List<DtwConnectivity> choices) {
         this.choices = choices;
+    }
+
+    public Integer getChoiceIndex() {
+        return choiceIndex;
+    }
+
+    public void setChoiceIndex(Integer choiceIndex) {
+        this.choiceIndex = choiceIndex;
     }
 
 }

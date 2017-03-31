@@ -1,5 +1,12 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw;
 
+/**
+ * Graph DTO for communicating with the Directed Tracing Workflow Service.
+ * 
+ * Represents a branch graph on a Tiled Microscope Sample.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public class DtwGraph {
     
     private String id;

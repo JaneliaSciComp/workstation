@@ -1,5 +1,12 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw;
 
+/**
+ * Focal point DTO for communicating with the Directed Tracing Workflow Service.
+ * 
+ * Represents the starting location and orientation of the camera when viewing a decision to be made.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public class DtwFocalPoint {
 
     private String centerLocation;

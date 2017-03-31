@@ -2,6 +2,13 @@ package org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw;
 
 import java.util.Date;
 
+/**
+ * Session DTO for communicating with the Directed Tracing Workflow Service.
+ * 
+ * Represents a tracing session on a branch graph.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public class DtwSession {
 
     private String id;
