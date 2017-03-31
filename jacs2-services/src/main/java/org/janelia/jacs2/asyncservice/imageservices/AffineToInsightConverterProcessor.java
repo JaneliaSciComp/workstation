@@ -64,15 +64,6 @@ public class AffineToInsightConverterProcessor extends AbstractBasicLifeCycleSer
     }
 
     @Override
-    protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
-        AfineToInsightConverterArgs args = getArgs(jacsServiceData);
-        if (!getInput(args).toFile().exists()) {
-            throw new ComputationException(jacsServiceData, "Affine input file " + args.input + " not found");
-        }
-        return super.prepareProcessing(jacsServiceData);
-    }
-
-    @Override
     protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
         AfineToInsightConverterArgs args = getArgs(jacsServiceData);
         AlignmentUtils.convertAffineMatToInsightMat(getInput(args), getOutput(args));
