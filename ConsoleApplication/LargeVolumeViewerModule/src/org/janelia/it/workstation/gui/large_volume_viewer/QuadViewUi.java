@@ -1412,7 +1412,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             String [] mountNames = {"", "mousebrainmicro", "mouselight",
                     "nobackup/mousebrainmicro", "nobackup2/mouselight",
                     "nobackup/mousebrainmicro/from_tier2", "mousebrainmicro/from_tier2",
-                    "mousebrainmicro/mousebrainmicro", "nrs/mouselight", "mltest"};
+                    "mousebrainmicro/mousebrainmicro", "nrs/mouselight",
+                    "mltest", "dicksonlab"};
 
             boolean found = false;
             for (Path prefix: prefixesToTry) {
