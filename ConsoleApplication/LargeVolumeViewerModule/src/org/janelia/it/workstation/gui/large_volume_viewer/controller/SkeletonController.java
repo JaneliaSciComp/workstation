@@ -412,7 +412,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         
         @Override
         public void anchorMovedSilent(Anchor anchor) {
-            skeletonChanged();
+            skeletonChanged(true); // update display, but don't update all listeners
         }
         
     }
