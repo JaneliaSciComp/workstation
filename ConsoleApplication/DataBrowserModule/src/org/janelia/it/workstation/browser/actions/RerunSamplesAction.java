@@ -142,7 +142,7 @@ public class RerunSamplesAction extends AbstractAction {
                     taskParameters.add(new TaskParameter("reuse processing", "false", null));
                     taskParameters.add(new TaskParameter("reuse post", "false", null));
                     taskParameters.add(new TaskParameter("reuse alignment", "false", null));
-                    Task task = new GenericTask(new HashSet<Node>(), AccessManager.getSubjectKey(), new ArrayList<Event>(),
+                    Task task = new GenericTask(new HashSet<Node>(), sample.getOwnerKey(), new ArrayList<Event>(),
                             taskParameters, TASK_LABEL, TASK_LABEL);
                     try {
                         task = StateMgr.getStateMgr().saveOrUpdateTask(task);
