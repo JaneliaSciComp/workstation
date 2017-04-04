@@ -366,8 +366,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
 
         this.annotationModel = annotationModel;
-        this.annotationMgr = new AnnotationManager(annotationModel, this, tileServer);
         this.largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);
+        this.annotationMgr = new AnnotationManager(annotationModel, this, largeVolumeViewerTranslator, tileServer);
 
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);
