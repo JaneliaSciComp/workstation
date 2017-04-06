@@ -47,7 +47,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     private JacsServiceData parentService;
     @JsonIgnore
     private List<JacsServiceData> dependencies = new ArrayList<>();
-    private List<Number> dependeciesIds = new ArrayList<>();
+    private List<Number> dependenciesIds = new ArrayList<>();
     private Long serviceTimeout;
 
     public Number getId() {
@@ -292,19 +292,19 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         dependency.updateParentService(this);
     }
 
-    public List<Number> getDependeciesIds() {
-        return dependeciesIds;
+    public List<Number> getDependenciesIds() {
+        return dependenciesIds;
     }
 
     public void addServiceDependencyId(JacsServiceData dependency) {
-        if (dependency.getId() != null && !dependeciesIds.contains(dependency.getId())) {
-            dependeciesIds.add(dependency.getId());
+        if (dependency.getId() != null && !dependenciesIds.contains(dependency.getId())) {
+            dependenciesIds.add(dependency.getId());
         }
     }
 
     public void addServiceDependencyId(Number dependencyId) {
-        if (dependencyId != null && !dependeciesIds.contains(dependencyId)) {
-            dependeciesIds.add(dependencyId);
+        if (dependencyId != null && !dependenciesIds.contains(dependencyId)) {
+            dependenciesIds.add(dependencyId);
         }
     }
 

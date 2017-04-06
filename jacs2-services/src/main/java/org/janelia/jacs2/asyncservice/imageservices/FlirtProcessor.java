@@ -3,13 +3,15 @@ package org.janelia.jacs2.asyncservice.imageservices;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
-import org.janelia.jacs2.asyncservice.common.resulthandlers.VoidServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractFileListServiceResultHandler;
 import org.janelia.jacs2.asyncservice.utils.ScriptWriter;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -21,12 +23,18 @@ import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 @Named("flirt")
-public class FlirtProcessor extends AbstractExeBasedServiceProcessor<Void> {
+public class FlirtProcessor extends AbstractExeBasedServiceProcessor<List<File>> {
 
     static class FlirtArgs extends ServiceArgs {
         @Parameter(names = {"-in", "-input"}, description = "Input volume")
@@ -146,8 +154,60 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<Void> {
     }
 
     @Override
-    public ServiceResultHandler<Void> getResultHandler() {
-        return new VoidServiceResultHandler();
+    public ServiceResultHandler<List<File>> getResultHandler() {
+        return new AbstractFileListServiceResultHandler() {
+
+            @Override
+            public boolean isResultReady(JacsServiceData jacsServiceData) {
+                FlirtArgs args = getArgs(jacsServiceData);
+                Path outputAffine = getOutputAffine(args);
+                if (outputAffine != null && !outputAffine.toFile().exists()) {
+                    return false;
+                }
+                Path outputVolume = getOutputVolume(args);
+                if (outputVolume != null && !outputVolume.toFile().exists()) {
+                    return false;
+                }
+                return true;
+            }
+
+            @Override
+            public List<File> collectResult(JacsServiceData jacsServiceData) {
+                FlirtArgs args = getArgs(jacsServiceData);
+                List<File> results = new LinkedList<>();
+                Path outputAffine = getOutputAffine(args);
+                if (outputAffine != null) {
+                    results.add(outputAffine.toFile());
+                }
+                Path outputVolume = getOutputVolume(args);
+                if (outputVolume != null) {
+                    results.add(outputVolume.toFile());
+                }
+                return results;
+            }
+        };
+    }
+
+    @Override
+    protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
+        FlirtArgs args = getArgs(jacsServiceData);
+        Path outputAffine = getOutputAffine(args);
+        if (outputAffine != null) {
+            try {
+                Files.createDirectories(outputAffine.getParent());
+            } catch (IOException e) {
+                throw new ComputationException(jacsServiceData, e);
+            }
+        }
+        Path outputVolume = getOutputVolume(args);
+        if (outputVolume != null) {
+            try {
+                Files.createDirectories(outputVolume.getParent());
+            } catch (IOException e) {
+                throw new ComputationException(jacsServiceData, e);
+            }
+        }
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override
@@ -223,6 +283,22 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<Void> {
         FlirtArgs args = new FlirtArgs();
         new JCommander(args).parse(jacsServiceData.getArgsArray());
         return args;
+    }
+
+    private Path getOutputAffine(FlirtArgs args) {
+        if (StringUtils.isNotBlank(args.outputAffine)) {
+            return Paths.get(args.outputAffine);
+        } else {
+            return null;
+        }
+    }
+
+    private Path getOutputVolume(FlirtArgs args) {
+        if (StringUtils.isNotBlank(args.outputVol)) {
+            return Paths.get(args.outputVol);
+        } else {
+            return null;
+        }
     }
 
     private String getExecutable() {

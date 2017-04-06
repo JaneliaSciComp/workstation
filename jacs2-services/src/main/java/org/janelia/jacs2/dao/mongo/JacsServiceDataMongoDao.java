@@ -1,6 +1,5 @@
 package org.janelia.jacs2.dao.mongo;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.mongodb.client.MongoDatabase;
@@ -19,7 +18,6 @@ import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceState;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -70,7 +68,7 @@ public class JacsServiceDataMongoDao extends AbstractMongoDao<JacsServiceData> i
             }
         });
         fullServiceHierachy.forEach((k, sd) -> {
-            sd.getDependeciesIds().forEach(id -> sd.addServiceDependency(fullServiceHierachy.get(id)));
+            sd.getDependenciesIds().forEach(id -> sd.addServiceDependency(fullServiceHierachy.get(id)));
         });
 
         return fullServiceHierachy.get(serviceId);

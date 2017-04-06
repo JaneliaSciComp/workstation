@@ -1,6 +1,8 @@
 package org.janelia.jacs2.asyncservice.common;
 
+import com.google.common.base.Equivalence;
 import org.apache.commons.collections4.CollectionUtils;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
@@ -28,12 +30,17 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
 
     @Override
     public ServiceComputation<T> process(JacsServiceData jacsServiceData) {
-        JacsServiceData currentServiceData = this.prepareProcessing(jacsServiceData);
-        this.submitServiceDependencies(currentServiceData);
-        return computationFactory.newCompletedComputation(currentServiceData)
-                .thenSuspendUntil(() -> !suspendUntilAllDependenciesComplete(currentServiceData)) // suspend until all dependencies complete
+        JacsServiceData[] currentServiceDataHolder = new JacsServiceData[1]; // this will enclose the service data with the changes made by the prepareProcessing method in case there are any
+        return computationFactory.newCompletedComputation(jacsServiceData)
+                .thenApply(sd -> {
+                    currentServiceDataHolder[0] = this.prepareProcessing(sd);
+                    this.submitServiceDependencies(currentServiceDataHolder[0]);
+                    return currentServiceDataHolder[0];
+                })
+                .thenApply(this::prepareProcessing)
+                .thenSuspendUntil(() -> !suspendUntilAllDependenciesComplete(currentServiceDataHolder[0])) // suspend until all dependencies complete
                 .thenCompose(this::processing)
-                .thenSuspendUntil(() -> this.isResultReady(currentServiceData)) // wait until the result becomes available
+                .thenSuspendUntil(() -> this.isResultReady(currentServiceDataHolder[0])) // wait until the result becomes available
                 .thenApply(sd -> {
                     T r = this.getResultHandler().collectResult(sd);
                     this.getResultHandler().updateServiceDataResult(sd, r);
