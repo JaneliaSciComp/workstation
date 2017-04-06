@@ -217,7 +217,8 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 jacsServiceDataHierarchy,
                 flippedSubjectServiceData);
         // $Vaa3D -x ireg -f resizeImage -o $SUBSXRS -p "#s $SUBSXIS #t $TARSXEXT #y 1"
-        JacsServiceData resizeSubjectServiceData = resizeSubjectToTarget(isotropicSubjectFile, targetExtFile, resizedSubjectFile,
+        JacsServiceData resizeSubjectServiceData = resizeToTarget(isotropicSubjectFile, targetExtFile, resizedSubjectFile,
+                "#y 1",
                 "Resize subject to target",
                 jacsServiceDataHierarchy,
                 isotropicSubjectSamplingServiceData);
@@ -281,21 +282,23 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 targetExtToNiftiServiceData, subjectToNiftiServiceData);
         // rotate recentered object
         // $Vaa3D -x ireg -f iwarp2 -o $SUBSXRSROT -p "#s $SUBSXRS #a $RCAFFINE #dx $TARSXEXTDX #dy $TARSXEXTDY #dz $TARSXEXTDZ"
-        JacsServiceData rotateRecenteredServiceData = applyIWarp2Transformation(resizedSubjectFile, rotationsAffineFile, rotatedResizedSubjectFile,
+        JacsServiceData rotateRecenteredSubjectServiceData = applyIWarp2Transformation(resizedSubjectFile, rotationsAffineFile, rotatedResizedSubjectFile,
+                null,
                 "Rotate recentered object",
                 jacsServiceDataHierarchy,
                 resizeSubjectServiceData, rotateSubjectServiceData);
         // affine transform rotated subject
         // $Vaa3D -x ireg -f iwarp2 -o $SUBSXRSROTGA -p "#s $SUBSXRSROT #a $AFFINEMATRIX #dx $TARSXEXTDX #dy $TARSXEXTDY #dz $TARSXEXTDZ"
-        JacsServiceData globalAlignedServiceData = applyIWarp2Transformation(rotatedResizedSubjectFile, symmetricAffineTransformFile, rotatedSubjectGlobalAllignedFile,
-                "Affine transform rotated object",
+        JacsServiceData globalAlignedSubjectServiceData = applyIWarp2Transformation(rotatedResizedSubjectFile, symmetricAffineTransformFile, rotatedSubjectGlobalAllignedFile,
+                null,
+                "Affine transform rotated subject",
                 jacsServiceDataHierarchy,
-                rotateRecenteredServiceData, globalAlignServiceData);
+                rotateRecenteredSubjectServiceData, globalAlignServiceData);
         // $Vaa3D -x ireg -f genVOIs -p "#s $SUBSXRSROTGA #t $TARSX"
         JacsServiceData voiServiceData = getVOI(rotatedSubjectGlobalAllignedFile, targetFile,
                 "Gen VOID for global aligned subject",
                 jacsServiceDataHierarchy,
-                globalAlignedServiceData);
+                globalAlignedSubjectServiceData);
         // $Vaa3D -x ireg -f NiftiImageConverter -i $SUBSXRSROTGARS
         JacsServiceData resizedAlignedSubjectToNiftiServiceData = convertToNiftiImage(resizedRotatedSubjectGlobalAllignedFile, resizedRotatedSubjectGlobalAlignedNiftiFiles,
                 "Convert global aligned subject to nifti",
@@ -333,7 +336,8 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 warpServices.toArray(new JacsServiceData[warpServices.size()]));
         // resize to the templates' space
         // $Vaa3D -x ireg -f resizeImage -o $SUBSXALINGED -p "#s $SUBSXDFRMD #t $TARSX #y 1"
-        JacsServiceData restoreSizeAlignedSubjectServiceData = resizeSubjectToTarget(resizedAlignedSubjectFile, targetFile, alignedSubjectFile,
+        JacsServiceData restoreSizeAlignedSubjectServiceData = resizeToTarget(resizedAlignedSubjectFile, targetFile, alignedSubjectFile,
+                "#y 1",
                 "Restore size of the aligned subject",
                 jacsServiceDataHierarchy,
                 combineChannelsServiceData);
@@ -364,6 +368,27 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 "Isotropic sampling the neurons",
                 zFlippedNeuronsServiceData,
                 zFlippedNeuronsServiceData);
+        Path resizedNeuronsFile = getResizedFile(zFlippedLabelsFile, jacsServiceDataHierarchy); // => NEURONSYFLIPISRS
+        // $Vaa3D -x ireg -f resizeImage -o $NEURONSYFLIPISRS -p "#s $NEURONSYFLIPIS #t $TARSXEXT #k 1 #i 1 #y 1"
+        JacsServiceData resizeNeuronsServiceData = resizeToTarget(isotropicNeuronsFile, targetExtFile, resizedNeuronsFile,
+                "#k 1 #i 1 #y 1",
+                "Resizing the neurons to the target",
+                jacsServiceDataHierarchy,
+                isotropicNeronsSamplingServiceData);
+        Path rotatedResizedNeuronsFile =  getRotatedFile(resizedNeuronsFile, jacsServiceDataHierarchy); // => NEURONSYFLIPISRSRT
+        // $Vaa3D -x ireg -f iwarp2 -o $NEURONSYFLIPISRSRT -p "#s $NEURONSYFLIPISRS #a $RCAFFINE #dx $TARSXEXTDX #dy $TARSXEXTDY #dz $TARSXEXTDZ #i 1"
+        JacsServiceData rotateRecenteredNeuronsServiceData = applyIWarp2Transformation(resizedNeuronsFile, rotationsAffineFile, rotatedResizedNeuronsFile,
+                "#i 1",
+                "Rotating the neurons",
+                jacsServiceDataHierarchy,
+                resizeNeuronsServiceData, rotateSubjectServiceData);
+        Path rotatedNeuronsGlobalAllignedFile = getGlobalAlignedFile(rotatedResizedNeuronsFile, jacsServiceDataHierarchy); // => NEURONSYFLIPISRSRTAFF
+        // $Vaa3D -x ireg -f iwarp2 -o $NEURONSYFLIPISRSRTAFF -p "#s $NEURONSYFLIPISRSRT #a $AFFINEMATRIX #dx $TARSXEXTDX #dy $TARSXEXTDY #dz $TARSXEXTDZ #i 1"
+        JacsServiceData globalAlignedNeuronsServiceData = applyIWarp2Transformation(rotatedResizedNeuronsFile, symmetricAffineTransformFile, rotatedSubjectGlobalAllignedFile,
+                "#i 1",
+                "Affine transform rotated neurons",
+                jacsServiceDataHierarchy,
+                rotateRecenteredSubjectServiceData, globalAlignServiceData);
 
         return ImmutableList.of(restoreSizeAlignedSubjectServiceData);
     }
@@ -535,10 +560,11 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return submitDependencyIfNotPresent(jacsServiceData, isotropicSamplingServiceData);
     }
 
-    private JacsServiceData resizeSubjectToTarget(Path subjectFile, Path targetFile, Path resizedSubjectFile,
-                                                  String description,
-                                                  JacsServiceData jacsServiceData, JacsServiceData... deps) {
-        if (resizedSubjectFile.toFile().exists()) {
+    private JacsServiceData resizeToTarget(Path sourceFile, Path targetFile, Path resizedFile,
+                                           String otherParameters,
+                                           String description,
+                                           JacsServiceData jacsServiceData, JacsServiceData... deps) {
+        if (resizedFile.toFile().exists()) {
             return null;
         }
         JacsServiceData resizeSubjectServiceData = vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
@@ -547,10 +573,10 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                         .build(),
                 new ServiceArg("-plugin", "ireg"),
                 new ServiceArg("-pluginFunc", "resizeImage"),
-                new ServiceArg("-output", resizedSubjectFile.toString()),
-                new ServiceArg("-pluginParams", String.format("#s %s", subjectFile)),
+                new ServiceArg("-output", resizedFile.toString()),
+                new ServiceArg("-pluginParams", String.format("#s %s", sourceFile)),
                 new ServiceArg("-pluginParams", String.format("#t %s", targetFile)),
-                new ServiceArg("-pluginParams", "#y 1")
+                new ServiceArg("-pluginParams", otherParameters)
         );
         return submitDependencyIfNotPresent(jacsServiceData, resizeSubjectServiceData);
     }
@@ -687,6 +713,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     private JacsServiceData applyIWarp2Transformation(Path subjectFile, Path transformationFile, Path outputFile,
+                                                      String otherParams,
                                                       String description,
                                                       JacsServiceData jacsServiceData, JacsServiceData... deps) {
         logger.info("Apply transformation {} to {} => {}", transformationFile, subjectFile, outputFile);
@@ -701,7 +728,8 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 new ServiceArg("-pluginParams", String.format("#a %s", transformationFile)),
                 new ServiceArg("-pluginParams", String.format("#dx %d", TARSXEXTDX)),
                 new ServiceArg("-pluginParams", String.format("#dy %s", TARSXEXTDY)),
-                new ServiceArg("-pluginParams", String.format("#dz %s", TARSXEXTDZ))
+                new ServiceArg("-pluginParams", String.format("#dz %s", TARSXEXTDZ)),
+                new ServiceArg("-pluginParams", otherParams)
         );
         return submitDependencyIfNotPresent(jacsServiceData, estimateRotationsServiceData);
     }
