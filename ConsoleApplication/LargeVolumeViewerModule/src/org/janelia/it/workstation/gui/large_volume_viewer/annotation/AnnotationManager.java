@@ -500,8 +500,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
 
         // can't merge with same neurite (don't create cycles!)
-        if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
-                annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
+        if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
             log.debug("Can't merge with same neurite");
             return false;
         }
@@ -524,8 +523,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         // same neurite = cycle = NO!
         // this should already be filtered out, but it's important enough to check twice
-        if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
-                annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
+        if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
             presentError(
                     "You can't merge a neurite with itself!",
                     "Can't merge!!");
@@ -565,10 +563,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             sourceAnchor.getGuid());
         TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(targetAnchor.getNeuronID(),
             targetAnchor.getGuid());
+        TmNeuronMetadata sourceNeuron = annotationModel.getNeuronFromNeuronID(sourceAnchor.getNeuronID());
+        TmNeuronMetadata targetNeuron = annotationModel.getNeuronFromNeuronID(targetAnchor.getNeuronID());
+
 
         // check for cycles (this can be tested before we check exactly which annotations to merge
-        if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
-                annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
+        if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
             presentError(
                     "You can't merge a neurite with itself!",
                     "Can't merge!");
@@ -577,14 +577,25 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
 
         // figure out which two annotations to merge
-        // testing: merge the two points that were input
-        List<TmGeoAnnotation> result = SmartMergeAlgorithms.mergeChosenPoints(sourceAnnotation, targetAnnotation);
+        List<TmGeoAnnotation> result = SmartMergeAlgorithms.mergeClosestEndpoints(sourceAnnotation,
+            sourceNeuron, targetAnnotation, targetNeuron);
+
+        if (result.size() != 2) {
+            presentError("There was an error in the smart merge algorithm!", "Smart merge error");
+            return;
+        }
+        // returned annotations should be on same neurite as input ones:
+        if (!annotationModel.sameNeurite(sourceAnnotation, result.get(0)) ||
+                !annotationModel.sameNeurite(targetAnnotation, result.get(1))) {
+            presentError("There was an error in the smart merge algorithm!", "Smart merge error");
+            return;
+        }
         sourceAnnotation = result.get(0);
         targetAnnotation = result.get(1);
 
         // part of the smart: move the next parent someplace useful
-        // test: just returns the target annotation again
-        final Long nextParentID = SmartMergeAlgorithms.nextParentTarget(sourceAnnotation, targetAnnotation).getId();
+        final Long nextParentID = SmartMergeAlgorithms.farthestEndpointNextParent(sourceAnnotation,
+            sourceNeuron, targetAnnotation, targetNeuron).getId();
 
         // do the merge
         final Long sourceNeuronID = sourceAnnotation.getNeuronId();
