@@ -262,32 +262,4 @@ public class AbstractBasicLifeCycleServiceProcessorTest {
         verify(failure).accept(any());
     }
 
-    @Test
-    public void processSleep() {
-        Consumer successful = mock(Consumer.class);
-        Consumer failure = mock(Consumer.class);
-
-        TestSuccessfulProcessorBasicLifeCycle testProcessor = new TestSuccessfulProcessorBasicLifeCycle(
-                serviceComputationFactory,
-                jacsServiceDataPersistence,
-                TEST_WORKING_DIR,
-                logger) {
-            @Override
-            protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-                sleep(500, new CyclicBarrier(1));
-                return super.processing(jacsServiceData);
-            }
-        };
-        testProcessor.process(testJacsServiceData)
-                .whenComplete((r, e) -> {
-                    if (e == null) {
-                        successful.accept(r);
-                    } else {
-                        failure.accept(e);
-                    }
-                });
-        verify(successful).accept(any());
-        verify(failure, never()).accept(any());
-
-    }
 }

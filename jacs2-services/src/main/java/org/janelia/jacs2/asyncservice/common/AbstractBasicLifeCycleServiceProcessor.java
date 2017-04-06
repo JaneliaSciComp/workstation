@@ -193,35 +193,4 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
         }
     }
 
-    protected void sleep(long millis) {
-        sleep(millis, new CyclicBarrier(2));
-    }
-
-    protected void sleep(long millis, CyclicBarrier barrier) {
-        long startTime = System.currentTimeMillis();
-        long sleepUntil = startTime + millis;
-        ServiceComputation<Void> sc = computationFactory.<Void>newCompletedComputation(null)
-                .thenSuspendUntil(() -> {
-                    long currentTime = System.currentTimeMillis();
-                    return currentTime >= sleepUntil;
-                })
-                .thenApply(r -> {
-                    try {
-                        barrier.await();
-                    } catch (InterruptedException e) {
-                        return null;
-                    } catch (BrokenBarrierException e) {
-                        return null;
-                    }
-                    return null;
-                })
-                ;
-        try {
-            barrier.await();
-        } catch (InterruptedException e) {
-            return;
-        } catch (BrokenBarrierException e) {
-            return;
-        }
-    }
 }
