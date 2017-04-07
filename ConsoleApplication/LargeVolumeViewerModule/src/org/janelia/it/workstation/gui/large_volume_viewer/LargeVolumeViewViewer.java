@@ -51,7 +51,7 @@ public class LargeVolumeViewViewer extends JPanel {
         setLayout(new BorderLayout());
     }
 
-    public void showLoadingIndicator() {
+    private void showLoadingIndicator() {
         removeAll();
         add(new JLabel(Icons.getLoadingIcon()), BorderLayout.CENTER);
         revalidate();
@@ -185,7 +185,7 @@ public class LargeVolumeViewViewer extends JPanel {
         }
     }
     
-    public void refresh() {
+    private void refresh() {
         logger.info("Refreshing");
 
         showLoadingIndicator();

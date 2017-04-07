@@ -31,7 +31,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateLi
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;
@@ -60,15 +59,16 @@ import Jama.Matrix;
 public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener,
         GlobalAnnotationListener {
 
-    private Logger logger = LoggerFactory.getLogger(LargeVolumeViewerTranslator.class);
+    private static final Logger logger = LoggerFactory.getLogger(LargeVolumeViewerTranslator.class);
 
-    private AnnotationManager annotationMgr;
-    private LargeVolumeViewer largeVolumeViewer;
+    private final AnnotationManager annotationMgr;
+    private final LargeVolumeViewer largeVolumeViewer;
+    private final Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<>();
+    private final Collection<TmGeoAnnotationAnchorListener> anchorListeners = new ArrayList<>();
+    private final Collection<NextParentListener> nextParentListeners = new ArrayList<>();
+    private final Collection<NeuronStyleChangeListener> neuronStyleChangeListeners = new ArrayList<>();
+    
     private SkeletonController skeletonController;
-    private Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<>();
-    private Collection<TmGeoAnnotationAnchorListener> anchorListeners = new ArrayList<>();
-    private Collection<NextParentListener> nextParentListeners = new ArrayList<>();
-    private Collection<NeuronStyleChangeListener> neuronStyleChangeListeners = new ArrayList<>();
     private ViewStateListener viewStateListener;
 
     public void addAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {

@@ -168,7 +168,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         closeGroup();
     }
 
-    protected void closeGroup() {
+    private void closeGroup() {
         Runnable runnable = new Runnable() {
             public void run() {
                 lvvv.close();

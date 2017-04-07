@@ -37,14 +37,12 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.it.jacs.shared.lvv.RandomNeuronGenerator;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
-import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.Events;
@@ -111,21 +109,21 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
 
-    // annotation model object
-    private AnnotationModel annotationModel;
-
-    private ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
+    private final ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
 
     // quad view ui object
     private QuadViewUi quadViewUi;
 
-    private DomainObject initialObject;
-
     private TileServer tileServer;
-    
+
+    // annotation model object
+    private final AnnotationModel annotationModel;
+
     // For communicating annotations to Horta
     private final NeuronSetAdapter neuronSetAdapter; 
 
+    private DomainObject initialObject;
+    
     // ----- constants
     // AUTOMATIC_TRACING_TIMEOUT for automatic tracing in seconds
     private static final double AUTOMATIC_TRACING_TIMEOUT = 10.0;
@@ -385,7 +383,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * find the annotation closest to the input location, excluding
      * the input annotation (null = don't exclude any)
      */
-    public TmGeoAnnotation getClosestAnnotation(Vec3 micronLocation, TmGeoAnnotation excludedAnnotation) {
+    private TmGeoAnnotation getClosestAnnotation(Vec3 micronLocation, TmGeoAnnotation excludedAnnotation) {
 
         double x = micronLocation.getX();
         double y = micronLocation.getY();
@@ -481,7 +479,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * add an annotation at the given location with the given parent ID; if no
      * parent, pass in null
      */
-    public void addAnnotation(final Vec3 xyz, final Long parentID) {
+    private void addAnnotation(final Vec3 xyz, final Long parentID) {
 
         if (getCurrentWorkspace() == null) {
             presentError(
@@ -565,7 +563,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * (many children); in other words, it's an end point, or an annotation with
      * a parent and single child that can be connected up unambiguously
      */
-    public void deleteLink(final Long neuronID, final Long annotationID) {
+    private void deleteLink(final Long neuronID, final Long annotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
             return;
@@ -616,7 +614,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * delete the annotation with the input ID, and delete all of its
      * descendants
      */
-    public void deleteSubTree(final Long neuronID, final Long annotationID) {
+    private void deleteSubTree(final Long neuronID, final Long annotationID) {
         if (annotationModel.getCurrentWorkspace() == null || annotationID == null) {
             // dialog?
             return;
@@ -686,7 +684,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         mover.execute();
     }
 
-    public boolean canMergeNeurite(Long neuronID, Long anchorID, Vec3 anchorLocation, Long targetNeuronID, Long targetAnnotationID) {
+    private boolean canMergeNeurite(Long neuronID, Long anchorID, Vec3 anchorLocation, Long targetNeuronID, Long targetAnnotationID) {
 
         // can't merge with itself
         if (anchorID.equals(targetAnnotationID)) {
@@ -896,7 +894,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * instead; if it's a root with many children, it's an error, since there is
      * no unambiguous location to place the new anchor
      */
-    public void splitAnchor(final Long neuronID, Long annotationID) {
+    private void splitAnchor(final Long neuronID, Long annotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
             return;
@@ -933,7 +931,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         splitter.execute();
     }
 
-    public void rerootNeurite(final Long neuronID, final Long newRootAnnotationID) {
+    private void rerootNeurite(final Long neuronID, final Long newRootAnnotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
@@ -960,7 +958,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         rerooter.execute();
     }
 
-    public void splitNeurite(final Long neuronID, final Long newRootAnnotationID) {
+    private void splitNeurite(final Long neuronID, final Long newRootAnnotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
@@ -1054,7 +1052,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
-    public void clearNote(final Long neuronID, final Long annotationID) {
+    private void clearNote(final Long neuronID, final Long annotationID) {
         TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronID);
         final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
         if (textAnnotation != null) {
@@ -1089,7 +1087,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return annotationModel.getNote(neuronID, annotationID);
     }
 
-    public void setNote(final Long neuronID, final Long annotationID, final String noteText) {
+    private void setNote(final Long neuronID, final Long annotationID, final String noteText) {
         SimpleWorker setter = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
@@ -1111,7 +1109,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         setter.execute();
     }
 
-    public void editNeuronTags(TmNeuronMetadata neuron) {
+    private void editNeuronTags(TmNeuronMetadata neuron) {
         log.info("editNeuronTags({})",neuron);
         // reuse the action; note that the action doesn't actually
         //  use the event, so we can throw in an empty one
@@ -1236,7 +1234,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * pop a dialog that asks for a name for a neuron;
      * returns null if the user didn't make a choice
      */
-    String promptForNeuronName(String suggestedName) {
+    private String promptForNeuronName(String suggestedName) {
         if (suggestedName == null) {
             suggestedName = "";
         }
@@ -1292,7 +1290,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     /**
      * given an neuronId, select (make current) the neuron it belongs to
      */
-    public void selectNeuron(Long neuronId) {
+    private void selectNeuron(Long neuronId) {
         if (neuronId == null) {
             return;
         }
@@ -1602,7 +1600,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         setNeuronVisibility(neuron, visibility);
     }
 
-    public void setNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
+    private void setNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
         NeuronStyle style = getNeuronStyle(neuron);
         style.setVisible(visibility);
         setNeuronStyle(neuron, style);
@@ -1826,7 +1824,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * usual error dialog is hiding too much info when it pops within
      * a SimpleWorker's error clause; log those errors!
      */
-    public void presentError(String message, Throwable error) throws HeadlessException {
+    private void presentError(String message, Throwable error) throws HeadlessException {
         FrameworkImplProvider.handleException(new Exception(message,error));
     }
 
@@ -1846,7 +1844,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return annotationModel.getCurrentWorkspace();
     }
     
-    public void saveCurrentWorkspace() throws Exception {
+    private void saveCurrentWorkspace() throws Exception {
         annotationModel.saveCurrentWorkspace();
     }
 
@@ -1918,10 +1916,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return annotationModel.getSelectionModel();
     }
 
-    public void addNeuron(TmNeuronMetadata neuron) {
-        annotationModel.addNeuron(neuron);
-    }
-
     public FilteredAnnotationModel getFilteredAnnotationModel() {
         return annotationModel.getFilteredAnnotationModel();
     }
@@ -1936,10 +1930,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     public void addTmAnchoredPathListener(TmAnchoredPathListener listener) {
         annotationModel.addTmAnchoredPathListener(listener);
-    }
-
-    public void removeTmAnchoredPathListener(TmAnchoredPathListener listener) {
-        annotationModel.removeTmAnchoredPathListener(listener);
     }
 
     public void addGlobalAnnotationListener(GlobalAnnotationListener listener) {
@@ -1962,10 +1952,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         annotationModel.saveWorkspace(workspace);
     }
 
-    public void postWorkspaceUpdate(TmNeuronMetadata neuron) {
-        annotationModel.postWorkspaceUpdate(neuron);
-    }
-
     public void setSWCDataConverter(SWCDataConverter converter) {
         annotationModel.setSWCDataConverter(converter);
     }
@@ -1978,32 +1964,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return annotationModel.getGeoAnnotationFromID(neuronID, annotationID);
     }
 
-    public TmGeoAnnotation getGeoAnnotationFromID(TmNeuronMetadata foundNeuron, Long annotationID) {
-        return annotationModel.getGeoAnnotationFromID(foundNeuron, annotationID);
-    }
-
     public TmGeoAnnotation getNeuriteRootAnnotation(TmGeoAnnotation annotation) {
         return annotationModel.getNeuriteRootAnnotation(annotation);
     }
     
     public TmNeuronMetadata createNeuron(String name) throws Exception {
         return annotationModel.createNeuron(name);
-    }
-
-    public void renameCurrentNeuron(String name) throws Exception {
-        annotationModel.renameCurrentNeuron(name);
-    }
-
-    public void deleteNeuron(TmNeuronMetadata deletedNeuron) throws Exception {
-        annotationModel.deleteNeuron(deletedNeuron);
-    }
-
-    public TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {
-        return annotationModel.createWorkspace(sampleId, name);
-    }
-
-    public TmWorkspace copyWorkspace(TmWorkspace workspace, String name) throws Exception {
-        return annotationModel.copyWorkspace(workspace, name);
     }
 
     public TmGeoAnnotation addRootAnnotation(TmNeuronMetadata neuron, Vec3 xyz) throws Exception {
@@ -2018,84 +1984,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         annotationModel.updateAnnotationRadius(neuronID, annotationID, radius);
     }
 
-    public void moveNeurite(TmGeoAnnotation annotation, TmNeuronMetadata destNeuron) throws Exception {
-        annotationModel.moveNeurite(annotation, destNeuron);
-    }
-
     public void deleteLink(TmGeoAnnotation link) throws Exception {
         annotationModel.deleteLink(link);
     }
 
-    public void deleteSubTree(TmGeoAnnotation rootAnnotation) throws Exception {
-        annotationModel.deleteSubTree(rootAnnotation);
-    }
-
-    public void splitAnnotation(TmGeoAnnotation annotation) throws Exception {
-        annotationModel.splitAnnotation(annotation);
-    }
-
-    public String getNote(Long annotationID, TmNeuronMetadata neuron) {
-        return annotationModel.getNote(annotationID, neuron);
-    }
-
-    public void setNote(TmGeoAnnotation geoAnnotation, String noteString) throws Exception {
-        annotationModel.setNote(geoAnnotation, noteString);
-    }
-
-    public void removeNote(Long neuronID, TmStructuredTextAnnotation textAnnotation) throws Exception {
-        annotationModel.removeNote(neuronID, textAnnotation);
-    }
-
-    public void setNeuronVisibility(Collection<TmNeuronMetadata> neuronList, boolean visibility) throws Exception {
-        annotationModel.setNeuronVisibility(neuronList, visibility);
-    }
-
-    public boolean automatedRefinementEnabled() {
-        return annotationModel.automatedRefinementEnabled();
-    }
-
-    public boolean automatedTracingEnabled() {
-        return annotationModel.automatedTracingEnabled();
-    }
-
-    public void exportSWCData(File swcFile, int downsampleModulo, Collection<TmNeuronMetadata> neurons, Progress progress) throws Exception {
-        annotationModel.exportSWCData(swcFile, downsampleModulo, neurons, progress);
-    }
-
-    public TmNeuronMetadata importBulkSWCData(File swcFile, TmWorkspace tmWorkspace, Progress progress) throws Exception {
-        return annotationModel.importBulkSWCData(swcFile, tmWorkspace, progress);
-    }
-
-    public Set<String> getPredefinedNeuronTags() {
-        return annotationModel.getPredefinedNeuronTags();
-    }
-
-    public Set<String> getAllNeuronTags() {
-        return annotationModel.getAllNeuronTags();
-    }
-
-    public Set<TmNeuronMetadata> getNeuronsForTag(String tag) {
-        return annotationModel.getNeuronsForTag(tag);
-    }
-
-    public void fireAnnotationNotMoved(TmGeoAnnotation annotation) {
-        annotationModel.fireAnnotationNotMoved(annotation);
-    }
-
-    public void fireAnnotationMoved(TmGeoAnnotation annotation) {
-        annotationModel.fireAnnotationMoved(annotation);
-    }
-
-    public void fireAnnotationRadiusUpdated(TmGeoAnnotation annotation) {
-        annotationModel.fireAnnotationRadiusUpdated(annotation);
-    }
-
     public void fireSpatialIndexReady(TmWorkspace workspace) {
         annotationModel.fireSpatialIndexReady(workspace);
-    }
-
-    public TmModelManipulator getNeuronManager() {
-        return annotationModel.getNeuronManager();
     }
 
     public void generateRandomNeurons(final Integer neuronCount, final Integer meanPointsPerNeuron, 

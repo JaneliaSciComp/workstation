@@ -357,7 +357,7 @@ public class TiledMicroscopeDomainMgr {
         return tmSession;
     }
     
-    private Map<TmSession, DtwSession> sessionMapping = new HashMap<>();
+    private final Map<TmSession, DtwSession> sessionMapping = new HashMap<>();
     private DtwSession getSataSession(TmSession tmSession) throws Exception {
         DtwSession sataSession = sessionMapping.get(tmSession);
         if (sataSession==null) {
