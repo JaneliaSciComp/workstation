@@ -529,6 +529,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     public void expandNodeById(Long id) {
+        log.debug("expandNodeById({})",id);
         for(Node node : DomainObjectNodeTracker.getInstance().getNodesById(id)) {
             expand(NodeUtils.createIdPath(node));
             break;
@@ -559,6 +560,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     public Node selectNodeById(Long id) {
+        log.debug("selectNodeById({})",id);
         for(Node node : DomainObjectNodeTracker.getInstance().getNodesById(id)) {
             selectNode(node);
             return node;
@@ -567,6 +569,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     public Node selectAndNavigateNodeById(Long id) {
+        log.debug("selectAndNavigateNodeById({})",id);
         Node selectedNode = selectNodeById(id);
         if (selectedNode!=null) {
             navigateNode(selectedNode);

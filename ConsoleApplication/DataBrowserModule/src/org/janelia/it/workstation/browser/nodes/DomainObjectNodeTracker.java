@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings({"rawtypes", "unchecked"}) // This class is a generic type disaster
 public class DomainObjectNodeTracker {
 
-    private static final Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
+    private static final Logger log = LoggerFactory.getLogger(DomainObjectNodeTracker.class);
     
     private static final DomainObjectNodeTracker singleton = new DomainObjectNodeTracker();
     
