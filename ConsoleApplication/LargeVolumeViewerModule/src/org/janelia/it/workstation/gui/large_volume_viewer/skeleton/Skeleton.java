@@ -4,7 +4,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.HistoryStack;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -246,6 +245,10 @@ public class Skeleton {
 
     public void moveNeuriteRequest(Anchor anchor) {
         controller.moveNeuriteRequested(anchor);
+    }
+
+    public void smartMergeNeuriteRequest(Anchor clickedAnchor) {
+        controller.smartMergeNeuriteRequested(clickedAnchor, getNextParent());
     }
 
     public void changeNeuronStyle(Anchor anchor) {

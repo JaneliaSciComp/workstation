@@ -466,7 +466,20 @@ implements MouseMode, KeyListener
                         };
                         deleteLinkAction.setEnabled(controller.editsAllowed());
                         result.add(new JMenuItem(deleteLinkAction));
-                        
+
+                        AbstractAction smartMergeNeuriteAction = new AbstractAction("Merge chosen neurite to selected neurite") {
+                            @Override
+                            public void actionPerformed(ActionEvent actionEvent) {
+                                if (getHoverAnchor() != null) {
+                                    skeleton.smartMergeNeuriteRequest(getHoverAnchor());
+                                } else {
+                                    logger.warn("Null hover anchor when attempting smart merge neurite.");
+                                }
+                            }
+                        };
+                        smartMergeNeuriteAction.setEnabled(controller.editsAllowed());
+                        result.add(new JMenuItem(smartMergeNeuriteAction));
+
                         AbstractAction transferNeuriteAction = new AbstractAction("Transfer neurite...") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {

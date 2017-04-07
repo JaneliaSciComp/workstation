@@ -31,7 +31,6 @@
 package org.janelia.horta.blocks;
 
 import java.io.BufferedInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -66,6 +65,8 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     private final ConstVector3 origin;
     private final Vector3 outerCorner;
     private final KtxOctreeBlockTileKey rootKey;
+    
+    private final String compressionString;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -90,7 +91,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
         return folderUrl;
     }
     
-    private URL blockUrlForKey(KtxOctreeBlockTileKey key) throws IOException {
+    private URL blockUrlForKey(KtxOctreeBlockTileKey key, String compressionString) throws IOException {
         URL folder = folderForKey(key);
 
         // TODO: Main defect of URL vs. File is searchability of actual file name.
@@ -99,14 +100,14 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
         String specimenName = pathParts[pathParts.length - 1];
         String subfolderStr = subfolderForKey(key);
         subfolderStr = subfolderStr.replaceAll("/", "");
-        String fileName = "block_" + specimenName + "_8_xy_" + subfolderStr + ".ktx";
+        String fileName = "block_" + specimenName + compressionString + subfolderStr + ".ktx";
         
         URL blockUrl = new URL(folder, fileName);
         return blockUrl;
     }
     
     public InputStream streamForKey(BlockTileKey key) throws IOException {
-        URL url = blockUrlForKey((KtxOctreeBlockTileKey)key);
+        URL url = blockUrlForKey((KtxOctreeBlockTileKey)key, compressionString);
         return new BufferedInputStream(url.openStream());
     }
     
@@ -114,11 +115,30 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     {
         this.rootUrl = rootUrl;
         rootKey = new KtxOctreeBlockTileKey(new ArrayList<Integer>(), this);
-        
-        try (InputStream stream = streamForKey(rootKey)) {
-            rootHeader = new KtxHeader();
-            rootHeader.loadStream(stream);
+
+        // Figure out which compression strategy is used in this data set
+        String[] compressionStringsToTry = new String[]{"_8_xy_", "_"};
+        InputStream stream = null;
+        IOException exception = null;
+        String chosenCompressionString = null;
+        for (String cs : compressionStringsToTry) {
+            URL url = blockUrlForKey(rootKey, cs);
+            try {
+                stream = new BufferedInputStream(url.openStream());
+            }
+            catch (IOException exc) {
+                exception = exc;
+                continue;
+            }
+            chosenCompressionString = cs;
+            break;
         }
+        if (stream == null)
+            throw exception;
+        compressionString = chosenCompressionString;
+        
+        rootHeader = new KtxHeader();
+        rootHeader.loadStream(stream);
         
         // Parse maximum resolution
         int maxRes = Integer.parseInt(rootHeader.keyValueMetadata.get("multiscale_total_levels").trim()) - 1;
@@ -251,20 +271,6 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
         return centroid;
     }
 
-    @Override
-    public boolean blockExists(BlockTileKey key) throws IOException
-    {
-        URL blockUrl = blockUrlForKey((KtxOctreeBlockTileKey)key);
-        try (InputStream stream = blockUrl.openStream()) { // throws IOException
-            return true;
-        } catch (FileNotFoundException ex) {
-            return false;
-            // Exceptions.printStackTrace(ex);
-        } catch (IOException ex) {
-            return false;
-            // Exceptions.printStackTrace(ex);
-        }
-    }
 
     @Override
     public BlockTileData loadBlock(BlockTileKey key) 
