@@ -221,7 +221,8 @@ public class LargeVolumeViewViewer extends JPanel {
 
     private void refreshInitialObject() {
         try {
-        loadDomainObject(DomainMgr.getDomainMgr().getModel().getDomainObject(annotationMgr.getInitialObject()));
+            DomainObject domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(annotationMgr.getInitialObject());
+            loadDomainObject(domainObject);
         }
         catch (Exception e) {
             FrameworkImplProvider.handleException("Error refreshing initial object", e);
@@ -231,12 +232,16 @@ public class LargeVolumeViewViewer extends JPanel {
     @Subscribe
     public void objectsInvalidated(DomainObjectInvalidationEvent event) {
         if (event.isTotalInvalidation()) {
+            logger.debug("Total invalidation detected, refreshing...");
             refreshInitialObject();
         }
         else {
             for(DomainObject domainObject : event.getDomainObjects()) {
                 if (DomainUtils.equals(domainObject, annotationMgr.getInitialObject())) {
-                    refreshInitialObject();
+                    // We don't do anything here because we assume that the LVV manages any updates to the workspace out-of-band. 
+                    // There are some edge cases we could support here (e.g. if the user renames the workspace 
+                    // from the Domain Explorer) but they're generally not worth the effort right now.
+                    logger.info("Invalidated initial object: {}",domainObject.getName());
                 }
             }
         }

@@ -1673,8 +1673,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void setAutomaticRefinement(final boolean state) {
         try {
             TmWorkspace workspace = getCurrentWorkspace();
-            workspace.setAutoPointRefinement(state);
-            saveCurrentWorkspace();
+            if (state!=workspace.isAutoPointRefinement()) {
+                workspace.setAutoPointRefinement(state);
+                saveCurrentWorkspace();
+            }
         }
         catch(Exception e) {
             ConsoleApp.handleException(e);
@@ -1684,8 +1686,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void setAutomaticTracing(final boolean state) {
         try {
             TmWorkspace workspace = getCurrentWorkspace();
-            workspace.setAutoTracing(state);
-            saveCurrentWorkspace();
+            if (state!=workspace.isAutoTracing()) {
+                workspace.setAutoTracing(state);
+                saveCurrentWorkspace();
+            }
         }
         catch(Exception e) {
             ConsoleApp.handleException(e);

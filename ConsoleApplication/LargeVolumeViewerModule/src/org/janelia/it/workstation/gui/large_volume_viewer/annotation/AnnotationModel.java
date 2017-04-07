@@ -93,9 +93,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private static final String NAME_FORMAT = "# NAME %s";
 
     private final TiledMicroscopeDomainMgr tmDomainMgr;
+    private final DomainMgrTmModelAdapter modelAdapter;
+    private final TmModelManipulator neuronManager;
+    private final FilteredAnnotationModel filteredAnnotationModel;
 
     private SWCDataConverter swcDataConverter;
-    private final DomainMgrTmModelAdapter modelAdapter;
 
     private TmSample currentSample;
     private TmWorkspace currentWorkspace;
@@ -105,13 +107,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private ViewStateListener viewStateListener;
     private NotesUpdateListener notesUpdateListener;
 
-    private final FilteredAnnotationModel filteredAnnotationModel;
 
     private final Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
     private final Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
     private final Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
 
-    private final TmModelManipulator neuronManager;
 
     private final LoadTimer addTimer = new LoadTimer();
 
