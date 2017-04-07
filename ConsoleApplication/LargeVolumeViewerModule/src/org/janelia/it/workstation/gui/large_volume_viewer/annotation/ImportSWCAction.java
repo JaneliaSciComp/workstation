@@ -12,6 +12,7 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.workstation.browser.ConsoleApp;
 
 /**
@@ -21,9 +22,9 @@ import org.janelia.it.workstation.browser.ConsoleApp;
  */
 public class ImportSWCAction extends AbstractAction {
 
-    private boolean neuronPerRoot = false;
-    private AnnotationPanel annotationPanel;
-    private AnnotationManager annotationManager;
+    private final boolean neuronPerRoot;
+    private final AnnotationPanel annotationPanel;
+    private final AnnotationManager annotationManager;
 
     public ImportSWCAction(boolean neuronPerRoot, AnnotationPanel annotationPanel, AnnotationManager annotationManager) {
         this.neuronPerRoot = neuronPerRoot;
@@ -78,7 +79,8 @@ public class ImportSWCAction extends AbstractAction {
             // Now, we traverse list above, breaking any we see as
             // having more than one root, into multiple input files.
             for (File infile : rawFileList) {
-                rtnVal.addAll(annotationManager.breakOutByRoots(infile));
+                List<File> files = new SWCData().breakOutByRoots(infile);
+                rtnVal.addAll(files);
             }
         } 
         else {

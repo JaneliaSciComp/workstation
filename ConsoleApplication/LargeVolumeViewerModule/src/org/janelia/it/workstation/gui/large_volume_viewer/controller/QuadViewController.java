@@ -268,7 +268,6 @@ public class QuadViewController implements ViewStateListener {
 
         @Override
         public void closeWorkspace() {
-            annoMgr.setInitialObject(null);
         }
         
     }

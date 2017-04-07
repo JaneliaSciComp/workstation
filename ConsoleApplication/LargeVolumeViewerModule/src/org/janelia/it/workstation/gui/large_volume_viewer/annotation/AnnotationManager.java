@@ -5,7 +5,6 @@ import java.awt.Frame;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +40,6 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.it.jacs.shared.lvv.RandomNeuronGenerator;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -142,10 +140,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         LargeVolumeViewerTopComponent.getInstance().registerNeurons(neuronSetAdapter);
         Events.getInstance().registerOnEventBus(annotationModel);
     }
-
-    public void close() {
-        Events.getInstance().unregisterOnEventBus(annotationModel);
-    }
     
     /**
      * Must be called after initialization, to establish two-way communication between the AnnotationManager and the UI.
@@ -160,7 +154,26 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return annotationModel.editsAllowed();
     }
 
+    public TileFormat getTileFormat() {
+        return tileServer.getLoadAdapter().getTileFormat();
+    }
+
+    public DomainObject getInitialObject() {
+        return initialObject;
+    }
+    
+    /**
+     * Load an object into the model. 
+     * Currently, this is a one-time use method. Calling it more than once will result in an error.
+     * @param domainObject
+     * @param volumeLoader
+     */
     public void loadDomainObject(final DomainObject domainObject, final SimpleWorker volumeLoader) {
+        
+        if (this.initialObject!=null) {
+            throw new IllegalStateException("This instance already loaded a domain object");
+        }
+        
         log.info("loadDomainObject({})", domainObject);
         this.initialObject = domainObject;
         
@@ -285,6 +298,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         worker.execute();
 
     }
+
+    public void close() {
+        Events.getInstance().unregisterOnEventBus(annotationModel);
+    }
     
     public void deleteSubtreeRequested(Anchor anchor) {
         if (anchor != null) {
@@ -293,19 +310,27 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void splitAnchorRequested(Anchor anchor) {
-        splitAnchor(anchor.getNeuronID(), anchor.getGuid());
+        if (anchor != null) {
+            splitAnchor(anchor.getNeuronID(), anchor.getGuid());
+        }
     }
 
     public void rerootNeuriteRequested(Anchor anchor) {
-        rerootNeurite(anchor.getNeuronID(), anchor.getGuid());
+        if (anchor != null) {
+            rerootNeurite(anchor.getNeuronID(), anchor.getGuid());
+        }
     }
 
     public void splitNeuriteRequested(Anchor anchor) {
-        splitNeurite(anchor.getNeuronID(), anchor.getGuid());
+        if (anchor != null) {
+            splitNeurite(anchor.getNeuronID(), anchor.getGuid());
+        }
     }
 
     public void deleteLinkRequested(Anchor anchor) {
-        deleteLink(anchor.getNeuronID(), anchor.getGuid());
+        if (anchor != null) {
+            deleteLink(anchor.getNeuronID(), anchor.getGuid());
+        }
     }
 
     public void addEditNoteRequested(Anchor anchor) {
@@ -321,7 +346,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void anchorAdded(AnchorSeed seed) {
-        addAnnotation(seed.getLocation(), seed.getParentGuid());
+        if (seed != null) {
+            addAnnotation(seed.getLocation(), seed.getParentGuid());
+        }
     }
     
     public void moveAnchor(Anchor anchor) {
@@ -453,22 +480,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         else if (initialObject instanceof TmWorkspace) {
             activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat(), getSampleID());
         }
-    }
-
-    public TileFormat getTileFormat() {
-        return tileServer.getLoadAdapter().getTileFormat();
-    }
-
-    public DomainObject getInitialObject() {
-        return initialObject;
-    }
-
-    /**
-     * @param initialObject = entity the user right-clicked on to start the
-     * large volume viewer
-     */
-    public void setInitialObject(final DomainObject initialObject) {
-        this.initialObject = initialObject;
     }
 
     // ----- methods called from UI
@@ -1228,8 +1239,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         renamer.execute();
 
     }
-
-
+    
     /**
      * pop a dialog that asks for a name for a neuron;
      * returns null if the user didn't make a choice
@@ -1323,9 +1333,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                         "Null sample ID");
                 return;
             }
-        } else {
-            presentError(
-                    "You must load a brain sample before creating a workspace!",
+        } 
+        else {
+            presentError("You must load a brain sample before creating a workspace!",
                     "No brain sample!");
             return;
         }
@@ -1642,7 +1652,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 TmWorkspace workspace = getCurrentWorkspace();
                 workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
                 log.info("Setting color model: {}",workspace.getColorModel());
-                saveCurrentWorkspace();
+                annotationModel.saveCurrentWorkspace();
             }
         }
         catch (Exception e) {
@@ -1660,7 +1670,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 TmWorkspace workspace = getCurrentWorkspace();
                 workspace.setColorModel3d(ModelTranslation.translateColorModel(colorModel));
                 log.info("Setting 3d color model: {}",workspace.getColorModel3d());
-                saveCurrentWorkspace();
+                annotationModel.saveCurrentWorkspace();
             }
         }
         catch (Exception e) {
@@ -1673,7 +1683,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             TmWorkspace workspace = getCurrentWorkspace();
             if (state!=workspace.isAutoPointRefinement()) {
                 workspace.setAutoPointRefinement(state);
-                saveCurrentWorkspace();
+                annotationModel.saveCurrentWorkspace();
             }
         }
         catch(Exception e) {
@@ -1686,7 +1696,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             TmWorkspace workspace = getCurrentWorkspace();
             if (state!=workspace.isAutoTracing()) {
                 workspace.setAutoTracing(state);
-                saveCurrentWorkspace();
+                annotationModel.saveCurrentWorkspace();
             }
         }
         catch(Exception e) {
@@ -1829,25 +1839,25 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     private Long getSampleID() {
-        if (annotationModel.getCurrentWorkspace() != null) {
-            return annotationModel.getCurrentWorkspace().getSampleRef().getTargetId();
-        } else {
-            return null;
-        }
+        TmWorkspace workspace = annotationModel.getCurrentWorkspace();
+        if (workspace != null) {
+            return workspace.getSampleRef().getTargetId();
+        } 
+        return null;
     }
 
     private Long getWorkspaceID() {
-        return annotationModel.getCurrentWorkspace().getId();
+        TmWorkspace workspace = annotationModel.getCurrentWorkspace();
+        if (workspace != null) {
+            return workspace.getId();
+        }
+        return null;
     }
 
     public TmWorkspace getCurrentWorkspace() {
         return annotationModel.getCurrentWorkspace();
     }
     
-    private void saveCurrentWorkspace() throws Exception {
-        annotationModel.saveCurrentWorkspace();
-    }
-
     public Collection<TmNeuronMetadata> getNeuronList() {
         return annotationModel.getNeuronList();
     }
@@ -1898,10 +1908,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     public void clearNeuronTags(TmNeuronMetadata neuron) throws Exception {
         annotationModel.clearNeuronTags(neuron);
-    }
-
-    public List<File> breakOutByRoots(File infile) throws IOException {
-        return new SWCData().breakOutByRoots(infile);
     }
 
     public TmSample getCurrentSample() {
