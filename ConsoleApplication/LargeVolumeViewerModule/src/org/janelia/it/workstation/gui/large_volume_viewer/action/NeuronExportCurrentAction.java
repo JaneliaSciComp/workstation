@@ -7,7 +7,6 @@ import javax.swing.AbstractAction;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.SwcExport;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.SwcExport.ExportParameters;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
@@ -36,8 +35,7 @@ public class NeuronExportCurrentAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        AnnotationModel annotationModel = annotationMgr.getAnnotationModel();
-        TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
+        TmNeuronMetadata currentNeuron = annotationMgr.getCurrentNeuron();
         if (currentNeuron == null) {
             annotationMgr.presentError("You must select a neuron prior to performing this action.", "No neuron selected");
         }

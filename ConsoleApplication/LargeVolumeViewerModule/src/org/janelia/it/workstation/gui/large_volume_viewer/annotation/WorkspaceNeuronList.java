@@ -69,7 +69,6 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private JComboBox<String> tagMenu;
 
     private AnnotationManager annotationManager;
-    private AnnotationModel annotationModel;
     private CameraPanToListener panListener;
     private NeuronSelectedListener neuronSelectedListener;
 
@@ -88,10 +87,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     public enum NeuronSortOrder {ALPHABETICAL, CREATIONDATE};
     private NeuronSortOrder neuronSortOrder = NeuronSortOrder.CREATIONDATE;
 
-    public WorkspaceNeuronList(AnnotationManager annotationManager,
-        AnnotationModel annotationModel, int width) {
+    public WorkspaceNeuronList(AnnotationManager annotationManager, int width) {
         this.annotationManager = annotationManager;
-        this.annotationModel = annotationModel;
         this.width = width;
         setupUI();
     }
@@ -131,7 +128,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
         // neuron table
         neuronTableModel = new NeuronTableModel();
-        neuronTableModel.setAnnotationModel(annotationModel);
+        neuronTableModel.setAnnotationModel(annotationManager);
         neuronTable = new JTable(neuronTableModel){
             // mostly taken from the Oracle tutorial
             public String getToolTipText(MouseEvent event) {
@@ -149,7 +146,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                         Color color = neuronMetadata.getColor();
                         if (color == null) {
                             // get the default if there isn't a stored user-chosen color
-                            color = annotationModel.getNeuronStyle(neuronMetadata).getColor();
+                            color = annotationManager.getNeuronStyle(neuronMetadata).getColor();
                         }
                         tip = "RGB value: " + color.getRed() + ", " + color.getGreen() + ", " + color.getBlue();
                     }
@@ -332,7 +329,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     protected JPopupMenu createPopupMenu(MouseEvent me) {
-        NeuronContextMenu menu = new NeuronContextMenu(annotationManager.getAnnotationModel().getCurrentNeuron());
+        NeuronContextMenu menu = new NeuronContextMenu(annotationManager.getCurrentNeuron());
         menu.addMenuItems();
         return menu;
     }
@@ -359,7 +356,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         String currentMode = (String) tagModeMenu.getSelectedItem();
         tagMenu.removeAllItems();
 
-        Set<String> tagSet = annotationModel.getAvailableNeuronTags();
+        Set<String> tagSet = annotationManager.getAvailableNeuronTags();
         String[] tagList = tagSet.toArray(new String[tagSet.size()]);
         Arrays.sort(tagList);
 
@@ -501,7 +498,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private void updateModel(TmWorkspace workspace) {
         neuronTableModel.clear();
         if (workspace != null) {
-            neuronTableModel.addNeurons(annotationModel.getNeuronList());
+            neuronTableModel.addNeurons(annotationManager.getNeuronList());
         }
         updateNeuronLabel();
     }
@@ -541,7 +538,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         saveSelection();
         List<TmNeuronMetadata> neuronList = new ArrayList<>();
         for (TmNeuronMetadata tmNeuronMetadata: neuronStyleMap.keySet()) {
-            neuronList.add(annotationModel.getNeuronFromNeuronID(tmNeuronMetadata.getId()));
+            neuronList.add(annotationManager.getNeuronFromNeuronID(tmNeuronMetadata.getId()));
         }
         neuronTableModel.updateNeurons(neuronList);
         updateNeuronLabel();
@@ -583,10 +580,10 @@ class NeuronTableModel extends AbstractTableModel {
     private NeuronTagMode tagMode = NeuronTagMode.NONE;
 
     // need this to retrieve colors, tags
-    private AnnotationModel annotationModel;
+    private AnnotationManager annotationMgr;
 
-    public void setAnnotationModel(AnnotationModel annotationModel) {
-        this.annotationModel = annotationModel;
+    public void setAnnotationModel(AnnotationManager annotationMgr) {
+        this.annotationMgr = annotationMgr;
     }
 
     public void clear() {
@@ -600,7 +597,7 @@ class NeuronTableModel extends AbstractTableModel {
         neurons.addAll(neuronList);
         if (hasFilter()) {
             for (TmNeuronMetadata neuron: neuronList) {
-                if (annotationModel.hasNeuronTag(neuron, tagFilter)) {
+                if (annotationMgr.hasNeuronTag(neuron, tagFilter)) {
                     matchedNeurons.add(neuron);
                 } else {
                     unmatchedNeurons.add(neuron);
@@ -654,7 +651,7 @@ class NeuronTableModel extends AbstractTableModel {
     }
 
     private boolean matchesTagFilter(TmNeuronMetadata neuron) {
-        return annotationModel.hasNeuronTag(neuron, tagFilter);
+        return annotationMgr.hasNeuronTag(neuron, tagFilter);
     }
 
     // boilerplate stuff
@@ -739,7 +736,7 @@ class NeuronTableModel extends AbstractTableModel {
                 return targetNeuron.getName();
             case 1:
                 // Note that is not the same as targetNeuron.getColor(). If the persisted color is null, it picks a default.
-                return annotationModel.getNeuronStyle(targetNeuron).getColor();
+                return annotationMgr.getNeuronStyle(targetNeuron).getColor();
             case 2:
                 // creation date, hidden, but there for sorting
                 return targetNeuron.getCreationDate();

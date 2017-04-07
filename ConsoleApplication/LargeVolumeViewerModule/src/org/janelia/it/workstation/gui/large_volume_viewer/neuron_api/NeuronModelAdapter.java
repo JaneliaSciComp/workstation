@@ -85,7 +85,7 @@ public class NeuronModelAdapter implements NeuronModel
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // private NeuronStyle neuronStyle;
     // TODO: Stop using locally cached color and visibility, in favor of proper syncing with underlying Style
-    // private AnnotationModel annotationModel;
+    // private AnnotationModel annotationMgr;
     private boolean bIsVisible; // TODO: sync visibility with LVV eventually. For now, we want fast toggle from Horta.
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
@@ -94,13 +94,13 @@ public class NeuronModelAdapter implements NeuronModel
     private NeuronSetAdapter neuronSet;
 
     public NeuronModelAdapter(TmNeuronMetadata neuron, NeuronSetAdapter workspace)
-            // AnnotationModel annotationModel, TmWorkspace workspace, TmSample sample)
+            // AnnotationModel annotationMgr, TmWorkspace workspace, TmSample sample)
     {
         assert neuron != null;
         this.neuron = neuron;
         this.neuronId = neuron.getId();
         this.neuronSet = workspace;
-        // this.annotationModel = annotationModel;
+        // this.annotationModel = annotationMgr;
         bIsVisible = true; // TODO: 
         vertexes = new VertexList(neuron.getGeoAnnotationMap(), neuronSet);
         edges = new EdgeList(vertexes);
@@ -150,12 +150,12 @@ public class NeuronModelAdapter implements NeuronModel
             // no parent? create root annotation.
             TmGeoAnnotation ann;
             if (parent == null) {
-                ann = neuronSet.annotationModel.addRootAnnotation(neuron, voxelXyz);
+                ann = neuronSet.annotationMgr.addRootAnnotation(neuron, voxelXyz);
             }
             else {
                 NeuronVertexAdapter p = (NeuronVertexAdapter)parent;
                 TmGeoAnnotation parentAnnotation = p.getTmGeoAnnotation();
-                ann = neuronSet.annotationModel.addChildAnnotation(parentAnnotation, voxelXyz);
+                ann = neuronSet.annotationMgr.addChildAnnotation(parentAnnotation, voxelXyz);
                 ActivityLogHelper.getInstance().logExternallyAddAnchor(neuronSet.workspace.getSampleRef().getTargetId(), neuronSet.workspace.getId(), ann, micronXyz);
             }
             ann.setRadius(new Double(radius));
@@ -186,13 +186,13 @@ public class NeuronModelAdapter implements NeuronModel
         // Borrow logic from AnnotationManager::canMergeNeurite()::520
         if (sourceID.equals(targetID))
             return false; // cannot merge with itself
-        if (neuronSet.annotationModel.getNeuriteRootAnnotation(sourceAnn).getId().equals(
-                neuronSet.annotationModel.getNeuriteRootAnnotation(targetAnn).getId())) {
+        if (neuronSet.annotationMgr.getNeuriteRootAnnotation(sourceAnn).getId().equals(
+                neuronSet.annotationMgr.getNeuriteRootAnnotation(targetAnn).getId())) {
             return false;
         }
         
         try {
-            neuronSet.annotationModel.mergeNeurite(sourceAnn.getNeuronId(), sourceID, targetAnn.getNeuronId(), targetID);
+            neuronSet.annotationMgr.mergeNeurite(sourceAnn.getNeuronId(), sourceID, targetAnn.getNeuronId(), targetID);
         } 
         catch (Exception ex) {
             return false;
@@ -207,7 +207,7 @@ public class NeuronModelAdapter implements NeuronModel
                 return false;
             NeuronVertexAdapter nva = (NeuronVertexAdapter)vertex;
             TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
-            neuronSet.annotationModel.updateAnnotationRadius(annotation.getNeuronId(), annotation.getId(), micronRadius);
+            neuronSet.annotationMgr.updateAnnotationRadius(annotation.getNeuronId(), annotation.getId(), micronRadius);
             return true;
         }
         catch (Exception ex) {
@@ -236,7 +236,7 @@ public class NeuronModelAdapter implements NeuronModel
                     annotation.getX(),
                     annotation.getY(),
                     annotation.getZ());
-            neuronSet.annotationModel.moveAnnotation(annotation.getNeuronId(), annotation.getId(), destination);
+            neuronSet.annotationMgr.moveAnnotation(annotation.getNeuronId(), annotation.getId(), destination);
             return true;
         }
         catch (Exception ex) {
@@ -261,7 +261,7 @@ public class NeuronModelAdapter implements NeuronModel
             if (annotation.getChildIds().size() > 1)
                 return false; // non-terminal cannot be deleted
             
-            neuronSet.annotationModel.deleteLink(annotation);
+            neuronSet.annotationMgr.deleteLink(annotation);
             ActivityLogHelper.getInstance().logExternallyDeleteLink(neuronSet.workspace.getSampleRef().getTargetId(), neuronSet.workspace.getId(), annotation);
             return true;
         } catch (Exception ex) {
@@ -336,7 +336,7 @@ public class NeuronModelAdapter implements NeuronModel
         // set yet at WorkspaceLoaded time.
         if (cachedColor != null)
             return cachedColor;
-        NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
+        NeuronStyle style = neuronSet.annotationMgr.getNeuronStyle(neuron);
         if (style != null) {
             cachedColor = style.getColor();
             return cachedColor;
@@ -356,7 +356,7 @@ public class NeuronModelAdapter implements NeuronModel
         // Set color in actual wrapped Style
         boolean vis = true;
         Color deepColor = null;
-        NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
+        NeuronStyle style = neuronSet.annotationMgr.getNeuronStyle(neuron);
         if (style != null) {
             vis = style.isVisible();
             deepColor = style.getColor();
@@ -368,7 +368,7 @@ public class NeuronModelAdapter implements NeuronModel
         // Avoid multiple style setting calls
         if (! color.equals(deepColor)) {
             try {
-                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, vis));
+                neuronSet.annotationMgr.setNeuronStyle(neuron, new NeuronStyle(color, vis));
             } catch (Exception ex) {
                 logger.error("Error setting neuron style", ex);
             }
@@ -444,7 +444,7 @@ public class NeuronModelAdapter implements NeuronModel
         bIsVisible = visible;
         
         // Synchronize with TmNeuron Style
-        NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
+        NeuronStyle style = neuronSet.annotationMgr.getNeuronStyle(neuron);
         Color color = cachedColor;
 
         boolean deepVisibility = ! visible;
@@ -455,7 +455,7 @@ public class NeuronModelAdapter implements NeuronModel
         // Don't keep updating visibility, if it's already set correctly
         if (visible != deepVisibility) {
             try {
-                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, visible));
+                neuronSet.annotationMgr.setNeuronStyle(neuron, new NeuronStyle(color, visible));
             } catch (Exception ex) {
                 logger.error("Error setting neuron style", ex);
             }

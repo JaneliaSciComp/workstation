@@ -92,7 +92,7 @@ public class TmSampleNode extends AbstractDomainObjectNode<TmSample> {
     }
     
     public TmSample getSample() {
-        return (TmSample)getDomainObject();
+        return getDomainObject();
     }
     
     @Override

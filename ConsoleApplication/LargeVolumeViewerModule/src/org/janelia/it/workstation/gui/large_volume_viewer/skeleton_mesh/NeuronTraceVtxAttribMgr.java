@@ -10,19 +10,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.mesh_loader.BufferPackager;
 import org.janelia.it.jacs.shared.mesh_loader.NormalCompositor;
 import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
 import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationGeometry;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
@@ -471,17 +472,17 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
 	}
 	
     protected void calculateInterestingAnnotationVertices(TileFormat tileFormat, PointEnclosureFactory interestingAnnotationEnclosureFactory) {
-        AnnotationModel annoMdl = dataSource.getAnnotationModel();
-        if (annoMdl != null) {
+        AnnotationManager annotationMgr = dataSource.getAnnotationManager();
+        if (annotationMgr != null) {
             float[] id = null;
-            FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
+            FilteredAnnotationModel filteredModel = annotationMgr.getFilteredAnnotationModel();
             final int rowCount = filteredModel.getRowCount();
             idCoder = new IdCoder();
             for (int i = 0; i < rowCount; i++) {
                 id = idCoder.encode(i);                
                 log.debug("ID={}.  Row={}.", id, i);
                 InterestingAnnotation anno = filteredModel.getAnnotationAtRow(i);
-                TmGeoAnnotation geoAnno = annoMdl.getGeoAnnotationFromID(anno.getNeuronID(), anno.getAnnotationID());
+                TmGeoAnnotation geoAnno = annotationMgr.getGeoAnnotationFromID(anno.getNeuronID(), anno.getAnnotationID());
                 final AnnotationGeometry geometry = anno.getGeometry();
                 if (!(geometry == AnnotationGeometry.BRANCH || geometry == AnnotationGeometry.END || anno.hasNote())) {
                     continue;

@@ -55,7 +55,6 @@ public class FilteredAnnotationList extends JPanel {
 
     // data stuff
     private AnnotationManager annotationMgr;
-    private AnnotationModel annotationModel;
     private FilteredAnnotationModel model;
 
     private Map<String, AnnotationFilter> filters = new HashMap<>();
@@ -72,8 +71,8 @@ public class FilteredAnnotationList extends JPanel {
     private static FilteredAnnotationList theInstance;
     private boolean skipUpdate=false;
 
-    public static FilteredAnnotationList createInstance(final AnnotationManager annotationMgr, final AnnotationModel annotationModel, int width) {
-        theInstance = new FilteredAnnotationList(annotationMgr, annotationModel, width);
+    public static FilteredAnnotationList createInstance(final AnnotationManager annotationMgr, int width) {
+        theInstance = new FilteredAnnotationList(annotationMgr, width);
         return theInstance;
     }
 
@@ -95,13 +94,12 @@ public class FilteredAnnotationList extends JPanel {
         updateData();
     }
 
-    private FilteredAnnotationList(final AnnotationManager annotationMgr, final AnnotationModel annotationModel, int width) {
+    private FilteredAnnotationList(final AnnotationManager annotationMgr, int width) {
         this.annotationMgr = annotationMgr;
-        this.annotationModel = annotationModel;
         this.width = width;
 
         // set up model & data-related stuff
-        model = annotationModel.getFilteredAnnotationModel();
+        model = annotationMgr.getFilteredAnnotationModel();
         setupFilters();
 
         // GUI stuff
@@ -134,7 +132,7 @@ public class FilteredAnnotationList extends JPanel {
                         int viewColumn = table.columnAtPoint(me.getPoint());
                         int modelColumn = table.convertColumnIndexToModel(viewColumn);
                         InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
-                        TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(interestingAnnotation.getNeuronID(), interestingAnnotation.getAnnotationID());
+                        TmGeoAnnotation ann = annotationMgr.getGeoAnnotationFromID(interestingAnnotation.getNeuronID(), interestingAnnotation.getAnnotationID());
                         if (modelColumn == 2) {
                             // double-click note: edit note dialog
                             editNoteRequestedListener.editNote(ann);
@@ -192,7 +190,7 @@ public class FilteredAnnotationList extends JPanel {
         // totally brute force; we don't know what updated, so
         //  start from scratch each time
 
-        TmWorkspace currentWorkspace = annotationModel.getCurrentWorkspace();
+        TmWorkspace currentWorkspace = annotationMgr.getCurrentWorkspace();
         if (currentWorkspace == null) {
             return;
         }
@@ -201,14 +199,14 @@ public class FilteredAnnotationList extends JPanel {
 
         if (currentNeuronCheckbox.isSelected()) {
             // Necessary optimization: only consider current neuron
-            TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
+            TmNeuronMetadata currentNeuron = annotationMgr.getCurrentNeuron();
             if (currentNeuron!=null) {
                 updateData(currentNeuron);
             }
         }
         else {
             // Consider all neurons
-            for (TmNeuronMetadata neuron: new ArrayList<>(annotationModel.getNeuronList())) {
+            for (TmNeuronMetadata neuron: new ArrayList<>(annotationMgr.getNeuronList())) {
                 updateData(neuron);
             }
         }
@@ -531,7 +529,7 @@ public class FilteredAnnotationList extends JPanel {
      * neuron" toggle doesn't explicitly set the filter
      */
     public AnnotationFilter getCurrentFilter() {
-        TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
+        TmNeuronMetadata currentNeuron = annotationMgr.getCurrentNeuron();
         if (currentNeuronCheckbox.isSelected() && currentNeuron != null) {
             return new AndFilter(new NeuronFilter(currentNeuron), currentFilter);
         } else {

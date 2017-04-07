@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -9,7 +8,6 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationList;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
@@ -51,36 +49,32 @@ public class PanelController {
         PanelTmGeoSelectListener ptgsl = new PanelTmGeoSelectListener();
         this.filteredAnnotationList.setAnnoSelectListener(ptgsl);
     }
-    
-    public void registerForEvents(AnnotationModel annotationModel) {
         
-        globalListener = new PanelGlobalListener();
-        annotationModel.addGlobalAnnotationListener(globalListener);
-        
-        notesListener = new PanelNotesUpdateListener();
-        annotationModel.setNotesUpdateListener(notesListener);
-
-        annotationListener = new PanelAnnotationListener();
-        annotationModel.addTmGeoAnnotationModListener(annotationListener);
-        
-        PanelNeuronSelectedListener pnsl = new PanelNeuronSelectedListener(annotationModel);
-        wsNeuronList.setNeuronSelectedListener(pnsl);
-        
-    }
-    
     public void registerForEvents(AnnotationManager annotationManager) {
         PanelEditNoteRequestedListener penrl = new PanelEditNoteRequestedListener(annotationManager);
         filteredAnnotationList.setEditNoteRequestListener(penrl);
+
+        globalListener = new PanelGlobalListener();
+        annotationManager.addGlobalAnnotationListener(globalListener);
+        
+        notesListener = new PanelNotesUpdateListener();
+        annotationManager.setNotesUpdateListener(notesListener);
+
+        annotationListener = new PanelAnnotationListener();
+        annotationManager.addTmGeoAnnotationModListener(annotationListener);
+        
+        PanelNeuronSelectedListener pnsl = new PanelNeuronSelectedListener(annotationManager);
+        wsNeuronList.setNeuronSelectedListener(pnsl);
     }
     
     public void registerForEvents(WorkspaceInfoPanel wsip) {
         this.wsInfoPanel = wsip;
     }
     
-    public void unregisterForEvents(AnnotationModel annotationModel) {
-        annotationModel.removeGlobalAnnotationListener(globalListener);
-        annotationModel.removeTmGeoAnnotationModListener(annotationListener);
-        annotationModel.setNotesUpdateListener(null);
+    public void unregisterForEvents(AnnotationManager annotationMgr) {
+        annotationMgr.removeGlobalAnnotationListener(globalListener);
+        annotationMgr.removeTmGeoAnnotationModListener(annotationListener);
+        annotationMgr.setNotesUpdateListener(null);
         this.globalListener = null;
         this.notesListener = null;
         this.annotationListener = null;
@@ -105,7 +99,7 @@ public class PanelController {
         
         @Override
         public void neuronCreated(TmNeuronMetadata neuron) {
-            TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
+            TmWorkspace workspace = annotationPanel.getAnnotationMgr().getCurrentWorkspace();
             filteredAnnotationList.loadNeuron(neuron);
             // TODO: could use a more granular update
             wsNeuronList.loadWorkspace(workspace);
@@ -113,7 +107,7 @@ public class PanelController {
 
         @Override
         public void neuronDeleted(TmNeuronMetadata neuron) {
-            TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
+            TmWorkspace workspace = annotationPanel.getAnnotationMgr().getCurrentWorkspace();
             filteredAnnotationList.loadNeuron(neuron);
             // TODO: could use a more granular update
             wsNeuronList.loadWorkspace(workspace);
@@ -121,7 +115,7 @@ public class PanelController {
 
         @Override
         public void neuronChanged(TmNeuronMetadata neuron) {
-            TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
+            TmWorkspace workspace = annotationPanel.getAnnotationMgr().getCurrentWorkspace();
             filteredAnnotationList.loadNeuron(neuron);
             // TODO: could use a more granular update
             wsNeuronList.loadWorkspace(workspace);
@@ -219,30 +213,30 @@ public class PanelController {
     
     private class PanelNeuronSelectedListener implements NeuronSelectedListener {
 
-        private AnnotationModel model;
+        private AnnotationManager annotationMgr;
         
-        public PanelNeuronSelectedListener(AnnotationModel model) {
-            this.model = model;
+        public PanelNeuronSelectedListener(AnnotationManager annotationManager) {
+            this.annotationMgr = annotationManager;
         }
         
         @Override
         public void selectNeuron(TmNeuronMetadata neuron) {
-            model.selectNeuron(neuron);
+            annotationMgr.selectNeuron(neuron);
         }
         
     }
     
     private class PanelEditNoteRequestedListener implements EditNoteRequestedListener {
 
-        private AnnotationManager mgr;
+        private AnnotationManager annotationMgr;
         
         public PanelEditNoteRequestedListener(AnnotationManager mgr) {
-            this.mgr = mgr;
+            this.annotationMgr = mgr;
         }
         
         @Override
         public void editNote(TmGeoAnnotation annotation) {
-            mgr.addEditNote(annotation.getNeuronId(), annotation.getId());
+            annotationMgr.addEditNote(annotation.getNeuronId(), annotation.getId());
         }
         
     }

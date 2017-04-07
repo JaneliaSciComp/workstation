@@ -51,7 +51,6 @@ public class AnnotationPanel extends JPanel
     // not clear these belong here!  should all info be shuffled through signals and actions?
     // on the other hand, even if so, we still need them just to hook everything up
     private AnnotationManager annotationMgr;
-    private AnnotationModel annotationModel;
     private LargeVolumeViewerTranslator largeVolumeViewerTranslator;
 
 
@@ -105,10 +104,8 @@ public class AnnotationPanel extends JPanel
     private JMenu sortSubmenu;
 
 
-    public AnnotationPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
-        LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
+    public AnnotationPanel(AnnotationManager annotationMgr, LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
         this.annotationMgr = annotationMgr;
-        this.annotationModel = annotationModel;
         this.largeVolumeViewerTranslator = largeVolumeViewerTranslator;
 
         setupUI();
@@ -119,8 +116,8 @@ public class AnnotationPanel extends JPanel
 
     }
 
-    public AnnotationModel getAnnotationModel() {
-        return annotationModel;
+    public AnnotationManager getAnnotationMgr() {
+        return annotationMgr;
     }
 
     public void setViewStateListener(ViewStateListener listener) {
@@ -164,7 +161,6 @@ public class AnnotationPanel extends JPanel
         // outgoing from the model:
         PanelController panelController = new PanelController(this,
                 filteredList, workspaceNeuronList, largeVolumeViewerTranslator);
-        panelController.registerForEvents(annotationModel);
         panelController.registerForEvents(annotationMgr);
         panelController.registerForEvents(workspaceInfoPanel);
     }
@@ -235,13 +231,13 @@ public class AnnotationPanel extends JPanel
         exportAllSWCAction = new NeuronExportAllAction();
         workspaceToolMenu.add(new JMenuItem(exportAllSWCAction));
 
-        importSWCAction = new ImportSWCAction(this, annotationModel, annotationMgr);
+        importSWCAction = new ImportSWCAction(this, annotationMgr);
         importSWCAction.putValue(Action.NAME, "Import SWC file as one neuron...");
         importSWCAction.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCAction));
 
-        importSWCActionMulti = new ImportSWCAction(true, this, annotationModel, annotationMgr);
+        importSWCActionMulti = new ImportSWCAction(true, this, annotationMgr);
         importSWCActionMulti.putValue(Action.NAME, "Import SWC file as separate neurons...");
         importSWCActionMulti.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
@@ -255,7 +251,7 @@ public class AnnotationPanel extends JPanel
         };
         workspaceToolMenu.add(new JMenuItem(saveColorModelAction));
 
-        workspaceToolMenu.add(new WorkspaceInformationAction(annotationModel));
+        workspaceToolMenu.add(new WorkspaceInformationAction());
 
         saveAsAction = new WorkspaceSaveAsAction();
         workspaceToolMenu.add(new JMenuItem(saveAsAction));
@@ -278,7 +274,7 @@ public class AnnotationPanel extends JPanel
 
 
         // list of neurons in workspace
-        workspaceNeuronList = new WorkspaceNeuronList(annotationMgr, annotationModel, width);
+        workspaceNeuronList = new WorkspaceNeuronList(annotationMgr, width);
         add(workspaceNeuronList, cVert);
 
         // testing
@@ -307,10 +303,10 @@ public class AnnotationPanel extends JPanel
         };
         neuronToolMenu.add(hideAllNeuronsAction);
         
-        bulkChangeNeuronStyleAction = new BulkChangeNeuronColorAction(annotationModel, workspaceNeuronList);
+        bulkChangeNeuronStyleAction = new BulkChangeNeuronColorAction(workspaceNeuronList);
         neuronToolMenu.add(bulkChangeNeuronStyleAction);
         
-        bulkNeuronTagAction = new BulkNeuronTagAction(annotationModel, workspaceNeuronList);
+        bulkNeuronTagAction = new BulkNeuronTagAction(workspaceNeuronList);
         neuronToolMenu.add(bulkNeuronTagAction);
                 
         neuronToolMenu.add(new JSeparator());
@@ -375,7 +371,7 @@ public class AnnotationPanel extends JPanel
 
         // ----- interesting annotations
         add(Box.createRigidArea(new Dimension(0, 20)), cVert);
-        filteredList = FilteredAnnotationList.createInstance(annotationMgr, annotationModel, width);
+        filteredList = FilteredAnnotationList.createInstance(annotationMgr, width);
         add(filteredList, cVert);
 
 
@@ -400,7 +396,7 @@ public class AnnotationPanel extends JPanel
 
         // developer panel, only shown to me; used for various testing things
         if (AccessManager.getAccessManager().getSubject().getName().equals("olbrisd")) {
-            lvvDevPanel = new LVVDevPanel(annotationMgr, annotationModel, largeVolumeViewerTranslator);
+            lvvDevPanel = new LVVDevPanel(annotationMgr, largeVolumeViewerTranslator);
             add(lvvDevPanel, cVert);
         }
 

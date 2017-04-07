@@ -17,13 +17,10 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.IdSource;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.RandomNeuronGenerator;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileFormat.MicrometerXyz;
 import org.janelia.it.jacs.shared.lvv.TileFormat.VoxelXyz;
@@ -34,11 +31,9 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
-import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +48,6 @@ public class GenerateNeuronsDialog extends ModalDialog {
     private static final Logger log = LoggerFactory.getLogger(GenerateNeuronsDialog.class);
     
     private final AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-    private AnnotationModel annotationModel;
     
     private final JButton cancelButton;
     private final JButton okButton;
@@ -76,9 +70,7 @@ public class GenerateNeuronsDialog extends ModalDialog {
     	if (annotationMgr==null) {
     	    throw new IllegalStateException("LVV needs to be opened before this dialog is opened");
     	}
-    	
-    	this.annotationModel = annotationMgr.getAnnotationModel();
-    	
+    	    	
         setTitle("Generate Neurons");
 
         attrPanel = new GroupedKeyValuePanel();
@@ -175,8 +167,7 @@ public class GenerateNeuronsDialog extends ModalDialog {
 
         log.info("Bounding box (voxels): {}", boundingBox);
         
-        final TmWorkspace currentWorkspace = annotationModel.getCurrentWorkspace();
-        final String taskName = "Generating "+neuronCount+" neurons";
+        final TmWorkspace currentWorkspace = annotationMgr.getCurrentWorkspace();
         
         log.info("Generating {} neurons with {} mean points per neuron, with {} branching possibility", neuronCount, meanPointsPerNeuron, branchProbability);
         
@@ -201,6 +192,7 @@ public class GenerateNeuronsDialog extends ModalDialog {
             TaskMonitoringWorker tmw = new TaskMonitoringWorker(task.getObjectId()) {
                 @Override
                 public String getName() {
+                    final String taskName = "Generating "+neuronCount+" neurons";
                     return taskName;
                 }
                 
@@ -233,49 +225,7 @@ public class GenerateNeuronsDialog extends ModalDialog {
             tmw.executeWithEvents();
         }
         else {
-
-            IdSource idSource = new IdSource((int)(neuronCount*meanPointsPerNeuron*2));
-            final RandomNeuronGenerator generator = new RandomNeuronGenerator(idSource, boundingBox, meanPointsPerNeuron, branchProbability);
-            BackgroundWorker worker = new BackgroundWorker() {
-
-                @Override
-                public String getName() {
-                    return taskName;
-                }
-
-                @Override
-                protected void doStuff() throws Exception {
-                    
-                    int index = 1;
-                    int total = neuronCount;
-                    
-                    for(int i=0; i<neuronCount; i++) {
-                        String neuronName = "Neuron "+index;
-                        setStatus("Creating artificial "+neuronName);
-                        final TmNeuronMetadata neuron = annotationModel.getNeuronManager()
-                                .createTiledMicroscopeNeuron(currentWorkspace, neuronName);
-                        generator.generateArtificialNeuronData(neuron);
-                        annotationModel.getNeuronManager().saveNeuronData(neuron).get();
-                        setProgress(index++, total);
-                    }
-                    
-                    setStatus("Completed artificial neuron generation");
-                }
-            };
-            worker.setSuccessCallback(new Callable<Void>() {
-                
-                @Override
-                public Void call() throws Exception {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            annotationModel.postWorkspaceUpdate(null);
-                        }
-                    });
-                    return null;
-                }
-            });
-            worker.executeWithEvents();    
+            annotationMgr.generateRandomNeurons(neuronCount, meanPointsPerNeuron, boundingBox, branchProbability);
         }
         
         return true;

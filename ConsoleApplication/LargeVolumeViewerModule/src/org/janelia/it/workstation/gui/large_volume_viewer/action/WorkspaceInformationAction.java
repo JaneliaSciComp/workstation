@@ -15,7 +15,8 @@ import javax.swing.table.AbstractTableModel;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 
 /**
  * this action opens a dialog in which information on the neurons
@@ -23,22 +24,17 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationM
  */
 public class WorkspaceInformationAction extends AbstractAction {
 
-    private AnnotationModel annotationModel;
-
-    public WorkspaceInformationAction(AnnotationModel annotationModel) {
-        this.annotationModel = annotationModel;
-
+    public WorkspaceInformationAction() {
         putValue(NAME, "Show workspace information...");
         putValue(SHORT_DESCRIPTION, "Show workspace info");
     }
 
-
     @Override
     public void actionPerformed(ActionEvent action) {
-        if (annotationModel.getCurrentWorkspace() != null) {
+        AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+        if (annotationMgr.getCurrentWorkspace() != null) {
 
             final InfoTableModel tableModel = new InfoTableModel();
-            tableModel.setAnnotationModel(annotationModel);
             JTable table = new JTable(tableModel) {
                 public String getToolTipText(MouseEvent event) {
                     String tip = null;
@@ -61,7 +57,7 @@ public class WorkspaceInformationAction extends AbstractAction {
             JScrollPane scrollPane = new JScrollPane(table);
 
             table.setFillsViewportHeight(true);
-            tableModel.addNeurons(new ArrayList<>(annotationModel.getNeuronList()));
+            tableModel.addNeurons(new ArrayList<>(annotationMgr.getNeuronList()));
 
             JOptionPane.showConfirmDialog(null,
                 scrollPane,
@@ -75,8 +71,6 @@ public class WorkspaceInformationAction extends AbstractAction {
 
 class InfoTableModel extends AbstractTableModel {
 
-    private  AnnotationModel annotationModel;
-
     private String[] columnNames = {"Neuron name", "# points", "# branches"};
 
     private ArrayList<TmNeuronMetadata> neurons = new ArrayList<>();
@@ -84,10 +78,6 @@ class InfoTableModel extends AbstractTableModel {
     private int npoints;
     private int nbranches;
     private Map<Long, Integer> branchMap = new HashMap<>();
-
-    public void setAnnotationModel(AnnotationModel annotationModel) {
-        this.annotationModel = annotationModel;
-    }
 
     public void addNeurons(List<TmNeuronMetadata> neuronList) {
         neurons.addAll(neuronList);

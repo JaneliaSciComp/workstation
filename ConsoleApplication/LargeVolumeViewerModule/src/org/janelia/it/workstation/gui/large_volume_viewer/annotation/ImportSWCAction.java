@@ -23,24 +23,22 @@ public class ImportSWCAction extends AbstractAction {
 
     private boolean neuronPerRoot = false;
     private AnnotationPanel annotationPanel;
-    private AnnotationModel annotationModel;
     private AnnotationManager annotationManager;
 
-    public ImportSWCAction(boolean neuronPerRoot, AnnotationPanel annotationPanel, AnnotationModel annotationModel, AnnotationManager annotationManager) {
+    public ImportSWCAction(boolean neuronPerRoot, AnnotationPanel annotationPanel, AnnotationManager annotationManager) {
         this.neuronPerRoot = neuronPerRoot;
         this.annotationPanel = annotationPanel;
-        this.annotationModel = annotationModel;
         this.annotationManager = annotationManager;
     }
 
-    public ImportSWCAction(AnnotationPanel annotationPanel, AnnotationModel annotationModel, AnnotationManager annotationManager) {
-        this(false, annotationPanel, annotationModel, annotationManager);
+    public ImportSWCAction(AnnotationPanel annotationPanel, AnnotationManager annotationManager) {
+        this(false, annotationPanel, annotationManager);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (annotationManager.getCurrentWorkspace() == null) {
             JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "No workspace is open", "Cannot Import", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -80,7 +78,7 @@ public class ImportSWCAction extends AbstractAction {
             // Now, we traverse list above, breaking any we see as
             // having more than one root, into multiple input files.
             for (File infile : rawFileList) {
-                rtnVal.addAll(annotationModel.breakOutByRoots(infile));
+                rtnVal.addAll(annotationManager.breakOutByRoots(infile));
             }
         } 
         else {

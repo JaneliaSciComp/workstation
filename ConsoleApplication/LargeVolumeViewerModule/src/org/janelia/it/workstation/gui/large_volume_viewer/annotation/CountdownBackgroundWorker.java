@@ -19,7 +19,6 @@ public class CountdownBackgroundWorker extends BackgroundWorker {
     public static final int WAIT_INTERIM_MS = 1000 * WAIT_INTERIM_S;
     
     private final AtomicInteger countdownSemaphore;
-    private AnnotationModel annotationModel;
 
     private final String name;
     private Integer remainingWaitTime;  // Optional: null-> wait forever.
@@ -34,10 +33,6 @@ public class CountdownBackgroundWorker extends BackgroundWorker {
         this.name = name;
         this.countdownSemaphore = countdownSemaphore;
         this.remainingWaitTime = maxWaitTime;
-    }
-    
-    public void setAnnotationModel( AnnotationModel model ) {
-        this.annotationModel = model;
     }
 
     @Override
@@ -66,7 +61,7 @@ public class CountdownBackgroundWorker extends BackgroundWorker {
                     // such as Concurrent Modification Exceptions.
 //                    if (countdownSemaphore.get() % 100 == 0) {
 //                        // Need to "goose" the display, to show what it has.
-//                        annotationModel.postWorkspaceUpdate();
+//                        annotationMgr.postWorkspaceUpdate();
 //                    }
 
                 } catch (InterruptedException ex) {

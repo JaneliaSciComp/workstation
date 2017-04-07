@@ -56,7 +56,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.util.MatrixUtilities;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -81,7 +81,7 @@ implements NeuronSet// , LookupListener
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
     TmWorkspace workspace; // LVV workspace, as opposed to Horta workspace
-    AnnotationModel annotationModel;
+    AnnotationManager annotationMgr;
     private final GlobalAnnotationListener globalAnnotationListener;
     private final TmGeoAnnotationModListener annotationModListener;
     private HortaMetaWorkspace metaWorkspace = null;
@@ -105,7 +105,7 @@ implements NeuronSet// , LookupListener
 
     @Override
     public boolean isReadOnly() {
-        return !annotationModel.editsAllowed();
+        return !annotationMgr.editsAllowed();
     }
     
     private void updateVoxToMicronMatrices(TmSample sample)
@@ -133,14 +133,14 @@ implements NeuronSet// , LookupListener
     Jama.Matrix getVoxToMicronMatrix() {
         if (voxToMicronMatrix != null)
             return voxToMicronMatrix;
-        updateVoxToMicronMatrices(annotationModel.getCurrentSample());
+        updateVoxToMicronMatrices(annotationMgr.getCurrentSample());
         return voxToMicronMatrix;
     }
     
     Jama.Matrix getMicronToVoxMatrix() {
         if (micronToVoxMatrix != null)
             return micronToVoxMatrix;
-        updateVoxToMicronMatrices(annotationModel.getCurrentSample());
+        updateVoxToMicronMatrices(annotationMgr.getCurrentSample());
         return micronToVoxMatrix;
     }
 
@@ -170,7 +170,7 @@ implements NeuronSet// , LookupListener
 
     @Override 
     public NeuronModel getNeuronByGuid(Long guid) {
-        TmNeuronMetadata neuronMetadata = annotationModel.getNeuronFromNeuronID(guid);
+        TmNeuronMetadata neuronMetadata = annotationMgr.getNeuronFromNeuronID(guid);
         return innerList.neuronModelForTmNeuron(neuronMetadata);
     }
     
@@ -190,7 +190,7 @@ implements NeuronSet// , LookupListener
     public NeuronModel createNeuron(String neuronName) {
         TmNeuronMetadata neuron;
         try {
-            neuron = annotationModel.createNeuron(neuronName);
+            neuron = annotationMgr.createNeuron(neuronName);
             getMembershipChangeObservable().setChanged();
         } catch (Exception ex) {
             log.warn("Error creating neuron",ex);
@@ -199,31 +199,31 @@ implements NeuronSet// , LookupListener
         return new NeuronModelAdapter(neuron, this);
     }
     
-    public void observe(AnnotationModel annotationModel)
+    public void observe(AnnotationManager annotationMgr)
     {
-        if (annotationModel == null)
+        if (annotationMgr == null)
             return; // can't watch nothing?
-        if (this.annotationModel == annotationModel)
+        if (this.annotationMgr == annotationMgr)
             return; // already watching this model
         // Stop listening to whatever we were listening to earlier
-        AnnotationModel oldAnnotationModel = this.annotationModel;
-        this.annotationModel = annotationModel;
-        if (oldAnnotationModel != null) {
-            oldAnnotationModel.removeGlobalAnnotationListener(globalAnnotationListener);
-            oldAnnotationModel.removeTmGeoAnnotationModListener(annotationModListener);
+        AnnotationManager oldAnnotationMgr = this.annotationMgr;
+        this.annotationMgr = annotationMgr;
+        if (oldAnnotationMgr != null) {
+            oldAnnotationMgr.removeGlobalAnnotationListener(globalAnnotationListener);
+            oldAnnotationMgr.removeTmGeoAnnotationModListener(annotationModListener);
         }
         sanityCheckWorkspace();
-        annotationModel.addGlobalAnnotationListener(globalAnnotationListener);
-        annotationModel.addTmGeoAnnotationModListener(annotationModListener);
+        annotationMgr.addGlobalAnnotationListener(globalAnnotationListener);
+        annotationMgr.addTmGeoAnnotationModListener(annotationModListener);
         getMembershipChangeObservable().notifyObservers();
-        log.info("Observing new Annotation Model {}", annotationModel);
+        log.info("Observing new Annotation Model {}", annotationMgr);
     }
     
     // Sometimes the TmWorkspace instance changes, even though the semantic workspace has not changed.
     // In this case, we need to scramble to distribute the new object instances
     // behind our stable NeuronSet/NeuronMode/NeuronVertex facade.
     private void sanityCheckWorkspace() {
-        TmWorkspace w = this.annotationModel.getCurrentWorkspace();
+        TmWorkspace w = this.annotationMgr.getCurrentWorkspace();
         if (w == workspace) return; // unchanged
         log.info("Workspace changed");
         setWorkspace(w);
@@ -260,7 +260,7 @@ implements NeuronSet// , LookupListener
         if (! workspace.getName().equals(getName()))
             getNameChangeObservable().setChanged();
         this.workspace = workspace;
-        TmSample sample = annotationModel.getCurrentSample();
+        TmSample sample = annotationMgr.getCurrentSample();
         updateVoxToMicronMatrices(sample);
         NeuronList nl = (NeuronList) neurons;
         nl.wrap(this);
@@ -289,7 +289,7 @@ implements NeuronSet// , LookupListener
     private NeuronModelAdapter neuronModelForTmGeoAnnotation(TmGeoAnnotation annotation) 
     {
         Long neuronId = annotation.getNeuronId();
-        TmNeuronMetadata neuronMetadata = annotationModel.getNeuronFromNeuronID(neuronId);
+        TmNeuronMetadata neuronMetadata = annotationMgr.getNeuronFromNeuronID(neuronId);
         return innerList.neuronModelForTmNeuron(neuronMetadata);
     }
 
@@ -515,7 +515,7 @@ implements NeuronSet// , LookupListener
                     protected void hadSuccess() {
                         progress.finish();
                         // Let LVV know that index is done  
-                        annotationModel.fireSpatialIndexReady(workspace);
+                        annotationMgr.fireSpatialIndexReady(workspace);
                     }
 
                     @Override
@@ -677,7 +677,7 @@ implements NeuronSet// , LookupListener
         // private TmSample sample;
         private NeuronSetAdapter neuronSet;
         private final Map<Long, NeuronModelAdapter> cachedNeurons = new HashMap<>();
-        // private AnnotationModel annotationModel;
+        // private AnnotationModel annotationMgr;
         private final Logger logger = LoggerFactory.getLogger(this.getClass());
         
         NeuronModelAdapter neuronModelForTmNeuron(TmNeuronMetadata tmNeuron) {
@@ -713,7 +713,7 @@ implements NeuronSet// , LookupListener
                 return 0;
             if (neuronSet.workspace == null) 
                 return 0;
-            return neuronSet.annotationModel.getNeuronList().size();
+            return neuronSet.annotationMgr.getNeuronList().size();
         }
 
         @Override
@@ -723,7 +723,7 @@ implements NeuronSet// , LookupListener
                 return true;
             if (neuronSet.workspace == null) 
                 return true;
-            return neuronSet.annotationModel.getNeuronList().isEmpty();
+            return neuronSet.annotationMgr.getNeuronList().isEmpty();
         }
 
         @Override
@@ -733,13 +733,13 @@ implements NeuronSet// , LookupListener
                 return false;
             if (neuronSet.workspace == null)
                 return false;
-            if (neuronSet.annotationModel.getNeuronList().contains(o))
+            if (neuronSet.annotationMgr.getNeuronList().contains(o))
                 return true;
             if (! ( o instanceof NeuronModelAdapter ))
                 return false;
             NeuronModelAdapter neuron = (NeuronModelAdapter) o;
             TmNeuronMetadata tmNeuronMetadata = neuron.getTmNeuronMetadata();
-            return neuronSet.annotationModel.getNeuronList().contains(tmNeuronMetadata);
+            return neuronSet.annotationMgr.getNeuronList().contains(tmNeuronMetadata);
         }
 
         @Override
@@ -750,7 +750,7 @@ implements NeuronSet// , LookupListener
                 // return empty iterator
                 return new ArrayList<NeuronModel>().iterator();
             }
-            final Iterator<TmNeuronMetadata> it = neuronSet.annotationModel.getNeuronList().iterator();
+            final Iterator<TmNeuronMetadata> it = neuronSet.annotationMgr.getNeuronList().iterator();
             return new Iterator<NeuronModel>() {
 
                 @Override
@@ -807,21 +807,21 @@ implements NeuronSet// , LookupListener
             
             NeuronModelAdapter neuron = (NeuronModelAdapter)o;
             TmNeuronMetadata tmn = neuron.getTmNeuronMetadata();
-            TmNeuronMetadata previousNeuron = neuronSet.annotationModel.getCurrentNeuron();
+            TmNeuronMetadata previousNeuron = neuronSet.annotationMgr.getCurrentNeuron();
             Long neuronId = tmn.getId();
             boolean removingCurrentNeuron = (previousNeuron != null) && (previousNeuron.getId() == neuronId);
 
             if (! removingCurrentNeuron) 
-                neuronSet.annotationModel.selectNeuron(tmn);
+                neuronSet.annotationMgr.selectNeuron(tmn);
             try {
-                neuronSet.annotationModel.deleteCurrentNeuron();
+                neuronSet.annotationMgr.deleteCurrentNeuron();
             } catch (Exception ex) {
                 logger.warn("Error deleting neuron",ex);
                 return false;
             }
             finally {
                 if (! removingCurrentNeuron) // restore previous selected neuron
-                    neuronSet.annotationModel.selectNeuron(previousNeuron);
+                    neuronSet.annotationMgr.selectNeuron(previousNeuron);
             }
 
             cachedNeurons.remove(neuronId);
@@ -863,13 +863,13 @@ implements NeuronSet// , LookupListener
         {
             this.neuronSet = neuronSet;
 
-            // If we get this far, either the annotationModel or the workspace changed,
+            // If we get this far, either the annotationMgr or the workspace changed,
             // so we should refresh our persistent cached NeuronModelAdapter objects
             
             Set<Long> oldNeurons = new HashSet<>(cachedNeurons.keySet());
             Set<Long> newNeurons = new HashSet<>();
             boolean neuronMembershipChanged = false;
-            for (TmNeuronMetadata tmNeuronMetadata : neuronSet.annotationModel.getNeuronList())
+            for (TmNeuronMetadata tmNeuronMetadata : neuronSet.annotationMgr.getNeuronList())
             {
                 Long newId = tmNeuronMetadata.getId();
                 newNeurons.add(newId);

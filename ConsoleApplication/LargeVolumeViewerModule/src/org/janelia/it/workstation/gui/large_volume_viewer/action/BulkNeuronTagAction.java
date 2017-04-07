@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.action;
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.Box;
@@ -17,8 +18,9 @@ import javax.swing.JTextField;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NeuronListProvider;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +35,6 @@ public class BulkNeuronTagAction extends AbstractAction {
 
     private static final Logger logger = LoggerFactory.getLogger(BulkNeuronTagAction.class);
 
-    private AnnotationModel annModel;
     private NeuronListProvider listProvider;
 
     private JPanel mainPanel;
@@ -42,8 +43,7 @@ public class BulkNeuronTagAction extends AbstractAction {
     private JTextField newTagField;
 
 
-    public BulkNeuronTagAction(AnnotationModel annotationModel, NeuronListProvider listProvider) {
-        this.annModel = annotationModel;
+    public BulkNeuronTagAction(NeuronListProvider listProvider) {
         this.listProvider = listProvider;
 
         putValue(NAME, "Edit neuron tags...");
@@ -93,8 +93,9 @@ public class BulkNeuronTagAction extends AbstractAction {
             protected void doStuff() throws Exception {
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.start();
-                annModel.addNeuronTag(tag, neuronList);
-                System.out.println("added tag to " + neuronList.size() + " neurons in " + stopwatch);
+                AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+                annotationMgr.addNeuronTag(tag, neuronList);
+                logger.info("added tag to " + neuronList.size() + " neurons in " + stopwatch);
                 stopwatch.stop();
             }
 
@@ -134,8 +135,9 @@ public class BulkNeuronTagAction extends AbstractAction {
             protected void doStuff() throws Exception {
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.start();
-                annModel.removeNeuronTag(tag, neuronList);
-                System.out.println("removed tag from " + neuronList.size() + " neurons in " + stopwatch);
+                AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+                annotationMgr.removeNeuronTag(tag, neuronList);
+                logger.info("removed tag from " + neuronList.size() + " neurons in " + stopwatch);
                 stopwatch.stop();
             }
 
@@ -179,7 +181,9 @@ public class BulkNeuronTagAction extends AbstractAction {
         existingPanel.add(existingButton);
         existingPanel.add(new JLabel("existing tag "));
 
-        String[] existingTags = annModel.getAvailableNeuronTags().toArray(new String[annModel.getAvailableNeuronTags().size()]);
+        AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+        Set<String> availableNeuronTags = annotationMgr.getAvailableNeuronTags();
+        String[] existingTags = availableNeuronTags.toArray(new String[availableNeuronTags.size()]);
         Arrays.sort(existingTags);
         existingTagMenu = new JComboBox<String>(existingTags);
         existingPanel.add(existingTagMenu);

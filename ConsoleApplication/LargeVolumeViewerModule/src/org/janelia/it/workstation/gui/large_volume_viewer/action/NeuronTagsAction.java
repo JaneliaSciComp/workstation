@@ -24,7 +24,7 @@ import javax.swing.JTextField;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -94,8 +94,8 @@ public class NeuronTagsAction extends EditAction {
 
     private TmNeuronMetadata getTargetNeuron() {
         if (targetNeuron == null) {
-            AnnotationModel annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
-            return annModel.getCurrentNeuron();
+            AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+            return annotationMgr.getCurrentNeuron();
         }
         return targetNeuron;
     }
@@ -104,12 +104,12 @@ public class NeuronTagsAction extends EditAction {
      * add given tag to target neuron
      */
     private void addTag(final String tag) {
-        final AnnotationModel annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
+        final AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         final TmNeuronMetadata target = getTargetNeuron();
         SimpleWorker adder = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annModel.addNeuronTag(tag, target);
+                annotationMgr.addNeuronTag(tag, target);
             }
 
             @Override
@@ -130,12 +130,12 @@ public class NeuronTagsAction extends EditAction {
      * remove given tag from target neuron
      */
     private void removeTag(final String tag) {
-        final AnnotationModel annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
+        final AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         final TmNeuronMetadata target = getTargetNeuron();
         SimpleWorker remover = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annModel.removeNeuronTag(tag, target);
+                annotationMgr.removeNeuronTag(tag, target);
             }
 
             @Override
@@ -162,12 +162,12 @@ public class NeuronTagsAction extends EditAction {
      * remove all the tags from the target neuron
      */
     private void onRemoveAllButton() {
-        final AnnotationModel annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
+        final AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         final TmNeuronMetadata target = getTargetNeuron();
         SimpleWorker remover = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annModel.clearNeuronTags(target);
+                annotationMgr.clearNeuronTags(target);
             }
 
             @Override
@@ -195,15 +195,15 @@ public class NeuronTagsAction extends EditAction {
 
         // OMG Java makes everything hard...JList can't take List<>, only
         //  arrays and vectors
-        AnnotationModel annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
+        AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         final TmNeuronMetadata target = getTargetNeuron();
-        Set<String> appliedTagSet = annModel.getNeuronTags(target);
+        Set<String> appliedTagSet = annotationMgr.getNeuronTags(target);
         String[] appliedTags = appliedTagSet.toArray(new String[appliedTagSet.size()]);
         Arrays.sort(appliedTags);
         appliedTagsList.setListData(appliedTags);
 
         // available tag list; be careful, we're mutating:
-        Set<String> availableTagSet = new HashSet<>(annModel.getAvailableNeuronTags());
+        Set<String> availableTagSet = new HashSet<>(annotationMgr.getAvailableNeuronTags());
         availableTagSet.removeAll(appliedTagSet);
         String [] availableTags = availableTagSet.toArray(new String[availableTagSet.size()]);
         Arrays.sort(availableTags);
@@ -334,7 +334,7 @@ public class NeuronTagsAction extends EditAction {
                 if (e.getClickCount() == 1) {
                     int index = appliedTagsList.locationToIndex(e.getPoint());
                     if (index<0) return;
-                    removeTag((String) appliedTagsList.getModel().getElementAt(index));
+                    removeTag(appliedTagsList.getModel().getElementAt(index));
                 }
             }
         });
@@ -346,7 +346,7 @@ public class NeuronTagsAction extends EditAction {
                 if (e.getClickCount() == 1) {
                     int index = availableTagsList.locationToIndex(e.getPoint());
                     if (index<0) return;
-                    addTag((String) availableTagsList.getModel().getElementAt(index));
+                    addTag(availableTagsList.getModel().getElementAt(index));
                 }
             }
         });

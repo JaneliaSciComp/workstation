@@ -16,7 +16,7 @@ public class TmSessionNode extends AbstractDomainObjectNode<TmSession> {
     }
     
     public TmSession getSession() {
-        return (TmSession)getDomainObject();
+        return getDomainObject();
     }
     
     @Override

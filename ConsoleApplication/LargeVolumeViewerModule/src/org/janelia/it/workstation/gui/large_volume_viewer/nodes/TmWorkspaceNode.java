@@ -16,7 +16,7 @@ public class TmWorkspaceNode extends AbstractDomainObjectNode<TmWorkspace> {
     }
     
     public TmWorkspace getWorkspace() {
-        return (TmWorkspace)getDomainObject();
+        return getDomainObject();
     }
     
     @Override

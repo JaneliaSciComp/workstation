@@ -11,8 +11,8 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NeuronListProvider;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,11 +24,9 @@ public class BulkChangeNeuronColorAction extends AbstractAction {
 
     private static final Logger logger = LoggerFactory.getLogger(BulkChangeNeuronColorAction.class);
 
-    private AnnotationModel annModel;
     private NeuronListProvider listProvider;
 
-    public BulkChangeNeuronColorAction(AnnotationModel annotationModel, NeuronListProvider listProvider) {
-        this.annModel = annotationModel;
+    public BulkChangeNeuronColorAction(NeuronListProvider listProvider) {
         this.listProvider = listProvider;
 
         putValue(NAME, "Choose neuron color...");
@@ -53,7 +51,8 @@ public class BulkChangeNeuronColorAction extends AbstractAction {
                     protected void doStuff() throws Exception {
                         // Stopwatch stopwatch = new Stopwatch();
                         // stopwatch.start();
-                        annModel.setNeuronColors(neurons, color);
+                        AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+                        annotationMgr.setNeuronColors(neurons, color);
                         // System.out.println("changed style of " + neurons.size() + " neurons in " + stopwatch);
                         // stopwatch.stop();
                     }

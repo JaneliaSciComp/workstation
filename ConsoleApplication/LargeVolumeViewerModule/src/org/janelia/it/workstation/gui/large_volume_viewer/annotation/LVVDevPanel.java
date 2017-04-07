@@ -32,17 +32,14 @@ import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMg
 public class LVVDevPanel extends JPanel {
     // these are useful to have around when testing:
     private AnnotationManager annotationMgr;
-    private AnnotationModel annotationModel;
     private LargeVolumeViewerTranslator largeVolumeViewerTranslator;
 
     // 2016: new neuron persistance
     private DomainMgrTmModelAdapter modelAdapter;
     private TmModelManipulator neuronManager;
 
-    public LVVDevPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
-                       LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
+    public LVVDevPanel(AnnotationManager annotationMgr, LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
         this.annotationMgr = annotationMgr;
-        this.annotationModel = annotationModel;
         this.largeVolumeViewerTranslator = largeVolumeViewerTranslator;
 
         modelAdapter = new DomainMgrTmModelAdapter();
@@ -73,7 +70,7 @@ public class LVVDevPanel extends JPanel {
                     @Override
                     protected void doStuff() throws Exception {
                         // remove the first root of the selected neurite from the annotation map
-                        TmNeuronMetadata tmNeuronMetadata = annotationModel.getCurrentNeuron();
+                        TmNeuronMetadata tmNeuronMetadata = annotationMgr.getCurrentNeuron();
                         if (tmNeuronMetadata == null) {
                             System.out.println("no selected neuron");
                             return;
@@ -114,13 +111,13 @@ public class LVVDevPanel extends JPanel {
         testButton2.setAction(new AbstractAction("Add flat path") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                final TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
+                final TmNeuronMetadata currentNeuron = annotationMgr.getCurrentNeuron();
 
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
                         TmGeoAnnotation ann1 = currentNeuron.getFirstRoot();
-                        TmGeoAnnotation ann2 = annotationModel.getGeoAnnotationFromID(ann1.getNeuronId(), ann1.getChildIds().get(0));
+                        TmGeoAnnotation ann2 = annotationMgr.getGeoAnnotationFromID(ann1.getNeuronId(), ann1.getChildIds().get(0));
 
                         // I wonder if you can get away with not having any points except the endpoints?
                         TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(ann1, ann2);
@@ -145,8 +142,7 @@ public class LVVDevPanel extends JPanel {
                         lastPoint.add((int) (1.0 * ann2.getZ()));
                         pointList.add(lastPoint);
 
-
-                        annotationModel.addAnchoredPath(ann1.getNeuronId(), endpoints, pointList);
+                        annotationMgr.addAnchoredPath(ann1.getNeuronId(), endpoints, pointList);
                     }
 
                     @Override
@@ -191,7 +187,7 @@ public class LVVDevPanel extends JPanel {
                 // copy some variables we'll use (snapshots!  don't necessarily
                 //  reflect current state of GUI!
                 console.setVariable("annMgr", annotationMgr);
-                console.setVariable("annModel", annotationModel);
+                console.setVariable("annModel", annotationMgr);
                 console.setVariable("lvvTrans", largeVolumeViewerTranslator);
                 console.run();
             }

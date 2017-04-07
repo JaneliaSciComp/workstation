@@ -13,8 +13,6 @@ import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
@@ -52,18 +50,15 @@ public final class NewWorkspaceActionListener implements ActionListener {
         final LargeVolumeViewerTopComponent tc = LargeVolumeViewerTopComponent.getInstance();
         
         if (tc.getAnnotationMgr()!=null) {
-            AnnotationModel annotationModel = tc.getAnnotationMgr().getAnnotationModel();
-            if (annotationModel!=null) {
-                // ask the user if they really want a new workspace if one is active
-                if (annotationModel.getCurrentWorkspace() != null) {
-                    int ans = JOptionPane.showConfirmDialog(
-                            ComponentUtil.getLVVMainWindow(),
-                            "You already have an active workspace!  Close and create another?",
-                            "Workspace exists",
-                            JOptionPane.YES_NO_OPTION);
-                    if (ans == JOptionPane.NO_OPTION) {
-                        return;
-                    }
+            // ask the user if they really want a new workspace if one is active
+            if (tc.getAnnotationMgr().getCurrentWorkspace() != null) {
+                int ans = JOptionPane.showConfirmDialog(
+                        ComponentUtil.getLVVMainWindow(),
+                        "You already have an active workspace!  Close and create another?",
+                        "Workspace exists",
+                        JOptionPane.YES_NO_OPTION);
+                if (ans == JOptionPane.NO_OPTION) {
+                    return;
                 }
             }
         }
@@ -93,10 +88,9 @@ public final class NewWorkspaceActionListener implements ActionListener {
                 // Reuse the existing color model 
                 QuadViewUi quadViewUi = tc.getQuadViewUi();
                 if (quadViewUi!=null) {
-                    AnnotationModel annotationModel = tc.getAnnotationMgr().getAnnotationModel();
-                    if (annotationModel.getCurrentWorkspace() != null) {
+                    if (tc.getAnnotationMgr().getCurrentWorkspace() != null) {
                         workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
-                        annotationModel.saveWorkspace(workspace);
+                        tc.getAnnotationMgr().saveWorkspace(workspace);
                         log.info("Copied existing color model");
                     }
                 }

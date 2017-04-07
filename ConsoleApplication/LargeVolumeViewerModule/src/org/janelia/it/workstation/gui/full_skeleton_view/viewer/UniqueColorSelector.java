@@ -1,13 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.full_skeleton_view.viewer;
 
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
 import org.janelia.it.workstation.gui.viewer3d.picking.IdCoder;
@@ -53,14 +48,14 @@ public class UniqueColorSelector implements RenderedIdPicker.PixelListener {
         final IdCoder idCoder = idCoderProvider.getIdCoder();
         final int row = idCoder.decode(pixel / IdCoder.RAW_RANGE_DIVISOR);
         //DEBUG System.out.println(String.format("ID or Row=%d", row));
-        final AnnotationModel annoMdl = dataSource.getAnnotationModel();
-        final FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
+        final AnnotationManager annotationMgr = dataSource.getAnnotationManager();
+        final FilteredAnnotationModel filteredModel = annotationMgr.getFilteredAnnotationModel();
         if (row < filteredModel.getRowCount()  &&  row >= 0) {
             InterestingAnnotation annotation = filteredModel.getAnnotationAtRow(row);
             if (annotation != null) {
                 long annoId = annotation.getAnnotationID();
                 annoSkeletonPanel.positionForSelection(annoId);
-                activityLog.logLandmarkViewPick(dataSource.getAnnotationModel(), annoId);
+                activityLog.logLandmarkViewPick(annotationMgr, annoId);
             }
         }
         redraw();

@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import java.awt.Color;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,8 +15,6 @@ import java.util.Set;
 import javax.swing.SwingUtilities;
 
 import org.janelia.console.viewerapi.model.DefaultNeuron;
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
@@ -51,9 +48,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredP
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
-import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
-import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
-import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.SpatialFilter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
@@ -112,7 +106,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private NotesUpdateListener notesUpdateListener;
 
     private final FilteredAnnotationModel filteredAnnotationModel;
-    private final NeuronSetAdapter neuronSetAdapter; // For communicating annotations to Horta
 
     private final Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
     private final Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
@@ -138,11 +131,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         this.modelAdapter = new DomainMgrTmModelAdapter();
         this.neuronManager = new TmModelManipulator(modelAdapter);
         this.filteredAnnotationModel = new FilteredAnnotationModel();
-        
-        this.neuronSetAdapter = new NeuronSetAdapter();
-        neuronSetAdapter.observe(this);
-        LargeVolumeViewerTopComponent.getInstance().registerNeurons(neuronSetAdapter);
-        
+                
         // Report performance statistics when program closes
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -420,44 +409,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             parent = neuron.getParentOf(current);
         }
         return current;
-    }
-
-    /**
-     * find the annotation closest to the input location, excluding
-     * the input annotation (null = don't exclude any)
-     */
-    public TmGeoAnnotation getClosestAnnotation(Vec3 micronLocation, TmGeoAnnotation excludedAnnotation) {
-
-        double x = micronLocation.getX();
-        double y = micronLocation.getY();
-        double z = micronLocation.getZ();
-
-        TmGeoAnnotation closest = null;
-        // our valid IDs are positive, so this will never match
-        final Long excludedAnnotationID = excludedAnnotation == null ? -1L : excludedAnnotation.getId();
-
-        log.trace("getClosestAnnotation to {}", excludedAnnotationID);
-        
-        List<NeuronVertex> vertexList = neuronSetAdapter.getAnchorClosestToMicronLocation(new double[]{x, y, z}, 1, new SpatialFilter() {
-            @Override
-            public boolean include(NeuronVertex vertex, TmGeoAnnotation annotation) {
-                boolean notItself = !annotation.getId().equals(excludedAnnotationID);
-                boolean visible = getNeuronStyle(getNeuronFromNeuronID(annotation.getNeuronId())).isVisible();
-                return notItself && visible;
-            }
-        });
-        
-        if (vertexList != null && !vertexList.isEmpty()) {
-            log.trace("Got {} anchors closest to {}", vertexList.size(), micronLocation);
-            NeuronVertex vertex = vertexList.get(0);
-            closest = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
-        }
-
-        if (closest!=null) {
-            log.trace("Returning closest anchor: {}", closest.getId());
-        }
-        
-        return closest;
     }
 
     /**
@@ -1738,10 +1689,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         fireNeuronTagsChanged(Arrays.asList(neuron));
     }
 
-    public List<File> breakOutByRoots(File infile) throws IOException {
-        return new SWCData().breakOutByRoots(infile);
-    }
-
     public void fireAnnotationNotMoved(TmGeoAnnotation annotation) {
         for (TmGeoAnnotationModListener l: tmGeoAnnoModListeners) {
             l.annotationNotMoved(annotation);
@@ -1870,10 +1817,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             notesUpdateListener.notesUpdated(ann);
         }
     }
-    public NeuronSet getNeuronSet() {
-        return neuronSetAdapter;
-    }
-
+    
     public TmModelManipulator getNeuronManager() {
         return neuronManager;
     }

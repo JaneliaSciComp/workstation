@@ -347,7 +347,7 @@ public class AnnotationSkeletonPanel extends JPanel {
         
         MeshDrawActor meshDraw = new MeshDrawActor(configurator);
         SkeletonController.getInstance().registerForEvents(
-                meshDraw, dataSource.getAnnotationModel().getFilteredAnnotationModel()
+                meshDraw, dataSource.getAnnotationManager().getFilteredAnnotationModel()
         );
         
         MDReturn rtnVal = new MDReturn();

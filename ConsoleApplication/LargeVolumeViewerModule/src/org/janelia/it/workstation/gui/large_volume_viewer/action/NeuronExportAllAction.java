@@ -5,7 +5,6 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.SwcExport;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.SwcExport.ExportParameters;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
@@ -34,12 +33,11 @@ public class NeuronExportAllAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        AnnotationModel annotationModel = annotationMgr.getAnnotationModel();
-        if (annotationModel.getCurrentWorkspace()==null) return;
+        if (annotationMgr.getCurrentWorkspace()==null) return;
         SwcExport export = new SwcExport();
-        ExportParameters params = export.getExportParameters(annotationModel.getCurrentWorkspace().getName());
+        ExportParameters params = export.getExportParameters(annotationMgr.getCurrentWorkspace().getName());
         if ( params != null ) {
-            annotationMgr.exportNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo(), annotationModel.getNeuronList());
+            annotationMgr.exportNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo(), annotationMgr.getNeuronList());
         }
     }
     

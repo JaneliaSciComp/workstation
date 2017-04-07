@@ -15,7 +15,7 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 
 /**
  * Keep all the logging code in one place, to declutter.
@@ -278,12 +278,12 @@ public class ActivityLogHelper {
         );
     }
 
-    public void logLandmarkViewPick(AnnotationModel annotationModel, Long annotationId) {
+    public void logLandmarkViewPick(AnnotationManager annotationManager, Long annotationId) {
         String action = "Unknown";
-        if (annotationModel != null
-                && annotationModel.getCurrentWorkspace() != null
-                && annotationModel.getCurrentWorkspace().getId() != null) {
-            action = "Sample/Annotation:" + annotationModel.getCurrentWorkspace().getSampleRef().getTargetId() + ":" + annotationId;
+        if (annotationManager != null
+                && annotationManager.getCurrentWorkspace() != null
+                && annotationManager.getCurrentWorkspace().getId() != null) {
+            action = "Sample/Annotation:" + annotationManager.getCurrentWorkspace().getSampleRef().getTargetId() + ":" + annotationId;
         }
         AccessManager.getAccessManager().logToolEvent(
                 LVV_LOGSTAMP_ID,

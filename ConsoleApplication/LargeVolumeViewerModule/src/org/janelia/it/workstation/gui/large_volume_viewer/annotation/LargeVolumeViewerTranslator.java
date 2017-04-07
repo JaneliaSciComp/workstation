@@ -31,6 +31,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateLi
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;
@@ -61,7 +62,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
     private Logger logger = LoggerFactory.getLogger(LargeVolumeViewerTranslator.class);
 
-    private AnnotationModel annModel;
+    private AnnotationManager annotationMgr;
     private LargeVolumeViewer largeVolumeViewer;
     private SkeletonController skeletonController;
     private Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<>();
@@ -102,10 +103,9 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         neuronStyleChangeListeners.remove(l);
     }
 
-    public LargeVolumeViewerTranslator(AnnotationModel annModel, LargeVolumeViewer largeVolumeViewer) {
-        this.annModel = annModel;
+    public LargeVolumeViewerTranslator(LargeVolumeViewer largeVolumeViewer, AnnotationManager annotationMgr) {
         this.largeVolumeViewer = largeVolumeViewer;
-
+        this.annotationMgr = annotationMgr;
         setupSignals();
     }
 
@@ -130,9 +130,9 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
 
     private void setupSignals() {
-        annModel.addGlobalAnnotationListener(this);
-        annModel.addTmGeoAnnotationModListener(this);
-        annModel.addTmAnchoredPathListener(this);
+        annotationMgr.addGlobalAnnotationListener(this);
+        annotationMgr.addTmGeoAnnotationModListener(this);
+        annotationMgr.addTmAnchoredPathListener(this);
     }
 
     /**
@@ -301,7 +301,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             // require knowledge of the sample ID, rather than file path.
             TileFormat tileFormat = getTileFormat();
             if (tileFormat != null) {
-                TmSample sample = annModel.getCurrentSample();
+                TmSample sample = annotationMgr.getCurrentSample();
                 if (sample.getMicronToVoxMatrix()!=null && sample.getVoxToMicronMatrix()!=null) {
                     Matrix micronToVoxMatrix = MatrixUtilities.deserializeMatrix(sample.getMicronToVoxMatrix(), "micronToVoxMatrix");
                     Matrix voxToMicronMatrix = MatrixUtilities.deserializeMatrix(sample.getVoxToMicronMatrix(), "voxToMicronMatrix");            
@@ -331,7 +331,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
             List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
             
-            for (TmNeuronMetadata neuron: annModel.getNeuronList()) {
+            for (TmNeuronMetadata neuron: annotationMgr.getNeuronList()) {
 
                 // (we used to retrieve global color here; replaced by styles)
                 // set styles for our neurons; if a neuron isn't in the saved map,
@@ -539,7 +539,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             SimpleWorker sw = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annModel.setSampleMatrices(micronToVoxMatrix, voxToMicronMatrix);
+                    annotationMgr.setSampleMatrices(micronToVoxMatrix, voxToMicronMatrix);
                 }
 
                 @Override

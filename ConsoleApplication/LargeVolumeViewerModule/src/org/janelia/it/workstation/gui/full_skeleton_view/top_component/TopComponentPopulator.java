@@ -15,7 +15,7 @@ import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
@@ -51,7 +51,7 @@ public class TopComponentPopulator {
 
         private Skeleton skeleton;
         private NeuronStyleModel neuronStyleModel;
-        private AnnotationModel annotationModel;
+        private AnnotationManager annotationMgr;
 
         public SkeletonDataSource() {
         }
@@ -78,11 +78,11 @@ public class TopComponentPopulator {
         }
         
         @Override
-        public AnnotationModel getAnnotationModel() {
-            if (annotationModel == null) {
+        public AnnotationManager getAnnotationManager() {
+            if (annotationMgr == null) {
                 cacheValues();
             }
-            return annotationModel;
+            return annotationMgr;
         }
         
         private void cacheValues() {
@@ -96,7 +96,7 @@ public class TopComponentPopulator {
                 if (ui != null) {
                     skeleton = ui.getSkeleton();
                     neuronStyleModel = ui.getNeuronStyleModel();
-                    annotationModel = ui.getAnnotationModel();    
+                    annotationMgr = ui.getAnnotationMgr();    
                 }
             }
         }

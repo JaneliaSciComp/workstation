@@ -70,7 +70,6 @@ import org.janelia.console.viewerapi.ToolButton;
 import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -118,7 +117,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomMouseModeAc
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomOutAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomScrollModeAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
@@ -220,7 +218,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	ZScanMode zScanMode = new ZScanMode(volumeImage);
 	
 	// annotation things
-	private final AnnotationModel annotationModel;
 	private final AnnotationManager annotationMgr;
     private final LargeVolumeViewerTranslator largeVolumeViewerTranslator;
     private AnnotationPanel annotationPanel;
@@ -335,11 +332,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
      * move toward the neuron root to the next branch or the root
      */
     public void backtrackNeuronMicron() {
-        TmNeuronMetadata neuron = annotationModel.getCurrentNeuron();
+        TmNeuronMetadata neuron = annotationMgr.getCurrentNeuron();
         if (neuron != null) {
             Anchor anchor = getSkeletonActor().getModel().getNextParent();
             if (anchor != null) {
-                TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
+                TmGeoAnnotation ann = annotationMgr.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
                 if (!ann.isRoot()) {
                     ann = neuron.getParentOf(ann);
                     while (!ann.isRoot() && !ann.isBranch()) {
@@ -358,16 +355,19 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         }
     }
 
-	/**
+	public TileServer getTileServer() {
+        return tileServer;
+    }
+
+    /**
 	 * Create the frame.
 	 */
-	public QuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel)
+	public QuadViewUi(JFrame parentFrame, boolean overrideFrameMenuBar, AnnotationManager annotationMgr)
 	{
         new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
 
-        this.annotationModel = annotationModel;
-        this.annotationMgr = new AnnotationManager(annotationModel, this, tileServer);
-        this.largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);
+        this.annotationMgr = annotationMgr;
+        this.largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(largeVolumeViewer, annotationMgr);
 
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);
@@ -418,7 +418,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         quadViewController = new QuadViewController(this, annotationMgr, largeVolumeViewer);
         largeVolumeViewerTranslator.setViewStateListener(quadViewController);
         annotationPanel.setViewStateListener(quadViewController);
-        annotationModel.setViewStateListener(quadViewController);
+        annotationMgr.setViewStateListener(quadViewController);
         
         // Toggle skeleton actor with v key
         // see note in interceptModeChangeGestures() regarding which input map
@@ -445,9 +445,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         skeletonController.reestablish(skeleton, annotationMgr);
         skeletonController.registerForEvents(largeVolumeViewer.getSkeletonActor());
         largeVolumeViewerTranslator.connectSkeletonSignals(skeleton, skeletonController);
-
-		// must come after setupUi() (etc), since it triggers UI changes:
-		annotationMgr.setInitialObject(initialObject);
 
         //
         clearCacheAction.putValue(Action.NAME, "Clear Cache");
@@ -577,11 +574,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public NeuronStyleModel getNeuronStyleModel() {
         return neuronStyleModel;
     }
-    
-    public AnnotationModel getAnnotationModel() {
-        return annotationModel;
-    }
-    
+        
 	public void clearCache() {
 		tileServer.clearCache();
 	}
@@ -689,7 +682,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         swcDataConverter.setSWCExchanger(
                 new MatrixDrivenSWCExchanger(tileFormat.getMicronToVoxMatrix(), tileFormat.getVoxToMicronMatrix())
         );
-        annotationModel.setSWCDataConverter(swcDataConverter);
+        annotationMgr.setSWCDataConverter(swcDataConverter);
     }
 	
 	private void setOrthogonalMode() {
@@ -965,7 +958,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		resetColorsButton.setAction(resetColorsAction);
 		buttonsPanel.add(resetColorsButton);
 		
-        annotationPanel = new AnnotationPanel(annotationMgr, annotationModel, largeVolumeViewerTranslator);
+        annotationPanel = new AnnotationPanel(annotationMgr, largeVolumeViewerTranslator);
         controlsPanel.add(annotationPanel);
 
 
@@ -1624,18 +1617,18 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
 
     private Long getWorkspaceId() {
-        if (this.annotationModel.getCurrentWorkspace() != null) {
-            return this.annotationModel.getCurrentWorkspace().getId();
+        if (this.annotationMgr.getCurrentWorkspace() != null) {
+            return this.annotationMgr.getCurrentWorkspace().getId();
         } else {
             return null;
         }
     }
 
     private Long getSampleId() {
-        if (annotationModel == null  ||  annotationModel.getCurrentWorkspace() == null) {
+        if (annotationMgr == null  ||  annotationMgr.getCurrentWorkspace() == null) {
             return null;
         }
-        return this.annotationModel.getCurrentWorkspace().getSampleRef().getTargetId();
+        return this.annotationMgr.getCurrentWorkspace().getSampleRef().getTargetId();
     }
 
     /**
