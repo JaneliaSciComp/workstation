@@ -2,6 +2,7 @@ package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableList;
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
@@ -48,6 +49,10 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     private static final int TARSXEXTDY = 1713;
     private static final int TARSXEXTDZ = 640;
 
+    private static final int IMAGE_SIZE_DX = 1450;
+    private static final int IMAGE_SIZE_DY = 725;
+    private static final int IMAGE_SIZE_DZ = 436;
+
     static class AlignmentArgs extends ServiceArgs {
         @Parameter(names = {"-nthreads"}, description = "Number of ITK threads")
         Integer nthreads = 16;
@@ -73,6 +78,8 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         String step;
         @Parameter(names = {"-m", "-mp", "-mountingProtocol"}, description = "Mounting protocol", required = false)
         String mountingProtocol;
+        @Parameter(names = {"-alignmentSpace"}, description = "Alignment space name", required = false)
+        String alignmentSpace = "";
         @Parameter(names = {"-targetTemplate"}, description = "Target template", required = false)
         String targetTemplate;
         @Parameter(names = {"-targetExtTemplate"}, description = "Target EXT template", required = false)
@@ -90,6 +97,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     private final AffineToInsightConverterProcessor affineToInsightConverterProcessor;
     private final FlirtProcessor flirtProcessor;
     private final AntsToolProcessor antsToolProcessor;
+    private final AlignmentVerificationMovieProcessor alignmentVerificationMovieProcessor;
     private final ImageServicesInvocationHelper invocationHelper;
 
     @Inject
@@ -104,6 +112,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                                FlirtProcessor flirtProcessor,
                                AntsToolProcessor antsToolProcessor,
                                WarpToolProcessor warpToolProcessor,
+                               AlignmentVerificationMovieProcessor alignmentVerificationMovieProcessor,
                                Logger logger) {
         super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
         invocationHelper = new ImageServicesInvocationHelper(jacsServiceDataPersistence,
@@ -118,6 +127,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         this.affineToInsightConverterProcessor = affineToInsightConverterProcessor;
         this.flirtProcessor = flirtProcessor;
         this.antsToolProcessor = antsToolProcessor;
+        this.alignmentVerificationMovieProcessor = alignmentVerificationMovieProcessor;
     }
 
     @Override
@@ -346,7 +356,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                             localAlignServiceData);
             warpServices.add(warpServiceData);
         }
-        Path alignedSubjectFile = getAlignedFile(subjectFile, jacsServiceDataHierarchy); // => SUBSXALINGED
+        Path alignedSubjectFile = getAlignedSubjectFile(args); // => SUBSXALINGED
         Path resizedAlignedSubjectFile = getResizedFile(alignedSubjectFile, jacsServiceDataHierarchy); // => SUBSXDFRMD
         // $Vaa3D -x ireg -f NiftiImageConverter -i $MOVINGDFRMDCI $MOVINGDFRMDCII $MOVINGDFRMDCIII $MOVINGDFRMDCIV -o $SUBSXDFRMD -p "#b 1 #v 1"
         JacsServiceData combineChannelsServiceData =
@@ -355,6 +365,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                         jacsServiceDataHierarchy,
                         warpServices.toArray(new JacsServiceData[warpServices.size()]));
         // resize to the templates' space
+
         // $Vaa3D -x ireg -f resizeImage -o $SUBSXALINGED -p "#s $SUBSXDFRMD #t $TARSX #y 1"
         JacsServiceData restoreSizeAlignedSubjectServiceData =
                 invocationHelper.resizeToTarget(resizedAlignedSubjectFile, targetFile, alignedSubjectFile,
@@ -414,7 +425,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                         TARSXEXTDX, TARSXEXTDY, TARSXEXTDZ,
                         "Affine transform rotated neurons",
                         jacsServiceDataHierarchy,
-                        rotateRecenteredSubjectServiceData, globalAlignServiceData);
+                        rotateRecenteredNeuronsServiceData, globalAlignServiceData);
         Path flippedAlignedNeuronsFile = getAlignedFile(zFlippedLabelsFile, jacsServiceDataHierarchy); // => SXNEURONALIGNEDRS
         Path resizedAlignedNeuronsFile = getResizedFile(flippedAlignedNeuronsFile, jacsServiceDataHierarchy); // => NEURONSYFLIPISRSRTAFFRS
         // $Vaa3D -x ireg -f resizeImage -o $NEURONSYFLIPISRSRTAFFRS -p "#s $NEURONSYFLIPISRSRTAFF #t $TARSXRS #k 1 #i 1 #y 1"
@@ -454,7 +465,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                         "Resize the neurons to the template's space",
                         jacsServiceDataHierarchy,
                         combineNeuronChannelsServiceData);
-        Path alignedNeuronsFile = getAlignedFile(neuronsFile, jacsServiceDataHierarchy); // => SXNEURONALIGNED
+        Path alignedNeuronsFile = getAlignedNeuronsFile(args); // => SXNEURONALIGNED
         // $Vaa3D -x ireg -f yflip -i $SXNEURONALIGNEDRS -o $SXNEURONALIGNED
         JacsServiceData unYFlippedNeuronsServiceData = yFlip(flippedAlignedNeuronsFile, alignedNeuronsFile,
                 "Y-Flipping 63x neurons back",
@@ -469,7 +480,18 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 jacsServiceDataHierarchy,
                 unYFlippedNeuronsServiceData);
 
-        return ImmutableList.of(restoreSizeAlignedSubjectServiceData, evalServiceData);
+        // create verification movie
+        Path verifyMovie = getAlignmentVerificationFile(args);
+        // createVerificationMovie.sh -c $CONFIGFILE -k $TOOLDIR -w $WORKDIR -s $SUBSXALINGED -i $TARSX -r $SUBSXREF -o ${FINALOUTPUT}/$ALIGNVERIFY
+        JacsServiceData verificationMovieServiceData = createVerificationMovie(alignedSubjectFile,
+                targetFile,
+                args.input1Ref,
+                verifyMovie,
+                "Create verification movie",
+                jacsServiceDataHierarchy,
+                evalServiceData);
+
+        return ImmutableList.of(restoreSizeAlignedSubjectServiceData, verificationMovieServiceData);
     }
 
     private void createWorkingCopy(Path inputFile, Path outputFile) {
@@ -685,9 +707,67 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         return submitDependencyIfNotPresent(jacsServiceData, evalServiceData);
     }
 
+    private JacsServiceData createVerificationMovie(Path subjectFile,
+                                                    Path targetFile,
+                                                    int referenceChannel,
+                                                    Path outputFile,
+                                                    String description,
+                                                    JacsServiceData jacsServiceData, JacsServiceData... deps) {
+        JacsServiceData movieServiceData = alignmentVerificationMovieProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                        .description(description)
+                        .waitFor(deps)
+                        .build(),
+                new ServiceArg("-subject", subjectFile.toString()),
+                new ServiceArg("-target", targetFile.toString()),
+                new ServiceArg("-reference", referenceChannel),
+                new ServiceArg("-output", outputFile.toString())
+        );
+        return submitDependencyIfNotPresent(jacsServiceData, movieServiceData);
+    }
+
     @Override
     protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(jacsServiceData);
+        // generate metadata
+        AlignmentArgs args = getArgs(jacsServiceData);
+        AlignmentConfiguration alignConfig = AlignmentUtils.parseAlignConfig(args.configFile);
+
+        Path alignedSubjectFile = getAlignedSubjectFile(args); // => SUBSXALINGED
+        Path alignmentVerificationFile = getAlignmentVerificationFile(args); // => ALIGNVERIFY
+        Path alignmentDescriptor = getAlignmentResultsDescriptor(args); // => META
+
+        Path alignmentQualityFile = getAlignmentQualityFile(args.input1File, jacsServiceData); // => AQ
+        Path alignedNeuronsFile = getAlignedNeuronsFile(args); // => SXNEURONALIGNED
+
+        try {
+            List<String> alignmentQualityContent = Files.readAllLines(alignmentQualityFile);
+            String score = alignmentQualityContent.stream().filter(s -> StringUtils.isNotBlank(s)).findFirst().orElse("");
+
+            Files.write(alignmentDescriptor,
+                    ImmutableList.<String>builder()
+                            .add(String.format("alignment.stack.filename=%s", alignedSubjectFile))
+                            .add(String.format("alignment.image.channels=%d", args.input1Channels))
+                            .add(String.format("alignment.image.refchan=%d", args.input1Ref))
+                            .add(String.format("alignment.verify.filename=%s", alignmentVerificationFile))
+                            .add(String.format("alignment.space.name=%s", args.alignmentSpace))
+                            .add(String.format("alignment.resolution.voxels=%fx%fx%f",
+                                    alignConfig.misc.vSzIsX63x,
+                                    alignConfig.misc.vSzIsY63x,
+                                    alignConfig.misc.vSzIsZ63x))
+                            .add(String.format("alignment.image.size=%dx%dx%d",
+                                    IMAGE_SIZE_DX,
+                                    IMAGE_SIZE_DY,
+                                    IMAGE_SIZE_DZ))
+                            .add("alignment.bounding.box=")
+                            .add("alignment.objective=63x")
+                            .add(String.format("alignment.quality.score.ncc=%s", score))
+                            .add(String.format("neuron.masks.filename=%s", alignedNeuronsFile))
+                            .add("default=true")
+                            .build()
+            );
+            return computationFactory.newCompletedComputation(jacsServiceData);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private AlignmentArgs getArgs(JacsServiceData jacsServiceData) {
@@ -696,6 +776,34 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
 
     private Path getResultsDir(AlignmentArgs args) {
         return Paths.get(args.resultsDir, com.google.common.io.Files.getNameWithoutExtension(args.input1File));
+    }
+
+    private Path getBrainResultsDir(AlignmentArgs args) {
+        return invocationHelper.getFilePath(getResultsDir(args), "Brains");
+    }
+
+    private Path getNeuronsResultsDir(AlignmentArgs args) {
+        return invocationHelper.getFilePath(getResultsDir(args), "Neurons");
+    }
+
+    private Path getTransformationsResultsDir(AlignmentArgs args) {
+        return invocationHelper.getFilePath(getResultsDir(args), "Transformations");
+    }
+
+    private Path getAlignmentVerificationFile(AlignmentArgs args) {
+        return invocationHelper.getFilePath(getResultsDir(args), "VerifyMovie.mp4");
+    }
+
+    private Path getAlignedSubjectFile(AlignmentArgs args) {
+        return invocationHelper.getFilePath(getBrainResultsDir(args), "Aligned63xScale.v3draw");
+    }
+
+    private Path getAlignedNeuronsFile(AlignmentArgs args) {
+        return invocationHelper.getFilePath(getNeuronsResultsDir(args), "NeuronAligned63xScale.v3draw");
+    }
+
+    private Path getAlignmentResultsDescriptor(AlignmentArgs args) {
+        return invocationHelper.getFilePath(getBrainResultsDir(args), "Aligned63xScale.properties");
     }
 
     private Path getWorkingFile(String inputFileName, JacsServiceData jacsServiceData) {

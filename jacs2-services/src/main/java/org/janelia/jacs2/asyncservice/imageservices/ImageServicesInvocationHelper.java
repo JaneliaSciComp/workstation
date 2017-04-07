@@ -1,5 +1,7 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
+import com.google.common.collect.ImmutableList;
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.fileservices.LinkDataProcessor;
@@ -9,6 +11,7 @@ import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +41,26 @@ class ImageServicesInvocationHelper {
         this.niftiConverterProcessor = niftiConverterProcessor;
         this.warpToolProcessor = warpToolProcessor;
         this.logger = logger;
+    }
+
+    JacsServiceData applyPlugin(List<Path> inputFiles, List<Path> outputFiles,
+                                String plugin, String pluginFunction,
+                                String pluginParameters,
+                                String description,
+                                JacsServiceData jacsServiceData, JacsServiceData... deps) {
+        List<Path> inputs = inputFiles == null ? ImmutableList.of() : inputFiles;
+        List<Path> outputs = outputFiles == null ? ImmutableList.of() : outputFiles;
+        JacsServiceData pluginServiceData = vaa3dPluginProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
+                            .description(description)
+                            .waitFor(deps)
+                            .build(),
+                    new ServiceArg("-plugin", plugin),
+                    new ServiceArg("-pluginFunc", pluginFunction),
+                    new ServiceArg("-input", inputs.stream().map(Path::toString).collect(Collectors.joining(","))),
+                    new ServiceArg("-output", outputs.stream().map(Path::toString).collect(Collectors.joining(","))),
+                    new ServiceArg("-pluginParams", pluginParameters)
+            );
+        return submitNewServiceDependency(jacsServiceData, pluginServiceData);
     }
 
     JacsServiceData applyIWarp2Transformation(Path subjectFile, Path transformationFile, Path outputFile,
@@ -265,6 +288,28 @@ class ImageServicesInvocationHelper {
                 new ServiceArg(interpolation)
         );
         return submitNewServiceDependency(jacsServiceData, warpServiceData);
+    }
+
+    Path getFilePath(Path dir, String fileName) {
+        return dir.resolve(new File(fileName).getName());
+    }
+
+    Path getFilePath(Path dir, String prefix, String fileName, String suffix, String fileExt) {
+        String actualFileName = String.format("%s%s%s.%s",
+                StringUtils.defaultIfBlank(prefix, ""),
+                com.google.common.io.Files.getNameWithoutExtension(fileName),
+                StringUtils.defaultIfBlank(suffix, ""),
+                fileExt);
+        return dir.resolve(actualFileName);
+    }
+
+    Path getChannelFilePath(Path dir, int channelNumber, String fileName, String fileExt) {
+        String channelFileName = String.format("%s_c%d.%s",
+                com.google.common.io.Files.getNameWithoutExtension(fileName),
+                channelNumber,
+                StringUtils.defaultIfBlank(fileExt, com.google.common.io.Files.getFileExtension(fileName))
+        );
+        return dir.resolve(channelFileName);
     }
 
 }

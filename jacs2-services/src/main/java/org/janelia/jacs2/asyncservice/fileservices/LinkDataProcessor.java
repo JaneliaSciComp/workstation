@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Named("linkData")
 public class LinkDataProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
@@ -51,16 +53,12 @@ public class LinkDataProcessor extends AbstractBasicLifeCycleServiceProcessor<Fi
         return new AbstractSingleFileServiceResultHandler() {
             @Override
             public boolean isResultReady(JacsServiceData jacsServiceData) {
-                LinkDataArgs args = getArgs(jacsServiceData);
-                File targetFile = getTargetFile(args);
-                return targetFile.exists();
+                return getTargetFile(getArgs(jacsServiceData)).toFile().exists();
             }
 
             @Override
             public File collectResult(JacsServiceData jacsServiceData) {
-                LinkDataArgs args = getArgs(jacsServiceData);
-                File targetFile = getTargetFile(args);
-                return targetFile;
+                return getTargetFile(getArgs(jacsServiceData)).toFile();
             }
         };
     }
@@ -69,13 +67,13 @@ public class LinkDataProcessor extends AbstractBasicLifeCycleServiceProcessor<Fi
     protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
         try {
             LinkDataArgs args = getArgs(jacsServiceData);
-            if (StringUtils.isBlank(args.source) || !getSourceFile(args).exists()) {
-                throw new ComputationException(jacsServiceData, "Source file name must be specified and must exist");
+            if (StringUtils.isBlank(args.source)) {
+                throw new ComputationException(jacsServiceData, "Source file name must be specified");
             } else if (StringUtils.isBlank(args.target)) {
                 throw new ComputationException(jacsServiceData, "Target file name must be specified");
             } else {
-                File targetFile = getTargetFile(args);
-                Files.createDirectories(targetFile.getParentFile().toPath());
+                Path targetFile = getTargetFile(args);
+                Files.createDirectories(targetFile.getParent());
             }
         } catch (ComputationException e) {
             throw e;
@@ -91,7 +89,11 @@ public class LinkDataProcessor extends AbstractBasicLifeCycleServiceProcessor<Fi
                 .thenApply(sd -> {
                     try {
                         LinkDataArgs args = getArgs(jacsServiceData);
-                        Files.createSymbolicLink(getSourceFile(args).toPath(), getTargetFile(args).toPath());
+                        Path sourcePath = getSourceFile(args);
+                        Path targetPath = getTargetFile(args);
+                        if (!Files.isSameFile(sourcePath, targetPath)) {
+                            Files.createSymbolicLink(sourcePath, targetPath);
+                        }
                         return sd;
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
@@ -105,12 +107,12 @@ public class LinkDataProcessor extends AbstractBasicLifeCycleServiceProcessor<Fi
         return linkDataArgs;
     }
 
-    private File getSourceFile(LinkDataArgs args) {
-        return new File(args.source);
+    private Path getSourceFile(LinkDataArgs args) {
+        return Paths.get(args.source);
     }
 
-    private File getTargetFile(LinkDataArgs args) {
-        return new File(args.target);
+    private Path getTargetFile(LinkDataArgs args) {
+        return Paths.get(args.target);
     }
 
 }
