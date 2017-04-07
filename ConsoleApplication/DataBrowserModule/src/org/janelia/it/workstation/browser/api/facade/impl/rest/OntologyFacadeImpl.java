@@ -23,11 +23,9 @@ import org.slf4j.LoggerFactory;
 public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade {
 
     private static final Logger log = LoggerFactory.getLogger(OntologyFacadeImpl.class);
-    private RESTClientManager manager;
     
     public OntologyFacadeImpl() {
         super(log);
-        this.manager = RESTClientManager.getInstance();
     }
 
     @Override

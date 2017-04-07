@@ -56,27 +56,31 @@ public class ResultPage implements AnnotatedDomainObjectList {
         return annotationsByDomainObjectId.get(domainObjectId);
     }
     
-    @Override
-    public synchronized DomainObject getDomainObject(Long domainObjectId) {
+    private synchronized Map<Long, DomainObject> getDomainObjectByIdMap() {
         if (domainObjectById==null) {
             this.domainObjectById = new HashMap<>();
             for(DomainObject domainObject : domainObjects) {
                 domainObjectById.put(domainObject.getId(), domainObject);
             }
         }
-        return domainObjectById.get(domainObjectId);
+        return domainObjectById;
+    }
+    
+    @Override
+    public synchronized DomainObject getDomainObject(Long domainObjectId) {
+        return getDomainObjectByIdMap().get(domainObjectId);
     }
 
     @Override
     public synchronized boolean updateObject(DomainObject updatedObject) {
         if (updatedObject==null) return false;
-        domainObjectById.put(updatedObject.getId(), updatedObject);
+        getDomainObjectByIdMap().put(updatedObject.getId(), updatedObject);
         return DomainUtils.replaceDomainObjectInList(domainObjects, updatedObject);
     }
     
     @Override
     public boolean updateAnnotations(Long domainObjectId, List<Annotation> annotations) {
-        if (!domainObjectById.containsKey(domainObjectId)) return false;
+        if (!getDomainObjectByIdMap().containsKey(domainObjectId)) return false;
         annotationsByDomainObjectId.removeAll(domainObjectId);
         annotationsByDomainObjectId.putAll(domainObjectId, annotations);
         return false;

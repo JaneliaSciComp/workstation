@@ -1,12 +1,14 @@
-// 5.10.0
+// 5.11.0
 
 Workstation Browser
-* Now defaults to direct non-proxy connection to fix slow performance over VPN
-* Spaces in paths are now supported on Windows
-* Many other minor bug fixes (see JIRA)
-
-FlyLight
-* No change
+* Refresh now works for unsaved filters
+* Open in Neuron Annotator fixed for separations with curated neurons
+* Neuron Annotator now displays neurons in the correct order
+* Fixed issue with Data Explorer sometimes not displaying Home folders for admins
+* Other minor bug fixes (see JIRA)
 
 MouseLight
-* No change
+* Make "merge" in Horta undo-able, and remove the confirm dialog.
+* Set primary anchor on downstream anchor after Horta merge operation.
+* Prevent Ktx tile memory from building up when switching between LVV and Horta when auto-load is active.
+* Avoid OutOfBoundException errors when editing neurons JW-28009

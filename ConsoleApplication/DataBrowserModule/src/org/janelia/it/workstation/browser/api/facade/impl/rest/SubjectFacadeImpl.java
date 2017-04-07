@@ -19,11 +19,9 @@ import org.slf4j.LoggerFactory;
 public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
 
     private static final Logger log = LoggerFactory.getLogger(SubjectFacadeImpl.class);
-    private RESTClientManager manager;
     
     public SubjectFacadeImpl() {
         super(log);
-        this.manager = RESTClientManager.getInstance();
     }
 
     @Override

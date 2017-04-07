@@ -6,7 +6,6 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +45,6 @@ import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerType;
-import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerConfiguration;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
@@ -68,7 +66,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private static final String COLUMN_KEY_ANNOTATIONS = "annotations";
 
     // Configuration
-    private IconGridViewerConfiguration config;
+    private TableViewerConfiguration config;
     private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,null,true,null,null);
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
 
@@ -91,12 +89,12 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         @Override
         public String getImageFilepath(DomainObject domainObject) {
-            return null;
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public BufferedImage getStaticIcon(DomainObject imageObject) {
-            return null;
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -106,18 +104,12 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         @Override
         public String getImageTitle(DomainObject domainObject) {
-            String titlePattern = config.getDomainClassTitle(domainObject.getClass().getSimpleName());
-            if (StringUtils.isEmpty(titlePattern)) return domainObject.getName();
-            DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
-            return StringUtils.replaceVariablePattern(titlePattern, proxy);
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public String getImageSubtitle(DomainObject domainObject) {
-            String subtitlePattern = config.getDomainClassSubtitle(domainObject.getClass().getSimpleName());
-            if (StringUtils.isEmpty(subtitlePattern)) return null;
-            DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
-            return StringUtils.replaceVariablePattern(subtitlePattern, proxy);
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -162,7 +154,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     public void showDomainObjects(final AnnotatedDomainObjectList domainObjectList, final Callable<Void> success) {
 
         try {
-            this.config = IconGridViewerConfiguration.loadConfig();
+            this.config = TableViewerConfiguration.loadConfig();
         } catch (Exception ex) {
             ConsoleApp.handleException(ex);
         }
@@ -174,8 +166,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         attrs = DomainUtils.getDisplayAttributes(domainObjectList.getDomainObjects());
         attrs.add(0, annotationAttr);
-
-        TableViewerConfiguration config = TableViewerConfiguration.loadConfig();
 
         getDynamicTable().clearColumns();
         for(DomainObjectAttribute attr : attrs) {
@@ -208,7 +198,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             ListSelectionModel lsm = table.getSelectionModel();
             if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) {
                 String value = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
-                final String label = value == null ? "null" : value;
+                final String label = StringUtils.isEmpty(value) ? "Empty value" : value;
 
                 JMenuItem titleMenuItem = new JMenuItem(label);
                 titleMenuItem.setEnabled(false);
@@ -225,6 +215,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                 popupMenu.add(copyMenuItem);
             }
 
+            popupMenu.addSeparator();
             popupMenu.addMenuItems();
 
             return popupMenu;
@@ -243,7 +234,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                 DynamicColumn column = getDynamicTable().getVisibleColumn(col);
                 log.info("Hiding column {} ({})",column.getLabel(),col);
                 try {
-                    TableViewerConfiguration config = TableViewerConfiguration.loadConfig();
                     config.getHiddenColumns().add(column.getName());
                     config.save();
                     column.setVisible(false);
@@ -269,14 +259,15 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     protected void chooseColumnsButtonPressed() {
-        TableViewerConfigDialog configDialog = new TableViewerConfigDialog(attrs);
+        TableViewerConfigDialog configDialog = new TableViewerConfigDialog(attrs, config);
         if (configDialog.showDialog(this)==1) {
-            TableViewerConfiguration config = configDialog.getConfig();
             for(String attrName : attributeMap.keySet()) {
                 boolean visible = config.isColumnVisible(attrName);
                 getColumn(attrName).setVisible(visible);
             }
             updateTableModel();
+            updateUI();
+            log.info("Updated table model1");
         }
     }
 
@@ -304,7 +295,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     public void activate() {
-        Hud.getSingletonInstance().setKeyListener(keyListener);
     }
 
     @Override
@@ -341,6 +331,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     }
 
+    @Override
     public AnnotatedDomainObjectList getDomainObjectList() {
         return domainObjectList;
     }
@@ -399,7 +390,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     @Override
     protected void updateHud(boolean toggle) {
 
+        if (!toggle && !Hud.isInitialized()) return;
+        
         Hud hud = Hud.getSingletonInstance();
+        hud.setKeyListener(keyListener);
+        
         try {
             List<DomainObject> selected = getSelectedObjects();
 
@@ -415,7 +410,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             else {
                 hud.setObject(domainObject, null, null, false);
             }
-        } catch (Exception ex) {
+        } 
+        catch (Exception ex) {
             ConsoleApp.handleException(ex);
         }
     }
@@ -537,6 +533,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
     };
 
+    @Override
     public void setSearchProvider(SearchProvider searchProvider) {
         this.searchProvider = searchProvider;
     }
@@ -579,8 +576,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     private class TableViewerState extends ListViewerState {
 
-        private int horizontalScrollValue;
-        private int verticalScrollValue;
+        private final int horizontalScrollValue;
+        private final int verticalScrollValue;
 
         public TableViewerState(int horizontalScrollValue, int verticalScrollValue) {
             super(ListViewerType.TableViewer);
