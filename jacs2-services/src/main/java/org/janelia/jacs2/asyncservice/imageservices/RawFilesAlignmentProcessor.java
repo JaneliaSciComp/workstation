@@ -764,6 +764,26 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                             .add("default=true")
                             .build()
             );
+
+            // copy the transformations
+            Path subjectFile = Paths.get(args.input1File);
+            Path workingCCMIPrefix = getLocalSymmetricTransformFilePrefix(subjectFile, jacsServiceData);
+            Files.copy(
+                    getAffineRotationsMatrixFile(subjectFile, jacsServiceData),
+                    invocationHelper.getFilePath(getTransformationsResultsDir(args), "rotationsAffine.txt"));
+            Files.copy(
+                    getGlobalSymmetricTransformFilePrefix(subjectFile, jacsServiceData),
+                    invocationHelper.getFilePath(getTransformationsResultsDir(args), "txmiAffine.txt"));
+            Files.copy(
+                    getWarpTransformFile(workingCCMIPrefix, jacsServiceData),
+                    invocationHelper.getFilePath(getTransformationsResultsDir(args), "ccmiWarp.nii.gz"));
+            Files.copy(
+                    getInverseWarpTransformFile(workingCCMIPrefix, jacsServiceData),
+                    invocationHelper.getFilePath(getTransformationsResultsDir(args), "ccmiInverseWarp.nii.gz"));
+            Files.copy(
+                    getAffineTransformFile(workingCCMIPrefix, jacsServiceData),
+                    invocationHelper.getFilePath(getTransformationsResultsDir(args), "ccmiAffine.txt"));
+
             return computationFactory.newCompletedComputation(jacsServiceData);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
