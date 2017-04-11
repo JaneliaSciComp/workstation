@@ -27,6 +27,28 @@ class ImageServicesInvocationHelper {
     private final WarpToolProcessor warpToolProcessor;
     private final Logger logger;
 
+    static Path getFilePath(Path dir, String fileName) {
+        return dir.resolve(new File(fileName).getName());
+    }
+
+    static Path getFilePath(Path dir, String prefix, String fileName, String suffix, String fileExt) {
+        String actualFileName = String.format("%s%s%s.%s",
+                StringUtils.defaultIfBlank(prefix, ""),
+                com.google.common.io.Files.getNameWithoutExtension(fileName),
+                StringUtils.defaultIfBlank(suffix, ""),
+                fileExt);
+        return dir.resolve(actualFileName);
+    }
+
+    static Path getChannelFilePath(Path dir, int channelNumber, String fileName, String fileExt) {
+        String channelFileName = String.format("%s_c%d.%s",
+                com.google.common.io.Files.getNameWithoutExtension(fileName),
+                channelNumber,
+                StringUtils.defaultIfBlank(fileExt, com.google.common.io.Files.getFileExtension(fileName))
+        );
+        return dir.resolve(channelFileName);
+    }
+
     ImageServicesInvocationHelper(JacsServiceDataPersistence jacsServiceDataPersistence,
                                   LinkDataProcessor linkDataProcessor,
                                   Vaa3dConverterProcessor vaa3dConverterProcessor,
@@ -288,28 +310,6 @@ class ImageServicesInvocationHelper {
                 new ServiceArg(interpolation)
         );
         return submitNewServiceDependency(jacsServiceData, warpServiceData);
-    }
-
-    Path getFilePath(Path dir, String fileName) {
-        return dir.resolve(new File(fileName).getName());
-    }
-
-    Path getFilePath(Path dir, String prefix, String fileName, String suffix, String fileExt) {
-        String actualFileName = String.format("%s%s%s.%s",
-                StringUtils.defaultIfBlank(prefix, ""),
-                com.google.common.io.Files.getNameWithoutExtension(fileName),
-                StringUtils.defaultIfBlank(suffix, ""),
-                fileExt);
-        return dir.resolve(actualFileName);
-    }
-
-    Path getChannelFilePath(Path dir, int channelNumber, String fileName, String fileExt) {
-        String channelFileName = String.format("%s_c%d.%s",
-                com.google.common.io.Files.getNameWithoutExtension(fileName),
-                channelNumber,
-                StringUtils.defaultIfBlank(fileExt, com.google.common.io.Files.getFileExtension(fileName))
-        );
-        return dir.resolve(channelFileName);
     }
 
 }

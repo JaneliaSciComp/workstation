@@ -1,6 +1,5 @@
 package org.janelia.jacs2.asyncservice.sampleprocessing;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
@@ -10,6 +9,7 @@ import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceErrorChecker;
 import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractAnyServiceResultHandler;
 import org.janelia.jacs2.asyncservice.fileservices.FileCopyProcessor;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
@@ -19,7 +19,6 @@ import org.janelia.jacs2.dataservice.sample.SampleDataService;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
@@ -57,7 +56,7 @@ public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceP
 
     @Override
     public ServiceResultHandler<List<SampleImageFile>> getResultHandler() {
-        return new ServiceResultHandler<List<SampleImageFile>>() {
+        return new AbstractAnyServiceResultHandler<List<SampleImageFile>>() {
             @Override
             public boolean isResultReady(JacsServiceData jacsServiceData) {
                 return areAllDependenciesDone(jacsServiceData);
@@ -88,15 +87,6 @@ public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceP
                         .collect(Collectors.toList());
             }
 
-            @Override
-            public void updateServiceDataResult(JacsServiceData jacsServiceData, List<SampleImageFile> result) {
-                jacsServiceData.setStringifiedResult(ServiceDataUtils.anyToString(result));
-            }
-
-            @Override
-            public List<SampleImageFile> getServiceDataResult(JacsServiceData jacsServiceData) {
-                return ServiceDataUtils.stringToAny(jacsServiceData.getStringifiedResult(), new TypeReference<List<SampleImageFile>>(){});
-            }
         };
     }
 

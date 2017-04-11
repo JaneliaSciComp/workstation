@@ -1,6 +1,5 @@
 package org.janelia.jacs2.asyncservice.sampleprocessing;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.DefaultServiceErrorChecker;
@@ -9,6 +8,7 @@ import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceErrorChecker;
 import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractAnyServiceResultHandler;
 import org.janelia.jacs2.asyncservice.lsmfileservices.LsmFileMetadataProcessor;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.sample.SampleDataService;
@@ -16,7 +16,6 @@ import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.asyncservice.common.ServiceDataUtils;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
 
@@ -56,7 +55,7 @@ public class GetSampleLsmsMetadataProcessor extends AbstractBasicLifeCycleServic
 
     @Override
     public ServiceResultHandler<List<SampleImageMetadataFile>> getResultHandler() {
-        return new ServiceResultHandler<List<SampleImageMetadataFile>>() {
+        return new AbstractAnyServiceResultHandler<List<SampleImageMetadataFile>>() {
             @Override
             public boolean isResultReady(JacsServiceData jacsServiceData) {
                 return areAllDependenciesDone(jacsServiceData);
@@ -91,16 +90,6 @@ public class GetSampleLsmsMetadataProcessor extends AbstractBasicLifeCycleServic
                                     return lsmMetadata;
                                 }))
                         .collect(Collectors.toList());
-            }
-
-            @Override
-            public void updateServiceDataResult(JacsServiceData jacsServiceData, List<SampleImageMetadataFile> result) {
-                jacsServiceData.setStringifiedResult(ServiceDataUtils.anyToString(result));
-            }
-
-            @Override
-            public List<SampleImageMetadataFile> getServiceDataResult(JacsServiceData jacsServiceData) {
-                return ServiceDataUtils.stringToAny(jacsServiceData.getStringifiedResult(), new TypeReference<List<SampleImageMetadataFile>>(){});
             }
         };
     }

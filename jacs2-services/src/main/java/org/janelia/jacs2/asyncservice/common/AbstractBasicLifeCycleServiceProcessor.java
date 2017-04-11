@@ -11,8 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
 
 public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends AbstractServiceProcessor<T> {
 
@@ -37,7 +35,6 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
                     this.submitServiceDependencies(currentServiceDataHolder[0]);
                     return currentServiceDataHolder[0];
                 })
-                .thenApply(this::prepareProcessing)
                 .thenSuspendUntil(() -> !suspendUntilAllDependenciesComplete(currentServiceDataHolder[0])) // suspend until all dependencies complete
                 .thenCompose(this::processing)
                 .thenSuspendUntil(() -> this.isResultReady(currentServiceDataHolder[0])) // wait until the result becomes available
