@@ -1,11 +1,10 @@
-// 5.11.0
+// 5.11.1
 
 Workstation Browser
 * Refresh now works for unsaved filters
 * Open in Neuron Annotator fixed for separations with curated neurons
 * Neuron Annotator now displays neurons in the correct order
 * Fixed issue with Data Explorer sometimes not displaying Home folders for admins
-* Other minor bug fixes (see JIRA)
 
 MouseLight
 * Make "merge" in Horta undo-able, and remove the confirm dialog.
@@ -13,5 +12,3 @@ MouseLight
 * Prevent Ktx tile memory from building up when switching between LVV and Horta when auto-load is active.
 * Avoid OutOfBoundException errors when editing neurons JW-28009
 * Added "merge to selected" tool (aka smart merge)
-* Fixed bug: in LVV, right-click menu items should not fail because "hover" was lost
-* Fixed bug: when deleting endpoint annotation, next parent moves to its parent now (as it used to)
