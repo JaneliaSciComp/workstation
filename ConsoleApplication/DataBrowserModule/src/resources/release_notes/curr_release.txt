@@ -14,3 +14,4 @@ MouseLight
 * Avoid OutOfBoundException errors when editing neurons JW-28009
 * Added "merge to selected" tool (aka smart merge)
 * Fixed bug: in LVV, right-click menu items should not fail because "hover" was lost
+* Fixed bug: when deleting endpoint annotation, next parent moves to its parent now (as it used to)
