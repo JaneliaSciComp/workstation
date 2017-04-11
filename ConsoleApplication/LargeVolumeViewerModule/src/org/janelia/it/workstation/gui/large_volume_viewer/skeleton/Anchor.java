@@ -147,4 +147,8 @@ public class Anchor {
         this.neuronID = neuronID;
     }
 
+    public String toString() {
+        return "Anchor at " + getLocation();
+    }
+
 }

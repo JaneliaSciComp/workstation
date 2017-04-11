@@ -410,6 +410,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     /**
+     * given two annotations, return true if they are on the same neurite
+     * (ie, share the same ultimate root annotation)
+     */
+    public boolean sameNeurite(TmGeoAnnotation ann1, TmGeoAnnotation ann2) {
+        return getNeuriteRootAnnotation(ann1).getId().equals(getNeuriteRootAnnotation(ann2).getId());
+    }
+
+    /**
      * find the annotation closest to the input location, excluding
      * the input annotation (null = don't exclude any)
      */
