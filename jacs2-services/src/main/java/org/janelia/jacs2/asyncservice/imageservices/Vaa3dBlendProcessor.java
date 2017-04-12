@@ -1,6 +1,5 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
@@ -99,13 +98,7 @@ public class Vaa3dBlendProcessor extends AbstractBasicLifeCycleServiceProcessor<
     }
 
     private Vaa3dBlendArgs getArgs(JacsServiceData jacsServiceData) {
-        Vaa3dBlendArgs args = new Vaa3dBlendArgs();
-        new JCommander(args).parse(jacsServiceData.getArgsArray());
-        return args;
-    }
-
-    private Path getInputDir(Vaa3dBlendArgs args) {
-        return Paths.get(args.inputDir);
+        return ServiceArgs.parse(jacsServiceData.getArgsArray(), new Vaa3dBlendArgs());
     }
 
     private Path getOutputFile(Vaa3dBlendArgs args) {

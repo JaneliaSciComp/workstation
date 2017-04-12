@@ -32,15 +32,13 @@ public class IntegerComputeTestProcessor extends AbstractServiceProcessor<Long> 
         Integer iterations = DEFAULT_ITERATIONS;
     }
 
-    private final ServiceComputationFactory computationFactory;
     private long resultComputationTime;
 
     @Inject
     public IntegerComputeTestProcessor(ServiceComputationFactory computationFactory,
                                        @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
                                        Logger logger) {
-        super(defaultWorkingDir, logger);
-        this.computationFactory = computationFactory;
+        super(computationFactory, null, defaultWorkingDir, logger);
     }
 
     @Override

@@ -13,6 +13,7 @@ import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
 import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractSingleFileServiceResultHandler;
 import org.janelia.jacs2.asyncservice.fileservices.FileMoveProcessor;
 import org.janelia.jacs2.asyncservice.fileservices.FileRemoveProcessor;
+import org.janelia.jacs2.asyncservice.utils.FileUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
@@ -209,7 +210,7 @@ public class Vaa3dStitchAndBlendProcessor extends AbstractBasicLifeCycleServiceP
     }
 
     private Path getTemporaryBlendOutput(Vaa3dStitchAndBlendArgs args) {
-        return ImageServicesInvocationHelper.getFilePath(getInputDir(args), DEFAULT_BLEND_OUTPUT);
+        return FileUtils.getFilePath(getInputDir(args), DEFAULT_BLEND_OUTPUT);
     }
 
     private Path getOutputFile(Vaa3dStitchAndBlendArgs args) {

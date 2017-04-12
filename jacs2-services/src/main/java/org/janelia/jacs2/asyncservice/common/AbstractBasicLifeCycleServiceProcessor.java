@@ -14,16 +14,11 @@ import java.util.Optional;
 
 public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends AbstractServiceProcessor<T> {
 
-    protected final ServiceComputationFactory computationFactory;
-    protected final JacsServiceDataPersistence jacsServiceDataPersistence;
-
     public AbstractBasicLifeCycleServiceProcessor(ServiceComputationFactory computationFactory,
                                                   JacsServiceDataPersistence jacsServiceDataPersistence,
                                                   String defaultWorkingDir,
                                                   Logger logger) {
-        super(defaultWorkingDir, logger);
-        this.computationFactory = computationFactory;
-        this.jacsServiceDataPersistence = jacsServiceDataPersistence;
+        super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
     }
 
     @Override
@@ -143,10 +138,6 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
 
     protected T postProcessing(JacsServiceResult<T> sr) {
         return sr.getResult();
-    }
-
-    protected void updateServiceData(JacsServiceData jacsServiceData) {
-        if (jacsServiceData.hasId()) jacsServiceDataPersistence.update(jacsServiceData);
     }
 
     protected void success(JacsServiceData jacsServiceData) {

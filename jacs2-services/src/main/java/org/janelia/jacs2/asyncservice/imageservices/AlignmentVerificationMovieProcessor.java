@@ -10,6 +10,7 @@ import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
 import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractSingleFileServiceResultHandler;
 import org.janelia.jacs2.asyncservice.fileservices.LinkDataProcessor;
+import org.janelia.jacs2.asyncservice.utils.FileUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
@@ -98,7 +99,7 @@ public class AlignmentVerificationMovieProcessor extends AbstractBasicLifeCycleS
         AlignmentVerificationMoviewArgs args = getArgs(jacsServiceData);
         JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
 
-        Path workingSubjectFile = invocationHelper.getFilePath(getWorkingDirectory(jacsServiceDataHierarchy), args.subjectFile); // => SUB
+        Path workingSubjectFile = FileUtils.getFilePath(getWorkingDirectory(jacsServiceDataHierarchy), args.subjectFile); // => SUB
 
         JacsServiceData createWorkingSubjectFile = invocationHelper.linkData(getSubjectFile(args), workingSubjectFile,
                 "Create link for working subject file",
@@ -120,7 +121,7 @@ public class AlignmentVerificationMovieProcessor extends AbstractBasicLifeCycleS
                 args.referenceChannel - 1,
                 args.subjectFile,
                 ".v3draw");
-        Path temporaryMergedFile = invocationHelper.getFilePath(
+        Path temporaryMergedFile = FileUtils.getFilePath(
                 getWorkingDirectory(jacsServiceDataHierarchy),
                 null,
                 args.outputFile,

@@ -4,7 +4,6 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.asyncservice.JacsServiceEngine;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.DefaultServiceErrorChecker;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
@@ -20,7 +19,6 @@ import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
-import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 import org.slf4j.Logger;
@@ -45,7 +43,7 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
         @Parameter(names = "-macro", description = "FIJI macro name", required = true)
         String macroName;
         @Parameter(names = "-macroArgs", description = "Arguments for the fiji macro")
-        String macroArgs;
+        List<String> macroArgs;
         @Parameter(names = "-temporaryOutput", description = "Temporary output directory")
         String temporaryOutput;
         @Parameter(names = "-finalOutput", description = "Final output directory")
@@ -104,9 +102,14 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
 
     @Override
     protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
-        FijiMacroArgs args = getArgs(jacsServiceData);
-        if (StringUtils.isBlank(args.macroName)) {
-            throw new ComputationException(jacsServiceData, "FIJI macro must be specified");
+        try {
+            FijiMacroArgs args = getArgs(jacsServiceData);
+            Path temporaryOutput = getTemporaryDir(args);
+            if (temporaryOutput != null) {
+                Files.createDirectories(temporaryOutput);
+            }
+        } catch (Exception e) {
+            throw new ComputationException(jacsServiceData, e);
         }
         return super.prepareProcessing(jacsServiceData);
     }
@@ -141,9 +144,9 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
                     .add("function exitHandler() { cleanXvfb; cleanTemp; }")
                     .add("trap exitHandler EXIT\n");
 
-            scriptWriter.addBackground(String.format("%s -macro %s %s", getFijiExecutable(), getFullFijiMacro(args), args.macroArgs));
+            scriptWriter.addBackground(String.format("%s -macro %s %s", getFijiExecutable(), getFullFijiMacro(args), String.join(",", args.macroArgs)));
             // Monitor Fiji and take periodic screenshots, killing it eventually
-            scriptWriter.setVar("fpid","$!");
+            scriptWriter.setVar("fpid", "$!");
             X11Utils.startScreenCaptureLoop(scratchDir + "/xvfb-" + jacsServiceData.getId() + ".${PORT}",
                     "PORT", "fpid", 30, getTimeoutInSeconds(jacsServiceData), scriptWriter);
             if (StringUtils.isNotBlank(args.finalOutput) && StringUtils.isNotBlank(args.temporaryOutput) &&
@@ -189,6 +192,14 @@ public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
             return (int) timeoutInMillis / 1000;
         } else {
             return X11Utils.DEFAULT_TIMEOUT_SECONDS;
+        }
+    }
+
+    private Path getTemporaryDir(FijiMacroArgs args) {
+        if (StringUtils.isNotBlank(args.temporaryOutput)) {
+            return Paths.get(args.temporaryOutput);
+        } else {
+            return null;
         }
     }
 }

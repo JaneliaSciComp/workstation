@@ -770,19 +770,19 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
             Path workingCCMIPrefix = getLocalSymmetricTransformFilePrefix(subjectFile, jacsServiceData);
             Files.copy(
                     getAffineRotationsMatrixFile(subjectFile, jacsServiceData),
-                    invocationHelper.getFilePath(getTransformationsResultsDir(args), "rotationsAffine.txt"));
+                    FileUtils.getFilePath(getTransformationsResultsDir(args), "rotationsAffine.txt"));
             Files.copy(
                     getGlobalSymmetricTransformFilePrefix(subjectFile, jacsServiceData),
-                    invocationHelper.getFilePath(getTransformationsResultsDir(args), "txmiAffine.txt"));
+                    FileUtils.getFilePath(getTransformationsResultsDir(args), "txmiAffine.txt"));
             Files.copy(
                     getWarpTransformFile(workingCCMIPrefix, jacsServiceData),
-                    invocationHelper.getFilePath(getTransformationsResultsDir(args), "ccmiWarp.nii.gz"));
+                    FileUtils.getFilePath(getTransformationsResultsDir(args), "ccmiWarp.nii.gz"));
             Files.copy(
                     getInverseWarpTransformFile(workingCCMIPrefix, jacsServiceData),
-                    invocationHelper.getFilePath(getTransformationsResultsDir(args), "ccmiInverseWarp.nii.gz"));
+                    FileUtils.getFilePath(getTransformationsResultsDir(args), "ccmiInverseWarp.nii.gz"));
             Files.copy(
                     getAffineTransformFile(workingCCMIPrefix, jacsServiceData),
-                    invocationHelper.getFilePath(getTransformationsResultsDir(args), "ccmiAffine.txt"));
+                    FileUtils.getFilePath(getTransformationsResultsDir(args), "ccmiAffine.txt"));
 
             return computationFactory.newCompletedComputation(jacsServiceData);
         } catch (IOException e) {
@@ -799,31 +799,31 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     private Path getBrainResultsDir(AlignmentArgs args) {
-        return invocationHelper.getFilePath(getResultsDir(args), "Brains");
+        return FileUtils.getFilePath(getResultsDir(args), "Brains");
     }
 
     private Path getNeuronsResultsDir(AlignmentArgs args) {
-        return invocationHelper.getFilePath(getResultsDir(args), "Neurons");
+        return FileUtils.getFilePath(getResultsDir(args), "Neurons");
     }
 
     private Path getTransformationsResultsDir(AlignmentArgs args) {
-        return invocationHelper.getFilePath(getResultsDir(args), "Transformations");
+        return FileUtils.getFilePath(getResultsDir(args), "Transformations");
     }
 
     private Path getAlignmentVerificationFile(AlignmentArgs args) {
-        return invocationHelper.getFilePath(getResultsDir(args), "VerifyMovie.mp4");
+        return FileUtils.getFilePath(getResultsDir(args), "VerifyMovie.mp4");
     }
 
     private Path getAlignedSubjectFile(AlignmentArgs args) {
-        return invocationHelper.getFilePath(getBrainResultsDir(args), "Aligned63xScale.v3draw");
+        return FileUtils.getFilePath(getBrainResultsDir(args), "Aligned63xScale.v3draw");
     }
 
     private Path getAlignedNeuronsFile(AlignmentArgs args) {
-        return invocationHelper.getFilePath(getNeuronsResultsDir(args), "NeuronAligned63xScale.v3draw");
+        return FileUtils.getFilePath(getNeuronsResultsDir(args), "NeuronAligned63xScale.v3draw");
     }
 
     private Path getAlignmentResultsDescriptor(AlignmentArgs args) {
-        return invocationHelper.getFilePath(getBrainResultsDir(args), "Aligned63xScale.properties");
+        return FileUtils.getFilePath(getBrainResultsDir(args), "Aligned63xScale.properties");
     }
 
     private Path getWorkingFile(String inputFileName, JacsServiceData jacsServiceData) {

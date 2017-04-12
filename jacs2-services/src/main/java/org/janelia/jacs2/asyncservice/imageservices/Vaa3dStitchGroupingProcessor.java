@@ -117,9 +117,7 @@ public class Vaa3dStitchGroupingProcessor extends AbstractBasicLifeCycleServiceP
     }
 
     private Vaa3dStitchGroupingArgs getArgs(JacsServiceData jacsServiceData) {
-        Vaa3dStitchGroupingArgs args = new Vaa3dStitchGroupingArgs();
-        new JCommander(args).parse(jacsServiceData.getArgsArray());
-        return args;
+        return ServiceArgs.parse(jacsServiceData.getArgsArray(), new Vaa3dStitchGroupingArgs());
     }
 
     private Path getOutputDir(Vaa3dStitchGroupingArgs args) {

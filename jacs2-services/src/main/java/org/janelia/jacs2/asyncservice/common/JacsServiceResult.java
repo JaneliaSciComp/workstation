@@ -4,7 +4,11 @@ import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 
 public class JacsServiceResult<T> {
     private final JacsServiceData jacsServiceData;
-    private final T result;
+    private T result;
+
+    public JacsServiceResult(JacsServiceData jacsServiceData) {
+        this.jacsServiceData = jacsServiceData;
+    }
 
     public JacsServiceResult(JacsServiceData jacsServiceData, T result) {
         this.jacsServiceData = jacsServiceData;
@@ -17,5 +21,9 @@ public class JacsServiceResult<T> {
 
     public T getResult() {
         return result;
+    }
+
+    public void setResult(T result) {
+        this.result = result;
     }
 }
