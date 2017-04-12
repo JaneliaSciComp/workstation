@@ -12,6 +12,8 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -21,6 +23,9 @@ import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.SampleAnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.SessionAnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceAnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -107,8 +112,8 @@ public class LargeVolumeViewViewer extends JPanel {
                     else {
                         logger.info("Image data loading failed");
                         JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
-                                "Could not open sample entity for this workspace!",
-                                "Could not open workspace",
+                                "Could not load image data for this sample!",
+                                "Could not load image data",
                                 JOptionPane.ERROR_MESSAGE);
                     }
                 }
@@ -123,10 +128,26 @@ public class LargeVolumeViewViewer extends JPanel {
         };
 
         close();
-        this.annotationMgr = new AnnotationManager();
-        annotationMgr.loadDomainObject(domainObject, volumeLoader);
+        
+        this.annotationMgr = getAnnotationManagerImpl(domainObject);
+        annotationMgr.load(volumeLoader);
     }
         
+    public AnnotationManager getAnnotationManagerImpl(DomainObject domainObject) {
+        if (domainObject instanceof TmSample) {
+            return new SampleAnnotationManager((TmSample)domainObject);
+        }
+        if (domainObject instanceof TmWorkspace) {
+            return new WorkspaceAnnotationManager((TmWorkspace)domainObject);
+        }
+        if (domainObject instanceof TmSession) {
+            return new SessionAnnotationManager((TmSession)domainObject);
+        }
+        else {
+            throw new IllegalArgumentException("Can't handle objects of type "+domainObject.getType());
+        }   
+    }
+    
     public void setInitialViewFocus(Vec3 initialViewFocus, Double initialZoom) {
         this.initialViewFocus = initialViewFocus;
         this.initialZoom = initialZoom;

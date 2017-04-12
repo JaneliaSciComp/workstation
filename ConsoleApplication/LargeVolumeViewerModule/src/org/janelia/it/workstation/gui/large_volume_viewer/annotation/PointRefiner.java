@@ -29,11 +29,11 @@ public class PointRefiner {
 
     SubvolumeProvider dataProvider;
 
-    PointRefiner(SubvolumeProvider dataProvider) {
+    public PointRefiner(SubvolumeProvider dataProvider) {
         this.dataProvider = dataProvider;
     }
 
-    Vec3 refine(Vec3 point) {
+    public Vec3 refine(Vec3 point) {
         return maxIntensityZ(point, 5);
     }
 

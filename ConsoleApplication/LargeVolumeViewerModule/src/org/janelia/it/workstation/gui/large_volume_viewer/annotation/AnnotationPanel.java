@@ -50,8 +50,8 @@ public class AnnotationPanel extends JPanel
     // things we get data from
     // not clear these belong here!  should all info be shuffled through signals and actions?
     // on the other hand, even if so, we still need them just to hook everything up
-    private AnnotationManager annotationMgr;
-    private LargeVolumeViewerTranslator largeVolumeViewerTranslator;
+    private final BasicAnnotationManager annotationMgr;
+    private final LargeVolumeViewerTranslator largeVolumeViewerTranslator;
 
 
     // UI components
@@ -104,7 +104,7 @@ public class AnnotationPanel extends JPanel
     private JMenu sortSubmenu;
 
 
-    public AnnotationPanel(AnnotationManager annotationMgr, LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
+    public AnnotationPanel(BasicAnnotationManager annotationMgr, LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
         this.annotationMgr = annotationMgr;
         this.largeVolumeViewerTranslator = largeVolumeViewerTranslator;
 

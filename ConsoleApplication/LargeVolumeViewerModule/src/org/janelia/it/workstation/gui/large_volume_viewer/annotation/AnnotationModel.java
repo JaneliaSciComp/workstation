@@ -61,8 +61,8 @@ import com.google.common.base.Stopwatch;
 import Jama.Matrix;
 
 /**
- * This class is responsible for handling requests from the AnnotationManager.  those
- * requests are ready-to-execute; the AnnotationManager has taken care of validation.
+ * This class is responsible for handling requests from the BasicAnnotationManager.  those
+ * requests are ready-to-execute; the BasicAnnotationManager has taken care of validation.
  * 
  * Public methods in this class that throw exceptions are the ones that involve db calls, and
  * they should all be called from worker threads.  the others, typically getters of

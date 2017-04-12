@@ -183,7 +183,7 @@ public class NeuronModelAdapter implements NeuronModel
         Long sourceID = sourceAnn.getId();
         Long targetID = targetAnn.getId();
         
-        // Borrow logic from AnnotationManager::canMergeNeurite()::520
+        // Borrow logic from BasicAnnotationManager::canMergeNeurite()::520
         if (sourceID.equals(targetID))
             return false; // cannot merge with itself
         if (neuronSet.annotationMgr.getNeuriteRootAnnotation(sourceAnn).getId().equals(
@@ -253,7 +253,7 @@ public class NeuronModelAdapter implements NeuronModel
             NeuronVertexAdapter nva = (NeuronVertexAdapter)doomedVertex;
             TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
 
-            // Borrow some defensive logic from AnnotationManager.java::405
+            // Borrow some defensive logic from BasicAnnotationManager.java::405
             if (annotation == null)
                 return false; // no such anchor
             if (annotation.isRoot() && annotation.getChildIds().size() > 0)

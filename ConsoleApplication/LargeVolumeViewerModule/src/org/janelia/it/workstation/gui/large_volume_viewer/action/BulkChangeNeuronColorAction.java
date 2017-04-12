@@ -11,6 +11,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.BasicAnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NeuronListProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ public class BulkChangeNeuronColorAction extends AbstractAction {
 
     @Override
     public void actionPerformed(ActionEvent action) {
-        final Color color = AnnotationManager.askForNeuronColor(null);
+        final Color color = BasicAnnotationManager.askForNeuronColor(null);
         if (color != null) {
             final List<TmNeuronMetadata> neurons = listProvider.getNeuronList();
             int ans = JOptionPane.showConfirmDialog(
