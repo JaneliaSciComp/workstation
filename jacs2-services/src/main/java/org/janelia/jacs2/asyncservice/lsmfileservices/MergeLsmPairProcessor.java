@@ -32,7 +32,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Named("mergeLsms")
-public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcessor<JacsServiceData, File> {
+public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, File> {
 
     static class MergeLsmPairArgs extends ServiceArgs {
         @Parameter(names = "-lsm1", description = "First LSM input file", required = true)
@@ -98,7 +98,7 @@ public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcesso
     }
 
     @Override
-    protected JacsServiceResult<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+    protected JacsServiceResult<Void> submitServiceDependencies(JacsServiceData jacsServiceData) {
         MergeLsmPairArgs args = getArgs(jacsServiceData);
 
         List<JacsServiceData> distortionCorrectionServiceData;
@@ -130,11 +130,11 @@ public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcesso
             distortionCorrectionServiceData = ImmutableList.of();
         }
         Path mergeOutput = getOutputDir(args);
-        JacsServiceData mergeChannelsServiceData = mergeChannels(mergeInput1, mergeInput2, mergeOutput, args.multiscanBlendVersion,
+        mergeChannels(mergeInput1, mergeInput2, mergeOutput, args.multiscanBlendVersion,
                 "Merge channels",
                 jacsServiceData,
                 distortionCorrectionServiceData.toArray(new JacsServiceData[distortionCorrectionServiceData.size()]));
-        return new JacsServiceResult<>(jacsServiceData, mergeChannelsServiceData);
+        return new JacsServiceResult<>(jacsServiceData);
     }
 
     private JacsServiceData applyCorrection(Path input, Path output, String microscope, String description, JacsServiceData jacsServiceData, JacsServiceData... deps) {
@@ -163,7 +163,7 @@ public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcesso
     }
 
     @Override
-    protected ServiceComputation<JacsServiceResult<JacsServiceData>> processing(JacsServiceResult<JacsServiceData> depResults) {
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
         return computationFactory.newCompletedComputation(depResults);
     }
 

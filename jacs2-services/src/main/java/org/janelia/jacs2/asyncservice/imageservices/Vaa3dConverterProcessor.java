@@ -1,6 +1,5 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
@@ -123,9 +122,7 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
     }
 
     private Vaa3dConverterArgs getArgs(JacsServiceData jacsServiceData) {
-        Vaa3dConverterArgs args = new Vaa3dConverterArgs();
-        new JCommander(args).parse(jacsServiceData.getArgsArray());
-        return args;
+        return ServiceArgs.parse(jacsServiceData.getArgsArray(), new Vaa3dConverterArgs());
     }
 
 }

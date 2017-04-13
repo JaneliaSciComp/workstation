@@ -42,7 +42,7 @@ import java.util.stream.IntStream;
  * in v3draw format.
  */
 @Named("alignRaw")
-public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<List<JacsServiceData>, List<File>> {
+public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, List<File>> {
 
     private static final String MAX_AFFINE_ITERATIONS = "10000x10000x10000x10000";
     private static final String MAX_CC_ITERATIONS ="100x70x50x0x0" ;
@@ -168,7 +168,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     @Override
-    protected JacsServiceResult<List<JacsServiceData>> submitServiceDependencies(JacsServiceData jacsServiceData) {
+    protected JacsServiceResult<Void> submitServiceDependencies(JacsServiceData jacsServiceData) {
         AlignmentArgs args = getArgs(jacsServiceData);
         AlignmentConfiguration alignConfig = AlignmentUtils.parseAlignConfig(args.configFile);
         ImageCoordinates inputResolution = AlignmentUtils.parseCoordinates(args.input1Res);
@@ -366,12 +366,11 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         // resize to the templates' space
 
         // $Vaa3D -x ireg -f resizeImage -o $SUBSXALINGED -p "#s $SUBSXDFRMD #t $TARSX #y 1"
-        JacsServiceData restoreSizeAlignedSubjectServiceData =
-                invocationHelper.resizeToTarget(resizedAlignedSubjectFile, targetFile, alignedSubjectFile,
-                        "#y 1",
-                        "Restore size of the aligned subject",
-                        jacsServiceData,
-                        combineChannelsServiceData);
+        invocationHelper.resizeToTarget(resizedAlignedSubjectFile, targetFile, alignedSubjectFile,
+                "#y 1",
+                "Restore size of the aligned subject",
+                jacsServiceData,
+                combineChannelsServiceData);
 
         // warp neurons
         Path neuronsFile = getWorkingFile(args.input1Neurons, jacsServiceData); // => SUBSXNEURONS
@@ -482,7 +481,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         // create verification movie
         Path verifyMovie = getAlignmentVerificationFile(args);
         // createVerificationMovie.sh -c $CONFIGFILE -k $TOOLDIR -w $WORKDIR -s $SUBSXALINGED -i $TARSX -r $SUBSXREF -o ${FINALOUTPUT}/$ALIGNVERIFY
-        JacsServiceData verificationMovieServiceData = createVerificationMovie(alignedSubjectFile,
+        createVerificationMovie(alignedSubjectFile,
                 targetFile,
                 args.input1Ref,
                 verifyMovie,
@@ -490,7 +489,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 jacsServiceData,
                 evalServiceData);
 
-        return new JacsServiceResult<>(jacsServiceData, ImmutableList.of(restoreSizeAlignedSubjectServiceData, verificationMovieServiceData));
+        return new JacsServiceResult<>(jacsServiceData);
     }
 
     private void createWorkingCopy(Path inputFile, Path outputFile) {
@@ -725,7 +724,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     @Override
-    protected ServiceComputation<JacsServiceResult<List<JacsServiceData>>> processing(JacsServiceResult<List<JacsServiceData>> depResults) {
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
         // generate metadata
         JacsServiceData jacsServiceData = depResults.getJacsServiceData();
         AlignmentArgs args = getArgs(jacsServiceData);
@@ -740,7 +739,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
 
         try {
             List<String> alignmentQualityContent = Files.readAllLines(alignmentQualityFile);
-            String score = alignmentQualityContent.stream().filter(s -> StringUtils.isNotBlank(s)).findFirst().orElse("");
+            String score = alignmentQualityContent.stream().filter(StringUtils::isNotBlank).findFirst().orElse("");
 
             Files.write(alignmentDescriptor,
                     ImmutableList.<String>builder()
@@ -918,7 +917,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     private Path getAlignmentQualityFile(String fp, JacsServiceData jacsServiceData) {
-        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(fp.toString()) + "_AlignmentQuality.txt");
+        return Paths.get(getWorkingDirectory(jacsServiceData).toString(), com.google.common.io.Files.getNameWithoutExtension(fp) + "_AlignmentQuality.txt");
     }
 
 }

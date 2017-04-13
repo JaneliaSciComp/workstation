@@ -1,6 +1,5 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableList;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
@@ -33,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Named("vaa3dStitchAndBlend")
-public class Vaa3dStitchAndBlendProcessor extends AbstractBasicLifeCycleServiceProcessor<List<JacsServiceData>, File> {
+public class Vaa3dStitchAndBlendProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, File> {
 
     private static final java.lang.String DEFAULT_BLEND_OUTPUT = "output.v3draw";
 
@@ -106,7 +105,7 @@ public class Vaa3dStitchAndBlendProcessor extends AbstractBasicLifeCycleServiceP
     }
 
     @Override
-    protected JacsServiceResult<List<JacsServiceData>> submitServiceDependencies(JacsServiceData jacsServiceData) {
+    protected JacsServiceResult<Void> submitServiceDependencies(JacsServiceData jacsServiceData) {
         Vaa3dStitchAndBlendArgs args = getArgs(jacsServiceData);
         JacsServiceData stitchServiceData = stitch(
                 getInputDir(args),
@@ -125,16 +124,15 @@ public class Vaa3dStitchAndBlendProcessor extends AbstractBasicLifeCycleServiceP
                 stitchServiceData
         );
         Path outputFile = getOutputFile(args);
-        JacsServiceData copyResultsServiceData;
         if ("v3draw".equals(com.google.common.io.Files.getFileExtension(args.outputFile))) {
             // if the output is a v3draw move the result
-            copyResultsServiceData = mv(temporaryBlendOutput, outputFile, "Moving temporary output results", jacsServiceData, blendServiceData);
+            mv(temporaryBlendOutput, outputFile, "Moving temporary output results", jacsServiceData, blendServiceData);
         } else {
             // if the output is not a v3draw convert the temporary v3draw file to the desired output
             JacsServiceData convertResultServiceData = convert(temporaryBlendOutput, outputFile, "Convert temporary output results", jacsServiceData, blendServiceData);
-            copyResultsServiceData = rm(temporaryBlendOutput, "Removing temporary output results", jacsServiceData, convertResultServiceData);
+            rm(temporaryBlendOutput, "Removing temporary output results", jacsServiceData, convertResultServiceData);
         }
-        return new JacsServiceResult<>(jacsServiceData, ImmutableList.of(stitchServiceData, blendServiceData, copyResultsServiceData));
+        return new JacsServiceResult<>(jacsServiceData);
     }
 
     private JacsServiceData stitch(Path inputDir, int referenceChannel, List<String> additionalPluginParams, String description, JacsServiceData jacsServiceData, JacsServiceData... deps) {
@@ -194,14 +192,12 @@ public class Vaa3dStitchAndBlendProcessor extends AbstractBasicLifeCycleServiceP
     }
 
     @Override
-    protected ServiceComputation<JacsServiceResult<List<JacsServiceData>>> processing(JacsServiceResult<List<JacsServiceData>> depResults) {
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
         return computationFactory.newCompletedComputation(depResults);
     }
 
     private Vaa3dStitchAndBlendArgs getArgs(JacsServiceData jacsServiceData) {
-        Vaa3dStitchAndBlendArgs args = new Vaa3dStitchAndBlendArgs();
-        new JCommander(args).parse(jacsServiceData.getArgsArray());
-        return args;
+        return ServiceArgs.parse(jacsServiceData.getArgsArray(), new Vaa3dStitchAndBlendArgs());
     }
 
     private Path getInputDir(Vaa3dStitchAndBlendArgs args) {

@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Named("warpTool")
 public class WarpToolProcessor extends AbstractExeBasedServiceProcessor<Void, Void> {
 
-    static class AntsToolArgs extends ServiceArgs {
+    static class WarpToolArgs extends ServiceArgs {
         @Parameter(names = {"-d", "-dims"}, description = "Scene dimensionality")
         int dims = 3;
         @Parameter(names = {"-i", "-input"}, description = "Input moving image")
@@ -75,7 +75,7 @@ public class WarpToolProcessor extends AbstractExeBasedServiceProcessor<Void, Vo
 
     @Override
     public ServiceMetaData getMetadata() {
-        return ServiceArgs.getMetadata(this.getClass(), new AntsToolArgs());
+        return ServiceArgs.getMetadata(this.getClass(), new WarpToolArgs());
     }
 
     @Override
@@ -85,7 +85,7 @@ public class WarpToolProcessor extends AbstractExeBasedServiceProcessor<Void, Vo
 
     @Override
     protected ExternalCodeBlock prepareExternalScript(JacsServiceData jacsServiceData) {
-        AntsToolArgs args = getArgs(jacsServiceData);
+        WarpToolArgs args = getArgs(jacsServiceData);
         ExternalCodeBlock externalScriptCode = new ExternalCodeBlock();
         ScriptWriter externalScriptWriter = externalScriptCode.getCodeWriter();
         createScript(args, externalScriptWriter);
@@ -93,7 +93,7 @@ public class WarpToolProcessor extends AbstractExeBasedServiceProcessor<Void, Vo
         return externalScriptCode;
     }
 
-    private void createScript(AntsToolArgs args, ScriptWriter scriptWriter) {
+    private void createScript(WarpToolArgs args, ScriptWriter scriptWriter) {
         scriptWriter.addWithArgs(getExecutable())
                 .addArg(String.valueOf(args.dims));
         if (StringUtils.isNotBlank(args.input)) {
@@ -131,10 +131,8 @@ public class WarpToolProcessor extends AbstractExeBasedServiceProcessor<Void, Vo
         return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
     }
 
-    private AntsToolArgs getArgs(JacsServiceData jacsServiceData) {
-        AntsToolArgs args = new AntsToolArgs();
-        new JCommander(args).parse(jacsServiceData.getArgsArray());
-        return args;
+    private WarpToolArgs getArgs(JacsServiceData jacsServiceData) {
+        return ServiceArgs.parse(jacsServiceData.getArgsArray(), new WarpToolArgs());
     }
 
     private String getExecutable() {

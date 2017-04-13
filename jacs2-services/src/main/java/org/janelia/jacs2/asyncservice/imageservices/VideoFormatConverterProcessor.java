@@ -1,6 +1,5 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
@@ -143,9 +142,7 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
     }
 
     private ConverterArgs getArgs(JacsServiceData jacsServiceData) {
-        ConverterArgs args = new ConverterArgs();
-        new JCommander(args).parse(jacsServiceData.getArgsArray());
-        return args;
+        return ServiceArgs.parse(jacsServiceData.getArgsArray(), new ConverterArgs());
     }
 
     private File getOutputFile(ConverterArgs args) {

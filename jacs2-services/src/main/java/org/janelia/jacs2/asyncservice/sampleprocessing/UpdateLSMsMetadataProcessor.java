@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Named("updateLSMMetadata")
-public class UpdateLSMsMetadataProcessor extends AbstractBasicLifeCycleServiceProcessor<JacsServiceData, Void> {
+public class UpdateLSMsMetadataProcessor extends AbstractBasicLifeCycleServiceProcessor<Number, Void> {
 
     private final SampleDataService sampleDataService;
     private final GetSampleLsmsMetadataProcessor getSampleLsmsMetadataProcessor;
@@ -64,27 +64,23 @@ public class UpdateLSMsMetadataProcessor extends AbstractBasicLifeCycleServicePr
     }
 
     @Override
-    protected JacsServiceResult<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+    protected JacsServiceResult<Number> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
-
-        JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
-
         JacsServiceData getSampleLsmMetadataServiceRef = getSampleLsmsMetadataProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
                 new ServiceArg("-sampleDataDir", args.sampleDataDir)
         );
-
-        JacsServiceData getSampleLsmMetadataService = submitDependencyIfNotPresent(jacsServiceDataHierarchy, getSampleLsmMetadataServiceRef);
-
-        return new JacsServiceResult<>(jacsServiceDataHierarchy, getSampleLsmMetadataService);
+        JacsServiceData getSampleLsmMetadataService = submitDependencyIfNotPresent(jacsServiceData, getSampleLsmMetadataServiceRef);
+        return new JacsServiceResult<>(jacsServiceData, getSampleLsmMetadataService.getId());
     }
 
     @Override
-    protected ServiceComputation<JacsServiceResult<JacsServiceData>> processing(JacsServiceResult<JacsServiceData> depResults) {
+    protected ServiceComputation<JacsServiceResult<Number>> processing(JacsServiceResult<Number> depResults) {
         return computationFactory.newCompletedComputation(depResults)
             .thenApply(pd -> {
-                List<SampleImageMetadataFile> sampleImageMetadataFiles = getSampleLsmsMetadataProcessor.getResultHandler().getServiceDataResult(depResults.getResult());
+                JacsServiceData getSampleLsmsMetadatService = jacsServiceDataPersistence.findById(depResults.getResult());
+                List<SampleImageMetadataFile> sampleImageMetadataFiles = getSampleLsmsMetadataProcessor.getResultHandler().getServiceDataResult(getSampleLsmsMetadatService);
                 sampleImageMetadataFiles.forEach(simdf -> {
                     // read the metadata from the metadata file
                     try {
@@ -119,7 +115,6 @@ public class UpdateLSMsMetadataProcessor extends AbstractBasicLifeCycleServicePr
                                 sampleDataService.updateLSM(lsmImage);
                             }
                             sampleDataService.updateLSMMetadataFile(lsmImage, simdf.getMetadataFilePath());
-
                         }
                     } catch (IOException e) {
                         throw new ComputationException(depResults.getJacsServiceData(), e);

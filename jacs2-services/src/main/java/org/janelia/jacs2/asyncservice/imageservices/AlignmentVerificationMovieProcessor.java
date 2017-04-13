@@ -30,7 +30,7 @@ import java.util.List;
  * AlignmentVerificationMovieProcessor generates the alignment verification movie.
  */
 @Named("alignmentVerificationMovie")
-public class AlignmentVerificationMovieProcessor extends AbstractBasicLifeCycleServiceProcessor<List<JacsServiceData>, File> {
+public class AlignmentVerificationMovieProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, File> {
 
     static class AlignmentVerificationMoviewArgs extends ServiceArgs {
         @Parameter(names = {"-s", "-subject"}, description = "Subject file", required = true)
@@ -96,7 +96,7 @@ public class AlignmentVerificationMovieProcessor extends AbstractBasicLifeCycleS
     }
 
     @Override
-    protected JacsServiceResult<List<JacsServiceData>> submitServiceDependencies(JacsServiceData jacsServiceData) {
+    protected JacsServiceResult<Void> submitServiceDependencies(JacsServiceData jacsServiceData) {
         AlignmentVerificationMoviewArgs args = getArgs(jacsServiceData);
 
         Path workingSubjectFile = FileUtils.getFilePath(getWorkingDirectory(jacsServiceData), args.subjectFile); // => SUB
@@ -141,19 +141,18 @@ public class AlignmentVerificationMovieProcessor extends AbstractBasicLifeCycleS
 
         Path outputFile = getOutputFile(args);
         // $Vaa3D -cmd image-loader -convert $WORKDIR/out.v3draw $OUTPUT_FILE
-        JacsServiceData convertToMovieServiceData =
-                invocationHelper.convertFile(
+        invocationHelper.convertFile(
                         temporaryMergedFile,
                         outputFile,
                         "Generate movie",
                         jacsServiceData,
                         mergeChannelsServiceData);
 
-        return new JacsServiceResult<>(jacsServiceData, ImmutableList.of(convertToMovieServiceData));
+        return new JacsServiceResult<>(jacsServiceData);
     }
 
     @Override
-    protected ServiceComputation<JacsServiceResult<List<JacsServiceData>>> processing(JacsServiceResult<List<JacsServiceData>> depResults) {
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
         return computationFactory.newCompletedComputation(depResults);
     }
 

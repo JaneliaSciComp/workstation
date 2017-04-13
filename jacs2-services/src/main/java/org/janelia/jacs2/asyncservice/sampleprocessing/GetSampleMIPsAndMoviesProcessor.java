@@ -35,11 +35,11 @@ import java.util.List;
 public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServiceProcessor<GetSampleMIPsAndMoviesProcessor.GetSampleMIPsIntermediateResult, List<SampleImageMIPsFile>> {
 
     static class GetSampleMIPsIntermediateResult {
-        final JacsServiceData getSampleLsmsServiceData;
+        final Number getSampleLsmsServiceDataId;
         final List<SampleImageMIPsFile> sampleImageFileWithMips = new LinkedList<>();
 
-        public GetSampleMIPsIntermediateResult(JacsServiceData getSampleLsmsServiceData) {
-            this.getSampleLsmsServiceData = getSampleLsmsServiceData;
+        public GetSampleMIPsIntermediateResult(Number getSampleLsmsServiceDataId) {
+            this.getSampleLsmsServiceDataId = getSampleLsmsServiceDataId;
         }
 
         public void addSampleImageMipsFile(SampleImageMIPsFile simf) {
@@ -113,7 +113,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
                 new ServiceArg("-sampleDataDir", args.sampleDataDir)
         );
         JacsServiceData getSampleLsmsService = submitDependencyIfNotPresent(jacsServiceData, getSampleLsmsServiceRef);
-        return new JacsServiceResult<>(jacsServiceData, new GetSampleMIPsIntermediateResult(getSampleLsmsService));
+        return new JacsServiceResult<>(jacsServiceData, new GetSampleMIPsIntermediateResult(getSampleLsmsService.getId()));
     }
 
     @Override
@@ -121,7 +121,8 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
         return computationFactory.newCompletedComputation(depResults)
                 .thenApply(pd -> {
                     SampleMIPsAndMoviesArgs args = getArgs(pd.getJacsServiceData());
-                    List<SampleImageFile> sampleImageFiles = getSampleImageFilesProcessor.getResultHandler().getServiceDataResult(depResults.getResult().getSampleLsmsServiceData);
+                    JacsServiceData getSampleLsmsService = jacsServiceDataPersistence.findById(depResults.getResult().getSampleLsmsServiceDataId);
+                    List<SampleImageFile> sampleImageFiles = getSampleImageFilesProcessor.getResultHandler().getServiceDataResult(getSampleLsmsService);
                     sampleImageFiles.stream()
                             .forEach(sif -> {
                                 String lsmImageFileName = sif.getWorkingFilePath();
@@ -130,7 +131,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
                                 }
                                 Path resultsDir =  getResultsDir(args, sif.getArea(), sif.getObjective(), new File(lsmImageFileName));
                                 JacsServiceData basicMipMapsService = basicMIPsAndMoviesProcessor.createServiceData(new ServiceExecutionContext.Builder(depResults.getJacsServiceData())
-                                                .waitFor(depResults.getResult().getSampleLsmsServiceData)
+                                                .waitFor(getSampleLsmsService)
                                                 .build(),
                                         new ServiceArg("-imgFile", lsmImageFileName),
                                         new ServiceArg("-chanSpec", sif.getChanSpec()),

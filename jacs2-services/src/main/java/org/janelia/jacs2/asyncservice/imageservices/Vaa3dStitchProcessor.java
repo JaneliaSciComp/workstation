@@ -1,6 +1,5 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
@@ -86,9 +85,7 @@ public class Vaa3dStitchProcessor extends AbstractBasicLifeCycleServiceProcessor
     }
 
     private Vaa3dStitchArgs getArgs(JacsServiceData jacsServiceData) {
-        Vaa3dStitchArgs args = new Vaa3dStitchArgs();
-        new JCommander(args).parse(jacsServiceData.getArgsArray());
-        return args;
+        return ServiceArgs.parse(jacsServiceData.getArgsArray(), new Vaa3dStitchArgs());
     }
 
 }

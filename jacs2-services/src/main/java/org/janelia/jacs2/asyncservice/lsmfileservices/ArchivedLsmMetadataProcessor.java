@@ -31,12 +31,10 @@ import java.nio.file.Files;
 public class ArchivedLsmMetadataProcessor extends AbstractBasicLifeCycleServiceProcessor<ArchivedLsmMetadataProcessor.ChildServiceData, File> {
 
     static class ChildServiceData {
-        final JacsServiceData fileCopyServiceData;
-        final JacsServiceData lsmMetadataServiceData;
+        final Number fileCopyServiceDataId;
 
-        ChildServiceData(JacsServiceData fileCopyServiceData, JacsServiceData lsmMetadataServiceData) {
-            this.fileCopyServiceData = fileCopyServiceData;
-            this.lsmMetadataServiceData = lsmMetadataServiceData;
+        ChildServiceData(Number fileCopyServiceDataId) {
+            this.fileCopyServiceDataId = fileCopyServiceDataId;
         }
     }
 
@@ -96,7 +94,7 @@ public class ArchivedLsmMetadataProcessor extends AbstractBasicLifeCycleServiceP
         } else if (StringUtils.isBlank(args.outputLSMMetadata)) {
             throw new ComputationException(jacsServiceData, "Output LSM metadata name must be specified");
         }
-        return jacsServiceData;
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override
@@ -107,8 +105,8 @@ public class ArchivedLsmMetadataProcessor extends AbstractBasicLifeCycleServiceP
         JacsServiceData fileCopyService = createFileCopyService(args, workingLsmFile, jacsServiceData);
         fileCopyService = submitDependencyIfNotPresent(jacsServiceData, fileCopyService);
         JacsServiceData lsmMetadataService = createLsmMetadataService(lsmMetadataFile, workingLsmFile, jacsServiceData, fileCopyService);
-        lsmMetadataService = submitDependencyIfNotPresent(jacsServiceData, lsmMetadataService);
-        return new JacsServiceResult<>(jacsServiceData, new ChildServiceData(fileCopyService, lsmMetadataService));
+        submitDependencyIfNotPresent(jacsServiceData, lsmMetadataService);
+        return new JacsServiceResult<>(jacsServiceData, new ChildServiceData(fileCopyService.getId()));
     }
 
     private JacsServiceData createFileCopyService(ArchivedLsmMetadataArgs args, File workingLsmFile, JacsServiceData jacsServiceData) {
@@ -134,7 +132,8 @@ public class ArchivedLsmMetadataProcessor extends AbstractBasicLifeCycleServiceP
                     try {
                         ArchivedLsmMetadataArgs args = getArgs(pd.getJacsServiceData());
                         if (!args.keepIntermediateLSM) {
-                            File workingLsmFile = fileCopyProcessor.getResultHandler().getServiceDataResult(depResults.getResult().fileCopyServiceData);
+                            JacsServiceData fileCopyServiceData = jacsServiceDataPersistence.findById(depResults.getResult().fileCopyServiceDataId);
+                            File workingLsmFile = fileCopyProcessor.getResultHandler().getServiceDataResult(fileCopyServiceData);
                             try {
                                 logger.debug("Delete working LSM file {}", workingLsmFile);
                                 Files.deleteIfExists(workingLsmFile.toPath());

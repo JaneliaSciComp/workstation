@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Named("align")
-public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<List<JacsServiceData>, List<File>> {
+public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, List<File>> {
 
     static class AlignmentArgs extends ServiceArgs {
         @Parameter(names = {"-nthreads"}, description = "Number of ITK threads")
@@ -118,7 +118,7 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
     }
 
     @Override
-    protected JacsServiceResult<List<JacsServiceData>> submitServiceDependencies(JacsServiceData jacsServiceData) {
+    protected JacsServiceResult<Void> submitServiceDependencies(JacsServiceData jacsServiceData) {
         AlignmentArgs args = getArgs(jacsServiceData);
         AlignmentConfiguration alignConfig = AlignmentUtils.parseAlignConfig(args.configFile);
         AlignmentInput input1 = AlignmentUtils.parseInput(args.input1);
@@ -168,13 +168,13 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
                         .build(),
                 alignmentArgs.toArray(new ServiceArg[alignmentArgs.size()]));
 
-        JacsServiceData alignServiceData = submitDependencyIfNotPresent(jacsServiceData, alignServiceDataRef);
+        submitDependencyIfNotPresent(jacsServiceData, alignServiceDataRef);
 
-        return new JacsServiceResult<>(jacsServiceData, ImmutableList.of(alignServiceData));
+        return new JacsServiceResult<>(jacsServiceData);
     }
 
     @Override
-    protected ServiceComputation<JacsServiceResult<List<JacsServiceData>>> processing(JacsServiceResult<List<JacsServiceData>> depResults) {
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
         return computationFactory.newCompletedComputation(depResults);
     }
 

@@ -31,15 +31,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 @Named("basicMIPsAndMovies")
-public class BasicMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServiceProcessor<BasicMIPsAndMoviesProcessor.BasicMIPMapsChildServiceData, List<File>> {
-
-    static class BasicMIPMapsChildServiceData {
-        final JacsServiceData fijiServiceData;
-
-        BasicMIPMapsChildServiceData(JacsServiceData fijiServiceData) {
-            this.fijiServiceData = fijiServiceData;
-        }
-    }
+public class BasicMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, List<File>> {
 
     static class BasicMIPsAndMoviesArgs extends ServiceArgs {
         @Parameter(names = "-imgFile", description = "The name of the image file", required = true)
@@ -93,6 +85,9 @@ public class BasicMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServicePr
 
             @Override
             public boolean isResultReady(JacsServiceResult<?> depResults) {
+                if (!areAllDependenciesDone(depResults.getJacsServiceData())) {
+                    return false;
+                }
                 BasicMIPsAndMoviesArgs args = getArgs(depResults.getJacsServiceData());
                 return FileUtils.lookupFiles(getResultsDir(args), 1, resultsPattern).count() > 0;
             }
@@ -119,9 +114,10 @@ public class BasicMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServicePr
     }
 
     @Override
-    protected JacsServiceResult<BasicMIPMapsChildServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+    protected JacsServiceResult<Void> submitServiceDependencies(JacsServiceData jacsServiceData) {
         BasicMIPsAndMoviesArgs args = getArgs(jacsServiceData);
-        return new JacsServiceResult<>(jacsServiceData, new BasicMIPMapsChildServiceData(submitFijiService(args, jacsServiceData)));
+        submitFijiService(args, jacsServiceData);
+        return new JacsServiceResult<>(jacsServiceData);
     }
 
     private JacsServiceData submitFijiService(BasicMIPsAndMoviesArgs args, JacsServiceData jacsServiceData) {
@@ -164,17 +160,15 @@ public class BasicMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServicePr
     }
 
     @Override
-    protected ServiceComputation<JacsServiceResult<BasicMIPMapsChildServiceData>> processing(JacsServiceResult<BasicMIPMapsChildServiceData> depResults) {
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
         return computationFactory.newCompletedComputation(depResults)
-                .thenSuspendUntil(() -> this.isResultReady(depResults))
                 .thenApply(pd -> {
                     List<File> fileResults = getResultHandler().collectResult(pd);
                     fileResults.stream()
                             .filter(f -> f.getName().endsWith(".avi"))
                             .forEach(f -> submitMpegConverterService(f, pd.getJacsServiceData()));
                     return pd;
-                })
-                .thenSuspendUntil(() -> !suspendUntilAllDependenciesComplete(depResults.getJacsServiceData()));
+                });
     }
 
     private JacsServiceData submitMpegConverterService(File aviFile, JacsServiceData jacsServiceData) {

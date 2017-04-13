@@ -1,6 +1,5 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
@@ -110,9 +109,7 @@ public class Vaa3dProcessor extends AbstractExeBasedServiceProcessor<Void, Void>
     }
 
     private Vaa3dArgs getArgs(JacsServiceData jacsServiceData) {
-        Vaa3dArgs args = new Vaa3dArgs();
-        new JCommander(args).parse(jacsServiceData.getArgsArray());
-        return args;
+        return ServiceArgs.parse(jacsServiceData.getArgsArray(), new Vaa3dArgs());
     }
 
     private String getExecutable() {
