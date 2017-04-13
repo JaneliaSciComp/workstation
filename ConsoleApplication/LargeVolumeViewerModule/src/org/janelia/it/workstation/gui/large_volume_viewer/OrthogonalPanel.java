@@ -196,6 +196,10 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
     }
 
     @Override
+    public void volumeLoadStarted(URL vol) {
+    }
+    
+    @Override
     public void volumeLoaded(URL vol) {        
         if (volume == null) {
             return;

@@ -1,22 +1,13 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import java.net.URL;
-import java.util.Arrays;
-import java.util.List;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.workers.SimpleListenableFuture;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.netbeans.api.progress.ProgressHandle;
-import org.netbeans.api.progress.ProgressHandleFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Annotation controller for loading Samples.
@@ -26,8 +17,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 public class SampleAnnotationManager extends BasicAnnotationManager {
 
     private static final Logger log = LoggerFactory.getLogger(SampleAnnotationManager.class);
-    
-    private TmSample initialObject;
+
+    private final TmSample initialObject;
     
     public SampleAnnotationManager(TmSample sample) {
         this.initialObject = sample;
@@ -37,22 +28,24 @@ public class SampleAnnotationManager extends BasicAnnotationManager {
     public TmSample getInitialObject() {
         return initialObject;
     }
+
+    @Override
+    public SimpleListenableFuture<TmSample> loadSample() {
+        return new SimpleListenableFuture<TmSample>() {
+            {
+                annotationModel.setSample(initialObject);
+                set(initialObject);
+            }
+        };
+    }
     
     @Override
-    public void load(final SimpleWorker volumeLoader) {
+    public SimpleListenableFuture<Void> load() {
         
         log.info("loadDomainObject({})", initialObject);
-        
         final TmSample sliceSample = initialObject;
 
-        HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
-
-        final ProgressHandle progress2 = ProgressHandleFactory.createHandle("Loading metadata...");
-        progress2.start();
-        progress2.setDisplayName("Loading metadata");
-        progress2.switchToIndeterminate();
-        
-        SimpleWorker workspaceLoader = new SimpleWorker() {
+        SimpleWorker worker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
                 annotationModel.loadSample(sliceSample);
@@ -60,47 +53,26 @@ public class SampleAnnotationManager extends BasicAnnotationManager {
 
             @Override
             protected void hadSuccess() {
-                log.info("Metadata loading completed");
-                progress2.finish();
             }
 
             @Override
             protected void hadError(Throwable error) {
-                progress2.finish();
                 ConsoleApp.handleException(error);
             }
         };
 
-        SimpleListenableFuture future1 = volumeLoader.executeWithFuture();
-        SimpleListenableFuture future2 = workspaceLoader.executeWithFuture();
-        
-        // Join the two futures
-        ListenableFuture<List<Boolean>> combinedFuture = Futures.allAsList(Arrays.asList(future1, future2));
-        Futures.addCallback(combinedFuture, new FutureCallback<List<Boolean>>() {
-            public void onSuccess(List<Boolean> result) {
-                // If both loads succeeded
-                log.info("Loading completed");
-                annotationModel.loadComplete();
-            }
-            public void onFailure(Throwable t) {
-                loadFailed = true;
-                // If either load failed
-                log.error("LVVV load failed", t);
-                try {
-                    if (annotationModel!=null) {
-                        annotationModel.clear();
-                        annotationModel.loadComplete();
-                    }
-                }
-                catch (Exception e) {
-                    log.error("Error loading empty workspace",e);
-                }
-            }
-        });
-        
+        return worker.executeWithFuture();
+    }
+
+    @Override
+    public void loadComplete() {
+        annotationModel.loadComplete();
     }
 
     //-------------------------------IMPLEMENTS VolumeLoadListener
+    @Override
+    public void volumeLoadStarted(URL vol) {
+    }
     @Override
     public void volumeLoaded(URL url) {
         activityLog.setTileFormat(getTileFormat(), initialObject.getId());

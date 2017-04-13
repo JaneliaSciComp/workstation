@@ -1,21 +1,26 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.HistoryStack;
-import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
-import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
+import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
+import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Skeleton {
-    
-    public static final String SKELETON_LOOKUP_PATH = "Skeleton/Node";
     
 	@SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(Skeleton.class);
@@ -82,8 +87,8 @@ public class Skeleton {
 	 *
 	 */
 	public class AnchorSeed {
-		private Vec3 location;
-		private Anchor parent;
+		private final Vec3 location;
+		private final Anchor parent;
 
 		public AnchorSeed(Vec3 locationInMicrometers, Anchor parent) {
             TileFormat.VoxelXyz locationInVoxels = 
@@ -133,7 +138,7 @@ public class Skeleton {
 
     public void incrementAnchorVersion() { _anchors.incrementVersion(); }
     
-	public Anchor addAnchor(Anchor anchor) {
+	private Anchor addAnchor(Anchor anchor) {
 		if (anchors.contains(anchor))
 			return anchor;
 		anchors.add(anchor);
@@ -144,7 +149,7 @@ public class Skeleton {
 		return anchor;
 	}
 
-    public void addAnchors(List<Anchor> anchorList) {
+    private void addAnchors(List<Anchor> anchorList) {
         for (Anchor anchor: anchorList) {
             addAnchor(anchor);
         }
@@ -165,32 +170,32 @@ public class Skeleton {
         controller.anchorAdded(new AnchorSeed(xyz, parent));
 	}
     
-    /**
-     * Externally drive focus, given a target anchor.
-     * 
-     * @param annotationID look this up for loc.
-     */
-    public Vec3 setFocusByAnchorID( long annotationID ) {
-        Anchor focusAnchor = getAnchorByID(annotationID);
-        Vec3 location = null;
-        if (focusAnchor != null) {
-            location = focusAnchor.getLocation();
-            controller.setLVVFocus( location );
-        }
-        return location;
-    }
-
-	public boolean connect(Anchor anchor1, Anchor anchor2) {
-		if (! anchors.contains(anchor1))
-			return false;
-		if (! anchors.contains(anchor2))
-			return false;
-		if (! anchor1.addNeighbor(anchor2))
-			return false;
-        _anchors.incrementVersion();
-        controller.skeletonChanged();
-		return true;
-	}
+//    /**
+//     * Externally drive focus, given a target anchor.
+//     * 
+//     * @param annotationID look this up for loc.
+//     */
+//    public Vec3 setFocusByAnchorID( long annotationID ) {
+//        Anchor focusAnchor = getAnchorByID(annotationID);
+//        Vec3 location = null;
+//        if (focusAnchor != null) {
+//            location = focusAnchor.getLocation();
+//            controller.setLVVFocus( location );
+//        }
+//        return location;
+//    }
+//
+//	public boolean connect(Anchor anchor1, Anchor anchor2) {
+//		if (! anchors.contains(anchor1))
+//			return false;
+//		if (! anchors.contains(anchor2))
+//			return false;
+//		if (! anchor1.addNeighbor(anchor2))
+//			return false;
+//        _anchors.incrementVersion();
+//        controller.skeletonChanged();
+//		return true;
+//	}
     
     /**
      * @return the nextParent
@@ -382,7 +387,7 @@ public class Skeleton {
      * @param anchor
      * @param newNeighborIDs
      */
-    public void updateNeighbors(Anchor anchor, Set<Long> newNeighborIDs) {
+    private void updateNeighbors(Anchor anchor, Set<Long> newNeighborIDs) {
 
         HashSet<Long> currentNeighborIDs = new HashSet<Long>(anchor.getNeighbors().size());
         for (Anchor a: anchor.getNeighbors()) {

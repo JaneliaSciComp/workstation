@@ -22,7 +22,6 @@ import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.workers.SimpleListenableFuture;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
@@ -37,8 +36,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.Anch
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 
-import Jama.Matrix;
-
 /**
  * Interface for annotation controllers.
  *   
@@ -52,25 +49,41 @@ public interface AnnotationManager extends UpdateAnchorListener, PathTraceListen
      */
     void setQuadViewUi(QuadViewUi quadViewUi);
 
-    boolean editsAllowed();
-
+    /**
+     * Returns the tile format for the current sample.
+     */
     TileFormat getTileFormat();
 
+    /**
+     * Get the object that was initially loaded by the user. 
+     */
     DomainObject getInitialObject();
 
-    boolean isLoadFailed();
+    /**
+     * Given the initial object, load the TmSample.
+     * @return future result
+     */
+    SimpleListenableFuture<TmSample> loadSample();
     
     /**
-     * Load an object into the model.
-     * @param volumeLoader background thread that loads the image data
+     * Load the sample and any other annotations, as specified by the initial object.
+     * @return future result
      */
-    void load(SimpleWorker volumeLoader);
+    SimpleListenableFuture<Void> load();
 
+    public void loadComplete();
+    
     /**
      * Clean up operations called before this object is discarded.
      */
     void close();
 
+    /**
+     * Can the annotations be changed at all, or is this a read-only presentation?
+     * @return true if edits are allowed
+     */
+    boolean editsAllowed();
+    
     void deleteSubtreeRequested(Anchor anchor);
 
     void splitAnchorRequested(Anchor anchor);
@@ -157,7 +170,7 @@ public interface AnnotationManager extends UpdateAnchorListener, PathTraceListen
 
     void setAllNeuronVisibility(boolean visibility);
 
-    SimpleListenableFuture setBulkNeuronVisibility(Collection<TmNeuronMetadata> neuronList, boolean visibility);
+    SimpleListenableFuture<Void> setBulkNeuronVisibility(Collection<TmNeuronMetadata> neuronList, boolean visibility);
 
     /** 
      * Hide others. Hide all then show current; this is purely a convenience function.
@@ -220,8 +233,6 @@ public interface AnnotationManager extends UpdateAnchorListener, PathTraceListen
     void clearNeuronTags(TmNeuronMetadata neuron) throws Exception;
 
     TmSample getCurrentSample();
-
-    void setSampleMatrices(Matrix micronToVoxMatrix, Matrix voxToMicronMatrix) throws Exception;
 
     DomainObjectSelectionModel getSelectionModel();
 

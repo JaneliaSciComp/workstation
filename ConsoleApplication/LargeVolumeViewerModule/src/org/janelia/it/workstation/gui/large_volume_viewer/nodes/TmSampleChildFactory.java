@@ -56,7 +56,7 @@ public class TmSampleChildFactory extends ChildFactory<DomainObject> {
         }
         catch (Exception ex) {
             log.error("Error creating tree node child keys",ex);
-            return false;
+            return true;
         }
         return true;
     }

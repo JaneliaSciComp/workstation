@@ -211,15 +211,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         return currentSample;
     }
 
-    public void setSampleMatrices(Matrix micronToVoxMatrix, Matrix voxToMicronMatrix) throws Exception {
-        if (currentSample==null) {
-            throw new IllegalStateException("Sample is not loaded");
-        }
-        currentSample.setMicronToVoxMatrix(MatrixUtilities.serializeMatrix(micronToVoxMatrix, "micronToVoxMatrix"));
-        currentSample.setVoxToMicronMatrix(MatrixUtilities.serializeMatrix(voxToMicronMatrix, "voxToMicronMatrix"));
-        tmDomainMgr.save(currentSample);
-    }
-
     private Long getWsId() {
         if (currentWorkspace != null) {
             return currentWorkspace.getId();
@@ -253,6 +244,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         currentTagMap = null;
         setCurrentNeuron(null);
         fireWorkspaceUnloaded(currentWorkspace);
+    }
+
+    public synchronized void setSample(final TmSample sample) {
+        this.currentSample = sample;
     }
     
     public synchronized void loadSample(final TmSample sample) throws Exception {

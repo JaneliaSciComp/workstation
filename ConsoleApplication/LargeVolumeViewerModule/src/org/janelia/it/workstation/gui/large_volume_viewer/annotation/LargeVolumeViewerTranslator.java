@@ -1,11 +1,14 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.jetty.util.log.Log;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -28,6 +31,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredP
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -57,7 +61,7 @@ import Jama.Matrix;
  * somewhat interchangeably, which can be confusing
  */
 public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener,
-        GlobalAnnotationListener {
+        GlobalAnnotationListener, VolumeLoadListener {
 
     private static final Logger logger = LoggerFactory.getLogger(LargeVolumeViewerTranslator.class);
 
@@ -290,12 +294,18 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
     
     @Override
+    public void volumeLoadStarted(URL vol) {
+    }
+    
+    @Override
+    public void volumeLoaded(URL vol) {
+    }
+    
+    @Override
     public void workspaceLoaded(TmWorkspace workspace) {
         
-        logger.info("Workspace loaded");
-        
-        if (workspace != null) {
-            
+        if (workspace!=null) {
+
             // See about things to add to the Tile Format.
             // These must be collected from the workspace, because they
             // require knowledge of the sample ID, rather than file path.
@@ -308,13 +318,10 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                     tileFormat.setMicronToVoxMatrix(micronToVoxMatrix);
                     tileFormat.setVoxToMicronMatrix(voxToMicronMatrix);
                 }
-                else {
-                    addMatrices(tileFormat);
-                }
             }
-            
-            // check for saved image color model
+
             if (workspace.getColorModel() != null  &&  viewStateListener != null) {
+                logger.info("Loading color model");
                 viewStateListener.loadColorModel(workspace.getColorModel());
             }
         }
@@ -322,52 +329,49 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     
     @Override
     public void spatialIndexReady(TmWorkspace workspace) {
-        
-        logger.info("Spatial index is ready. Rebuilding anchor model.");
-        
-        if (workspace != null) {
-            
-            Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
-            List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
-            List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
-            
-            for (TmNeuronMetadata neuron: annotationMgr.getNeuronList()) {
 
-                // (we used to retrieve global color here; replaced by styles)
-                // set styles for our neurons; if a neuron isn't in the saved map,
-                //  use a default style
-                NeuronStyle style = ModelTranslation.translateNeuronStyle(neuron);
-                updateNeuronStyleMap.put(neuron, style);
-                
-                // note that we must add annotations in parent-child sequence
-                //  so lines get drawn correctly; we must send this as one big
-                //  list so the anchor update routine is run once will all anchors
-                //  present rather than piecemeal (which will cause problems in
-                //  some cases on workspace reloads)
-                for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
-                    addedAnchorList.addAll(neuron.getSubTreeList(root));
-                }
+        logger.info("Rebuilding anchor model");
+        
+        Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
+        List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
+        List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
+        
+        for (TmNeuronMetadata neuron: annotationMgr.getNeuronList()) {
 
-                // draw anchored paths, too, after all the anchors are drawn
-                for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
-                    voxelPathList.add(TAP2AVP(neuron.getId(), path));
-                }   
+            // (we used to retrieve global color here; replaced by styles)
+            // set styles for our neurons; if a neuron isn't in the saved map,
+            //  use a default style
+            NeuronStyle style = ModelTranslation.translateNeuronStyle(neuron);
+            updateNeuronStyleMap.put(neuron, style);
+            
+            // note that we must add annotations in parent-child sequence
+            //  so lines get drawn correctly; we must send this as one big
+            //  list so the anchor update routine is run once will all anchors
+            //  present rather than piecemeal (which will cause problems in
+            //  some cases on workspace reloads)
+            for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+                addedAnchorList.addAll(neuron.getSubTreeList(root));
             }
 
-            skeletonController.setSkipSkeletonChange(true);
-
-            fireNeuronStylesChangedEvent(updateNeuronStyleMap);
-            logger.debug("updated {} neuron styles", updateNeuronStyleMap.size());
-            
-            fireAnchorsAdded(addedAnchorList);
-            logger.info("added {} anchors", addedAnchorList.size());
-
-            fireAnchoredVoxelPathsAdded(voxelPathList);
-            logger.debug("added {} anchored paths", voxelPathList.size());
-            
-            skeletonController.setSkipSkeletonChange(false);
-            skeletonController.skeletonChanged(true);
+            // draw anchored paths, too, after all the anchors are drawn
+            for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
+                voxelPathList.add(TAP2AVP(neuron.getId(), path));
+            }   
         }
+
+        skeletonController.setSkipSkeletonChange(true);
+
+        fireNeuronStylesChangedEvent(updateNeuronStyleMap);
+        logger.debug("updated {} neuron styles", updateNeuronStyleMap.size());
+        
+        fireAnchorsAdded(addedAnchorList);
+        logger.info("added {} anchors", addedAnchorList.size());
+
+        fireAnchoredVoxelPathsAdded(voxelPathList);
+        logger.debug("added {} anchored paths", voxelPathList.size());
+        
+        skeletonController.setSkipSkeletonChange(false);
+        skeletonController.skeletonChanged(true);
     }
 
     @Override
@@ -523,39 +527,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private void fireNeuronStyleRemovedEvent(TmNeuronMetadata neuron) {
         for (NeuronStyleChangeListener l: neuronStyleChangeListeners) {
             l.neuronStyleRemoved(neuron);
-        }
-    }
-    
-    /**
-     * This is a lazy-add of matrices. These matrices support translation
-     * between coordinate systems.
-     */
-    private void addMatrices(TileFormat tileFormat) {
-        // If null, the tile format can be used to construct its
-        // own versions of these matrices, and saved.
-        try {
-            final Matrix micronToVoxMatrix = tileFormat.getMicronToVoxMatrix();
-            final Matrix voxToMicronMatrix = tileFormat.getVoxToMicronMatrix();
-            SimpleWorker sw = new SimpleWorker() {
-                @Override
-                protected void doStuff() throws Exception {
-                    annotationMgr.setSampleMatrices(micronToVoxMatrix, voxToMicronMatrix);
-                }
-
-                @Override
-                protected void hadSuccess() {
-                }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    logger.warn("Unable to lazy-add matrices to sample.");
-                }
-                
-            };
-            sw.execute();
-            
-        } catch (Exception ex) {
-            logger.error("Error adding matricies to TmSample",ex);
         }
     }
 

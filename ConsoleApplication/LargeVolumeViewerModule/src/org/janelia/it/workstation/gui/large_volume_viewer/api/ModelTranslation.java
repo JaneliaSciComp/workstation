@@ -53,7 +53,7 @@ public class ModelTranslation {
     public static void updateColorModel(TmColorModel tmColorModel, ImageColorModel colorModel) {
 
         if (colorModel.getChannelCount()!=tmColorModel.getChannelCount()) {
-            throw new IllegalStateException("Channel count does not match");
+            throw new IllegalStateException("Channel count does not match ("+colorModel.getChannelCount()+"!="+tmColorModel.getChannelCount()+")");
         }
         colorModel.setBlackSynchronized(tmColorModel.isBlackSynchronized());
         colorModel.setGammaSynchronized(tmColorModel.isGammaSynchronized());

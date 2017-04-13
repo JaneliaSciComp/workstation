@@ -15,17 +15,10 @@ import com.google.common.util.concurrent.AbstractFuture;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SimpleListenableFuture extends AbstractFuture<Boolean> {
+public class SimpleListenableFuture<T> extends AbstractFuture<T> {
 
-    public static SimpleListenableFuture create() {
-        return new SimpleListenableFuture();
-    }
-
-    private SimpleListenableFuture() {
-    }
-
-    public boolean setComplete() {
-        return super.set(true);
+    public boolean setComplete(T result) {
+        return super.set(result);
     }
 
     @Override

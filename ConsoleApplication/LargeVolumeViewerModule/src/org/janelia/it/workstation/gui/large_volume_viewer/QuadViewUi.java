@@ -56,6 +56,7 @@ import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
@@ -289,9 +290,15 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	};
 
     public void focusChanged(Vec3 focus) {
-        int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
-        zScanSlider.setValue(z);
-        spinnerValue.setValue(z);
+        final int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                zScanSlider.setValue(z);
+                log.info("Set value to "+z+" but got "+zScanSlider.getValue());
+                //spinnerValue.setValue(z);
+            }
+        });
     }
 
     public void zoomChanged(Double zoom) {
@@ -372,6 +379,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);
+        volumeImage.addVolumeLoadListener(largeVolumeViewerTranslator);
 		largeVolumeViewer.setImageColorModel(imageColorModel);
         largeVolumeViewer.setNeuronStyleModel(neuronStyleModel);
 		sliderPanel.setVisible(false);
@@ -1274,7 +1282,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         return mnView;
     }
 
-    public JMenuItem addFileMenuItem() {
+    private JMenuItem addFileMenuItem() {
         JMenu mnFile = new JMenu("File");
         menuBar.add(mnFile);
 
@@ -1291,14 +1299,14 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         return mnFile;
     }
     
-    public JMenuItem addCopyMicronLocMenuItem() {
+    private JMenuItem addCopyMicronLocMenuItem() {
         JMenuItem mnCopyMicron = new JMenuItem(
                 new MicronsToClipboardAction(statusLabel)
         );
         return mnCopyMicron;
     }
 
-    public JMenuItem addCopyOctreePathMenuItem() {
+    private JMenuItem addCopyOctreePathMenuItem() {
         JMenuItem menuItem = new JMenuItem(
                 new OctreeFilePathToClipboardAction(
                         statusLabel, tileServer.getSharedVolumeImage().getRemoteBasePath(), tileFormat, camera, CoordinateAxis.Z
@@ -1307,7 +1315,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         return menuItem;
     }
     
-    public JMenuItem addCopyTileLocMenuItem() {
+    private JMenuItem addCopyTileLocMenuItem() {
         JMenuItem mnCopyTileInx = new JMenuItem(
                 new TileLocToClipboardAction(
                         statusLabel, tileFormat, camera, CoordinateAxis.Z
@@ -1316,7 +1324,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         return mnCopyTileInx;
     }
     
-    public JMenuItem addCopyTileFileLocMenuItem() {
+    private JMenuItem addCopyTileFileLocMenuItem() {
         JMenuItem mnCopyTileFileLoc = new JMenuItem(
                 new RawFileLocToClipboardAction(
                         statusLabel, tileFormat, volumeImage, camera, CoordinateAxis.Z
@@ -1325,13 +1333,13 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         return mnCopyTileFileLoc;
     }
     
-    public JMenuItem addEditMenuItem() {
+    private JMenuItem addEditMenuItem() {
         JMenu mnEdit = new JMenu("Edit");
         menuBar.add(mnEdit);
         return mnEdit;
     }
 
-    public JMenuItem addHelpMenuItem() {
+    private JMenuItem addHelpMenuItem() {
         JMenu mnHelp = new JMenu("Help");
         menuBar.add(mnHelp);
         return mnHelp;
@@ -1469,7 +1477,16 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
         volumeImage.setRemoteBasePath(canonicalLinuxPath);       
         
-        return loadURL(url);
+        if (loadURL(url)) {
+            return true;
+        }
+        else {
+            JOptionPane.showMessageDialog(this.getParent(),
+                    "Could not load image data for this sample!",
+                    "Could not load image data",
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
     }
 
     /**
@@ -1538,6 +1555,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
     
     //---------------------------IMPLEMENTS VolumeLoadListener
+    @Override
+    public void volumeLoadStarted(URL vol) {
+    }
+    
     @Override
     public void volumeLoaded(URL url) {
         updateRanges();

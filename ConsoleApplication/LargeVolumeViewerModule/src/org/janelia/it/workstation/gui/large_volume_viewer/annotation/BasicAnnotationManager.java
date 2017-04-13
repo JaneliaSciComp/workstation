@@ -74,8 +74,6 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import Jama.Matrix;
-
 /**
  * This class is the middleman between the UI and the model. first, the UI makes
  * naive requests (eg, add annotation). then this class determines if the
@@ -115,8 +113,6 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     //  at what seemed like a reasonable zoom level, and I experimented
     //  until the distance threshold seemed right
     protected static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
-
-    protected boolean loadFailed = false;
     
     public BasicAnnotationManager() {
         this.annotationModel = new AnnotationModel();
@@ -124,11 +120,6 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
         neuronSetAdapter.observe(this);
         LargeVolumeViewerTopComponent.getInstance().registerNeurons(neuronSetAdapter);
         Events.getInstance().registerOnEventBus(annotationModel);
-    }
-
-    @Override
-    public boolean isLoadFailed() {
-        return loadFailed;
     }
     
     @Override
@@ -139,7 +130,7 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
 
     @Override
     public boolean editsAllowed() {
-        return !loadFailed && annotationModel.editsAllowed();
+        return annotationModel.editsAllowed();
     }
 
     @Override
@@ -1324,7 +1315,7 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     }
 
     @Override
-    public SimpleListenableFuture setBulkNeuronVisibility(Collection<TmNeuronMetadata> neuronList, final boolean visibility) {
+    public SimpleListenableFuture<Void> setBulkNeuronVisibility(Collection<TmNeuronMetadata> neuronList, final boolean visibility) {
         final Collection<TmNeuronMetadata> neurons = neuronList==null?annotationModel.getNeuronList():neuronList;
         log.info("setBulkNeuronVisibility(neurons.size={}, visibility={})",neurons.size(),visibility);
         SimpleWorker updater = new SimpleWorker() {
@@ -1723,11 +1714,6 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     @Override
     public TmSample getCurrentSample() {
         return annotationModel.getCurrentSample();
-    }
-
-    @Override
-    public void setSampleMatrices(Matrix micronToVoxMatrix, Matrix voxToMicronMatrix) throws Exception {
-        annotationModel.setSampleMatrices(micronToVoxMatrix, voxToMicronMatrix);
     }
 
     @Override

@@ -477,6 +477,10 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 
     //-------------------------------------------IMPLEMENTS VolumeLoadListener
     @Override
+    public void volumeLoadStarted(URL vol) {
+    }
+    
+    @Override
     public void volumeLoaded(URL url) {
         if (sharedVolumeImage == null) {
             return;
