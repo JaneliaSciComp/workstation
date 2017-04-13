@@ -99,7 +99,7 @@ public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceP
         } catch (IOException e) {
             throw new ComputationException(jacsServiceData, e);
         }
-        return jacsServiceData;
+        return super.prepareProcessing(jacsServiceData);
     }
 
     @Override
@@ -114,7 +114,6 @@ public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceP
                             (StringUtils.isBlank(args.sampleObjective) ? "" : "-" + args.sampleObjective));
         }
 
-        JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
         // invoke child file copy services for all LSM files
         List<GetSampleImageIntermediateData> getSampleServiceData = anatomicalAreas.stream()
                 .flatMap(ar -> ar.getTileLsmPairs()
@@ -136,10 +135,10 @@ public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceP
                     JacsServiceData fileCopyService = fileCopyProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
                             new ServiceArg("-src", sif.getArchiveFilePath()),
                             new ServiceArg("-dst", sif.getWorkingFilePath()));
-                    return new GetSampleImageIntermediateData(sif, submitDependencyIfNotPresent(jacsServiceDataHierarchy, fileCopyService));
+                    return new GetSampleImageIntermediateData(sif, submitDependencyIfNotPresent(jacsServiceData, fileCopyService));
                 })
                 .collect(Collectors.toList());
-        return new JacsServiceResult<>(jacsServiceDataHierarchy, getSampleServiceData);
+        return new JacsServiceResult<>(jacsServiceData, getSampleServiceData);
     }
 
     @Override

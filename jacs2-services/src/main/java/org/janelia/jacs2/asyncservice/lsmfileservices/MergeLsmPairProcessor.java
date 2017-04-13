@@ -100,7 +100,6 @@ public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcesso
     @Override
     protected JacsServiceResult<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         MergeLsmPairArgs args = getArgs(jacsServiceData);
-        JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
 
         List<JacsServiceData> distortionCorrectionServiceData;
         Path mergeInput1;
@@ -113,7 +112,7 @@ public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcesso
                     mergeInput1,
                     args.microscope1,
                     "Apply correction to the first file",
-                    jacsServiceDataHierarchy
+                    jacsServiceData
             );
             Path lsm2 = getLsm1(args);
             mergeInput2 = getCorrectionResult(lsm2);
@@ -122,7 +121,7 @@ public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcesso
                     mergeInput1,
                     StringUtils.defaultIfBlank(args.microscope2, args.microscope1),
                     "Apply correction to the second file",
-                    jacsServiceDataHierarchy
+                    jacsServiceData
             );
             distortionCorrectionServiceData = ImmutableList.of(correctLsm1ServiceData, correctLsm2ServiceData);
         } else {
@@ -133,9 +132,9 @@ public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcesso
         Path mergeOutput = getOutputDir(args);
         JacsServiceData mergeChannelsServiceData = mergeChannels(mergeInput1, mergeInput2, mergeOutput, args.multiscanBlendVersion,
                 "Merge channels",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 distortionCorrectionServiceData.toArray(new JacsServiceData[distortionCorrectionServiceData.size()]));
-        return new JacsServiceResult<>(jacsServiceDataHierarchy, mergeChannelsServiceData);
+        return new JacsServiceResult<>(jacsServiceData, mergeChannelsServiceData);
     }
 
     private JacsServiceData applyCorrection(Path input, Path output, String microscope, String description, JacsServiceData jacsServiceData, JacsServiceData... deps) {

@@ -163,14 +163,12 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
             alignmentArgs.add(new ServiceArg("-alignmentSpace", "Yoshi 63x Subsampled Alignment Space"));
         }
 
-        JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
-
         JacsServiceData alignServiceDataRef = rawFilesAlignmentProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
                         .state(JacsServiceState.QUEUED)
                         .build(),
                 alignmentArgs.toArray(new ServiceArg[alignmentArgs.size()]));
 
-        JacsServiceData alignServiceData = submitDependencyIfNotPresent(jacsServiceDataHierarchy, alignServiceDataRef);
+        JacsServiceData alignServiceData = submitDependencyIfNotPresent(jacsServiceData, alignServiceDataRef);
 
         return new JacsServiceResult<>(jacsServiceData, ImmutableList.of(alignServiceData));
     }

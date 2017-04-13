@@ -107,15 +107,13 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
     protected JacsServiceResult<GetSampleMIPsIntermediateResult> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
 
-        JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
-
         JacsServiceData getSampleLsmsServiceRef = getSampleImageFilesProcessor.createServiceData(new ServiceExecutionContext(jacsServiceData),
                 new ServiceArg("-sampleId", args.sampleId.toString()),
                 new ServiceArg("-objective", args.sampleObjective),
                 new ServiceArg("-sampleDataDir", args.sampleDataDir)
         );
-        JacsServiceData getSampleLsmsService = submitDependencyIfNotPresent(jacsServiceDataHierarchy, getSampleLsmsServiceRef);
-        return new JacsServiceResult<>(jacsServiceDataHierarchy, new GetSampleMIPsIntermediateResult(getSampleLsmsService));
+        JacsServiceData getSampleLsmsService = submitDependencyIfNotPresent(jacsServiceData, getSampleLsmsServiceRef);
+        return new JacsServiceResult<>(jacsServiceData, new GetSampleMIPsIntermediateResult(getSampleLsmsService));
     }
 
     @Override

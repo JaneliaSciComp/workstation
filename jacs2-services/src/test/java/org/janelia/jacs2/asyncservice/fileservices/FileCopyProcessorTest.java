@@ -54,6 +54,7 @@ public class FileCopyProcessorTest {
 
     @Before
     public void setUp() throws IOException {
+        jacsServiceDataPersistence = mock(JacsServiceDataPersistence.class);
         Logger logger = mock(Logger.class);
         ExecutorService executor = mock(ExecutorService.class);
         doAnswer(invocation -> {

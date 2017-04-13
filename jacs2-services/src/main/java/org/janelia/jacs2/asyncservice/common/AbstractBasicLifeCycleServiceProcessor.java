@@ -31,17 +31,17 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<S, T> extends Abstr
 
     @Override
     public ServiceComputation<T> process(JacsServiceData jacsServiceData) {
-        DataHolder<JacsServiceResult<S>> serviceDepsResultsDataHolder = new DataHolder<>(); // this will enclose the service data with the changes made by the prepareProcessing method in case there are any
+        DataHolder<JacsServiceResult<S>> processDataHolder = new DataHolder<>(); // this will enclose the service data with the changes made by the prepareProcessing method in case there are any
         return computationFactory.newCompletedComputation(jacsServiceData)
                 .thenApply(sd -> {
                     JacsServiceData preparedJacsServiceData = this.prepareProcessing(sd);
-                    serviceDepsResultsDataHolder.setData(new JacsServiceResult<>(preparedJacsServiceData));
-                    serviceDepsResultsDataHolder.setData(this.submitServiceDependencies(preparedJacsServiceData));
-                    return serviceDepsResultsDataHolder.getData();
+                    processDataHolder.setData(new JacsServiceResult<>(preparedJacsServiceData));
+                    processDataHolder.setData(this.submitServiceDependencies(preparedJacsServiceData));
+                    return processDataHolder.getData();
                 })
-                .thenSuspendUntil(() -> !suspendUntilAllDependenciesComplete(serviceDepsResultsDataHolder.getData().getJacsServiceData())) // suspend until all dependencies complete
+                .thenSuspendUntil(() -> !suspendUntilAllDependenciesComplete(processDataHolder.getData().getJacsServiceData())) // suspend until all dependencies complete
                 .thenCompose(this::processing)
-                .thenSuspendUntil(() -> this.isResultReady(serviceDepsResultsDataHolder.getData())) // wait until the result becomes available
+                .thenSuspendUntil(() -> this.isResultReady(processDataHolder.getData())) // wait until the result becomes available
                 .thenApply(pd -> {
                     T r = this.getResultHandler().collectResult(pd);
                     this.getResultHandler().updateServiceDataResult(pd.getJacsServiceData(), r);
@@ -51,16 +51,20 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<S, T> extends Abstr
                 .thenApply(this::postProcessing)
                 .whenComplete((r, exc) -> {
                     if (exc != null) {
-                        fail(jacsServiceData, exc);
+                        fail(processDataHolder.getData().getJacsServiceData(), exc);
                     } else {
-                        success(jacsServiceData);
+                        success(processDataHolder.getData().getJacsServiceData());
                     }
                 });
     }
 
     protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
-        setOutputPath(jacsServiceData);
-        setErrorPath(jacsServiceData);
+        JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
+        if (jacsServiceDataHierarchy == null) {
+            jacsServiceDataHierarchy = jacsServiceData;
+        }
+        setOutputPath(jacsServiceDataHierarchy);
+        setErrorPath(jacsServiceDataHierarchy);
         return jacsServiceData;
     }
 

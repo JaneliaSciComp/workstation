@@ -108,14 +108,12 @@ public class Vaa3dStitchAndBlendProcessor extends AbstractBasicLifeCycleServiceP
     @Override
     protected JacsServiceResult<List<JacsServiceData>> submitServiceDependencies(JacsServiceData jacsServiceData) {
         Vaa3dStitchAndBlendArgs args = getArgs(jacsServiceData);
-        JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
-
         JacsServiceData stitchServiceData = stitch(
                 getInputDir(args),
                 args.referenceChannel,
                 ImmutableList.<String>builder().add("#si 0").addAll(args.otherStitchPluginParams).build(),
                 "Stitch data",
-                jacsServiceDataHierarchy
+                jacsServiceData
         );
         Path temporaryBlendOutput = getTemporaryBlendOutput(args);
         JacsServiceData blendServiceData = blend(
@@ -123,18 +121,18 @@ public class Vaa3dStitchAndBlendProcessor extends AbstractBasicLifeCycleServiceP
                 temporaryBlendOutput,
                 ImmutableList.<String>builder().add("#si 1").addAll(args.otherBlendPluginParams).build(),
                 "Blend results",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 stitchServiceData
         );
         Path outputFile = getOutputFile(args);
         JacsServiceData copyResultsServiceData;
         if ("v3draw".equals(com.google.common.io.Files.getFileExtension(args.outputFile))) {
             // if the output is a v3draw move the result
-            copyResultsServiceData = mv(temporaryBlendOutput, outputFile, "Moving temporary output results", jacsServiceDataHierarchy, blendServiceData);
+            copyResultsServiceData = mv(temporaryBlendOutput, outputFile, "Moving temporary output results", jacsServiceData, blendServiceData);
         } else {
             // if the output is not a v3draw convert the temporary v3draw file to the desired output
-            JacsServiceData convertResultServiceData = convert(temporaryBlendOutput, outputFile, "Convert temporary output results", jacsServiceDataHierarchy, blendServiceData);
-            copyResultsServiceData = rm(temporaryBlendOutput, "Removing temporary output results", jacsServiceDataHierarchy, convertResultServiceData);
+            JacsServiceData convertResultServiceData = convert(temporaryBlendOutput, outputFile, "Convert temporary output results", jacsServiceData, blendServiceData);
+            copyResultsServiceData = rm(temporaryBlendOutput, "Removing temporary output results", jacsServiceData, convertResultServiceData);
         }
         return new JacsServiceResult<>(jacsServiceData, ImmutableList.of(stitchServiceData, blendServiceData, copyResultsServiceData));
     }

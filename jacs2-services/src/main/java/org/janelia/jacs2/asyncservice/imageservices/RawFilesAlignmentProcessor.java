@@ -173,45 +173,43 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         AlignmentConfiguration alignConfig = AlignmentUtils.parseAlignConfig(args.configFile);
         ImageCoordinates inputResolution = AlignmentUtils.parseCoordinates(args.input1Res);
 
-        JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
+        Path subjectFile = getWorkingFile(args.input1File, jacsServiceData); // => SUBSX
+        Path targetFile = getWorkingFile(args.targetTemplate, jacsServiceData); // => TARSX
+        Path targetExtFile = getWorkingFile(args.targetExtTemplate, jacsServiceData); // => TARSXEXT
 
-        Path subjectFile = getWorkingFile(args.input1File, jacsServiceDataHierarchy); // => SUBSX
-        Path targetFile = getWorkingFile(args.targetTemplate, jacsServiceDataHierarchy); // => TARSX
-        Path targetExtFile = getWorkingFile(args.targetExtTemplate, jacsServiceDataHierarchy); // => TARSXEXT
+        Path targetExtNiftiFile = getNiftiChannelFile(targetExtFile, 0, jacsServiceData); // => TARSXNII
+        Path targetExtDownsampledFile = getNiftiDownsampledFile(targetExtFile, jacsServiceData); // => FDS
 
-        Path targetExtNiftiFile = getNiftiChannelFile(targetExtFile, 0, jacsServiceDataHierarchy); // => TARSXNII
-        Path targetExtDownsampledFile = getNiftiDownsampledFile(targetExtFile, jacsServiceDataHierarchy); // => FDS
+        Path isotropicSubjectFile = getIsotropicFile(subjectFile, jacsServiceData); // => SUBSXIS
+        Path resizedSubjectFile = getResizedFile(subjectFile, jacsServiceData); // => SUBSXRS
+        Path resizedSubjectRefChannelFile = getRefChannelFile(resizedSubjectFile, jacsServiceData); // => SUBSXRSRFC
 
-        Path isotropicSubjectFile = getIsotropicFile(subjectFile, jacsServiceDataHierarchy); // => SUBSXIS
-        Path resizedSubjectFile = getResizedFile(subjectFile, jacsServiceDataHierarchy); // => SUBSXRS
-        Path resizedSubjectRefChannelFile = getRefChannelFile(resizedSubjectFile, jacsServiceDataHierarchy); // => SUBSXRSRFC
+        Path resizedSubjectRefChannelNiftiFile = getNiftiChannelFile(resizedSubjectRefChannelFile, 0, jacsServiceData); // => SUBSXRSRFCNII
+        Path resizedSubjectRefChannelDownsampledFile = getNiftiDownsampledFile(resizedSubjectRefChannelFile, jacsServiceData); // => MDS
 
-        Path resizedSubjectRefChannelNiftiFile = getNiftiChannelFile(resizedSubjectRefChannelFile, 0, jacsServiceDataHierarchy); // => SUBSXRSRFCNII
-        Path resizedSubjectRefChannelDownsampledFile = getNiftiDownsampledFile(resizedSubjectRefChannelFile, jacsServiceDataHierarchy); // => MDS
+        Path rotationsMatFile = getRotationsMatrixFile(subjectFile, jacsServiceData); // => RCMAT
+        Path insightRotationsFile = getInsightRotationsMatrixFile(subjectFile, jacsServiceData); // => RCOUT
+        Path rotationsAffineFile = getAffineRotationsMatrixFile(subjectFile, jacsServiceData); // => $RCAFFINE
 
-        Path rotationsMatFile = getRotationsMatrixFile(subjectFile, jacsServiceDataHierarchy); // => RCMAT
-        Path insightRotationsFile = getInsightRotationsMatrixFile(subjectFile, jacsServiceDataHierarchy); // => RCOUT
-        Path rotationsAffineFile = getAffineRotationsMatrixFile(subjectFile, jacsServiceDataHierarchy); // => $RCAFFINE
+        Path rotatedResizedSubjectRefChannelFile = getRotatedFile(resizedSubjectRefChannelFile, jacsServiceData); // => SUBSXRFCROT
+        Path rotatedResizedSubjectRefChanneltNiftiFile = getNiftiChannelFile(rotatedResizedSubjectRefChannelFile, 0, jacsServiceData); // => SUBNII
 
-        Path rotatedResizedSubjectRefChannelFile = getRotatedFile(resizedSubjectRefChannelFile, jacsServiceDataHierarchy); // => SUBSXRFCROT
-        Path rotatedResizedSubjectRefChanneltNiftiFile = getNiftiChannelFile(rotatedResizedSubjectRefChannelFile, 0, jacsServiceDataHierarchy); // => SUBNII
+        Path rotatedResizedSubjectFile = getRotatedFile(resizedSubjectFile, jacsServiceData); // => SUBSXRSROT
 
-        Path rotatedResizedSubjectFile = getRotatedFile(resizedSubjectFile, jacsServiceDataHierarchy); // => SUBSXRSROT
+        Path globalSymmetricTransformFilePrefix = getGlobalSymmetricTransformFilePrefix(subjectFile, jacsServiceData); // => SIMMETRIC txmi
+        Path symmetricAffineTransformFile = getAffineTransformFile(globalSymmetricTransformFilePrefix, jacsServiceData); // => AFFINEMATRIX
+        Path rotatedSubjectGlobalAllignedFile = getGlobalAlignedFile(rotatedResizedSubjectFile, jacsServiceData); // => SUBSXRSROTGA
+        Path resizedRotatedSubjectGlobalAllignedFile = getResizedFile(rotatedSubjectGlobalAllignedFile, jacsServiceData); // => SUBSXRSROTGARS
+        List<Path> resizedRotatedSubjectGlobalAlignedNiftiFiles = getNiftiChannelsFiles(resizedRotatedSubjectGlobalAllignedFile, args.input1Channels, jacsServiceData); // => MOVINGNIICI, MOVINGNIICII, MOVINGNIICIII, MOVINGNIICIV
 
-        Path globalSymmetricTransformFilePrefix = getGlobalSymmetricTransformFilePrefix(subjectFile, jacsServiceDataHierarchy); // => SIMMETRIC txmi
-        Path symmetricAffineTransformFile = getAffineTransformFile(globalSymmetricTransformFilePrefix, jacsServiceDataHierarchy); // => AFFINEMATRIX
-        Path rotatedSubjectGlobalAllignedFile = getGlobalAlignedFile(rotatedResizedSubjectFile, jacsServiceDataHierarchy); // => SUBSXRSROTGA
-        Path resizedRotatedSubjectGlobalAllignedFile = getResizedFile(rotatedSubjectGlobalAllignedFile, jacsServiceDataHierarchy); // => SUBSXRSROTGARS
-        List<Path> resizedRotatedSubjectGlobalAlignedNiftiFiles = getNiftiChannelsFiles(resizedRotatedSubjectGlobalAllignedFile, args.input1Channels, jacsServiceDataHierarchy); // => MOVINGNIICI, MOVINGNIICII, MOVINGNIICIII, MOVINGNIICIV
-
-        Path resizedTargetFile = getResizedFile(targetFile, jacsServiceDataHierarchy); // => TARSXRS
-        Path resizedTargetNiftiFile = getNiftiChannelFile(resizedTargetFile, 0, jacsServiceDataHierarchy); // => FIXEDNII, FIX
+        Path resizedTargetFile = getResizedFile(targetFile, jacsServiceData); // => TARSXRS
+        Path resizedTargetNiftiFile = getNiftiChannelFile(resizedTargetFile, 0, jacsServiceData); // => FIXEDNII, FIX
 
         Path resizedSubjectGlobalAlignedRefChannelNiftiFile = resizedRotatedSubjectGlobalAlignedNiftiFiles.get(args.input1Ref - 1);  // => MOVINGNIICR, MOV
 
-        Path localSymmetricTransformFilePrefix = getLocalSymmetricTransformFilePrefix(subjectFile, jacsServiceDataHierarchy); // => SIMMETRIC ccmi
-        Path localAffineTransformFile = getAffineTransformFile(localSymmetricTransformFilePrefix, jacsServiceDataHierarchy); // => AFFINEMATRIXLOCAL
-        Path localWarpFile = getWarpTransformFile(localSymmetricTransformFilePrefix, jacsServiceDataHierarchy); // => FWDDISPFIELD
+        Path localSymmetricTransformFilePrefix = getLocalSymmetricTransformFilePrefix(subjectFile, jacsServiceData); // => SIMMETRIC ccmi
+        Path localAffineTransformFile = getAffineTransformFile(localSymmetricTransformFilePrefix, jacsServiceData); // => AFFINEMATRIXLOCAL
+        Path localWarpFile = getWarpTransformFile(localSymmetricTransformFilePrefix, jacsServiceData); // => FWDDISPFIELD
 
         createWorkingCopy(Paths.get(args.templateDir, args.targetTemplate), targetFile);
         createWorkingCopy(Paths.get(args.templateDir, args.targetExtTemplate), targetExtFile);
@@ -219,37 +217,37 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         JacsServiceData targetExtToNiftiServiceData =
                 invocationHelper.convertToNiftiImage(targetExtFile, targetExtNiftiFile,
                         "Convert extended target to nifti",
-                        jacsServiceDataHierarchy);
+                        jacsServiceData);
         //  $Vaa3D -x ireg -f zflip -i ${SUBSX} -o ${TEMPSUBJECT}
         JacsServiceData flippedSubjectServiceData = zFlip(Paths.get(args.input1File), subjectFile, args.zFlip,
                 "Flip subject",
-                jacsServiceDataHierarchy);
+                jacsServiceData);
         // $Vaa3D -x ireg -f isampler -i $SUBSX -o $SUBSXIS -p "#x $ISRX #y $ISRY #z $ISRZ"
         JacsServiceData isotropicSubjectSamplingServiceData = invocationHelper.isotropicSampling(
                 subjectFile, alignConfig, inputResolution, isotropicSubjectFile,
                 null, // no other parameters for subject sampling
                 "Isotropic sampling",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 flippedSubjectServiceData);
         // $Vaa3D -x ireg -f resizeImage -o $SUBSXRS -p "#s $SUBSXIS #t $TARSXEXT #y 1"
         JacsServiceData resizeSubjectServiceData = invocationHelper.resizeToTarget(
                 isotropicSubjectFile, targetExtFile, resizedSubjectFile,
                 "#y 1",
                 "Resize subject to target",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 isotropicSubjectSamplingServiceData);
         // $Vaa3D -x refExtract -f refExtract -i $SUBSXRS -o $SUBSXRSRFC -p "#c $SUBSXREF";
         JacsServiceData extractRefChannelServiceData = invocationHelper.extractRefFromSubject(
                 resizedSubjectFile, resizedSubjectRefChannelFile, args.input1Ref,
                 "Extract reference channel",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 resizeSubjectServiceData);
         // convert the ref channel to Nifti
         // $Vaa3D -x ireg -f NiftiImageConverter -i $SUBSXRSRFC
         JacsServiceData resizedSubjectToNiftiServiceData = invocationHelper.convertToNiftiImage(
                 resizedSubjectRefChannelFile, resizedSubjectRefChannelNiftiFile,
                 "Convert ref channel to nifti",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 extractRefChannelServiceData);
         double downsampleFactor = 0.125;
         // downsample the target with ration 1/8
@@ -257,7 +255,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
         JacsServiceData targetDownsampleServiceData = invocationHelper.downsampleImage(
                 targetExtNiftiFile, targetExtDownsampledFile, downsampleFactor,
                 "Downsample 1/8 ext target",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 targetExtToNiftiServiceData);
         // downsample the subject with ration 1/8
         // $Vaa3D -x ireg -f resamplebyspacing -i $SUBSXRSRFCNII -o $MDS -p "#x $DSFAC #y $DSFAC #z $DSFAC"
@@ -265,42 +263,42 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 invocationHelper.downsampleImage(
                         resizedSubjectRefChannelNiftiFile, resizedSubjectRefChannelDownsampledFile, downsampleFactor,
                         "Downsample 1/8 ref subject channel",
-                        jacsServiceDataHierarchy,
+                        jacsServiceData,
                         resizedSubjectToNiftiServiceData);
         // find the rotations with FLIRT
         // $FLIRT -in $MDS -ref $FDS -omat $RCMAT -cost mutualinfo -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -dof 12 -datatype char
         JacsServiceData estimateRotationsServiceData = findRotationMatrix(resizedSubjectRefChannelDownsampledFile, targetExtDownsampledFile, rotationsMatFile, args.fslOutputType,
                 "Find the rotations",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 targetDownsampleServiceData, subjectDownsampleServiceData);
         // Convert the affine matrix to insight
         JacsServiceData affine2InsightServiceData = convertAffineToInsight(rotationsMatFile, insightRotationsFile,
                 "Convert affine matrix to insight",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 estimateRotationsServiceData);
         // $Vaa3D -x ireg -f extractRotMat -i $RCOUT -o $RCAFFINE
         JacsServiceData affinePrepServiceData = prepareAffineTransformation(insightRotationsFile, rotationsAffineFile,
                 "Prepare affine transformations",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 affine2InsightServiceData);
         // rotate the subject
         // $Vaa3D -x ireg -f iwarp -o $SUBSXRFCROT -p "#s $SUBSXRSRFC #t $TARSXEXT #a $RCAFFINE"
         JacsServiceData rotateSubjectServiceData = rotateSubject(resizedSubjectRefChannelFile, targetExtFile, rotationsAffineFile, rotatedResizedSubjectRefChannelFile,
                 "Rotate subject",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 extractRefChannelServiceData, affinePrepServiceData);
         // convert rotated subject to Nifti
         // $Vaa3D -x ireg -f NiftiImageConverter -i $SUBSXRFCROT
         JacsServiceData subjectToNiftiServiceData = invocationHelper.convertToNiftiImage(
                 rotatedResizedSubjectRefChannelFile, rotatedResizedSubjectRefChanneltNiftiFile,
                 "Convert rotated subject to nifti",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 rotateSubjectServiceData);
         // global alignment of the subject to target
         // $ANTS 3 -m  MI[ $TARSXNII, $SUBNII, 1, 32] -o $SIMMETRIC -i 0 --number-of-affine-iterations $MAXITERATIONS #--rigid-affine true
         JacsServiceData globalAlignServiceData = globalAlignSubjectToTarget(targetExtNiftiFile, rotatedResizedSubjectRefChanneltNiftiFile, globalSymmetricTransformFilePrefix,
                 "Global alignment of subject to target",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 targetExtToNiftiServiceData, subjectToNiftiServiceData);
         // rotate recentered object
         // $Vaa3D -x ireg -f iwarp2 -o $SUBSXRSROT -p "#s $SUBSXRS #a $RCAFFINE #dx $TARSXEXTDX #dy $TARSXEXTDY #dz $TARSXEXTDZ"
@@ -309,7 +307,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 null,
                 TARSXEXTDX, TARSXEXTDY, TARSXEXTDZ,
                 "Rotate recentered object",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 resizeSubjectServiceData, rotateSubjectServiceData);
         // affine transform rotated subject
         // $Vaa3D -x ireg -f iwarp2 -o $SUBSXRSROTGA -p "#s $SUBSXRSROT #a $AFFINEMATRIX #dx $TARSXEXTDX #dy $TARSXEXTDY #dz $TARSXEXTDZ"
@@ -318,52 +316,52 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 null,
                 TARSXEXTDX, TARSXEXTDY, TARSXEXTDZ,
                 "Affine transform rotated subject",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 rotateRecenteredSubjectServiceData, globalAlignServiceData);
         // $Vaa3D -x ireg -f genVOIs -p "#s $SUBSXRSROTGA #t $TARSX"
         JacsServiceData voiServiceData = getVOI(rotatedSubjectGlobalAllignedFile, targetFile,
                 "Gen VOID for global aligned subject",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 globalAlignedSubjectServiceData);
         // $Vaa3D -x ireg -f NiftiImageConverter -i $SUBSXRSROTGARS
         JacsServiceData resizedAlignedSubjectToNiftiServiceData =
                 invocationHelper.convertToNiftiImage(resizedRotatedSubjectGlobalAllignedFile, resizedRotatedSubjectGlobalAlignedNiftiFiles,
                         "Convert global aligned subject to nifti",
-                        jacsServiceDataHierarchy,
+                        jacsServiceData,
                         voiServiceData);
         // $Vaa3D -x ireg -f NiftiImageConverter -i $TARSXRS
         JacsServiceData resizedTargetToNiftiServiceData = invocationHelper.convertToNiftiImage(
                 resizedTargetFile, resizedTargetNiftiFile,
                 "Convert resized target to nifti",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 voiServiceData);
         // $ANTS 3 -m  CC[ $FIX, $MOV, 1, 8] -t SyN[0.25]  -r Gauss[3,0] -o $SIMMETRIC -i $MAXITERSCC
         JacsServiceData localAlignServiceData = localAlignSubject(resizedTargetNiftiFile, resizedSubjectGlobalAlignedRefChannelNiftiFile, localSymmetricTransformFilePrefix,
                 "Local alignment",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 resizedAlignedSubjectToNiftiServiceData, resizedTargetToNiftiServiceData);
         List<JacsServiceData> warpServices = new ArrayList<>();
         List<Path> warpedFiles = new ArrayList<>();
         for (int channelNo = 0; channelNo < args.input1Channels; channelNo++) {
             Path inputMovingFile = resizedRotatedSubjectGlobalAlignedNiftiFiles.get(channelNo); // => MOVINGNIICI, MOVINGNIICII, MOVINGNIICIII, MOVINGNIICIV
-            Path warpedFile = getDeformedNiftiFile(inputMovingFile, jacsServiceDataHierarchy); // => MOVINGDFRMDCI, MOVINGDFRMDCII, MOVINGDFRMDCIII, MOVINGDFRMDCIV
+            Path warpedFile = getDeformedNiftiFile(inputMovingFile, jacsServiceData); // => MOVINGDFRMDCI, MOVINGDFRMDCII, MOVINGDFRMDCIII, MOVINGDFRMDCIV
             warpedFiles.add(warpedFile);
             // $WARP 3 $MOVINGNIICI $MOVINGDFRMDCI -R $FIXEDNII $FWDDISPFIELD $AFFINEMATRIXLOCAL --use-BSpline
             JacsServiceData warpServiceData =
                     invocationHelper.warp(inputMovingFile, warpedFile, ImmutableList.of(resizedTargetNiftiFile, localWarpFile, localAffineTransformFile),
                             "-bspline",
                             "Warp local aligned file",
-                            jacsServiceDataHierarchy,
+                            jacsServiceData,
                             localAlignServiceData);
             warpServices.add(warpServiceData);
         }
         Path alignedSubjectFile = getAlignedSubjectFile(args); // => SUBSXALINGED
-        Path resizedAlignedSubjectFile = getResizedFile(alignedSubjectFile, jacsServiceDataHierarchy); // => SUBSXDFRMD
+        Path resizedAlignedSubjectFile = getResizedFile(alignedSubjectFile, jacsServiceData); // => SUBSXDFRMD
         // $Vaa3D -x ireg -f NiftiImageConverter -i $MOVINGDFRMDCI $MOVINGDFRMDCII $MOVINGDFRMDCIII $MOVINGDFRMDCIV -o $SUBSXDFRMD -p "#b 1 #v 1"
         JacsServiceData combineChannelsServiceData =
                 invocationHelper.convertFromNiftiImage(warpedFiles, resizedAlignedSubjectFile, "#b 1 #v 1",
                         "Recombine all aligned subject channels into one stack",
-                        jacsServiceDataHierarchy,
+                        jacsServiceData,
                         warpServices.toArray(new JacsServiceData[warpServices.size()]));
         // resize to the templates' space
 
@@ -372,28 +370,28 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 invocationHelper.resizeToTarget(resizedAlignedSubjectFile, targetFile, alignedSubjectFile,
                         "#y 1",
                         "Restore size of the aligned subject",
-                        jacsServiceDataHierarchy,
+                        jacsServiceData,
                         combineChannelsServiceData);
 
         // warp neurons
-        Path neuronsFile = getWorkingFile(args.input1Neurons, jacsServiceDataHierarchy); // => SUBSXNEURONS
+        Path neuronsFile = getWorkingFile(args.input1Neurons, jacsServiceData); // => SUBSXNEURONS
         // ensureRawFileWdiffName "$Vaa3D" "$WORKDIR" "$SUBSXNEURONS" "${SUBSXNEURONS%.*}_SX.v3draw" SUBSXNEURONS
         JacsServiceData neuronsToRawServiceData = convertNeuronsFileToRawFormat(Paths.get(args.input1Neurons), neuronsFile,
                 "Ensure neurons labels vaa3d file exists",
-                jacsServiceDataHierarchy);
-        Path yFlippedNeuronsFile = getYFlippedFile(neuronsFile, jacsServiceDataHierarchy); // => NEURONSYFLIP
+                jacsServiceData);
+        Path yFlippedNeuronsFile = getYFlippedFile(neuronsFile, jacsServiceData); // => NEURONSYFLIP
         // $Vaa3D -x ireg -f yflip -i $SUBSXNEURONS -o $NEURONSYFLIP
         JacsServiceData yFlippedNeuronsServiceData = yFlip(neuronsFile, yFlippedNeuronsFile,
                 "Y-flipping the neurons",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 neuronsToRawServiceData);
         // $Vaa3D -x ireg -f zflip -i ${NEURONSYFLIP} -o ${NEURONSYFLIP}
-        Path zFlippedLabelsFile = getZFlippedFile(neuronsFile, jacsServiceDataHierarchy); // => NEURONSYFLIP
+        Path zFlippedLabelsFile = getZFlippedFile(neuronsFile, jacsServiceData); // => NEURONSYFLIP
         JacsServiceData zFlippedNeuronsServiceData = zFlip(yFlippedNeuronsFile, zFlippedLabelsFile, args.zFlip,
                 "Z-flipping the neurons",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 yFlippedNeuronsServiceData);
-        Path isotropicNeuronsFile = getIsotropicFile(zFlippedLabelsFile, jacsServiceDataHierarchy); // => NEURONSYFLIPIS
+        Path isotropicNeuronsFile = getIsotropicFile(zFlippedLabelsFile, jacsServiceData); // => NEURONSYFLIPIS
         //  $Vaa3D -x ireg -f isampler -i $NEURONSYFLIP -o $NEURONSYFLIPIS -p "#x $ISRX #y $ISRY #z $ISRZ #i 1"
         JacsServiceData isotropicNeronsSamplingServiceData =
                 invocationHelper.isotropicSampling(zFlippedLabelsFile, alignConfig, inputResolution, isotropicNeuronsFile,
@@ -401,84 +399,84 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                         "Isotropic sampling the neurons",
                         zFlippedNeuronsServiceData,
                         zFlippedNeuronsServiceData);
-        Path resizedNeuronsFile = getResizedFile(zFlippedLabelsFile, jacsServiceDataHierarchy); // => NEURONSYFLIPISRS
+        Path resizedNeuronsFile = getResizedFile(zFlippedLabelsFile, jacsServiceData); // => NEURONSYFLIPISRS
         // $Vaa3D -x ireg -f resizeImage -o $NEURONSYFLIPISRS -p "#s $NEURONSYFLIPIS #t $TARSXEXT #k 1 #i 1 #y 1"
         JacsServiceData resizeNeuronsServiceData =
                 invocationHelper.resizeToTarget(isotropicNeuronsFile, targetExtFile, resizedNeuronsFile,
                         "#k 1 #i 1 #y 1",
                         "Resizing the neurons to the target",
-                        jacsServiceDataHierarchy,
+                        jacsServiceData,
                         isotropicNeronsSamplingServiceData);
-        Path rotatedResizedNeuronsFile =  getRotatedFile(resizedNeuronsFile, jacsServiceDataHierarchy); // => NEURONSYFLIPISRSRT
+        Path rotatedResizedNeuronsFile =  getRotatedFile(resizedNeuronsFile, jacsServiceData); // => NEURONSYFLIPISRSRT
         // $Vaa3D -x ireg -f iwarp2 -o $NEURONSYFLIPISRSRT -p "#s $NEURONSYFLIPISRS #a $RCAFFINE #dx $TARSXEXTDX #dy $TARSXEXTDY #dz $TARSXEXTDZ #i 1"
         JacsServiceData rotateRecenteredNeuronsServiceData =
                 invocationHelper.applyIWarp2Transformation(resizedNeuronsFile, rotationsAffineFile, rotatedResizedNeuronsFile,
                         "#i 1",
                         TARSXEXTDX, TARSXEXTDY, TARSXEXTDZ,
                         "Rotating the neurons",
-                        jacsServiceDataHierarchy,
+                        jacsServiceData,
                         resizeNeuronsServiceData, rotateSubjectServiceData);
-        Path rotatedNeuronsGlobalAllignedFile = getGlobalAlignedFile(rotatedResizedNeuronsFile, jacsServiceDataHierarchy); // => NEURONSYFLIPISRSRTAFF
+        Path rotatedNeuronsGlobalAllignedFile = getGlobalAlignedFile(rotatedResizedNeuronsFile, jacsServiceData); // => NEURONSYFLIPISRSRTAFF
         // $Vaa3D -x ireg -f iwarp2 -o $NEURONSYFLIPISRSRTAFF -p "#s $NEURONSYFLIPISRSRT #a $AFFINEMATRIX #dx $TARSXEXTDX #dy $TARSXEXTDY #dz $TARSXEXTDZ #i 1"
         JacsServiceData globalAlignedNeuronsServiceData =
                 invocationHelper.applyIWarp2Transformation(rotatedResizedNeuronsFile, symmetricAffineTransformFile, rotatedNeuronsGlobalAllignedFile,
                         "#i 1",
                         TARSXEXTDX, TARSXEXTDY, TARSXEXTDZ,
                         "Affine transform rotated neurons",
-                        jacsServiceDataHierarchy,
+                        jacsServiceData,
                         rotateRecenteredNeuronsServiceData, globalAlignServiceData);
-        Path flippedAlignedNeuronsFile = getAlignedFile(zFlippedLabelsFile, jacsServiceDataHierarchy); // => SXNEURONALIGNEDRS
-        Path resizedAlignedNeuronsFile = getResizedFile(flippedAlignedNeuronsFile, jacsServiceDataHierarchy); // => NEURONSYFLIPISRSRTAFFRS
+        Path flippedAlignedNeuronsFile = getAlignedFile(zFlippedLabelsFile, jacsServiceData); // => SXNEURONALIGNEDRS
+        Path resizedAlignedNeuronsFile = getResizedFile(flippedAlignedNeuronsFile, jacsServiceData); // => NEURONSYFLIPISRSRTAFFRS
         // $Vaa3D -x ireg -f resizeImage -o $NEURONSYFLIPISRSRTAFFRS -p "#s $NEURONSYFLIPISRSRTAFF #t $TARSXRS #k 1 #i 1 #y 1"
         JacsServiceData restoreSizeAlignedNeuronsServiceData =
                 invocationHelper.resizeToTarget(rotatedNeuronsGlobalAllignedFile, targetFile, resizedAlignedNeuronsFile,
                         "#k 1 #i 1 #y 1",
                         "Restore size of the aligned subject",
-                        jacsServiceDataHierarchy,
+                        jacsServiceData,
                         globalAlignedNeuronsServiceData);
-        Path resizedAlignedNeuronsNiftiFile = getNiftiChannelFile(resizedAlignedNeuronsFile, 0, jacsServiceDataHierarchy); // => NEURONSNII
+        Path resizedAlignedNeuronsNiftiFile = getNiftiChannelFile(resizedAlignedNeuronsFile, 0, jacsServiceData); // => NEURONSNII
         // Vaa3D -x ireg -f NiftiImageConverter -i $NEURONSYFLIPISRSRTAFFRS
         JacsServiceData resizedAlignedNeuronsNiftiServiceData =
                 invocationHelper.convertToNiftiImage(resizedAlignedNeuronsFile, resizedAlignedNeuronsNiftiFile,
                         "Converting 63x neurons into Nifti",
-                        jacsServiceDataHierarchy,
+                        jacsServiceData,
                         restoreSizeAlignedNeuronsServiceData);
-        Path warpedNeuronsNiftiFile = getDeformedNiftiFile(resizedAlignedNeuronsNiftiFile, jacsServiceDataHierarchy); // => NEURONDFMD
+        Path warpedNeuronsNiftiFile = getDeformedNiftiFile(resizedAlignedNeuronsNiftiFile, jacsServiceData); // => NEURONDFMD
         // $WARP 3 $NEURONSNII $NEURONDFMD -R $FIXEDNII $FWDDISPFIELD $AFFINEMATRIXLOCAL --use-NN
         JacsServiceData warpNeuronsServiceData =
                 invocationHelper.warp(resizedAlignedNeuronsNiftiFile, warpedNeuronsNiftiFile,
                         ImmutableList.of(resizedTargetNiftiFile, localWarpFile, localAffineTransformFile),
                         "--use-NN",
                         "Warp neurons",
-                        jacsServiceDataHierarchy,
+                        jacsServiceData,
                         localAlignServiceData, resizedAlignedNeuronsNiftiServiceData);
-        Path scaledFlippedNeuronsFile = getScaledFile(flippedAlignedNeuronsFile, jacsServiceDataHierarchy); // => NEURONALIGNEDYFLIP
+        Path scaledFlippedNeuronsFile = getScaledFile(flippedAlignedNeuronsFile, jacsServiceData); // => NEURONALIGNEDYFLIP
         // $Vaa3D -x ireg -f NiftiImageConverter -i $NEURONDFMD -o $NEURONALIGNEDYFLIP -p "#b 1 #v 2 #r 0"
         JacsServiceData combineNeuronChannelsServiceData =
                 invocationHelper.convertFromNiftiImage(ImmutableList.of(warpedNeuronsNiftiFile), scaledFlippedNeuronsFile, "#b 1 #v 2 #r 0",
                         "Recombine all aligned neuron channels into one stack",
-                        jacsServiceDataHierarchy,
+                        jacsServiceData,
                         warpNeuronsServiceData);
         //  $Vaa3D -x ireg -f resizeImage -o $SXNEURONALIGNEDRS -p "#s $NEURONALIGNEDYFLIP #t $TARSX #k 1 #i 1 #y 1"
         JacsServiceData resizeAlignedNeuronsServiceData =
                 invocationHelper.resizeToTarget(scaledFlippedNeuronsFile, targetFile, flippedAlignedNeuronsFile,
                         "#k 1 #i 1 #y 1",
                         "Resize the neurons to the template's space",
-                        jacsServiceDataHierarchy,
+                        jacsServiceData,
                         combineNeuronChannelsServiceData);
         Path alignedNeuronsFile = getAlignedNeuronsFile(args); // => SXNEURONALIGNED
         // $Vaa3D -x ireg -f yflip -i $SXNEURONALIGNEDRS -o $SXNEURONALIGNED
         JacsServiceData unYFlippedNeuronsServiceData = yFlip(flippedAlignedNeuronsFile, alignedNeuronsFile,
                 "Y-Flipping 63x neurons back",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 resizeAlignedNeuronsServiceData);
         // verify alignment
-        Path alignmentQualityFile = getAlignmentQualityFile(args.input1File, jacsServiceDataHierarchy); // => AQ
+        Path alignmentQualityFile = getAlignmentQualityFile(args.input1File, jacsServiceData); // => AQ
         // $Vaa3D -x ireg -f esimilarity -o $AQ -p "#s $SUBSXALINGED #cs $SUBSXREF #t $TARSX"
         JacsServiceData evalServiceData = evaluateAlignment(alignedSubjectFile, args.input1Ref, targetFile,
                 alignmentQualityFile,
                 "Verify alignment",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 unYFlippedNeuronsServiceData);
 
         // create verification movie
@@ -489,10 +487,10 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 args.input1Ref,
                 verifyMovie,
                 "Create verification movie",
-                jacsServiceDataHierarchy,
+                jacsServiceData,
                 evalServiceData);
 
-        return new JacsServiceResult<>(jacsServiceDataHierarchy, ImmutableList.of(restoreSizeAlignedSubjectServiceData, verificationMovieServiceData));
+        return new JacsServiceResult<>(jacsServiceData, ImmutableList.of(restoreSizeAlignedSubjectServiceData, verificationMovieServiceData));
     }
 
     private void createWorkingCopy(Path inputFile, Path outputFile) {
