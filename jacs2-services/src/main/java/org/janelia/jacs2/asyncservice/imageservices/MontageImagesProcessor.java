@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableMap;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
 import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractSingleFileServiceResultHandler;
@@ -36,7 +37,7 @@ import java.util.Map;
  * Create a square montage from PNGs in a given directory.
  */
 @Named("montageImages")
-public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<File> {
+public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Void, File> {
 
     static class MontageImagesArgs extends ServiceArgs {
         @Parameter(names = "-inputFolder", description = "Input folder", required = true)
@@ -79,15 +80,15 @@ public class MontageImagesProcessor extends AbstractExeBasedServiceProcessor<Fil
         return new AbstractSingleFileServiceResultHandler() {
 
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                MontageImagesArgs args = getArgs(jacsServiceData);
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                MontageImagesArgs args = getArgs(depResults.getJacsServiceData());
                 File targetImage = getTargetImage(args);
                 return targetImage.exists();
             }
 
             @Override
-            public File collectResult(JacsServiceData jacsServiceData) {
-                MontageImagesArgs args = getArgs(jacsServiceData);
+            public File collectResult(JacsServiceResult<?> depResults) {
+                MontageImagesArgs args = getArgs(depResults.getJacsServiceData());
                 return getTargetImage(args);
             }
         };

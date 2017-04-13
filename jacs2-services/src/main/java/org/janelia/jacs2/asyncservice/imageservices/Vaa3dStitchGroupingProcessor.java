@@ -1,8 +1,8 @@
 package org.janelia.jacs2.asyncservice.imageservices;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Named("vaa3dStitchGrouping")
-public class Vaa3dStitchGroupingProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
+public class Vaa3dStitchGroupingProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, File> {
 
     private static final String GROUPS_FILENAME = "igroups.txt";
 
@@ -66,13 +66,13 @@ public class Vaa3dStitchGroupingProcessor extends AbstractBasicLifeCycleServiceP
     public ServiceResultHandler<File> getResultHandler() {
         return new AbstractSingleFileServiceResultHandler() {
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                return getGroupsFile(getArgs(jacsServiceData)).toFile().exists();
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                return getGroupsFile(getArgs(depResults.getJacsServiceData())).toFile().exists();
             }
 
             @Override
-            public File collectResult(JacsServiceData jacsServiceData) {
-                return getGroupsFile(getArgs(jacsServiceData)).toFile();
+            public File collectResult(JacsServiceResult<?> depResults) {
+                return getGroupsFile(getArgs(depResults.getJacsServiceData())).toFile();
             }
         };
     }
@@ -94,11 +94,11 @@ public class Vaa3dStitchGroupingProcessor extends AbstractBasicLifeCycleServiceP
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        Vaa3dStitchGroupingArgs args = getArgs(jacsServiceData);
-        JacsServiceData vaa3dPluginService = createVaa3dPluginService(args, jacsServiceData);
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
+        Vaa3dStitchGroupingArgs args = getArgs(depResults.getJacsServiceData());
+        JacsServiceData vaa3dPluginService = createVaa3dPluginService(args, depResults.getJacsServiceData());
         return vaa3dPluginProcessor.process(vaa3dPluginService)
-                .thenApply(voidResult -> jacsServiceData);
+                .thenApply(voidResult -> depResults);
     }
 
     private JacsServiceData createVaa3dPluginService(Vaa3dStitchGroupingArgs args, JacsServiceData jacsServiceData) {

@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
 import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractSingleFileServiceResultHandler;
@@ -25,12 +26,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.Map;
 
 @Named("lsmFileMetadata")
-public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<File> {
+public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<Void, File> {
 
     static class LsmFileMetadataArgs extends ServiceArgs {
         @Parameter(names = "-inputLSM", description = "LSM Input file name", required = true)
@@ -71,14 +71,14 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
         return new AbstractSingleFileServiceResultHandler() {
 
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                File outputFile = getOutputFile(getArgs(jacsServiceData));
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                File outputFile = getOutputFile(getArgs(depResults.getJacsServiceData()));
                 return outputFile.exists();
             }
 
             @Override
-            public File collectResult(JacsServiceData jacsServiceData) {
-                return getOutputFile(getArgs(jacsServiceData));
+            public File collectResult(JacsServiceResult<?> depResults) {
+                return getOutputFile(getArgs(depResults.getJacsServiceData()));
             }
         };
     }

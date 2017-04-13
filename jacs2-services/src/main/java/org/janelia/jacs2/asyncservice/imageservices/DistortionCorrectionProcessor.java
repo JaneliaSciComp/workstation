@@ -3,6 +3,7 @@ package org.janelia.jacs2.asyncservice.imageservices;
 import com.beust.jcommander.Parameter;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
@@ -25,7 +26,7 @@ import java.nio.file.Paths;
 import java.util.StringJoiner;
 
 @Named("distortionCorrection")
-public class DistortionCorrectionProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
+public class DistortionCorrectionProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, File> {
 
     static class DistortionCorrectionArgs extends ServiceArgs {
         @Parameter(names = "-inputFile", description = "Input file", required = true)
@@ -60,13 +61,13 @@ public class DistortionCorrectionProcessor extends AbstractBasicLifeCycleService
     public ServiceResultHandler<File> getResultHandler() {
         return new AbstractSingleFileServiceResultHandler() {
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                return getOutputFile(getArgs(jacsServiceData)).toFile().exists();
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                return getOutputFile(getArgs(depResults.getJacsServiceData())).toFile().exists();
             }
 
             @Override
-            public File collectResult(JacsServiceData jacsServiceData) {
-                return getOutputFile(getArgs(jacsServiceData)).toFile();
+            public File collectResult(JacsServiceResult<?> depResults) {
+                return getOutputFile(getArgs(depResults.getJacsServiceData())).toFile();
             }
         };
     }
@@ -77,11 +78,11 @@ public class DistortionCorrectionProcessor extends AbstractBasicLifeCycleService
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        DistortionCorrectionArgs args = getArgs(jacsServiceData);
-        JacsServiceData fijiService = createFijiService(args, jacsServiceData);
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
+        DistortionCorrectionArgs args = getArgs(depResults.getJacsServiceData());
+        JacsServiceData fijiService = createFijiService(args, depResults.getJacsServiceData());
         return fijiMacroProcessor.process(fijiService)
-                .thenApply(voidResult -> jacsServiceData);
+                .thenApply(voidResult -> depResults);
     }
 
     private JacsServiceData createFijiService(DistortionCorrectionArgs args, JacsServiceData jacsServiceData) {

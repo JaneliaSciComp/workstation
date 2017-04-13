@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameter;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
@@ -27,7 +28,7 @@ import java.nio.file.Files;
 import java.util.StringJoiner;
 
 @Named("vaa3dConverter")
-public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
+public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, File> {
 
     static class Vaa3dConverterArgs extends ServiceArgs {
         @Parameter(names = "-convertCmd", description = "Convert command. Valid values are: []")
@@ -60,15 +61,15 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
         return new AbstractSingleFileServiceResultHandler() {
 
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                Vaa3dConverterArgs args = getArgs(jacsServiceData);
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                Vaa3dConverterArgs args = getArgs(depResults.getJacsServiceData());
                 File outputFile = new File(args.outputFileName);
                 return outputFile.exists();
             }
 
             @Override
-            public File collectResult(JacsServiceData jacsServiceData) {
-                Vaa3dConverterArgs args = getArgs(jacsServiceData);
+            public File collectResult(JacsServiceResult<?> depResults) {
+                Vaa3dConverterArgs args = getArgs(depResults.getJacsServiceData());
                 return new File(args.outputFileName);
             }
         };
@@ -100,11 +101,11 @@ public class Vaa3dConverterProcessor extends AbstractBasicLifeCycleServiceProces
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        Vaa3dConverterArgs args = getArgs(jacsServiceData);
-        JacsServiceData vaa3dService = createVaa3dCmdService(args, jacsServiceData);
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
+        Vaa3dConverterArgs args = getArgs(depResults.getJacsServiceData());
+        JacsServiceData vaa3dService = createVaa3dCmdService(args, depResults.getJacsServiceData());
         return vaa3dCmdProcessor.process(vaa3dService)
-                .thenApply(voidResult -> jacsServiceData);
+                .thenApply(voidResult -> depResults);
     }
 
     private JacsServiceData createVaa3dCmdService(Vaa3dConverterArgs args, JacsServiceData jacsServiceData) {

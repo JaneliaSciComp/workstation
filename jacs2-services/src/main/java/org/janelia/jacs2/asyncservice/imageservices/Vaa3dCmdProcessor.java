@@ -24,7 +24,7 @@ import javax.inject.Named;
 import java.util.Map;
 
 @Named("vaa3dCmd")
-public class Vaa3dCmdProcessor extends AbstractExeBasedServiceProcessor<Void> {
+public class Vaa3dCmdProcessor extends AbstractExeBasedServiceProcessor<Void, Void> {
 
     static class Vaa3dCmdArgs extends ServiceArgs {
         @Parameter(names = "-vaa3dCmd", description = "Vaa3d headless command", required = true)

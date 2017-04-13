@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Named("warpTool")
-public class WarpToolProcessor extends AbstractExeBasedServiceProcessor<Void> {
+public class WarpToolProcessor extends AbstractExeBasedServiceProcessor<Void, Void> {
 
     static class AntsToolArgs extends ServiceArgs {
         @Parameter(names = {"-d", "-dims"}, description = "Scene dimensionality")

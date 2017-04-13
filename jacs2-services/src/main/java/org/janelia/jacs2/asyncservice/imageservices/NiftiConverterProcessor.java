@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
@@ -28,7 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Named("niftiConverter")
-public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProcessor<List<File>> {
+public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, List<File>> {
 
     static class Vaa3dNiftiConverterArgs extends ServiceArgs {
         @Parameter(names = "-input", description = "Input file", required = true)
@@ -60,14 +61,14 @@ public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProces
     public ServiceResultHandler<List<File>> getResultHandler() {
         return new AbstractFileListServiceResultHandler() {
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                Vaa3dNiftiConverterArgs args = getArgs(jacsServiceData);
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                Vaa3dNiftiConverterArgs args = getArgs(depResults.getJacsServiceData());
                 return args.outputFileNames.stream().reduce(true, (b, fn) -> b && new File(fn).exists(), (b1, b2) -> b1 && b2);
             }
 
             @Override
-            public List<File> collectResult(JacsServiceData jacsServiceData) {
-                Vaa3dNiftiConverterArgs args = getArgs(jacsServiceData);
+            public List<File> collectResult(JacsServiceResult<?> depResults) {
+                Vaa3dNiftiConverterArgs args = getArgs(depResults.getJacsServiceData());
                 return args.outputFileNames.stream().map(File::new).filter(File::exists).collect(Collectors.toList());
             }
         };
@@ -88,11 +89,11 @@ public class NiftiConverterProcessor extends AbstractBasicLifeCycleServiceProces
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        Vaa3dNiftiConverterArgs args = getArgs(jacsServiceData);
-        JacsServiceData vaa3dPluginService = createVaa3dPluginService(args, jacsServiceData);
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
+        Vaa3dNiftiConverterArgs args = getArgs(depResults.getJacsServiceData());
+        JacsServiceData vaa3dPluginService = createVaa3dPluginService(args, depResults.getJacsServiceData());
         return vaa3dPluginProcessor.process(vaa3dPluginService)
-                .thenApply(voidResult -> jacsServiceData);
+                .thenApply(voidResult -> depResults);
     }
 
     private JacsServiceData createVaa3dPluginService(Vaa3dNiftiConverterArgs args, JacsServiceData jacsServiceData) {

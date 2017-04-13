@@ -7,6 +7,7 @@ import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.DefaultServiceErrorChecker;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceErrorChecker;
@@ -32,7 +33,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 @Named("mergeChannels")
-public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File> {
+public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<Void, File> {
 
     static class ChannelMergeArgs extends ServiceArgs {
         @Parameter(names = "-chInput1", description = "File containing the first set of channels", required = true)
@@ -74,14 +75,14 @@ public class ChannelMergeProcessor extends AbstractExeBasedServiceProcessor<File
         return new AbstractSingleFileServiceResultHandler() {
 
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                File outputFile = getMergedLsmResultFile(jacsServiceData);
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                File outputFile = getMergedLsmResultFile(depResults.getJacsServiceData());
                 return outputFile.exists();
             }
 
             @Override
-            public File collectResult(JacsServiceData jacsServiceData) {
-                return getMergedLsmResultFile(jacsServiceData);
+            public File collectResult(JacsServiceResult<?> depResults) {
+                return getMergedLsmResultFile(depResults.getJacsServiceData());
             }
         };
     }

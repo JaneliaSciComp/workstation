@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
 import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractSingleFileServiceResultHandler;
@@ -28,7 +29,7 @@ import java.nio.file.Files;
 import java.util.Map;
 
 @Named("mpegConverter")
-public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProcessor<File> {
+public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProcessor<Void, File> {
 
     static class ConverterArgs extends ServiceArgs {
         private static final String DEFAULT_OUTPUT_EXT = ".mp4";
@@ -93,15 +94,15 @@ public class VideoFormatConverterProcessor extends AbstractExeBasedServiceProces
         return new AbstractSingleFileServiceResultHandler() {
 
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                ConverterArgs args = getArgs(jacsServiceData);
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                ConverterArgs args = getArgs(depResults.getJacsServiceData());
                 File outputFile = getOutputFile(args);
                 return outputFile.exists();
             }
 
             @Override
-            public File collectResult(JacsServiceData jacsServiceData) {
-                ConverterArgs args = getArgs(jacsServiceData);
+            public File collectResult(JacsServiceResult<?> depResults) {
+                ConverterArgs args = getArgs(depResults.getJacsServiceData());
                 return getOutputFile(args);
             }
         };

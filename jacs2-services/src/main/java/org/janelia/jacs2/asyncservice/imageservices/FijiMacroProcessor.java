@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 @Named("fijiMacro")
-public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void> {
+public class FijiMacroProcessor extends AbstractExeBasedServiceProcessor<Void, Void> {
 
     static class FijiMacroArgs extends ServiceArgs {
         @Parameter(names = "-macro", description = "FIJI macro name", required = true)

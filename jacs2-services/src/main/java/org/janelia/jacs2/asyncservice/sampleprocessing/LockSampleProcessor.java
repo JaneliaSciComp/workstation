@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.jacs2.asyncservice.common.AbstractServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.DefaultServiceErrorChecker;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
@@ -55,12 +56,12 @@ public class LockSampleProcessor extends AbstractServiceProcessor<String> {
     public ServiceResultHandler<String> getResultHandler() {
         return new ServiceResultHandler<String>() {
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
                 return true;
             }
 
             @Override
-            public String collectResult(JacsServiceData jacsServiceData) {
+            public String collectResult(JacsServiceResult<?> depResults) {
                 throw new UnsupportedOperationException();
             }
 

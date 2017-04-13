@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
@@ -35,7 +36,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Named("align")
-public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<List<File>> {
+public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<List<JacsServiceData>, List<File>> {
 
     static class AlignmentArgs extends ServiceArgs {
         @Parameter(names = {"-nthreads"}, description = "Number of ITK threads")
@@ -91,13 +92,13 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
             final String resultsPattern = "glob:**/*.{v3draw}";
 
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                return areAllDependenciesDone(jacsServiceData);
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                return areAllDependenciesDone(depResults.getJacsServiceData());
             }
 
             @Override
-            public List<File> collectResult(JacsServiceData jacsServiceData) {
-                AlignmentArgs args = getArgs(jacsServiceData);
+            public List<File> collectResult(JacsServiceResult<?> depResults) {
+                AlignmentArgs args = getArgs(depResults.getJacsServiceData());
                 return FileUtils.lookupFiles(getResultsDir(args), 1, resultsPattern)
                         .map(Path::toFile)
                         .collect(Collectors.toList());
@@ -117,7 +118,7 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
     }
 
     @Override
-    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+    protected JacsServiceResult<List<JacsServiceData>> submitServiceDependencies(JacsServiceData jacsServiceData) {
         AlignmentArgs args = getArgs(jacsServiceData);
         AlignmentConfiguration alignConfig = AlignmentUtils.parseAlignConfig(args.configFile);
         AlignmentInput input1 = AlignmentUtils.parseInput(args.input1);
@@ -171,12 +172,12 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
 
         JacsServiceData alignServiceData = submitDependencyIfNotPresent(jacsServiceDataHierarchy, alignServiceDataRef);
 
-        return ImmutableList.of(alignServiceData);
+        return new JacsServiceResult<>(jacsServiceData, ImmutableList.of(alignServiceData));
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(jacsServiceData);
+    protected ServiceComputation<JacsServiceResult<List<JacsServiceData>>> processing(JacsServiceResult<List<JacsServiceData>> depResults) {
+        return computationFactory.newCompletedComputation(depResults);
     }
 
     private Path getResultsDir(AlignmentArgs args) {

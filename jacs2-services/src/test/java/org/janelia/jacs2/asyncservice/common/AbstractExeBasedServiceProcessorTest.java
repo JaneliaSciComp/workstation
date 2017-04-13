@@ -29,7 +29,7 @@ public class AbstractExeBasedServiceProcessorTest {
     private static final String TEST_WORKING_DIR = "testDir";
     private static final String TEST_EXE_DIR = "testToolsDir";
 
-    private static class TestExternalProcessor extends AbstractExeBasedServiceProcessor<Void> {
+    private static class TestExternalProcessor extends AbstractExeBasedServiceProcessor<Void, Void> {
 
         public TestExternalProcessor(ServiceComputationFactory computationFactory,
                                      JacsServiceDataPersistence jacsServiceDataPersistence,
@@ -61,7 +61,7 @@ public class AbstractExeBasedServiceProcessorTest {
         }
     }
 
-    private AbstractExeBasedServiceProcessor<?> testProcessor;
+    private AbstractExeBasedServiceProcessor<Void, Void> testProcessor;
     private ExternalProcessRunner processRunner;
 
     @Before
@@ -107,7 +107,7 @@ public class AbstractExeBasedServiceProcessorTest {
 
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
-        testProcessor.processing(testServiceData)
+        testProcessor.processing(new JacsServiceResult<>(testServiceData))
             .whenComplete((r, e) -> {
                 if (e == null) {
                     successful.accept(r);
@@ -132,7 +132,7 @@ public class AbstractExeBasedServiceProcessorTest {
 
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
-        testProcessor.processing(testServiceData)
+        testProcessor.processing(new JacsServiceResult<>(testServiceData))
                 .whenComplete((r, e) -> {
                     if (e == null) {
                         successful.accept(r);
@@ -156,7 +156,7 @@ public class AbstractExeBasedServiceProcessorTest {
 
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
-        testProcessor.processing(testServiceData)
+        testProcessor.processing(new JacsServiceResult<>(testServiceData))
                 .whenComplete((r, e) -> {
                     if (e == null) {
                         successful.accept(r);

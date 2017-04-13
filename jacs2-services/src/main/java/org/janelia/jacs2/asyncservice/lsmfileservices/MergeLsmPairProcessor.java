@@ -1,13 +1,10 @@
 package org.janelia.jacs2.asyncservice.lsmfileservices;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
-import org.janelia.jacs2.asyncservice.common.ComputationException;
-import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
@@ -35,7 +32,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Named("mergeLsms")
-public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
+public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcessor<JacsServiceData, File> {
 
     static class MergeLsmPairArgs extends ServiceArgs {
         @Parameter(names = "-lsm1", description = "First LSM input file", required = true)
@@ -78,13 +75,13 @@ public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcesso
     public ServiceResultHandler<File> getResultHandler() {
         return new AbstractSingleFileServiceResultHandler() {
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                return getOutputFile(getArgs(jacsServiceData)).toFile().exists();
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                return getOutputFile(getArgs(depResults.getJacsServiceData())).toFile().exists();
             }
 
             @Override
-            public File collectResult(JacsServiceData jacsServiceData) {
-                return getOutputFile(getArgs(jacsServiceData)).toFile();
+            public File collectResult(JacsServiceResult<?> depResults) {
+                return getOutputFile(getArgs(depResults.getJacsServiceData())).toFile();
             }
         };
     }
@@ -101,7 +98,7 @@ public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcesso
     }
 
     @Override
-    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+    protected JacsServiceResult<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
         MergeLsmPairArgs args = getArgs(jacsServiceData);
         JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
 
@@ -138,7 +135,7 @@ public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcesso
                 "Merge channels",
                 jacsServiceDataHierarchy,
                 distortionCorrectionServiceData.toArray(new JacsServiceData[distortionCorrectionServiceData.size()]));
-        return ImmutableList.of(mergeChannelsServiceData);
+        return new JacsServiceResult<>(jacsServiceDataHierarchy, mergeChannelsServiceData);
     }
 
     private JacsServiceData applyCorrection(Path input, Path output, String microscope, String description, JacsServiceData jacsServiceData, JacsServiceData... deps) {
@@ -167,8 +164,8 @@ public class MergeLsmPairProcessor extends AbstractBasicLifeCycleServiceProcesso
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(jacsServiceData);
+    protected ServiceComputation<JacsServiceResult<JacsServiceData>> processing(JacsServiceResult<JacsServiceData> depResults) {
+        return computationFactory.newCompletedComputation(depResults);
     }
 
     private MergeLsmPairArgs getArgs(JacsServiceData jacsServiceData) {

@@ -8,6 +8,7 @@ import org.janelia.jacs2.asyncservice.common.AbstractExeBasedServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
 import org.janelia.jacs2.asyncservice.common.ExternalCodeBlock;
 import org.janelia.jacs2.asyncservice.common.ExternalProcessRunner;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
 import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
@@ -34,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 @Named("flirt")
-public class FlirtProcessor extends AbstractExeBasedServiceProcessor<List<File>> {
+public class FlirtProcessor extends AbstractExeBasedServiceProcessor<Void, List<File>> {
 
     static class FlirtArgs extends ServiceArgs {
         @Parameter(names = {"-in", "-input"}, description = "Input volume")
@@ -158,8 +159,8 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<List<File>>
         return new AbstractFileListServiceResultHandler() {
 
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                FlirtArgs args = getArgs(jacsServiceData);
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                FlirtArgs args = getArgs(depResults.getJacsServiceData());
                 Path outputAffine = getOutputAffine(args);
                 if (outputAffine != null && !outputAffine.toFile().exists()) {
                     return false;
@@ -172,8 +173,8 @@ public class FlirtProcessor extends AbstractExeBasedServiceProcessor<List<File>>
             }
 
             @Override
-            public List<File> collectResult(JacsServiceData jacsServiceData) {
-                FlirtArgs args = getArgs(jacsServiceData);
+            public List<File> collectResult(JacsServiceResult<?> depResults) {
+                FlirtArgs args = getArgs(depResults.getJacsServiceData());
                 List<File> results = new LinkedList<>();
                 Path outputAffine = getOutputAffine(args);
                 if (outputAffine != null) {

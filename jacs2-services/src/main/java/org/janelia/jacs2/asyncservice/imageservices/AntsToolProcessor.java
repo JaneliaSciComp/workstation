@@ -24,7 +24,7 @@ import javax.inject.Named;
 import java.util.Map;
 
 @Named("antsTool")
-public class AntsToolProcessor extends AbstractExeBasedServiceProcessor<Void> {
+public class AntsToolProcessor extends AbstractExeBasedServiceProcessor<Void, Void> {
 
     static class AntsToolArgs extends ServiceArgs {
         @Parameter(names = {"--dims", "-dims"}, description = "Scene dimensionality")

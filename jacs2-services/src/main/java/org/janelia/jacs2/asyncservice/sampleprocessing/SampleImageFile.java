@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class SampleImageFile {
     private Number id;
+    private Number sampleId;
     private String archiveFilePath;
     private String workingFilePath;
     private String chanSpec;
@@ -20,6 +21,14 @@ public class SampleImageFile {
 
     public void setId(Number id) {
         this.id = id;
+    }
+
+    public Number getSampleId() {
+        return sampleId;
+    }
+
+    public void setSampleId(Number sampleId) {
+        this.sampleId = sampleId;
     }
 
     public String getArchiveFilePath() {

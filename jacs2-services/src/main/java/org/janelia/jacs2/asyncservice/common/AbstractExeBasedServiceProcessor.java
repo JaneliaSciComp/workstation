@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicLifeCycleServiceProcessor<T> {
+public abstract class AbstractExeBasedServiceProcessor<S, T> extends AbstractBasicLifeCycleServiceProcessor<S, T> {
 
     protected static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 
@@ -36,12 +36,13 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicL
         this.executablesBaseDir = executablesBaseDir;
     }
 
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        ExeJobInfo jobInfo = runExternalProcess(jacsServiceData);
-        return computationFactory.newCompletedComputation(jacsServiceData)
-                .thenSuspendUntil(() -> this.hasJobFinished(jacsServiceData, jobInfo))
-                .thenApply(sd -> {
-                    List<String> errors = this.getErrorChecker().collectErrors(jacsServiceData);
+    @Override
+    protected ServiceComputation<JacsServiceResult<S>> processing(JacsServiceResult<S> depsResult) {
+        ExeJobInfo jobInfo = runExternalProcess(depsResult.getJacsServiceData());
+        return computationFactory.newCompletedComputation(depsResult)
+                .thenSuspendUntil(() -> this.hasJobFinished(depsResult.getJacsServiceData(), jobInfo))
+                .thenApply(pd -> {
+                    List<String> errors = this.getErrorChecker().collectErrors(pd.getJacsServiceData());
                     String errorMessage = null;
                     if (CollectionUtils.isNotEmpty(errors)) {
                         errorMessage = String.format("Process %s failed; errors found: %s", jobInfo.getScriptName(), String.join(";", errors));
@@ -49,12 +50,12 @@ public abstract class AbstractExeBasedServiceProcessor<T> extends AbstractBasicL
                         errorMessage = String.format("Process %s failed", jobInfo.getScriptName());
                     }
                     if (errorMessage != null) {
-                        jacsServiceData.addEvent(JacsServiceEventTypes.FAILED, errorMessage);
-                        jacsServiceData.setState(JacsServiceState.ERROR);
-                        updateServiceData(jacsServiceData);
-                        throw new ComputationException(jacsServiceData, errorMessage);
+                        pd.getJacsServiceData().addEvent(JacsServiceEventTypes.FAILED, errorMessage);
+                        pd.getJacsServiceData().setState(JacsServiceState.ERROR);
+                        updateServiceData(pd.getJacsServiceData());
+                        throw new ComputationException(pd.getJacsServiceData(), errorMessage);
                     }
-                    return sd;
+                    return pd;
                 });
     }
 

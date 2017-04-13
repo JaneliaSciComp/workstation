@@ -31,7 +31,7 @@ import java.nio.file.Files;
 import java.util.Map;
 
 @Named("fileCopy")
-public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
+public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<Void, File> {
 
     public static class FileCopyArgs extends ServiceArgs {
         @Parameter(names = "-src", description = "Source file name", required = true)
@@ -69,17 +69,16 @@ public class FileCopyProcessor extends AbstractExeBasedServiceProcessor<File> {
     @Override
     public ServiceResultHandler<File> getResultHandler() {
         return new AbstractSingleFileServiceResultHandler() {
-
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                FileCopyArgs args = getArgs(jacsServiceData);
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                FileCopyArgs args = getArgs(depResults.getJacsServiceData());
                 File targetFile = getTargetFile(args);
                 return targetFile.exists();
             }
 
             @Override
-            public File collectResult(JacsServiceData jacsServiceData) {
-                FileCopyArgs args = getArgs(jacsServiceData);
+            public File collectResult(JacsServiceResult<?> depResults) {
+                FileCopyArgs args = getArgs(depResults.getJacsServiceData());
                 File targetFile = getTargetFile(args);
                 return targetFile;
             }

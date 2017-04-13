@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
@@ -41,7 +42,7 @@ import java.util.stream.IntStream;
  * in v3draw format.
  */
 @Named("alignRaw")
-public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<List<File>> {
+public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<List<JacsServiceData>, List<File>> {
 
     private static final String MAX_AFFINE_ITERATIONS = "10000x10000x10000x10000";
     private static final String MAX_CC_ITERATIONS ="100x70x50x0x0" ;
@@ -141,13 +142,13 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
             final String resultsPattern = "glob:**/*.{v3draw}";
 
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                return areAllDependenciesDone(jacsServiceData);
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                return areAllDependenciesDone(depResults.getJacsServiceData());
             }
 
             @Override
-            public List<File> collectResult(JacsServiceData jacsServiceData) {
-                AlignmentArgs args = getArgs(jacsServiceData);
+            public List<File> collectResult(JacsServiceResult<?> depResults) {
+                AlignmentArgs args = getArgs(depResults.getJacsServiceData());
                 return FileUtils.lookupFiles(getResultsDir(args), 1, resultsPattern)
                         .map(Path::toFile)
                         .collect(Collectors.toList());
@@ -167,7 +168,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     @Override
-    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+    protected JacsServiceResult<List<JacsServiceData>> submitServiceDependencies(JacsServiceData jacsServiceData) {
         AlignmentArgs args = getArgs(jacsServiceData);
         AlignmentConfiguration alignConfig = AlignmentUtils.parseAlignConfig(args.configFile);
         ImageCoordinates inputResolution = AlignmentUtils.parseCoordinates(args.input1Res);
@@ -491,7 +492,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                 jacsServiceDataHierarchy,
                 evalServiceData);
 
-        return ImmutableList.of(restoreSizeAlignedSubjectServiceData, verificationMovieServiceData);
+        return new JacsServiceResult<>(jacsServiceDataHierarchy, ImmutableList.of(restoreSizeAlignedSubjectServiceData, verificationMovieServiceData));
     }
 
     private void createWorkingCopy(Path inputFile, Path outputFile) {
@@ -726,8 +727,9 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
+    protected ServiceComputation<JacsServiceResult<List<JacsServiceData>>> processing(JacsServiceResult<List<JacsServiceData>> depResults) {
         // generate metadata
+        JacsServiceData jacsServiceData = depResults.getJacsServiceData();
         AlignmentArgs args = getArgs(jacsServiceData);
         AlignmentConfiguration alignConfig = AlignmentUtils.parseAlignConfig(args.configFile);
 
@@ -784,7 +786,7 @@ public class RawFilesAlignmentProcessor extends AbstractBasicLifeCycleServicePro
                     getAffineTransformFile(workingCCMIPrefix, jacsServiceData),
                     FileUtils.getFilePath(getTransformationsResultsDir(args), "ccmiAffine.txt"));
 
-            return computationFactory.newCompletedComputation(jacsServiceData);
+            return computationFactory.newCompletedComputation(depResults);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

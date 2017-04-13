@@ -3,6 +3,10 @@ package org.janelia.jacs2.asyncservice.common;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
 
+/**
+ * Service processor parameterized on the result type
+ * @param <T> result type
+ */
 public interface ServiceProcessor<T> {
     /**
      * @return service metadata

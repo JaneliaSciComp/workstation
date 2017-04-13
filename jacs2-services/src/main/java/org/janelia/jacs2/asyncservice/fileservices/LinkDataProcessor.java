@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameter;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
@@ -26,7 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Named("linkData")
-public class LinkDataProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
+public class LinkDataProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, File> {
 
     public static class LinkDataArgs extends ServiceArgs {
         @Parameter(names = {"-input", "-source"}, description = "Source name", required = true)
@@ -52,13 +53,13 @@ public class LinkDataProcessor extends AbstractBasicLifeCycleServiceProcessor<Fi
     public ServiceResultHandler<File> getResultHandler() {
         return new AbstractSingleFileServiceResultHandler() {
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                return getTargetFile(getArgs(jacsServiceData)).toFile().exists();
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                return getTargetFile(getArgs(depResults.getJacsServiceData())).toFile().exists();
             }
 
             @Override
-            public File collectResult(JacsServiceData jacsServiceData) {
-                return getTargetFile(getArgs(jacsServiceData)).toFile();
+            public File collectResult(JacsServiceResult<?> depResults) {
+                return getTargetFile(getArgs(depResults.getJacsServiceData())).toFile();
             }
         };
     }
@@ -84,17 +85,17 @@ public class LinkDataProcessor extends AbstractBasicLifeCycleServiceProcessor<Fi
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(jacsServiceData)
-                .thenApply(sd -> {
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
+        return computationFactory.newCompletedComputation(depResults)
+                .thenApply(pd -> {
                     try {
-                        LinkDataArgs args = getArgs(jacsServiceData);
+                        LinkDataArgs args = getArgs(pd.getJacsServiceData());
                         Path sourcePath = getSourceFile(args);
                         Path targetPath = getTargetFile(args);
                         if (!Files.isSameFile(sourcePath, targetPath)) {
                             Files.createSymbolicLink(sourcePath, targetPath);
                         }
-                        return sd;
+                        return pd;
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
                     }

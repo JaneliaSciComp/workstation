@@ -3,19 +3,18 @@ package org.janelia.jacs2.asyncservice.sampleprocessing;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.DefaultServiceErrorChecker;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceErrorChecker;
 import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
-import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractFileListServiceResultHandler;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractAnyServiceResultHandler;
 import org.janelia.jacs2.asyncservice.imageservices.BasicMIPsAndMoviesProcessor;
 import org.janelia.jacs2.asyncservice.utils.FileUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
-import org.janelia.jacs2.dataservice.sample.SampleDataService;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
@@ -29,12 +28,24 @@ import javax.inject.Named;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Named("getSampleMIPsAndMovies")
-public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServiceProcessor<List<File>> {
+public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServiceProcessor<GetSampleMIPsAndMoviesProcessor.GetSampleMIPsIntermediateResult, List<SampleImageMIPsFile>> {
+
+    static class GetSampleMIPsIntermediateResult {
+        final JacsServiceData getSampleLsmsServiceData;
+        final List<SampleImageMIPsFile> sampleImageFileWithMips = new LinkedList<>();
+
+        public GetSampleMIPsIntermediateResult(JacsServiceData getSampleLsmsServiceData) {
+            this.getSampleLsmsServiceData = getSampleLsmsServiceData;
+        }
+
+        public void addSampleImageMipsFile(SampleImageMIPsFile simf) {
+            sampleImageFileWithMips.add(simf);
+        }
+    }
 
     static class SampleMIPsAndMoviesArgs extends SampleServiceArgs {
         @Parameter(names = "-options", description = "Options", required = false)
@@ -43,7 +54,6 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
         public String mipsSubDir = "mips";
     }
 
-    private final SampleDataService sampleDataService;
     private final GetSampleImageFilesProcessor getSampleImageFilesProcessor;
     private final BasicMIPsAndMoviesProcessor basicMIPsAndMoviesProcessor;
 
@@ -51,12 +61,10 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
     GetSampleMIPsAndMoviesProcessor(ServiceComputationFactory computationFactory,
                                     JacsServiceDataPersistence jacsServiceDataPersistence,
                                     @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
-                                    SampleDataService sampleDataService,
                                     GetSampleImageFilesProcessor getSampleImageFilesProcessor,
                                     BasicMIPsAndMoviesProcessor basicMIPsAndMoviesProcessor,
                                     Logger logger) {
         super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
-        this.sampleDataService = sampleDataService;
         this.getSampleImageFilesProcessor = getSampleImageFilesProcessor;
         this.basicMIPsAndMoviesProcessor = basicMIPsAndMoviesProcessor;
     }
@@ -67,37 +75,25 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
     }
 
     @Override
-    public ServiceResultHandler<List<File>> getResultHandler() {
-        return new AbstractFileListServiceResultHandler() {
+    public ServiceResultHandler<List<SampleImageMIPsFile>> getResultHandler() {
+        return new AbstractAnyServiceResultHandler<List<SampleImageMIPsFile>>() {
             final String resultsPattern = "glob:**/*.{png,avi,mp4}";
 
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                return areAllDependenciesDone(jacsServiceData);
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                return areAllDependenciesDone(depResults.getJacsServiceData());
             }
 
             @Override
-            public List<File> collectResult(JacsServiceData jacsServiceData) {
-                SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
-                List<AnatomicalArea> anatomicalAreas =
-                        sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
-                List<File> results = new ArrayList<>();
-                anatomicalAreas.stream()
-                        .flatMap(ar -> ar.getTileLsmPairs()
-                                .stream()
-                                .flatMap(lsmp -> lsmp.getLsmFiles().stream())
-                                .map(lsmf -> {
-                                    File lsmImageFile = SampleServicesUtils.getImageFile(Paths.get(args.sampleDataDir), lsmf);
-
-                                    if (!lsmf.isChanSpecDefined()) {
-                                        throw new ComputationException(jacsServiceData, "No channel spec for LSM " + lsmf.getId());
-                                    }
-                                    return getResultsDir(args, ar.getName(), ar.getObjective(), lsmImageFile);
-                                }))
-                        .forEach(resultsDir -> {
-                            FileUtils.lookupFiles(resultsDir, 1, resultsPattern).forEach(p -> results.add(p.toFile()));
+            public List<SampleImageMIPsFile> collectResult(JacsServiceResult<?> depResults) {
+                GetSampleMIPsIntermediateResult result = (GetSampleMIPsIntermediateResult) depResults.getResult();
+                result.sampleImageFileWithMips.stream()
+                        .forEach(simf -> {
+                            Path mipsResultsDir = Paths.get(simf.getMipsResultsDir());
+                            FileUtils.lookupFiles(mipsResultsDir, 1, resultsPattern)
+                                    .forEach(p -> simf.addMipFile(p.toString()));
                         });
-                return results;
+                return result.sampleImageFileWithMips;
             }
         };
     }
@@ -108,7 +104,7 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
     }
 
     @Override
-    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+    protected JacsServiceResult<GetSampleMIPsIntermediateResult> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleMIPsAndMoviesArgs args = getArgs(jacsServiceData);
 
         JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
@@ -119,39 +115,41 @@ public class GetSampleMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServi
                 new ServiceArg("-sampleDataDir", args.sampleDataDir)
         );
         JacsServiceData getSampleLsmsService = submitDependencyIfNotPresent(jacsServiceDataHierarchy, getSampleLsmsServiceRef);
-
-        List<AnatomicalArea> anatomicalAreas =
-                sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
-
-        return anatomicalAreas.stream()
-                .flatMap(ar -> ar.getTileLsmPairs()
-                        .stream()
-                        .flatMap(lsmp -> lsmp.getLsmFiles().stream())
-                        .map(lsmf -> {
-                            File lsmImageFile = SampleServicesUtils.getImageFile(Paths.get(args.sampleDataDir), lsmf);
-                            if (!lsmf.isChanSpecDefined()) {
-                                throw new ComputationException(jacsServiceData, "No channel spec for LSM " + lsmf.getId());
-                            }
-                            Path resultsDir =  getResultsDir(args, ar.getName(), ar.getObjective(), lsmImageFile);
-                            JacsServiceData basicMipMapsService = basicMIPsAndMoviesProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData)
-                                            .waitFor(getSampleLsmsService)
-                                            .build(),
-                                    new ServiceArg("-imgFile", lsmImageFile.getAbsolutePath()),
-                                    new ServiceArg("-chanSpec", lsmf.getChanSpec()),
-                                    new ServiceArg("-colorSpec", lsmf.getChannelColors()),
-                                    new ServiceArg("-laser", null), // no laser info in the lsm
-                                    new ServiceArg("-gain", null), // no gain info in the lsm
-                                    new ServiceArg("-options", args.options),
-                                    new ServiceArg("-resultsDir", resultsDir.toString())
-                            );
-                            return submitDependencyIfNotPresent(jacsServiceDataHierarchy, basicMipMapsService);
-                        }))
-                .collect(Collectors.toList());
+        return new JacsServiceResult<>(jacsServiceDataHierarchy, new GetSampleMIPsIntermediateResult(getSampleLsmsService));
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(jacsServiceData);
+    protected ServiceComputation<JacsServiceResult<GetSampleMIPsIntermediateResult>> processing(JacsServiceResult<GetSampleMIPsIntermediateResult> depResults) {
+        return computationFactory.newCompletedComputation(depResults)
+                .thenApply(pd -> {
+                    SampleMIPsAndMoviesArgs args = getArgs(pd.getJacsServiceData());
+                    List<SampleImageFile> sampleImageFiles = getSampleImageFilesProcessor.getResultHandler().getServiceDataResult(depResults.getResult().getSampleLsmsServiceData);
+                    sampleImageFiles.stream()
+                            .forEach(sif -> {
+                                String lsmImageFileName = sif.getWorkingFilePath();
+                                if (!sif.isChanSpecDefined()) {
+                                    throw new ComputationException(pd.getJacsServiceData(), "No channel spec for LSM " + sif.getId());
+                                }
+                                Path resultsDir =  getResultsDir(args, sif.getArea(), sif.getObjective(), new File(lsmImageFileName));
+                                JacsServiceData basicMipMapsService = basicMIPsAndMoviesProcessor.createServiceData(new ServiceExecutionContext.Builder(depResults.getJacsServiceData())
+                                                .waitFor(depResults.getResult().getSampleLsmsServiceData)
+                                                .build(),
+                                        new ServiceArg("-imgFile", lsmImageFileName),
+                                        new ServiceArg("-chanSpec", sif.getChanSpec()),
+                                        new ServiceArg("-colorSpec", sif.getColorSpec()),
+                                        new ServiceArg("-laser", null), // no laser info in the lsm
+                                        new ServiceArg("-gain", null), // no gain info in the lsm
+                                        new ServiceArg("-options", args.options),
+                                        new ServiceArg("-resultsDir", resultsDir.toString())
+                                );
+                                submitDependencyIfNotPresent(depResults.getJacsServiceData(), basicMipMapsService);
+                                SampleImageMIPsFile sampleImageMIPsFile = new SampleImageMIPsFile();
+                                sampleImageMIPsFile.setSampleImageFile(sif);
+                                sampleImageMIPsFile.setMipsResultsDir(resultsDir.toString());
+                                depResults.getResult().addSampleImageMipsFile(sampleImageMIPsFile);
+                            });
+                    return pd;
+                });
     }
 
     private Path getResultsDir(SampleMIPsAndMoviesArgs args, String area, String objective, File lsmImageFile) {

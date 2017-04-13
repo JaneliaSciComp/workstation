@@ -4,6 +4,7 @@ import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableList;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
@@ -29,7 +30,7 @@ import java.util.List;
  * AlignmentVerificationMovieProcessor generates the alignment verification movie.
  */
 @Named("alignmentVerificationMovie")
-public class AlignmentVerificationMovieProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
+public class AlignmentVerificationMovieProcessor extends AbstractBasicLifeCycleServiceProcessor<List<JacsServiceData>, File> {
 
     static class AlignmentVerificationMoviewArgs extends ServiceArgs {
         @Parameter(names = {"-s", "-subject"}, description = "Subject file", required = true)
@@ -72,13 +73,13 @@ public class AlignmentVerificationMovieProcessor extends AbstractBasicLifeCycleS
         return new AbstractSingleFileServiceResultHandler() {
 
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                return getOutputFile(getArgs(jacsServiceData)).toFile().exists();
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                return getOutputFile(getArgs(depResults.getJacsServiceData())).toFile().exists();
             }
 
             @Override
-            public File collectResult(JacsServiceData jacsServiceData) {
-                return getOutputFile(getArgs(jacsServiceData)).toFile();
+            public File collectResult(JacsServiceResult<?> depResults) {
+                return getOutputFile(getArgs(depResults.getJacsServiceData())).toFile();
             }
         };
     }
@@ -95,7 +96,7 @@ public class AlignmentVerificationMovieProcessor extends AbstractBasicLifeCycleS
     }
 
     @Override
-    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+    protected JacsServiceResult<List<JacsServiceData>> submitServiceDependencies(JacsServiceData jacsServiceData) {
         AlignmentVerificationMoviewArgs args = getArgs(jacsServiceData);
         JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
 
@@ -149,12 +150,12 @@ public class AlignmentVerificationMovieProcessor extends AbstractBasicLifeCycleS
                         jacsServiceDataHierarchy,
                         mergeChannelsServiceData);
 
-        return ImmutableList.of(convertToMovieServiceData);
+        return new JacsServiceResult<>(jacsServiceDataHierarchy, ImmutableList.of(convertToMovieServiceData));
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(jacsServiceData);
+    protected ServiceComputation<JacsServiceResult<List<JacsServiceData>>> processing(JacsServiceResult<List<JacsServiceData>> depResults) {
+        return computationFactory.newCompletedComputation(depResults);
     }
 
     private AlignmentVerificationMoviewArgs getArgs(JacsServiceData jacsServiceData) {

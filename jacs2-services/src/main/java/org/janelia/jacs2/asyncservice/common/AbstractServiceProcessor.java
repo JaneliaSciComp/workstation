@@ -66,7 +66,7 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
 
     @Override
     public ServiceResultHandler<T> getResultHandler() {
-        return new EmptyServiceResultHandler<>();
+        return new EmptyServiceResultHandler<T>();
     }
 
     @Override

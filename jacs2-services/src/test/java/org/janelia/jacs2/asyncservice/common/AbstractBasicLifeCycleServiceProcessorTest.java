@@ -1,6 +1,5 @@
 package org.janelia.jacs2.asyncservice.common;
 
-import com.google.common.collect.ImmutableList;
 import org.janelia.jacs2.asyncservice.common.resulthandlers.VoidServiceResultHandler;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
@@ -10,8 +9,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import java.util.List;
-import java.util.concurrent.CyclicBarrier;
 import java.util.function.Consumer;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -28,7 +25,7 @@ public class AbstractBasicLifeCycleServiceProcessorTest {
     private static final String TEST_WORKING_DIR = "testDir";
     private static final Number TEST_ID = 1L;
 
-    static class TestSuccessfulProcessorBasicLifeCycle extends AbstractBasicLifeCycleServiceProcessor<Void> {
+    static class TestSuccessfulProcessorBasicLifeCycle extends AbstractBasicLifeCycleServiceProcessor<Void, Void> {
 
         public TestSuccessfulProcessorBasicLifeCycle(ServiceComputationFactory computationFactory,
                                                      JacsServiceDataPersistence jacsServiceDataPersistence,
@@ -48,17 +45,17 @@ public class AbstractBasicLifeCycleServiceProcessorTest {
         }
 
         @Override
-        protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
-            return ImmutableList.of();
+        protected JacsServiceResult<Void> submitServiceDependencies(JacsServiceData jacsServiceData) {
+            return new JacsServiceResult<>(jacsServiceData);
         }
 
         @Override
-        protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-            return computationFactory.newCompletedComputation(jacsServiceData);
+        protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
+            return computationFactory.newCompletedComputation(depResults);
         }
     }
 
-    static class TestFailedProcessorBasicLifeCycle extends AbstractBasicLifeCycleServiceProcessor<Void> {
+    static class TestFailedProcessorBasicLifeCycle extends AbstractBasicLifeCycleServiceProcessor<Void, Void> {
 
         public TestFailedProcessorBasicLifeCycle(ServiceComputationFactory computationFactory,
                                                  JacsServiceDataPersistence jacsServiceDataPersistence,
@@ -78,8 +75,8 @@ public class AbstractBasicLifeCycleServiceProcessorTest {
         }
 
         @Override
-        protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-            return computationFactory.newFailedComputation(new ComputationException(jacsServiceData));
+        protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
+            return computationFactory.newFailedComputation(new ComputationException(depResults.getJacsServiceData()));
         }
 
     }

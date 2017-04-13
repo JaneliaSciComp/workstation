@@ -2,6 +2,7 @@ package org.janelia.jacs2.asyncservice.imageservices;
 
 import com.beust.jcommander.Parameter;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Named("vaa3dBlend")
-public class Vaa3dBlendProcessor extends AbstractBasicLifeCycleServiceProcessor<File> {
+public class Vaa3dBlendProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, File> {
 
     static class Vaa3dBlendArgs extends ServiceArgs {
         @Parameter(names = "-inputDir", description = "Input file", required = true)
@@ -59,13 +60,13 @@ public class Vaa3dBlendProcessor extends AbstractBasicLifeCycleServiceProcessor<
         return new AbstractSingleFileServiceResultHandler() {
 
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                return getOutputFile(getArgs(jacsServiceData)).toFile().exists();
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                return getOutputFile(getArgs(depResults.getJacsServiceData())).toFile().exists();
             }
 
             @Override
-            public File collectResult(JacsServiceData jacsServiceData) {
-                return getOutputFile(getArgs(jacsServiceData)).toFile();
+            public File collectResult(JacsServiceResult<?> depResults) {
+                return getOutputFile(getArgs(depResults.getJacsServiceData())).toFile();
             }
         };
     }
@@ -76,11 +77,11 @@ public class Vaa3dBlendProcessor extends AbstractBasicLifeCycleServiceProcessor<
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        Vaa3dBlendArgs args = getArgs(jacsServiceData);
-        JacsServiceData vaa3dPluginService = createVaa3dPluginService(args, jacsServiceData);
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
+        Vaa3dBlendArgs args = getArgs(depResults.getJacsServiceData());
+        JacsServiceData vaa3dPluginService = createVaa3dPluginService(args, depResults.getJacsServiceData());
         return vaa3dPluginProcessor.process(vaa3dPluginService)
-                .thenApply(r -> jacsServiceData);
+                .thenApply(r -> depResults);
     }
 
     private JacsServiceData createVaa3dPluginService(Vaa3dBlendArgs args, JacsServiceData jacsServiceData) {

@@ -15,5 +15,4 @@ public abstract class AbstractSingleFileServiceResultHandler implements ServiceR
     public File getServiceDataResult(JacsServiceData jacsServiceData) {
         return ServiceDataUtils.stringToFile(jacsServiceData.getStringifiedResult());
     }
-
 }

@@ -6,6 +6,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.ComputationException;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
@@ -33,7 +34,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 @Named("vaa3dPlugin")
-public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor<List<File>> {
+public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, List<File>> {
 
     static class Vaa3dPluginArgs extends ServiceArgs {
         @Parameter(names = {"-x", "-plugin"}, description = "Vaa3d plugin name", required = true)
@@ -69,14 +70,14 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
     public ServiceResultHandler<List<File>> getResultHandler() {
         return new AbstractFileListServiceResultHandler() {
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                Vaa3dPluginArgs args = getArgs(jacsServiceData);
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                Vaa3dPluginArgs args = getArgs(depResults.getJacsServiceData());
                 return args.pluginOutputs.stream().reduce(true, (b, fn) -> b && new File(fn).exists(), (b1, b2) -> b1 && b2);
             }
 
             @Override
-            public List<File> collectResult(JacsServiceData jacsServiceData) {
-                Vaa3dPluginArgs args = getArgs(jacsServiceData);
+            public List<File> collectResult(JacsServiceResult<?> depResults) {
+                Vaa3dPluginArgs args = getArgs(depResults.getJacsServiceData());
                 return args.pluginOutputs.stream().map(File::new).filter(File::exists).collect(Collectors.toList());
             }
         };
@@ -106,11 +107,11 @@ public class Vaa3dPluginProcessor extends AbstractBasicLifeCycleServiceProcessor
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        Vaa3dPluginArgs args = getArgs(jacsServiceData);
-        JacsServiceData vaa3dService = createVaa3dService(args, jacsServiceData);
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
+        Vaa3dPluginArgs args = getArgs(depResults.getJacsServiceData());
+        JacsServiceData vaa3dService = createVaa3dService(args, depResults.getJacsServiceData());
         return vaa3dProcessor.process(vaa3dService)
-                .thenApply(voidResult -> jacsServiceData);
+                .thenApply(voidResult -> depResults);
     }
 
     private JacsServiceData createVaa3dService(Vaa3dPluginArgs args, JacsServiceData jacsServiceData) {

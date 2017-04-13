@@ -3,6 +3,7 @@ package org.janelia.jacs2.asyncservice.imageservices;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
@@ -24,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Named("vaa3dStitch")
-public class Vaa3dStitchProcessor extends AbstractBasicLifeCycleServiceProcessor<Void> {
+public class Vaa3dStitchProcessor extends AbstractBasicLifeCycleServiceProcessor<Void, Void> {
 
     static class Vaa3dStitchArgs extends ServiceArgs {
         @Parameter(names = "-inputDir", description = "Input directory", required = true)
@@ -63,11 +64,11 @@ public class Vaa3dStitchProcessor extends AbstractBasicLifeCycleServiceProcessor
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        Vaa3dStitchArgs args = getArgs(jacsServiceData);
-        JacsServiceData vaa3dPluginService = createVaa3dPluginService(args, jacsServiceData);
+    protected ServiceComputation<JacsServiceResult<Void>> processing(JacsServiceResult<Void> depResults) {
+        Vaa3dStitchArgs args = getArgs(depResults.getJacsServiceData());
+        JacsServiceData vaa3dPluginService = createVaa3dPluginService(args, depResults.getJacsServiceData());
         return vaa3dPluginProcessor.process(vaa3dPluginService)
-                .thenApply(r -> jacsServiceData);
+                .thenApply(r -> depResults);
     }
 
     private JacsServiceData createVaa3dPluginService(Vaa3dStitchArgs args, JacsServiceData jacsServiceData) {

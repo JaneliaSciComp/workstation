@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
 import org.janelia.jacs2.asyncservice.common.AbstractBasicLifeCycleServiceProcessor;
 import org.janelia.jacs2.asyncservice.common.DefaultServiceErrorChecker;
+import org.janelia.jacs2.asyncservice.common.JacsServiceResult;
 import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceErrorChecker;
@@ -32,7 +33,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Named("getSampleImageFiles")
-public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceProcessor<List<SampleImageFile>> {
+public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceProcessor<List<GetSampleImageFilesProcessor.GetSampleImageIntermediateData>, List<SampleImageFile>> {
+
+    static class GetSampleImageIntermediateData {
+        private final SampleImageFile sampleImageFile;
+        private final JacsServiceData fileCopyServiceData;
+
+        public GetSampleImageIntermediateData(SampleImageFile sampleImageFile, JacsServiceData fileCopyServiceData) {
+            this.sampleImageFile = sampleImageFile;
+            this.fileCopyServiceData = fileCopyServiceData;
+        }
+    }
 
     private final SampleDataService sampleDataService;
     private final FileCopyProcessor fileCopyProcessor;
@@ -58,32 +69,16 @@ public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceP
     public ServiceResultHandler<List<SampleImageFile>> getResultHandler() {
         return new AbstractAnyServiceResultHandler<List<SampleImageFile>>() {
             @Override
-            public boolean isResultReady(JacsServiceData jacsServiceData) {
-                return areAllDependenciesDone(jacsServiceData);
+            public boolean isResultReady(JacsServiceResult<?> depResults) {
+                return areAllDependenciesDone(depResults.getJacsServiceData());
             }
 
+            @SuppressWarnings("unchecked")
             @Override
-            public List<SampleImageFile> collectResult(JacsServiceData jacsServiceData) {
-                SampleServiceArgs args = getArgs(jacsServiceData);
-                List<AnatomicalArea> anatomicalAreas =
-                        sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsServiceData.getOwner(), args.sampleId, args.sampleObjective);
-                Path destinationDirectory = Paths.get(args.sampleDataDir);
-                // invoke child file copy services for all LSM files
-                return anatomicalAreas.stream()
-                        .flatMap(ar -> ar.getTileLsmPairs()
-                                .stream()
-                                .flatMap(lsmp -> lsmp.getLsmFiles().stream())
-                                .map(lsmf -> {
-                                    SampleImageFile sif = new SampleImageFile();
-                                    sif.setId(lsmf.getId());
-                                    sif.setArchiveFilePath(lsmf.getFilepath());
-                                    sif.setWorkingFilePath(SampleServicesUtils.getImageFile(destinationDirectory, lsmf).getAbsolutePath());
-                                    sif.setArea(ar.getName());
-                                    sif.setChanSpec(lsmf.getChanSpec());
-                                    sif.setColorSpec(lsmf.getChannelColors());
-                                    sif.setObjective(ar.getObjective());
-                                    return sif;
-                                }))
+            public List<SampleImageFile> collectResult(JacsServiceResult<?> depResults) {
+                List<GetSampleImageIntermediateData> getSampleServiceData = (List<GetSampleImageIntermediateData>) depResults.getResult();
+                return getSampleServiceData.stream()
+                        .map(sd -> sd.sampleImageFile)
                         .collect(Collectors.toList());
             }
 
@@ -108,7 +103,7 @@ public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceP
     }
 
     @Override
-    protected List<JacsServiceData> submitServiceDependencies(JacsServiceData jacsServiceData) {
+    protected JacsServiceResult<List<GetSampleImageIntermediateData>> submitServiceDependencies(JacsServiceData jacsServiceData) {
         SampleServiceArgs args = getArgs(jacsServiceData);
         Path destinationDirectory = Paths.get(args.sampleDataDir);
 
@@ -121,12 +116,13 @@ public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceP
 
         JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
         // invoke child file copy services for all LSM files
-        return anatomicalAreas.stream()
+        List<GetSampleImageIntermediateData> getSampleServiceData = anatomicalAreas.stream()
                 .flatMap(ar -> ar.getTileLsmPairs()
                         .stream()
                         .flatMap(lsmp -> lsmp.getLsmFiles().stream())
                         .map(lsmf -> {
                             SampleImageFile sif = new SampleImageFile();
+                            sif.setSampleId(args.sampleId);
                             sif.setId(lsmf.getId());
                             sif.setArchiveFilePath(lsmf.getFilepath());
                             sif.setWorkingFilePath(SampleServicesUtils.getImageFile(destinationDirectory, lsmf).getAbsolutePath());
@@ -140,15 +136,15 @@ public class GetSampleImageFilesProcessor extends AbstractBasicLifeCycleServiceP
                     JacsServiceData fileCopyService = fileCopyProcessor.createServiceData(new ServiceExecutionContext.Builder(jacsServiceData).processingLocation(ProcessingLocation.CLUSTER).build(),
                             new ServiceArg("-src", sif.getArchiveFilePath()),
                             new ServiceArg("-dst", sif.getWorkingFilePath()));
-                    return submitDependencyIfNotPresent(jacsServiceDataHierarchy, fileCopyService);
-
+                    return new GetSampleImageIntermediateData(sif, submitDependencyIfNotPresent(jacsServiceDataHierarchy, fileCopyService));
                 })
                 .collect(Collectors.toList());
+        return new JacsServiceResult<>(jacsServiceDataHierarchy, getSampleServiceData);
     }
 
     @Override
-    protected ServiceComputation<JacsServiceData> processing(JacsServiceData jacsServiceData) {
-        return computationFactory.newCompletedComputation(jacsServiceData);
+    protected ServiceComputation<JacsServiceResult<List<GetSampleImageIntermediateData>>> processing(JacsServiceResult<List<GetSampleImageIntermediateData>> depResults) {
+        return computationFactory.newCompletedComputation(depResults);
     }
 
     private SampleServiceArgs getArgs(JacsServiceData jacsServiceData) {
