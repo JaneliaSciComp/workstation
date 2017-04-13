@@ -8,7 +8,13 @@ import javax.inject.Named;
 public class ServiceArgs {
 
     public static <A extends ServiceArgs> A parse(String[] argsList, A args) {
-        new JCommander(args).parse(argsList);
+        System.out.println("ServiceArgs parse check1");
+        try {
+            new JCommander(args).parse(argsList);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        System.out.println("ServiceArgs parse check2");
         return args;
     }
 
