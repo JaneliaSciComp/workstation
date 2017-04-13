@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 
 import java.util.List;
+import java.util.concurrent.CyclicBarrier;
 import java.util.function.Consumer;
 
 import static org.hamcrest.CoreMatchers.equalTo;

@@ -1,8 +1,6 @@
 package org.janelia.jacs2.asyncservice.common;
 
-import com.google.common.base.Equivalence;
 import org.apache.commons.collections4.CollectionUtils;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceEventTypes;
@@ -16,16 +14,11 @@ import java.util.Optional;
 
 public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends AbstractServiceProcessor<T> {
 
-    protected final ServiceComputationFactory computationFactory;
-    protected final JacsServiceDataPersistence jacsServiceDataPersistence;
-
     public AbstractBasicLifeCycleServiceProcessor(ServiceComputationFactory computationFactory,
                                                   JacsServiceDataPersistence jacsServiceDataPersistence,
                                                   String defaultWorkingDir,
                                                   Logger logger) {
-        super(defaultWorkingDir, logger);
-        this.computationFactory = computationFactory;
-        this.jacsServiceDataPersistence = jacsServiceDataPersistence;
+        super(computationFactory, jacsServiceDataPersistence, defaultWorkingDir, logger);
     }
 
     @Override
@@ -37,7 +30,6 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
                     this.submitServiceDependencies(currentServiceDataHolder[0]);
                     return currentServiceDataHolder[0];
                 })
-                .thenApply(this::prepareProcessing)
                 .thenSuspendUntil(() -> !suspendUntilAllDependenciesComplete(currentServiceDataHolder[0])) // suspend until all dependencies complete
                 .thenCompose(this::processing)
                 .thenSuspendUntil(() -> this.isResultReady(currentServiceDataHolder[0])) // wait until the result becomes available
@@ -55,11 +47,6 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
                         success(jacsServiceData);
                     }
                 });
-    }
-
-    @Override
-    public ServiceErrorChecker getErrorChecker() {
-        return new DefaultServiceErrorChecker(logger);
     }
 
     protected JacsServiceData prepareProcessing(JacsServiceData jacsServiceData) {
@@ -153,10 +140,6 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
         return sr.getResult();
     }
 
-    protected void updateServiceData(JacsServiceData jacsServiceData) {
-        if (jacsServiceData.hasId()) jacsServiceDataPersistence.update(jacsServiceData);
-    }
-
     protected void success(JacsServiceData jacsServiceData) {
         if (jacsServiceData.hasCompletedSuccessfully()) {
             // nothing to do
@@ -197,4 +180,5 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<T> extends Abstract
             return dependency;
         }
     }
+
 }

@@ -137,13 +137,7 @@ public class LsmFileMetadataProcessor extends AbstractExeBasedServiceProcessor<F
     }
 
     private File getOutputFile(LsmFileMetadataArgs args) {
-        try {
-            File outputFile = new File(args.outputLSMMetadata);
-            Files.createDirectories(outputFile.getParentFile().toPath());
-            return outputFile;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        return new File(args.outputLSMMetadata);
     }
 
 }

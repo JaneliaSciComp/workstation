@@ -1,7 +1,8 @@
 package org.janelia.jacs2.asyncservice.utils;
 
-import org.janelia.jacs2.model.jacsservice.JacsServiceData;
+import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.FileSystems;
@@ -56,4 +57,24 @@ public class FileUtils {
         });
     }
 
+    public static Path getFilePath(Path dir, String fileName) {
+        return dir.resolve(new File(fileName).getName());
+    }
+
+    public static Path replaceFileExt(Path filePath, String fileExt) {
+        return getFilePath(filePath.getParent(), filePath.toFile().getName(), fileExt);
+    }
+
+    public static Path getFilePath(Path dir, String fileName, String fileExt) {
+        return getFilePath(dir, null, fileName, null, fileExt);
+    }
+
+    public static Path getFilePath(Path dir, String prefix, String fileName, String suffix, String fileExt) {
+        String actualFileName = String.format("%s%s%s.%s",
+                StringUtils.defaultIfBlank(prefix, ""),
+                com.google.common.io.Files.getNameWithoutExtension(fileName),
+                StringUtils.defaultIfBlank(suffix, ""),
+                fileExt);
+        return dir.resolve(actualFileName);
+    }
 }

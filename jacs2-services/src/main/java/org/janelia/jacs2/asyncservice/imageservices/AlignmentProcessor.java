@@ -154,10 +154,12 @@ public class AlignmentProcessor extends AbstractBasicLifeCycleServiceProcessor<L
             // male must be explicit
             alignmentArgs.add(new ServiceArg("-targetTemplate", alignConfig.templates.mfbSxDpx));
             alignmentArgs.add(new ServiceArg("-targetExtTemplate", alignConfig.templates.mfbSxDpxExt));
+            alignmentArgs.add(new ServiceArg("-alignmentSpace", "Barry 63x Subsampled Alignment Space"));
         } else {
             // otherwise select female templates
             alignmentArgs.add(new ServiceArg("-targetTemplate", alignConfig.templates.cbmCfo));
             alignmentArgs.add(new ServiceArg("-targetExtTemplate", alignConfig.templates.cbmCfoExt));
+            alignmentArgs.add(new ServiceArg("-alignmentSpace", "Yoshi 63x Subsampled Alignment Space"));
         }
 
         JacsServiceData jacsServiceDataHierarchy = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());

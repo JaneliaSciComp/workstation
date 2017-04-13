@@ -2,6 +2,8 @@ package org.janelia.jacs2.asyncservice.common;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.asyncservice.common.resulthandlers.EmptyServiceResultHandler;
+import org.janelia.jacs2.dataservice.persistence.JacsServiceDataPersistence;
 import org.janelia.jacs2.model.jacsservice.JacsServiceData;
 import org.janelia.jacs2.model.jacsservice.JacsServiceDataBuilder;
 import org.janelia.jacs2.model.jacsservice.ServiceMetaData;
@@ -14,10 +16,17 @@ import java.util.stream.Stream;
 
 public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T> {
 
+    protected final ServiceComputationFactory computationFactory;
+    protected final JacsServiceDataPersistence jacsServiceDataPersistence;
     protected final String defaultWorkingDir;
     protected final Logger logger;
 
-    public AbstractServiceProcessor(String defaultWorkingDir, Logger logger) {
+    public AbstractServiceProcessor(ServiceComputationFactory computationFactory,
+                                    JacsServiceDataPersistence jacsServiceDataPersistence,
+                                    String defaultWorkingDir,
+                                    Logger logger) {
+        this.computationFactory = computationFactory;
+        this.jacsServiceDataPersistence = jacsServiceDataPersistence;
         this.defaultWorkingDir = defaultWorkingDir;
         this.logger = logger;
     }
@@ -53,6 +62,16 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
             executionContext.getParentServiceData().getDependenciesIds().forEach(jacsServiceDataBuilder::addDependencyId);
         }
         return jacsServiceDataBuilder.build();
+    }
+
+    @Override
+    public ServiceResultHandler<T> getResultHandler() {
+        return new EmptyServiceResultHandler<>();
+    }
+
+    @Override
+    public ServiceErrorChecker getErrorChecker() {
+        return new DefaultServiceErrorChecker(logger);
     }
 
     protected Path getWorkingDirectory(JacsServiceData jacsServiceData) {
@@ -91,6 +110,10 @@ public abstract class AbstractServiceProcessor<T> implements ServiceProcessor<T>
         }
         pathElemsBuilder.addAll(Arrays.asList(more));
         return Paths.get(baseDir, pathElemsBuilder.build().toArray(new String[0])).toAbsolutePath();
+    }
+
+    protected void updateServiceData(JacsServiceData jacsServiceData) {
+        if (jacsServiceData.hasId()) jacsServiceDataPersistence.update(jacsServiceData);
     }
 
 }

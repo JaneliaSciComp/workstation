@@ -10,7 +10,6 @@ import org.janelia.jacs2.asyncservice.common.ServiceArg;
 import org.janelia.jacs2.asyncservice.common.ServiceArgs;
 import org.janelia.jacs2.asyncservice.common.ServiceComputation;
 import org.janelia.jacs2.asyncservice.common.ServiceComputationFactory;
-import org.janelia.jacs2.asyncservice.common.ServiceErrorChecker;
 import org.janelia.jacs2.asyncservice.common.ServiceExecutionContext;
 import org.janelia.jacs2.asyncservice.common.ServiceResultHandler;
 import org.janelia.jacs2.asyncservice.common.resulthandlers.AbstractFileListServiceResultHandler;
@@ -189,7 +188,7 @@ public class BasicMIPsAndMoviesProcessor extends AbstractBasicLifeCycleServicePr
     }
 
     private BasicMIPsAndMoviesArgs getArgs(JacsServiceData jacsServiceData) {
-        return BasicMIPsAndMoviesArgs.parse(jacsServiceData.getArgsArray(), new BasicMIPsAndMoviesArgs());
+        return ServiceArgs.parse(jacsServiceData.getArgsArray(), new BasicMIPsAndMoviesArgs());
     }
 
     private Path getResultsDir(BasicMIPsAndMoviesArgs args) {
