@@ -65,7 +65,7 @@ public abstract class AbstractBasicLifeCycleServiceProcessor<S, T> extends Abstr
         }
         setOutputPath(jacsServiceDataHierarchy);
         setErrorPath(jacsServiceDataHierarchy);
-        return jacsServiceData;
+        return jacsServiceDataHierarchy;
     }
 
     /**
