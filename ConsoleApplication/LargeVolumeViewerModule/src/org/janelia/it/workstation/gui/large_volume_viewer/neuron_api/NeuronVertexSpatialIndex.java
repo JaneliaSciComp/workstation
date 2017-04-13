@@ -110,8 +110,9 @@ public class NeuronVertexSpatialIndex {
     public List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2) {
         if (index==null) return Collections.emptyList();
         try {
-            log.debug("Finding anchors in area bounded by points: p1=({},{},{}) p2=({},{},{})",p1[0],p1[1],p1[2],p2[0],p2[1],p2[2]);
-            return index.range(p1, p2);
+            List<NeuronVertex> results = index.range(p1, p2);
+            log.debug("Found "+results.size()+" anchors in area bounded by points: p1=({},{},{}) p2=({},{},{})",p1[0],p1[1],p1[2],p2[0],p2[1],p2[2]);
+            return results;
         } 
         catch (KeySizeException ex) {
             log.warn("Exception while anchors in area using spatial index", ex);

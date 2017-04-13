@@ -89,6 +89,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
                 // Prepare the view for loading volume data
                 HttpDataSource.setMouseLightCurrentSampleId(sample.getId());
+                SkeletonController.refreshInstance();
                 refresh();
                 
                 // Load the volume in the background

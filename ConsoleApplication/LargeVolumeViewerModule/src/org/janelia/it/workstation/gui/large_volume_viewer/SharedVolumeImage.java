@@ -131,8 +131,6 @@ implements VolumeImage3d
         if (folderUrl == null)
             return false;
 
-        fireVolumeLoadStarted(folderUrl);
-
         loadAdapter = createLoadAdapter(folderUrl);
 
         if (loadAdapter==null)
@@ -164,12 +162,6 @@ implements VolumeImage3d
 
     public AbstractTextureLoadAdapter getLoadAdapter() {
         return loadAdapter;
-    }
-
-    private void fireVolumeLoadStarted(URL volume) {
-        for ( VolumeLoadListener l: volumeLoadListeners ) {
-            l.volumeLoadStarted(volume);
-        }
     }
     
     private void fireVolumeLoaded(URL volume) {

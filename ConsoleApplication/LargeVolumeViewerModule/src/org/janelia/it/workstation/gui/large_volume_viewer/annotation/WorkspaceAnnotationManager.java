@@ -87,10 +87,7 @@ public class WorkspaceAnnotationManager extends BasicAnnotationManager {
 
     //-------------------------------IMPLEMENTS VolumeLoadListener
     @Override
-    public void volumeLoadStarted(URL vol) {
-    }
-    @Override
     public void volumeLoaded(URL url) {
-        activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat(), getSampleID());
+        activityLog.setTileFormat(getTileFormat(), getSampleID());
     }
 }

@@ -71,9 +71,6 @@ public class SampleAnnotationManager extends BasicAnnotationManager {
 
     //-------------------------------IMPLEMENTS VolumeLoadListener
     @Override
-    public void volumeLoadStarted(URL vol) {
-    }
-    @Override
     public void volumeLoaded(URL url) {
         activityLog.setTileFormat(getTileFormat(), initialObject.getId());
     }

@@ -76,6 +76,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         this.skipSkeletonChange = false;
         skeletonChanged();
     }
+    
+    public static void refreshInstance() {
+        instance = new SkeletonController();
+    }
 
     public static SkeletonController getInstance() {
         return instance;

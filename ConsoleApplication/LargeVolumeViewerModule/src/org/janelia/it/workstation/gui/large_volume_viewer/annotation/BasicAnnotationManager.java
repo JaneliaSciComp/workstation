@@ -47,7 +47,6 @@ import org.janelia.it.workstation.browser.workers.SimpleListenableFuture;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NewWorkspaceActionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
@@ -95,8 +94,6 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     // quad view ui object
     protected QuadViewUi quadViewUi;
 
-    protected TileServer tileServer;
-
     // annotation model object
     protected final AnnotationModel annotationModel;
 
@@ -125,7 +122,6 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     @Override
     public void setQuadViewUi(QuadViewUi quadViewUi) {
         this.quadViewUi = quadViewUi;
-        this.tileServer = quadViewUi.getTileServer();
     }
 
     @Override
@@ -135,7 +131,7 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
 
     @Override
     public TileFormat getTileFormat() {
-        return tileServer.getLoadAdapter().getTileFormat();
+        return quadViewUi.getTileServer().getLoadAdapter().getTileFormat();
     }
 
     @Override

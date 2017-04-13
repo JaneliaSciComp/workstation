@@ -85,11 +85,7 @@ public class SessionAnnotationManager extends BasicAnnotationManager {
         annotationModel.loadComplete();
     }
 
-    //-------------------------------IMPLEMENTS VolumeLoadListener
-    @Override
-    public void volumeLoadStarted(URL vol) {
-    }
-    
+    //-------------------------------IMPLEMENTS VolumeLoadListener    
     @Override
     public void volumeLoaded(URL url) {
         // TODO: implement this to set the tile format

@@ -1,14 +1,11 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.jetty.util.log.Log;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -19,7 +16,6 @@ import org.janelia.it.jacs.model.util.MatrixUtilities;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchoredVoxelPathListener;
@@ -31,7 +27,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredP
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -61,7 +56,7 @@ import Jama.Matrix;
  * somewhat interchangeably, which can be confusing
  */
 public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener,
-        GlobalAnnotationListener, VolumeLoadListener {
+        GlobalAnnotationListener {
 
     private static final Logger logger = LoggerFactory.getLogger(LargeVolumeViewerTranslator.class);
 
@@ -294,15 +289,9 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
     
     @Override
-    public void volumeLoadStarted(URL vol) {
-    }
-    
-    @Override
-    public void volumeLoaded(URL vol) {
-    }
-    
-    @Override
     public void workspaceLoaded(TmWorkspace workspace) {
+
+        logger.info("Workspace loaded");
         
         if (workspace!=null) {
 
@@ -330,48 +319,51 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     @Override
     public void spatialIndexReady(TmWorkspace workspace) {
 
-        logger.info("Rebuilding anchor model");
-        
-        Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
-        List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
-        List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
-        
-        for (TmNeuronMetadata neuron: annotationMgr.getNeuronList()) {
+        logger.info("Spatial index is ready. Rebuilding anchor model.");
 
-            // (we used to retrieve global color here; replaced by styles)
-            // set styles for our neurons; if a neuron isn't in the saved map,
-            //  use a default style
-            NeuronStyle style = ModelTranslation.translateNeuronStyle(neuron);
-            updateNeuronStyleMap.put(neuron, style);
+        if (workspace != null) {
             
-            // note that we must add annotations in parent-child sequence
-            //  so lines get drawn correctly; we must send this as one big
-            //  list so the anchor update routine is run once will all anchors
-            //  present rather than piecemeal (which will cause problems in
-            //  some cases on workspace reloads)
-            for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
-                addedAnchorList.addAll(neuron.getSubTreeList(root));
+            Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
+            List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
+            List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
+            
+            for (TmNeuronMetadata neuron: annotationMgr.getNeuronList()) {
+    
+                // (we used to retrieve global color here; replaced by styles)
+                // set styles for our neurons; if a neuron isn't in the saved map,
+                //  use a default style
+                NeuronStyle style = ModelTranslation.translateNeuronStyle(neuron);
+                updateNeuronStyleMap.put(neuron, style);
+                
+                // note that we must add annotations in parent-child sequence
+                //  so lines get drawn correctly; we must send this as one big
+                //  list so the anchor update routine is run once will all anchors
+                //  present rather than piecemeal (which will cause problems in
+                //  some cases on workspace reloads)
+                for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+                    addedAnchorList.addAll(neuron.getSubTreeList(root));
+                }
+    
+                // draw anchored paths, too, after all the anchors are drawn
+                for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
+                    voxelPathList.add(TAP2AVP(neuron.getId(), path));
+                }   
             }
-
-            // draw anchored paths, too, after all the anchors are drawn
-            for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
-                voxelPathList.add(TAP2AVP(neuron.getId(), path));
-            }   
+    
+            skeletonController.setSkipSkeletonChange(true);
+    
+            fireNeuronStylesChangedEvent(updateNeuronStyleMap);
+            logger.debug("updated {} neuron styles", updateNeuronStyleMap.size());
+            
+            fireAnchorsAdded(addedAnchorList);
+            logger.info("added {} anchors", addedAnchorList.size());
+    
+            fireAnchoredVoxelPathsAdded(voxelPathList);
+            logger.debug("added {} anchored paths", voxelPathList.size());
+            
+            skeletonController.setSkipSkeletonChange(false);
+            skeletonController.skeletonChanged(true);
         }
-
-        skeletonController.setSkipSkeletonChange(true);
-
-        fireNeuronStylesChangedEvent(updateNeuronStyleMap);
-        logger.debug("updated {} neuron styles", updateNeuronStyleMap.size());
-        
-        fireAnchorsAdded(addedAnchorList);
-        logger.info("added {} anchors", addedAnchorList.size());
-
-        fireAnchoredVoxelPathsAdded(voxelPathList);
-        logger.debug("added {} anchored paths", voxelPathList.size());
-        
-        skeletonController.setSkipSkeletonChange(false);
-        skeletonController.skeletonChanged(true);
     }
 
     @Override

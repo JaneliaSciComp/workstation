@@ -295,8 +295,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             @Override
             public void run() {
                 zScanSlider.setValue(z);
-                log.info("Set value to "+z+" but got "+zScanSlider.getValue());
-                //spinnerValue.setValue(z);
+                spinnerValue.setValue(z);
             }
         });
     }
@@ -379,7 +378,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);
-        volumeImage.addVolumeLoadListener(largeVolumeViewerTranslator);
 		largeVolumeViewer.setImageColorModel(imageColorModel);
         largeVolumeViewer.setNeuronStyleModel(neuronStyleModel);
 		sliderPanel.setVisible(false);
@@ -1554,11 +1552,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         return new SubvolumeProvider(volumeImage, tileServer);
     }
     
-    //---------------------------IMPLEMENTS VolumeLoadListener
-    @Override
-    public void volumeLoadStarted(URL vol) {
-    }
-    
+    //---------------------------IMPLEMENTS VolumeLoadListener    
     @Override
     public void volumeLoaded(URL url) {
         updateRanges();
