@@ -176,7 +176,7 @@ public class NeuronModelAdapter implements NeuronModel
             return false;
         NeuronVertexAdapter nva = (NeuronVertexAdapter)anchor;
         try {
-            neuronSet.annotationModel.moveNeurite(nva.getTmGeoAnnotation(), neuron);
+            neuronSet.annotationMgr.moveNeurite(nva.getTmGeoAnnotation(), neuron);
             return true;
         } catch (Exception ex) {
             return false;
@@ -210,7 +210,7 @@ public class NeuronModelAdapter implements NeuronModel
             return false; // anchors not connected, or anchor's id is null
         
         try {
-            neuronSet.annotationModel.splitNeurite(neuronId, newRootId);
+            neuronSet.annotationMgr.splitNeurite(neuronId, newRootId);
             return true;
         } catch (Exception ex) {
             return false;

@@ -163,7 +163,7 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     @Override
     public void splitNeuriteRequested(Anchor anchor) {
         if (anchor != null) {
-            splitNeurite(anchor.getNeuronID(), anchor.getGuid());
+            splitNeuriteInternal(anchor.getNeuronID(), anchor.getGuid());
         }
     }
 
@@ -795,7 +795,7 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
         rerooter.execute();
     }
 
-    private void splitNeurite(final Long neuronID, final Long newRootAnnotationID) {
+    private void splitNeuriteInternal(final Long neuronID, final Long newRootAnnotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
@@ -1807,6 +1807,16 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
         annotationModel.deleteLink(link);
     }
 
+    @Override
+    public void moveNeurite(TmGeoAnnotation tmGeoAnnotation, TmNeuronMetadata neuron) throws Exception {
+        annotationModel.moveNeurite(tmGeoAnnotation, neuron);
+    }
+
+    @Override
+    public void splitNeurite(Long neuronId, Long newRootId) throws Exception {
+        annotationModel.splitNeurite(neuronId, newRootId);
+    }
+    
     @Override
     public void fireSpatialIndexReady(TmWorkspace workspace) {
         annotationModel.fireSpatialIndexReady(workspace);

@@ -272,6 +272,10 @@ public interface AnnotationManager extends UpdateAnchorListener, PathTraceListen
 
     void updateAnnotationRadius(Long neuronID, Long annotationID, float radius) throws Exception;
 
+    void moveNeurite(TmGeoAnnotation tmGeoAnnotation, TmNeuronMetadata neuron) throws Exception;
+
+    void splitNeurite(Long neuronId, Long newRootId) throws Exception;
+    
     void deleteLink(TmGeoAnnotation link) throws Exception;
 
     void fireSpatialIndexReady(TmWorkspace workspace);
