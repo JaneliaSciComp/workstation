@@ -1187,7 +1187,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             public void run() {
                 beginTransaction();
                 try {
-                    fireAnnotationReparented(neuron.getGeoAnnotationMap().get(newRootID), neuron.getId());
+                    TmGeoAnnotation newRootAnnotation = neuron.getGeoAnnotationMap().get(newRootID);
+                    if (newRootAnnotation == null) {
+                        // Happens during Horta undo-merge-neurites. I'm Not sure why.
+                        log.warn("Failed to find new annotation after splitNeurite");
+                    }
+                    else {
+                        fireAnnotationReparented(newRootAnnotation, neuron.getId());
+                    }
                     fireNeuronSelected(neuron);
                 }
                 finally {

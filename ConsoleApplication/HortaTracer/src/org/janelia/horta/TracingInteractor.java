@@ -62,7 +62,9 @@ import org.janelia.console.viewerapi.actions.DeleteNeuronAction;
 import org.janelia.console.viewerapi.actions.RecolorNeuronAction;
 import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
 import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
+import org.janelia.console.viewerapi.commands.MergeNeuriteCommand;
 import org.janelia.console.viewerapi.commands.MoveNeuronAnchorCommand;
+import org.janelia.console.viewerapi.commands.SplitNeuriteCommand;
 import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
@@ -246,7 +248,7 @@ public class TracingInteractor extends MouseAdapter
                     // System.out.println("Append took " + elapsed + "milliseconds"); // 1200 ms -- way too long
                 }
                 else if (context.canMergeNeurite()) { // Maybe merge two neurons
-                    context.mergeNeurite();
+                    context.mergeNeurites();
                 }
                 else if (context.canCreateNeuron()) {
                     context.createNeuron();
@@ -978,6 +980,34 @@ public class TracingInteractor extends MouseAdapter
                     hoveredNeuron).actionPerformed(null);
         }
         
+        public boolean canSplitNeurite() {
+            if (parentNeuron == null) return false;
+            if (hoveredVertex == null) return false;
+            if (parentVertex == null) return false;
+            if (hoveredVertex == parentVertex) return false;
+            if (hoveredNeuron != parentNeuron) return false;
+            // TODO: ensure the two anchors/vertices are connected
+            if (defaultWorkspace.isReadOnly()) return false;
+            return true;
+        }
+        
+        public boolean splitNeurite() {
+            if (!canSplitNeurite())
+                return false;
+
+            SplitNeuriteCommand cmd = new SplitNeuriteCommand(defaultWorkspace, hoveredVertex, parentVertex);
+            if (cmd.execute()) {
+                log.info("User split neurites in Horta");
+                if (undoRedoManager != null) {
+                    undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
+                }
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        
         public boolean canMergeNeurite() {
             if (parentNeuron == null) return false;
             if (hoveredVertex == null) return false;
@@ -989,42 +1019,39 @@ public class TracingInteractor extends MouseAdapter
             return true;
         }
         
-        public boolean mergeNeurite() {
+        public boolean mergeNeurites() {
             if (!canMergeNeurite())
                 return false;
-            Object[] options = {"Merge", "Cancel"};
-            int answer = JOptionPane.showOptionDialog(
-                    volumeProjection.getMouseableComponent(),
-                    String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
-                            parentNeuron.getName(),
-                            hoveredNeuron.getName()),
-                    "Merge neurites?", 
-                    JOptionPane.YES_NO_OPTION, 
-                    JOptionPane.QUESTION_MESSAGE, 
-                    null, 
-                    options,
-                    options[1]); // default button
-            if (answer == JOptionPane.YES_OPTION) 
-            {
-                // merging is not undoable, and thus taints previous edits 
-                if (undoRedoManager != null)    
-                    undoRedoManager.discardAllEdits();
-                
-                // TODO: Create Undo-able command for mergeNeurite, and activate it from context menu
-                // 3/18/2016 reverse order of merge, with respect to traditional LVV behavior
-                boolean merged = parentNeuron.mergeNeurite(hoveredVertex, parentVertex);
-                if (!merged) {
-                    JOptionPane.showMessageDialog(
-                            volumeProjection.getMouseableComponent(),
-                            "merge failed",
-                            "merge failed",
-                            JOptionPane.WARNING_MESSAGE
-                    );
+            
+            final boolean doConfirmMerge = false;
+            if (doConfirmMerge) {
+                Object[] options = {"Merge", "Cancel"};
+                int answer = JOptionPane.showOptionDialog(
+                        volumeProjection.getMouseableComponent(),
+                        String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
+                                parentNeuron.getName(),
+                                hoveredNeuron.getName()),
+                        "Merge neurites?", 
+                        JOptionPane.YES_NO_OPTION, 
+                        JOptionPane.QUESTION_MESSAGE, 
+                        null, 
+                        options,
+                        options[1]); // default button
+                if (answer != JOptionPane.YES_OPTION)
                     return false;
+            }
+
+            MergeNeuriteCommand cmd = new MergeNeuriteCommand(defaultWorkspace, hoveredVertex, parentVertex);
+            if (cmd.execute()) {
+                log.info("User merged neurites in Horta");
+                if (undoRedoManager != null) {
+                    // undoRedoManager.discardAllEdits(); // (redundant) because this cannot be undone...
+                    undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
                 }
-                else {
-                    return true;
-                }
+                // TODO: maybe walk down merged subtree to next branch or tip
+                selectParentVertex(hoveredVertex, hoveredNeuron);
+                
+                return true;
             }
             else {
                 return false;

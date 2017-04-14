@@ -66,6 +66,19 @@ public class TreeNodeObjectHelper implements DomainObjectHelper {
     }
 
     @Override
+    public boolean supportsRemoval(DomainObject domainObject) {
+        if (TreeNode.class.isAssignableFrom(domainObject.getClass())) {
+            return true;
+        }
+        else if (Filter.class.isAssignableFrom(domainObject.getClass())) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    
+    @Override
     public void remove(DomainObject domainObject) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         if (TreeNode.class.isAssignableFrom(domainObject.getClass())) {

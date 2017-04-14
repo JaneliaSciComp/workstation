@@ -74,7 +74,7 @@ class KtxBlockMenuBuilder {
                 if (nttc == null)
                     return;
                 try {
-                    nttc.loadTileAtLocation(context.mouseXyz);
+                    nttc.loadPersistentTileAtLocation(context.mouseXyz);
                 } catch (IOException ex) {
                     // Exceptions.printStackTrace(ex);
                     logger.info("Tile load failed");
@@ -111,7 +111,7 @@ class KtxBlockMenuBuilder {
         {
             @Override
             public void actionPerformed(ActionEvent e) {
-                TetVolumeActor.getInstance().getChildren().clear();
+                TetVolumeActor.getInstance().clearAllBlocks();
                 context.renderer.setIntensityBufferDirty();
                 context.sceneWindow.getInnerComponent().repaint();
             }
