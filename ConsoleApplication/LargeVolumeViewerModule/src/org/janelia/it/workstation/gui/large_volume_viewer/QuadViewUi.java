@@ -56,7 +56,6 @@ import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
@@ -162,9 +161,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     
     private static final int MINIMUM_MEMORY_REQUIRED_GB = 8;
 
-    public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
+    public static final GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 
-	private boolean bAllowOrthoView = true; // false until ready for release
+	private final boolean bAllowOrthoView = true; // false until ready for release
 	
 	// One shared camera for all viewers.
 	// (there's only one viewer now actually, but you know...)
@@ -202,22 +201,22 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		});
 	
 	private boolean modifierKeyPressed = false;
-	private JPanel zScanPanel = new JPanel();
-	private JSlider zScanSlider = new JSlider();
-	private JSpinner zScanSpinner = new JSpinner();
-    private SpinnerCalculationValue spinnerValue = new SpinnerCalculationValue(zScanSpinner);
-	private JSlider zoomSlider = new JSlider(SwingConstants.VERTICAL, 0, 1000, 500);
+	private final JPanel zScanPanel = new JPanel();
+	private final JSlider zScanSlider = new JSlider();
+	private final JSpinner zScanSpinner = new JSpinner();
+    private final SpinnerCalculationValue spinnerValue = new SpinnerCalculationValue(zScanSpinner);
+	private final JSlider zoomSlider = new JSlider(SwingConstants.VERTICAL, 0, 1000, 500);
 	
 	//private JPanel colorPanel = new JPanel();
-    private JMenuBar menuBar = new JMenuBar();
-    private JPanel toolBarPanel = new JPanel();
-	private JSplitPane splitPane = new JSplitPane();    
-    private SliderPanel sliderPanel = new SliderPanel(imageColorModel);
+    private final JMenuBar menuBar = new JMenuBar();
+    private final JPanel toolBarPanel = new JPanel();
+	private final JSplitPane splitPane = new JSplitPane();    
+    private final SliderPanel sliderPanel = new SliderPanel(imageColorModel);
 
-	private JLabel statusLabel = new JLabel("status area");
-	private LoadStatusLabel loadStatusLabel = new LoadStatusLabel();
+	private final JLabel statusLabel = new JLabel("status area");
+	private final LoadStatusLabel loadStatusLabel = new LoadStatusLabel();
 	
-	ZScanMode zScanMode = new ZScanMode(volumeImage);
+	private final ZScanMode zScanMode = new ZScanMode(volumeImage);
 	
 	// annotation things
 	private final AnnotationManager annotationMgr;
@@ -297,13 +296,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         int z = zSliceIndexForZMicrons(focus.getZ());
         zScanSlider.setValue(z);
         spinnerValue.setValue(z);
-//        SwingUtilities.invokeLater(new Runnable() {
-//            @Override
-//            public void run() {
-//                zScanSlider.setValue(z);
-//                spinnerValue.setValue(z);
-//            }
-//        });
     }
 
     public void zoomChanged(Double zoom) {
@@ -1510,7 +1502,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         return rtnVal;
     }
 
-    public boolean loadURL(URL url) {  
+    private boolean loadURL(URL url) {  
         log.info("loadURL: {}", url);
         boolean rtnVal = false;
     	// Check if url exists first...
