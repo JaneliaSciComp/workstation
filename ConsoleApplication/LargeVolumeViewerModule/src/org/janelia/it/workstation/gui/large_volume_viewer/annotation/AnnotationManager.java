@@ -46,9 +46,18 @@ public interface AnnotationManager extends UpdateAnchorListener, PathTraceListen
     /**
      * Must be called after initialization, to establish two-way communication between the AnnotationManager and the UI.
      * @param quadViewUi
+     * TODO: this completely breaks encapsulation, and should be eliminated
      */
     void setQuadViewUi(QuadViewUi quadViewUi);
 
+    /**
+     * Must be called after initialization, to establish two-way communication between the AnnotationManager and the
+     * translator. 
+     * TODO: this completely breaks encapsulation, and should be eliminated
+     * @param lvvTranslator
+     */
+    void setLvvTranslator(LargeVolumeViewerTranslator lvvTranslator);
+    
     /**
      * Returns the tile format for the current sample.
      */
@@ -116,6 +125,8 @@ public interface AnnotationManager extends UpdateAnchorListener, PathTraceListen
      * @param targetAnnotationID
      */
     void mergeNeurite(Long sourceNeuronID, Long sourceAnnotationID, Long targetNeuronID, Long targetAnnotationID);
+
+    void smartMergeNeuriteRequested(Anchor sourceAnchor, Anchor targetAnchor);
 
     void moveNeuriteRequested(Anchor anchor);
 

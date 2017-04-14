@@ -98,7 +98,9 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     protected final AnnotationModel annotationModel;
 
     // For communicating annotations to Horta
-    protected final NeuronSetAdapter neuronSetAdapter; 
+    protected final NeuronSetAdapter neuronSetAdapter;
+    
+    private LargeVolumeViewerTranslator lvvTranslator;
     
     // ----- constants
     // AUTOMATIC_TRACING_TIMEOUT for automatic tracing in seconds
@@ -122,6 +124,11 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     @Override
     public void setQuadViewUi(QuadViewUi quadViewUi) {
         this.quadViewUi = quadViewUi;
+    }
+
+    @Override
+    public void setLvvTranslator(LargeVolumeViewerTranslator lvvTranslator) {
+        this.lvvTranslator = lvvTranslator;
     }
 
     @Override
@@ -255,7 +262,7 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
      * find the annotation closest to the input location, excluding
      * the input annotation (null = don't exclude any)
      */
-    private TmGeoAnnotation getClosestAnnotation(Vec3 micronLocation, TmGeoAnnotation excludedAnnotation) {
+    public TmGeoAnnotation getClosestAnnotation(Vec3 micronLocation, TmGeoAnnotation excludedAnnotation) {
 
         double x = micronLocation.getX();
         double y = micronLocation.getY();
@@ -551,8 +558,7 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
         }
 
         // can't merge with same neurite (don't create cycles!)
-        if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
-                annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
+        if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
             log.debug("Can't merge with same neurite");
             return false;
         }
@@ -569,8 +575,7 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
 
         // same neurite = cycle = NO!
         // this should already be filtered out, but it's important enough to check twice
-        if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
-                annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
+        if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
             presentError(
                     "You can't merge a neurite with itself!",
                     "Can't merge!!");
@@ -599,6 +604,81 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
 
     }
 
+    public void smartMergeNeuriteRequested(Anchor sourceAnchor, Anchor targetAnchor) {
+        if (targetAnchor == null) {
+            presentError("No neurite selected!  Select an annotation on target neurite, then choose this operation again.",
+                "No selected neurite");
+            return;
+        }
+
+        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(sourceAnchor.getNeuronID(),
+            sourceAnchor.getGuid());
+        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(targetAnchor.getNeuronID(),
+            targetAnchor.getGuid());
+        TmNeuronMetadata sourceNeuron = annotationModel.getNeuronFromNeuronID(sourceAnchor.getNeuronID());
+        TmNeuronMetadata targetNeuron = annotationModel.getNeuronFromNeuronID(targetAnchor.getNeuronID());
+
+
+        // check for cycles (this can be tested before we check exactly which annotations to merge
+        if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
+            presentError(
+                    "You can't merge a neurite with itself!",
+                    "Can't merge!");
+            return;
+        }
+
+
+        // figure out which two annotations to merge
+        List<TmGeoAnnotation> result = SmartMergeAlgorithms.mergeClosestEndpoints(sourceAnnotation,
+            sourceNeuron, targetAnnotation, targetNeuron);
+
+        if (result.size() != 2) {
+            presentError("There was an error in the smart merge algorithm!", "Smart merge error");
+            return;
+        }
+        // returned annotations should be on same neurite as input ones:
+        if (!annotationModel.sameNeurite(sourceAnnotation, result.get(0)) ||
+                !annotationModel.sameNeurite(targetAnnotation, result.get(1))) {
+            presentError("There was an error in the smart merge algorithm!", "Smart merge error");
+            return;
+        }
+        sourceAnnotation = result.get(0);
+        targetAnnotation = result.get(1);
+
+        // part of the smart: move the next parent someplace useful
+        final Long nextParentID = SmartMergeAlgorithms.farthestEndpointNextParent(sourceAnnotation,
+            sourceNeuron, targetAnnotation, targetNeuron).getId();
+
+        // do the merge
+        final Long sourceNeuronID = sourceAnnotation.getNeuronId();
+        final Long sourceAnnotationID = sourceAnnotation.getId();
+        final Long targetNeuronID = targetAnnotation.getNeuronId();
+        final Long targetAnnotationID = targetAnnotation.getId();
+
+        SimpleWorker merger = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                // after a smart merge, we might want to trim any dangling ends; however,
+                // that probably has to be implemented in AnnModel.mergeNeurite()
+                annotationModel.mergeNeurite(sourceNeuronID, sourceAnnotationID, targetNeuronID, targetAnnotationID);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // unlike most operations in the annmgr, we want to adjust the UI in
+                //  ways other than via the updates the model triggers; in this case,
+                //  we advance the next parent to the appropriate annotation
+                lvvTranslator.fireNextParentEvent(nextParentID);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                ConsoleApp.handleException(error);
+            }
+        };
+        merger.execute();
+    }
+    
     private class TmDisplayNeuron {
     	private TmNeuronMetadata tmNeuronMetadata;
     	TmDisplayNeuron(TmNeuronMetadata tmNeuronMetadata) {

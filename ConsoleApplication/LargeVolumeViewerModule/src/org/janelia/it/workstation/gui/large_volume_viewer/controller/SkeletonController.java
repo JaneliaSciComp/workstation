@@ -344,6 +344,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         annoMgr.moveNeuriteRequested(anchor);
     }
 
+    public void smartMergeNeuriteRequested(Anchor clickedAnchor, Anchor currentParentAnchor) {
+        annoMgr.smartMergeNeuriteRequested(clickedAnchor, currentParentAnchor);
+    }
+
     public void changeNeuronStyleRequested(Anchor anchor) {
         annoMgr.chooseNeuronStyle(anchor);
     }
@@ -416,7 +420,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         
         @Override
         public void anchorMovedSilent(Anchor anchor) {
-            skeletonChanged();
+            skeletonChanged(true); // update display, but don't update all listeners
         }
         
     }

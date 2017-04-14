@@ -15,6 +15,7 @@ import java.util.Set;
 import javax.swing.SwingUtilities;
 
 import org.janelia.console.viewerapi.model.DefaultNeuron;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
@@ -27,7 +28,6 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
-import org.janelia.it.jacs.model.util.MatrixUtilities;
 import org.janelia.it.jacs.shared.geom.ParametrizedLine;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.SWCData;
@@ -48,6 +48,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredP
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.SpatialFilter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
@@ -57,8 +59,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
-
-import Jama.Matrix;
 
 /**
  * This class is responsible for handling requests from the BasicAnnotationManager.  those
@@ -404,6 +404,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             parent = neuron.getParentOf(current);
         }
         return current;
+    }
+
+    /**
+     * given two annotations, return true if they are on the same neurite
+     * (ie, share the same ultimate root annotation)
+     */
+    public boolean sameNeurite(TmGeoAnnotation ann1, TmGeoAnnotation ann2) {
+        return getNeuriteRootAnnotation(ann1).getId().equals(getNeuriteRootAnnotation(ann2).getId());
     }
 
     /**

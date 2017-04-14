@@ -253,6 +253,10 @@ public class Skeleton {
         controller.moveNeuriteRequested(anchor);
     }
 
+    public void smartMergeNeuriteRequest(Anchor clickedAnchor) {
+        controller.smartMergeNeuriteRequested(clickedAnchor, getNextParent());
+    }
+
     public void changeNeuronStyle(Anchor anchor) {
         controller.changeNeuronStyleRequested(anchor);
     }
@@ -366,7 +370,9 @@ public class Skeleton {
             return;
         }
         final Vec3 voxelVec3 = new Vec3(tga.getX(), tga.getY(), tga.getZ());
-        anchor.setLocation(tileFormat.micronVec3ForVoxelVec3Centered(voxelVec3));
+        // "silent" because we don't want to trigger the whole "move or merge?" dialog,
+        // especially when triggered from a Horta/NeuronModelAdapter move
+        anchor.setLocationSilent(tileFormat.micronVec3ForVoxelVec3Centered(voxelVec3));
     }
     
 	public void clear() {

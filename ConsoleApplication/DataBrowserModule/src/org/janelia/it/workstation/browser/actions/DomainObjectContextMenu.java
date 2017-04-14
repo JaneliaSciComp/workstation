@@ -657,7 +657,16 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         
         if (samples.size()!=domainObjectList.size()) return null;
         
-        return getNamedActionItem(new SetPublishingNameAction(samples));
+        JMenuItem menuItem = getNamedActionItem(new SetPublishingNameAction(samples));
+        
+        for(Sample sample : samples) {
+            if (!ClientDomainUtils.hasWriteAccess(sample)) {
+                menuItem.setEnabled(false);
+                break;
+            }
+        }
+        
+        return menuItem;
     }
 
     /** Allows users to rerun their own samples. */
@@ -671,15 +680,29 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
     
     protected JMenuItem getPartialSecondaryDataDeletiontItem() {
+
+        List<Sample> samples = new ArrayList<>();
+        for(DomainObject domainObject : domainObjectList) {
+            if (domainObject instanceof Sample) {
+                samples.add((Sample)domainObject);
+            }
+        }
+        
+        if (samples.size()!=domainObjectList.size()) return null;
+        if (samples.size()!=1) return null;
+        
         JMenu secondaryDeletionMenu = new JMenu("  Remove Secondary Data");
-        JMenuItem itm = getPartialSecondaryDataDeletionItem();
+        
+        JMenuItem itm = getPartialSecondaryDataDeletionItem(samples);
         if (itm != null) {
             secondaryDeletionMenu.add(itm);
         }
-        itm = getStitchedImageDeletionItem();
+        
+        itm = getStitchedImageDeletionItem(samples);
         if (itm != null) {
             secondaryDeletionMenu.add(itm);
         }
+        
         /* Removing this feature until such time as this level of flexibility has user demand. */
         if (SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI) {
             itm = getNeuronSeparationDeletionItem();
@@ -687,16 +710,23 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                 secondaryDeletionMenu.add(itm);
             }
         }
+        
         if (secondaryDeletionMenu.getItemCount() > 0) {
+            for(Sample sample : samples) {
+                if (!ClientDomainUtils.hasWriteAccess(sample)) {
+                    secondaryDeletionMenu.setEnabled(false);
+                    break;
+                }
+            }
             return secondaryDeletionMenu;
         }
         return null;
     }
     
-    protected JMenuItem getPartialSecondaryDataDeletionItem() {
+    protected JMenuItem getPartialSecondaryDataDeletionItem(List<Sample> samples) {
         JMenuItem rtnVal = null;
-        if (domainObjectList.size() == 1  &&  domainObjectList.get(0) instanceof Sample) {
-            final Sample sample = (Sample)domainObjectList.get(0);
+        if (samples.size() == 1) {
+            final Sample sample = samples.get(0);
             rtnVal = new JMenuItem("  " + WHOLE_AA_REMOVAL_MSG);
             rtnVal.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
@@ -711,14 +741,13 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                 }
             });
         }
-        log.trace("Returning from getPartialSecondaryDataDeletionItem " + rtnVal);
         return rtnVal;
     }
 
-    protected JMenuItem getStitchedImageDeletionItem() {
+    protected JMenuItem getStitchedImageDeletionItem(List<Sample> samples) {
         JMenuItem rtnVal = null;
-        if (domainObjectList.size() == 1  &&  domainObjectList.get(0) instanceof Sample) {
-            final Sample sample = (Sample)domainObjectList.get(0);
+        if (samples.size() == 1) {
+            final Sample sample = samples.get(0);
             rtnVal = new JMenuItem("  " + STITCHED_IMG_REMOVAL_MSG);
             rtnVal.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {

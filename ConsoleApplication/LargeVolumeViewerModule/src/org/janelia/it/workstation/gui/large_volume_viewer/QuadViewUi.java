@@ -289,15 +289,21 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		}
 	};
 
+    private int zSliceIndexForZMicrons(double zMicrons) {
+        return (int)Math.round(zMicrons / volumeImage.getZResolution() - 0.5);
+    }
+    
     public void focusChanged(Vec3 focus) {
-        final int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                zScanSlider.setValue(z);
-                spinnerValue.setValue(z);
-            }
-        });
+        int z = zSliceIndexForZMicrons(focus.getZ());
+        zScanSlider.setValue(z);
+        spinnerValue.setValue(z);
+//        SwingUtilities.invokeLater(new Runnable() {
+//            @Override
+//            public void run() {
+//                zScanSlider.setValue(z);
+//                spinnerValue.setValue(z);
+//            }
+//        });
     }
 
     public void zoomChanged(Double zoom) {
@@ -613,7 +619,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             largeVolumeViewer.setWheelMode(WheelMode.Mode.SCAN);
             zScanScrollModeAction.setEnabled(true);
             zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
-            int z = (int) Math.round((camera.getFocus().getZ() - 0.5) / volumeImage.getZResolution());
+            int z = zSliceIndexForZMicrons(camera.getFocus().getZ());
             if (z < z0) {
                 z = z0;
             }
@@ -1176,7 +1182,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	
 	private boolean setZSlice(int z) {
 		Vec3 oldFocus = camera.getFocus();
-		int oldValue = (int)Math.round(oldFocus.getZ() / volumeImage.getZResolution() - 0.5);
+		int oldValue = zSliceIndexForZMicrons(oldFocus.getZ());
 		if (oldValue == z)
 			return false; // camera is already pretty close
 		double halfVoxel = 0.5 * volumeImage.getZResolution();
@@ -1380,7 +1386,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     "/nobackup2/mouselight",
                     "/tier2/mousebrainmicro/mousebrainmicro/",
                     "/nrs/mouselight",
-                    "/nrs/mltest/"
+                    "/nrs/mltest/",
+                    "/groups/dickson/dicksonlab",
             };
             Path linuxPrefix = null;
             for (String testPrefix: mbmPrefixes) {
@@ -1414,7 +1421,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             String [] mountNames = {"", "mousebrainmicro", "mouselight",
                     "nobackup/mousebrainmicro", "nobackup2/mouselight",
                     "nobackup/mousebrainmicro/from_tier2", "mousebrainmicro/from_tier2",
-                    "mousebrainmicro/mousebrainmicro", "nrs/mouselight", "mltest"};
+                    "mousebrainmicro/mousebrainmicro", "nrs/mouselight",
+                    "mltest", "dicksonlab"};
 
             boolean found = false;
             for (Path prefix: prefixesToTry) {
