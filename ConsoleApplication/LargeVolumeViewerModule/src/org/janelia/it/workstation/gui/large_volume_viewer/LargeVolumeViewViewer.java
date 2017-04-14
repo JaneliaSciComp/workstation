@@ -50,7 +50,7 @@ import com.google.common.util.concurrent.ListenableFuture;
  */
 public class LargeVolumeViewViewer extends JPanel {
 
-    private final Logger logger = LoggerFactory.getLogger(LargeVolumeViewViewer.class);
+    private static final Logger logger = LoggerFactory.getLogger(LargeVolumeViewViewer.class);
 
     private Vec3 initialViewFocus;
     private Double initialZoom;
@@ -129,10 +129,9 @@ public class LargeVolumeViewViewer extends JPanel {
                     
                 });
                 
-
                 // Join the two futures
-                // TODO: In the future, the hope is to decouple these two loads, so that they can success or fail independently. 
-                // Currently, there is a lot of coupling in both directions, so loadComplete can only be called once both are done.
+                // TODO: In the future (heh), the hope is to decouple these two loads, so that they can succeed or fail independently. 
+                // However, there is a lot of coupling in both directions, so loadComplete can only be called once both are done.
                 ListenableFuture<List<Void>> combinedFuture = Futures.allAsList(Arrays.asList(future1, future2));
                 Futures.addCallback(combinedFuture, new FutureCallback<List<Void>>() {
                     
@@ -140,6 +139,20 @@ public class LargeVolumeViewViewer extends JPanel {
                         // If both loads succeeded
                         logger.info("Loading completed");
                         annotationMgr.loadComplete();
+                    
+                        // Initialize the camera if this is the first time loading
+                        synchronized(this) {
+                            if (initialViewFocus!=null) {
+                                logger.info("Setting intial camera focus: {}", initialViewFocus);
+                                viewUI.setCameraFocus(initialViewFocus);
+                                initialViewFocus = null;
+                            }
+                            if (initialZoom!=null) {
+                                logger.info("Setting intial zoom: {}", initialZoom);
+                                viewUI.setPixelsPerSceneUnit(initialZoom);
+                                initialZoom = null;
+                            }
+                        }
                     }
                     
                     public void onFailure(Throwable t) {
@@ -165,29 +178,26 @@ public class LargeVolumeViewViewer extends JPanel {
     private SimpleListenableFuture<Void> loadVolume(final TmSample sample) {
 
         final SimpleWorker volumeLoader = new SimpleWorker() {
-            Boolean success = null;
             
             @Override
             protected void doStuff() throws Exception {
-                success = viewUI.loadFile(sample.getFilepath());
+                // TODO: In the future, when the TileFormat gets loaded from the sample 
+                // instead of from disk, we can use this commented code instead, and
+                // still load annotations even if the sample gets moved. For now, we need to 
+                // treat errors as fatal.
+//                try {
+//                    if (!viewUI.loadFile(sample.getFilepath())) {
+//                        logger.error("Volume load failed");    
+//                    }
+//                }
+//                catch (Exception e) {
+//                    logger.error("Volume load failed", e);
+//                }
+                viewUI.loadFile(sample.getFilepath());
             }
 
             @Override
             protected void hadSuccess() {
-                if (success!=null && success) {
-                    synchronized(this) {
-                        if (initialViewFocus!=null) {
-                            logger.info("Setting intial camera focus: {}", initialViewFocus);
-                            viewUI.setCameraFocus(initialViewFocus);
-                            initialViewFocus = null;
-                        }
-                        if (initialZoom!=null) {
-                            logger.info("Setting intial zoom: {}", initialZoom);
-                            viewUI.setPixelsPerSceneUnit(initialZoom);
-                            initialZoom = null;
-                        }
-                    }
-                }
             }
 
             @Override
@@ -262,6 +272,9 @@ public class LargeVolumeViewViewer extends JPanel {
             annotationMgr.close();
             annotationMgr = null;
         }
+        
+        revalidate();
+        repaint();
     }
     
     private void refresh() {
