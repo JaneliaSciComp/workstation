@@ -100,6 +100,7 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     // For communicating annotations to Horta
     protected final NeuronSetAdapter neuronSetAdapter;
     
+    // TODO: eliminate dependency on the translator
     private LargeVolumeViewerTranslator lvvTranslator;
     
     // ----- constants
@@ -300,7 +301,10 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     @Override
     public void update(Anchor anchor) {
         if (anchor != null) {
-            selectNeuron(anchor.getNeuronID());
+            TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(anchor.getNeuronID());
+            if (neuron!=null) {
+                selectNeuron(neuron);
+            }
         }
     }
 
@@ -1189,17 +1193,6 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
             }
         }
         return String.format("Neuron %d", maximum + 1);
-    }
-
-    /**
-     * given an neuronId, select (make current) the neuron it belongs to
-     */
-    private void selectNeuron(Long neuronId) {
-        if (neuronId == null) {
-            return;
-        }
-        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
-        annotationModel.selectNeuron(neuron);
     }
 
     @Override
