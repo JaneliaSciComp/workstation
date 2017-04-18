@@ -49,10 +49,10 @@ import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnnotationObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.util.MatrixUtilities;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -80,7 +80,7 @@ implements NeuronSet// , LookupListener
 {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
-    TmWorkspace workspace; // LVV workspace, as opposed to Horta workspace
+    TmAnnotationObject annotationObject; // LVV workspace, as opposed to Horta workspace
     AnnotationManager annotationMgr;
     private final GlobalAnnotationListener globalAnnotationListener;
     private final TmGeoAnnotationModListener annotationModListener;
@@ -223,10 +223,10 @@ implements NeuronSet// , LookupListener
     // In this case, we need to scramble to distribute the new object instances
     // behind our stable NeuronSet/NeuronMode/NeuronVertex facade.
     private void sanityCheckWorkspace() {
-        TmWorkspace w = this.annotationMgr.getCurrentWorkspace();
-        if (w == workspace) return; // unchanged
-        log.info("Workspace changed");
-        setWorkspace(w);
+        TmAnnotationObject annotationObject = this.annotationMgr.getCurrentAnnotationObject();
+        if (annotationObject == this.annotationObject) return; // unchanged
+        log.info("Annotation object changed");
+        setAnnotationObject(annotationObject);
     }
     
     // Recache edge data structures after vertices change
@@ -246,20 +246,20 @@ implements NeuronSet// , LookupListener
     @Override
     public String getName()
     {
-        if (workspace != null)
-            return workspace.getName();
+        if (annotationObject != null)
+            return annotationObject.getName();
         else
             return super.getName();
     }
         
-    private boolean setWorkspace(TmWorkspace workspace) {
-        if (this.workspace == workspace)
+    private boolean setAnnotationObject(TmAnnotationObject annotationObject) {
+        if (this.annotationObject == annotationObject)
             return false;
-        if (workspace == null)
+        if (annotationObject == null)
             return false;
-        if (! workspace.getName().equals(getName()))
+        if (! annotationObject.getName().equals(getName()))
             getNameChangeObservable().setChanged();
-        this.workspace = workspace;
+        this.annotationObject = annotationObject;
         TmSample sample = annotationMgr.getCurrentSample();
         updateVoxToMicronMatrices(sample);
         NeuronList nl = (NeuronList) neurons;
@@ -490,17 +490,17 @@ implements NeuronSet// , LookupListener
     private class MyGlobalAnnotationListener implements GlobalAnnotationListener {
 
         @Override
-        public void workspaceUnloaded(final TmWorkspace workspace) {
+        public void annotationsUnloaded(final TmAnnotationObject annotationObject) {
             spatialIndex.clear();
         }
     
         @Override
-        public void workspaceLoaded(final TmWorkspace workspace)
+        public void annotationsLoaded(final TmAnnotationObject annotationObject)
         {
             log.info("Workspace loaded");
-            setWorkspace(workspace);
+            setAnnotationObject(annotationObject);
 
-            if (workspace==null) {
+            if (annotationObject==null) {
                 spatialIndex.clear();
             }
             else {
@@ -519,7 +519,7 @@ implements NeuronSet// , LookupListener
                     protected void hadSuccess() {
                         progress.finish();
                         // Let LVV know that index is done  
-                        annotationMgr.fireSpatialIndexReady(workspace);
+                        annotationMgr.fireSpatialIndexReady(annotationObject);
                     }
 
                     @Override
@@ -533,7 +533,7 @@ implements NeuronSet// , LookupListener
         }
 
         @Override
-        public void spatialIndexReady(TmWorkspace workspace) {
+        public void spatialIndexReady(TmAnnotationObject annotationObject) {
             // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
             getMembershipChangeObservable().setChanged();
             getNameChangeObservable().setChanged();
@@ -715,7 +715,7 @@ implements NeuronSet// , LookupListener
         {
             if (neuronSet == null)
                 return 0;
-            if (neuronSet.workspace == null) 
+            if (neuronSet.annotationObject == null) 
                 return 0;
             return neuronSet.annotationMgr.getNeuronList().size();
         }
@@ -725,7 +725,7 @@ implements NeuronSet// , LookupListener
         {
             if (neuronSet == null)
                 return true;
-            if (neuronSet.workspace == null) 
+            if (neuronSet.annotationObject == null) 
                 return true;
             return neuronSet.annotationMgr.getNeuronList().isEmpty();
         }
@@ -735,7 +735,7 @@ implements NeuronSet// , LookupListener
         {
             if (neuronSet == null)
                 return false;
-            if (neuronSet.workspace == null)
+            if (neuronSet.annotationObject == null)
                 return false;
             if (neuronSet.annotationMgr.getNeuronList().contains(o))
                 return true;
@@ -749,7 +749,7 @@ implements NeuronSet// , LookupListener
         @Override
         public Iterator<NeuronModel> iterator()
         {
-            if ( (neuronSet == null) || (neuronSet.workspace == null) ) 
+            if ( (neuronSet == null) || (neuronSet.annotationObject == null) ) 
             {
                 // return empty iterator
                 return new ArrayList<NeuronModel>().iterator();

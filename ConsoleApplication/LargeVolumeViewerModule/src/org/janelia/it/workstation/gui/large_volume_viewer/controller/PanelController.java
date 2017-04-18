@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnnotationObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
@@ -82,19 +83,22 @@ public class PanelController {
     
     private class PanelGlobalListener extends GlobalAnnotationAdapter {
         @Override
-        public void workspaceUnloaded(TmWorkspace workspace) {
-            workspaceLoaded(null);
+        public void annotationsUnloaded(TmAnnotationObject annotationObject) {
+            annotationsLoaded(null);
         }
         @Override
-        public void workspaceLoaded(TmWorkspace workspace) {
-            annotationPanel.loadWorkspace(workspace);
-            filteredAnnotationList.loadWorkspace(workspace);
-            wsNeuronList.loadWorkspace(workspace);
-            wsInfoPanel.loadWorkspace(workspace);
+        public void annotationsLoaded(TmAnnotationObject annotationObject) {
+            if (annotationObject==null || annotationObject instanceof TmWorkspace) {
+                TmWorkspace workspace = (TmWorkspace)annotationObject;
+                annotationPanel.loadWorkspace(workspace);
+                filteredAnnotationList.loadWorkspace(workspace);
+                wsNeuronList.loadWorkspace(workspace);
+                wsInfoPanel.loadWorkspace(workspace);
+            }
         }
 
         @Override
-        public void spatialIndexReady(TmWorkspace workspace) {
+        public void spatialIndexReady(TmAnnotationObject annotationObject) {
         }
         
         @Override

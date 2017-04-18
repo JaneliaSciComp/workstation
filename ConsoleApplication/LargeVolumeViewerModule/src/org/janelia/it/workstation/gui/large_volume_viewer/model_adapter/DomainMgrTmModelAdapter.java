@@ -32,12 +32,12 @@ import com.google.common.util.concurrent.SettableFuture;
  * @author fosterl
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainMgrTmModelAdapter implements TmModelAdapter {
+public class DomainMgrTmModelAdapter implements TmModelAdapter<TmWorkspace> {
 
-    private static Logger log = LoggerFactory.getLogger(DomainMgrTmModelAdapter.class);
+    private static final Logger log = LoggerFactory.getLogger(DomainMgrTmModelAdapter.class);
 
-    private RequestProcessor loadProcessor = new RequestProcessor("Tm-Save-Queue", 1, true);
-    private TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+    private final RequestProcessor loadProcessor = new RequestProcessor("Tm-Save-Queue", 1, true);
+    private final TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
 
     @Override
     public List<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) throws Exception {

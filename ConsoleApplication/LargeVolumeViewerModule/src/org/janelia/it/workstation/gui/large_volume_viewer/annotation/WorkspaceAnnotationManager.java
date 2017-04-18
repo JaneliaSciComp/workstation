@@ -33,6 +33,11 @@ public class WorkspaceAnnotationManager extends BasicAnnotationManager {
     }
 
     @Override
+    public TmWorkspace getCurrentAnnotationObject() {
+        return initialObject;
+    }
+    
+    @Override
     public SimpleListenableFuture<TmSample> loadSample() {
         
         ResultWorker<TmSample> worker = new ResultWorker<TmSample>() {

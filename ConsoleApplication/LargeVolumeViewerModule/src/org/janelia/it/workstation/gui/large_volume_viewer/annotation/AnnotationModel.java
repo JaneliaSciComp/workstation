@@ -19,11 +19,12 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnnotationObject;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmDirectedSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
@@ -46,7 +47,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonCon
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
@@ -86,47 +86,40 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private static final Logger log = LoggerFactory.getLogger(AnnotationModel.class);
     
     public static final String STD_SWC_EXTENSION = SWCData.STD_SWC_EXTENSION;
-    private static final String COLOR_FORMAT = "# COLOR %f,%f,%f";
-    private static final String NAME_FORMAT = "# NAME %s";
+    public static final String COLOR_FORMAT = "# COLOR %f,%f,%f";
+    public static final String NAME_FORMAT = "# NAME %s";
 
-    private final TiledMicroscopeDomainMgr tmDomainMgr;
-    private final DomainMgrTmModelAdapter modelAdapter;
-    private final TmModelManipulator neuronManager;
-    private final FilteredAnnotationModel filteredAnnotationModel;
-
-    private SWCDataConverter swcDataConverter;
-
-    private TmSample currentSample;
-    private TmWorkspace currentWorkspace;
-    private TmNeuronMetadata currentNeuron;
-    private TmNeuronTagMap currentTagMap;
-
-    private ViewStateListener viewStateListener;
-    private NotesUpdateListener notesUpdateListener;
-
-
-    private final Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
-    private final Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
-    private final Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
-
-
-    private final LoadTimer addTimer = new LoadTimer();
-
-    private final ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
-
-    private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
+    protected final ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
+    protected final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
+    protected final TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+    protected final LoadTimer addTimer = new LoadTimer();
     
+    protected final TmModelManipulator<? extends TmAnnotationObject> neuronManager;
+    protected final FilteredAnnotationModel filteredAnnotationModel;
+
+    protected SWCDataConverter swcDataConverter;
+
+    protected TmSample currentSample;
+    protected TmWorkspace currentWorkspace;
+    protected TmNeuronMetadata currentNeuron;
+    protected TmNeuronTagMap currentTagMap;
+
+    protected ViewStateListener viewStateListener;
+    protected NotesUpdateListener notesUpdateListener;
+    protected final Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
+    protected final Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
+    protected final Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
+
+
 
     // ----- constants
     // how far away to try to put split anchors (pixels)
     private static final Double SPLIT_ANCHOR_DISTANCE = 60.0;
 
 
-    public AnnotationModel() {
+    public AnnotationModel(TmModelManipulator<? extends TmAnnotationObject> neuronManager) {
         log.info("Creating new AnnotationModel {}", this);
-        this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-        this.modelAdapter = new DomainMgrTmModelAdapter();
-        this.neuronManager = new TmModelManipulator(modelAdapter);
+        this.neuronManager = neuronManager;
         this.filteredAnnotationModel = new FilteredAnnotationModel();
                 
         // Report performance statistics when program closes
@@ -256,34 +249,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         currentSample = sample;
         currentTagMap = null;
     }
-    
-    public synchronized void loadWorkspace(final TmWorkspace workspace) throws Exception {
-        if (workspace == null) {
-            throw new IllegalArgumentException("Cannot load null workspace");
-        }
-        log.info("Loading workspace {}", workspace.getId());
-        currentWorkspace = workspace;
-        currentSample = tmDomainMgr.getSample(workspace);
 
-        // Neurons need to be loaded en masse from raw data from server.
-        log.info("Loading neurons for workspace {}", workspace.getId());
-        neuronManager.loadWorkspaceNeurons(workspace);
-
-        // Create the local tag map for cached access to tags
-        log.info("Creating tag map for workspace {}", workspace.getId());
-        currentTagMap = new TmNeuronTagMap();
-        for(TmNeuronMetadata tmNeuronMetadata : neuronManager.getNeurons()) {
-            for(String tag : tmNeuronMetadata.getTags()) {
-                currentTagMap.addTag(tag, tmNeuronMetadata);
-            }
-        }
-        
-        // Clear neuron selection
-        log.info("Clearing current neuron for workspace {}", workspace.getId());
-        setCurrentNeuron(null);   
-    }
-
-    public synchronized void loadSession(final TmSession session) throws Exception {
+    public synchronized void loadSession(final TmDirectedSession session) throws Exception {
         if (session == null) {
             throw new IllegalArgumentException("Cannot load null session");
         }
@@ -326,7 +293,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     // this method sets the current neuron but does not fire an event to update the UI
-    private synchronized void setCurrentNeuron(TmNeuronMetadata neuron) {
+    protected synchronized void setCurrentNeuron(TmNeuronMetadata neuron) {
         log.trace("setCurrentNeuron({})",neuron);
         // be sure we're using the neuron object from the current workspace
         if (neuron != null) {
@@ -1303,7 +1270,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
 
-    public String getNote(Long annotationID, TmNeuronMetadata neuron) {
+    private String getNote(Long annotationID, TmNeuronMetadata neuron) {
         final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
         if (textAnnotation != null) {
             JsonNode rootNode = textAnnotation.getData();
@@ -1750,21 +1717,21 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
 
-    void fireWorkspaceUnloaded(TmWorkspace workspace) {
+    void fireWorkspaceUnloaded(TmAnnotationObject annotationObject) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
-            l.workspaceUnloaded(workspace);
+            l.annotationsUnloaded(annotationObject);
         }
     }
     
-    void fireWorkspaceLoaded(TmWorkspace workspace) {
+    void fireWorkspaceLoaded(TmAnnotationObject annotationObject) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
-            l.workspaceLoaded(workspace);
+            l.annotationsLoaded(annotationObject);
         }
     }
 
-    public void fireSpatialIndexReady(TmWorkspace workspace) {
+    public void fireSpatialIndexReady(TmAnnotationObject annotationObject) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
-            l.spatialIndexReady(workspace);
+            l.spatialIndexReady(annotationObject);
         }
     }
     
@@ -1825,7 +1792,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
     
-    public TmModelManipulator getNeuronManager() {
+    public TmModelManipulator<? extends TmAnnotationObject> getNeuronManager() {
         return neuronManager;
     }
     

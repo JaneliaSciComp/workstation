@@ -6,7 +6,7 @@ import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmDirectedSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.openide.nodes.ChildFactory;
@@ -50,7 +50,7 @@ public class TmSampleChildFactory extends ChildFactory<DomainObject> {
             list.addAll(workspaces);
             
             log.debug("Creating session children keys for {}",sample.getName());
-            List<TmSession> sessions = mgr.getSessions(sample.getId());
+            List<TmDirectedSession> sessions = mgr.getSessions(sample.getId());
             log.debug("Got session children: {}",sessions);
             list.addAll(sessions);
         }

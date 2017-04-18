@@ -27,11 +27,13 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.IdSource;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnnotationObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.RandomNeuronGenerator;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
@@ -57,6 +59,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredP
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
+import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.SpatialFilter;
@@ -95,7 +98,7 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     protected QuadViewUi quadViewUi;
 
     // annotation model object
-    protected final AnnotationModel annotationModel;
+    protected final WorkspaceAnnotationModel annotationModel;
 
     // For communicating annotations to Horta
     protected final NeuronSetAdapter neuronSetAdapter;
@@ -115,11 +118,16 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     protected static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
     
     public BasicAnnotationManager() {
-        this.annotationModel = new AnnotationModel();
+        
+        TmModelManipulator<TmWorkspace> neuronManager = new TmModelManipulator<TmWorkspace>(new DomainMgrTmModelAdapter());
+        this.annotationModel = new WorkspaceAnnotationModel(neuronManager);
+        
         this.neuronSetAdapter = new NeuronSetAdapter();
         neuronSetAdapter.observe(this);
+        
         LargeVolumeViewerTopComponent.getInstance().registerNeurons(neuronSetAdapter);
         Events.getInstance().registerOnEventBus(annotationModel);
+        
     }
     
     @Override
@@ -1711,6 +1719,14 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     }
 
     @Override
+    public TmAnnotationObject getCurrentAnnotationObject() {
+        return null;
+    }
+
+    /**
+     * TODO: Gradually replace references to this method with references to getCurrentAnnotationObject wherever possible.
+     */
+    @Override
     public TmWorkspace getCurrentWorkspace() {
         return annotationModel.getCurrentWorkspace();
     }
@@ -1891,8 +1907,8 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     }
     
     @Override
-    public void fireSpatialIndexReady(TmWorkspace workspace) {
-        annotationModel.fireSpatialIndexReady(workspace);
+    public void fireSpatialIndexReady(TmAnnotationObject annotationObject) {
+        annotationModel.fireSpatialIndexReady(annotationObject);
     }
 
     @Override

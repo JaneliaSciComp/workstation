@@ -54,6 +54,7 @@ public class ActivityLogHelper {
     // Time-of-writing: nothing is producing micron coords alone.
     private static final CategoryString END_OP_MICRON_CATEGORY_STRING           = new CategoryString("endAOmu:xyzw");
     private static final CategoryString LVV_LOAD_WORKSPACE_CATEGORY_STRING      = new CategoryString("loadWorkspace");
+    private static final CategoryString LVV_LOAD_DIRECTED_SESSION_CATEGORY_STRING = new CategoryString("loadDirectedSession");
     private static final CategoryString LVV_SET_PREFERENCE_CATEGORY_STRING      = new CategoryString("setPreference");
     private static final CategoryString LVV_SELECT_NEURON_CATEGORY_STRING       = new CategoryString("selectNeuron");
     private static final CategoryString LVV_CREATE_NEURON_CATEGORY_STRING       = new CategoryString("createNeuron");
@@ -297,6 +298,14 @@ public class ActivityLogHelper {
                 LVV_LOGSTAMP_ID,
                 LVV_LOAD_WORKSPACE_CATEGORY_STRING,
                 new ActionString(workspaceID.toString())
+        );
+    }
+
+    public void logLoadDirectedSession(Long sessionID) {
+        AccessManager.getAccessManager().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_LOAD_DIRECTED_SESSION_CATEGORY_STRING,
+                new ActionString(sessionID.toString())
         );
     }
 

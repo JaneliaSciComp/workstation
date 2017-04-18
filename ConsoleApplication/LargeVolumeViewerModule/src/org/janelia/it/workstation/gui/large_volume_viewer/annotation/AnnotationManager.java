@@ -12,6 +12,7 @@ import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnnotationObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
@@ -217,6 +218,8 @@ public interface AnnotationManager extends UpdateAnchorListener, PathTraceListen
 
     TmWorkspace getCurrentWorkspace();
 
+    TmAnnotationObject getCurrentAnnotationObject();
+    
     Collection<TmNeuronMetadata> getNeuronList();
 
     TmNeuronMetadata getCurrentNeuron();
@@ -289,7 +292,7 @@ public interface AnnotationManager extends UpdateAnchorListener, PathTraceListen
     
     void deleteLink(TmGeoAnnotation link) throws Exception;
 
-    void fireSpatialIndexReady(TmWorkspace workspace);
+    void fireSpatialIndexReady(TmAnnotationObject workspace);
 
     void generateRandomNeurons(Integer neuronCount, Integer meanPointsPerNeuron, BoundingBox3d boundingBox, Float branchProbability);
     

@@ -158,7 +158,7 @@ public class NeuronModelAdapter implements NeuronModel
                 NeuronVertexAdapter p = (NeuronVertexAdapter)parent;
                 TmGeoAnnotation parentAnnotation = p.getTmGeoAnnotation();
                 ann = neuronSet.annotationMgr.addChildAnnotation(parentAnnotation, voxelXyz);
-                ActivityLogHelper.getInstance().logExternallyAddAnchor(neuronSet.workspace.getSampleRef().getTargetId(), neuronSet.workspace.getId(), ann, micronXyz);
+                ActivityLogHelper.getInstance().logExternallyAddAnchor(neuronSet.annotationObject.getSampleRef().getTargetId(), neuronSet.annotationObject.getId(), ann, micronXyz);
             }
             ann.setRadius(new Double(radius));
             if (ann != null) {
@@ -311,7 +311,7 @@ public class NeuronModelAdapter implements NeuronModel
                 return false; // non-terminal cannot be deleted
             
             neuronSet.annotationMgr.deleteLink(annotation);
-            ActivityLogHelper.getInstance().logExternallyDeleteLink(neuronSet.workspace.getSampleRef().getTargetId(), neuronSet.workspace.getId(), annotation);
+            ActivityLogHelper.getInstance().logExternallyDeleteLink(neuronSet.annotationObject.getSampleRef().getTargetId(), neuronSet.annotationObject.getId(), annotation);
             return true;
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);

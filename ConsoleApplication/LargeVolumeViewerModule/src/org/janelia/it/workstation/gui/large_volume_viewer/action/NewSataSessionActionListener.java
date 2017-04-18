@@ -6,7 +6,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmDirectedSession;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
@@ -54,7 +54,7 @@ public final class NewSataSessionActionListener implements ActionListener {
         final Long finalSampleId = sample.getId();
         SimpleWorker creator = new SimpleWorker() {
             
-            private TmSession session;
+            private TmDirectedSession session;
             
             @Override
             protected void doStuff() throws Exception {

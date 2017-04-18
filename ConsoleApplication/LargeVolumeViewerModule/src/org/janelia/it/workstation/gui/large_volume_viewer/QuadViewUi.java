@@ -1636,18 +1636,17 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
 
     private Long getWorkspaceId() {
-        if (this.annotationMgr.getCurrentWorkspace() != null) {
-            return this.annotationMgr.getCurrentWorkspace().getId();
-        } else {
+        if (annotationMgr == null || this.annotationMgr.getCurrentWorkspace() == null) {
             return null;
         }
+        return this.annotationMgr.getCurrentWorkspace().getId();
     }
 
     private Long getSampleId() {
-        if (annotationMgr == null  ||  annotationMgr.getCurrentWorkspace() == null) {
+        if (annotationMgr == null || annotationMgr.getCurrentSample() == null) {
             return null;
         }
-        return this.annotationMgr.getCurrentWorkspace().getSampleRef().getTargetId();
+        return this.annotationMgr.getCurrentSample().getId();
     }
 
     /**

@@ -16,7 +16,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmDirectedSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
@@ -292,28 +292,28 @@ public class TiledMicroscopeDomainMgr {
     // SESSIONS
     // *****************************************************************************************************************
 
-    public List<TmSession> getSessions(Long sampleId) throws Exception {
-        Collection<TmSession> sessions = client.getTmSessionsForSample(sampleId);
-        List<TmSession> canonicalObjects = DomainMgr.getDomainMgr().getModel().putOrUpdate(sessions, false);
+    public List<TmDirectedSession> getSessions(Long sampleId) throws Exception {
+        Collection<TmDirectedSession> sessions = client.getTmSessionsForSample(sampleId);
+        List<TmDirectedSession> canonicalObjects = DomainMgr.getDomainMgr().getModel().putOrUpdate(sessions, false);
         Collections.sort(canonicalObjects, new DomainObjectComparator());
         return canonicalObjects;
     }
 
-    public TmSession getSession(Long sessionId) throws Exception {
+    public TmDirectedSession getSession(Long sessionId) throws Exception {
         log.debug("getSession(sessionId={})",sessionId);
-        TmSession session = model.getDomainObject(TmSession.class, sessionId);
+        TmDirectedSession session = model.getDomainObject(TmDirectedSession.class, sessionId);
         if (session==null) {
             throw new Exception("Session with id="+sessionId+" does not exist");
         }
         return session;
     }
     
-    public TmSample getSample(TmSession session) throws Exception {
+    public TmSample getSample(TmDirectedSession session) throws Exception {
         log.debug("getSample({})",session);
         return getSample(session.getSampleRef().getTargetId());
     }
     
-    public TmSession createSession(Long sampleId, String name) throws Exception {
+    public TmDirectedSession createSession(Long sampleId, String name) throws Exception {
         log.debug("createSession(sampleId={}, name={})", sampleId, name);
         TmSample sample = getSample(sampleId);
         if (sample==null) {
@@ -337,7 +337,7 @@ public class TiledMicroscopeDomainMgr {
         DtwSession session = sataClient.createSession(graph, DtwSessionType.AffinityLearning);
         
         // Create session tracking object in JACS
-        TmSession tmSession = new TmSession();
+        TmDirectedSession tmSession = new TmDirectedSession();
         tmSession.setOwnerKey(AccessManager.getSubjectKey());
         tmSession.setName(name);
         tmSession.setSampleRef(sampleRef);
@@ -357,8 +357,8 @@ public class TiledMicroscopeDomainMgr {
         return tmSession;
     }
     
-    private final Map<TmSession, DtwSession> sessionMapping = new HashMap<>();
-    private DtwSession getSataSession(TmSession tmSession) throws Exception {
+    private final Map<TmDirectedSession, DtwSession> sessionMapping = new HashMap<>();
+    private DtwSession getSataSession(TmDirectedSession tmSession) throws Exception {
         DtwSession sataSession = sessionMapping.get(tmSession);
         if (sataSession==null) {
             log.info("Session not cached, attempting to retrieve from SATA");
@@ -368,7 +368,7 @@ public class TiledMicroscopeDomainMgr {
         return sataSession;
     }
     
-    public DtwDecision getNextDecision(TmSession tmSession) throws Exception {
+    public DtwDecision getNextDecision(TmDirectedSession tmSession) throws Exception {
         log.debug("getNextDecision(sessionId={})", tmSession.getExternalSessionId());
         return sataClient.getNextDecision(tmSession.getExternalSessionId());
     }
@@ -378,13 +378,13 @@ public class TiledMicroscopeDomainMgr {
         return sataClient.updateDecision(decision);
     }
     
-    public void startGraphUpdate(TmSession tmSession) throws Exception {
+    public void startGraphUpdate(TmDirectedSession tmSession) throws Exception {
         log.debug("startGraphUpdate(sessionId={})", tmSession.getExternalSessionId());
         DtwSession session = getSataSession(tmSession);
         sataClient.startGraphUpdate(session.getGraphId());
     }
 
-    public DtwGraphStatus getGraphStatus(TmSession tmSession) throws Exception {
+    public DtwGraphStatus getGraphStatus(TmDirectedSession tmSession) throws Exception {
         log.debug("getGraphStatus(sessionId={})", tmSession.getExternalSessionId());
         DtwSession session = getSataSession(tmSession);
         DtwGraph graph = sataClient.getGraph(session.getGraphId());
@@ -394,9 +394,9 @@ public class TiledMicroscopeDomainMgr {
         return DtwGraphStatus.Unknown;
     }
     
-    public TmSession save(TmSession session) throws Exception {
+    public TmDirectedSession save(TmDirectedSession session) throws Exception {
         log.debug("save({})", session);
-        TmSession canonicalObject;
+        TmDirectedSession canonicalObject;
         synchronized (this) {
             canonicalObject = model.putOrUpdate(session.getId()==null ? client.create(session) : client.update(session));
         }
@@ -409,7 +409,7 @@ public class TiledMicroscopeDomainMgr {
         return canonicalObject;
     }
 
-    public void remove(TmSession session) throws Exception {
+    public void remove(TmDirectedSession session) throws Exception {
         log.debug("remove({})", session);
         client.remove(session);
         model.notifyDomainObjectRemoved(session);

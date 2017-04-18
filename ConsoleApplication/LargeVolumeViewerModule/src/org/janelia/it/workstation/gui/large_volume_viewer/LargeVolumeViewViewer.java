@@ -13,7 +13,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmDirectedSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
@@ -217,8 +217,8 @@ public class LargeVolumeViewViewer extends JPanel {
         if (domainObject instanceof TmWorkspace) {
             return new WorkspaceAnnotationManager((TmWorkspace)domainObject);
         }
-        if (domainObject instanceof TmSession) {
-            return new SessionAnnotationManager((TmSession)domainObject);
+        if (domainObject instanceof TmDirectedSession) {
+            return new SessionAnnotationManager((TmDirectedSession)domainObject);
         }
         else {
             throw new IllegalArgumentException("Can't handle objects of type "+domainObject.getType());

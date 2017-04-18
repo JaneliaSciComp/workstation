@@ -28,7 +28,7 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSession;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmDirectedSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
@@ -358,17 +358,17 @@ public class TiledMicroscopeRestClient {
         }
     }
 
-    public Collection<TmSession> getTmSessions() throws Exception {
+    public Collection<TmDirectedSession> getTmSessions() throws Exception {
         Response response = getMouselightEndpoint("/session")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response, "getTmSessions")) {
             throw new WebApplicationException(response);
         }
-        return response.readEntity(new GenericType<List<TmSession>>() {});
+        return response.readEntity(new GenericType<List<TmDirectedSession>>() {});
     }
 
-    public Collection<TmSession> getTmSessionsForSample(Long sampleId) throws Exception {
+    public Collection<TmDirectedSession> getTmSessionsForSample(Long sampleId) throws Exception {
         Response response = getMouselightEndpoint("/session")
                 .queryParam("sampleId", sampleId)
                 .request("application/json")
@@ -376,10 +376,10 @@ public class TiledMicroscopeRestClient {
         if (checkBadResponse(response, "getTmSessions")) {
             throw new WebApplicationException(response);
         }
-        return response.readEntity(new GenericType<List<TmSession>>() {});
+        return response.readEntity(new GenericType<List<TmDirectedSession>>() {});
     }
     
-    public TmSession create(TmSession tmSession) throws Exception {
+    public TmDirectedSession create(TmDirectedSession tmSession) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(tmSession);
@@ -389,10 +389,10 @@ public class TiledMicroscopeRestClient {
         if (checkBadResponse(response, "create: "+tmSession)) {
             throw new WebApplicationException(response);
         }
-        return response.readEntity(TmSession.class);
+        return response.readEntity(TmDirectedSession.class);
     }
     
-    public TmSession update(TmSession tmSession) throws Exception {
+    public TmDirectedSession update(TmDirectedSession tmSession) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(tmSession);
         query.setSubjectKey(AccessManager.getSubjectKey());
@@ -402,10 +402,10 @@ public class TiledMicroscopeRestClient {
         if (checkBadResponse(response, "update: " + tmSession)) {
             throw new WebApplicationException(response);
         }
-        return response.readEntity(TmSession.class);
+        return response.readEntity(TmDirectedSession.class);
     }
 
-    public void remove(TmSession tmSession) throws Exception {
+    public void remove(TmDirectedSession tmSession) throws Exception {
         Response response = getMouselightEndpoint("/session")
                 .queryParam("sessionId", tmSession.getId())
                 .request("application/json")

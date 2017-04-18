@@ -8,10 +8,10 @@ import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnnotationObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.util.MatrixUtilities;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -284,15 +284,15 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
 
     @Override
-    public void workspaceUnloaded(TmWorkspace workspace) {
-        logger.info("Workspace unloaded");
+    public void annotationsUnloaded(TmAnnotationObject workspace) {
+        logger.info("Annotations unloaded");
         fireClearAnchors();
     }
     
     @Override
-    public void workspaceLoaded(TmWorkspace workspace) {
+    public void annotationsLoaded(TmAnnotationObject workspace) {
 
-        logger.info("Workspace loaded");
+        logger.info("Annotations loaded");
         
         if (workspace!=null) {
 
@@ -318,7 +318,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
     
     @Override
-    public void spatialIndexReady(TmWorkspace workspace) {
+    public void spatialIndexReady(TmAnnotationObject workspace) {
 
         logger.info("Spatial index is ready. Rebuilding anchor model.");
 

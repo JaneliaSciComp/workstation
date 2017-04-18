@@ -1,10 +1,10 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import java.util.List;
 import java.util.Map;
 
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnnotationObject;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 
 /**
@@ -16,7 +16,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 public abstract class GlobalAnnotationAdapter implements GlobalAnnotationListener {
 
     @Override
-    public void workspaceLoaded(TmWorkspace workspace) {}
+    public void annotationsLoaded(TmAnnotationObject annotationObject) {}
 
     @Override
     public void neuronSelected(TmNeuronMetadata neuron) {}
