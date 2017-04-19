@@ -68,11 +68,12 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private JComboBox<String> tagModeMenu;
     private JComboBox<String> tagMenu;
 
-    private AnnotationManager annotationManager;
+    private final AnnotationManager annotationManager;
+    private final int width;
+    
     private CameraPanToListener panListener;
     private NeuronSelectedListener neuronSelectedListener;
 
-    private int width;
     private static final int height = 2 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
 
     /**

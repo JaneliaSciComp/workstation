@@ -27,7 +27,7 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.SampleAnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.SessionAnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.DirectedSessionAnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceAnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.netbeans.api.progress.ProgressHandle;
@@ -81,16 +81,16 @@ public class LargeVolumeViewViewer extends JPanel {
         Futures.addCallback(annotationMgr.loadSample(), new FutureCallback<TmSample>() {
             public void onSuccess(TmSample sample) {
                 
+                // Prepare the view for loading volume data
+                HttpDataSource.setMouseLightCurrentSampleId(sample.getId());
+                SkeletonController.refreshInstance();
+                refresh();
+
                 // Load image data in one thread
                 final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading image data...");
                 progress.start();
                 progress.setDisplayName("Loading image data");
                 progress.switchToIndeterminate();
-
-                // Prepare the view for loading volume data
-                HttpDataSource.setMouseLightCurrentSampleId(sample.getId());
-                SkeletonController.refreshInstance();
-                refresh();
                 
                 // Load the volume in the background
                 SimpleListenableFuture<Void> future1 = loadVolume(sample);
@@ -143,12 +143,12 @@ public class LargeVolumeViewViewer extends JPanel {
                         // Initialize the camera if this is the first time loading
                         synchronized(this) {
                             if (initialViewFocus!=null) {
-                                logger.info("Setting intial camera focus: {}", initialViewFocus);
+                                logger.info("Setting initial camera focus: {}", initialViewFocus);
                                 viewUI.setCameraFocus(initialViewFocus);
                                 initialViewFocus = null;
                             }
                             if (initialZoom!=null) {
-                                logger.info("Setting intial zoom: {}", initialZoom);
+                                logger.info("Setting initial zoom: {}", initialZoom);
                                 viewUI.setPixelsPerSceneUnit(initialZoom);
                                 initialZoom = null;
                             }
@@ -166,10 +166,7 @@ public class LargeVolumeViewViewer extends JPanel {
             }
             
             public void onFailure(Throwable t) {
-                JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
-                        "Could not find the supporting sample",
-                        "Could not open "+domainObject.getType(),
-                        JOptionPane.ERROR_MESSAGE);
+                FrameworkImplProvider.handleException(t);
                 close();
             }
         });
@@ -210,6 +207,11 @@ public class LargeVolumeViewViewer extends JPanel {
         return volumeLoader.executeWithFuture();
     }
         
+    /**
+     * Instantiate and return the appropriate controller for the given domain object. 
+     * @param domainObject
+     * @return
+     */
     private AnnotationManager getAnnotationManagerImpl(DomainObject domainObject) {
         if (domainObject instanceof TmSample) {
             return new SampleAnnotationManager((TmSample)domainObject);
@@ -218,7 +220,7 @@ public class LargeVolumeViewViewer extends JPanel {
             return new WorkspaceAnnotationManager((TmWorkspace)domainObject);
         }
         if (domainObject instanceof TmDirectedSession) {
-            return new SessionAnnotationManager((TmDirectedSession)domainObject);
+            return new DirectedSessionAnnotationManager((TmDirectedSession)domainObject);
         }
         else {
             throw new IllegalArgumentException("Can't handle objects of type "+domainObject.getType());
@@ -243,9 +245,6 @@ public class LargeVolumeViewViewer extends JPanel {
     }
     
     public QuadViewUi getQuadViewUi() {
-        if (!hasQuadViewUi()) {
-            refresh();
-        }
         return viewUI;
     }
     
@@ -282,11 +281,10 @@ public class LargeVolumeViewViewer extends JPanel {
 
         showLoadingIndicator();
 
-        if (viewUI == null) {
-            viewUI = new QuadViewUi(ConsoleApp.getMainFrame(), false, annotationMgr);
-        }
-        
         if (annotationMgr != null) {
+            if (viewUI == null) {
+                viewUI = new QuadViewUi(ConsoleApp.getMainFrame(), false, annotationMgr);
+            }
             annotationMgr.setQuadViewUi(viewUI);
         }
         

@@ -35,7 +35,7 @@ public class NeuronVertexSpatialIndex {
     private KDTree<NeuronVertex> index; // Cannot be final because it doesn't have a clear method
 
     // Is the index currently in a valid, usable state?
-    private AtomicBoolean valid = new AtomicBoolean(false);
+    private final AtomicBoolean valid = new AtomicBoolean(false);
     
     public NeuronVertexSpatialIndex() {
         log.trace("Creating spatial index");

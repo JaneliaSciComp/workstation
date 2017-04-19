@@ -22,20 +22,20 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public final class NewSataSessionActionListener implements ActionListener {
+public final class NewDirectedSessionActionListener implements ActionListener {
 
-    private static final Logger log = LoggerFactory.getLogger(NewSataSessionActionListener.class);
+    private static final Logger log = LoggerFactory.getLogger(NewDirectedSessionActionListener.class);
     
     private TmSample sample;
 
-    public NewSataSessionActionListener(TmSample sample) {
+    public NewDirectedSessionActionListener(TmSample sample) {
         this.sample = sample;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        ActivityLogHelper.logUserAction("NewSataSessionActionListener.actionPerformed");
+        ActivityLogHelper.logUserAction("NewDirectedSessionActionListener.actionPerformed");
         
         if (sample==null) {
             JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
@@ -58,10 +58,10 @@ public final class NewSataSessionActionListener implements ActionListener {
             
             @Override
             protected void doStuff() throws Exception {
-                log.info("Creating new workspace with name '{}' for {}",sessionName,finalSampleId);
+                log.info("Creating new session with name '{}' for {}",sessionName,finalSampleId);
                 // now we can create the workspace
                 this.session = TiledMicroscopeDomainMgr.getDomainMgr().createSession(finalSampleId, sessionName);
-                log.info("Created workspace with id={}",session.getId());
+                log.info("Created session with id={}",session.getId());
             }
 
             @Override

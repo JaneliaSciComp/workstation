@@ -681,7 +681,7 @@ implements NeuronSet// , LookupListener
         // private TmSample sample;
         private NeuronSetAdapter neuronSet;
         private final Map<Long, NeuronModelAdapter> cachedNeurons = new HashMap<>();
-        // private AnnotationModel annotationMgr;
+        // private BasicAnnotationModel annotationMgr;
         private final Logger logger = LoggerFactory.getLogger(this.getClass());
         
         NeuronModelAdapter neuronModelForTmNeuron(TmNeuronMetadata tmNeuron) {

@@ -58,49 +58,54 @@ public class DirectedTracingWorkflowRestClient {
         client.register(provider);
     }
 
-    public WebTarget getEndpoint(String suffix) {
+    private WebTarget getEndpoint(String suffix) {
         return client.target(REMOTE_API_URL + suffix).queryParam("subjectKey", AccessManager.getSubjectKey());
     }
     
     public List<DtwGraph> getGraphs() throws Exception {
-        Response response = getEndpoint("/graph/")
+        WebTarget endpoint = getEndpoint("/graph/");
+        Response response = endpoint
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
-        checkBadResponse(response, "getGraphs");
+        checkBadResponse(endpoint, response);
         return response.readEntity(new GenericType<List<DtwGraph>>() {});
     }
 
     public DtwGraph getGraph(String graphId) throws Exception {
-        Response response = getEndpoint("/graph/"+graphId)
+        WebTarget endpoint = getEndpoint("/graph/"+graphId);
+        Response response = endpoint
                 .request("application/json")
                 .get();
-        checkBadResponse(response, "getGraphById");
+        checkBadResponse(endpoint, response);
         return response.readEntity(DtwGraph.class);
     }
     
     public DtwGraph getLatestGraph(String samplePath) throws Exception {
-        Response response = getEndpoint("/graph/findLatest")
+        WebTarget endpoint = getEndpoint("/graph/findLatest");
+        Response response = endpoint
                 .queryParam("samplePath", samplePath)
                 .request("application/json")
                 .get();
-        checkBadResponse(response, "findLatestGraph");
+        checkBadResponse(endpoint, response);
         return response.readEntity(DtwGraph.class);
     }
     
     public DtwGraph create(DtwGraph graph) throws Exception {
-        Response response = getEndpoint("/graph/")
+        WebTarget endpoint = getEndpoint("/graph/");
+        Response response = endpoint
                 .request("application/json")
                 .post(Entity.json(graph));
-        checkBadResponse(response, "createGraph");
+        checkBadResponse(endpoint, response);
         return response.readEntity(DtwGraph.class);
     }
 
     public DtwGraph startGraphUpdate(String graphId) throws Exception {
-        Response response = getEndpoint("/graph/"+graphId+"/update")
+        WebTarget endpoint = getEndpoint("/graph/"+graphId+"/update");
+        Response response = endpoint
                 .request("application/json")
                 .post(Entity.json(null));
-        checkBadResponse(response, "updateGraph");
+        checkBadResponse(endpoint, response);
         return response.readEntity(DtwGraph.class);
     }
     
@@ -108,43 +113,46 @@ public class DirectedTracingWorkflowRestClient {
         DtwSession session = new DtwSession();
         session.setGraphId(graph.getId());
         session.setSessionType(sessionType.getLabel());
-        Response response = getEndpoint("/session/")
+        WebTarget endpoint = getEndpoint("/session/");
+        Response response = endpoint
                 .request("application/json")
                 .post(Entity.json(session));
-        checkBadResponse(response, "createSession");
+        checkBadResponse(endpoint, response);
         return response.readEntity(DtwSession.class);
     }
 
     public DtwSession getSession(String sessionId) throws Exception {
-        Response response = getEndpoint("/session/"+sessionId)
+        WebTarget endpoint = getEndpoint("/session/"+sessionId);
+        Response response = endpoint
                 .request("application/json")
                 .get();
-        checkBadResponse(response, "getSession");
+        checkBadResponse(endpoint, response);
         return response.readEntity(DtwSession.class);
     }
     
     public DtwDecision getNextDecision(String sessionId) throws Exception {
-        Response response = getEndpoint("/session/"+sessionId+"/next")
+        WebTarget endpoint = getEndpoint("/session/"+sessionId+"/next");
+        Response response = endpoint
                 .request("application/json")
                 .get();
-        checkBadResponse(response, "getNextDecision");
+        checkBadResponse(endpoint, response);
         return response.readEntity(DtwDecision.class);
     }
     
     public DtwDecision updateDecision(DtwDecision decision) throws Exception {
-        WebTarget target = getEndpoint("/session/"+decision.getSessionId()+"/decision/"+decision.getId());
-        Response response = target
+        WebTarget endpoint = getEndpoint("/session/"+decision.getSessionId()+"/decision/"+decision.getId());
+        Response response = endpoint
                 .request("application/json")
                 .post(Entity.json(decision));
-        checkBadResponse(response, "updateDecision");
+        checkBadResponse(endpoint, response);
         return response.readEntity(DtwDecision.class);
     }
     
-    protected void checkBadResponse(Response response, String failureError) {
+    private void checkBadResponse(WebTarget endpoint, Response response) {
         int responseStatus = response.getStatus();
         Response.Status status = Response.Status.fromStatusCode(response.getStatus());
         if (responseStatus<200 || responseStatus>=300) {
-            log.error("Problem making request for {}", failureError);
+            log.error("Problem making request for: {}", endpoint.getUri());
             log.error("Server responded with error code: {} {}",response.getStatus(), status);
             throw new WebApplicationException(response);
         }

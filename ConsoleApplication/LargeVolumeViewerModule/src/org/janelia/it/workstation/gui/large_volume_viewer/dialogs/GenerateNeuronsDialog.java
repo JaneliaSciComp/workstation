@@ -145,6 +145,11 @@ public class GenerateNeuronsDialog extends ModalDialog {
         }
         
         LargeVolumeViewViewer lvvv = LargeVolumeViewerTopComponent.getInstance().getLvvv();
+        
+        if (!lvvv.hasQuadViewUi()) {
+            throw new IllegalStateException("LVVV is not instantiated");
+        }
+        
         tileFormat = lvvv.getQuadViewUi().getTileFormat();
         BoundingBox3d boundingBox = lvvv.getQuadViewUi().getBoundingBox();
         log.info("Bounding box (micrometers): {}", boundingBox);

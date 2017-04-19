@@ -29,6 +29,7 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronColorAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.ImportSWCAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronCreateAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronDeleteAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronExportAllAction;
@@ -50,7 +51,7 @@ public class AnnotationPanel extends JPanel
     // things we get data from
     // not clear these belong here!  should all info be shuffled through signals and actions?
     // on the other hand, even if so, we still need them just to hook everything up
-    private final BasicAnnotationManager annotationMgr;
+    private final AnnotationManager annotationMgr;
     private final LargeVolumeViewerTranslator largeVolumeViewerTranslator;
 
 
@@ -104,7 +105,7 @@ public class AnnotationPanel extends JPanel
     private JMenu sortSubmenu;
 
 
-    public AnnotationPanel(BasicAnnotationManager annotationMgr, LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
+    public AnnotationPanel(AnnotationManager annotationMgr, LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
         this.annotationMgr = annotationMgr;
         this.largeVolumeViewerTranslator = largeVolumeViewerTranslator;
 

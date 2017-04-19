@@ -52,7 +52,7 @@ public final class NewWorkspaceFromSWCActionListener implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        ActivityLogHelper.logUserAction("NewSataSessionActionListener.actionPerformed");
+        ActivityLogHelper.logUserAction("NewDirectedSessionActionListener.actionPerformed");
 
         final JFrame mainFrame = ConsoleApp.getMainFrame();
 

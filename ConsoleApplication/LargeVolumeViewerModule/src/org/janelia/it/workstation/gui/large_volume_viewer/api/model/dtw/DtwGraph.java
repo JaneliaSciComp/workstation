@@ -1,5 +1,9 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw;
 
+import java.util.Date;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 /**
  * Graph DTO for communicating with the Directed Tracing Workflow Service.
  * 
@@ -12,6 +16,8 @@ public class DtwGraph {
     private String id;
     private String samplePath;
     private DtwGraphStatus status;
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+    private Date creationDate;
 
     public String getId() {
         return id;
@@ -36,5 +42,12 @@ public class DtwGraph {
     public void setStatus(DtwGraphStatus status) {
         this.status = status;
     }
-    
+
+    public Date getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(Date creationDate) {
+        this.creationDate = creationDate;
+    }
 }

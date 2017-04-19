@@ -10,7 +10,7 @@ import java.util.List;
 public class DtwBranch {
 
     private String id;
-    private List<String> nodeLocations;
+    private List<String> nodes;
 
     public String getId() {
         return id;
@@ -20,11 +20,11 @@ public class DtwBranch {
         this.id = id;
     }
 
-    public List<String> getNodeLocations() {
-        return nodeLocations;
+    public List<String> getNodes() {
+        return nodes;
     }
 
-    public void setNodeLocations(List<String> nodeLocations) {
-        this.nodeLocations = nodeLocations;
+    public void setNodes(List<String> nodes) {
+        this.nodes = nodes;
     }
 }

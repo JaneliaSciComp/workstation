@@ -3,6 +3,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 /**
  * Decision DTO for communicating with the Directed Tracing Workflow Service.
  * 
@@ -15,7 +17,9 @@ public class DtwDecision {
 
     private String id;
     private String sessionId;
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
     private Date orderDate;
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
     private Date fillDate;
     private DtwFocalPoint viewingFocus;
     private List<DtwBranch> branches;

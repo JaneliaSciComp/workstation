@@ -18,7 +18,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.jacs.shared.lvv.TileFormatProvider;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
@@ -42,7 +42,7 @@ import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
  *   
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public interface AnnotationManager extends UpdateAnchorListener, PathTraceListener, VolumeLoadListener  {
+public interface AnnotationManager extends UpdateAnchorListener, PathTraceListener, VolumeLoadListener, TileFormatProvider  {
 
     /**
      * Must be called after initialization, to establish two-way communication between the AnnotationManager and the UI.
@@ -59,11 +59,6 @@ public interface AnnotationManager extends UpdateAnchorListener, PathTraceListen
      */
     void setLvvTranslator(LargeVolumeViewerTranslator lvvTranslator);
     
-    /**
-     * Returns the tile format for the current sample.
-     */
-    TileFormat getTileFormat();
-
     /**
      * Get the object that was initially loaded by the user. 
      */

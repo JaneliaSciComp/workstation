@@ -45,11 +45,11 @@ import Jama.Matrix;
  * Date: 7/9/13
  * Time: 2:06 PM
  *
- * this class translates between the AnnotationModel, which says things like "I changed
+ * this class translates between the BasicAnnotationModel, which says things like "I changed
  * a neuron", and the LargeVolumeViewer proper, which only wants to be told what to draw.
  * this class *only* handles the viewer, not the other traditional UI elements.
  *
- * this class generally observes the AnnotationModel, while its events go
+ * this class generally observes the BasicAnnotationModel, while its events go
  * out to various UI elements.
  *
  * unfortunately, this class's comments and methods tends to use "anchor" and "annotation"

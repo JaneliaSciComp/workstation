@@ -2,6 +2,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 /**
  * Session DTO for communicating with the Directed Tracing Workflow Service.
  * 
@@ -14,7 +16,9 @@ public class DtwSession {
     private String id;
     private String graphId;
     private String sessionType;
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
     private Date startDate;
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
     private Date endDate;
 
     public String getId() {

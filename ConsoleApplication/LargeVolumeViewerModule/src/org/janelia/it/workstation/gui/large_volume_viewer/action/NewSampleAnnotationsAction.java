@@ -43,8 +43,8 @@ public final class NewSampleAnnotationsAction extends NodePresenterAction {
         menuItem.addActionListener(new NewWorkspaceFromSWCActionListener(sample));
         newMenu.add(menuItem);
         
-        menuItem = new JMenuItem("Semi-Automated Tracing Session");
-        menuItem.addActionListener(new NewSataSessionActionListener(sample));
+        menuItem = new JMenuItem("Directed Tracing Session");
+        menuItem.addActionListener(new NewDirectedSessionActionListener(sample));
         newMenu.add(menuItem);
         
         if (selected.size()!=1) {

@@ -34,6 +34,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.RandomNeuronGenerator;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
@@ -84,9 +85,9 @@ import org.slf4j.LoggerFactory;
  * the call to the back end, usually spinning off a worker thread to do so.
  *
  * This class's events are usually connected to various UI signals, and it
- * typically fires events for AnnotationModel. this class has no
+ * typically fires events for BasicAnnotationModel. this class has no
  * responsibilities in notifying UI elements of what's been done; that's handled
- * by events generated at AnnotationModel.
+ * by events generated at BasicAnnotationModel.
  */
 public abstract class BasicAnnotationManager implements AnnotationManager {
     
@@ -98,7 +99,7 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     protected QuadViewUi quadViewUi;
 
     // annotation model object
-    protected final WorkspaceAnnotationModel annotationModel;
+    protected final BasicAnnotationModel annotationModel;
 
     // For communicating annotations to Horta
     protected final NeuronSetAdapter neuronSetAdapter;
@@ -120,7 +121,7 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
     public BasicAnnotationManager() {
         
         TmModelManipulator<TmWorkspace> neuronManager = new TmModelManipulator<TmWorkspace>(new DomainMgrTmModelAdapter());
-        this.annotationModel = new WorkspaceAnnotationModel(neuronManager);
+        this.annotationModel = new BasicAnnotationModel(this, neuronManager);
         
         this.neuronSetAdapter = new NeuronSetAdapter();
         neuronSetAdapter.observe(this);
@@ -150,6 +151,17 @@ public abstract class BasicAnnotationManager implements AnnotationManager {
         return quadViewUi.getTileServer().getLoadAdapter().getTileFormat();
     }
 
+    @Override
+    public Vec3 getMicrometerVecFromVoxelVec(Vec3 voxelVec) {
+        TileFormat.MicrometerXyz mmXyz = getTileFormat().micrometerXyzForVoxelXyz(
+                new TileFormat.VoxelXyz(
+                        (int)voxelVec.getX(),
+                        (int)voxelVec.getY(),
+                        (int)voxelVec.getZ()), 
+                CoordinateAxis.Z);
+        return new Vec3(mmXyz.getX(), mmXyz.getY(), mmXyz.getZ());
+    }
+    
     @Override
     public void close() {
         Events.getInstance().unregisterOnEventBus(annotationModel);

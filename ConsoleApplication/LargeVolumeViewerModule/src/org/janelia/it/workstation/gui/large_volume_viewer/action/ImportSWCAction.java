@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
+package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -14,6 +14,9 @@ import javax.swing.filechooser.FileFilter;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.BasicAnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
 
 /**
  * Drag the SWCs into the workspace, and make neurons.
@@ -88,4 +91,27 @@ public class ImportSWCAction extends AbstractAction {
         }
         return rtnVal;
     }
+    
+    class SwcDirListFilter implements java.io.FileFilter {
+
+        @Override
+        public boolean accept(File file) {
+            return file.isFile() && file.getName().endsWith(BasicAnnotationModel.STD_SWC_EXTENSION);
+        }
+
+    }
+
+    class SwcDirAndFileFilter extends FileFilter {
+
+        @Override
+        public boolean accept(File f) {
+            return f.getName().endsWith(BasicAnnotationModel.STD_SWC_EXTENSION) || f.isDirectory();
+        }
+
+        @Override
+        public String getDescription() {
+            return "*" + BasicAnnotationModel.STD_SWC_EXTENSION;
+        }
+    }
 }
+

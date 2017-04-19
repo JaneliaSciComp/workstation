@@ -9,10 +9,12 @@ import javax.swing.ToolTipManager;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmDirectedSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.utils.GeomUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
@@ -79,12 +81,13 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
     }
     
-    public static void setRestoreStateOnOpen(boolean value) {
+    public static synchronized void setRestoreStateOnOpen(boolean value) {
         // A hack to ensure that if the LVV is opened by the user after app launch it does not restore its previous state
         restoreStateOnOpen = value;
     }
     
     public static final LargeVolumeViewerTopComponent getInstance() {
+        LargeVolumeViewerTopComponent.setRestoreStateOnOpen(false);
         return (LargeVolumeViewerTopComponent)WindowManager.getDefault().findTopComponent(LVV_PREFERRED_ID);
     }
     
@@ -113,8 +116,10 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         return true;
     }
     
-    public void openLargeVolumeViewer(DomainObject domainObject) {
+    public synchronized void openLargeVolumeViewer(DomainObject domainObject) {
         log.info("openLargeVolumeViewer({})",domainObject);
+        
+        // Load the object
         setCurrent(domainObject);
         Snapshot3DLauncher.removeStaleViewer();
         getLvvv().loadDomainObject(domainObject);
@@ -229,7 +234,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         
         // Save view focus
         
-        if (lvvv != null && lvvv.getQuadViewUi()!=null) {
+        if (lvvv != null && lvvv.hasQuadViewUi()) {
             Vec3 focus = lvvv.getQuadViewUi().getCameraFocus();
             if (focus != null) {
                 String viewFocus = focus.x()+","+focus.y()+","+focus.z();
@@ -263,11 +268,11 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
 
             String viewFocusStr = p.getProperty("viewFocus");
             log.info("Reading state: viewFocus={}",viewFocusStr);
-            final Vec3 viewFocus = parseVec3(viewFocusStr);
+            final Vec3 viewFocus = GeomUtils.parseVec3(viewFocusStr);
 
             String viewZoomStr = p.getProperty("viewZoom");
             log.info("Reading state: viewZoom={}",viewZoomStr);
-            final Double viewZoom = parseDouble(viewZoomStr);
+            final Double viewZoom = GeomUtils.parseDouble(viewZoomStr);
             
             if (viewFocus!=null && viewZoom!=null) {
                 getLvvv().setInitialViewFocus(viewFocus, viewZoom);
@@ -284,6 +289,9 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
                     }
                     else if (TmWorkspace.class.getSimpleName().equals(ref.getTargetClassName())) {
                         domainObject = tmDomainMgr.getWorkspace(ref.getTargetId());
+                    }
+                    else if (TmDirectedSession.class.getSimpleName().equals(ref.getTargetClassName())) {
+                        domainObject = tmDomainMgr.getSession(ref.getTargetId());
                     }
                     else {
                         log.error("State object is unsupported by the LVV: "+ref);
@@ -305,34 +313,6 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
             };
             worker.execute();
         }
-    }
-    
-    private Vec3 parseVec3(String vecStr) {
-        try {
-            if (!StringUtils.isBlank(vecStr)) {
-                String[] vecArr = vecStr.split(",");
-                Double x = new Double(vecArr[0]);
-                Double y = new Double(vecArr[1]);
-                Double z = new Double(vecArr[2]);
-                return new Vec3(x, y, z);
-            }
-        }
-        catch (Exception e) {
-            log.warn("Could not parse vector: "+vecStr);
-        }
-        return null;
-    }
-    
-    private Double parseDouble(String doubleStr) {
-        try {
-            if (doubleStr!=null) {
-                return new Double(doubleStr);
-            }
-        }
-        catch (NumberFormatException e) {
-            log.warn("Could not parse double: "+doubleStr);
-        }
-        return null;
     }
     
     private void establishLookups() {

@@ -2,24 +2,34 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.janelia.it.jacs.model.IdSource;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnnotationObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmDirectedSession;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.lvv.TileFormatProvider;
+import org.janelia.it.jacs.shared.swc.SWCDataConverter;
+import org.janelia.it.jacs.shared.utils.GeomUtils;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionSupport;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw.DtwBranch;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw.DtwDecision;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.model.dtw.DtwGraphStatus;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
@@ -28,49 +38,43 @@ import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVol
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Sets;
+
 /**
  * Annotation model which masquerades a directed annotation session as TM objects, so that they
  * can be loaded into LVV/Horta through the existing mechanisms. 
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SessionAnnotationModel implements DomainObjectSelectionSupport {
+public class DirectedSessionAnnotationModel implements DomainObjectSelectionSupport {
 
-    private static final Logger log = LoggerFactory.getLogger(SessionAnnotationModel.class);
+    private static final Logger log = LoggerFactory.getLogger(DirectedSessionAnnotationModel.class);
 
+    protected final LoadTimer addTimer = new LoadTimer();
     protected final ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
     protected final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
-    protected final LoadTimer addTimer = new LoadTimer();
     protected final TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-
+    protected final FilteredAnnotationModel filteredAnnotationModel = new FilteredAnnotationModel();
+    
+    protected final TileFormatProvider tileFormatProvider;
+    
     protected TmSample currentSample;
     protected TmDirectedSession currentSession;
     protected TmNeuronMetadata currentNeuron;
+    protected Map<Long, TmNeuronMetadata> neuronMap = new LinkedHashMap<>();
 
+    protected SWCDataConverter swcDataConverter;
     protected ViewStateListener viewStateListener;
     protected NotesUpdateListener notesUpdateListener;
     protected final Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
     protected final Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
     protected final Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
 
-    public SessionAnnotationModel() {
-    }
+    private DtwDecision decision;
 
-    /**
-     * In order to avoid doing things twice (or more) unnecessarily, we stop any piecemeal UI updates from being made 
-     * and wait until the transaction to end before doing everything in bulk.
-     */
-    private void beginTransaction() {
-        SkeletonController.getInstance().beginTransaction();
-        FilteredAnnotationList.getInstance().beginTransaction();
-    }
-
-    /**
-     * Commit everything that changed into UI changes.
-     */
-    private void endTransaction() {
-        SkeletonController.getInstance().endTransaction();
-        FilteredAnnotationList.getInstance().endTransaction();
+    public DirectedSessionAnnotationModel(TileFormatProvider tileFormatProvider) {
+        this.tileFormatProvider = tileFormatProvider;
+        log.info("Creating new BasicAnnotationModel: {}", this);
     }
     
     public synchronized void clear() {
@@ -78,7 +82,7 @@ public class SessionAnnotationModel implements DomainObjectSelectionSupport {
         currentSession = null;
         currentSample = null;
         setCurrentNeuron(null);
-        fireWorkspaceUnloaded(currentSession);
+        fireAnnotationsUnloaded(currentSession);
     }
     
     public synchronized void setSample(final TmSample sample) {
@@ -101,30 +105,136 @@ public class SessionAnnotationModel implements DomainObjectSelectionSupport {
         log.info("Loading session {}", session.getId());
         currentSession = session;
         currentSample = tmDomainMgr.getSample(session);
-
-        // Neurons need to be loaded en masse from raw data from server.
-        log.info("Loading neurons for workspace {}", session.getId());
-        
-        if (true) throw new UnsupportedOperationException();
-       
-        //neuronManager.loadWorkspaceNeurons(session);
         
         // Clear neuron selection
         log.info("Clearing current neuron for workspace {}", session.getId());
         setCurrentNeuron(null);   
     }
 
-    public void loadComplete() { 
+    public void loadComplete() throws Exception { 
         final TmDirectedSession session = getCurrentSession();
+        
         // Update TC, in case the load bypassed it
-        LargeVolumeViewerTopComponent.getInstance().setCurrent(session==null ? getCurrentSample() : session);    
-        fireWorkspaceLoaded(session);
+        LargeVolumeViewerTopComponent.getInstance().setCurrent(session==null ? getCurrentSample() : session);
+
+        //fireAnnotationsLoaded(session);
+        
+        // Load first decision
+        loadNextDecision();
+
+        // Tell viewers to update
+        fireAnnotationsLoaded(session);
         fireNeuronSelected(null);
+        
         if (session!=null) {
             activityLog.logLoadDirectedSession(session.getId());
         }
     }
     
+    private DtwDecision loadNextDecision() throws Exception {
+        final TmDirectedSession session = getCurrentSession();
+        
+        neuronMap.clear();
+        
+        decision = tmDomainMgr.getNextDecision(session);
+        log.info("Got next decision (id={}) with order date {}", decision.getId(), decision.getOrderDate());
+
+        int meanPointsPerNeuron = 1000;
+        int neuronCount = decision.getBranches().size();
+        IdSource idSource = new IdSource((int)(neuronCount*meanPointsPerNeuron*2));
+        String owner = session.getOwnerKey();
+
+        TmWorkspace dummyWorkspace = new TmWorkspace(); 
+        dummyWorkspace.setId(idSource.next());
+        dummyWorkspace.setName(session.getName());
+        dummyWorkspace.setOwnerKey(owner);
+        dummyWorkspace.setReaders(Sets.newHashSet(owner));
+        dummyWorkspace.setWriters(Sets.newHashSet(owner));
+        dummyWorkspace.setSampleRef(session.getSampleRef());
+             
+        for (DtwBranch dtwBranch : decision.getBranches()) {
+
+            // Create neuron for each branch
+            Long neuronId = idSource.next();
+            
+            TmNeuronMetadata metadata = new TmNeuronMetadata(dummyWorkspace, "Branch_"+dtwBranch.getId());
+            metadata.setId(neuronId);
+            metadata.setOwnerKey(owner);
+            metadata.setReaders(Sets.newHashSet(owner));
+            metadata.setWriters(Sets.newHashSet(owner));
+            
+            Map<Long, TmGeoAnnotation> map = metadata.getGeoAnnotationMap();
+            TmGeoAnnotation prev = null;
+            
+            for (String location : dtwBranch.getNodes()) {
+
+                TmGeoAnnotation annotation = new TmGeoAnnotation();
+                annotation.setId(idSource.next());
+                annotation.setNeuronId(neuronId);
+                annotation.setCreationDate(new Date());
+                populateAnnotationLocation(annotation, location);
+
+                if (prev==null) {
+                    annotation.setParentId(neuronId);
+                    metadata.addRootAnnotation(annotation);
+                }
+                else {
+                    annotation.setParentId(prev.getId());
+                    prev.addChild(annotation);
+                }
+
+                map.put(annotation.getId(), annotation);
+                prev = annotation;
+                
+            }
+
+            log.info("Loaded {} locations for branch {}", map.size(), metadata.getName());
+            neuronMap.put(metadata.getId(), metadata);
+        }
+        
+        log.info("Loaded {} branches as neurons", neuronMap.size());
+        
+        return decision;
+    }
+
+    public DtwDecision getNextDecision() {
+        return decision;
+    }
+    
+    public DtwDecision nextDecisionRequested() throws Exception {
+        final TmDirectedSession session = getCurrentSession();
+        
+        DtwDecision decision = loadNextDecision();
+        
+        fireAnnotationsLoaded(session);
+        
+        return decision;
+    }
+    
+    public void makeDecision(int choiceIndex) throws Exception {
+        decision.setChoiceIndex(choiceIndex);
+        tmDomainMgr.saveDecision(decision);
+    }
+    
+    public void startGraphUpdate() throws Exception {
+        tmDomainMgr.startGraphUpdate(currentSession);
+    }
+
+    public DtwGraphStatus getGraphStatus() throws Exception {
+        return tmDomainMgr.getGraphStatus(currentSession);
+    }
+    
+    private void populateAnnotationLocation(TmGeoAnnotation annotation, String location) {
+        Vec3 vec = GeomUtils.parseVec3(location);
+        annotation.setX(vec.x());
+        annotation.setY(vec.y());
+        annotation.setZ(vec.z());
+    }
+    
+    public Map<Long, TmNeuronMetadata> getNeuronMap() {
+        return neuronMap;
+    }
+
     public TmSample getCurrentSample() {
         return currentSample;
     }
@@ -152,7 +262,7 @@ public class SessionAnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public Collection<TmNeuronMetadata> getNeuronList() {
-        throw new UnsupportedOperationException();
+        return neuronMap.values();
     }
 
     // current neuron methods
@@ -179,7 +289,7 @@ public class SessionAnnotationModel implements DomainObjectSelectionSupport {
         if (neuron != null && getCurrentNeuron() != null && neuron.getId().equals(getCurrentNeuron().getId())) {
             return;
         }
-        setCurrentNeuron(neuron); // synchronized on this AnnotationModel here
+        setCurrentNeuron(neuron); // synchronized on this BasicAnnotationModel here
         fireNeuronSelected(neuron);
         if (getCurrentSession()!=null && neuron!=null) {
             activityLog.logSelectNeuron(getCurrentSession().getId(), neuron.getId());
@@ -187,14 +297,13 @@ public class SessionAnnotationModel implements DomainObjectSelectionSupport {
     }
 
     public TmNeuronMetadata getNeuronFromNeuronID(Long neuronID) {
-        throw new UnsupportedOperationException();
-//        TmNeuronMetadata foundNeuron = neuronManager.getNeuronById(neuronID);
-//        if (foundNeuron == null) {
-//            // This happens, for example, when a new workspace is loaded and we try to find the previous nextParent anchor.
-//            log.warn("There is no neuron with id: {}", neuronID);
-//        }
-//        log.debug("getNeuronFromNeuronID({}) = {}",neuronID,foundNeuron);
-//        return foundNeuron;
+        TmNeuronMetadata foundNeuron = neuronMap.get(neuronID);
+        if (foundNeuron == null) {
+            // This happens, for example, when a new workspace is loaded and we try to find the previous nextParent anchor.
+            log.warn("There is no neuron with id: {}", neuronID);
+        }
+        log.debug("getNeuronFromNeuronID({}) = {}",neuronID,foundNeuron);
+        return foundNeuron;
     }
 
     /**
@@ -236,6 +345,10 @@ public class SessionAnnotationModel implements DomainObjectSelectionSupport {
             log.warn("There is no annotation with id {} in neuron {}", annotationID, foundNeuron.getId());
         }
         return annotation;
+    }
+
+    public FilteredAnnotationModel getFilteredAnnotationModel() {
+        return filteredAnnotationModel;
     }
     
     //----------------------------------------------------------------------------------------------------------
@@ -325,13 +438,13 @@ public class SessionAnnotationModel implements DomainObjectSelectionSupport {
         }
     }
 
-    void fireWorkspaceUnloaded(TmAnnotationObject annotationObject) {
+    void fireAnnotationsUnloaded(TmAnnotationObject annotationObject) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.annotationsUnloaded(annotationObject);
         }
     }
     
-    void fireWorkspaceLoaded(TmAnnotationObject annotationObject) {
+    void fireAnnotationsLoaded(TmAnnotationObject annotationObject) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.annotationsLoaded(annotationObject);
         }
@@ -398,5 +511,9 @@ public class SessionAnnotationModel implements DomainObjectSelectionSupport {
         if (notesUpdateListener != null) {
             notesUpdateListener.notesUpdated(ann);
         }
+    }
+
+    public void setSWCDataConverter(SWCDataConverter converter) {
+        this.swcDataConverter = converter;
     }
 }

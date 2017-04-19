@@ -324,7 +324,7 @@ public class TiledMicroscopeDomainMgr {
         
         // Get or create graph in SATA
         DtwGraph graph = sataClient.getLatestGraph(sample.getFilepath());
-        if (graph==null) {
+        if (graph==null || graph.getId()==null) {
             graph = new DtwGraph();
             graph.setSamplePath(sample.getFilepath());
             graph = sataClient.create(graph);

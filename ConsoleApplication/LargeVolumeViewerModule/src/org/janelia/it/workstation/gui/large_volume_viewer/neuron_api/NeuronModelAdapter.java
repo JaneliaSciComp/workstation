@@ -85,7 +85,7 @@ public class NeuronModelAdapter implements NeuronModel
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // private NeuronStyle neuronStyle;
     // TODO: Stop using locally cached color and visibility, in favor of proper syncing with underlying Style
-    // private AnnotationModel annotationMgr;
+    // private BasicAnnotationModel annotationMgr;
     private boolean bIsVisible; // TODO: sync visibility with LVV eventually. For now, we want fast toggle from Horta.
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
@@ -94,7 +94,7 @@ public class NeuronModelAdapter implements NeuronModel
     private NeuronSetAdapter neuronSet;
 
     public NeuronModelAdapter(TmNeuronMetadata neuron, NeuronSetAdapter workspace)
-            // AnnotationModel annotationMgr, TmWorkspace workspace, TmSample sample)
+            // BasicAnnotationModel annotationMgr, TmWorkspace workspace, TmSample sample)
     {
         assert neuron != null;
         this.neuron = neuron;

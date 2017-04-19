@@ -24,7 +24,7 @@ public class SwcExport {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Save SWC file");
-        chooser.setSelectedFile(new File(seedName + AnnotationModel.STD_SWC_EXTENSION));
+        chooser.setSelectedFile(new File(seedName + BasicAnnotationModel.STD_SWC_EXTENSION));
         JPanel layoutPanel = new JPanel();
         layoutPanel.setLayout(new BorderLayout());
         // Force-out to desired size.

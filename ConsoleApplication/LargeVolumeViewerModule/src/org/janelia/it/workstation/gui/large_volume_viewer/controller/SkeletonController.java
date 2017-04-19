@@ -91,6 +91,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     
     /** In a "driving" client that would normally construct, call this instead. */
     public void reestablish(Skeleton skeleton, AnnotationManager annotationMgr) {
+        log.info("Establishing connection to annotation manager: {}", annotationMgr);
         this.skeleton = skeleton;
         this.annoMgr = annotationMgr;
         skeletonAnchorListener = new ControllerSkeletonAnchorListener();
