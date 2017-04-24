@@ -1,14 +1,7 @@
-// 5.11.1
+// 5.12
 
 Workstation Browser
-* Refresh now works for unsaved filters
-* Open in Neuron Annotator fixed for separations with curated neurons
-* Neuron Annotator now displays neurons in the correct order
-* Fixed issue with Data Explorer sometimes not displaying Home folders for admins
+* Details of pipeline errors now appear in Data Inspector when the error is selected
 
 MouseLight
-* Make "merge" in Horta undo-able, and remove the confirm dialog.
-* Set primary anchor on downstream anchor after Horta merge operation.
-* Prevent Ktx tile memory from building up when switching between LVV and Horta when auto-load is active.
-* Avoid OutOfBoundException errors when editing neurons JW-28009
-* Added "merge to selected" tool (aka smart merge)
+* None
