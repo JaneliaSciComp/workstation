@@ -2,6 +2,8 @@
 
 Workstation Browser
 * Details of pipeline errors now appear in Data Inspector when the error is selected
+* Fixed error popup when marking sample for reprocessing
+* Fixed issues with the "Sample Compression Strategy" feature
 
 MouseLight
 * None
