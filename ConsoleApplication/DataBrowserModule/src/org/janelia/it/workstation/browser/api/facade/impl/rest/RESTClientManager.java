@@ -82,6 +82,7 @@ public class RESTClientManager {
         serviceEndpoints.put("search", client.target(serverUrl + REMOTE_DATA_PREFIX + "/search"));
         serviceEndpoints.put("sample", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/sample"));
         serviceEndpoints.put("release", client.target(serverUrl  + REMOTE_PROCESS_PREFIX + "/release"));
+        serviceEndpoints.put("sampleProcess", client.target(serverUrl  + REMOTE_PROCESS_PREFIX + "/sample"));
         
     }
 
@@ -135,6 +136,10 @@ public class RESTClientManager {
 
     public WebTarget getReleaseEndpoint() {
         return serviceEndpoints.get("release");
+    }
+    
+    public WebTarget getSampleProcessEndpoint() {
+        return serviceEndpoints.get("sampleProcess");
     }
     
 }
