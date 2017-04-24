@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 
@@ -44,9 +45,12 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
+import org.janelia.it.jacs.model.tasks.utility.GenericTask;
+import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.Constants;
 import org.janelia.it.jacs.shared.utils.domain.DataReporter;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -503,42 +507,76 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                 ActivityLogHelper.logUserAction("DomainObjectContentMenu.changeSampleCompressionStrategyToLossless", domainObject);
 
                 final String targetCompression = DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J;
-                String message = "Are you sure you want to mark "+samplesText+" for reprocessing into Lossless (v3dpbd) format?";
+                String message = "Are you sure you want to reprocess "+samplesText+" into Lossless (v3dpbd) format?";
                 int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
 
                 if (result != 0) return;
 
                 SimpleWorker worker = new SimpleWorker() {
 
+                    private static final String TASK_LABEL = "GSPS_CompleteSamplePipeline";
+                    
                     @Override
                     protected void doStuff() throws Exception {
+
+                        Calendar c = Calendar.getInstance();
+                        SimpleDateFormat format = new SimpleDateFormat("yyyyddMMhh");
+                        Sample sampleInfo = samples.get(0);
+                        String orderNo = "Workstation_" + sampleInfo.getOwnerName() + "_" +
+                                sampleInfo.getDataSet() + "_" +format.format(Calendar.getInstance().getTime());
+
                         List<Long> sampleIds = new ArrayList<>();
-                        for(final Sample sample : samples) {
+                        for(Sample sample : samples) {
+
+                            String status = sample.getStatus();
+                            if (PipelineStatus.Scheduled.toString().equals(status)  ||
+                                        PipelineStatus.Processing.toString().equals(status)) {
+                                log.info("Bypassing sample " + sample.getName() + " because it is already marked {}.", status);
+                                continue;
+                            }
+                            
+                            Set<TaskParameter> taskParameters = new HashSet<>();
+                            taskParameters.add(new TaskParameter("sample entity id", sample.getId().toString(), null));
+                            taskParameters.add(new TaskParameter("order no", orderNo, null));
+                            taskParameters.add(new TaskParameter("reuse summary", "false", null));
+                            taskParameters.add(new TaskParameter("reuse processing", "false", null));
+                            taskParameters.add(new TaskParameter("reuse post", "false", null));
+                            taskParameters.add(new TaskParameter("reuse alignment", "false", null));
+                            Task task = new GenericTask(new HashSet<Node>(), sample.getOwnerKey(), 
+                                    new ArrayList<Event>(), taskParameters, TASK_LABEL, TASK_LABEL);
+                            task = StateMgr.getStateMgr().saveOrUpdateTask(task);
+                            
                             StatusTransition transition = new StatusTransition();
-                            transition.setSource(PipelineStatus.valueOf(sample.getStatus()));
+                            transition.setOrderNo(orderNo);
+                            transition.setSource(PipelineStatus.valueOf(status));
                             transition.setProcess("Front End Processing");
                             transition.setSampleId(sample.getId());
                             transition.setTarget(PipelineStatus.Scheduled);
                             model.addPipelineStatusTransition(transition);
                             model.updateProperty(sample, "compressionType", targetCompression);
                             model.updateProperty(sample, "status", PipelineStatus.Scheduled.toString());
+                            StateMgr.getStateMgr().dispatchJob(TASK_LABEL, task);
                             sampleIds.add(sample.getId());
                         }
 
                         // add an intake order to track all these Samples
                         if (samples.size()>0) {
-                            Calendar c = Calendar.getInstance();
-                            SimpleDateFormat format = new SimpleDateFormat("yyyyddMMhh");
-                            Sample sample = samples.get(0);
-                            String orderNo = "Workstation_" + sample.getOwnerName() + "_" +
-                                    sample.getDataSet() + "_" +format.format(Calendar.getInstance().getTime());
-                            IntakeOrder newOrder = new IntakeOrder();
-                            newOrder.setOrderNo(orderNo);
-                            newOrder.setOwner(sample.getOwnerKey());
-                            newOrder.setStartDate(c.getTime());
-                            newOrder.setStatus(OrderStatus.Intake);
-                            newOrder.setSampleIds(sampleIds);
-                            DomainMgr.getDomainMgr().getModel().putOrUpdateIntakeOrder(newOrder);
+                            // check if there is an existing order no
+                            IntakeOrder order = DomainMgr.getDomainMgr().getModel().getIntakeOrder(orderNo);
+                            if (order==null) {
+                                order = new IntakeOrder();
+                                order.setOrderNo(orderNo);
+                                order.setOwner(sampleInfo.getOwnerKey());
+                                order.setStartDate(c.getTime());
+                                order.setStatus(OrderStatus.Intake);
+                                order.setSampleIds(sampleIds);
+                            } 
+                            else {
+                                List<Long> currIds = order.getSampleIds();
+                                currIds.addAll(sampleIds);
+                                order.setSampleIds(currIds);
+                            }
+                            model.putOrUpdateIntakeOrder(order);
                         }
 
                     }
