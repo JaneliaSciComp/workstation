@@ -16,7 +16,7 @@ import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.BasicAnnotationModel;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.BasicAnnotationPanel;
 
 /**
  * Drag the SWCs into the workspace, and make neurons.
@@ -26,16 +26,16 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationP
 public class ImportSWCAction extends AbstractAction {
 
     private final boolean neuronPerRoot;
-    private final AnnotationPanel annotationPanel;
+    private final BasicAnnotationPanel annotationPanel;
     private final AnnotationManager annotationManager;
 
-    public ImportSWCAction(boolean neuronPerRoot, AnnotationPanel annotationPanel, AnnotationManager annotationManager) {
+    public ImportSWCAction(boolean neuronPerRoot, BasicAnnotationPanel annotationPanel, AnnotationManager annotationManager) {
         this.neuronPerRoot = neuronPerRoot;
         this.annotationPanel = annotationPanel;
         this.annotationManager = annotationManager;
     }
 
-    public ImportSWCAction(AnnotationPanel annotationPanel, AnnotationManager annotationManager) {
+    public ImportSWCAction(BasicAnnotationPanel annotationPanel, AnnotationManager annotationManager) {
         this(false, annotationPanel, annotationManager);
     }
 

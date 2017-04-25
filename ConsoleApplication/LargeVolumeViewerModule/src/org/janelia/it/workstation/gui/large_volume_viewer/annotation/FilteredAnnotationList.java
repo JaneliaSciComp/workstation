@@ -47,7 +47,7 @@ public class FilteredAnnotationList extends JPanel {
 
     // GUI stuff
     private int width;
-    private static final int height = 3 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
+    private static final int height = 3 * BasicAnnotationPanel.SUBPANEL_STD_HEIGHT;
     private JTable filteredTable;
     private JTextField filterField;
     private TableRowSorter<FilteredAnnotationModel> sorter;

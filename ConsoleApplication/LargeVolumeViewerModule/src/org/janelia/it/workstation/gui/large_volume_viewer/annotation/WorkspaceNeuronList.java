@@ -74,7 +74,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private CameraPanToListener panListener;
     private NeuronSelectedListener neuronSelectedListener;
 
-    private static final int height = 2 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
+    private static final int height = 2 * BasicAnnotationPanel.SUBPANEL_STD_HEIGHT;
 
     /**
      * @param neuronSelectedListener the neuronSelectedListener to set

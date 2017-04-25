@@ -118,6 +118,10 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomOutAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomScrollModeAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.BasicAnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.BasicAnnotationPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.DirectedSessionAnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.DirectedSessionPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
@@ -964,10 +968,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		resetColorsButton.setAction(resetColorsAction);
 		buttonsPanel.add(resetColorsButton);
 		
-//		if (annotationMgr instanceof BasicAnnotationManager) {
-            annotationPanel = new AnnotationPanel(annotationMgr, largeVolumeViewerTranslator);
-            controlsPanel.add(annotationPanel);
-//		}
+		if (annotationMgr instanceof BasicAnnotationManager) {
+            annotationPanel = new BasicAnnotationPanel(annotationMgr, largeVolumeViewerTranslator);
+		} else if (annotationMgr instanceof DirectedSessionAnnotationManager) {
+            annotationPanel = new DirectedSessionPanel(annotationMgr, largeVolumeViewerTranslator);
+        }
+        controlsPanel.add(annotationPanel);
 
 		JPanel statusBar = new JPanel();
 		statusBar.setMaximumSize(new Dimension(32767, 30));

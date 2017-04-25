@@ -9,7 +9,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.BasicAnnotationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationList;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceInfoPanel;
@@ -24,7 +24,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 public class PanelController {
     
     private PanelGlobalListener globalListener;
-    private AnnotationPanel annotationPanel;
+    private BasicAnnotationPanel annotationPanel;
     private WorkspaceNeuronList wsNeuronList;
     private WorkspaceInfoPanel wsInfoPanel;
     private LargeVolumeViewerTranslator lvvTranslator;
@@ -33,7 +33,7 @@ public class PanelController {
     private PanelAnnotationListener annotationListener;
     
     public PanelController(
-            AnnotationPanel annoPanel,
+            BasicAnnotationPanel annoPanel,
             FilteredAnnotationList filteredAnnotationList,
             WorkspaceNeuronList wsNeuronList,
             LargeVolumeViewerTranslator lvvTranslator
