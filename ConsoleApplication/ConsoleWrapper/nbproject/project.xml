@@ -1555,6 +1555,7 @@
                 <package>org.janelia.it.jacs.model.common</package>
                 <package>org.janelia.it.jacs.model.domain</package>
                 <package>org.janelia.it.jacs.model.domain.compartments</package>
+                <package>org.janelia.it.jacs.model.domain.dto</package>
                 <package>org.janelia.it.jacs.model.domain.enums</package>
                 <package>org.janelia.it.jacs.model.domain.gui.alignment_board</package>
                 <package>org.janelia.it.jacs.model.domain.gui.search</package>

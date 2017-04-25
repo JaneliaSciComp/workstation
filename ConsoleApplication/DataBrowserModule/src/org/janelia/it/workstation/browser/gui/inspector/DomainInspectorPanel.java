@@ -40,6 +40,7 @@ import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.domain.sample.PipelineError;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
@@ -421,6 +422,29 @@ public class DomainInspectorPanel extends JPanel {
         tabbedPane.setEnabledAt(2, false);
     }
 
+    // TODO: factor this out into a separate module
+    public void loadPipelineError(PipelineError error) {
+
+        log.debug("Loading properties for pipeline error");
+        showAttributesLoadingIndicator();
+
+        this.propertySet = new TreeSet<>();
+
+        addProperty("Creation Date", error.getCreationDate());
+        addProperty("Filepath", error.getFilepath());
+        addProperty("Operation", error.getOperation());
+        addProperty("Classification", error.getClassification());
+        addProperty("Description", error.getDescription());
+
+        addPropertiesToTable();
+        attributesPanel.removeAll();
+        attributesPanel.add(attributesTable, BorderLayout.CENTER);
+
+        tabbedPane.setSelectedIndex(0);
+        tabbedPane.setEnabledAt(1, false);
+        tabbedPane.setEnabledAt(2, false);
+    }
+    
     private void loadAttributes() {
 
         log.debug("Loading properties for domain object {}", domainObject.getId());

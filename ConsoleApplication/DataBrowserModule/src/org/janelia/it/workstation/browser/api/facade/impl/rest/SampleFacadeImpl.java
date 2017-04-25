@@ -9,6 +9,8 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.dto.SampleDispatchRequest;
 import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
@@ -153,37 +155,20 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         }
     }
 
-    public void addStatusTransition(StatusTransition transition) throws Exception {
-        Response response = manager.getSampleEndpoint()
-                .path("transitions")
+    @Override
+    public String dispatchSamples(List<Reference> sampleRefs, String reprocessPurpose, boolean reuse) throws Exception {
+        SampleDispatchRequest dispatchRequest = new SampleDispatchRequest();
+        dispatchRequest.setProcessLabel(reprocessPurpose);
+        dispatchRequest.setSampleReferences(sampleRefs);
+        dispatchRequest.setReuse(reuse);
+        Response response = manager.getSampleProcessEndpoint()
+                .path("dispatch")
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
-                .put(Entity.json(transition));
-        if (checkBadResponse(response.getStatus(), "problem making request to add a pipeline status transition: " + transition.getSampleId())) {
+                .post(Entity.json(dispatchRequest));
+        if (checkBadResponse(response.getStatus(), "problem making request to dispatch samples")) {
             throw new WebApplicationException(response);
         }
-    }
-
-
-    public void putOrUpdateIntakeOrder(IntakeOrder order) throws Exception {
-        Response response = manager.getSampleEndpoint()
-                .path("intakeorder")
-                .request("application/json")
-                .put(Entity.json(order));
-        if (checkBadResponse(response.getStatus(), "problem making request to update/create an intake order for reprocessing pipelines: " + order.getOrderNo())) {
-            throw new WebApplicationException(response);
-        }
-    }
-
-
-    public IntakeOrder getIntakeOrder(String orderNo) throws Exception {
-        Response response = manager.getSampleEndpoint()
-                .path("intakeorder")
-                .queryParam("releaseId", orderNo)
-                .request("application/json")
-                .get();
-        if (checkBadResponse(response.getStatus(), "problem making request to retrieve an intake order: " + orderNo)) {
-            throw new WebApplicationException(response);
-        }
-        return response.readEntity(IntakeOrder.class);
+        return response.readEntity(String.class);
     }
 }
