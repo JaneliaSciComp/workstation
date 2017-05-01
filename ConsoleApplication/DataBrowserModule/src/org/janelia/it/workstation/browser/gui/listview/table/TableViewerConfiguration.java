@@ -73,7 +73,8 @@ public class TableViewerConfiguration {
             }
 
             return config;
-        }  catch (Exception e) {
+        }  
+        catch (Exception e) {
             ConsoleApp.handleException(e);
             return null;
         }

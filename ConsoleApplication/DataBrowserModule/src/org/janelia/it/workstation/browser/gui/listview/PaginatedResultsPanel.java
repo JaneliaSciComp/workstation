@@ -21,6 +21,7 @@ import javax.swing.text.Position;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -603,9 +604,10 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             protected void doStuff() throws Exception {
                 System.currentTimeMillis();
                 DomainObject startObject;
-                Reference lastSelectedId = selectionModel.getLastSelectedId();
-                if (lastSelectedId!=null) {
-                    startObject = DomainMgr.getDomainMgr().getModel().getDomainObject(lastSelectedId);
+                Reference lastSelectedRef = selectionModel.getLastSelectedId();
+                log.info("lastSelectedId={}", lastSelectedRef);
+                if (lastSelectedRef!=null) {
+                    startObject = DomainMgr.getDomainMgr().getModel().getDomainObject(lastSelectedRef);
                 }
                 else {
                     // This is generally unexpected, because the viewer should
@@ -614,12 +616,23 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                     startObject = resultPage.getDomainObjects().get(0);
                 }
 
-                int index = resultPage.getDomainObjects().indexOf(startObject);
-                if (index<0) {
-                    throw new IllegalStateException("Last selected object no longer exists");
+                int index = 0;
+                Integer foundIndex = null;
+                for (DomainObject domainObject : resultPage.getDomainObjects()) {
+                    if (DomainUtils.equals(domainObject, startObject)) {
+                        foundIndex = index;
+                        break;
+                    }
+                    index++;
                 }
+                
+                if (foundIndex==null) {
+                    log.warn("Last selected object no longer exists");
+                    foundIndex = 0;
+                }
+                
                 log.debug("currPage={}",currPage);
-                int globalStartIndex = currPage*PAGE_SIZE + index;
+                int globalStartIndex = currPage*PAGE_SIZE + foundIndex;
                 log.debug("globalStartIndex={}",globalStartIndex);
                 ResultIterator resultIterator = new ResultIterator(searchResults, globalStartIndex, bias, skipStartingNode);
                 searcher = new ResultIteratorFind(resultIterator) {

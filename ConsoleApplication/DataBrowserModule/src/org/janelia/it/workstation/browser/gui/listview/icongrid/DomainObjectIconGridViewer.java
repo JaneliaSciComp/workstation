@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -380,7 +381,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     protected DomainObjectContextMenu getContextualPopupMenu() {
-        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), getSelectedObjects(), resultButton.getResultDescriptor(), typeButton.getImageTypeName());
+        return getPopupMenu(getSelectedObjects());
+    }
+    
+    private DomainObjectContextMenu getPopupMenu(List<DomainObject> domainObjectList) {
+        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), domainObjectList, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
         popupMenu.addMenuItems();
         return popupMenu;
     }
@@ -403,7 +408,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             domainObjectProviderHelper.service(object);
         }
         else {
-            getContextualPopupMenu().runDefaultAction();            
+            getPopupMenu(Arrays.asList(object)).runDefaultAction();            
         }
     }
     
@@ -452,22 +457,29 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     protected void updateHud(boolean toggle) {
 
+        if (!toggle && !Hud.isInitialized()) return;
+        
         Hud hud = Hud.getSingletonInstance();
         hud.setKeyListener(keyListener);
-        
-        List<DomainObject> selected = getSelectedObjects();
-        
-        if (selected.size() != 1) {
-            hud.hideDialog();
-            return;
-        }
-        
-        DomainObject domainObject = selected.get(0);
-        if (toggle) {
-            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
-        }
-        else {
-            hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), false);
+
+        try {
+            List<DomainObject> selected = getSelectedObjects();
+            
+            if (selected.size() != 1) {
+                hud.hideDialog();
+                return;
+            }
+            
+            DomainObject domainObject = selected.get(0);
+            if (toggle) {
+                hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
+            }
+            else {
+                hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), false);
+            }
+        } 
+        catch (Exception ex) {
+            ConsoleApp.handleException(ex);
         }
     }
     

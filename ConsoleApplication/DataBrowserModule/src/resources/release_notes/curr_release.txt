@@ -1,12 +1,9 @@
-// 5.10.0
+// 5.12
 
 Workstation Browser
-* Now defaults to direct non-proxy connection to fix slow performance over VPN
-* Spaces in paths are now supported on Windows
-* Many other minor bug fixes (see JIRA)
-
-FlyLight
-* No change
+* Details of pipeline errors now appear in Data Inspector when the error is selected
+* Fixed error popup when marking sample for reprocessing
+* Fixed issues with the "Sample Compression Strategy" feature
 
 MouseLight
-* No change
+* None

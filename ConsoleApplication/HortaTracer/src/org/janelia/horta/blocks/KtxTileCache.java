@@ -72,7 +72,7 @@ extends BasicTileCache<BlockTileKey, SortableBlockActor>
     public void disposeObsoleteTiles(GL3 gl) {
         Collection<SortableBlockActor> obs = popObsoleteTiles();
         if (! obs.isEmpty()) {
-            log.info("Disposing {} tile(s)", obs.size());
+            // log.info("Disposing {} tile(s)", obs.size());
         }
         for (SortableBlockActor actor : obs) {
             actor.dispose(gl);

@@ -410,6 +410,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     /**
+     * given two annotations, return true if they are on the same neurite
+     * (ie, share the same ultimate root annotation)
+     */
+    public boolean sameNeurite(TmGeoAnnotation ann1, TmGeoAnnotation ann2) {
+        return getNeuriteRootAnnotation(ann1).getId().equals(getNeuriteRootAnnotation(ann2).getId());
+    }
+
+    /**
      * find the annotation closest to the input location, excluding
      * the input annotation (null = don't exclude any)
      */
@@ -1228,7 +1236,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             public void run() {
                 beginTransaction();
                 try {
-                    fireAnnotationReparented(neuron.getGeoAnnotationMap().get(newRootID), neuron.getId());
+                    TmGeoAnnotation newRootAnnotation = neuron.getGeoAnnotationMap().get(newRootID);
+                    if (newRootAnnotation == null) {
+                        // Happens during Horta undo-merge-neurites. I'm Not sure why.
+                        log.warn("Failed to find new annotation after splitNeurite");
+                    }
+                    else {
+                        fireAnnotationReparented(newRootAnnotation, neuron.getId());
+                    }
                     fireNeuronSelected(neuron);
                 }
                 finally {
