@@ -119,7 +119,8 @@ public final class DownloadVisualPanel2 extends JPanel {
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(checkboxPanel);
         scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 300));
-
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16); // Increase scroll speed
+        
         outerPanel.add(scrollPane, BorderLayout.CENTER);
         outerPanel.add(buttonPane, BorderLayout.WEST);
         
