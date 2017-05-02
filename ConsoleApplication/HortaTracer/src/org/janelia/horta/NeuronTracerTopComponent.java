@@ -29,6 +29,7 @@
  */
 package org.janelia.horta;
 
+import org.janelia.console.viewerapi.controller.UnmixingListener;
 import org.janelia.horta.render.NeuronMPRenderer;
 import org.janelia.horta.actors.ScaleBar;
 import org.janelia.horta.actors.CenterCrossHairActor;
@@ -166,6 +167,8 @@ import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import org.openide.util.lookup.AbstractLookup;
+import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.NbPreferences;
@@ -857,7 +860,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     private void loadStartupPreferences() 
     {
         Preferences prefs = NbPreferences.forModule(getClass());
-        
+   //     final InstanceContent content = new InstanceContent();
+
         // Load brightness and visibility settings for each channel
         for (int cix = 0; cix < imageColorModel.getChannelCount(); ++cix) {
             ChannelColorModel c = imageColorModel.getChannel(cix);
@@ -874,6 +878,10 @@ public final class NeuronTracerTopComponent extends TopComponent
         for (int i = 0; i < unmix.length; ++i) {
             unmix[i] = prefs.getFloat("startupUnmixingParameter"+i, unmix[i]);
         }
+        imageColorModel.setUnmixParameters(unmix);
+    //    AbstractLookup colorLookup = new AbstractLookup(content);
+    //    content.add(imageColorModel);
+
         // Load camera state
         Vantage vantage = sceneWindow.getVantage();
         vantage.setConstrainedToUpDirection(prefs.getBoolean("dorsalIsUp", vantage.isConstrainedToUpDirection()));
@@ -979,6 +987,15 @@ public final class NeuronTracerTopComponent extends TopComponent
                 neuronMPRenderer.setIntensityBufferDirty();
                 redrawNow();
             }
+        });
+
+        // add TetVolumeActor as listener for ImageColorModel changes from SliderPanel events
+        imageColorModel.addUnmixingParameterListener(new UnmixingListener() {
+            @Override
+            public void unmixingParametersChanged(float[] unmixingParams) {
+                TetVolumeActor.getInstance().setUnmixingParams(unmixingParams);
+            }
+
         });
 
         this.setLayout(new BorderLayout());
