@@ -46,6 +46,7 @@ import javax.media.opengl.GL4;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.console.viewerapi.model.UnmixingParameters;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Object3d;
@@ -71,6 +72,7 @@ import org.janelia.horta.blocks.Finest8DisplayBlockChooser;
 import org.janelia.horta.blocks.KtxTileCache;
 import org.janelia.horta.blocks.OneFineDisplayBlockChooser;
 import org.openide.util.Exceptions;
+import org.openide.util.lookup.Lookups;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,7 +105,7 @@ implements DepthSlabClipper
     private float zFarRelative = 100.0f; // relative z clip planes
     private final float[] zNearFar = new float[] {0.1f, 100.0f, 1.0f}; // absolute clip for shader
     // Initialize tracing channel to average of the first two channels
-    private final float[] unmixMinScale = new float[] {0.0f, 0.0f, 0.5f, 0.5f};
+    private final UnmixingParameters unmixMinScale = new UnmixingParameters(new float[] {0.0f, 0.0f, 0.5f, 0.5f});
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private VolumeState volumeState = new VolumeState();
 
@@ -139,6 +141,8 @@ implements DepthSlabClipper
                 dynamicTiles.updateDesiredTiles(blockDisplayUpdater.getDesiredBlocks());
             }
         });
+
+        Lookups.singleton(unmixMinScale);
     }
 
     public Object3d addPersistentBlock(Object3d child) {
@@ -304,7 +308,7 @@ implements DepthSlabClipper
                 gl.glUniform3fv(12, 1, saturations, 0);
                 
                 // unmixing parameters
-                gl.glUniform4fv(7, 1, unmixMinScale, 0);
+                gl.glUniform4fv(7, 1, unmixMinScale.getParams(), 0);
                 
                 gl.glUniform1i(13, volumeState.projectionMode);
                 gl.glUniform1i(14, volumeState.filteringOrder);
@@ -381,47 +385,49 @@ implements DepthSlabClipper
      */
     public void unmixChannelOne() {
         float scale = setChannelMins();
-        unmixMinScale[2] = 1.0f;
-        unmixMinScale[3] = scale;
+        unmixMinScale.getParams()[2] = 1.0f;
+        unmixMinScale.getParams()[3] = scale;
     }
     
     public void unmixChannelTwo() {
         float scale = setChannelMins();
-        unmixMinScale[2] = 1.0f/scale;
-        unmixMinScale[3] = 1.0f;
+        unmixMinScale.getParams()[2] = 1.0f/scale;
+        unmixMinScale.getParams()[3] = 1.0f;
+        // update lookup
     }
     
     public void traceChannelOneTwoAverage() {
         setChannelMins();
-        unmixMinScale[0] = 0.0f;
-        unmixMinScale[1] = 0.0f;
-        unmixMinScale[2] = 0.5f;
-        unmixMinScale[3] = 0.5f;
+        unmixMinScale.getParams()[0] = 0.0f;
+        unmixMinScale.getParams()[1] = 0.0f;
+        unmixMinScale.getParams()[2] = 0.5f;
+        unmixMinScale.getParams()[3] = 0.5f;
+        // update lookup
     }
     
     public void traceChannelOneRaw() {
         setChannelMins();
-        unmixMinScale[0] = 0.0f;
-        unmixMinScale[1] = 0.0f;
-        unmixMinScale[2] = 1.0f;
-        unmixMinScale[3] = 0.0f;
+        unmixMinScale.getParams()[0] = 0.0f;
+        unmixMinScale.getParams()[1] = 0.0f;
+        unmixMinScale.getParams()[2] = 1.0f;
+        unmixMinScale.getParams()[3] = 0.0f;
     }
     
     public void traceChannelTwoRaw() {
         setChannelMins();
-        unmixMinScale[0] = 0.0f;
-        unmixMinScale[1] = 0.0f;
-        unmixMinScale[2] = 0.0f;
-        unmixMinScale[3] = 1.0f;
+        unmixMinScale.getParams()[0] = 0.0f;
+        unmixMinScale.getParams()[1] = 0.0f;
+        unmixMinScale.getParams()[2] = 0.0f;
+        unmixMinScale.getParams()[3] = 1.0f;
     }
     
     public float[] getUnmixingParams() {
-        return unmixMinScale;
+        return unmixMinScale.getParams();
     }
     
     public void setUnmixingParams(float[] minScale) {
         for (int i = 0; i < 4; ++i) {
-            unmixMinScale[i] = minScale[i];
+            unmixMinScale.getParams()[i] = minScale[i];
         }
     }
     
@@ -431,8 +437,8 @@ implements DepthSlabClipper
         ChannelColorModel c2 = brightnessModel.getChannel(1);
         float minA = c1.getNormalizedMinimum();
         float minB = c2.getNormalizedMinimum();
-        unmixMinScale[0] = minA;
-        unmixMinScale[1] = minB;
+        unmixMinScale.getParams()[0] = minA;
+        unmixMinScale.getParams()[1] = minB;
         float range1 = c1.getWhiteLevel() - c1.getBlackLevel();
         float range2 = c2.getWhiteLevel() - c2.getBlackLevel();
         float scaleB = -range1/range2;
