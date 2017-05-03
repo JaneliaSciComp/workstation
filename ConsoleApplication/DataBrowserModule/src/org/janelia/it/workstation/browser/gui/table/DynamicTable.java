@@ -258,6 +258,9 @@ public abstract class DynamicTable extends JPanel {
         scrollPane.addMouseListener(new MouseForwarder(this, "JScrollPane->DynamicTable"));
         scrollPane.setViewportView(table);
 
+        // When scrolling, only update the visible part of the panel
+        scrollPane.getViewport().putClientProperty("EnableWindowBlit", Boolean.TRUE);
+        
         scrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
             @Override
             public void adjustmentValueChanged(final AdjustmentEvent e) {

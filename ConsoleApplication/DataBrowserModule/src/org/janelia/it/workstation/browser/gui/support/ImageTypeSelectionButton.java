@@ -117,12 +117,14 @@ public class ImageTypeSelectionButton extends DropDownButton {
                 NeuronSeparation separation = result.getLatestSeparationResult();
                 log.trace("Source has separation: {}",separation);
                 if (separation!=null) {
-                    Set<String> typeNames = new HashSet<>();
-                    typeNames.add(FileType.NeuronAnnotatorLabel.toString());
-                    typeNames.add(FileType.NeuronAnnotatorSignal.toString());
-                    typeNames.add(FileType.NeuronAnnotatorReference.toString());
-                    log.trace("Adding type names: {}",typeNames);
-                    countedTypeNames.addAll(typeNames);
+                    if (!only2d) {
+                        Set<String> typeNames = new HashSet<>();
+                        typeNames.add(FileType.NeuronAnnotatorLabel.toString());
+                        typeNames.add(FileType.NeuronAnnotatorSignal.toString());
+                        typeNames.add(FileType.NeuronAnnotatorReference.toString());
+                        log.trace("Adding type names: {}",typeNames);
+                        countedTypeNames.addAll(typeNames);
+                    }
                 }
             }
         }

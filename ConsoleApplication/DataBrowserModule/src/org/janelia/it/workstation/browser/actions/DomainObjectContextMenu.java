@@ -57,9 +57,9 @@ import org.janelia.it.workstation.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
-import org.janelia.it.workstation.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SpecialAnnotationChooserDialog;
+import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadWizardAction;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory;
@@ -840,20 +840,10 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getDownloadItem() {
-
         String label = domainObjectList.size() > 1 ? "Download " + domainObjectList.size() + " Items..." : "Download...";
-
-        JMenuItem toggleHudMI = new JMenuItem("  "+label);
-        toggleHudMI.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ActivityLogHelper.logUserAction("DomainObjectContextMenu.download", domainObject);
-                DownloadDialog dialog = new DownloadDialog();
-                dialog.showDialog(domainObjectList, resultDescriptor);
-            }
-        });
-
-        return toggleHudMI;
+        JMenuItem menuItem = new JMenuItem("  "+label);
+        menuItem.addActionListener(new DownloadWizardAction(domainObjectList, resultDescriptor));
+        return menuItem;
     }
 
     private long startMergeTask() throws Exception {

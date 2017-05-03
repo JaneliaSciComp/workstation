@@ -121,6 +121,8 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         if (!StateMgr.getStateMgr().isDarkLook()) {
             getViewport().setBackground(Color.white);
         }
+        // When scrolling, only update the visible part of the panel
+        getViewport().putClientProperty("EnableWindowBlit", Boolean.TRUE);
     }
     
     public void setImageModel(ImageModel<T,S> imageModel) {
