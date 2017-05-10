@@ -3,9 +3,11 @@ package org.janelia.it.workstation.browser.components;
 import java.awt.BorderLayout;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.sample.PipelineError;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.it.workstation.browser.events.selection.PipelineErrorSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -126,7 +128,6 @@ public final class DomainInspectorTopComponent extends TopComponent {
 
     @Subscribe
     public void resultSelected(PipelineResultSelectionEvent event) {
-
         if (event.isUserDriven()) {
             PipelineResult result = event.getPipelineResult();
             log.info("resultSelected({})", result.getId());
@@ -134,4 +135,12 @@ public final class DomainInspectorTopComponent extends TopComponent {
         }
     }
 
+    @Subscribe
+    public void errorSelected(PipelineErrorSelectionEvent event) {
+        if (event.isUserDriven()) {
+            PipelineError error = event.getPipelineError();
+            log.info("errorSelected()");
+            detailsPanel.loadPipelineError(error);
+        }
+    }
 }

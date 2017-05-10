@@ -1,5 +1,6 @@
 package org.janelia.console.viewerapi.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.awt.Color;
 import java.util.Arrays;
 import java.util.Vector;
@@ -10,6 +11,7 @@ import java.util.Collection;
 import org.janelia.console.viewerapi.controller.ChannelColorChangeListener;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
+import org.janelia.console.viewerapi.controller.UnmixingListener;
 
 public class ImageColorModel 
 {
@@ -28,15 +30,16 @@ public class ImageColorModel
 	private boolean blackSynchronized = false;
 	private boolean gammaSynchronized = false;
 	private boolean whiteSynchronized = false;
+    private float[] unmix = new float[] {0.0f, 0.0f, 0.5f, 0.5f};
     
     private Collection<ColorModelListener> colorModelListeners = new ArrayList<>();
     private Collection<ColorModelInitListener> colorModelInitListeners = new ArrayList<>();
+    private Collection<UnmixingListener> unmixingListeners = new ArrayList<>();
 
-	/*
+
+    // needed for jackson deserialization
 	public ImageColorModel() {
-		init(3, 8); // Default to 3 8-bit channels
 	}
-	**/
 	
 	public ImageColorModel(Integer maxIntensity, Integer numberOfChannels)
 	{
@@ -53,6 +56,15 @@ public class ImageColorModel
     public void removeColorModelListener(ColorModelListener l) {
         colorModelListeners.remove(l);
     }
+
+    // simple way to notify listeners about changes to unmixing parameters
+    public void addUnmixingParameterListener(UnmixingListener unmixingListener) {
+        unmixingListeners.add(unmixingListener);
+    }
+
+    public void removeUnmixingParameterListener(UnmixingListener unmixingListener) {
+        unmixingListeners.remove(unmixingListener);
+    }
     
     public void addColorModelInitListener(ColorModelInitListener listener) {
         colorModelInitListeners.add(listener);
@@ -60,6 +72,14 @@ public class ImageColorModel
     
     public void removeColorModelInitListener(ColorModelInitListener listener) {
         colorModelInitListeners.remove(listener);
+    }
+
+    public float[] getUnmixParameters() {
+        return unmix;
+    }
+
+    public void setUnmixParameters(float[] unmixParameters) {
+        this.unmix = unmixParameters;
     }
     
     /**
@@ -128,6 +148,12 @@ public class ImageColorModel
 
     }
 
+    public void fireUnmixingParametersChanged() {
+        for (UnmixingListener listener: unmixingListeners) {
+            listener.unmixingParametersChanged(getUnmixParameters());
+        }
+    }
+
     public void fireColorModelChanged() {
         for (ColorModelListener colorModelListener: colorModelListeners) {
             colorModelListener.colorModelChanged();
@@ -194,10 +220,14 @@ public class ImageColorModel
             @Override
             public void whiteLevelChanged(Integer whiteLevel) {
                 ImageColorModel.this.whiteLevelChanged(whiteLevel);
-            }            
+            }
         });
         
 	}
+
+    public void addChannel(ChannelColorModel channelColorModel) {
+        channels.add(channelColorModel);
+    }
 
 	public boolean isBlackSynchronized() {
 		return blackSynchronized;
@@ -236,6 +266,7 @@ public class ImageColorModel
 		return channels.get(channelIndex);
 	}
 	
+        @JsonIgnore
 	public int getChannelCount() {
 		return channels.size();
 	}

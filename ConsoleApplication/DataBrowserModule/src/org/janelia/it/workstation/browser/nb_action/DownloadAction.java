@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
-import org.janelia.it.workstation.browser.gui.dialogs.DownloadDialog;
+import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadWizardAction;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.openide.nodes.Node;
 
@@ -42,7 +41,7 @@ public final class DownloadAction extends NodePresenterAction {
             }
         }
 
-        DownloadDialog dialog = new DownloadDialog();
-        dialog.showDialog(domainObjectList, ResultDescriptor.LATEST);
+        DownloadWizardAction wizard = new DownloadWizardAction(domainObjectList, null);
+        wizard.actionPerformed(null);
     }
 }

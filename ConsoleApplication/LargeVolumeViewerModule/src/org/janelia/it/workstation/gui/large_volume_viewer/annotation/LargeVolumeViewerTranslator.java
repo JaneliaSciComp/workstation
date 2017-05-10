@@ -412,8 +412,16 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     @Override
     public void neuronChanged(TmNeuronMetadata neuron) {
         logger.info("neuronChanged: {}", neuron);
+
+        // maintain next parent selection across the delete/create
+        Anchor nextParent = largeVolumeViewer.getSkeletonActor().getModel().getNextParent();
+
         neuronDeleted(neuron);
         neuronCreated(neuron);
+
+        if (nextParent != null && neuron.getGeoAnnotationMap().containsKey(nextParent.getGuid())) {
+            fireNextParentEvent(nextParent.getGuid());
+        }
     }
     
     @Override
