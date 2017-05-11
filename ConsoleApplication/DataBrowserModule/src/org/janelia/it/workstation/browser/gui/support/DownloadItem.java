@@ -33,6 +33,8 @@ public class DownloadItem {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadItem.class);
     
+    public static final File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
+    
     public static final String ATTR_LABEL_RESULT_NAME = "Result Name";
     public static final String ATTR_LABEL_FILE_NAME = "File Name";
     public static final String ATTR_LABEL_SAMPLE_NAME = "Sample Name";
@@ -70,18 +72,20 @@ public class DownloadItem {
         // Figure out what file we're downloading
         HasFiles fileProvider = null;
         if (domainObject instanceof Sample) {
-            Sample sample = (Sample)domainObject;
-            if (resultDescriptor==ResultDescriptor.LATEST) {
-                // Get the actual result descriptor, for file naming purposes
-                ResultDescriptor actualDescriptor = SampleUtils.getLatestResultDescriptor(sample);
-                if (actualDescriptor!=null) {
-                    resultName = actualDescriptor.getResultName();
+            if (resultDescriptor!=null) {
+                Sample sample = (Sample)domainObject;
+                if (resultDescriptor==ResultDescriptor.LATEST) {
+                    // Get the actual result descriptor, for file naming purposes
+                    ResultDescriptor actualDescriptor = SampleUtils.getLatestResultDescriptor(sample);
+                    if (actualDescriptor!=null) {
+                        resultName = actualDescriptor.getResultName();
+                    }
                 }
+                else {
+                    resultName = resultDescriptor.getResultName();
+                }
+                fileProvider = SampleUtils.getResult(sample, resultDescriptor);
             }
-            else {
-                resultName = resultDescriptor.getResultName();
-            }
-            fileProvider = SampleUtils.getResult(sample, resultDescriptor);
         }
         else if (domainObject instanceof HasFiles) {
             fileProvider = (HasFiles)domainObject;
@@ -98,14 +102,21 @@ public class DownloadItem {
             // Try separation
             PipelineResult result = (PipelineResult)fileProvider;
             NeuronSeparation separation = result.getLatestSeparationResult();
-            sourceFilePath = DomainUtils.getFilepath(separation, fileType); 
-            if (sourceFilePath==null) {
-                sourceFilePath = getStaticPath(separation, fileType);
+            if (separation!=null) {
+                sourceFilePath = DomainUtils.getFilepath(separation, fileType); 
+                if (sourceFilePath==null) {
+                    sourceFilePath = getStaticPath(separation, fileType);
+                }
             }
         }
         
         if (sourceFilePath==null) {
-            errorMessage = "Cannot find '"+fileType.getLabel()+"' file for '"+resultDescriptor+"' result in: "+domainObject.getName();
+            if (resultDescriptor==null) {
+                errorMessage = "Cannot find '"+fileType.getLabel()+"' file in: "+domainObject.getName();
+            }
+            else {
+                errorMessage = "Cannot find '"+fileType.getLabel()+"' file for '"+resultDescriptor+"' result in: "+domainObject.getName();
+            }
             return;
         }
             
@@ -118,9 +129,7 @@ public class DownloadItem {
         if (this.targetExtension==null) {
             this.targetExtension = sourceExtension;
         }
-        
-        File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
-        
+                
         // Build the path
         File itemDir = null;
         if (itemPath!=null && !flattenStructure) {
@@ -239,6 +248,7 @@ public class DownloadItem {
     	if (targetFile==null) {
     		return "Error getting file for "+domainObject.getName();
     	}
-        return targetFile.getAbsolutePath();
+        int cut = workstationImagesDir.getAbsolutePath().length()+1;
+        return targetFile.getAbsolutePath().substring(cut);
     }
 }

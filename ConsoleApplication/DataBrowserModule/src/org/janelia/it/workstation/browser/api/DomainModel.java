@@ -977,17 +977,9 @@ public class DomainModel {
     public Subject loginSubject(String username, String password) throws Exception {
         return subjectFacade.loginSubject(username, password);
     }
-
-    public void addPipelineStatusTransition(StatusTransition transition) throws Exception {
-        sampleFacade.addStatusTransition(transition);
-    }
-
-    public void putOrUpdateIntakeOrder (IntakeOrder order) throws Exception {
-        sampleFacade.putOrUpdateIntakeOrder(order);
-    }
-
-    public IntakeOrder getIntakeOrder (String orderNo) throws Exception {
-        return sampleFacade.getIntakeOrder(orderNo);
+    
+    public String dispatchSamples(List<Reference> sampleRefs, String reprocessPurpose, boolean reuse) throws Exception {
+        return sampleFacade.dispatchSamples(sampleRefs, reprocessPurpose, reuse);
     }
 
     // EVENT HANDLING

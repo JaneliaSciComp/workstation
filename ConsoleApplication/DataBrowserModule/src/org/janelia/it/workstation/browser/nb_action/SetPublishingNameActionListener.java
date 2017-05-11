@@ -88,6 +88,13 @@ public final class SetPublishingNameActionListener implements ActionListener {
                 }
             }
             
+
+            if (consensusLine==null) {
+                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                        "Selected samples have no associated line information", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
             PublishingNameDialog dialog = new PublishingNameDialog(consensusLine);
             final String publishedName = dialog.showDialog();
             if (StringUtils.isEmpty(publishedName)) {
@@ -199,7 +206,7 @@ public final class SetPublishingNameActionListener implements ActionListener {
         }
         
         public void load() {
-
+            
             SimpleWorker worker = new SimpleWorker() {
 
                 @Override

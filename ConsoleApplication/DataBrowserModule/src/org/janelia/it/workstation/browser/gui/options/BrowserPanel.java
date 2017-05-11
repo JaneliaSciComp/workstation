@@ -1,9 +1,6 @@
 package org.janelia.it.workstation.browser.gui.options;
 
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.UNLOAD_IMAGES_PROPERTY;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.*;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -28,13 +25,12 @@ final class BrowserPanel extends javax.swing.JPanel {
     private final BrowserOptionsPanelController controller;
     private final GroupedKeyValuePanel mainPanel;
     
+    private JCheckBox downloadDialogCheckbox;
     private JCheckBox unloadImagesCheckbox;
     private JCheckBox disableImageDrag;
+    private JCheckBox allowDuplicateAnnotations;
     private JCheckBox showAnnotationTables;
     private JSlider annotationTableHeight;
-
-//    private ButtonGroup rendererGroup;
-//    private Map<ButtonModel, String> buttonToRendererMap;
     
     BrowserPanel(BrowserOptionsPanelController controller) {
         this.controller = controller;
@@ -65,34 +61,24 @@ final class BrowserPanel extends javax.swing.JPanel {
 
         mainPanel.addSeparator("Image Browser");
 
-        // Renderer
+        // Download Dialog
 
-        // LOCI renderer does not work with JFS because it does not use authorization
+        downloadDialogCheckbox = new JCheckBox();
+        downloadDialogCheckbox.setText("Use the legacy download dialog instead of the wizard");
+        downloadDialogCheckbox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                controller.changed();
+            }
+        });
+        
+        if (app.getModelProperty(LEGACY_DOWNLOAD_DIALOG) == null) {
+            app.setModelProperty(LEGACY_DOWNLOAD_DIALOG, Boolean.FALSE);
+        }
+        else {
+            downloadDialogCheckbox.setSelected((Boolean) app.getModelProperty(LEGACY_DOWNLOAD_DIALOG));
+        }
 
-//        rendererGroup = new ButtonGroup();
-//        buttonToRendererMap = new HashMap<>();
-//
-//        JPanel pnlRendererOptions = new JPanel();
-//
-//        pnlRendererOptions.setLayout(new BoxLayout(pnlRendererOptions, BoxLayout.Y_AXIS));
-//
-//        String selectedRenderer = (String) sessionMgr.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D);
-//        for (RendererType2D type : RendererType2D.values()) {
-//            JRadioButton rb = new JRadioButton(type.getName());
-//            rb.addActionListener(new ActionListener() {
-//                public void actionPerformed(ActionEvent evt) {
-//                    controller.changed();
-//                }
-//            });
-//            if (selectedRenderer.equals(type.name())) {
-//                rb.setSelected(true);
-//            }
-//            rendererGroup.add(rb);
-//            buttonToRendererMap.put(rb.getModel(), type.name());
-//            pnlRendererOptions.add(rb);
-//        }
-//
-//        mainPanel.addItem("2D Image Renderer", pnlRendererOptions);
+        mainPanel.addItem(downloadDialogCheckbox);
 
         // Unload Images
 
@@ -132,9 +118,25 @@ final class BrowserPanel extends javax.swing.JPanel {
 
         mainPanel.addItem(disableImageDrag);
 
-        // Use Annotation Tables
+        // Allow duplicate annotation keys
         
-        annotationTableHeight = new JSlider(ImagesPanel.MIN_TABLE_HEIGHT, ImagesPanel.MAX_TABLE_HEIGHT, ImagesPanel.DEFAULT_TABLE_HEIGHT);
+        allowDuplicateAnnotations = new JCheckBox();
+        allowDuplicateAnnotations.setText("Allow duplicate annotations on a single item");
+        allowDuplicateAnnotations.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                controller.changed();
+            }
+        });
+        if (app.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY) == null) {
+            app.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, Boolean.FALSE);
+        }
+        else {
+            allowDuplicateAnnotations.setSelected((Boolean) app.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY));
+        }
+
+        mainPanel.addItem(allowDuplicateAnnotations);
+        
+        // Use Annotation Tables
         
         showAnnotationTables = new JCheckBox();
         showAnnotationTables.setText("Show annotations in a table instead of a tag cloud");
@@ -154,6 +156,7 @@ final class BrowserPanel extends javax.swing.JPanel {
 
         // Annotation table height
 
+        annotationTableHeight = new JSlider(ImagesPanel.MIN_TABLE_HEIGHT, ImagesPanel.MAX_TABLE_HEIGHT, ImagesPanel.DEFAULT_TABLE_HEIGHT);
         annotationTableHeight.setMaximumSize(new Dimension(300, Integer.MAX_VALUE));
         annotationTableHeight.addChangeListener(new ChangeListener() {
             @Override
@@ -170,18 +173,16 @@ final class BrowserPanel extends javax.swing.JPanel {
         }
 
         mainPanel.addItem("Annotation table height", annotationTableHeight);
-
     }
 
     void store() {
 
         ConsoleApp app = ConsoleApp.getConsoleApp();
 
-//        String newRenderer = buttonToRendererMap.get(rendererGroup.getSelection());
-//        if (!newRenderer.equals(sessionMgr.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D))) {
-//            log.info("Saving renderer setting: "+newRenderer);
-//            sessionMgr.setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, newRenderer);
-//        }
+        if (downloadDialogCheckbox.isSelected() != (Boolean) app.getModelProperty(LEGACY_DOWNLOAD_DIALOG)) {
+            log.info("Saving legacy download dialog setting: "+downloadDialogCheckbox.isSelected());
+            app.setModelProperty(LEGACY_DOWNLOAD_DIALOG, downloadDialogCheckbox.isSelected());
+        }
         
         if (unloadImagesCheckbox.isSelected() != (Boolean) app.getModelProperty(UNLOAD_IMAGES_PROPERTY)) {
             log.info("Saving unload images setting: "+unloadImagesCheckbox.isSelected());
@@ -193,6 +194,11 @@ final class BrowserPanel extends javax.swing.JPanel {
             app.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, disableImageDrag.isSelected());
         }
 
+        if (allowDuplicateAnnotations.isSelected() != (Boolean) app.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY)) {
+            log.info("Saving allow annotation duplicates: "+allowDuplicateAnnotations.isSelected());
+            app.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, allowDuplicateAnnotations.isSelected());
+        }
+        
         if (showAnnotationTables.isSelected() != (Boolean) app.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY)) {
             log.info("Saving show annotation tables: "+showAnnotationTables.isSelected());
             app.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, showAnnotationTables.isSelected());
