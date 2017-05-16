@@ -7,4 +7,5 @@ Workstation Browser
 * Fixed issues with the "Sample Compression Strategy" feature
 
 MouseLight
-* None
+* Import/export color model added
+* Merge performance improved somewhat
