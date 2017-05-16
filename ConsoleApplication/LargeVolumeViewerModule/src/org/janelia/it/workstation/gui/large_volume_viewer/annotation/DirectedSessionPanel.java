@@ -4,10 +4,15 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.Box;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 
+import org.janelia.it.jacs.model.genomics.AccessionIdentifierUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 
 /**
@@ -28,6 +33,14 @@ public class DirectedSessionPanel extends AnnotationPanel {
 
 
     // major UI panels
+
+
+    // actions
+    AbstractAction gotoDecisionAction;
+    AbstractAction nextDecisionAction;
+    AbstractAction finishedAction;
+
+
 
 
     // other UI stuff
@@ -66,9 +79,6 @@ public class DirectedSessionPanel extends AnnotationPanel {
         cTop.fill = GridBagConstraints.HORIZONTAL;
         cTop.insets = new Insets(10, 0, 0, 0);
         cTop.weighty = 0.0;
-
-        // error on this line?  compare other file!
-        // illegal component position
 
         add(new JLabel("Directed session info", JLabel.LEADING));
 
@@ -111,15 +121,58 @@ public class DirectedSessionPanel extends AnnotationPanel {
 
         // ---------- decision handling section
 
-        add(new JLabel("decision controls here!", JLabel.CENTER), cVert);
+        // ---> don't forget to hook in the controller; don't
+        //  do direct calls!
 
 
-        // this adds the button, with right name, but it's grayed out
-        //  (and ctrl-N still works); tried multiple variations of
-        //  instantiating button and action as class variables
-        // add(new JButton(new NextDecisionAction()), cVert);
+        add(new JLabel("Decision controls", JLabel.CENTER), cVert);
+
+        // next = this decision made, go to next (needs better name?)
+        JButton nextDecisionButton = new JButton("Next decision");
+        nextDecisionAction = new AbstractAction("Next decision") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("next decision action");
+            }
+        };
+        nextDecisionButton.setAction(nextDecisionAction);
+        add(nextDecisionButton, cVert);
 
 
+        JButton gotoDecisionButton = new JButton("Go to decision");
+        gotoDecisionAction = new AbstractAction("Go to decision") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("go to decision action");
+            }
+        };
+        gotoDecisionButton.setAction(gotoDecisionAction);
+        add(gotoDecisionButton, cVert);
+
+
+        // this will eventually be dynamic, depending on what kind
+        //  of decision we're asking for
+        // first stage: correct or not
+        add(new JLabel("Decision buttons (yes/no/a/b/c)", JLabel.CENTER), cVert);
+
+
+        // need to rename; finished = finished with this batch (not this one)
+        JButton finishedButton = new JButton("Finished");
+        finishedAction = new AbstractAction("Finished") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("finished action");
+            }
+        };
+        finishedButton.setAction(finishedAction);
+        add(finishedButton, cVert);
+
+
+
+        add(Box.createRigidArea(new Dimension(0, 40)), cVert);
+
+
+        add(new JLabel("List of completed decisions", JLabel.CENTER), cVert);
 
 
         add(Box.createRigidArea(new Dimension(0, 40)), cVert);
@@ -127,6 +180,16 @@ public class DirectedSessionPanel extends AnnotationPanel {
 
 
         add(new JLabel("Progress: xxx/yyy (zzz%)", JLabel.CENTER), cVert);
+
+
+
+        // big spacer, just to separate stuff while developing
+        add(Box.createRigidArea(new Dimension(0, 150)), cVert);
+
+        // ---------- debugging/testing section
+        add(new JLabel("debugging/testing info here", JLabel.CENTER), cVert);
+
+
 
 
 
