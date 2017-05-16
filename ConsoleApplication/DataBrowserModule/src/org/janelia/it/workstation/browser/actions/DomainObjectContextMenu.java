@@ -936,7 +936,25 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                             return new Callable<Void>() {
                                 @Override
                                 public Void call() throws Exception {
-                                	DomainMgr.getDomainMgr().getModel().invalidate(sample);
+
+                                    // Domain model must be called from a background thread
+                                    SimpleWorker simpleWorker = new SimpleWorker() {
+                                        @Override
+                                        protected void doStuff() throws Exception {
+                                            DomainMgr.getDomainMgr().getModel().invalidate(sample);
+                                        }
+
+                                        @Override
+                                        protected void hadSuccess() {
+                                        }
+
+                                        @Override
+                                        protected void hadError(Throwable error) {
+                                            ConsoleApp.handleException(error);
+                                        }
+                                    };
+
+                                    simpleWorker.execute();
                                     return null;
                                 }
                             };
