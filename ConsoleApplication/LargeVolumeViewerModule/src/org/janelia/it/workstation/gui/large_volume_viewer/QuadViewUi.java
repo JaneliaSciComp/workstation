@@ -213,7 +213,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private JPanel toolBarPanel = new JPanel();
 	private JSplitPane splitPane = new JSplitPane();    
     private SliderPanel sliderPanel = new SliderPanel(imageColorModel);
-
 	private JLabel statusLabel = new JLabel("status area");
 	private LoadStatusLabel loadStatusLabel = new LoadStatusLabel();
 	
@@ -746,6 +745,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }            
         });
 
+        
+        sliderPanel.setTop(SliderPanel.VIEW.LVV);
         sliderPanel.guiInit();
         
         JSplitPane splitPane_1 = new JSplitPane();
