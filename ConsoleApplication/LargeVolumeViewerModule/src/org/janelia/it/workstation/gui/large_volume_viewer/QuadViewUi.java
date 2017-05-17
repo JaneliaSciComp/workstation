@@ -746,6 +746,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }            
         });
 
+        
+        sliderPanel.setTop(SliderPanel.VIEW.LVV);
         sliderPanel.guiInit();
         
         JSplitPane splitPane_1 = new JSplitPane();

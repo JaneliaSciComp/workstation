@@ -43,6 +43,7 @@ import org.openide.util.Utilities;
  * @author fosterl
  */
 public class SliderPanel extends JPanel {
+    public enum VIEW {Horta, LVV};
     private static final String IMAGES_LOCK = "lock.png";
     private static final String IMAGES_LOCK_UNLOCK = "lock_unlock.png";
 
@@ -57,12 +58,21 @@ public class SliderPanel extends JPanel {
 	private JPanel colorLockPanel = new JPanel();
     private ImageColorModel imageColorModel;
     private ColorModelListener visibilityListener;
+    private VIEW top;
 
     public SliderPanel() { // empty constructor so I can drag this widget in netbeans GUI builder
     }
     
     public SliderPanel( ImageColorModel imageColorModel ) {
         setImageColorModel(imageColorModel);
+    }
+    
+    public void setTop(VIEW top) {
+        this.top = top;
+    }
+    
+    public VIEW getTop() {
+        return top;
     }
     
     public final void setImageColorModel( ImageColorModel imageColorModel ) {
@@ -223,6 +233,7 @@ public class SliderPanel extends JPanel {
         exportColorModelAction.putValue(Action.NAME, "Export Color Model");
         exportColorModelAction.putValue(Action.SHORT_DESCRIPTION,
                 "Export Workspace color model to external file");
+        exportColorModelAction.putValue("top", this.top);
         sliderPanelMenu.add(new JMenuItem(exportColorModelAction));
 
         colorLockPanel.setComponentPopupMenu(sliderPanelMenu);
