@@ -29,6 +29,7 @@
  */
 package org.janelia.horta;
 
+import org.janelia.console.viewerapi.controller.UnmixingListener;
 import org.janelia.horta.render.NeuronMPRenderer;
 import org.janelia.horta.actors.ScaleBar;
 import org.janelia.horta.actors.CenterCrossHairActor;
@@ -166,6 +167,8 @@ import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import org.openide.util.lookup.AbstractLookup;
+import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.NbPreferences;
@@ -857,7 +860,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     private void loadStartupPreferences() 
     {
         Preferences prefs = NbPreferences.forModule(getClass());
-        
+   //     final InstanceContent content = new InstanceContent();
+
         // Load brightness and visibility settings for each channel
         for (int cix = 0; cix < imageColorModel.getChannelCount(); ++cix) {
             ChannelColorModel c = imageColorModel.getChannel(cix);
@@ -874,6 +878,10 @@ public final class NeuronTracerTopComponent extends TopComponent
         for (int i = 0; i < unmix.length; ++i) {
             unmix[i] = prefs.getFloat("startupUnmixingParameter"+i, unmix[i]);
         }
+        imageColorModel.setUnmixParameters(unmix);
+    //    AbstractLookup colorLookup = new AbstractLookup(content);
+    //    content.add(imageColorModel);
+
         // Load camera state
         Vantage vantage = sceneWindow.getVantage();
         vantage.setConstrainedToUpDirection(prefs.getBoolean("dorsalIsUp", vantage.isConstrainedToUpDirection()));
@@ -892,7 +900,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 prefs.getInt("startupRenderFilter", volumeState.filteringOrder);
         setCubifyVoxels(prefs.getBoolean("bCubifyVoxels", doCubifyVoxels));
         volumeCache.setUpdateCache(
-                prefs.getBoolean("bCacheHortaTiles", volumeCache.isUpdateCache()));
+                prefs.getBoolean("bCacheHortaTiles", doesUpdateVolumeCache()));
         setPreferKtx(prefs.getBoolean("bPreferKtxTiles", isPreferKtx()));
     }
     
@@ -928,7 +936,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         prefs.putInt("startupProjectionMode", volumeState.projectionMode);
         prefs.putInt("startupRenderFilter", volumeState.filteringOrder);
         prefs.putBoolean("bCubifyVoxels", doCubifyVoxels);
-        prefs.putBoolean("bCacheHortaTiles", volumeCache.isUpdateCache());
+        prefs.putBoolean("bCacheHortaTiles", doesUpdateVolumeCache());
         prefs.putBoolean("bPreferKtxTiles", isPreferKtx());
     }
 
@@ -979,6 +987,15 @@ public final class NeuronTracerTopComponent extends TopComponent
                 neuronMPRenderer.setIntensityBufferDirty();
                 redrawNow();
             }
+        });
+
+        // add TetVolumeActor as listener for ImageColorModel changes from SliderPanel events
+        imageColorModel.addUnmixingParameterListener(new UnmixingListener() {
+            @Override
+            public void unmixingParametersChanged(float[] unmixingParams) {
+                TetVolumeActor.getInstance().setUnmixingParams(unmixingParams);
+            }
+
         });
 
         this.setLayout(new BorderLayout());
@@ -1154,7 +1171,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 
                 Vector3 mouseXyz = worldXyzForScreenXy(popupMenuScreenPoint);
                 Vector3 focusXyz = sceneWindow.getVantage().getFocusPosition();
-                HortaMenuContext menuContext = new HortaMenuContext(
+                final HortaMenuContext menuContext = new HortaMenuContext(
                         topMenu,
                         popupMenuScreenPoint,
                         mouseXyz,
@@ -1238,7 +1255,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 if (currentSource != null) 
                 {
                     JCheckBoxMenuItem enableVolumeCacheMenu = new JCheckBoxMenuItem(
-                            "Auto-load Image Tiles", volumeCache.isUpdateCache());
+                            "Auto-load Image Tiles", doesUpdateVolumeCache());
                     topMenu.add(enableVolumeCacheMenu);
                     enableVolumeCacheMenu.addActionListener(new AbstractAction() {
                         @Override
@@ -1246,12 +1263,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                         {
                             JCheckBoxMenuItem item = (JCheckBoxMenuItem)e.getSource();
                             volumeCache.toggleUpdateCache();
-                            item.setSelected(volumeCache.isUpdateCache());
-                            TetVolumeActor.getInstance().setAutoUpdate(volumeCache.isUpdateCache());
+                            item.setSelected(doesUpdateVolumeCache());
+                            TetVolumeActor.getInstance().setAutoUpdate(doesUpdateVolumeCache());
                         }
                     });
 
-                    topMenu.add(new AbstractAction("Load Image Tile Here") {
+                    topMenu.add(new AbstractAction("Load Image Tile At Focus") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             loadTileAtCurrentFocusAsynchronous();
@@ -1715,6 +1732,24 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 indicatedNeuron));
                     }
 
+                    if (interactorContext.canMergeNeurite()) {
+                        topMenu.add(new AbstractAction("Merge neurites...") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.mergeNeurites();
+                            }
+                        });
+                    }
+                    
+                    if (interactorContext.canSplitNeurite()) {
+                        topMenu.add(new AbstractAction("Split neurite...") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.splitNeurite();
+                            }
+                        });
+                    }
+                    
                     // Delete Neuron DANGER!
                     if (interactorContext.canDeleteNeuron()) {
                         // Extra separator due to danger...
@@ -2045,13 +2080,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
     }
     
-    public void loadTileAtFocus() throws IOException
+    public void loadPersistentTileAtFocus() throws IOException
     {
         Vector3 focus = getVantage().getFocusPosition();
-        loadTileAtLocation(focus);
+        loadPersistentTileAtLocation(focus);
     }
     
-    public void loadTileAtLocation(Vector3 location) throws IOException
+    public void loadPersistentTileAtLocation(Vector3 location) throws IOException
     {
         if (ktxSource == null) {
             BlockTileSource source = promptUserForKtxFolder();
@@ -2059,7 +2094,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 return;
             setKtxSource(source);
         }
-        loader.loadKtxTileAtLocation(ktxSource, location);
+        loader.loadKtxTileAtLocation(ktxSource, location, true);
     }
     
     private BlockTileSource promptUserForKtxFolder() {

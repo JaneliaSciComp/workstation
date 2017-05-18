@@ -61,6 +61,19 @@ public class TiledMicroscopeObjectHelper implements DomainObjectHelper {
     }
 
     @Override
+    public boolean supportsRemoval(DomainObject domainObject) {
+        if (TmSample.class.isAssignableFrom(domainObject.getClass())) {
+            return true;
+        }
+        else if (TmWorkspace.class.isAssignableFrom(domainObject.getClass())) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    
+    @Override
     public void remove(DomainObject domainObject) throws Exception {
         TiledMicroscopeDomainMgr mgr = TiledMicroscopeDomainMgr.getDomainMgr();
         if (TmSample.class.isAssignableFrom(domainObject.getClass())) {

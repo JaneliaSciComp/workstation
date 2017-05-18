@@ -42,6 +42,12 @@ public interface DomainObjectHelper extends Compatible<DomainObject> {
     String getLargeIcon(DomainObject domainObject);
 
     /**
+     * Returns true if removal of the given object is supported by this helper.
+     * @return
+     */
+    boolean supportsRemoval(DomainObject domainObject);
+    
+    /**
      * Domain-specific deletion.
      * @param domainObject
      * @throws Exception

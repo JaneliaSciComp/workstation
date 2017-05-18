@@ -3,8 +3,6 @@ package org.janelia.it.workstation.browser.workers;
 import java.beans.PropertyChangeEvent;
 import java.util.concurrent.Callable;
 
-import javax.swing.SwingUtilities;
-
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.components.ProgressTopComponent;
 import org.janelia.it.workstation.browser.events.Events;

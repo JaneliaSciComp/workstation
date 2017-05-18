@@ -1,11 +1,14 @@
 package org.janelia.it.workstation.browser.nb_action;
 
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import javax.swing.ProgressMonitor;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
@@ -177,19 +180,35 @@ public class ApplyAnnotationAction extends NodeAction {
         int i = 1;
         for (DomainObject domainObject : domainObjects) {
             
+            Boolean allowDups = (Boolean)FrameworkImplProvider.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY);
+
             Annotation existingAnnotation = null;
-            
-            Collection<Annotation> annotations = annotationMap.get(domainObject.getId());
-            if (annotations!=null) {
-                for(Annotation annotation : annotations) {
-                    if (annotation.getKeyTerm().getOntologyTermId().equals(ontologyTerm.getId())) {
-                        existingAnnotation = annotation;
-                        break;
+            if (allowDups==null || !allowDups) {
+                
+                Collection<Annotation> annotations = annotationMap.get(domainObject.getId());
+                if (annotations!=null) {
+                    
+                    OntologyTerm keyTerm = ontologyTerm;
+                    if (keyTerm instanceof EnumItem) {
+                        keyTerm = ontologyTerm.getParent();
+                    }
+                    
+                    for(Annotation annotation : annotations) {
+                        if (annotation.getKeyTerm().getOntologyTermId().equals(keyTerm.getId())) {
+                            existingAnnotation = annotation;
+                            break;
+                        }
                     }
                 }
             }
             
+            if (existingAnnotation!=null) {
+                log.info("Found existing annotation to update: "+existingAnnotation);
+            }
+            
             doAnnotation(domainObject, existingAnnotation, ontologyTerm, value);
+            
+            // Update progress
             if (progress!=null) {
                 if (progress.isCancelled()) return;
                 progress.setProgress(i++, domainObjects.size());

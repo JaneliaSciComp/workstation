@@ -63,6 +63,10 @@ public class ColorChannelWidget extends JPanel
         });
 	}
 
+	public ImageColorModel getImageColorModel() {
+		return imageColorModel;
+	}
+
 	public void setWhiteColor(Color whiteColor) {
 		if (whiteColor == null)
 			return;

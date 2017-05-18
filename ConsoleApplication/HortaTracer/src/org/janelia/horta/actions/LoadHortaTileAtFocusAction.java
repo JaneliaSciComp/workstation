@@ -68,7 +68,7 @@ implements ActionListener
         if (nttc == null)
             return;
         try {
-            nttc.loadTileAtFocus();
+            nttc.loadPersistentTileAtFocus();
         } catch (IOException ex) {
             // Exceptions.printStackTrace(ex);
             logger.info("Tile load failed");

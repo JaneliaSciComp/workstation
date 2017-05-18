@@ -54,7 +54,7 @@ public class BrickInfoSet implements Set<BrickInfo> {
         double[] key = new double[] {xyz.getX(), xyz.getY(), xyz.getZ()};
         try {
             return centroidIndex.nearest(key);
-        } catch (KeySizeException ex) {
+        } catch (KeySizeException | ArrayIndexOutOfBoundsException ex) {
             Exceptions.printStackTrace(ex);
             return null;
         }

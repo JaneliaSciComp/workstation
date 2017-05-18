@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -212,7 +213,12 @@ public class ProgressMeterPanel extends JPanel {
             workerPanel.update();
             Throwable error = e.getWorker().getError();
             if (error!=null) {
-                log.error("Error occurred while running task", error);
+                if (error instanceof CancellationException) {
+                    log.info("Worker was cancelled: {}, Status:{}",e.getWorker().getName(),e.getWorker().getStatus());
+                }
+                else {
+                    log.error("Error occurred while running task", error);
+                }
             }
         }
     }
