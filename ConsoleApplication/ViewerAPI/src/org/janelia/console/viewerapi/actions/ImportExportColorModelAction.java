@@ -31,6 +31,8 @@ public class ImportExportColorModelAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
         try {
+            
+            // check which top component is live
             JFileChooser chooser = new JFileChooser();
             chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 switch (mode) {
@@ -40,14 +42,15 @@ public class ImportExportColorModelAction extends AbstractAction {
                         break;
                     case EXPORT:
                         chooser.setDialogTitle("Choose color model file to export");
+                        chooser.setSelectedFile(new File(this.getValue("top") + "_colormodel.json"));
                         chooser.setApproveButtonText("Save");
                         break;
                 }
 
 
            // set .model filter
-            final FileFilter modelFilter = new ColorModelFileFilter();
-            chooser.setFileFilter(modelFilter);
+            //final FileFilter modelFilter = new ColorModelFileFilter();
+            //chooser.setFileFilter(modelFilter);
 
             int returnValue = chooser.showOpenDialog(panel);
             if (returnValue == JFileChooser.APPROVE_OPTION) {

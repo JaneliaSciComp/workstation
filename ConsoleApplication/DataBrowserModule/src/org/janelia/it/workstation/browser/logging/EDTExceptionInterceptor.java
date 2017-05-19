@@ -33,12 +33,12 @@ public class EDTExceptionInterceptor extends EventQueue {
     private boolean isKnownHarmlessIssue(Throwable e) {
         
         // JDK bug: http://bugs.java.com/view_bug.do?bug_id=8003398
-        if (e.getClass().equals(IllegalArgumentException.class) && "adding a container to a container on a different GraphicsDevice".equals(e.getMessage())) {
+        if ((e instanceof IllegalArgumentException) && e.getMessage()!=null && "adding a container to a container on a different GraphicsDevice".equalsIgnoreCase(e.getMessage().trim())) {
             return true;
         }
         
         // JDK bug: http://bugs.java.com/view_bug.do?bug_id=7117595
-        if (e.getClass().equals(ArrayIndexOutOfBoundsException.class) && "1".equals(e.getMessage())) {
+        if ((e instanceof ArrayIndexOutOfBoundsException) && "1".equals(e.getMessage())) {
             StackTraceElement ste = e.getStackTrace()[0];
             if ("sun.awt.Win32GraphicsEnvironment".equals(ste.getClassName()) && "getDefaultScreenDevice".equals(ste.getMethodName())) {
                 return true;
