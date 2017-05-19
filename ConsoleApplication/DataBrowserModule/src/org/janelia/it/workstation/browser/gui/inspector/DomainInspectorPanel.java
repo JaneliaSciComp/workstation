@@ -381,6 +381,7 @@ public class DomainInspectorPanel extends JPanel {
         this.propertySet = new TreeSet<>();
 
         addProperty("Creation Date", result.getCreationDate());
+        addProperty("Disk Space Usage", result.getDiskSpaceUsage());
         addProperty("Filepath", result.getFilepath());
         addProperty("GUID", result.getId());
         addProperty("Name", result.getName());
