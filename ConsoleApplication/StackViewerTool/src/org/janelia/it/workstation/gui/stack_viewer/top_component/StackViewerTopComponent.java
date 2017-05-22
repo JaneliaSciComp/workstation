@@ -6,13 +6,7 @@
 package org.janelia.it.workstation.gui.stack_viewer.top_component;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.SwingUtilities;
-import org.janelia.it.workstation.gui.stack_viewer.gui.Mip3dStackViewer;
+import org.janelia.it.workstation.gui.stack_viewer.gui.StackViewerPanel;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -45,9 +39,9 @@ import org.openide.util.NbBundle.Messages;
 })
 public final class StackViewerTopComponent extends TopComponent {
     
-    private Mip3dStackViewer stackViewer;
+	private StackViewerPanel stackViewerPanel;
 
-    public StackViewerTopComponent() {
+	public StackViewerTopComponent() {
         initComponents();
         setName(Bundle.CTL_StackViewerTopComponent());
         setToolTipText(Bundle.HINT_StackViewerTopComponent());
@@ -76,35 +70,14 @@ public final class StackViewerTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
+		stackViewerPanel = new StackViewerPanel(this);
         // We want input for a file name.
-        final JButton fileOpenButton = new JButton("Browse and Open Stack");
-        contentPanel.add(new JLabel(""), BorderLayout.CENTER); // Placeholder.
-        contentPanel.add(fileOpenButton, BorderLayout.SOUTH);
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-            }
-        });
-        fileOpenButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        JFileChooser jfc = new JFileChooser();
-                        int option = jfc.showOpenDialog(StackViewerTopComponent.this);
-                        if (option == JFileChooser.APPROVE_OPTION) {
-                            stackViewer = new Mip3dStackViewer();
-                            stackViewer.launch(jfc.getSelectedFile().getAbsolutePath());
-                        }
-                    }
-                });
-            }
-        });
+		contentPanel.add(stackViewerPanel, BorderLayout.CENTER);
     }
 
     @Override
     public void componentClosed() {
-        if (stackViewer != null)
-            stackViewer.close();
+		stackViewerPanel.close();
     }
 
     void writeProperties(java.util.Properties p) {
