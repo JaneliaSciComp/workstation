@@ -263,8 +263,13 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         populateViewButton();
         objectiveButton = new DropDownButton("Objective: "+currObjective);
         areaButton = new DropDownButton("Area: "+currArea);
-        
-        configPanel = new ConfigPanel(true);
+
+        configPanel = new ConfigPanel(true) {
+            @Override
+            protected void titleClicked(MouseEvent e) {
+                Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(sample), true, true, true));
+            }
+        };
         configPanel.addTitleComponent(viewButton, true, true);
         
         lsmPanel = new PaginatedResultsPanel(selectionModel, this) {
