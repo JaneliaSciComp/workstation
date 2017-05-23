@@ -209,20 +209,11 @@ public class StackViewerPanel extends JPanel {
 					
 			boolean rtnVal = false;
 			final String filename = pathname.getName();
-			if (FILENAME_PATTERN.matcher(filename).matches()) {
-				logger.log(Level.INFO, "Pattern matches {0}", filename);
-				Matcher matcher = FILENAME_PATTERN.matcher(filename);
-				// Capture groups are 0=whole expression; 1=outermost/first ()'s
-				if (matcher.groupCount() == 1) {
-					logger.log(
-							Level.WARNING,
-							"Failed to find extension group in {0}",
-							filename
-					);
-					return false;
-				}
-				String extension = matcher.group(1);
-				if (extension != null) {
+			String[] filenameParts = filename.split("\\.");
+			if (filenameParts.length > 1) {
+				logger.log(Level.INFO, "Got extension for {0}", filename);
+				String extension = filenameParts[filenameParts.length - 1];
+				if (extension != null  &&  extension.length() > 0) {
 					if (ACCEPTED_EXTENSIONS.contains(extension)) {
 						rtnVal = true;
 					} else {
