@@ -8,14 +8,21 @@ package org.janelia.it.workstation.gui.stack_viewer.gui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.filechooser.FileFilter;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -29,6 +36,8 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
  */
 public class StackViewerPanel extends JPanel {
 	private static final String STACK_VW_LAUNCH_FAIL_MSG = "Failed to launch Stack Viewer";
+	
+	private static final Logger logger = Logger.getLogger(StackViewerPanel.class.getSimpleName());
 
 	private final JButton fileOpenButton = new JButton("Browse and Open Stack");
     private Mip3dStackViewer stackViewer;
@@ -62,13 +71,12 @@ public class StackViewerPanel extends JPanel {
 
 					@Override
 					protected void doStuff() throws Exception {
-                        JFileChooser jfc = new JFileChooser();
-                        int option = jfc.showOpenDialog(parent);
-                        if (option == JFileChooser.APPROVE_OPTION) {
+						String selectedFile = chooseFile();
+						if (selectedFile != null) {
 							setBusyState(true);
                             stackViewer = new Mip3dStackViewer();
-							stackViewer.prepareWidget(jfc.getSelectedFile().getAbsolutePath());
-                        }
+							stackViewer.prepareWidget(selectedFile);
+						}
 					}
 
 					@Override
@@ -132,5 +140,111 @@ public class StackViewerPanel extends JPanel {
 			fileOpenButton.setEnabled(true);
 			busyLabel = null;
 		}
+	}
+	
+	/**
+	 * Let user select a file.  If they do, return its absolute path;
+	 * if they do not, return null.
+	 * 
+	 * @return file path or null value.
+	 */
+	private String chooseFile() {
+		String rtnVal = null;
+		JFileChooser jfc = new JFileChooser();
+		jfc.setAcceptAllFileFilterUsed(false);
+		jfc.addChoosableFileFilter(new ViableLoadFileFilter());
+		int option = jfc.showOpenDialog(parent);
+		if (option == JFileChooser.APPROVE_OPTION) {
+			rtnVal = jfc.getSelectedFile().getAbsolutePath();
+		}
+		return rtnVal;
+	}
+	
+	/**
+	 * This filter will apply constraints based upon success or failure of load
+	 * tests as below.
+	 * 
+	 * file load tests.
+     * old cons label v3draw file from Yuy: black screen
+     * old lsm: failed
+     * old mp4 file: viewable
+     * newly downloaded mp4 file: viewable
+     * newly downloaded h5j file: viewable
+     * newly downloaded (Wolfft) v3dpbd consolidated label: viewable
+     * newly downloaded (Wolfft) v3dpbd consolidated signal: very slow, fails with stack trace (see other comment).
+     * newly downloaded (Wolfft) v3dpbd Reference: viewable in grayscale
+     * newly downloaded (Wolfft) v3dpbd cons signal converted to TIF. Fails, with stack trace (see other comment).
+	 * 
+	 */
+	private static class ViableLoadFileFilter extends FileFilter {
+
+		// This is a capture pattern for the extension.
+		private static final Pattern FILENAME_PATTERN = Pattern.compile(".+\\.([^.]+)$");
+				//Pattern.compile(".+([^.]+)");
+		
+		// This is a set of acceptable extensions--regardless of file name.
+		private static final Set<String> ACCEPTED_EXTENSIONS = new HashSet<>();		
+		static {
+			ACCEPTED_EXTENSIONS.add("mp4");
+			ACCEPTED_EXTENSIONS.add("h5j");
+		}
+		
+		// These are endings of file names shown to be successfully loaded.
+		private static final Set<String> ACCEPTED_NAME_ENDINGS = new HashSet<>();
+		static {
+			ACCEPTED_NAME_ENDINGS.add("ConsolidatedLabel.v3dpbd");
+			ACCEPTED_NAME_ENDINGS.add("Reference.v3dpbd");
+		}
+		
+		/**
+		 * We use the acceptable/working file name patterns as a guide for
+		 * what may be loaded. These lists can/will be extended as bugs
+		 * are found and eliminated from the viewer.
+		 * 
+		 * @param pathname candidate path.
+		 * @return T=this can be opened; F=this cannot be opened.
+		 */
+		@Override
+		public boolean accept(File pathname) {
+					
+			boolean rtnVal = false;
+			final String filename = pathname.getName();
+			if (FILENAME_PATTERN.matcher(filename).matches()) {
+				logger.log(Level.INFO, "Pattern matches {0}", filename);
+				Matcher matcher = FILENAME_PATTERN.matcher(filename);
+				// Capture groups are 0=whole expression; 1=outermost/first ()'s
+				if (matcher.groupCount() == 1) {
+					logger.log(
+							Level.WARNING,
+							"Failed to find extension group in {0}",
+							filename
+					);
+					return false;
+				}
+				String extension = matcher.group(1);
+				if (extension != null) {
+					if (ACCEPTED_EXTENSIONS.contains(extension)) {
+						rtnVal = true;
+					} else {
+						for (String filenameEnding : ACCEPTED_NAME_ENDINGS) {
+							if (filename.endsWith(filenameEnding)) {
+								rtnVal = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+			if (pathname.isDirectory()) {
+				rtnVal = true;
+			}
+			return rtnVal;
+		}
+
+		@Override
+		public String getDescription() {
+			return "All types currently supported";
+		}
+		
 	}
 }
