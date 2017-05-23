@@ -103,16 +103,21 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         }
 
         String st = ExceptionUtils.getStackTrace(throwable);
-        String sth = hf.newHasher().putString(st, Charsets.UTF_8).hash().toString();
-        log.trace("Got exception hash: {}",sth);
         String firstLine = getFirstLine(st);
+
+        if (isIgnoredForAutoSend(throwable, st)) {
+            log.trace("Ignoring exception for auto-send: {}", firstLine);
+            return;
+        }
         
         // We remove the first line before checking for uniqueness. 
         // Ignoring the exception message when looking for duplicates can cause some false positives, but it's better than a flood. 
         // Even if we miss a novel exception, if it matters then sooner or later it will come up again. 
         String trace = getTrace(st);
+        String traceHash = hf.newHasher().putString(trace, Charsets.UTF_8).hash().toString();
+        log.trace("Got exception hash: {}",traceHash);
         
-        if (!exceptionCounts.contains(trace)) {  
+        if (!exceptionCounts.contains(traceHash)) {  
             // First appearance of this stack trace, let's try to send it to JIRA.
 
             // Allow one exception report every cooldown cycle. Our RateLimiter allows one access every 
@@ -124,14 +129,13 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             sendEmail(st, false);
         }
         else {
-            int count = exceptionCounts.count(trace);
+            int count = exceptionCounts.count(traceHash);
             if (count % 10 == 0) {
                 log.warn("Exception count reached {} for: {}", count, firstLine);
-                // TODO: create another JIRA ticket?
             }
         }
 
-        exceptionCounts.add(trace); // Increment counter
+        exceptionCounts.add(traceHash); // Increment counter
 
         // Make sure we're not devoting too much memory to stack traces
         if (exceptionCounts.size()>MAX_STACKTRACE_CACHE_SIZE) {
@@ -143,13 +147,39 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
                 }
             }
             // Still too big? Just clear it out.
-            if (exceptionCounts.size()>=MAX_STACKTRACE_CACHE_SIZE) {
+            if (exceptionCounts.size()>MAX_STACKTRACE_CACHE_SIZE) {
                 log.info("Clearing exception cache (cacheSize={})", exceptionCounts.size());
                 exceptionCounts.clear();
             }
         }   
     }
 
+    /**
+     * Filter exceptions which should never be reported to JIRA. These are exceptions for
+     * which we can not do anything. They are not caused by bugs in our software, but issues with 
+     * the environment or an acceptable user action which happens to generate an exception. 
+     */
+    private boolean isIgnoredForAutoSend(Throwable throwable, String stacktrace) {
+        
+        // Ignore all space issues, these do not represent bugs
+        if (stacktrace.contains("java.io.IOException: No space left on device")) {
+            return true;
+        }
+        
+        // Ignore all broken pipes, because these are usually caused by user initiated cancellation or network issues
+        if (stacktrace.contains("Caused by: java.io.IOException: Broken pipe")) {
+            return true;
+        }
+        
+        // Ignore network and data issues. If it's in fact a data problem on our end, the user will let us know. 
+        if (stacktrace.contains("java.io.IOException: unexpected end of stream") 
+                || stacktrace.contains("Caused by: java.net.ConnectException: Connection refused")) {
+            return true;
+        }
+        
+        return false;
+    }
+    
     @Override
     public void flush() {
     }

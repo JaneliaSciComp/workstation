@@ -77,6 +77,10 @@ import net.miginfocom.swing.MigLayout;
  * TODO: keep track of user's favorite file naming patterns
  * TODO: better progress indication for loading large file sets
  * 
+ * @deprecated We're keeping this around for a while in case users want to revert to it
+ * because the new Download Wizard is missing any features. But the idea is that we'll 
+ * eventually just delete it.  
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DownloadDialog extends ModalDialog {

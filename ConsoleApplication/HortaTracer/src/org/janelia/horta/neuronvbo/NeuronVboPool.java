@@ -248,6 +248,13 @@ public class NeuronVboPool implements Iterable<NeuronModel>
         return true;
     }
 
+    public void clear() {
+        for (Iterator<NeuronVbo> it = new VboIterator(); it.hasNext();) {
+            NeuronVbo vbo = it.next();
+            vbo.clear();
+        }
+    }
+
     boolean contains(NeuronModel neuron) {
         for (Iterator<NeuronVbo> it = new VboIterator(); it.hasNext();) {
             NeuronVbo vbo = it.next();

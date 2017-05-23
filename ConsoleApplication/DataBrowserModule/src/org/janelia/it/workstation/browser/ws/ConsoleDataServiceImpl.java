@@ -12,6 +12,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasImageStack;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.model.domain.sample.CuratedNeuron;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
@@ -190,6 +191,14 @@ public class ConsoleDataServiceImpl {
         int orderIndex = 0;
         for(DomainObject domainObject : model.getDomainObjects(separation.getFragmentsReference())) {
             NeuronFragment fragment = (NeuronFragment)domainObject;
+            if (fragment instanceof CuratedNeuron) {
+                log.trace("Omitting curated fragment: {}", fragment);
+                continue;
+            }
+            if (fragment.getNumber()==null) {
+                log.warn("Omitting neuron fragment which has no number: {}", fragment);
+                continue;
+            }
             Entity fragmentEntity = new Entity();
             fragmentEntity.setId(fragment.getId());
             fragmentEntity.setName(fragment.getName());

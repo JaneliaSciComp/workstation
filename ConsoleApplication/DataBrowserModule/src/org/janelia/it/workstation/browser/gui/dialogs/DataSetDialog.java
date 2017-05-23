@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.browser.gui.dialogs;
 
+import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -15,7 +17,6 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -27,7 +28,6 @@ import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.janelia.it.jacs.model.domain.enums.SampleImageType;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -36,9 +36,7 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.util.Utils;
-import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 
 import net.miginfocom.swing.MigLayout;
@@ -64,7 +62,6 @@ public class DataSetDialog extends ModalDialog {
     private JTextField sampleNamePatternInput;
     private JTextField sageConfigPathInput;
     private JTextField sageGrammarPathInput;
-    private JComboBox<SampleImageType> sampleImageInput;
     private JCheckBox sageSyncCheckbox;
     private JCheckBox neuronSeparationCheckbox;
     private HashMap<String, JRadioButton> processCheckboxes = new LinkedHashMap<>();
@@ -182,12 +179,6 @@ public class DataSetDialog extends ModalDialog {
         attrPanel.add(sageGrammarPathLabel, "gap para");
         attrPanel.add(sageGrammarPathInput);
 
-        final JLabel sampleImageLabel = new JLabel("Sample Image: ");
-        sampleImageInput = new JComboBox<>(SampleImageType.values());
-        sampleImageLabel.setLabelFor(sampleImageInput);
-        attrPanel.add(sampleImageLabel, "gap para");
-        attrPanel.add(sampleImageInput);
-
         sageSyncCheckbox = new JCheckBox("Synchronize images from SAGE");
         attrPanel.add(sageSyncCheckbox, "gap para");
 
@@ -217,11 +208,6 @@ public class DataSetDialog extends ModalDialog {
             sampleNamePatternInput.setText(dataSet.getSampleNamePattern());
             sageConfigPathInput.setText(dataSet.getSageConfigPath());
             sageGrammarPathInput.setText(dataSet.getSageGrammarPath());
-
-            SampleImageType sampleImageType = dataSet.getSampleImageType();
-            if (sampleImageType != null) {
-                sampleImageInput.setSelectedItem(sampleImageType);
-            }
 
             sageSyncCheckbox.setSelected(dataSet.isSageSync());
             neuronSeparationCheckbox.setSelected(true); //dataSet.isNeuronSeparationSupported());
@@ -260,7 +246,6 @@ public class DataSetDialog extends ModalDialog {
 
         final String sageConfigPath = sageConfigPathInput.getText();
         final String sageGrammarPath = sageGrammarPathInput.getText();
-        final String sampleImageType = ((SampleImageType) sampleImageInput.getSelectedItem()).name();
 
         Utils.setWaitingCursor(DataSetDialog.this);
 
@@ -276,7 +261,6 @@ public class DataSetDialog extends ModalDialog {
 
                 dataSet.setName(nameInput.getText());
                 dataSet.setSampleNamePattern(sampleNamePattern);
-                dataSet.setSampleImageType(SampleImageType.valueOf(sampleImageType));
                 java.util.List<String> pipelineProcesses = new ArrayList<>();
                 pipelineProcesses.add(getRadioButtonValues(processCheckboxes));
                 dataSet.setPipelineProcesses(pipelineProcesses);

@@ -4,7 +4,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.HistoryStack;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -248,6 +247,10 @@ public class Skeleton {
         controller.moveNeuriteRequested(anchor);
     }
 
+    public void smartMergeNeuriteRequest(Anchor clickedAnchor) {
+        controller.smartMergeNeuriteRequested(clickedAnchor, getNextParent());
+    }
+
     public void changeNeuronStyle(Anchor anchor) {
         controller.changeNeuronStyleRequested(anchor);
     }
@@ -361,7 +364,9 @@ public class Skeleton {
             return;
         }
         final Vec3 voxelVec3 = new Vec3(tga.getX(), tga.getY(), tga.getZ());
-        anchor.setLocation(tileFormat.micronVec3ForVoxelVec3Centered(voxelVec3));
+        // "silent" because we don't want to trigger the whole "move or merge?" dialog,
+        // especially when triggered from a Horta/NeuronModelAdapter move
+        anchor.setLocationSilent(tileFormat.micronVec3ForVoxelVec3Centered(voxelVec3));
     }
     
 	public void clear() {

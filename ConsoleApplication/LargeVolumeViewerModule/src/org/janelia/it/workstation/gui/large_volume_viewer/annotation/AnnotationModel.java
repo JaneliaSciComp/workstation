@@ -63,6 +63,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
 import Jama.Matrix;
+import org.janelia.console.viewerapi.model.DefaultNeuron;
 
 /**
  * This class is responsible for handling requests from the AnnotationManager.  those
@@ -409,6 +410,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     /**
+     * given two annotations, return true if they are on the same neurite
+     * (ie, share the same ultimate root annotation)
+     */
+    public boolean sameNeurite(TmGeoAnnotation ann1, TmGeoAnnotation ann2) {
+        return getNeuriteRootAnnotation(ann1).getId().equals(getNeuriteRootAnnotation(ann2).getId());
+    }
+
+    /**
      * find the annotation closest to the input location, excluding
      * the input annotation (null = don't exclude any)
      */
@@ -593,6 +602,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 
         final TmGeoAnnotation annotation = neuronManager.addGeometricAnnotation(
                 neuron, parentAnn.getId(), xyz.x(), xyz.y(), xyz.z());
+        annotation.setRadius(parentAnn.getRadius());
 
         log.info("Added annotation {} to neuron {}", annotation.getId(), neuron);
         
@@ -1119,6 +1129,21 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // create the new annotation, child of original parent
         final TmGeoAnnotation newAnnotation = neuronManager.addGeometricAnnotation(neuron,
                 annotation2.getId(), newPoint.x(), newPoint.y(), newPoint.z());
+        
+        // set radius of new point to an intermediate value
+        double newRadius = DefaultNeuron.radius;
+        if (annotation2.getRadius() != null) {
+            newRadius = annotation2.getRadius();
+            if (annotation1.getRadius() != null) {
+                double r1 = annotation1.getRadius();
+                double r2 = annotation2.getRadius();
+                newRadius = t * r2 + (1.0 - t) * r1;
+            }
+        }
+        else if (annotation1.getRadius() != null) {
+            newRadius = annotation1.getRadius();
+        }
+        newAnnotation.setRadius(newRadius);
 
         //  reparent existing annotation to new annotation
         neuronManager.reparentGeometricAnnotation(annotation1, newAnnotation.getId(), neuron);
@@ -1211,7 +1236,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             public void run() {
                 beginTransaction();
                 try {
-                    fireAnnotationReparented(neuron.getGeoAnnotationMap().get(newRootID), neuron.getId());
+                    TmGeoAnnotation newRootAnnotation = neuron.getGeoAnnotationMap().get(newRootID);
+                    if (newRootAnnotation == null) {
+                        // Happens during Horta undo-merge-neurites. I'm Not sure why.
+                        log.warn("Failed to find new annotation after splitNeurite");
+                    }
+                    else {
+                        fireAnnotationReparented(newRootAnnotation, neuron.getId());
+                    }
                     fireNeuronSelected(neuron);
                 }
                 finally {

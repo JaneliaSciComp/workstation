@@ -288,6 +288,8 @@ implements NeuronSet// , LookupListener
 
     private NeuronModelAdapter neuronModelForTmGeoAnnotation(TmGeoAnnotation annotation) 
     {
+        if (annotation == null)
+            return null;
         Long neuronId = annotation.getNeuronId();
         TmNeuronMetadata neuronMetadata = annotationModel.getNeuronFromNeuronID(neuronId);
         return innerList.neuronModelForTmNeuron(neuronMetadata);
@@ -402,8 +404,10 @@ implements NeuronSet// , LookupListener
             if (innerList.hasCachedNeuronId(prevNeuronId)) {
                 NeuronModelAdapter oldNeuronModel = innerList.getCachedNeuron(prevNeuronId);
                 NeuronVertex oldVertex = oldNeuronModel.getVertexForAnnotation(annotation);
-                log.debug("Removing vertex: {}", oldVertex);
-                spatialIndex.removeFromIndex(oldVertex);
+                if (oldVertex != null) {
+                    log.debug("Removing vertex: {}", oldVertex);
+                    spatialIndex.removeFromIndex(oldVertex);
+                }
             }
             
             NeuronModelAdapter neuronModel = neuronModelForTmGeoAnnotation(annotation);

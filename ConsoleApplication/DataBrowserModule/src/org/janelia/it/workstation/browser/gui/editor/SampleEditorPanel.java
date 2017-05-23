@@ -24,9 +24,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollPane;
+import javax.swing.Scrollable;
 
-import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
@@ -54,6 +63,7 @@ import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationE
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.PipelineErrorSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
@@ -76,6 +86,8 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 
 /**
@@ -251,8 +263,13 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         populateViewButton();
         objectiveButton = new DropDownButton("Objective: "+currObjective);
         areaButton = new DropDownButton("Area: "+currArea);
-        
-        configPanel = new ConfigPanel(true);
+
+        configPanel = new ConfigPanel(true) {
+            @Override
+            protected void titleClicked(MouseEvent e) {
+                Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(sample), true, true, true));
+            }
+        };
         configPanel.addTitleComponent(viewButton, true, true);
         
         lsmPanel = new PaginatedResultsPanel(selectionModel, this) {
@@ -297,6 +314,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         if (resultPanel instanceof PipelineResultPanel) {
             PipelineResultPanel resultPanel2 = (PipelineResultPanel)resultPanel;
             Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, resultPanel2.getResult(), isUserDriven));
+        }
+        else if (resultPanel instanceof PipelineErrorPanel) {
+            PipelineErrorPanel resultPanel2 = (PipelineErrorPanel)resultPanel;
+            Events.getInstance().postOnEventBus(new PipelineErrorSelectionEvent(this, resultPanel2.getError(), isUserDriven));
         }
         
         if (isUserDriven) {
@@ -439,6 +460,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     protected void updateHud(boolean toggle) {
 
+        if (!toggle && !Hud.isInitialized()) return;
+        
         Hud hud = Hud.getSingletonInstance();
         hud.setKeyListener(keyListener);
                 
@@ -977,6 +1000,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         public SamplePipelineRun getRun() {
             return run;
         }
+        
+        public PipelineError getError() {
+            return run.getError();
+        }
     }
 
     @Subscribe
@@ -1053,6 +1080,5 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         if (lsmPanel!=null) {
             lsmPanel.annotationsChanged(event);
         }
-    
     }
 }

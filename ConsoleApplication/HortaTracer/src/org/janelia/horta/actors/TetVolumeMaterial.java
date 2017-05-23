@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.util.HashSet;
+import java.util.Set;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
@@ -57,6 +59,9 @@ import org.slf4j.LoggerFactory;
  */
 public class TetVolumeMaterial extends BasicMaterial
 {
+    private static final Set<Integer> volumeTextureInventory = new HashSet<>();
+    private static final boolean doDebugInventory = false;
+    
     private int volumeTextureHandle = 0;
     private final KtxData ktxData;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -115,21 +120,29 @@ public class TetVolumeMaterial extends BasicMaterial
                 / Math.log(2.0) );
         // Performance/Quality tradeoff: adjust to taste; 0.5f matches automatic lod
         levelOfDetail += 
-                2f;  
+                // 2f;  
+                1f;
                 // 0.5f; 
         levelOfDetail = Math.max(levelOfDetail, 0); // hard minimum
-        levelOfDetail = (float)Math.floor(levelOfDetail); // convert to int
-        int intLod = (int) levelOfDetail;
+        // levelOfDetail = (float)Math.floor(levelOfDetail); // convert to int
+        // int intLod = (int) levelOfDetail;
         // System.out.println("Computed level of detail = "+levelOfDetail);
-        gl.glUniform1i(15, intLod);
+        gl.glUniform1f(15, levelOfDetail);
         
         mesh.displayTriangleAdjacencies(gl);
     }
 
     @Override
     public void dispose(GL3 gl) {
-        gl.glDeleteTextures(1, new int[] {volumeTextureHandle}, 0);
-        volumeTextureHandle = 0;
+        if (volumeTextureHandle != 0) {
+            if (doDebugInventory) {
+                logger.info("deleting volume texture {}", volumeTextureHandle);
+                volumeTextureInventory.remove(volumeTextureHandle);
+                logger.info("volume texture inventory now contains {} textures", volumeTextureInventory.size());
+            }
+            gl.glDeleteTextures(1, new int[] {volumeTextureHandle}, 0);
+            volumeTextureHandle = 0;
+        }
         if ((pbos != null) && (pbos.capacity() > 0)) {
             gl.glDeleteBuffers(pbos.capacity(), pbos);
             pbos = IntBuffer.allocate(0);
@@ -152,10 +165,18 @@ public class TetVolumeMaterial extends BasicMaterial
     {
         super.init(gl);
         
-        // Volume texture
-        int[] h = {0};
-        gl.glGenTextures(1, h, 0);
-        volumeTextureHandle = h[0];
+        if (volumeTextureHandle == 0) {
+            // Volume texture
+            int[] h = {0};
+            gl.glGenTextures(1, h, 0);
+            volumeTextureHandle = h[0];
+            if (doDebugInventory) {
+                logger.info("adding volume texture {}", volumeTextureHandle);
+                volumeTextureInventory.add(volumeTextureHandle);
+                logger.info("volume texture inventory now contains {} textures", volumeTextureInventory.size());
+                // todo: tetvolumeactor child count
+            }
+        }
 
         gl.glActiveTexture(GL3.GL_TEXTURE0);
         gl.glBindTexture(GL3.GL_TEXTURE_3D, volumeTextureHandle);
@@ -285,7 +306,7 @@ public class TetVolumeMaterial extends BasicMaterial
         }
         else { // trilinear or tricubic
             gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_LINEAR);
-            gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_LINEAR_MIPMAP_NEAREST);            
+            gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_LINEAR_MIPMAP_LINEAR);            
         }
     }
 

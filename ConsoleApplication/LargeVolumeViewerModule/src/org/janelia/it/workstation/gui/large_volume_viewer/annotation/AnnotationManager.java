@@ -5,7 +5,10 @@ import java.awt.Frame;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,12 +23,15 @@ import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
@@ -34,7 +40,6 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
@@ -91,6 +96,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     private TileServer tileServer;
 
+    private LargeVolumeViewerTranslator lvvTranslator;
+
     // ----- constants
     // AUTOMATIC_TRACING_TIMEOUT for automatic tracing in seconds
     private static final double AUTOMATIC_TRACING_TIMEOUT = 10.0;
@@ -102,10 +109,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     //  until the distance threshold seemed right
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
 
-    public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi, TileServer tileServer) {
+    public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi,
+        LargeVolumeViewerTranslator lvvTranslator, TileServer tileServer) {
         this.annotationModel = annotationModel;
         this.quadViewUi = quadViewUi;
         this.tileServer = tileServer;
+        this.lvvTranslator = lvvTranslator;
     }
 
     public boolean editsAllowed() {
@@ -497,8 +506,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
 
         // can't merge with same neurite (don't create cycles!)
-        if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
-                annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
+        if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
             log.debug("Can't merge with same neurite");
             return false;
         }
@@ -521,8 +529,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         // same neurite = cycle = NO!
         // this should already be filtered out, but it's important enough to check twice
-        if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
-                annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
+        if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
             presentError(
                     "You can't merge a neurite with itself!",
                     "Can't merge!!");
@@ -549,6 +556,81 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         };
         merger.execute();
 
+    }
+
+    public void smartMergeNeuriteRequested(Anchor sourceAnchor, Anchor targetAnchor) {
+        if (targetAnchor == null) {
+            presentError("No neurite selected!  Select an annotation on target neurite, then choose this operation again.",
+                "No selected neurite");
+            return;
+        }
+
+        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(sourceAnchor.getNeuronID(),
+            sourceAnchor.getGuid());
+        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(targetAnchor.getNeuronID(),
+            targetAnchor.getGuid());
+        TmNeuronMetadata sourceNeuron = annotationModel.getNeuronFromNeuronID(sourceAnchor.getNeuronID());
+        TmNeuronMetadata targetNeuron = annotationModel.getNeuronFromNeuronID(targetAnchor.getNeuronID());
+
+
+        // check for cycles (this can be tested before we check exactly which annotations to merge
+        if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
+            presentError(
+                    "You can't merge a neurite with itself!",
+                    "Can't merge!");
+            return;
+        }
+
+
+        // figure out which two annotations to merge
+        List<TmGeoAnnotation> result = SmartMergeAlgorithms.mergeClosestEndpoints(sourceAnnotation,
+            sourceNeuron, targetAnnotation, targetNeuron);
+
+        if (result.size() != 2) {
+            presentError("There was an error in the smart merge algorithm!", "Smart merge error");
+            return;
+        }
+        // returned annotations should be on same neurite as input ones:
+        if (!annotationModel.sameNeurite(sourceAnnotation, result.get(0)) ||
+                !annotationModel.sameNeurite(targetAnnotation, result.get(1))) {
+            presentError("There was an error in the smart merge algorithm!", "Smart merge error");
+            return;
+        }
+        sourceAnnotation = result.get(0);
+        targetAnnotation = result.get(1);
+
+        // part of the smart: move the next parent someplace useful
+        final Long nextParentID = SmartMergeAlgorithms.farthestEndpointNextParent(sourceAnnotation,
+            sourceNeuron, targetAnnotation, targetNeuron).getId();
+
+        // do the merge
+        final Long sourceNeuronID = sourceAnnotation.getNeuronId();
+        final Long sourceAnnotationID = sourceAnnotation.getId();
+        final Long targetNeuronID = targetAnnotation.getNeuronId();
+        final Long targetAnnotationID = targetAnnotation.getId();
+
+        SimpleWorker merger = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                // after a smart merge, we might want to trim any dangling ends; however,
+                // that probably has to be implemented in AnnModel.mergeNeurite()
+                annotationModel.mergeNeurite(sourceNeuronID, sourceAnnotationID, targetNeuronID, targetAnnotationID);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // unlike most operations in the annmgr, we want to adjust the UI in
+                //  ways other than via the updates the model triggers; in this case,
+                //  we advance the next parent to the appropriate annotation
+                lvvTranslator.fireNextParentEvent(nextParentID);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                ConsoleApp.handleException(error);
+            }
+        };
+        merger.execute();
     }
 
     private class TmDisplayNeuron {

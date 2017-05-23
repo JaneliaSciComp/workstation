@@ -86,6 +86,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
     // Cached indices
     private final Map<NeuronModel, Integer> neuronOffsets = new HashMap<>(); // for surgically updating buffers
     private final Map<NeuronModel, Integer> neuronVertexCounts = new HashMap<>(); // for sanity checking
+    private final Map<NeuronModel, Integer> neuronEdgeCounts = new HashMap<>(); // for sanity checking
     private final Map<NeuronModel, NeuronObserver> neuronObservers = new HashMap<>();
     
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -105,6 +106,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
             buffersNeedRebuild = true;
         neurons.clear();
         neuronOffsets.clear();
+        neuronEdgeCounts.clear();
         neuronVertexCounts.clear();
         neuronObservers.clear();
         edgeCount = 0;
@@ -203,7 +205,10 @@ public class NeuronVbo implements Iterable<NeuronModel>
     // lightweight update of just the color field
     private boolean updateNeuronColor(NeuronModel neuron) 
     {
+        if (buffersNeedRebuild)
+            return false;
         int sv = neuron.getVertexes().size();
+        int se = neuron.getEdges().size();
         float rgb[] = {0,0,0,1};
         neuron.getColor().getRGBComponents(rgb);
         boolean bChanged = false; // nothing has changed yet
@@ -211,31 +216,45 @@ public class NeuronVbo implements Iterable<NeuronModel>
         // sanity check
         // Do we already have most of the information for this neuron tabulated?
         if ( neuronOffsets.containsKey(neuron)
-                && (neuronVertexCounts.get(neuron) == sv) ) 
+                && (neuronVertexCounts.get(neuron) == sv)
+                && (neuronEdgeCounts.get(neuron) == se)) 
         {
             // Has the color actually changed?
             final int COLOR_OFFSET = 4; // red color begins at 5th value
             int offset = neuronOffsets.get(neuron) * FLOATS_PER_VERTEX + COLOR_OFFSET;
-            if ( (vertexBuffer.get(offset+0) == rgb[0])
-                    && (vertexBuffer.get(offset+1) == rgb[1])
-                    && (vertexBuffer.get(offset+2) == rgb[2]) )
-            {
-                return bChanged; // color has not changed
+            int max_offset = offset + (sv-1) * FLOATS_PER_VERTEX + 2;
+            if (max_offset >= vertexBuffer.limit()) {
+                // Hmm. The actual buffer is no longer big enough to hold this neuron.
+                log.info("vertex buffer object is too small. rebuild queued (after updateNeuronColor())");
+                buffersNeedRebuild = true;
+                return true;
             }
-            log.info("old neuron color was [{},{},{}]", 
-                    vertexBuffer.get(offset+0), 
-                    vertexBuffer.get(offset+1), 
-                    vertexBuffer.get(offset+2));
-            log.info("new neuron color = [{},{},{}]", rgb[0], rgb[1], rgb[2]);
-            for (int v = 0; v < sv; ++v) {
-                int index = offset + v * FLOATS_PER_VERTEX;
-                for (int r = 0; r < 3; ++r) {
-                    vertexBuffer.put(index + r, rgb[r]);
-                    // assert(vertexBuffer.get(index + r) == rgb[r]);
+            try {
+                if ( (vertexBuffer.get(offset+0) == rgb[0])
+                        && (vertexBuffer.get(offset+1) == rgb[1])
+                        && (vertexBuffer.get(offset+2) == rgb[2]) )
+                {
+                    return bChanged; // color has not changed
                 }
+                log.info("old neuron color was [{},{},{}]", 
+                        vertexBuffer.get(offset+0), 
+                        vertexBuffer.get(offset+1), 
+                        vertexBuffer.get(offset+2));
+                log.info("new neuron color = [{},{},{}]", rgb[0], rgb[1], rgb[2]);
+                for (int v = 0; v < sv; ++v) {
+                    int index = offset + v * FLOATS_PER_VERTEX;
+                    for (int r = 0; r < 3; ++r) {
+                        vertexBuffer.put(index + r, rgb[r]);
+                        // assert(vertexBuffer.get(index + r) == rgb[r]);
+                    }
+                }
+                buffersNeedUpdate = true;
+                bChanged = true;
+            } catch (IndexOutOfBoundsException exc) {
+                log.info("stale vertex buffer object accessed with bogus index {}. Queueing rebuild.", offset);
+                buffersNeedRebuild = true;
+                return true;
             }
-            buffersNeedUpdate = true;
-            bChanged = true;
         }
         else {
             buffersNeedRebuild = true;
@@ -245,9 +264,13 @@ public class NeuronVbo implements Iterable<NeuronModel>
     }
     
     // lightweight update of just the visibility field
+    // returns true if the buffer state actually changed
     private boolean updateNeuronVisibility(NeuronModel neuron) 
     {
+        if (buffersNeedRebuild)
+            return false; // we are going to redo everything anyway, so skip the surgical update
         int sv = neuron.getVertexes().size();
+        int se = neuron.getEdges().size();
         boolean bIsVisible = neuron.isVisible();
         float visFloat = bIsVisible ? 1.0f : 0.0f;
         boolean bChanged = false;
@@ -256,18 +279,32 @@ public class NeuronVbo implements Iterable<NeuronModel>
         // sanity check
         // Do we already have most of the information for this neuron tabulated?
         if ( neuronOffsets.containsKey(neuron)
-                && (neuronVertexCounts.get(neuron) == sv) ) 
+                && (neuronVertexCounts.get(neuron) == sv)
+                && (neuronEdgeCounts.get(neuron) == se) ) 
         {
             // Has the visibility actually changed?
             final int VISIBILITY_OFFSET = 7; // visibility is the 8th attribute value
             int offset = neuronOffsets.get(neuron) * FLOATS_PER_VERTEX + VISIBILITY_OFFSET;
-            if (vertexBuffer.get(offset) != visFloat) { // visibility actually changed
-                for (int v = 0; v < sv; ++v) {
-                    int index = offset + v * FLOATS_PER_VERTEX;
-                    vertexBuffer.put(index, visFloat);
+            int max_offset = offset + (sv-1) * FLOATS_PER_VERTEX;
+            if (max_offset >= vertexBuffer.limit()) {
+                log.info("vertex buffer object is too small. rebuild queued (after updateNeuronVisibility())");
+                // Hmm. The actual buffer is no longer big enough to hold this neuron.
+                buffersNeedRebuild = true;
+                return true;
+            }
+            try {
+                if (vertexBuffer.get(offset) != visFloat) { // visibility actually changed
+                    for (int v = 0; v < sv; ++v) {
+                        int index = offset + v * FLOATS_PER_VERTEX;
+                        vertexBuffer.put(index, visFloat);
+                    }
+                    buffersNeedUpdate = true;
+                    bChanged = true;
                 }
-                buffersNeedUpdate = true;
-                bChanged = true;
+            } catch (IndexOutOfBoundsException exc) {
+                log.info("stale vertex buffer object accessed with bogus index {}. Queueing rebuild.", offset);
+                buffersNeedRebuild = true;
+                return true;
             }
         }
         else {
@@ -286,10 +323,14 @@ public class NeuronVbo implements Iterable<NeuronModel>
         vertexCount = 0;
         edgeCount = 0;
         float rgb[] = {0,0,0};
+        neuronOffsets.clear();
+        neuronVertexCounts.clear();
+        neuronEdgeCounts.clear();
         for (NeuronModel neuron : neurons) {
             // if (! neuron.isVisible()) continue;
             neuronOffsets.put(neuron, vertexCount);
             neuronVertexCounts.put(neuron, neuron.getVertexes().size());
+            neuronEdgeCounts.put(neuron, neuron.getEdges().size());
             float visibility = neuron.isVisible() ? 1 : 0;
             Color color = neuron.getColor();
             color.getColorComponents(rgb);
@@ -452,7 +493,9 @@ public class NeuronVbo implements Iterable<NeuronModel>
         if (buffersNeedRebuild)
             return; // no need to check counts, if we will be rebuilding anyway
         for (NeuronModel neuron : this) {
-            if (neuron.getVertexes().size() != neuronVertexCounts.get(neuron)) {
+            if ( (neuron.getVertexes().size() != neuronVertexCounts.get(neuron)) 
+                    || (neuron.getEdges().size() != neuronEdgeCounts.get(neuron)))
+            {
                 buffersNeedRebuild = true;
                 return;
             }
