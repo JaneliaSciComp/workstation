@@ -60,7 +60,13 @@ public class StartPageTopComponent extends TopComponent {
         startPage = null;
         initialized = false;
     }
-        
+
+    void writeProperties(java.util.Properties p) {
+    }
+
+    void readProperties(java.util.Properties p) {
+    }
+    
     /**
      * #38900 - lazy addition of GUI components
      */
