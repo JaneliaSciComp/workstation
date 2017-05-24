@@ -45,6 +45,7 @@ public class StackViewerPanel extends JPanel {
 	private JLabel busyLabel;
 
 	private final JComponent parent;
+	private JComponent mip3dContainer;
 	
 	public StackViewerPanel(JComponent parent) {
 		this.parent = parent;
@@ -68,10 +69,11 @@ public class StackViewerPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent ae) {
 				SimpleWorker simpleWorker = new SimpleWorker() {
-
+					private String selectedFile;
+					
 					@Override
 					protected void doStuff() throws Exception {
-						String selectedFile = chooseFile();
+						selectedFile = chooseFile();
 						if (selectedFile != null) {
 							setBusyState(true);
                             stackViewer = new Mip3dStackViewer();
@@ -84,14 +86,19 @@ public class StackViewerPanel extends JPanel {
 						try {
 							// If user selected nothing, there will be no viewer.
 							if (stackViewer != null) {
-								stackViewer.displayWidget();
+								mip3dContainer = new JPanel();
+								stackViewer.displayWidget(mip3dContainer, selectedFile);
+								setBusyState(false);
+								remove(mainLabel);
+								add(mip3dContainer, BorderLayout.CENTER);
+								revalidate();
+								repaint();
 							}
 						} catch (Exception ex) {
 							// This error occurs on attempting to display the widget.
 							Exception reportEx = new Exception(STACK_VW_LAUNCH_FAIL_MSG, ex);
 					        FrameworkImplProvider.handleException(reportEx);		
 						}
-						setBusyState(false);
 					}
 
 					/**
@@ -124,7 +131,11 @@ public class StackViewerPanel extends JPanel {
 		if (busy) {
 			fileOpenButton.setEnabled(false);
 			// Anything appearing in the central area would need to be
-			// removed at this point.
+			// removed at this point. The "remove" method checks for presence
+			// and does not throw exceptions if not found.
+			if (mip3dContainer != null)
+				remove(mip3dContainer);
+			remove(mainLabel);
 			
 			busyLabel = new JLabel(Icons.getLoadingIcon());
 			add(busyLabel, BorderLayout.CENTER);
@@ -132,6 +143,7 @@ public class StackViewerPanel extends JPanel {
 			repaint();
 		}
 		else {
+			
 			if (busyLabel != null) {
 				remove(busyLabel);
 				revalidate();

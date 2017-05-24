@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.stack_viewer.gui;
 
+import java.awt.BorderLayout;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.static_view.RGBExcludableVolumeBrick;
 import org.janelia.it.workstation.gui.viewer3d.resolver.TrivialFileResolver;
@@ -23,6 +24,7 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 public class Mip3dStackViewer {
 	
     private JFrame frame;
+	private JComponent parent;
 	private Mip3d mipWidget;
 	private GLActor actor;
 
@@ -58,7 +60,10 @@ public class Mip3dStackViewer {
 
 	}
 
-	public void displayWidget() {
+	/**
+	 * Show the prepared MIP widget on its own popup frame.
+	 */
+	public void displayWidgetInFrame() {
 		frame = new JFrame("Mip3d Stack Viewer");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JLabel label = new JLabel("Mip3d Stack Viewer");
@@ -73,86 +78,40 @@ public class Mip3dStackViewer {
 		frame.setVisible(true);
 
 	}
-
-    /**
-     * This launches a GUI frame at time of writing.
-     *
-     * @param args
-     */
-    private void launch(final String... args) {
-        SimpleWorker worker = new SimpleWorker() {
-            private Mip3d mipWidget;
-            private GLActor actor;
-
-            @Override
-            protected void doStuff() throws Exception {
-                System.out.println("Has JavaCPP? " + System.getProperty("java.class.path").contains("javacpp"));
-                String fn = "C:\\Users\\FOSTERL\\Documents\\jvone-79\\raw\\ConsolidatedLabel.v3dpbd";
-
-                // All black.
-                if (args.length > 0) {
-                    fn = args[ 0];
-                }
-
-                VolumeBrickFactory factory = new VolumeBrickFactory() {
-                    @Override
-                    public VolumeBrickI getVolumeBrick(VolumeModel model) {
-                        return new RGBExcludableVolumeBrick(model);
-                    }
-
-                    @Override
-                    public VolumeBrickI getVolumeBrick(VolumeModel model, TextureDataI maskTextureData, TextureDataI colorMapTextureData) {
-                        return null;
-                    }
-                };
-
-                mipWidget = new Mip3d();
-                VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
-                actor = actorBuilder.buildVolumeBrickActor(
-                        mipWidget.getVolumeModel(), factory, new TrivialFileResolver(), fn
-                );
-
-                if (actor == null) {
-                    throw new Exception("Volume load failed.");
-                }
-            }
-
-            @Override
-            protected void hadSuccess() {
-                frame = new JFrame("Mip3d Stack Viewer");
-                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                JLabel label = new JLabel("Mip3d Stack Viewer");
-                frame.getContentPane().add(label);
-                mipWidget.clear();
-                mipWidget.addActor(actor);
-                frame.getContentPane().add(mipWidget);
-
-                //Display the window.
-                frame.pack();
-                frame.setSize(frame.getContentPane().getPreferredSize());
-                frame.setVisible(true);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                JOptionPane.showMessageDialog(frame, error.getMessage());
-            }
-
-        };
-        worker.execute();
-//        SwingUtilities.invokeLater(new Runnable() {
-//            public void run() {
-//                try {
-//                } catch (Exception exc) {
-//                    exc.printStackTrace();
-//                }
-//            }
-//        });
-    }
 	
+	/**
+	 * Show the prepared MIP widget on the parent component provided, and
+	 * with proper labeling.
+	 * 
+	 * @param parent holds widget and label.
+	 * @param labelStr how to present to user.
+	 */
+	public void displayWidget(JComponent parent, String labelStr) {
+		this.parent = parent;
+		if (frame != null) {
+			disposeFrame();
+		}
+		
+		JLabel label = new JLabel(labelStr);
+		mipWidget.clear();
+		mipWidget.addActor(actor);
+		parent.setLayout(new BorderLayout());
+		parent.add(label, BorderLayout.SOUTH);
+		parent.add(mipWidget, BorderLayout.CENTER);
+	}
+
     public void close() {
-        frame.setVisible(false);
-        frame.dispose();
+		if (frame != null) {
+		    disposeFrame();
+		}
+		else {
+			parent.removeAll();
+		}
     }
 	
+	private void disposeFrame() {
+		frame.setVisible(false);
+		frame.dispose();
+	}
+
 }
