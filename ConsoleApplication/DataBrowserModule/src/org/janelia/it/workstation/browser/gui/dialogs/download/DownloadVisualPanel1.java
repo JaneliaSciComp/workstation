@@ -225,14 +225,23 @@ public final class DownloadVisualPanel1 extends JPanel {
             
         for(DownloadObject downloadObject : downloadItems) {
             DomainObject domainObject = downloadObject.getDomainObject();
+            log.trace("Inspecting object: {}", domainObject);
             if (domainObject instanceof HasFiles) {
+                log.trace("  Adding self descriptor");
                 countedArtifacts.add(new SelfArtifactDescriptor());
             }
             if (domainObject instanceof Sample) {
                 Sample sample = (Sample)domainObject;
+                log.trace("  Inspecting sample: {}", sample.getName());
+                
                 for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
+                    log.trace("    Inspecting objective: {}", objectiveSample.getObjective());
+                    
                     for (SampleTile tile : objectiveSample.getTiles()) {
+                        log.trace("      Inspecting tile: {}", tile.getName());
+                        
                         for (Reference reference : tile.getLsmReferences()) {
+                            log.trace("         Adding LSM descriptor for objective: {}", objectiveSample.getObjective());
                             countedArtifacts.add(new LSMArtifactDescriptor(objectiveSample.getObjective()));
                         }
                     }
@@ -242,15 +251,18 @@ public final class DownloadVisualPanel1 extends JPanel {
                         if (run==null || run.getResults()==null) continue;
                     }
                     for(PipelineResult result : run.getResults()) {
+                        log.trace("  Inspecting pipeline result: {}", result.getName());
                         if (result instanceof HasFileGroups && !(result instanceof LSMSummaryResult)) {
                             HasFileGroups hasGroups = (HasFileGroups)result;
                             for(String groupKey : hasGroups.getGroupKeys()) {
                                 ResultDescriptor rd = ResultDescriptor.create().setObjective(objectiveSample.getObjective()).setResultName(result.getName()).setGroupName(groupKey);
+                                log.trace("    Adding result artifact descriptor: {}", rd);
                                 countedArtifacts.add(new ResultArtifactDescriptor(rd));
                             }
                         }
                         if (!DomainUtils.get2dTypeNames(result).isEmpty()) {
                             ResultDescriptor rd = ResultDescriptor.create().setObjective(objectiveSample.getObjective()).setResultName(result.getName());
+                            log.trace("    Adding result artifact descriptor: {}", rd);
                             countedArtifacts.add(new ResultArtifactDescriptor(rd));
                         }
                     }

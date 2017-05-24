@@ -160,6 +160,7 @@ public final class DownloadVisualPanel2 extends JPanel {
             Multiset<FileType> fileTypesCounts = getFileTypeCounts(domainObjects, artifactDescriptor);
 
             HashMap<FileType, JCheckBox> fileTypeMap = new LinkedHashMap<>();
+            log.trace("Adding descriptor: {}", artifactDescriptor);
             fileTypesCheckboxes.put(artifactDescriptor, fileTypeMap);
 
             fileTypesCounts.add(FileType.FirstAvailable3d);
@@ -208,27 +209,27 @@ public final class DownloadVisualPanel2 extends JPanel {
         
         boolean only2d = false;
         for (Object source : sources) {
-            log.trace("Inspecting file sources {}", source);
+            log.trace("Inspecting file source: {}", source.getClass().getSimpleName());
             if (source instanceof HasFileGroups) {
                 Multiset<FileType> fileTypes = DomainUtils.getFileTypes((HasFileGroups)source, only2d);
-                log.trace("Source has file groups: {}",fileTypes);
+                log.trace("  Source has file groups: {}",fileTypes);
                 countedTypeNames.addAll(fileTypes);
             }
             if (source instanceof HasFiles) {
                 Multiset<FileType> fileTypes = DomainUtils.getFileTypes((HasFiles) source, only2d);
-                log.trace("Source has files: {}",fileTypes);
+                log.trace("  Source has files: {}",fileTypes);
                 countedTypeNames.addAll(fileTypes);
             }
             if (source instanceof PipelineResult) {
                 PipelineResult result = (PipelineResult)source;
                 NeuronSeparation separation = result.getLatestSeparationResult();
-                log.trace("Source has separation: {}",separation);
                 if (separation!=null) {
+                    log.trace("  Source has separation: {}",separation);
                     Set<FileType> typeNames = new HashSet<>();
                     typeNames.add(FileType.NeuronAnnotatorLabel);
                     typeNames.add(FileType.NeuronAnnotatorSignal);
                     typeNames.add(FileType.NeuronAnnotatorReference);
-                    log.trace("Adding type names: {}",typeNames);
+                    log.trace("    Adding type names: {}",typeNames);
                     countedTypeNames.addAll(typeNames);
                 }
             }
