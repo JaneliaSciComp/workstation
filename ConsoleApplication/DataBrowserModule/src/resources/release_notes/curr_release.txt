@@ -1,11 +1,6 @@
-// 5.12
+// 5.13
 
 Workstation Browser
-* The "Download" dialog is now a wizard, allowing download of multiple file types at once 
-* Details of pipeline errors now appear in Data Inspector when the error is selected
-* Fixed error popup when marking sample for reprocessing
-* Fixed issues with the "Sample Compression Strategy" feature
-
-MouseLight
-* Import/export color model added
-* Merge performance improved somewhat
+* Added "Disk Space Usage" attribute to Data Sets, Samples, and Results
+* Added right-click option called "Add Related Items", which allows mapping between Samples, LSMs, and Neurons
+* Fixed issue with the Download wizard which caused it to not display certain file types
