@@ -2,5 +2,8 @@
 
 Workstation Browser
 * Added "Disk Space Usage" attribute to Data Sets, Samples, and Results
-* Added right-click option called "Add Related Items", which allows mapping between Samples, LSMs, and Neurons
+* Added a right-click menu option called "Add Related Items", which allows mapping between Samples, LSMs, and Neurons
 * Fixed issue with the Download wizard which caused it to not display certain file types
+* Fixed error when using "Purging and Block" on more than one sample at a time
+* Fixed application deadlock issue which occurred sometimes when pressing the Refresh button
+
