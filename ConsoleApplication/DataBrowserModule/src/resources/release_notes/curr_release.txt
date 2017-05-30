@@ -7,3 +7,5 @@ Workstation Browser
 * Fixed error when using "Purging and Block" on more than one sample at a time
 * Fixed application deadlock issue which occurred sometimes when pressing the Refresh button
 
+Horta
+* Optimized neuron merge performance
