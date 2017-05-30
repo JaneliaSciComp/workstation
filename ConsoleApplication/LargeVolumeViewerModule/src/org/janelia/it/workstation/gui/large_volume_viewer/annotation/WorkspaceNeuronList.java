@@ -506,6 +506,10 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         updateNeuronLabel();
     }
     
+    public void deleteFromModel(TmNeuronMetadata neuron) {
+        neuronTableModel.deleteNeuron(neuron);
+    }
+    
     /**
      * update the table neuron with a new version of an
      * existing neuron (replaces in place)
@@ -607,6 +611,13 @@ class NeuronTableModel extends AbstractTableModel {
                 }
             }
         }
+        fireTableDataChanged();
+    }
+    
+    public void deleteNeuron(TmNeuronMetadata neuron) {
+        neurons.remove(neuron);
+        matchedNeurons.remove(neuron);
+        unmatchedNeurons.remove(neuron);
         fireTableDataChanged();
     }
 

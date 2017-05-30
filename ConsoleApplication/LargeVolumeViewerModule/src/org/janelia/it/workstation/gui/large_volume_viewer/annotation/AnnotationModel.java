@@ -63,6 +63,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
 import Jama.Matrix;
+import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 
 /**
@@ -246,6 +247,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private void beginTransaction() {
         SkeletonController.getInstance().beginTransaction();
         FilteredAnnotationList.getInstance().beginTransaction();
+        TransactionManager.getInstance().beginTransaction();
     }
 
     /**
@@ -254,6 +256,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private void endTransaction() {
         SkeletonController.getInstance().endTransaction();
         FilteredAnnotationList.getInstance().endTransaction();
+        TransactionManager.getInstance().endTransaction();
     }
     
     public synchronized void clear() {

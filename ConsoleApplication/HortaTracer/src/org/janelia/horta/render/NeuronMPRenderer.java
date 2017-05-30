@@ -30,6 +30,7 @@
 
 package org.janelia.horta.render;
 
+import com.google.common.base.Stopwatch;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.geom.Point2D;
@@ -44,6 +45,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
+import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.geometry3d.AbstractCamera;
 // import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.gltools.BasicScreenBlitActor;
@@ -464,39 +466,37 @@ extends MultipassRenderer
         @Override
         public void update(Observable o, Object arg)
         {
+            // if transactions are enabled don't run this till the endTransaction
+            TransactionManager tm = TransactionManager.getInstance();
+            if (tm.isTransactionStarted()) {
+                tm.addObservables(this, o, arg);
+                return;
+            }
+            
             // Update neuron models
             Set<NeuronModel> latestNeurons = new java.util.HashSet<>();
             Set<NeuronSet> latestNeuronLists = new java.util.HashSet<>();
             // 1 - enumerate latest neurons
+            
+            
             for (NeuronSet neuronList : workspace.getNeuronSets()) {
                 latestNeuronLists.add(neuronList);
-                for (NeuronModel neuron : neuronList) {
-                    latestNeurons.add(neuron);
-                }
+                latestNeurons.addAll(neuronList);
             }
+            
             // 2 - remove obsolete neurons
             Set<NeuronModel> obsoleteNeurons = new HashSet<>();
+            Set<NeuronModel> newNeurons = new HashSet<>();
             
             for (NeuronModel neuron : allSwcActor) {
-                if (! latestNeurons.contains(neuron))
-                    obsoleteNeurons.add(neuron);                
-            }
-            
-            /*
-            // Perform two passes, to avoid concurrent modification
-            for (NeuronModel neuron : allSwcActor.sphereNeurons()) {
-                if (! latestNeurons.contains(neuron))
+                if (!latestNeurons.remove(neuron))
                     obsoleteNeurons.add(neuron);
             }
-            for (NeuronModel neuron : allSwcActor.coneNeurons()) {
-                if (! latestNeurons.contains(neuron))
-                    obsoleteNeurons.add(neuron);
-            }
-             */
             
-            for (NeuronModel neuron : obsoleteNeurons)
+            for (NeuronModel neuron : obsoleteNeurons) {
                 removeNeuronReconstruction(neuron);
-            // Remove obsolete lists too
+            }
+            
             Iterator<NeuronSet> nli = currentNeuronLists.iterator();
             while (nli.hasNext()) {
                 NeuronSet set = nli.next();
@@ -505,18 +505,21 @@ extends MultipassRenderer
                     set.getMembershipChangeObservable().deleteObserver(neuronListRefresher);
                 }
             }
+
             // 3 - add new neurons
+            
             for (NeuronSet neuronList : workspace.getNeuronSets()) {
                 if (currentNeuronLists.add(neuronList)) {
                     neuronList.getMembershipChangeObservable().addObserver(neuronListRefresher);
                 }
-                for (NeuronModel neuron : neuronList) {
-                    addNeuronReconstruction(neuron);
-                }
+            }
+            for (NeuronModel neuron : latestNeurons) {
+                 addNeuronReconstruction(neuron);
             }
             
             // 4 - double check for changes in neuron size (e.g. after transfer neurite)
             allSwcActor.checkForChanges();
+            
         }
     }
 
