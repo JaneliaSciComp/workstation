@@ -81,7 +81,6 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
             validate();
         }
         catch (WizardValidationException e) {
-            log.error("Validation error: "+e.getMessage());
             // We don't create an error message when the panel appears, because the user hasn't done anything yet.
             if (!firstException) {
                 wiz.putProperty(WizardDescriptor.PROP_ERROR_MESSAGE, e.getMessage());

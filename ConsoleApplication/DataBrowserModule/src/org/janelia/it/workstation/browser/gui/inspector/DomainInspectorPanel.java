@@ -40,6 +40,7 @@ import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineError;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
@@ -372,7 +373,7 @@ public class DomainInspectorPanel extends JPanel {
         refresh();
     }
 
-    // TODO: factor this out into a separate module
+    // TODO: factor this out into a separate confocal module
     public void loadPipelineResult(PipelineResult result) {
 
         log.debug("Loading properties for pipeline result {}", result.getId());
@@ -381,6 +382,8 @@ public class DomainInspectorPanel extends JPanel {
         this.propertySet = new TreeSet<>();
 
         addProperty("Creation Date", result.getCreationDate());
+        addProperty("Disk Space Usage (Bytes)", result.getDiskSpaceUsage());
+        addProperty("Disk Space Usage", result.getDiskSpaceUsageForHumans());
         addProperty("Filepath", result.getFilepath());
         addProperty("GUID", result.getId());
         addProperty("Name", result.getName());
@@ -404,15 +407,19 @@ public class DomainInspectorPanel extends JPanel {
                 addProperty(scoretype.getLabel(), score);
             }
         }
-
-        if (result instanceof SampleProcessingResult) {
+        else if (result instanceof SampleProcessingResult) {
             SampleProcessingResult spr = (SampleProcessingResult) result;
             addProperty("Channel Colors", spr.getChannelColors());
             addProperty("Channel Spec", spr.getChannelSpec());
             addProperty("Image Size", spr.getImageSize());
             addProperty("Optical Resolution", spr.getOpticalResolution());
         }
-
+        else if (result instanceof NeuronSeparation) {
+            NeuronSeparation ns = (NeuronSeparation) result;
+            addProperty("Number of Neurons", ns.getFragmentsReference().getCount());
+            addProperty("Neuron Weights", ns.getHasWeights());
+        }
+        
         addPropertiesToTable();
         attributesPanel.removeAll();
         attributesPanel.add(attributesTable, BorderLayout.CENTER);
