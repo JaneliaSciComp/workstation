@@ -1326,6 +1326,12 @@ public class DomainDAO {
         }
     }
 
+    public List<Subject> getMembersByGroupId(String groupId) {
+        log.debug("getMembersByGroupId({})", groupId);
+            return toList(subjectCollection.find("{userGroupRoles.groupKey:#}", groupId).as(Subject.class));
+    }
+
+
     /**
      * Create the given object, with the given id. Dangerous to use if you don't know what you're doing! Use save() instead.
      * @param subjectKey
