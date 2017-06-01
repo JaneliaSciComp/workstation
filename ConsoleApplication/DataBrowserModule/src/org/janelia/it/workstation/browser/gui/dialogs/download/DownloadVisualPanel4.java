@@ -19,10 +19,9 @@ import javax.swing.ListSelectionModel;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
+import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.browser.gui.support.DownloadItem;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -53,7 +52,7 @@ public final class DownloadVisualPanel4 extends JPanel {
     private JCheckBox flattenStructureCheckbox;
     private JComboBox<String> filePatternCombo;
     private JLabel downloadItemCountLabel;
-    private JList<DownloadItem> downloadItemList;
+    private JList<DownloadFileItem> downloadItemList;
 
     // Inputs
     private List<DownloadObject> downloadObjects;
@@ -64,7 +63,7 @@ public final class DownloadVisualPanel4 extends JPanel {
     private String filenamePattern;
     
     // Outputs
-    private List<DownloadItem> downloadItems = new ArrayList<>();
+    private List<DownloadFileItem> downloadItems = new ArrayList<>();
 
     public DownloadVisualPanel4(DownloadWizardPanel4 wizardPanel) {
         this.wizardPanel = wizardPanel;
@@ -125,10 +124,10 @@ public final class DownloadVisualPanel4 extends JPanel {
         downloadItemCountLabel = new JLabel();
         attrPanel.addItem("File count", downloadItemCountLabel);
         
-        JLabel downloadDirLabel = new JLabel(DownloadItem.workstationImagesDir.getAbsolutePath());
+        JLabel downloadDirLabel = new JLabel(DownloadFileItem.workstationImagesDir.getAbsolutePath());
         attrPanel.addItem("Destination folder", downloadDirLabel);
         
-        downloadItemList = new JList<>(new DefaultListModel<DownloadItem>());
+        downloadItemList = new JList<>(new DefaultListModel<DownloadFileItem>());
         downloadItemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         downloadItemList.setLayoutOrientation(JList.VERTICAL);
         attrPanel.addItem("Preview files", new JScrollPane(downloadItemList), "width 200:600:2000, height 50:200:1000, grow");
@@ -162,17 +161,12 @@ public final class DownloadVisualPanel4 extends JPanel {
                     for (ArtifactDescriptor artifactDescriptor : artifactDescriptors) {
                         log.debug("  Checking artifact descriptor '{}'", artifactDescriptor);
 
-                        for(DomainObject describedObject : artifactDescriptor.getDescribedObjects(domainObject)) {
-                            log.debug("    Checking described object '{}'", describedObject);
-                            ResultDescriptor resultDescriptor = null;
-                            if (artifactDescriptor instanceof ResultArtifactDescriptor) {
-                                ResultArtifactDescriptor rad = (ResultArtifactDescriptor)artifactDescriptor;
-                                resultDescriptor = rad.getResultDescriptor();
-                            }
-                            for (FileType fileType : artifactDescriptor.getFileTypes()) {
+                        for (HasFiles hasFiles : artifactDescriptor.getFileSources(domainObject)) {
+                            log.debug("    Checking source item '{}'", hasFiles);
+                            for (FileType fileType : artifactDescriptor.getSelectedFileTypes()) {
                                 log.debug("      Adding item for file type '{}'", fileType);
-                                DownloadItem downloadItem = new DownloadItem(downloadObject.getPath(), describedObject);
-                                downloadItem.init(resultDescriptor, fileType.name(), outputExtension, splitChannels, flattenStructure, filenamePattern);
+                                DownloadFileItem downloadItem = new DownloadFileItem(downloadObject.getFolderPath(), domainObject);
+                                downloadItem.init(hasFiles, fileType, outputExtension, splitChannels, flattenStructure, filenamePattern);
                                 downloadItems.add(downloadItem);
                             }
                         }
@@ -184,9 +178,9 @@ public final class DownloadVisualPanel4 extends JPanel {
             protected void hadSuccess() {
                 
                 int count = 0;
-                DefaultListModel<DownloadItem> dlm = (DefaultListModel<DownloadItem>) downloadItemList.getModel();
+                DefaultListModel<DownloadFileItem> dlm = (DefaultListModel<DownloadFileItem>) downloadItemList.getModel();
                 dlm.removeAllElements();
-                for (DownloadItem downloadItem : downloadItems) {
+                for (DownloadFileItem downloadItem : downloadItems) {
                     count += downloadItem.getSourceFile()!=null ? 1 : 0;
                     dlm.addElement(downloadItem);
                     log.debug("Adding item "+downloadItem.getTargetFile());
@@ -221,7 +215,7 @@ public final class DownloadVisualPanel4 extends JPanel {
         return (String)fpmodel.getSelectedItem();
     }
     
-    public List<DownloadItem> getDownloadItems() {
+    public List<DownloadFileItem> getDownloadItems() {
         return downloadItems;
     }
 

@@ -1,12 +1,13 @@
 package org.janelia.it.workstation.browser.gui.dialogs.download;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.workstation.browser.gui.support.DownloadItem;
+import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Multiset;
@@ -21,13 +22,17 @@ class DownloadWizardState {
     
     // Wizard input
     private List<? extends DomainObject> inputObjects;
-    private ArtifactDescriptor defaultArtifactDescriptor;
+    private ResultDescriptor defaultResultDescriptor;
     
     // Calculated from Wizard input by panel 1
     private List<DownloadObject> downloadObjects;
     private Multiset<ArtifactDescriptor> artifactCounts;
     
     // User input from panel 2
+    private String objective;
+    private String area;
+    private String resultCategory;
+    private String imageCategory;
     private List<ArtifactDescriptor> artifactDescriptors;
     
     // User input from panel 3
@@ -39,7 +44,7 @@ class DownloadWizardState {
     private String filenamePattern;
     
     // Output of panel 4
-    private List<DownloadItem> downloadItems;
+    private List<DownloadFileItem> downloadFileItems;
 
     public List<? extends DomainObject> getInputObjects() {
         return inputObjects;
@@ -49,12 +54,12 @@ class DownloadWizardState {
         this.inputObjects = inputObjects;
     }
 
-    public ArtifactDescriptor getDefaultArtifactDescriptor() {
-        return defaultArtifactDescriptor;
+    public ResultDescriptor getDefaultResultDescriptor() {
+        return defaultResultDescriptor;
     }
 
-    public void setDefaultArtifactDescriptor(ArtifactDescriptor defaultArtifactDescriptor) {
-        this.defaultArtifactDescriptor = defaultArtifactDescriptor;
+    public void setDefaultArtifactDescriptor(ResultDescriptor defaultResultDescriptor) {
+        this.defaultResultDescriptor = defaultResultDescriptor;
     }
 
     public List<DownloadObject> getDownloadObjects() {
@@ -71,6 +76,38 @@ class DownloadWizardState {
 
     public void setArtifactCounts(Multiset<ArtifactDescriptor> artifactCounts) {
         this.artifactCounts = artifactCounts;
+    }
+
+    public String getObjective() {
+        return objective;
+    }
+
+    public void setObjective(String objective) {
+        this.objective = objective;
+    }
+
+    public String getArea() {
+        return area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
+
+    public String getResultCategory() {
+        return resultCategory;
+    }
+
+    public void setResultCategory(String resultCategory) {
+        this.resultCategory = resultCategory;
+    }
+
+    public String getImageCategory() {
+        return imageCategory;
+    }
+
+    public void setImageCategory(String imageCategory) {
+        this.imageCategory = imageCategory;
     }
 
     public List<ArtifactDescriptor> getArtifactDescriptors() {
@@ -100,9 +137,10 @@ class DownloadWizardState {
         if (StringUtils.isBlank(artifactDescriptorString)) return;
         try {
             ObjectMapper mapper = new ObjectMapper();
-            artifactDescriptors = mapper.readValue(artifactDescriptorString, ArtifactDescriptorList.class);
+            this.artifactDescriptors = mapper.readValue(artifactDescriptorString, ArtifactDescriptorList.class);
         }
         catch (Exception e) {
+            this.artifactDescriptors = new ArrayList<>();
             FrameworkImplProvider.handleExceptionQuietly(e);
         }
     }
@@ -139,18 +177,18 @@ class DownloadWizardState {
         this.filenamePattern = filenamePattern;
     }
 
-    public List<DownloadItem> getDownloadItems() {
-        return downloadItems;
+    public List<DownloadFileItem> getDownloadItems() {
+        return downloadFileItems;
     }
 
-    public void setDownloadItems(List<DownloadItem> downloadItems) {
-        this.downloadItems = downloadItems;
+    public void setDownloadItems(List<DownloadFileItem> downloadFileItems) {
+        this.downloadFileItems = downloadFileItems;
     }
 
     public boolean has3d() {
         if (artifactDescriptors!=null) {
             for (ArtifactDescriptor artifactDescriptor : artifactDescriptors) {
-                List<FileType> fileTypes = artifactDescriptor.getFileTypes();
+                List<FileType> fileTypes = artifactDescriptor.getSelectedFileTypes();
                 if (fileTypes!=null) {
                     for (FileType fileType : fileTypes) {
                         if (!fileType.is2dImage()) {

@@ -47,7 +47,7 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
     public void validate() throws WizardValidationException {
         isValid = false;
         for (ArtifactDescriptor artifactDescriptor : component.getArtifactDescriptors()) {
-            if (!artifactDescriptor.getFileTypes().isEmpty()) {
+            if (!artifactDescriptor.getSelectedFileTypes().isEmpty()) {
                 isValid = true;
                 break;
             }
@@ -103,6 +103,10 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
         ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 2);
         DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
         state.setArtifactDescriptors(getComponent().getArtifactDescriptors());
+        state.setObjective(getComponent().getCurrObjective());
+        state.setArea(getComponent().getCurrArea());
+        state.setResultCategory(getComponent().getCurrResultCategory());
+        state.setImageCategory(getComponent().getCurrImageCategory());
         // Updated serialized state
         FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", state.getArtifactDescriptorString());
     }

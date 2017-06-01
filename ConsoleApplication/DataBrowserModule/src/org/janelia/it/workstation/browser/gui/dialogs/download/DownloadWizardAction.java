@@ -96,7 +96,7 @@ public final class DownloadWizardAction implements ActionListener {
         // Setup the initial state
         DownloadWizardState state = new DownloadWizardState();
         state.setInputObjects(inputObjects);
-        state.setDefaultArtifactDescriptor(new ResultArtifactDescriptor(defaultResultDescriptor));
+        state.setDefaultArtifactDescriptor(defaultResultDescriptor);
 
         // Restore previous state from user's last usage
         String artifactDescriptorString = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", null);
@@ -131,21 +131,21 @@ public final class DownloadWizardAction implements ActionListener {
         if (DialogDisplayer.getDefault().notify(wiz) == WizardDescriptor.FINISH_OPTION) {
             // Start downloading 
             DownloadWizardState endState = (DownloadWizardState) wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
-            List<DownloadItem> downloadItems = endState.getDownloadItems();
+            List<DownloadFileItem> downloadItems = endState.getDownloadItems();
             if (!downloadItems.isEmpty()) {
                 download(downloadItems);
             }
         }
     }
 
-    private void download(List<DownloadItem> downloadItems) {
+    private void download(List<DownloadFileItem> downloadItems) {
 
         ActivityLogHelper.logUserAction("DownloadWizardAction.beginDownload");
         
         boolean started = false;
         int remaining = downloadItems.size();
         
-        for(final DownloadItem downloadItem : downloadItems) {
+        for(final DownloadFileItem downloadItem : downloadItems) {
             if (downloadItem.getSourceFile()!=null) {
             
                 FileDownloadWorker worker = new FileDownloadWorker(downloadItem, COPY_FILE_LOCK);

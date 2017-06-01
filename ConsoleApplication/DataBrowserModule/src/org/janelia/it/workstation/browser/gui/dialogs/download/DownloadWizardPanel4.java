@@ -9,7 +9,6 @@ import javax.swing.event.ChangeListener;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.gui.support.DownloadItem;
 import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
 import org.openide.util.ChangeSupport;
@@ -54,7 +53,7 @@ public class DownloadWizardPanel4 implements WizardDescriptor.ValidatingPanel<Wi
         // Check if all paths are unique
         boolean pathsUnique = true;
         Set<String> uniquePaths = new HashSet<>();
-        for (DownloadItem downloadItem : component.getDownloadItems()) {
+        for (DownloadFileItem downloadItem : component.getDownloadItems()) {
             File targetFile = downloadItem.getTargetFile();
             if (targetFile!=null) {
                 String path = targetFile.getAbsolutePath();

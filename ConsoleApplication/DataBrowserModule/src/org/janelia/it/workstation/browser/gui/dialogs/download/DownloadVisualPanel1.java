@@ -15,16 +15,17 @@ import javax.swing.ListSelectionModel;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.LSMSummaryResult;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
+import org.janelia.it.jacs.model.domain.sample.SamplePostProcessingResult;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -242,28 +243,33 @@ public final class DownloadVisualPanel1 extends JPanel {
                         
                         for (Reference reference : tile.getLsmReferences()) {
                             log.trace("         Adding LSM descriptor for objective: {}", objectiveSample.getObjective());
-                            countedArtifacts.add(new LSMArtifactDescriptor(objectiveSample.getObjective()));
+                            countedArtifacts.add(new LSMArtifactDescriptor(objectiveSample.getObjective(), tile.getAnatomicalArea()));
                         }
                     }
                     SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
                     if (run==null || run.getResults()==null) {
                         run = objectiveSample.getLatestRun();
-                        if (run==null || run.getResults()==null) continue;
                     }
-                    for(PipelineResult result : run.getResults()) {
-                        log.trace("  Inspecting pipeline result: {}", result.getName());
-                        if (result instanceof HasFileGroups && !(result instanceof LSMSummaryResult)) {
-                            HasFileGroups hasGroups = (HasFileGroups)result;
-                            for(String groupKey : hasGroups.getGroupKeys()) {
-                                ResultDescriptor rd = ResultDescriptor.create().setObjective(objectiveSample.getObjective()).setResultName(result.getName()).setGroupName(groupKey);
-                                log.trace("    Adding result artifact descriptor: {}", rd);
-                                countedArtifacts.add(new ResultArtifactDescriptor(rd));
+                    if (run!=null) {
+                        for(PipelineResult result : run.getResults()) {
+                            log.trace("  Inspecting pipeline result: {}", result.getName());
+                            if (result instanceof SamplePostProcessingResult) {
+                                // Add a descriptor for every anatomical area in the sample
+                                for (SampleTile sampleTile : objectiveSample.getTiles()) {
+                                    ResultArtifactDescriptor rad = new ResultArtifactDescriptor(objectiveSample.getObjective(), sampleTile.getAnatomicalArea(), result.getName(), false);
+                                    log.trace("    Adding result artifact descriptor: {}", rad);
+                                    countedArtifacts.add(rad);
+                                }
                             }
-                        }
-                        if (!DomainUtils.get2dTypeNames(result).isEmpty()) {
-                            ResultDescriptor rd = ResultDescriptor.create().setObjective(objectiveSample.getObjective()).setResultName(result.getName());
-                            log.trace("    Adding result artifact descriptor: {}", rd);
-                            countedArtifacts.add(new ResultArtifactDescriptor(rd));
+                            else if (result instanceof HasAnatomicalArea){
+                                HasAnatomicalArea aaResult = (HasAnatomicalArea)result;
+                                ResultArtifactDescriptor rad = new ResultArtifactDescriptor(objectiveSample.getObjective(), aaResult.getAnatomicalArea(), result.getName(), result instanceof SampleAlignmentResult);
+                                log.trace("    Adding result artifact descriptor: {}", rad);
+                                countedArtifacts.add(rad);
+                            }
+                            else {
+                                log.trace("Cannot handle result '"+result.getName()+"' of type "+result.getClass().getSimpleName());
+                            }
                         }
                     }
                 }

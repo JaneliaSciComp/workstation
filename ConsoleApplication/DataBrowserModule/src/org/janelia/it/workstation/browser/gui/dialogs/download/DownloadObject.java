@@ -7,10 +7,10 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 public class DownloadObject {
     
     private final DomainObject domainObject;
-    private final List<String> path;
+    private final List<String> folderPath;
     
-    public DownloadObject(List<String> path, DomainObject domainObject) {
-        this.path = path;
+    public DownloadObject(List<String> folderPath, DomainObject domainObject) {
+        this.folderPath = folderPath;
         this.domainObject = domainObject;
     }
     
@@ -18,7 +18,7 @@ public class DownloadObject {
         return domainObject;
     }
     
-    public List<String> getPath() {
-        return path;
+    public List<String> getFolderPath() {
+        return folderPath;
     }
 }
