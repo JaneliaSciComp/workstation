@@ -175,7 +175,6 @@ public final class DownloadWizardAction implements ActionListener {
     private List<DownloadObject> addObjectsToExport(List<String> path, DomainObject domainObject) {
         List<DownloadObject> downloadItems = new ArrayList<>();
         try {
-            // TODO: this should update some kind of label so the user knows what's going on during a long load
             log.debug("addObjectsToExport({},{})", path, domainObject.getName());
             if (domainObject instanceof TreeNode) {
                 TreeNode treeNode = (TreeNode) domainObject;

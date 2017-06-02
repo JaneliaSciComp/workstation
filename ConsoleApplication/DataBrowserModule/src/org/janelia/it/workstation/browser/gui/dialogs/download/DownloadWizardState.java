@@ -30,21 +30,21 @@ class DownloadWizardState {
     private List<ArtifactDescriptor> artifactDescriptors;
     private Map<ArtifactDescriptor,Multiset<FileType>> artifactFileCounts;
     
-    // User input from panel 2
+    // User input from panel 1
     private String objective;
     private String area;
     private String resultCategory;
     private String imageCategory;
     
-    // User input from panel 3
+    // User input from panel 2
     private boolean isSplitChannels;
     private String outputFormat;
     
-    // User input from panel 4
+    // User input from panel 3
     private boolean flattenStructure;
     private String filenamePattern;
     
-    // Output of panel 4
+    // Output of panel 3
     private List<DownloadFileItem> downloadFileItems;
 
     public List<? extends DomainObject> getInputObjects() {
