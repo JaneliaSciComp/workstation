@@ -31,15 +31,10 @@ public class Events {
         this.eventBus = new AsyncEventBus("awt", new Executor() {
             @Override
             public void execute(Runnable cmd) {
-                if (EventQueue.isDispatchThread()) {
-                    cmd.run();
-                }
-                else {
-                    // TODO: this should queue the command on a queue that is aware of entity invalidation, 
-                    // and does not generate other events for an entity if an invalidation is coming. 
-                    // This will elimiante the "Instance mismatch" issues that we sometimes have.
-                    EventQueue.invokeLater(cmd);
-                }
+                // TODO: this should queue the command on a queue that is aware of entity invalidation, 
+                // and does not generate other events for an entity if an invalidation is coming. 
+                // This will eliminate the "Instance mismatch" issues that we sometimes have.
+                EventQueue.invokeLater(cmd);
             }
         });
     }

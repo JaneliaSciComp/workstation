@@ -8,6 +8,7 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
@@ -100,11 +101,16 @@ class LSMArtifactDescriptor extends ArtifactDescriptor {
         if (sourceObject instanceof Sample) {
             Sample sample = (Sample)sourceObject;
             List<Reference> refs = new ArrayList<>();
-            for(SampleTile tile : sample.getObjectiveSample(objective).getTiles()) {
-                refs.addAll(tile.getLsmReferences());
+            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
+            if (objectiveSample!=null) {
+                for(SampleTile tile : objectiveSample.getTiles()) {
+                    refs.addAll(tile.getLsmReferences());
+                }
             }
-            for (LSMImage lsm : DomainMgr.getDomainMgr().getModel().getDomainObjectsAs(LSMImage.class, refs)) {
-                objects.add(lsm);
+            if (!refs.isEmpty()) {
+                for (LSMImage lsm : DomainMgr.getDomainMgr().getModel().getDomainObjectsAs(LSMImage.class, refs)) {
+                    objects.add(lsm);
+                }
             }
         }
         return objects;

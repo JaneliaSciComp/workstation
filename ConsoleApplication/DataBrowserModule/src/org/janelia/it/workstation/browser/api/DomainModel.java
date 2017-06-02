@@ -23,14 +23,12 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
-import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
-import org.janelia.it.jacs.model.domain.sample.StatusTransition;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.NotCacheable;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -194,7 +192,8 @@ public class DomainModel {
             return canonicalObjects;
         }
         List<T> invalidatedObjects = new ArrayList<>();
-        synchronized (this) {
+        // This is specifically synchronized on something other than this object, so as to minimize the possibility for deadlocks.
+        synchronized (objectCache) {
             for(T domainObject : domainObjects) {
                 if (domainObject==null) continue;
                 if (!isCacheable(domainObject)) {
@@ -223,11 +222,12 @@ public class DomainModel {
 
                 canonicalObjects.add(canonicalObject);
             }
-
-            if (!invalidatedObjects.isEmpty()) {
-                notifyDomainObjectsInvalidated(invalidatedObjects, invalidateTree);
-            }
         }
+        
+        if (!invalidatedObjects.isEmpty()) {
+            notifyDomainObjectsInvalidated(invalidatedObjects, invalidateTree);
+        }
+        
         return canonicalObjects;
     }
 
@@ -316,59 +316,6 @@ public class DomainModel {
     }
 
     /**
-     * Reload the given domain object from the database, and update the cache.
-     *
-     * @param domainObject
-     * @return canonical domain object instance
-     * @throws Exception
-     */
-    public <T extends DomainObject> T reload(T domainObject) throws Exception {
-        return reloadById(Reference.createFor(domainObject));
-    }
-
-    /**
-     * Reload the given domain object from the database, and update the cache.
-     *
-     * @param Reference
-     * @return canonical domain object instance
-     * @throws Exception
-     */
-    public <T extends DomainObject> T reloadById(Reference Reference) throws Exception {
-        synchronized (this) {
-            T domainobject = loadDomainObject(Reference);
-            return putOrUpdate(domainobject);
-        }
-    }
-
-    /**
-     * Reload all the entities in the given collection, and update the cache.
-     *
-     * @param objects
-     * @return canonical domain object instances
-     * @throws Exception
-     */
-    public List<DomainObject> reload(Collection<DomainObject> objects) throws Exception {
-        return reloadById(DomainUtils.getReferences(objects));
-    }
-
-    /**
-     * Reload all the entities in the given collection, and update the cache.
-     *
-     * @return canonical domain object instances
-     * @throws Exception
-     */
-    public List<DomainObject> reloadById(Collection<Reference> refs) throws Exception {
-        synchronized (this) {
-            List<DomainObject> objs = new ArrayList<>();
-            for(Reference id : refs) {
-                DomainObject domainObject = loadDomainObject(id);
-                if (domainObject!=null) objs.add(domainObject);
-            }
-            return putOrUpdate(objs, false);
-        }
-    }
-
-    /**
      * Retrieve the given domain object, checking the cache first and then the database.
      * @param domainObject
      * @return canonical domain object instance
@@ -396,9 +343,7 @@ public class DomainModel {
             log.debug("getEntityById: returning cached domain object {}", DomainUtils.identify(domainObject));
             return (T)domainObject;
         }
-        synchronized (this) {
-            return putOrUpdate((T)loadDomainObject(ref));
-        }
+        return putOrUpdate((T)loadDomainObject(ref));
     }
 
     public List<DomainObject> getDomainObjects(List<Reference> references) throws Exception {
@@ -982,7 +927,9 @@ public class DomainModel {
         return sampleFacade.dispatchSamples(sampleRefs, reprocessPurpose, reuse);
     }
 
-    // EVENT HANDLING
+    // EVENT HANDLING 
+    // Important: never call these methods from within a synchronized. That can lead to deadlocks because
+    // the event bus is also synchronized, and events can trigger domain model access.
     
     public void notifyDomainObjectCreated(DomainObject domainObject) {
         if (log.isTraceEnabled()) {

@@ -116,7 +116,7 @@ public class PanelController {
             TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
             filteredAnnotationList.loadNeuron(neuron);
             // TODO: could use a more granular update
-            wsNeuronList.loadWorkspace(workspace);
+            wsNeuronList.deleteFromModel(neuron);
         }
 
         @Override
@@ -124,7 +124,7 @@ public class PanelController {
             TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
             filteredAnnotationList.loadNeuron(neuron);
             // TODO: could use a more granular update
-            wsNeuronList.loadWorkspace(workspace);
+            wsNeuronList.updateModel(neuron);
         }
 
         @Override
