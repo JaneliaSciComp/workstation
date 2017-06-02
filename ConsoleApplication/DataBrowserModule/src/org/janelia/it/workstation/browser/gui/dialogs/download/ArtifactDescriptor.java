@@ -15,6 +15,7 @@ import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -94,16 +95,19 @@ class SelfArtifactDescriptor extends ArtifactDescriptor {
         return null;
     }
 
+    @JsonIgnore
     public boolean isAligned() {
         return false;
     }
-    
+
+    @JsonIgnore
     public List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception {
         List<DomainObject> objects = new ArrayList<>();
         objects.add(sourceObject);
         return objects;
     }
-    
+
+    @JsonIgnore
     public List<HasFiles> getFileSources(DomainObject sourceObject) throws Exception {
         List<HasFiles> objects = new ArrayList<>();
         if (sourceObject instanceof HasFiles) {
@@ -150,10 +154,12 @@ class LSMArtifactDescriptor extends ArtifactDescriptor {
         return area;
     }
 
+    @JsonIgnore
     public boolean isAligned() {
         return false;
     }
-    
+
+    @JsonIgnore
     public List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception {
         List<DomainObject> objects = new ArrayList<>();
         if (sourceObject instanceof Sample) {
@@ -175,7 +181,8 @@ class LSMArtifactDescriptor extends ArtifactDescriptor {
         }
         return objects;
     }
-    
+
+    @JsonIgnore
     public List<HasFiles> getFileSources(DomainObject sourceObject) throws Exception {
         List<HasFiles> objects = new ArrayList<>();
         for(DomainObject describedObject : getDescribedObjects(sourceObject))
@@ -259,12 +266,14 @@ class ResultArtifactDescriptor extends ArtifactDescriptor {
         return isAligned;
     }
 
+    @JsonIgnore
     public List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception {
         List<DomainObject> objects = new ArrayList<>();
         objects.add(sourceObject);
         return objects;
     }
-    
+
+    @JsonIgnore
     public List<HasFiles> getFileSources(DomainObject sourceObject) throws Exception {
         List<HasFiles> objects = new ArrayList<>();
         if (sourceObject instanceof Sample) {

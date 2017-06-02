@@ -113,7 +113,7 @@ public class DownloadWizardPanel3 implements WizardDescriptor.ValidatingPanel<Wi
 
     @Override
     public void storeSettings(WizardDescriptor wiz) {
-        ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 4);
+        ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 3);
         DownloadWizardState state = (DownloadWizardState) wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
         state.setFlattenStructure(getComponent().isFlattenStructure());
         state.setFilenamePattern(getComponent().getFilenamePattern());

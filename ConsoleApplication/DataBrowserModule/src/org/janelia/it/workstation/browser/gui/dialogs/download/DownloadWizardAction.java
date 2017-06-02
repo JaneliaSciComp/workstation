@@ -166,8 +166,8 @@ public final class DownloadWizardAction implements ActionListener {
         };
 
         ProgressMonitor monitor = new ProgressMonitor(ConsoleApp.getMainFrame(), "Finding files for download...", "", 0, 100);
-        monitor.setMillisToDecideToPopup(100);
-        monitor.setMillisToPopup(500);
+        monitor.setMillisToDecideToPopup(0);
+        monitor.setMillisToPopup(0);
         worker.setProgressMonitor(monitor);
         worker.execute();
     }
@@ -339,6 +339,22 @@ public final class DownloadWizardAction implements ActionListener {
         state.setArtifactFileCounts(artifactFileCounts);
         
         // Restore previous state from user's last usage
+        String objective = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "objective", null);
+        log.info("Setting last objective: "+objective);
+        state.setObjective(objective);
+        
+        String area = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "area", null);
+        log.info("Setting last anatomical area: "+area);
+        state.setArea(area);
+        
+        String resultCategory = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "resultCategory", null);
+        log.info("Setting last resultCategory: "+resultCategory);
+        state.setResultCategory(resultCategory);
+        
+        String imageCategory = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "imageCategory", null);
+        log.info("Setting last imageCategory: "+imageCategory);
+        state.setImageCategory(imageCategory);
+        
         String artifactDescriptorString = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", null);
         log.info("Setting last artifactDescriptorString: "+artifactDescriptorString);
         state.setArtifactDescriptorString(artifactDescriptorString);

@@ -5,7 +5,6 @@ import java.awt.BorderLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
@@ -64,13 +63,11 @@ public final class DownloadVisualPanel2 extends JPanel {
         formatCombo = new JComboBox<>();
         formatCombo.setEditable(false);
         formatCombo.setToolTipText("Choose an export format for 3d image stacks");
-        attrPanel.addItem("Output image format", formatCombo);
+        attrPanel.addItem("Convert 3d image stacks to a new format before download", formatCombo);
 
         splitChannelCheckbox = new JCheckBox();
         splitChannelCheckbox.setSelected(splitChannels);
-        attrPanel.addItem("Split channels", splitChannelCheckbox);        
-
-        attrPanel.addItem(new JLabel("Note: this processing is only applied to 3d image stacks"), "span 2");
+        attrPanel.addItem("Split channels in 3d stacks into individual files", splitChannelCheckbox);        
         
         populateExtensions();
         

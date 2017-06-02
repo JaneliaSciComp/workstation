@@ -52,7 +52,7 @@ public class DownloadWizardPanel2 implements WizardDescriptor.Panel<WizardDescri
 
     @Override
     public void storeSettings(WizardDescriptor wiz) {
-        ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 3);
+        ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 2);
         DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
         state.setSplitChannels(getComponent().isSplitChannels());
         state.setOutputFormat(getComponent().getOutputFormat());

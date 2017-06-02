@@ -100,7 +100,7 @@ public class DownloadWizardPanel1 implements WizardDescriptor.ValidatingPanel<Wi
 
     @Override
     public void storeSettings(WizardDescriptor wiz) {
-        ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 2);
+        ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 1);
         DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
         state.setArtifactDescriptors(getComponent().getArtifactDescriptors());
         state.setObjective(getComponent().getCurrObjective());
@@ -108,6 +108,10 @@ public class DownloadWizardPanel1 implements WizardDescriptor.ValidatingPanel<Wi
         state.setResultCategory(getComponent().getCurrResultCategory());
         state.setImageCategory(getComponent().getCurrImageCategory());
         // Updated serialized state
+        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "objective", state.getObjective());
+        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "area", state.getArea());
+        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "resultCategory", state.getResultCategory());
+        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "imageCategory", state.getImageCategory());        
         FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", state.getArtifactDescriptorString());
     }
 
