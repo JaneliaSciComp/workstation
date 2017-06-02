@@ -763,7 +763,9 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         AddToFolderAction action = AddToFolderAction.get();
         action.setDomainObjects(domainObjectList);
         JMenuItem item = action.getPopupPresenter();
-        item.setText("  " + item.getText());
+        if (item!=null) {
+            item.setText("  " + item.getText());
+        }
         return item;
     }
 
@@ -845,7 +847,9 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         GetRelatedItemsAction action = GetRelatedItemsAction.get();
         action.setDomainObjects(domainObjectList);
         JMenuItem item = action.getPopupPresenter();
-        item.setText("  " + item.getText());
+        if (item!=null) {
+            item.setText("  " + item.getText());
+        }
         return item;
     }
     

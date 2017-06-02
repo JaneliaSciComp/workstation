@@ -21,6 +21,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.ProgressMonitor;
+import javax.swing.SwingUtilities;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
@@ -57,6 +58,7 @@ import org.janelia.it.workstation.browser.gui.support.FileDownloadWorker;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.browser.model.search.SolrSearchResults;
+import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.openide.DialogDisplayer;
 import org.openide.WizardDescriptor;
@@ -124,31 +126,43 @@ public final class DownloadWizardAction implements ActionListener {
     }
 
     private void findDownloadObjects() {
-
+        
+        Utils.setWaitingCursor(ConsoleApp.getMainFrame());
+        
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
-                
+                                
                 log.info("Finding items for download");
                 for(DomainObject domainObject : inputObjects) {
+                    if (isCancelled()) return;
                     downloadItems.addAll(addObjectsToExport(new ArrayList<String>(), domainObject));
                 }
+                
+                setProgress(1);
                 
                 log.info("Got {} download items", downloadItems.size());
                 log.info("Collecting descriptors");
                 
                 Multiset<ArtifactDescriptor> artifactCounts = getArtifactCounts();
                 Set<ArtifactDescriptor> elementSet = artifactCounts.elementSet();
+
+                setProgress(2);
                 
                 log.info("Got {} artifact descriptors", elementSet.size());
                 log.info("Finding files");
                 
-                int i = 0;
+                int i = 10;
+                int total = elementSet.size();
+                int inc = total>0 ? (100-i) / total : 1;
+                
                 artifactFileCounts = new HashMap<>();
                 for(ArtifactDescriptor artifactDescriptor : elementSet) {
                     artifactFileCounts.put(artifactDescriptor, getFileTypeCounts(artifactDescriptor));
-                    setProgress(i++, elementSet.size());
+                    if (isCancelled()) return;
+                    setProgress(i);
+                    i += inc;
                 }
                 
                 log.info("Found {} objects to export",downloadItems.size());
@@ -156,11 +170,15 @@ public final class DownloadWizardAction implements ActionListener {
 
             @Override
             protected void hadSuccess() {
-                showWizard();
+                Utils.setDefaultCursor(ConsoleApp.getMainFrame());
+                if (!isCancelled()) {
+                    showWizard();
+                }
             }
 
             @Override
             protected void hadError(Throwable error) {
+                Utils.setDefaultCursor(ConsoleApp.getMainFrame());
                 ConsoleApp.handleException(error);
             }
         };
@@ -184,7 +202,7 @@ public final class DownloadWizardAction implements ActionListener {
                     List<String> childPath = new ArrayList<>(path);
                     childPath.add(domainObject.getName());
                     for (DomainObject child : children) {
-                        addObjectsToExport(childPath, child);
+                        downloadItems.addAll(addObjectsToExport(childPath, child));
                     }
                 }
             }
@@ -194,25 +212,20 @@ public final class DownloadWizardAction implements ActionListener {
                 List<String> childPath = new ArrayList<>(path);
                 childPath.add(domainObject.getName());
                 for (DomainObject child : children) {
-                    addObjectsToExport(childPath, child);
+                    downloadItems.addAll(addObjectsToExport(childPath, child));
                 }
             }
             else if (domainObject instanceof Filter) {
                 Filter filter = (Filter) domainObject;
-                try {
-                    SearchConfiguration config = new SearchConfiguration(filter, 1000);
-                    SolrSearchResults searchResults = config.performSearch();
-                    searchResults.loadAllResults();
-                    for (ResultPage page : searchResults.getPages()) {
-                        List<String> childPath = new ArrayList<>(path);
-                        childPath.add(domainObject.getName());
-                        for (DomainObject resultObject : page.getDomainObjects()) {
-                            addObjectsToExport(childPath, resultObject);
-                        }
+                SearchConfiguration config = new SearchConfiguration(filter, 1000);
+                SolrSearchResults searchResults = config.performSearch();
+                searchResults.loadAllResults();
+                for (ResultPage page : searchResults.getPages()) {
+                    List<String> childPath = new ArrayList<>(path);
+                    childPath.add(domainObject.getName());
+                    for (DomainObject resultObject : page.getDomainObjects()) {
+                        downloadItems.addAll(addObjectsToExport(childPath, resultObject));
                     }
-                }
-                catch (Exception e) {
-                    ConsoleApp.handleException(e);
                 }
             }
             else {

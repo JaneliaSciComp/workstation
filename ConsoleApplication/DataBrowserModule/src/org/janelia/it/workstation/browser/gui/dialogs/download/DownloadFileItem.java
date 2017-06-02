@@ -132,7 +132,7 @@ public class DownloadFileItem extends DownloadItem {
         try {
             targetFile = new File(itemDir, constructFilePath(filenamePattern));
             log.debug("Target path: {}", targetFile.getAbsolutePath());
-            log.debug("Target extension: {}", targetExtension);
+            log.debug("Target extension: {}", this.targetExtension);
         }
         catch (Exception e) {
             ConsoleApp.handleException(e);

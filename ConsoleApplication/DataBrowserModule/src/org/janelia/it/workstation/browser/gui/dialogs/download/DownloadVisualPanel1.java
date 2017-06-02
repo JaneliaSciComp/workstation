@@ -23,6 +23,7 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -55,12 +56,12 @@ public final class DownloadVisualPanel1 extends JPanel {
     
     // GUI
     private JPanel configPane;
-    private DropDownButton objectiveButton;
-    private DropDownButton areaButton;
-    private DropDownButton resultCategoryButton;
-    private DropDownButton imageCategoryButton;
-    private HashMap<ArtifactDescriptor, JCheckBox> artifactCheckboxes = new LinkedHashMap<>();
-    private HashMap<ArtifactDescriptor, HashMap<FileType, JCheckBox>> fileTypesCheckboxes = new LinkedHashMap<>();
+    private final DropDownButton objectiveButton = new DropDownButton();
+    private final DropDownButton areaButton = new DropDownButton();
+    private final DropDownButton resultCategoryButton = new DropDownButton();
+    private final DropDownButton imageCategoryButton = new DropDownButton();
+    private final HashMap<ArtifactDescriptor, HashMap<FileType, JCheckBox>> fileTypesCheckboxes = new LinkedHashMap<>();
+    private JPanel checkboxPanel;
     
     // Inputs
     private ResultDescriptor defaultResultDescriptor;
@@ -69,12 +70,13 @@ public final class DownloadVisualPanel1 extends JPanel {
     private String currArea;
     private String currResultCategory;
     private String currImageCategory;
+    private List<String> objectives;
+    private List<String> areas;
+    private List<String> resultCategories;
+    private List<String> imageCategories;
 
     // Outputs
     private List<ArtifactDescriptor> artifactDescriptors;
-
-    private JPanel checkboxPanel;
-
     
     @Override
     public String getName() {
@@ -99,6 +101,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setObjective(objective);
+                    refreshCheckboxPanel();
                 }
             });
             group.add(menuItem);
@@ -107,9 +110,14 @@ public final class DownloadVisualPanel1 extends JPanel {
     }
     
     private void setObjective(String objective) {
-        this.currObjective = objective;
+        if (objectives.contains(objective)) {
+            this.currObjective = objective;
+        }
+        else {
+            this.currObjective = ALL_VALUE;
+        }
         objectiveButton.setText("Objective: "+currObjective);
-        refreshCheckboxPanel();
+        populateObjectiveButton(objectives);
     }
 
     private void populateAreaButton(List<String> areas) {
@@ -122,6 +130,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setArea(area);
+                    refreshCheckboxPanel();
                 }
             });
             group.add(menuItem);
@@ -130,9 +139,14 @@ public final class DownloadVisualPanel1 extends JPanel {
     }
     
     private void setArea(String area) {
-        this.currArea = area;
+        if (areas.contains(area)) {
+            this.currArea = area;
+        }
+        else {
+            this.currArea = ALL_VALUE;
+        }
         areaButton.setText("Area: "+currArea);
-        refreshCheckboxPanel();
+        populateAreaButton(areas);
     }
 
     private void populateResultCategoryButton(List<String> resultCategories) {
@@ -145,6 +159,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setResultCategory(resultCategory);
+                    refreshCheckboxPanel();
                 }
             });
             group.add(menuItem);
@@ -153,9 +168,14 @@ public final class DownloadVisualPanel1 extends JPanel {
     }
     
     private void setResultCategory(String resultCategory) {
-        this.currResultCategory = resultCategory;
+        if (resultCategories.contains(resultCategory)) {
+            this.currResultCategory = resultCategory;
+        }
+        else {
+            this.currResultCategory = ALL_VALUE;
+        }
         resultCategoryButton.setText("Result Category: "+currResultCategory);
-        refreshCheckboxPanel();
+        populateResultCategoryButton(resultCategories);
     }
 
     private void populateImageCategoryButton(List<String> imageCategories) {
@@ -168,6 +188,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setImageCategory(imageCategory);
+                    refreshCheckboxPanel();
                 }
             });
             group.add(menuItem);
@@ -176,9 +197,14 @@ public final class DownloadVisualPanel1 extends JPanel {
     }
     
     private void setImageCategory(String resultCategory) {
-        this.currImageCategory = resultCategory;
+        if (imageCategories.contains(resultCategory)) {
+            this.currImageCategory = resultCategory;
+        }
+        else {
+            this.currImageCategory = ALL_VALUE;
+        }
         imageCategoryButton.setText("Image Category: "+currImageCategory);
-        refreshCheckboxPanel();
+        populateImageCategoryButton(imageCategories);
     }
     
     public void init(DownloadWizardState state) {
@@ -192,63 +218,28 @@ public final class DownloadVisualPanel1 extends JPanel {
 //            artifactDescriptors = new ArrayList<>();
 //            artifactDescriptors.add(defaultResultDescriptor);
 //        }
-
-        this.currObjective = state.getObjective();
-        this.currArea = state.getArea();
-        this.currResultCategory = state.getResultCategory();
-        this.currImageCategory = state.getImageCategory();
         
-        if (currObjective==null) {
-            this.currObjective = ALL_VALUE;
-        }
-
-        if (currArea==null) {
-            this.currArea = ALL_VALUE;
-        }
-
-        if (currResultCategory==null) {
-            this.currResultCategory = ALL_VALUE;
-        }
-
-        if (currImageCategory==null) {
-            this.currImageCategory = ALL_VALUE;
-        }
+        // Init filter values
+        buildFilterValueLists();
+        setObjective(state.getObjective());
+        setArea(state.getArea());
+        setResultCategory(state.getResultCategory());
+        setImageCategory(state.getImageCategory());
         
-        this.objectiveButton = new DropDownButton("Objective: "+currObjective);
-        this.areaButton = new DropDownButton("Area: "+currArea);
-        this.resultCategoryButton = new DropDownButton("Result Category: "+currResultCategory);
-        this.imageCategoryButton = new DropDownButton("Image Category: "+currImageCategory);
-
-        Set<String> objectiveSet = new TreeSet<>();
-        Set<String> areaSet = new TreeSet<>();
-        for (ArtifactDescriptor artifactDescriptor : artifactFileCounts.keySet()) {
-            String objective = artifactDescriptor.getObjective();
-            if (objective!=null) objectiveSet.add(objective);
-            String area = artifactDescriptor.getArea();
-            if (area!=null) areaSet.add(area);
-        }
-        
-        List<String> objectives = new ArrayList<>(objectiveSet);
-        objectives.add(0, ALL_VALUE);
-        populateObjectiveButton(objectives);
-
-        List<String> areas = new ArrayList<>(areaSet);
-        areas.add(0, ALL_VALUE);
-        populateAreaButton(areas);
-
-        List<String> resultCategories = new ArrayList<>();
-        resultCategories.add(ALL_VALUE);
-        for (ResultCategory resultCategory : ResultCategory.values()) {
-            resultCategories.add(resultCategory.getLabel());
-        }
-        populateResultCategoryButton(resultCategories);
-
-        List<String> imageCategories = new ArrayList<>();
-        imageCategories.add(ALL_VALUE);
-        for (ImageCategory imageCategory : ImageCategory.values()) {
-            imageCategories.add(imageCategory.getLabel());
-        }
-        populateImageCategoryButton(imageCategories);
+        JButton resetButton = new JButton();
+        resetButton = new JButton("Reset");
+        resetButton.setToolTipText("Clear all filters");
+        resetButton.setFocusable(false);
+        resetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) { 
+                setObjective(ALL_VALUE);
+                setArea(ALL_VALUE);
+                setResultCategory(ALL_VALUE);
+                setImageCategory(ALL_VALUE);
+                refreshCheckboxPanel();
+            }
+        });
         
         this.configPane = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 3));
         configPane.setBorder(BorderFactory.createEmptyBorder(2, 2, 8, 2));
@@ -256,6 +247,7 @@ public final class DownloadVisualPanel1 extends JPanel {
         configPane.add(areaButton);
         configPane.add(resultCategoryButton);
         configPane.add(imageCategoryButton);
+        configPane.add(resetButton);
         
         
         JPanel buttonPane = new JPanel();
@@ -268,33 +260,33 @@ public final class DownloadVisualPanel1 extends JPanel {
         selectAllButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) { 
-                for (ArtifactDescriptor artifactDescriptor : artifactCheckboxes.keySet()) {
-                    JCheckBox artifactCheckbox = artifactCheckboxes.get(artifactDescriptor);
-                    artifactCheckbox.setSelected(true);
+                for (ArtifactDescriptor artifactDescriptor : artifactFileCounts.keySet()) {
                     HashMap<FileType, JCheckBox> fileTypeMap = fileTypesCheckboxes.get(artifactDescriptor);
-                    for(FileType fileType : fileTypeMap.keySet()) {
-                        JCheckBox fileTypeCheckbox = fileTypeMap.get(fileType);
-                        fileTypeCheckbox.setSelected(true);
+                    if (fileTypeMap!=null) {
+                        for(FileType fileType : fileTypeMap.keySet()) {
+                            JCheckBox fileTypeCheckbox = fileTypeMap.get(fileType);
+                            fileTypeCheckbox.setSelected(true);
+                        }
                     }
                 }
                 triggerValidation();
             }
         });
         
-        JButton resetButton = new JButton();
-        resetButton = new JButton("Clear all");
-        resetButton.setToolTipText("Clear all selections");
-        resetButton.setFocusable(false);
-        resetButton.addActionListener(new ActionListener() {
+        JButton clearAllButton = new JButton();
+        clearAllButton = new JButton("Clear all");
+        clearAllButton.setToolTipText("Clear all selections");
+        clearAllButton.setFocusable(false);
+        clearAllButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) { 
-                for (ArtifactDescriptor artifactDescriptor : artifactCheckboxes.keySet()) {
-                    JCheckBox artifactCheckbox = artifactCheckboxes.get(artifactDescriptor);
-                    artifactCheckbox.setSelected(false);
+                for (ArtifactDescriptor artifactDescriptor : artifactFileCounts.keySet()) {
                     HashMap<FileType, JCheckBox> fileTypeMap = fileTypesCheckboxes.get(artifactDescriptor);
-                    for(FileType fileType : fileTypeMap.keySet()) {
-                        JCheckBox fileTypeCheckbox = fileTypeMap.get(fileType);
-                        fileTypeCheckbox.setSelected(false);
+                    if (fileTypeMap!=null) {
+                        for(FileType fileType : fileTypeMap.keySet()) {
+                            JCheckBox fileTypeCheckbox = fileTypeMap.get(fileType);
+                            fileTypeCheckbox.setSelected(false);
+                        }
                     }
                 }
                 triggerValidation();
@@ -303,14 +295,14 @@ public final class DownloadVisualPanel1 extends JPanel {
         
         buttonPane.add(Box.createVerticalGlue()); // Align to bottom
         buttonPane.add(selectAllButton);
-        buttonPane.add(resetButton);
+        buttonPane.add(clearAllButton);
         
         JPanel outerPanel = new JPanel(new BorderLayout());
         
         checkboxPanel = new JPanel();
         checkboxPanel.setLayout(new BoxLayout(checkboxPanel, BoxLayout.PAGE_AXIS));
         refreshCheckboxPanel();
-
+        
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(checkboxPanel);
         scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 300));
@@ -326,6 +318,36 @@ public final class DownloadVisualPanel1 extends JPanel {
         triggerValidation();
     }
     
+    private void buildFilterValueLists() {
+
+        Set<String> objectiveSet = new TreeSet<>();
+        Set<String> areaSet = new TreeSet<>();
+        for (ArtifactDescriptor artifactDescriptor : artifactFileCounts.keySet()) {
+            String objective = artifactDescriptor.getObjective();
+            if (objective!=null) objectiveSet.add(objective);
+            String area = artifactDescriptor.getArea();
+            if (area!=null) areaSet.add(area);
+        }
+        
+        objectives = new ArrayList<>(objectiveSet);
+        objectives.add(0, ALL_VALUE);
+
+        areas = new ArrayList<>(areaSet);
+        areas.add(0, ALL_VALUE);
+
+        resultCategories = new ArrayList<>();
+        resultCategories.add(ALL_VALUE);
+        for (ResultCategory resultCategory : ResultCategory.values()) {
+            resultCategories.add(resultCategory.getLabel());
+        }
+
+        imageCategories = new ArrayList<>();
+        imageCategories.add(ALL_VALUE);
+        for (ImageCategory imageCategory : ImageCategory.values()) {
+            imageCategories.add(imageCategory.getLabel());
+        }
+    }
+
     private void refreshCheckboxPanel() {
         checkboxPanel.removeAll();
         try {
@@ -340,7 +362,6 @@ public final class DownloadVisualPanel1 extends JPanel {
     private void addCheckboxes(Collection<DownloadObject> domainObjects, JPanel checkboxPanel) throws Exception {
 
         fileTypesCheckboxes.clear();
-        artifactCheckboxes.clear();
         
         // Sort in alphanumeric order, with Latest first
         List<ArtifactDescriptor> sortedResults = new ArrayList<>(artifactFileCounts.keySet());
@@ -385,7 +406,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             
             final JPanel subPanel = new JPanel();
             subPanel.setLayout(new BoxLayout(subPanel, BoxLayout.PAGE_AXIS));
-            subPanel.setVisible(selected);
+            //subPanel.setVisible(selected);
             subPanel.setBorder(BorderFactory.createEmptyBorder(0, 30, 5, 0));
 
             Multiset<FileType> fileTypesCounts = artifactFileCounts.get(artifactDescriptor);
@@ -420,18 +441,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             if (!fileTypeMap.isEmpty()) {
                 log.trace("Adding descriptor: {}", artifactDescriptor);
                 fileTypesCheckboxes.put(artifactDescriptor, fileTypeMap);
-
-                final JCheckBox artifactCheckbox = new JCheckBox(resultName, selected);
-                artifactCheckbox.addItemListener(new ItemListener() {
-                    @Override
-                    public void itemStateChanged(ItemEvent e) {
-                        subPanel.setVisible(artifactCheckbox.isSelected());
-                        triggerValidation();
-                    }
-                });
-                
-                artifactCheckboxes.put(artifactDescriptor, artifactCheckbox);
-                checkboxPanel.add(artifactCheckbox);
+                checkboxPanel.add(new JLabel(resultName));
                 checkboxPanel.add(subPanel);
             }
         }        
@@ -464,23 +474,22 @@ public final class DownloadVisualPanel1 extends JPanel {
 
     private void updateArtifactDescriptors() {
         artifactDescriptors = new ArrayList<>();
-        for (ArtifactDescriptor artifactDescriptor : artifactCheckboxes.keySet()) {
-            JCheckBox artifactCheckbox = artifactCheckboxes.get(artifactDescriptor);
-            if (artifactCheckbox.isSelected()) {
-                
-                List<FileType> fileTypes = artifactDescriptor.getSelectedFileTypes();
-                fileTypes.clear();
-                
-                HashMap<FileType, JCheckBox> fileTypeMap = fileTypesCheckboxes.get(artifactDescriptor);
+        for (ArtifactDescriptor artifactDescriptor : artifactFileCounts.keySet()) {
+                        
+            List<FileType> fileTypes = artifactDescriptor.getSelectedFileTypes();
+            fileTypes.clear();
+            
+            HashMap<FileType, JCheckBox> fileTypeMap = fileTypesCheckboxes.get(artifactDescriptor);
+            if (fileTypeMap!=null) {
                 for(FileType fileType : fileTypeMap.keySet()) {
                     JCheckBox fileTypeCheckbox = fileTypeMap.get(fileType);
                     if (fileTypeCheckbox.isSelected()) {
                         fileTypes.add(fileType);
                     }
                 }
-                
-                artifactDescriptors.add(artifactDescriptor);
             }
+            
+            artifactDescriptors.add(artifactDescriptor);
         }
     }
 }

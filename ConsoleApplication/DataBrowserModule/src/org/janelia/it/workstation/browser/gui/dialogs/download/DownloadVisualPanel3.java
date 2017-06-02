@@ -80,7 +80,7 @@ public final class DownloadVisualPanel3 extends JPanel {
         @Override
         public void itemStateChanged(ItemEvent e) {
             if (e.getStateChange() == ItemEvent.SELECTED || e.getSource() instanceof JCheckBox) {
-                populateDownloadItemList(null);
+                populateDownloadItemList();
             }
         }
     };
@@ -135,12 +135,12 @@ public final class DownloadVisualPanel3 extends JPanel {
         removeAll();
         add(attrPanel, BorderLayout.CENTER);
         
-        populateDownloadItemList(null);
+        populateDownloadItemList();
     }
 
-    private void populateDownloadItemList(final Callable<Void> success) {
+    private void populateDownloadItemList() {
 
-        if (!debouncer.queue(success)) {
+        if (!debouncer.queue()) {
             log.debug("Skipping populateDownloadItemList, since there is an operation already in progress");
             return;
         }
@@ -166,7 +166,7 @@ public final class DownloadVisualPanel3 extends JPanel {
                             for (FileType fileType : artifactDescriptor.getSelectedFileTypes()) {
                                 log.debug("      Adding item for file type '{}'", fileType);
                                 DownloadFileItem downloadItem = new DownloadFileItem(downloadObject.getFolderPath(), domainObject);
-                                downloadItem.init(hasFiles, fileType, outputExtension, splitChannels, flattenStructure, filenamePattern);
+                                downloadItem.init(hasFiles, fileType, fileType.is3dImage()?outputExtension:null, splitChannels, flattenStructure, filenamePattern);
                                 downloadItems.add(downloadItem);
                             }
                         }
