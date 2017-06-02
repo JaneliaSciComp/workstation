@@ -11,10 +11,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -31,13 +30,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.gui.support.DropDownButton;
@@ -47,7 +40,6 @@ import org.janelia.it.workstation.browser.model.ResultCategory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 
 public final class DownloadVisualPanel2 extends JPanel {
@@ -72,7 +64,7 @@ public final class DownloadVisualPanel2 extends JPanel {
     
     // Inputs
     private ResultDescriptor defaultResultDescriptor;
-    private Multiset<ArtifactDescriptor> artifacts;
+    private Map<ArtifactDescriptor, Multiset<FileType>> artifactFileCounts;
     private String currObjective;
     private String currArea;
     private String currResultCategory;
@@ -82,6 +74,7 @@ public final class DownloadVisualPanel2 extends JPanel {
     private List<ArtifactDescriptor> artifactDescriptors;
 
     private JPanel checkboxPanel;
+
     
     @Override
     public String getName() {
@@ -191,8 +184,8 @@ public final class DownloadVisualPanel2 extends JPanel {
     public void init(DownloadWizardState state) {
         this.initialState = state;
         this.defaultResultDescriptor = state.getDefaultResultDescriptor();
-        this.artifacts = state.getArtifactCounts();
         this.artifactDescriptors = state.getArtifactDescriptors();
+        this.artifactFileCounts = state.getArtifactFileCounts();
         
         // TODO: select the artifact descriptors matching the default result descriptor
 //        if (artifactDescriptors==null) {
@@ -228,7 +221,7 @@ public final class DownloadVisualPanel2 extends JPanel {
 
         Set<String> objectiveSet = new TreeSet<>();
         Set<String> areaSet = new TreeSet<>();
-        for (ArtifactDescriptor artifactDescriptor : artifacts) {
+        for (ArtifactDescriptor artifactDescriptor : artifactFileCounts.keySet()) {
             String objective = artifactDescriptor.getObjective();
             if (objective!=null) objectiveSet.add(objective);
             String area = artifactDescriptor.getArea();
@@ -350,7 +343,7 @@ public final class DownloadVisualPanel2 extends JPanel {
         artifactCheckboxes.clear();
         
         // Sort in alphanumeric order, with Latest first
-        List<ArtifactDescriptor> sortedResults = new ArrayList<>(artifacts.elementSet());
+        List<ArtifactDescriptor> sortedResults = new ArrayList<>(artifactFileCounts.keySet());
         Collections.sort(sortedResults, new Comparator<ArtifactDescriptor>() {
             @Override
             public int compare(ArtifactDescriptor o1, ArtifactDescriptor o2) {
@@ -395,7 +388,8 @@ public final class DownloadVisualPanel2 extends JPanel {
             subPanel.setVisible(selected);
             subPanel.setBorder(BorderFactory.createEmptyBorder(0, 30, 5, 0));
 
-            Multiset<FileType> fileTypesCounts = getFileTypeCounts(domainObjects, artifactDescriptor);
+            Multiset<FileType> fileTypesCounts = artifactFileCounts.get(artifactDescriptor);
+            
             HashMap<FileType, JCheckBox> fileTypeMap = new LinkedHashMap<>();
             
             for(final FileType fileType : FileType.values()) {
@@ -441,47 +435,6 @@ public final class DownloadVisualPanel2 extends JPanel {
                 checkboxPanel.add(subPanel);
             }
         }        
-    }
-
-    private Multiset<FileType> getFileTypeCounts(Collection<DownloadObject> downloadObjects, ArtifactDescriptor artifactDescriptor) throws Exception {
-
-        Multiset<FileType> countedTypeNames = LinkedHashMultiset.create();
-        
-        Set<Object> sources = new LinkedHashSet<>();
-        for(DownloadObject downloadObject : downloadObjects) {
-            DomainObject domainObject = downloadObject.getDomainObject();
-            sources.addAll(artifactDescriptor.getFileSources(domainObject));
-        }
-        
-        boolean only2d = false;
-        for (Object source : sources) {
-            log.trace("Inspecting file source: {}", source.getClass().getSimpleName());
-            if (source instanceof HasFileGroups) {
-                Multiset<FileType> fileTypes = DomainUtils.getFileTypes((HasFileGroups)source, only2d);
-                log.trace("  Source has file groups: {}",fileTypes);
-                countedTypeNames.addAll(fileTypes);
-            }
-            if (source instanceof HasFiles) {
-                Multiset<FileType> fileTypes = DomainUtils.getFileTypes((HasFiles) source, only2d);
-                log.trace("  Source has files: {}",fileTypes);
-                countedTypeNames.addAll(fileTypes);
-            }
-            if (source instanceof PipelineResult) {
-                PipelineResult result = (PipelineResult)source;
-                NeuronSeparation separation = result.getLatestSeparationResult();
-                if (separation!=null) {
-                    log.trace("  Source has separation: {}",separation);
-                    Set<FileType> typeNames = new HashSet<>();
-                    typeNames.add(FileType.NeuronAnnotatorLabel);
-                    typeNames.add(FileType.NeuronAnnotatorSignal);
-                    typeNames.add(FileType.NeuronAnnotatorReference);
-                    log.trace("    Adding type names: {}",typeNames);
-                    countedTypeNames.addAll(typeNames);
-                }
-            }
-        }
-        
-        return countedTypeNames;
     }
     
     public List<ArtifactDescriptor> getArtifactDescriptors() {

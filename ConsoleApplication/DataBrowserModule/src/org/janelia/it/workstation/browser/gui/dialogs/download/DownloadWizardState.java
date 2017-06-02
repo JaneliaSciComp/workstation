@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
@@ -24,16 +25,16 @@ class DownloadWizardState {
     private List<? extends DomainObject> inputObjects;
     private ResultDescriptor defaultResultDescriptor;
     
-    // Calculated from Wizard input by panel 1
+    // Calculated from Wizard input
     private List<DownloadObject> downloadObjects;
-    private Multiset<ArtifactDescriptor> artifactCounts;
+    private List<ArtifactDescriptor> artifactDescriptors;
+    private Map<ArtifactDescriptor,Multiset<FileType>> artifactFileCounts;
     
     // User input from panel 2
     private String objective;
     private String area;
     private String resultCategory;
     private String imageCategory;
-    private List<ArtifactDescriptor> artifactDescriptors;
     
     // User input from panel 3
     private boolean isSplitChannels;
@@ -68,14 +69,6 @@ class DownloadWizardState {
 
     public void setDownloadObjects(List<DownloadObject> downloadObjects) {
         this.downloadObjects = downloadObjects;
-    }
-
-    public Multiset<ArtifactDescriptor> getArtifactCounts() {
-        return artifactCounts;
-    }
-
-    public void setArtifactCounts(Multiset<ArtifactDescriptor> artifactCounts) {
-        this.artifactCounts = artifactCounts;
     }
 
     public String getObjective() {
@@ -116,6 +109,14 @@ class DownloadWizardState {
 
     public void setArtifactDescriptors(List<ArtifactDescriptor> artifactDescriptors) {
         this.artifactDescriptors = artifactDescriptors;
+    }
+    
+    public Map<ArtifactDescriptor, Multiset<FileType>> getArtifactFileCounts() {
+        return artifactFileCounts;
+    }
+
+    public void setArtifactFileCounts(Map<ArtifactDescriptor, Multiset<FileType>> artifactFileCounts) {
+        this.artifactFileCounts = artifactFileCounts;
     }
 
     public String getArtifactDescriptorString() {
