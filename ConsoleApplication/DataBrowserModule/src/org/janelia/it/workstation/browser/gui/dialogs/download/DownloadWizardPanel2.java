@@ -55,9 +55,9 @@ public class DownloadWizardPanel2 implements WizardDescriptor.Panel<WizardDescri
         ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 2);
         DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
         state.setSplitChannels(getComponent().isSplitChannels());
-        state.setOutputFormat(getComponent().getOutputFormat());
+        state.setOutputExtensions(getComponent().getOutputExtensions());
         // Updated serialized state
-        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "outputFormat", state.getOutputFormat());
+        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", state.getOutputExtensionString());
         FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "splitChannels", state.isSplitChannels());
     }
 

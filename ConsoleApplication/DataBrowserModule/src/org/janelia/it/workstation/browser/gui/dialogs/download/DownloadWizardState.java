@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +21,9 @@ import com.google.common.collect.Multiset;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 class DownloadWizardState {
+
+    public static final String NATIVE_EXTENSION = "No conversion";
+    private static final ObjectMapper mapper = new ObjectMapper();
     
     // Wizard input
     private List<? extends DomainObject> inputObjects;
@@ -38,7 +42,7 @@ class DownloadWizardState {
     
     // User input from panel 2
     private boolean isSplitChannels;
-    private String outputFormat;
+    private Map<String,String> outputExtensions = new HashMap<>();
     
     // User input from panel 3
     private boolean flattenStructure;
@@ -121,11 +125,8 @@ class DownloadWizardState {
 
     public String getArtifactDescriptorString() {
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            
             ArtifactDescriptorList list = new ArtifactDescriptorList();
             list.addAll(artifactDescriptors);
-            
             return mapper.writeValueAsString(list);
         }
         catch (Exception e) {
@@ -137,7 +138,6 @@ class DownloadWizardState {
     public void setArtifactDescriptorString(String artifactDescriptorString) {
         if (StringUtils.isBlank(artifactDescriptorString)) return;
         try {
-            ObjectMapper mapper = new ObjectMapper();
             this.artifactDescriptors = mapper.readValue(artifactDescriptorString, ArtifactDescriptorList.class);
         }
         catch (Exception e) {
@@ -154,14 +154,37 @@ class DownloadWizardState {
         this.isSplitChannels = isSplitChannels;
     }
 
-    public String getOutputFormat() {
-        return outputFormat;
+    public Map<String, String> getOutputExtensions() {
+        return outputExtensions;
     }
 
-    public void setOutputFormat(String outputFormat) {
-        this.outputFormat = outputFormat;
+    public void setOutputExtensions(Map<String, String> outputExtensions) {
+        this.outputExtensions = outputExtensions;
     }
 
+    public String getOutputExtensionString() {
+        try {
+            OutputExtensionMap map = new OutputExtensionMap();
+            map.putAll(outputExtensions);
+            return mapper.writeValueAsString(map);
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
+            return null;
+        }
+    }
+    
+    public void setOutputExtensionString(String outputExtensionString) {
+        if (StringUtils.isBlank(outputExtensionString)) return;
+        try {
+            this.outputExtensions = mapper.readValue(outputExtensionString, OutputExtensionMap.class);
+        }
+        catch (Exception e) {
+            this.outputExtensions = new HashMap<>();
+            FrameworkImplProvider.handleExceptionQuietly(e);
+        }
+    }
+    
     public boolean isFlattenStructure() {
         return flattenStructure;
     }

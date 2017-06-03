@@ -227,7 +227,7 @@ public final class DownloadVisualPanel1 extends JPanel {
         setImageCategory(state.getImageCategory());
         
         JButton resetButton = new JButton();
-        resetButton = new JButton("Reset");
+        resetButton = new JButton("Reset Filters");
         resetButton.setToolTipText("Clear all filters");
         resetButton.setFocusable(false);
         resetButton.addActionListener(new ActionListener() {
@@ -323,10 +323,17 @@ public final class DownloadVisualPanel1 extends JPanel {
         Set<String> objectiveSet = new TreeSet<>();
         Set<String> areaSet = new TreeSet<>();
         for (ArtifactDescriptor artifactDescriptor : artifactFileCounts.keySet()) {
+            
             String objective = artifactDescriptor.getObjective();
-            if (objective!=null) objectiveSet.add(objective);
+            if (!StringUtils.isBlank(objective)) {
+                objectiveSet.add(objective);
+            }
+            
             String area = artifactDescriptor.getArea();
-            if (area!=null) areaSet.add(area);
+            if (!StringUtils.isBlank(area)) {
+                areaSet.add(area);
+            }
+            
         }
         
         objectives = new ArrayList<>(objectiveSet);

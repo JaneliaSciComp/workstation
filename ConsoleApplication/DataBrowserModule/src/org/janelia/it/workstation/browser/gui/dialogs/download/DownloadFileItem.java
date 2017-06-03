@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
@@ -63,27 +64,22 @@ public class DownloadFileItem extends DownloadItem {
         this.domainObject = domainObject;
     }
     
-    public void init(HasFiles fileProvider, FileType fileType, String targetExtension, boolean splitChannels, boolean flattenStructure, String filenamePattern) {
+    public void init(ArtifactDescriptor artifactDescriptor, HasFiles fileProvider, FileType fileType, Map<String,String> outputExtensions, boolean splitChannels, boolean flattenStructure, String filenamePattern) {
 
-        this.fileProvider = fileProvider;
-        this.targetExtension = targetExtension;
-        this.splitChannels = splitChannels;
-        
-        // Reset derived state
-        errorMessage = null;
-        resultName = null;
-        sourceFile = null;
-        targetFile = null;
-        sourceExtension = null;
-        
         log.debug("Domain object type: {}",domainObject.getType());
         log.debug("Domain object id: {}",domainObject.getId());
-        log.debug("File provider: {}",fileProvider);
-
+        log.debug("File provider: {}",fileProvider.getClass().getName());
+        log.debug("File type: {}",fileType);
+        
+        this.fileProvider = fileProvider;
+        this.splitChannels = splitChannels;
+        this.errorMessage = null;
+        this.resultName = null;
+        this.targetFile = null;
+        
         String sourceFilePath = DomainUtils.getFilepath(fileProvider, fileType);
         
         if (fileProvider instanceof PipelineResult) {
-            
             PipelineResult result = (PipelineResult)fileProvider;
             resultName = result.getName();
             
@@ -101,19 +97,24 @@ public class DownloadFileItem extends DownloadItem {
         } 
         
         if (sourceFilePath==null) {
-            errorMessage = "Cannot find '"+fileType.getLabel()+"' file in: "+domainObject.getName();
+            errorMessage = "Cannot find '"+artifactDescriptor+"' with '"+fileType.getLabel()+"' file in: "+domainObject.getName();
+            log.debug(errorMessage);
             return;
         }
         
-        sourceFile = sourceFilePath;
-        sourceExtension = FileUtil.getExtension(sourceFilePath);
+        this.sourceFile = sourceFilePath;
+        this.sourceExtension = FileUtil.getExtension(sourceFilePath);
 
         log.debug("Source path: {}",sourceFilePath);
         log.debug("Source extension: {}",sourceExtension);
         
-        if (this.targetExtension==null) {
+        if (outputExtensions!=null) {
+            this.targetExtension = outputExtensions.get(sourceExtension);
+        }
+        if (this.targetExtension==null || DownloadWizardState.NATIVE_EXTENSION.equals(targetExtension)) {
             this.targetExtension = sourceExtension;
         }
+        log.debug("Output extension: {}",sourceExtension);
                 
         // Build the path
         File itemDir = null;

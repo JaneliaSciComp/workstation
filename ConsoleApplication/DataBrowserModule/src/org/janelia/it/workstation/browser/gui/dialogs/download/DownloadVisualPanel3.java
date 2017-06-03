@@ -1,11 +1,12 @@
 package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.Map;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
@@ -23,6 +24,7 @@ import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
+import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,7 @@ public final class DownloadVisualPanel3 extends JPanel {
     private final Debouncer debouncer = new Debouncer();
     
     // GUI
+    private JPanel mainPane;
     private GroupedKeyValuePanel attrPanel;
     private JCheckBox flattenStructureCheckbox;
     private JComboBox<String> filePatternCombo;
@@ -57,7 +60,7 @@ public final class DownloadVisualPanel3 extends JPanel {
     // Inputs
     private List<DownloadObject> downloadObjects;
     private List<ArtifactDescriptor> artifactDescriptors;
-    private String outputExtension;
+    private Map<String,String> outputExtensions;
     private boolean splitChannels;
     private boolean flattenStructure;
     private String filenamePattern;
@@ -89,7 +92,7 @@ public final class DownloadVisualPanel3 extends JPanel {
 
         this.downloadObjects = state.getDownloadObjects();
         this.artifactDescriptors = state.getArtifactDescriptors();
-        this.outputExtension = state.getOutputFormat();
+        this.outputExtensions = state.getOutputExtensions();
         this.splitChannels = state.isSplitChannels();
         this.flattenStructure = state.isFlattenStructure();
         this.filenamePattern = state.getFilenamePattern();
@@ -130,8 +133,17 @@ public final class DownloadVisualPanel3 extends JPanel {
         downloadItemList = new JList<>(new DefaultListModel<DownloadFileItem>());
         downloadItemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         downloadItemList.setLayoutOrientation(JList.VERTICAL);
-        attrPanel.addItem("Preview files", new JScrollPane(downloadItemList), "width 200:600:2000, height 50:200:1000, grow");
 
+        mainPane = new JPanel(new BorderLayout());
+        mainPane.add(new JLabel(Icons.getLoadingIcon()));
+
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(mainPane);
+        scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 300));
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16); // Increase scroll speed
+
+        attrPanel.addItem("Preview files", scrollPane, "width 200:600:2000, height 50:200:1000, grow");
+        
         removeAll();
         add(attrPanel, BorderLayout.CENTER);
         
@@ -166,7 +178,7 @@ public final class DownloadVisualPanel3 extends JPanel {
                             for (FileType fileType : artifactDescriptor.getSelectedFileTypes()) {
                                 log.debug("      Adding item for file type '{}'", fileType);
                                 DownloadFileItem downloadItem = new DownloadFileItem(downloadObject.getFolderPath(), domainObject);
-                                downloadItem.init(hasFiles, fileType, fileType.is3dImage()?outputExtension:null, splitChannels, flattenStructure, filenamePattern);
+                                downloadItem.init(artifactDescriptor, hasFiles, fileType, outputExtensions, splitChannels, flattenStructure, filenamePattern);
                                 downloadItems.add(downloadItem);
                             }
                         }
@@ -183,12 +195,15 @@ public final class DownloadVisualPanel3 extends JPanel {
                 for (DownloadFileItem downloadItem : downloadItems) {
                     count += downloadItem.getSourceFile()!=null ? 1 : 0;
                     dlm.addElement(downloadItem);
-                    log.debug("Adding item "+downloadItem.getTargetFile());
+                    log.debug("Adding item "+downloadItem);
                 }
                 
                 // Update GUI
-                downloadItemList.updateUI();
                 downloadItemCountLabel.setText(count+" files");
+
+                mainPane.removeAll();
+                mainPane.add(downloadItemList);
+                mainPane.updateUI();
                 
                 // Update Wizard
                 triggerValidation();

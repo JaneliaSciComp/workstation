@@ -372,9 +372,9 @@ public final class DownloadWizardAction implements ActionListener {
         log.info("Setting last artifactDescriptorString: "+artifactDescriptorString);
         state.setArtifactDescriptorString(artifactDescriptorString);
         
-        String outputFormat = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "outputFormat", null);
-        log.info("Setting last outputFormat: "+outputFormat);
-        state.setOutputFormat(outputFormat);
+        String outputExtensionString = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", null);
+        log.info("Setting last outputExtensionString: "+outputExtensionString);
+        state.setOutputExtensionString(outputExtensionString);
 
         boolean splitChannels = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "splitChannels", state.isSplitChannels());
         log.info("Setting last splitChannels: "+splitChannels);

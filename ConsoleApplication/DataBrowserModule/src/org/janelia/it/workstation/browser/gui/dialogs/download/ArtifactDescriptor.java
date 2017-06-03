@@ -237,17 +237,17 @@ class ResultArtifactDescriptor extends ArtifactDescriptor {
     private String objective;
     private String area;
     private String resultName;
-    private boolean isAligned;
+    private boolean aligned;
 
     // Empty constructor needed for JSON deserialization
     public ResultArtifactDescriptor() {
     }
     
-    public ResultArtifactDescriptor(String objective, String area, String resultName, boolean isAligned) {
+    public ResultArtifactDescriptor(String objective, String area, String resultName, boolean aligned) {
         this.objective = objective;
         this.area = area;
         this.resultName = resultName;
-        this.isAligned = isAligned;
+        this.aligned = aligned;
     }
 
     public String getObjective() {
@@ -263,7 +263,7 @@ class ResultArtifactDescriptor extends ArtifactDescriptor {
     }
 
     public boolean isAligned() {
-        return isAligned;
+        return aligned;
     }
 
     @JsonIgnore
