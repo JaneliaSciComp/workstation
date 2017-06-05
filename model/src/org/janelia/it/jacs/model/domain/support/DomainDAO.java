@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.swing.text.Document;
-
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -1333,10 +1331,13 @@ public class DomainDAO {
             return toList(subjectCollection.find("{userGroupRoles.groupKey:#}", groupId).as(Subject.class));
     }
 
-    public List<Sample> getSamplesByDataSet(String dataset){
+    public List<Sample> getSamplesByDataSet(String dataset, int pageNumber, int pageSize) {
         log.debug("getSamplesByDataSet({})", dataset);
-            return toList(sampleCollection.find("{dataSet:#}", dataset).as(Sample.class));
+        List<Sample> samples = toList(sampleCollection.find("{dataSet:#}", dataset).skip(pageSize * (pageNumber - 1)).limit(pageSize).as(Sample.class));
+            return samples;
+        //return toList(sampleCollection.find("{dataSet:#}", dataset).as(Sample.class));
     }
+
 
     public boolean isAdmin( String user){
         log.debug("isAdmin", user);
