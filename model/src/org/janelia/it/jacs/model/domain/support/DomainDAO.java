@@ -1331,13 +1331,12 @@ public class DomainDAO {
             return toList(subjectCollection.find("{userGroupRoles.groupKey:#}", groupId).as(Subject.class));
     }
 
-    public List<Sample> getSamplesByDataSet(String dataset, int pageNumber, int pageSize) {
+    public List<Sample> getSamplesByDataSet(String dataset, int pageNumber, int pageSize, String sortBy) {
         log.debug("getSamplesByDataSet({})", dataset);
-        List<Sample> samples = toList(sampleCollection.find("{dataSet:#}", dataset).skip(pageSize * (pageNumber - 1)).limit(pageSize).as(Sample.class));
+        List<Sample> samples = toList(sampleCollection.find("{dataSet:#}", dataset).sort("{"+sortBy+":1}").skip(pageSize * (pageNumber - 1)).limit(pageSize).as(Sample.class));
             return samples;
         //return toList(sampleCollection.find("{dataSet:#}", dataset).as(Sample.class));
     }
-
 
     public boolean isAdmin( String user){
         log.debug("isAdmin", user);
