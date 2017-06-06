@@ -1,3 +1,27 @@
+// 5.13
+
+Workstation Browser
+* Added "Disk Space Usage" attribute to Data Sets, Samples, and Results
+* Added a right-click menu option called "Add Related Items", which allows mapping between Samples, LSMs, and Neurons
+* Fixed issue with the Download wizard which caused it to not display certain file types
+* Fixed error when using "Purging and Block" on more than one sample at a time
+* Fixed application deadlock issue which occurred sometimes when pressing the Refresh button
+
+Horta
+* Optimized neuron merge performance
+
+// 5.12
+
+Workstation Browser
+* The "Download" dialog is now a wizard, allowing download of multiple file types at once 
+* Details of pipeline errors now appear in Data Inspector when the error is selected
+* Fixed error popup when marking sample for reprocessing
+* Fixed issues with the "Sample Compression Strategy" feature
+
+MouseLight
+* Import/export color model added
+* Merge performance improved somewhat
+
 // 5.11.1
 
 Workstation Browser

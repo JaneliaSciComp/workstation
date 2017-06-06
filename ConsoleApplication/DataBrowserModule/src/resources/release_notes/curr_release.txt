@@ -1,11 +1,6 @@
-// 5.12
+// 5.14
 
 Workstation Browser
-* The "Download" dialog is now a wizard, allowing download of multiple file types at once 
-* Details of pipeline errors now appear in Data Inspector when the error is selected
-* Fixed error popup when marking sample for reprocessing
-* Fixed issues with the "Sample Compression Strategy" feature
+* Improved usability of Download Wizard
+* Fixed error when right-clicking a folder in the Data Browser
 
-MouseLight
-* Import/export color model added
-* Merge performance improved somewhat

@@ -185,7 +185,6 @@ public class DataSetDialog extends ModalDialog {
         /* Removing this feature until such time as this level of flexibility has user demand. */
         neuronSeparationCheckbox = new JCheckBox("Support Neuron Separation");
         neuronSeparationCheckbox.setToolTipText("If pipeline does Neuron Separation by default, unchecking avoids it");
-        neuronSeparationCheckbox.setSelected(true); // Always support neuron separation.
         neuronSeparationCheckbox.setEnabled(SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI);
         attrPanel.add(neuronSeparationCheckbox, "gap para, span 2");
 
@@ -210,7 +209,7 @@ public class DataSetDialog extends ModalDialog {
             sageGrammarPathInput.setText(dataSet.getSageGrammarPath());
 
             sageSyncCheckbox.setSelected(dataSet.isSageSync());
-            neuronSeparationCheckbox.setSelected(true); //dataSet.isNeuronSeparationSupported());
+            neuronSeparationCheckbox.setSelected(dataSet.isNeuronSeparationSupported());
             if (dataSet.getPipelineProcesses()!=null && !dataSet.getPipelineProcesses().isEmpty()) {
                 applyRadioButtonValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
             }

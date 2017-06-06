@@ -66,6 +66,7 @@ import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
+import org.janelia.it.workstation.browser.nb_action.GetRelatedItemsAction;
 import org.janelia.it.workstation.browser.nb_action.SetPublishingNameAction;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
@@ -144,6 +145,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getPermissionItem());
 
         add(getAddToFolderItem());
+        add(getRelatedItemsItem());
         add(getRemoveFromFolderItem());
 
         setNextAddRequiresSeparator(true);
@@ -761,7 +763,9 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         AddToFolderAction action = AddToFolderAction.get();
         action.setDomainObjects(domainObjectList);
         JMenuItem item = action.getPopupPresenter();
-        item.setText("  " + item.getText());
+        if (item!=null) {
+            item.setText("  " + item.getText());
+        }
         return item;
     }
 
@@ -839,6 +843,16 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_FIJI, path, null));
     }
 
+    protected JMenuItem getRelatedItemsItem() {
+        GetRelatedItemsAction action = GetRelatedItemsAction.get();
+        action.setDomainObjects(domainObjectList);
+        JMenuItem item = action.getPopupPresenter();
+        if (item!=null) {
+            item.setText("  " + item.getText());
+        }
+        return item;
+    }
+    
     protected JMenuItem getDownloadItem() {
         String label = domainObjectList.size() > 1 ? "Download " + domainObjectList.size() + " Items..." : "Download...";
         JMenuItem menuItem = new JMenuItem("  "+label);

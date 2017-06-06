@@ -2,269 +2,269 @@ package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
+import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.TreeMultiset;
 
 public final class DownloadVisualPanel2 extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadVisualPanel2.class);
 
-    private DownloadWizardPanel2 wizardPanel;
+    private static final String[] FORMAT_EXTENSIONS_LSM = {
+            DownloadWizardState.NATIVE_EXTENSION,
+            "tif", 
+            "v3draw", 
+            "v3dpbd", 
+            "mp4", 
+            "h5j",
+            "lsm.bz2" 
+    };
+
+    private static final String[] FORMAT_EXTENSIONS_LSM_BZ2 = {
+            DownloadWizardState.NATIVE_EXTENSION,
+            "tif", 
+            "v3draw", 
+            "v3dpbd", 
+            "mp4", 
+            "h5j",
+            "lsm",
+    };
+    
+    private static final String[] FORMAT_EXTENSIONS_RAW = {
+            DownloadWizardState.NATIVE_EXTENSION,
+            "tif",  
+            "v3dpbd", 
+            "mp4", 
+            "h5j"
+    };
+    
+    private static final String[] FORMAT_EXTENSIONS_PBD = {
+            DownloadWizardState.NATIVE_EXTENSION,
+            "tif", 
+            "v3draw", 
+            "mp4", 
+            "h5j",
+            "lsm", 
+            "lsm.bz2" 
+    };
+
+    private static final String[] FORMAT_EXTENSIONS_H5J = {
+            DownloadWizardState.NATIVE_EXTENSION,
+            "tif", 
+            "v3draw", 
+            "v3dpbd", 
+            "mp4" 
+    };
+
+    private static final String[] FORMAT_EXTENSIONS_TIF = {
+            DownloadWizardState.NATIVE_EXTENSION,
+            "v3draw", 
+            "v3dpbd", 
+            "mp4", 
+            "h5j" 
+    };
+    
+    private static final Map<String,String[]> formatMap = new HashMap<>();
+    
+    static {
+        formatMap.put("lsm", FORMAT_EXTENSIONS_LSM);
+        formatMap.put("lsm.bz2", FORMAT_EXTENSIONS_LSM_BZ2);
+        formatMap.put("v3draw", FORMAT_EXTENSIONS_RAW);
+        formatMap.put("v3dpbd", FORMAT_EXTENSIONS_PBD);
+        formatMap.put("h5j", FORMAT_EXTENSIONS_H5J);
+        formatMap.put("tif", FORMAT_EXTENSIONS_TIF);
+        
+    }
+    
+    private final Debouncer debouncer = new Debouncer();
     
     // GUI
-    private HashMap<ArtifactDescriptor, JCheckBox> artifactCheckboxes = new LinkedHashMap<>();
-    private HashMap<ArtifactDescriptor, HashMap<FileType, JCheckBox>> fileTypesCheckboxes = new LinkedHashMap<>();
+    private JPanel mainPane;
+    private GroupedKeyValuePanel attrPanel;
+    private Map<String,JComboBox<String>> formatCombos;
+    private JCheckBox splitChannelCheckbox;
     
     // Inputs
-    private ArtifactDescriptor defaultArtifactDescriptor;
-    private Multiset<ArtifactDescriptor> artifacts;
-
-    // Outputs
+    private List<DownloadObject> downloadObjects;
     private List<ArtifactDescriptor> artifactDescriptors;
+    
+    // Outputs
+    private Map<String,String> selectedOutputExtensions;
+    private boolean splitChannels;
     
     @Override
     public String getName() {
-        return "Result Types";
+        return "File Processing";
     }
     
     /**
-     * Creates new form DownloadVisualPanel2
+     * Creates new form DownloadVisualPanel4
      */
-    public DownloadVisualPanel2(DownloadWizardPanel2 wizardPanel) {
-        this.wizardPanel = wizardPanel;
-        setLayout(new BorderLayout());
+    public DownloadVisualPanel2() {
+        setLayout(new BorderLayout());        
     }
 
     public void init(DownloadWizardState state) {
-        this.defaultArtifactDescriptor = state.getDefaultArtifactDescriptor();
-        this.artifacts = state.getArtifactCounts();
+
+        this.downloadObjects = state.getDownloadObjects();
         this.artifactDescriptors = state.getArtifactDescriptors();
+        this.splitChannels = state.isSplitChannels();
+        this.selectedOutputExtensions = state.getOutputExtensions();
         
-        if (artifactDescriptors==null) {
-            artifactDescriptors = new ArrayList<>();
-            artifactDescriptors.add(defaultArtifactDescriptor);
-        }
-        
-        JPanel buttonPane = new JPanel();
-        buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.PAGE_AXIS));
-        
-        JButton resetButton = new JButton();
-
-        resetButton = new JButton("Clear selections");
-        resetButton.setToolTipText("Clear all selections");
-        resetButton.setFocusable(false);
-        resetButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) { 
-                for (ArtifactDescriptor artifactDescriptor : artifactCheckboxes.keySet()) {
-                    JCheckBox artifactCheckbox = artifactCheckboxes.get(artifactDescriptor);
-                    artifactCheckbox.setSelected(false);
-                    HashMap<FileType, JCheckBox> fileTypeMap = fileTypesCheckboxes.get(artifactDescriptor);
-                    for(FileType fileType : fileTypeMap.keySet()) {
-                        JCheckBox fileTypeCheckbox = fileTypeMap.get(fileType);
-                        fileTypeCheckbox.setSelected(false);
-                    }
-                }
-                triggerValidation();
+        // Set default extensions
+        for(String extension : formatMap.keySet()) {
+            if (!selectedOutputExtensions.containsKey(extension)) {
+                selectedOutputExtensions.put(extension, formatMap.get(extension)[0]);
             }
-        });
-        
-        buttonPane.add(resetButton);
-        
-        JPanel outerPanel = new JPanel(new BorderLayout());
-        
-        JPanel checkboxPanel = new JPanel();
-        checkboxPanel.setLayout(new BoxLayout(checkboxPanel, BoxLayout.PAGE_AXIS));
-        
-        try {
-            addCheckboxes(state.getDownloadObjects(), checkboxPanel);
         }
-        catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
-        }
+        
+        this.attrPanel = new GroupedKeyValuePanel();
+        this.formatCombos = new HashMap<>();
 
+        mainPane = new JPanel(new BorderLayout());
+        mainPane.add(new JLabel(Icons.getLoadingIcon()));
+        
         JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setViewportView(checkboxPanel);
+        scrollPane.setViewportView(mainPane);
         scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 300));
         scrollPane.getVerticalScrollBar().setUnitIncrement(16); // Increase scroll speed
-        
-        outerPanel.add(scrollPane, BorderLayout.CENTER);
-        outerPanel.add(buttonPane, BorderLayout.WEST);
-        
+
         removeAll();
-        add(outerPanel, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
         
-        triggerValidation();
+        populateSourceExtensions();
     }
 
-    private void addCheckboxes(Collection<DownloadObject> domainObjects, JPanel checkboxPanel) throws Exception {
+    private void populateSourceExtensions() {
 
-        // Sort in alphanumeric order, with Latest first
-        List<ArtifactDescriptor> sortedResults = new ArrayList<>(artifacts.elementSet());
-        Collections.sort(sortedResults, new Comparator<ArtifactDescriptor>() {
+        if (!debouncer.queue()) {
+            log.debug("Skipping populateDownloadItemList, since there is an operation already in progress");
+            return;
+        }
+                
+        SimpleWorker worker = new SimpleWorker() {
+
+            Multiset<String> countedExtensions = TreeMultiset.create();
+            
             @Override
-            public int compare(ArtifactDescriptor o1, ArtifactDescriptor o2) {
-                return o1.toString().compareTo(o2.toString());
-            }
-        });
+            protected void doStuff() throws Exception {
+                
+                for(DownloadObject downloadObject : downloadObjects) {
+                    DomainObject domainObject = downloadObject.getDomainObject();
+                    log.debug("Inspecting download object '{}'", domainObject);
+                    
+                    for (ArtifactDescriptor artifactDescriptor : artifactDescriptors) {
+                        log.debug("  Checking artifact descriptor '{}'", artifactDescriptor);
 
-        for(final ArtifactDescriptor artifactDescriptor : sortedResults) {
-            String resultName = artifactDescriptor.toString();
-            
-            // Pull out an old version of the descriptor, so that the previously selected file types can be copied out 
-            int oldIndex = artifactDescriptors.indexOf(artifactDescriptor);
-            boolean selected = oldIndex > -1;
-            if (selected) {
-                ArtifactDescriptor oldAd = artifactDescriptors.get(oldIndex);
-                artifactDescriptor.setFileTypes(oldAd.getFileTypes());
-            }
-            
-            final JPanel subPanel = new JPanel();
-            subPanel.setLayout(new BoxLayout(subPanel, BoxLayout.PAGE_AXIS));
-            subPanel.setVisible(selected);
-            subPanel.setBorder(BorderFactory.createEmptyBorder(0, 30, 5, 0));
-
-            Multiset<FileType> fileTypesCounts = getFileTypeCounts(domainObjects, artifactDescriptor);
-
-            HashMap<FileType, JCheckBox> fileTypeMap = new LinkedHashMap<>();
-            fileTypesCheckboxes.put(artifactDescriptor, fileTypeMap);
-
-            fileTypesCounts.add(FileType.FirstAvailable3d);
-            fileTypesCounts.add(FileType.FirstAvailable2d);
-            
-            for(final FileType fileType : FileType.values()) {
-                if (fileTypesCounts.contains(fileType)) {
-                    String fileTypeLabel = fileType.getLabel();
-                    JCheckBox fileTypeCheckbox = new JCheckBox(fileTypeLabel, artifactDescriptor.getFileTypes().contains(fileType));
-                    fileTypeCheckbox.addItemListener(new ItemListener() {
-                        @Override
-                        public void itemStateChanged(ItemEvent e) {
-                            triggerValidation();
+                        for (HasFiles hasFiles : artifactDescriptor.getFileSources(domainObject)) {
+                            log.debug("    Checking source item '{}'", hasFiles);
+                            for (FileType fileType : artifactDescriptor.getSelectedFileTypes()) {
+                                log.debug("      Adding item for file type '{}'", fileType);
+                                
+                                if (fileType.is3dImage()) {
+                                    DownloadFileItem downloadItem = new DownloadFileItem(downloadObject.getFolderPath(), domainObject);
+                                    downloadItem.init(artifactDescriptor, hasFiles, fileType, null, false, false, "{GUID}_{File Name}");
+                                    String sourceExtension = downloadItem.getSourceExtension();
+                                    if (sourceExtension!=null) {
+                                        countedExtensions.add(sourceExtension);
+                                    }
+                                }
+                            }
                         }
-                    });
-                    subPanel.add(fileTypeCheckbox);
-                    fileTypeMap.put(fileType, fileTypeCheckbox);
-                }
-            }
-            
-            final JCheckBox artifactCheckbox = new JCheckBox(resultName, selected);
-            artifactCheckbox.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    subPanel.setVisible(artifactCheckbox.isSelected());
-                    triggerValidation();
-                }
-            });
-            
-            checkboxPanel.add(artifactCheckbox);
-            checkboxPanel.add(subPanel);
-            
-            artifactCheckboxes.put(artifactDescriptor, artifactCheckbox);
-        }        
-    }
-
-    public Multiset<FileType> getFileTypeCounts(Collection<DownloadObject> downloadObjects, ArtifactDescriptor artifactDescriptor) throws Exception {
-
-        Multiset<FileType> countedTypeNames = LinkedHashMultiset.create();
-        
-        Set<Object> sources = new LinkedHashSet<>();
-        for(DownloadObject downloadObject : downloadObjects) {
-            DomainObject domainObject = downloadObject.getDomainObject();
-            sources.addAll(artifactDescriptor.getFileSources(domainObject));
-        }
-        
-        boolean only2d = false;
-        for (Object source : sources) {
-            log.trace("Inspecting file sources {}", source);
-            if (source instanceof HasFileGroups) {
-                Multiset<FileType> fileTypes = DomainUtils.getFileTypes((HasFileGroups)source, only2d);
-                log.trace("Source has file groups: {}",fileTypes);
-                countedTypeNames.addAll(fileTypes);
-            }
-            if (source instanceof HasFiles) {
-                Multiset<FileType> fileTypes = DomainUtils.getFileTypes((HasFiles) source, only2d);
-                log.trace("Source has files: {}",fileTypes);
-                countedTypeNames.addAll(fileTypes);
-            }
-            if (source instanceof PipelineResult) {
-                PipelineResult result = (PipelineResult)source;
-                NeuronSeparation separation = result.getLatestSeparationResult();
-                log.trace("Source has separation: {}",separation);
-                if (separation!=null) {
-                    Set<FileType> typeNames = new HashSet<>();
-                    typeNames.add(FileType.NeuronAnnotatorLabel);
-                    typeNames.add(FileType.NeuronAnnotatorSignal);
-                    typeNames.add(FileType.NeuronAnnotatorReference);
-                    log.trace("Adding type names: {}",typeNames);
-                    countedTypeNames.addAll(typeNames);
-                }
-            }
-        }
-        
-        return countedTypeNames;
-    }
-    
-    public List<ArtifactDescriptor> getArtifactDescriptors() {
-        return artifactDescriptors;
-    }
-    
-    private void triggerValidation() {
-        updateArtifactDescriptors();
-        wizardPanel.fireChangeEvent();
-    }
-
-    private void updateArtifactDescriptors() {
-        artifactDescriptors = new ArrayList<>();
-        for (ArtifactDescriptor artifactDescriptor : artifactCheckboxes.keySet()) {
-            JCheckBox artifactCheckbox = artifactCheckboxes.get(artifactDescriptor);
-            if (artifactCheckbox.isSelected()) {
-                
-                List<FileType> fileTypes = artifactDescriptor.getFileTypes();
-                fileTypes.clear();
-                
-                HashMap<FileType, JCheckBox> fileTypeMap = fileTypesCheckboxes.get(artifactDescriptor);
-                for(FileType fileType : fileTypeMap.keySet()) {
-                    JCheckBox fileTypeCheckbox = fileTypeMap.get(fileType);
-                    if (fileTypeCheckbox.isSelected()) {
-                        fileTypes.add(fileType);
                     }
+                }    
+            }
+            
+            @Override
+            protected void hadSuccess() {
+                
+                for (String extension : countedExtensions.elementSet()) {
+                    int count = countedExtensions.count(extension);
+                    
+                    String[] outputExtensionArray = formatMap.get(extension);
+                    
+                    if (outputExtensionArray==null) {
+                        continue;
+                    }
+                    
+                    JComboBox<String> formatCombo = new JComboBox<>();
+                    formatCombo.setEditable(false);
+                    formatCombo.setToolTipText("Choose an export format for "+extension+" image stacks");
+                    attrPanel.addItem("Convert "+extension+" image stacks ("+count+" files)", formatCombo);
+
+                    DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) formatCombo.getModel();
+                    model.removeAllElements();
+                    for (String outputExtension : outputExtensionArray) {
+                        model.addElement(outputExtension);
+                    }
+
+                    // If the user already selected something, keep it selected
+                    String selectedOutputExtension = selectedOutputExtensions.get(extension);
+                    if (selectedOutputExtension!=null) {
+                        model.setSelectedItem(selectedOutputExtension);
+                    }
+                    
+                    formatCombos.put(extension, formatCombo);
                 }
                 
-                artifactDescriptors.add(artifactDescriptor);
+                splitChannelCheckbox = new JCheckBox();
+                splitChannelCheckbox.setSelected(splitChannels);
+                attrPanel.addItem("Split channels in 3d stacks into individual files", splitChannelCheckbox);
+
+                mainPane.removeAll();
+                mainPane.add(attrPanel);
+                mainPane.updateUI();
+                
+                debouncer.success();
             }
+
+            @Override
+            protected void hadError(Throwable error) {
+                debouncer.failure();
+                ConsoleApp.handleException(error);
+            }
+        };
+
+        worker.execute();
+    }
+    
+    public boolean isSplitChannels() {
+        return splitChannelCheckbox.isSelected();
+    }
+
+    public Map<String,String> getOutputExtensions() {
+        Map<String,String> outputExtensions = new HashMap<>();
+        for (String extension : selectedOutputExtensions.keySet()) {
+            String outputExtension = selectedOutputExtensions.get(extension);
+            outputExtensions.put(extension, outputExtension);
         }
+        for (String extension : formatCombos.keySet()) {
+            JComboBox<String> formatCombo = formatCombos.get(extension);
+            DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) formatCombo.getModel();
+            String outputExtension = (String)model.getSelectedItem();
+            outputExtensions.put(extension, outputExtension);
+        }
+        return outputExtensions;
     }
 }
