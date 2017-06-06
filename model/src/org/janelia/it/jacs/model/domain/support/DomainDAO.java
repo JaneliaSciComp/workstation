@@ -1346,6 +1346,11 @@ public class DomainDAO {
                 return false;
     }
 
+    public List<Sample> getRecentSamples() {
+        log.debug("getRecentSamples({})");
+        return toList(sampleCollection.find().sort("{creationDate: -1}").limit(100).as(Sample.class));
+    }
+
 
     /**
      * Create the given object, with the given id. Dangerous to use if you don't know what you're doing! Use save() instead.
