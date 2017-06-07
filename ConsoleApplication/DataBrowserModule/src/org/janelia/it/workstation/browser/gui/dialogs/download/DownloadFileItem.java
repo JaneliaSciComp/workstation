@@ -152,33 +152,51 @@ public class DownloadFileItem extends DownloadItem {
  
     private String constructFilePath(String filePattern) throws Exception {
 
-        DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
+        log.debug("Objects used for path constructions: ");
         
         MapUnion<String, Object> keyValues = new MapUnion<>();
-        keyValues.addMap(proxy);
+        
+        keyValues.addMap(new DynamicDomainObjectProxy(domainObject));
+        log.debug("  domainObject: {}", domainObject);
+        
+        if (fileProvider instanceof DomainObject) {
+            keyValues.addMap(new DynamicDomainObjectProxy((DomainObject)fileProvider));
+            log.debug("  fileProvider: {}", fileProvider);
+        }
+        
         keyValues.put(ATTR_LABEL_RESULT_NAME, resultName);
-        keyValues.put(ATTR_LABEL_FILE_NAME, FileUtil.getBasename(new File(sourceFile).getName()));
+        log.debug("  {}: {}", ATTR_LABEL_RESULT_NAME, resultName);
+        
+        String baseName = FileUtil.getBasename(new File(sourceFile).getName());
+        keyValues.put(ATTR_LABEL_FILE_NAME, baseName);
+        log.debug("  {}: {}", ATTR_LABEL_FILE_NAME, baseName);
+        
         keyValues.put(ATTR_LABEL_EXTENSION, targetExtension);
+        log.debug("  {}: {}", ATTR_LABEL_EXTENSION, targetExtension);
 
         if (domainObject instanceof Sample) {
             keyValues.put(ATTR_LABEL_SAMPLE_NAME, domainObject.getName());
+            log.debug("  {}: {}", ATTR_LABEL_SAMPLE_NAME, domainObject.getName());
         }
         else if (domainObject instanceof LSMImage) {
             LSMImage lsm = (LSMImage) domainObject;
             Sample sample = (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(lsm.getSample());
             if (sample != null) {
                 keyValues.put(ATTR_LABEL_SAMPLE_NAME, sample.getName());
+                log.debug("  {}: {}", ATTR_LABEL_SAMPLE_NAME, sample.getName());
             }
         }
 
         if (fileProvider instanceof HasAnatomicalArea) {
             HasAnatomicalArea aaResult = (HasAnatomicalArea)fileProvider;
             keyValues.put(ATTR_LABEL_ANATOMICAL_AREA, aaResult.getAnatomicalArea());
+            log.debug("  {}: {}", ATTR_LABEL_ANATOMICAL_AREA, aaResult.getAnatomicalArea());
         }
 
         if (fileProvider instanceof PipelineResult) {
             PipelineResult result = (PipelineResult)fileProvider;
             keyValues.put(ATTR_LABEL_OBJECTIVE, result.getParentRun().getParent().getObjective());
+            log.debug("  {}: {}", ATTR_LABEL_OBJECTIVE, result.getParentRun().getParent().getObjective());
         }
         
         log.debug("Filepath pattern: {}", filePattern);
