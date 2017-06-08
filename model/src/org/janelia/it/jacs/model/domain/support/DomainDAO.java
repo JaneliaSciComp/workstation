@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -1351,6 +1353,19 @@ public class DomainDAO {
         return toList(sampleCollection.find().sort("{creationDate: -1}").limit(100).as(Sample.class));
     }
 
+    public HashMap<Subject, Integer> getGroupNames(){
+        log.debug("getGroupNames");
+        HashMap<Subject,Integer> hmap = new HashMap<>();
+        List<Subject> c = subjectCollection.distinct("userGroupRoles.groupKey").as(Subject.class);
+        for (int i = 0; i < c.size(); i++) {
+            Integer count = subjectCollection.find("{userGroupRoles.groupKey:#}", c.get(i)).as(Subject.class).count();
+            hmap.put(c.get(i),count);
+        }
+
+        return hmap;
+
+
+    }
 
     /**
      * Create the given object, with the given id. Dangerous to use if you don't know what you're doing! Use save() instead.
