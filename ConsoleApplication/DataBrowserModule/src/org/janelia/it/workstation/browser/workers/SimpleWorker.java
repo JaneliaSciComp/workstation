@@ -42,9 +42,9 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
     protected Void doInBackground() throws Exception {
     	addPropertyChangeListener(this);
         setProgress(0);
-//        if (progressMonitor!=null) {
-//        	setProgress(1);
-//        }
+        if (progressMonitor!=null) {
+        	setProgress(1);
+        }
         try {
             doStuff();
         }
