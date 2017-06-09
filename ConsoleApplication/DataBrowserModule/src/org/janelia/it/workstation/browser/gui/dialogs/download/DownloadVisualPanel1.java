@@ -213,11 +213,12 @@ public final class DownloadVisualPanel1 extends JPanel {
         this.artifactDescriptors = state.getArtifactDescriptors();
         this.artifactFileCounts = state.getArtifactFileCounts();
         
-        // TODO: select the artifact descriptors matching the default result descriptor
-//        if (artifactDescriptors==null) {
-//            artifactDescriptors = new ArrayList<>();
-//            artifactDescriptors.add(defaultResultDescriptor);
-//        }
+        if (artifactDescriptors==null) {
+            artifactDescriptors = new ArrayList<>();
+            if (defaultResultDescriptor!=null) {
+                artifactDescriptors.add(new ResultArtifactDescriptor(defaultResultDescriptor.getObjective(), null, defaultResultDescriptor.getResultName(), defaultResultDescriptor.isAligned()));
+            }
+        }
         
         // Init filter values
         buildFilterValueLists();
