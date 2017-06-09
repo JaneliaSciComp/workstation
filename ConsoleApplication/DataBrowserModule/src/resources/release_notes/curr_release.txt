@@ -1,6 +1,10 @@
-// 5.14
+// 5.15
 
 Workstation Browser
-* Improved usability of Download Wizard
-* Fixed error when right-clicking a folder in the Data Browser
+* Each tab now maintains its own Back/Forward history 
+* You can now navigate backwards to unsaved filters using the Back button
+* LSM attributes (like "Objective" and "Num Channels") can be specified in file names when using the Download Wizard 
+
+Large Volume Viewer
+* Fixed issue with progress bar dialog for long running operations
 

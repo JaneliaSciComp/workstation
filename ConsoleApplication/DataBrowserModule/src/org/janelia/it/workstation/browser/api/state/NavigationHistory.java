@@ -3,7 +3,6 @@ package org.janelia.it.workstation.browser.api.state;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
@@ -78,7 +77,7 @@ public class NavigationHistory {
             throw new IllegalStateException("State with null domain object");
         }
         
-        log.debug("Pushing editor state: {}",state);
+        log.info("Pushing editor state: {}",state);
                     
         if (clearForward) {
             // Clear out navigation in the future direction
@@ -116,7 +115,7 @@ public class NavigationHistory {
         history.set(historyPosition, state);
     }
     
-    private void updateButtons() {
+    public void updateButtons() {
         CallableSystemAction.get(NavigateBack.class).setEnabled(isBackEnabled());
         CallableSystemAction.get(NavigateForward.class).setEnabled(isForwardEnabled());
     }
