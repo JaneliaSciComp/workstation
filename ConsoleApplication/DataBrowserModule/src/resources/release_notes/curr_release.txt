@@ -7,4 +7,5 @@ Workstation Browser
 
 Large Volume Viewer
 * Fixed issue with progress bar dialog for long running operations
+* Better error dialog when attempting to export neurons to read-only location
 
