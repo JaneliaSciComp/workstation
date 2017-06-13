@@ -15,8 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
+import com.mongodb.*;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -71,13 +70,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.mongodb.DuplicateKeyException;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoCredential;
-import com.mongodb.MongoException;
-import com.mongodb.ServerAddress;
-import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
 
 /**
  * Data access object for the domain object model.
@@ -1330,7 +1322,8 @@ public class DomainDAO {
 
     public List<Subject> getMembersByGroupId(String groupId) {
         log.debug("getMembersByGroupId({})", groupId);
-            return toList(subjectCollection.find("{userGroupRoles.groupKey:#}", groupId).as(Subject.class));
+        String refstr = "group:" + groupId;
+            return toList(subjectCollection.find("{userGroupRoles.groupKey:#}", refstr).as(Subject.class));
     }
 
     public List<Sample> getSamplesByDataSet(String dataset, int pageNumber, int pageSize, String sortBy) {
@@ -1363,8 +1356,37 @@ public class DomainDAO {
         }
 
         return hmap;
+    }
 
+    public  HashMap<String, List<String>> getDataSetsbyGroupId (String groupId){
+        log.debug("getDatasets");
+        String refstr = "group:" + groupId;
+        HashMap<String, List<String>> hmap = new HashMap<>();
 
+        for (DataSet dataSet : getDomainObjects(refstr, DataSet.class)) {
+            List<String> roles = new ArrayList<>();
+            if(groupId.equals("admin")){
+                roles.add("Admin");
+                hmap.put(dataSet.getName(),roles );
+            }
+            else{
+                String owner = dataSet.getOwnerKey();
+                Set<String> writers = dataSet.getWriters();
+                Set<String> readers = dataSet.getReaders();
+
+                if (owner.contains(refstr)){
+                    roles.add("Owner");
+                }
+                else if (writers.contains(refstr)){
+                    roles.add("Writer");
+                }
+                else if (readers.contains(refstr)){
+                    roles.add("Reader");
+                }
+                hmap.put(dataSet.getName(), roles);
+            }
+        }
+        return hmap;
     }
 
     /**
@@ -1842,7 +1864,7 @@ public class DomainDAO {
             changePermissions(ownerKey, className, Arrays.asList(id), readRemove, writeRemove, false, forceChildUpdates, true);
         }
     }
-    
+
     private void changePermissions(String subjectKey, String className, Collection<Long> ids, Collection<String> readers, Collection<String> writers, 
             boolean grant, boolean forceChildUpdates, boolean createSharedDataLinks) throws Exception {
         changePermissions(subjectKey, className, ids, readers, writers, grant, forceChildUpdates, createSharedDataLinks, new HashSet<Long>());
