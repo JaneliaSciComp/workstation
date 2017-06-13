@@ -35,6 +35,9 @@ import sun.swing.SwingLazyValue;
 /**
  * LFCustoms for Darcula LAF.
  *
+ * KR: Edited to comment out anything that is not needed by the Janelia Workstation, 
+ * mainly IDE/editor features that are not imported by our project and cause errors.
+ *
  * @author Revivius
  */
 public class DarculaLFCustoms extends LFCustoms {
@@ -114,6 +117,11 @@ public class DarculaLFCustoms extends LFCustoms {
         Color c = UIManager.getColor("Tree.selectionBackground");
         Color focusColor = new Color(c.getRed(), c.getGreen(), c.getBlue() + 1);
 
+        Color foreground1 = new Color(220, 220, 220); // Brightest foreground, for sparse, important things
+        Color foreground2 = new Color(200, 200, 200); // Dimmer foreground, for things that shouldn't pop as much
+        Color foreground3 = new Color(190, 190, 190); // Ever dimmer foreground, for things that might be very dense like tables 
+        Color foreground4 = new Color(110, 110, 110); // Dimmest foreground, for disabled items
+        
         Object[] result = {
             // The assorted standard NetBeans metal font customizations
             CONTROLFONT, controlFont,
@@ -122,6 +130,52 @@ public class DarculaLFCustoms extends LFCustoms {
             MENUFONT, controlFont,
             WINDOWTITLEFONT, controlFont,
             SUBFONT, controlFont.deriveFont(Font.PLAIN, Math.min(controlFont.getSize() - 1, 6)),
+            
+            
+            //##################################################################################################################
+            // Begin customizations for Janelia Workstation
+            //##################################################################################################################
+            
+            // Make all the common labels slightly brighter
+            "Label.foreground", foreground1, 
+            "CheckBox.foreground", foreground2,
+            "ProgressBar.foreground", foreground2,
+            "RadioButton.foreground", foreground2,
+            
+            // Menus
+            "Menu.foreground", foreground2,
+            "MenuItem.foreground", foreground2,
+            "CheckBoxMenuItem.foreground", foreground2,
+            "RadioButtonMenuItem.foreground", foreground2,
+            "PopupMenu.foreground", foreground2,
+            
+            // Disabled menus
+            "Menu.disabledForeground", foreground4,
+            "MenuItem.disabledForeground", foreground4,
+            "CheckBoxMenuItem.disabledForeground", foreground4,
+            "RadioButtonMenuItem.disabledForeground", foreground4,
+            "PopupMenu.disabledForeground", foreground4,
+            
+            // Menu accelerators
+            "Menu.acceleratorForeground", foreground4,
+            "MenuItem.acceleratorForeground", foreground4,
+            "CheckBoxMenuItem.acceleratorForeground", foreground4,
+            "RadioButtonMenuItem.acceleratorForeground", foreground4,
+            
+            // Explorer trees 
+            "Tree.foreground", foreground1,
+            "Tree.textForeground", foreground1,
+            
+            // Tables
+            "Table.foreground", foreground3,
+            "TableHeader.foreground", foreground2,
+            "Table.cellNoFocusBorder", new TransparentBorder(),
+            "Table.focusSelectedCellHighlightBorder", new TransparentBorder(),
+
+            //##################################################################################################################
+            // End customizations for Janelia Workstation
+            //##################################################################################################################
+            
             
             // Bug in JDK 1.5 thru b59 - pale blue is incorrectly returned for this
             "textInactiveText", Color.GRAY,
@@ -273,17 +327,18 @@ public class DarculaLFCustoms extends LFCustoms {
 
         removeEnterFromTreeInputMap();
 
-        replaceSearchNotFoundColor();
-        replaceGlyphGutterLineColor();
-        replaceFormDesignerGapBorderColors();
+        // KR: disable these because we don't use any editors, so it causes errors during L&F initialization
+//        replaceSearchNotFoundColor();
+//        replaceGlyphGutterLineColor();
+//        replaceFormDesignerGapBorderColors();
 
         replaceLFCustomsTextFgColors();
-        replaceCompletionColors();
-        replaceSQLCompletionColumnColor();
-        replaceJSPCompletionColor();
-        replaceHTMLCompletionColor();      
-        replaceCSSPreprocessorCompletionColors();
-        replaceProjectTabColors();
+//        replaceCompletionColors();
+//        replaceSQLCompletionColumnColor();
+//        replaceJSPCompletionColor();
+//        replaceHTMLCompletionColor();      
+//        replaceCSSPreprocessorCompletionColors();
+//        replaceProjectTabColors();
 
         return result;
     }
@@ -297,6 +352,21 @@ public class DarculaLFCustoms extends LFCustoms {
         Object propertySheetValues = new Windows8PropertySheetColorings();
 
         Object[] result = {
+                
+
+            //##################################################################################################################
+            // Begin customizations for Janelia Workstation
+            //##################################################################################################################
+
+            // Domain explorer trees
+            "Tree.secondaryLabel", new Color(172, 145, 83), // Yellowish label for displaying the owner of each node 
+            "Tree.extraLabel", new Color(175, 170, 157), // A third (less-important) label which might contain the size or type of the node
+            
+            //##################################################################################################################
+            // End customizations for Janelia Workstation
+            //##################################################################################################################
+                
+            
             // enable _dark postfix for resource loading
             "nb.dark.theme", Boolean.TRUE,
             "nb.wizard.hideimage", Boolean.TRUE,
@@ -327,7 +397,7 @@ public class DarculaLFCustoms extends LFCustoms {
             
             WARNING_FOREGROUND, new Color(254, 183, 24),
             ERROR_FOREGROUND, new Color(255, 102, 102),
-            
+                        
             // quicksearch
             "nb.quicksearch.border", BorderFactory.createEmptyBorder(),
             
@@ -778,7 +848,8 @@ public class DarculaLFCustoms extends LFCustoms {
 
         @Override
         public Insets getBorderInsets(Component c) {
-            return new Insets(1, 1, 1, 1);
+            // KR: add cell padding
+            return new Insets(5, 5, 5, 5);
         }
 
         @Override

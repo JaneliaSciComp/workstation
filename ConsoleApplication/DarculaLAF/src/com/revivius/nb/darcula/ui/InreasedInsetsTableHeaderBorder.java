@@ -12,6 +12,7 @@ public class InreasedInsetsTableHeaderBorder extends DarculaTableHeaderBorder {
 
     @Override
     public Insets getBorderInsets(Component c) {
-        return new Insets(1, 2, 1, 2);
+        // KR: increased even more
+        return new Insets(2, 3, 2, 3);
     }
 }

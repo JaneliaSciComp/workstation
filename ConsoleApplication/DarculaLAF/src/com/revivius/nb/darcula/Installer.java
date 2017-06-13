@@ -41,14 +41,15 @@ public class Installer extends ModuleInstall {
 
     @Override
     public void restored() {
-        if (SWITCH_EDITOR_COLORS) {
-            WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
-                @Override
-                public void run() {
-                    switchEditorColorsProfile();
-                }
-            });
-        };
+        // KR: disable because we don't use any editors
+//        if (SWITCH_EDITOR_COLORS) {
+//            WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
+//                @Override
+//                public void run() {
+//                    switchEditorColorsProfile();
+//                }
+//            });
+//        };
     }
 
     /**
