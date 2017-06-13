@@ -3,6 +3,7 @@ package org.janelia.it.workstation.browser.api.facade.impl.rest;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -22,6 +23,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 public class RESTClientManager {
 
@@ -36,7 +40,8 @@ public class RESTClientManager {
     private Client client;
     private String serverUrl;
     private Map<String, WebTarget> serviceEndpoints;
-
+    private LoadingCache<String, Boolean> failureCache;
+    
     public RESTClientManager() {
         this(REMOTE_API_URL);
     }
@@ -44,22 +49,39 @@ public class RESTClientManager {
     public RESTClientManager(String serverUrl) {
         this.serverUrl = serverUrl;
         log.info("Using server URL: {}",serverUrl);
-        client = ClientBuilder.newClient();
+        
+
+        this.failureCache = CacheBuilder.newBuilder()
+                .maximumSize(1000)
+                .expireAfterWrite(10, TimeUnit.MINUTES)
+                .build(
+                    new CacheLoader<String, Boolean>() {
+                        public Boolean load(String key) throws Exception {
+                            return false;
+                        }
+                    });
+        
+        this.client = ClientBuilder.newClient();
         JacksonJsonProvider provider = new JacksonJaxbJsonProvider();
                 //.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 //.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+        
         ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
         mapper.addHandler(new DeserializationProblemHandler() {
             @Override
             public boolean handleUnknownProperty(DeserializationContext ctxt, JsonParser jp, JsonDeserializer<?> deserializer, Object beanOrClass, String propertyName) throws IOException, JsonProcessingException {
-                log.error("Failed to deserialize property which does not exist in model: {}.{}",beanOrClass.getClass().getName(),propertyName);
+                String key = beanOrClass.getClass().getName()+"."+propertyName;
+                if (failureCache.getIfPresent(key)==null) {
+                    log.error("Failed to deserialize property which does not exist in model: {}",key);
+                    failureCache.put(key, true);
+                }
                 return true;
             }
         });
 
         client.register(provider);
         client.register(MultiPartFeature.class);
-        registerRestUris();
+        registerRestUris();   
     }
 
     private void registerRestUris() {
