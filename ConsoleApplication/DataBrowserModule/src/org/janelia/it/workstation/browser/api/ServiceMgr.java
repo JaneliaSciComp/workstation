@@ -65,9 +65,12 @@ public class ServiceMgr {
                         tries++;
                         if (tries >= MAX_PORT_TRIES) {
                             log.error("Tried to start external client web services on " + MAX_PORT_TRIES + " ports, giving up.");
-                            SwingUtilities.invokeLater(() -> {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
                                     JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Could not start external client services. Do you have another instance of the Janelia Workstation already open?");
-                                });
+                                }
+                            });
                             return -1;
                         }
                     } 
@@ -104,8 +107,11 @@ public class ServiceMgr {
                         tries++;
                         if (tries >= MAX_PORT_TRIES) {
                             log.error("Tried to start web server on " + MAX_PORT_TRIES + " ports, giving up.");
-                            SwingUtilities.invokeLater(() -> {
-                                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Could not start proxy services. Do you have another instance of the Janelia Workstation already open?");
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Could not start proxy services. Do you have another instance of the Janelia Workstation already open?");
+                                }
                             });
                             return -1;
                         }
