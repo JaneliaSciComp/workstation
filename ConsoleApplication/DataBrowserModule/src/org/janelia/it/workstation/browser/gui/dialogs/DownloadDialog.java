@@ -8,6 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,11 +19,24 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 
-import com.google.common.collect.LinkedHashMultiset;
-import com.google.common.collect.Multiset;
-import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
@@ -31,11 +46,13 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.gui.support.DownloadItem;
 import org.janelia.it.workstation.browser.gui.support.FileDownloadWorker;
 import org.janelia.it.workstation.browser.gui.support.Icons;
@@ -49,11 +66,20 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Multiset;
+
+import net.miginfocom.swing.MigLayout;
+
 /**
  * A dialog for exporting data. Supports exporting hierarchies of files in various ways. 
  *
  * TODO: keep track of user's favorite file naming patterns
  * TODO: better progress indication for loading large file sets
+ * 
+ * @deprecated We're keeping this around for a while in case users want to revert to it
+ * because the new Download Wizard is missing any features. But the idea is that we'll 
+ * eventually just delete it.  
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -63,7 +89,9 @@ public class DownloadDialog extends ModalDialog {
     
     // Constants
     private static final Lock COPY_FILE_LOCK = new ReentrantLock();
-    
+
+    private static final int MAX_BROWSE_FILES = 10;
+
     private static final Font SEPARATOR_FONT = new Font("Sans Serif", Font.BOLD, 12);
     
     private static final String ITEM_TYPE_SELF = "Selected Items";
@@ -121,6 +149,8 @@ public class DownloadDialog extends ModalDialog {
     private List<DomainObject> expandedObjects;
     private List<DownloadItem> downloadItems;
     private final Debouncer debouncer = new Debouncer();
+    private Integer applyToAllChoice;
+    private int numBrowseFileAttempts = 0;
 
     // If anything changes, we need to recalculate the file download list
     private ItemListener changeListener = new ItemListener() {
@@ -608,12 +638,19 @@ public class DownloadDialog extends ModalDialog {
         }
 
         boolean started = false;
+        int remaining = downloadItems.size();
+        
         for(final DownloadItem downloadItem : downloadItems) {
             if (downloadItem.getSourceFile()!=null) {
+            
                 FileDownloadWorker worker = new FileDownloadWorker(downloadItem, COPY_FILE_LOCK);
-                worker.startDownload();
+                if (checkForAlreadyDownloadedFiles(worker, remaining>1)) {
+                    worker.startDownload();
+                }
+                
                 started = true;
             }
+            remaining--;
         }
 
         if (!started) {
@@ -622,6 +659,76 @@ public class DownloadDialog extends ModalDialog {
         else {
             setVisible(false);
         }
+    }
+
+    private boolean checkForAlreadyDownloadedFiles(FileDownloadWorker worker, boolean showApplyToAll) {
+
+        final DownloadItem downloadItem = worker.getDownloadItem();
+        final File targetDir = worker.getTargetDir();
+        final String targetExtension = worker.getTargetExtension();
+        
+        boolean continueWithDownload = true;
+
+        final String targetName = downloadItem.getTargetFile().getName();
+        final String basename = FileUtil.getBasename(targetName).replaceAll("#","");
+
+        File[] files = targetDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.startsWith(basename) && name.endsWith(targetExtension);
+            }
+        });
+
+        if ((files != null) && (files.length > 0)) {
+
+            Integer chosenOptionIndex = applyToAllChoice;
+            if (chosenOptionIndex==null) {
+
+                String abbrName = StringUtils.abbreviate(files[0].getName(), 40);
+                String msg = "<html>The file " + abbrName + " was previously downloaded.<br>"
+                + "Open the existing download folder or re-run the download anyway?</html>";
+                
+                JCheckBox applyToAll = new JCheckBox("Apply to all");
+                
+                JPanel questionPanel = new JPanel(new BorderLayout());
+                questionPanel.add(new JLabel(msg), BorderLayout.CENTER);
+                
+                if (showApplyToAll) {
+                    questionPanel.add(applyToAll, BorderLayout.SOUTH);
+                }
+                
+                String[] options = { "Open Folder", "Run Download", "Ignore" };
+                chosenOptionIndex = JOptionPane.showOptionDialog(
+                        ConsoleApp.getMainFrame(),
+                        questionPanel,
+                        "File Previously Downloaded",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        options,
+                        options[0]);
+                
+                if (applyToAll.isSelected()) {
+                    log.info("Setting apply to all option: {}", chosenOptionIndex);
+                    applyToAllChoice = chosenOptionIndex;
+                }
+            }
+
+            continueWithDownload = (chosenOptionIndex == 1);
+            if (chosenOptionIndex == 0) {
+                if (numBrowseFileAttempts == MAX_BROWSE_FILES) {
+                    log.info("Reached max number of file browses for this download context: {}", numBrowseFileAttempts);
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                            "Maximum number of folders have been opened. Further folders will not be opened for this file set.", "Open Folder", JOptionPane.WARNING_MESSAGE);
+                }
+                else if (numBrowseFileAttempts < MAX_BROWSE_FILES) {
+                    DesktopApi.browse(targetDir);
+                }
+                numBrowseFileAttempts++;
+            }
+        }
+
+        return continueWithDownload;
     }
 
 }

@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
  * A persistent heads-up display for a synchronized image.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ * @author fosterl
  */
 public class Hud extends ModalDialog {
 
@@ -66,26 +67,31 @@ public class Hud extends ModalDialog {
     private final Cursor hndCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
     private final Point pp = new Point();
     
-    private DomainObject domainObject;
-    private HasFiles fileProvider;
-    
+    // GUI
     private boolean dirtyEntityFor3D;
     private final JScrollPane scrollPane;
     private final JLabel previewLabel;
-    private Mip3d mip3d;
-
-    private ResultSelectionButton resultButton;
-    private ImageTypeSelectionButton typeButton;
+    private final ResultSelectionButton resultButton;
+    private final ImageTypeSelectionButton typeButton;
     private final JMenu rgbMenu = new JMenu("RGB Controls");
+    private final JPanel menuLikePanel;
     private JCheckBox render3DCheckbox;
-    
+    private Mip3d mip3d;
     private Hud3DController hud3DController;
     private KeyListener keyListener;
 
+    // Current state
+    private DomainObject domainObject;
+    private HasFiles fileProvider;
+    
     public enum COLOR_CHANNEL {
         RED,
         GREEN,
         BLUE
+    }
+    
+    public static boolean isInitialized() {
+        return instance != null;
     }
     
     public static Hud getSingletonInstance() {
@@ -96,6 +102,7 @@ public class Hud extends ModalDialog {
     }
     
     private Hud() {
+        
         dirtyEntityFor3D = true;
         setModalityType(ModalityType.MODELESS);
         setLayout(new BorderLayout());
@@ -114,6 +121,22 @@ public class Hud extends ModalDialog {
             }
         };
 
+
+        JPanel leftSidePanel = new JPanel();
+        leftSidePanel.setLayout(new FlowLayout());
+        leftSidePanel.setFocusable(false);
+        leftSidePanel.setRequestFocusEnabled(false);
+        leftSidePanel.add(resultButton);
+        leftSidePanel.add(typeButton);
+
+        menuLikePanel = new JPanel();
+        menuLikePanel.setFocusable(false);
+        menuLikePanel.setRequestFocusEnabled(false);
+        menuLikePanel.setLayout(new BorderLayout());
+        menuLikePanel.add(leftSidePanel, BorderLayout.WEST);
+        
+        add(menuLikePanel, BorderLayout.NORTH);
+        
         previewLabel = new JLabel(new ImageIcon());
         previewLabel.setFocusable(false);
         previewLabel.setRequestFocusEnabled(false);
@@ -145,7 +168,6 @@ public class Hud extends ModalDialog {
         scrollPane.getViewport().addMouseMotionListener(mouseAdapter);
         scrollPane.getViewport().addMouseListener(mouseAdapter);
         
-        this.add(scrollPane, BorderLayout.CENTER);
         add(scrollPane, BorderLayout.CENTER);
 
         init3dGui();
@@ -214,8 +236,6 @@ public class Hud extends ModalDialog {
         typeButton.setResultDescriptor(currResult);
         typeButton.setImageTypeName(currImageType);
         typeButton.populate(domainObject);
-        
-        set3dModeEnabled(getFast3dFile()!=null);
 
         if (domainObject instanceof Sample) {
             Sample sample = (Sample)domainObject;
@@ -243,6 +263,8 @@ public class Hud extends ModalDialog {
             }
         }
         else {
+            log.info("fast3dFile={}", getFast3dFile());
+            set3dModeEnabled(getFast3dFile()!=null);
             
             SimpleWorker worker = new SimpleWorker() {
 
@@ -282,9 +304,8 @@ public class Hud extends ModalDialog {
                         previewLabel.setIcon(image == null ? null : new ImageIcon(image));
                         dirtyEntityFor3D = true;
                         if (render3DCheckbox != null) {
-                            render3DCheckbox.setEnabled(true);
                             render3DCheckbox.setSelected(false);
-                            hud3DController.entityUpdate();
+                            handleRenderSelection();
                         }
                         setAllColorsOn();
                         setTitle(domainObject.getName());
@@ -312,7 +333,7 @@ public class Hud extends ModalDialog {
             worker.execute();
             
         }
-        mip3d.repaint();
+        if (mip3d!=null) mip3d.repaint();
     }
     
     public String getFast3dFile() {
@@ -344,15 +365,6 @@ public class Hud extends ModalDialog {
     public void set3dModeEnabled(boolean flag) {
         if (render3DCheckbox != null) {
             render3DCheckbox.setEnabled(flag);
-            if (previewLabel.getIcon() == null) {
-                // In this case, no 2D image exists, and the checkbox for 3D is locked at true.
-                render3DCheckbox.setEnabled(false);
-                render3DCheckbox.setSelected(true);
-            }
-            else {
-                // In this case, 2D exists.  Need to reset the checkbox for 2D use, for now.
-                render3DCheckbox.setSelected(false);
-            }
         }
     }
 
@@ -362,7 +374,7 @@ public class Hud extends ModalDialog {
             renderIn3D();
         }
         else {
-            this.remove(mip3d);
+            if (mip3d!=null) this.remove(mip3d);
             this.add(scrollPane, BorderLayout.CENTER);
         }
         rgbMenu.setEnabled(is3D);
@@ -393,14 +405,12 @@ public class Hud extends ModalDialog {
                     hud3DController.load3d();
                     dirtyEntityFor3D = hud3DController.isDirty();
                 }
-
             }
             catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Failed to load 3D image.");
                 log.error("Failed to load 3D image", ex);
                 set3dModeEnabled(false);
                 handleRenderSelection();
-
             }
         }
         else {
@@ -414,83 +424,92 @@ public class Hud extends ModalDialog {
         for (Component component : rgbMenu.getMenuComponents()) {
             ((JCheckBoxMenuItem) component).setSelected(true);
         }
-        mip3d.toggleRGBValue(COLOR_CHANNEL.RED.ordinal(), true);
-        mip3d.toggleRGBValue(COLOR_CHANNEL.GREEN.ordinal(), true);
-        mip3d.toggleRGBValue(COLOR_CHANNEL.BLUE.ordinal(), true);
+        if (mip3d!=null) {
+            mip3d.toggleRGBValue(COLOR_CHANNEL.RED.ordinal(), true);
+            mip3d.toggleRGBValue(COLOR_CHANNEL.GREEN.ordinal(), true);
+            mip3d.toggleRGBValue(COLOR_CHANNEL.BLUE.ordinal(), true);
+        }
     }
 
     private void init3dGui() {
-        if (!Mip3d.isAvailable()) {
-            log.error("Cannot initialize 3D HUD because 3D MIP viewer is not available");
-            return;
-        }
-        try {
-            mip3d = new Mip3d();
-            mip3d.setResetFirstRedraw(true);
-            rgbMenu.setFocusable(false);
-            rgbMenu.setRequestFocusEnabled(false);
-            JMenuBar menuBar = new JMenuBar();
-            menuBar.setFocusable(false);
-            menuBar.setRequestFocusEnabled(false);
-            JCheckBoxMenuItem redButton = new JCheckBoxMenuItem("Red");
-            redButton.setSelected(true);
-            redButton.setFocusable(false);
-            redButton.setRequestFocusEnabled(false);
-            redButton.addActionListener(new MyButtonActionListener(COLOR_CHANNEL.RED));
-            rgbMenu.add(redButton);
-            JCheckBoxMenuItem blueButton = new JCheckBoxMenuItem("Blue");
-            blueButton.setSelected(true);
-            blueButton.addActionListener(new MyButtonActionListener(COLOR_CHANNEL.BLUE));
-            blueButton.setFocusable(false);
-            blueButton.setRequestFocusEnabled(false);
-            rgbMenu.add(blueButton);
-            JCheckBoxMenuItem greenButton = new JCheckBoxMenuItem("Green");
-            greenButton.setSelected(true);
-            greenButton.addActionListener(new MyButtonActionListener(COLOR_CHANNEL.GREEN));
-            greenButton.setFocusable(false);
-            greenButton.setRequestFocusEnabled(false);
-            rgbMenu.add(greenButton);
-            rgbMenu.setEnabled(false);
-            menuBar.add(rgbMenu);
 
-            JPanel leftSidePanel = new JPanel();
-            leftSidePanel.setLayout(new FlowLayout());
-            leftSidePanel.add(menuBar);
-            leftSidePanel.setFocusable(false);
-            leftSidePanel.setRequestFocusEnabled(false);
-            leftSidePanel.add(resultButton);
-            leftSidePanel.add(typeButton);
+        SimpleWorker worker = new SimpleWorker() {
+
+            private boolean allow3d = false;
             
-            hud3DController = new Hud3DController(this, mip3d);
-            render3DCheckbox = new JCheckBox(THREE_D_CONTROL);
-            render3DCheckbox.setSelected(false); // Always startup as false.
-            render3DCheckbox.addActionListener(hud3DController);
-            render3DCheckbox.setFont(render3DCheckbox.getFont().deriveFont(9.0f));
-            render3DCheckbox.setBorderPainted(false);
-            render3DCheckbox.setActionCommand(THREE_D_CONTROL);
-            render3DCheckbox.setFocusable(false);
-            render3DCheckbox.setRequestFocusEnabled(false);
-
-            JPanel rightSidePanel = new JPanel();
-            rightSidePanel.setLayout(new FlowLayout());
-            rightSidePanel.add(menuBar);
-            rightSidePanel.setFocusable(false);
-            rightSidePanel.setRequestFocusEnabled(false);
-            rightSidePanel.add(render3DCheckbox);
-
-            JPanel menuLikePanel = new JPanel();
-            menuLikePanel.setFocusable(false);
-            menuLikePanel.setRequestFocusEnabled(false);
-            menuLikePanel.setLayout(new BorderLayout());
-            menuLikePanel.add(leftSidePanel, BorderLayout.WEST);
-            menuLikePanel.add(rightSidePanel, BorderLayout.EAST);
-            add(menuLikePanel, BorderLayout.NORTH);
-        }
-        catch (Exception ex) {
-            // Turn off the 3d capability if exception.
-            render3DCheckbox = null;
-            log.error("Error initializing 3D HUD", ex);
-        }
+            @Override
+            protected void doStuff() throws Exception { 
+                // The isAvailable() check actually takes a second or two, so that's why we do it in a background thread.
+                if (!Mip3d.isAvailable()) {
+                    log.error("Cannot initialize 3D HUD because 3D MIP viewer is not available");
+                    return;
+                }
+                mip3d = new Mip3d();
+                mip3d.setResetFirstRedraw(true);
+                hud3DController = new Hud3DController(Hud.this, mip3d);
+                allow3d = true;
+            }
+            
+            @Override
+            protected void hadSuccess() {
+                
+                if (!allow3d) return;
+                
+                rgbMenu.setFocusable(false);
+                rgbMenu.setRequestFocusEnabled(false);
+                JMenuBar menuBar = new JMenuBar();
+                menuBar.setFocusable(false);
+                menuBar.setRequestFocusEnabled(false);
+                JCheckBoxMenuItem redButton = new JCheckBoxMenuItem("Red");
+                redButton.setSelected(true);
+                redButton.setFocusable(false);
+                redButton.setRequestFocusEnabled(false);
+                redButton.addActionListener(new MyButtonActionListener(COLOR_CHANNEL.RED));
+                rgbMenu.add(redButton);
+                JCheckBoxMenuItem blueButton = new JCheckBoxMenuItem("Blue");
+                blueButton.setSelected(true);
+                blueButton.addActionListener(new MyButtonActionListener(COLOR_CHANNEL.BLUE));
+                blueButton.setFocusable(false);
+                blueButton.setRequestFocusEnabled(false);
+                rgbMenu.add(blueButton);
+                JCheckBoxMenuItem greenButton = new JCheckBoxMenuItem("Green");
+                greenButton.setSelected(true);
+                greenButton.addActionListener(new MyButtonActionListener(COLOR_CHANNEL.GREEN));
+                greenButton.setFocusable(false);
+                greenButton.setRequestFocusEnabled(false);
+                rgbMenu.add(greenButton);
+                rgbMenu.setEnabled(false);
+                menuBar.add(rgbMenu);
+                
+                JPanel rightSidePanel = new JPanel();
+                rightSidePanel.setLayout(new FlowLayout());
+                rightSidePanel.setFocusable(false);
+                rightSidePanel.setRequestFocusEnabled(false);
+                rightSidePanel.add(menuBar);
+                
+                render3DCheckbox = new JCheckBox(THREE_D_CONTROL);
+                render3DCheckbox.setSelected(false); // Always startup as false.
+                render3DCheckbox.addActionListener(hud3DController);
+                render3DCheckbox.setFont(render3DCheckbox.getFont().deriveFont(9.0f));
+                render3DCheckbox.setBorderPainted(false);
+                render3DCheckbox.setActionCommand(THREE_D_CONTROL);
+                render3DCheckbox.setFocusable(false);
+                render3DCheckbox.setRequestFocusEnabled(false);
+                rightSidePanel.add(render3DCheckbox);
+                
+                menuLikePanel.add(rightSidePanel, BorderLayout.EAST);
+                menuLikePanel.validate();
+                menuLikePanel.repaint();
+            }
+            
+            @Override
+            protected void hadError(Throwable ex) {
+                // Turn off the 3d capability if exception.
+                render3DCheckbox = null;
+                log.error("Error initializing 3D HUD", ex);
+            }
+        };
+        worker.execute();
     }
 
     private boolean shouldRender3D() {
@@ -513,8 +532,10 @@ public class Hud extends ModalDialog {
 
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            mip3d.toggleRGBValue(myChannel.ordinal(), ((JCheckBoxMenuItem) actionEvent.getSource()).isSelected());
-            mip3d.repaint();
+            if (mip3d!=null) {
+                mip3d.toggleRGBValue(myChannel.ordinal(), ((JCheckBoxMenuItem) actionEvent.getSource()).isSelected());
+                mip3d.repaint();
+            }
         }
     }
 }

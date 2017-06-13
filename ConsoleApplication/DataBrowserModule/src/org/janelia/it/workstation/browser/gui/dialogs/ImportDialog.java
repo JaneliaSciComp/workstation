@@ -225,8 +225,8 @@ public class ImportDialog extends ModalDialog {
         }
         
         if (isEmpty(folderName)) {
-            throw new IllegalArgumentException(
-                    "Please specify a folder into which the files should be imported.");
+            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Please specify a folder into which the files should be imported.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
         // save the user preferences for later
@@ -249,10 +249,12 @@ public class ImportDialog extends ModalDialog {
                 fileCount = selectedChildren.size();
 
                 if (fileCount == 0) {
-                    throw new IllegalArgumentException(
-                            "No eligible import files were found in " +
-                            selectedFile.getAbsolutePath() + ".");
-                } else {
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "No eligible import files were found in " +
+                            selectedFile.getAbsolutePath() + ".", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                    
+                } 
+                else {
                     for (File child : selectedChildren) {
                         transferMegabytes += (child.length() / 1000000.0);
                     }
@@ -263,10 +265,8 @@ public class ImportDialog extends ModalDialog {
             }
 
         } else {
-
-            throw new IllegalArgumentException(
-                    "Please specify a valid file or directory to import.");
-
+            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Please specify a valid file or directory to import.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
         MessageFormat form = new MessageFormat(
@@ -289,9 +289,9 @@ public class ImportDialog extends ModalDialog {
 
         final int maxGigabytes = 20;
         if (transferGigabytes > maxGigabytes) {
-            throw new IllegalArgumentException(
-                    msg + "  This exceeds the maximum import limit of " +
-                    maxGigabytes + " gigabytes.");
+            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg + "  This exceeds the maximum import limit of " +
+                    maxGigabytes + " gigabytes.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
         boolean continueWithImport = true;

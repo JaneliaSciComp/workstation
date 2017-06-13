@@ -357,7 +357,7 @@ class UglyColorSliderUI extends BasicSliderUI
 
             // For 16-bit ranges, one unit is too small
             if (colorSlider.getMaximum() > 4000)
-                delta *= 20;
+                delta *= 10;
             
             if (selectedThumb == Thumb.WHITE) {
 				int oldValue = colorSlider.getWhiteLevel();

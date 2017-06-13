@@ -51,13 +51,13 @@ public class TableViewerConfigDialog extends ModalDialog {
     private final JPanel mainPanel;
     private final JPanel attrsPanel;
 
-    private TableViewerConfiguration config;
-    private List<DomainObjectAttribute> sortedAttrs;
-    private Map<DomainObjectAttribute, JCheckBox> checkboxes = new HashMap<>();
+    private final TableViewerConfiguration config;
+    private final List<DomainObjectAttribute> sortedAttrs;
+    private final Map<DomainObjectAttribute, JCheckBox> checkboxes = new HashMap<>();
 
-    public TableViewerConfigDialog(List<DomainObjectAttribute> attrs) {
+    public TableViewerConfigDialog(List<DomainObjectAttribute> attrs, final TableViewerConfiguration config) {
 
-        this.config = TableViewerConfiguration.loadConfig();
+        this.config = config;
         setTitle("Table View Configuration");
 
         JButton checkAllButton = new JButton("Check all");

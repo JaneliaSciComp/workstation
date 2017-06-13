@@ -7,15 +7,18 @@ import java.util.concurrent.CancellationException;
 import javax.swing.ProgressMonitor;
 import javax.swing.SwingWorker;
 
+import org.janelia.it.jacs.shared.utils.Progress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A simple worker class that handles exceptions. Also allows for easy attachment of a ProgressMonitor.
+ * A simple worker class that handles exceptions that occur in the background thread.
+ * 
+ * Also allows for easy attachment of a ProgressMonitor.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class SimpleWorker extends SwingWorker<Void, Void> implements PropertyChangeListener {
+public abstract class SimpleWorker extends SwingWorker<Void, Void> implements PropertyChangeListener, Progress {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleWorker.class);
     
@@ -24,6 +27,11 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
     protected ProgressMonitor progressMonitor; 
     protected SimpleListenableFuture future;
 
+    /**
+     * This object is already a future of course, but the SimpleListenableFuture returned by 
+     * this method uses Guava's Future API to allow for various types of composition 
+     * which are not possible with the normal concurrent API.
+     */
     public SimpleListenableFuture executeWithFuture() {
         this.future = SimpleListenableFuture.create();
         execute();
@@ -123,6 +131,10 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
      */
 	public void setProgressMonitor(ProgressMonitor progressMonitor) {
 		this.progressMonitor = progressMonitor;
+		if (progressMonitor!=null) {
+            String message = String.format("Completed %d%%", 0);
+            progressMonitor.setNote(message);
+		}
 	}
 
 	/**
@@ -130,7 +142,8 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
 	 * @param curr number of items completed
 	 * @param total total number of items
 	 */
-	public void setProgress(long curr, long total) {
+	@Override
+    public void setProgress(long curr, long total) {
     	double percentDone = (double)curr / (double)total;
     	int p = (int)Math.round(100*percentDone);
         try {
@@ -140,7 +153,12 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
             log.error("Invalid progress: "+curr+"/"+total,e);
         }
 	}
-	
+
+    @Override
+    public void setStatus(String status) {
+        throw new UnsupportedOperationException("SimpleWorker.setStatus is not implemented by default");
+    }
+    
 	/**
      * Invoked when the workers progress property changes.
      */

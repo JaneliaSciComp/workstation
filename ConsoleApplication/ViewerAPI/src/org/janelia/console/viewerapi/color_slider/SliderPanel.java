@@ -6,23 +6,44 @@
 
 package org.janelia.console.viewerapi.color_slider;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.awt.Color;
+import org.janelia.console.viewerapi.actions.ImportExportColorModelAction;
+import org.janelia.console.viewerapi.controller.UnmixingListener;
+import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import java.awt.Insets;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.swing.AbstractButton;
+import javax.swing.Action;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import org.janelia.console.viewerapi.SimpleIcons;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
+import org.janelia.console.viewerapi.model.UnmixingParameters;
+import org.openide.util.Lookup;
+import org.openide.util.Utilities;
 
 /**
  * Encapsulates all multi-slider functionality for reuse.
  * @author fosterl
  */
 public class SliderPanel extends JPanel {
+    public enum VIEW {Horta, LVV};
     private static final String IMAGES_LOCK = "lock.png";
     private static final String IMAGES_LOCK_UNLOCK = "lock_unlock.png";
 
@@ -37,12 +58,21 @@ public class SliderPanel extends JPanel {
 	private JPanel colorLockPanel = new JPanel();
     private ImageColorModel imageColorModel;
     private ColorModelListener visibilityListener;
+    private VIEW top;
 
     public SliderPanel() { // empty constructor so I can drag this widget in netbeans GUI builder
     }
     
     public SliderPanel( ImageColorModel imageColorModel ) {
-        setImageColorModel( imageColorModel );
+        setImageColorModel(imageColorModel);
+    }
+    
+    public void setTop(VIEW top) {
+        this.top = top;
+    }
+    
+    public VIEW getTop() {
+        return top;
     }
     
     public final void setImageColorModel( ImageColorModel imageColorModel ) {
@@ -189,7 +219,82 @@ public class SliderPanel extends JPanel {
             };
         }
         imageColorModel.addColorModelListener(visibilityListener);
-		
+
+        // add popup-menu for saving/loading color model information from file
+        JPopupMenu sliderPanelMenu = new JPopupMenu();
+
+        ImportExportColorModelAction importColorModelAction = new ImportExportColorModelAction(ImportExportColorModelAction.MODE.IMPORT, this, colorLockPanel);
+        importColorModelAction.putValue(Action.NAME, "Import Color Model");
+        importColorModelAction.putValue(Action.SHORT_DESCRIPTION,
+                "Import a color model from external file");
+        sliderPanelMenu.add(new JMenuItem(importColorModelAction));
+
+        ImportExportColorModelAction exportColorModelAction = new ImportExportColorModelAction(ImportExportColorModelAction.MODE.EXPORT, this, colorLockPanel);
+        exportColorModelAction.putValue(Action.NAME, "Export Color Model");
+        exportColorModelAction.putValue(Action.SHORT_DESCRIPTION,
+                "Export Workspace color model to external file");
+        exportColorModelAction.putValue("top", this.top);
+        sliderPanelMenu.add(new JMenuItem(exportColorModelAction));
+
+        colorLockPanel.setComponentPopupMenu(sliderPanelMenu);
+        for (int i=0; i<colorWidgets.length; i++) {
+             ColorChannelWidget cw = colorWidgets[i];
+             cw.setComponentPopupMenu(sliderPanelMenu);
+        }
+    }
+
+    public void importCompleteColorModel(File modelFile) {
+        try (FileInputStream fileReader = new FileInputStream(modelFile)) {
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String,Object> fullColorModel = mapper.readValue(fileReader, new TypeReference<Map<String,Object>>(){});
+            List<String> channelList = (List<String>)fullColorModel.get("channels");
+
+            ImageColorModel importModel = mapper.convertValue(fullColorModel.get("topLevelModel"), ImageColorModel.class);
+            for (int i=0; i<channelList.size(); i++) {
+                ChannelColorModel ccm = imageColorModel.getChannel(i);
+                ccm.fromString(channelList.get(i));
+            }
+            
+            // update sync values on image model; not sure if this makes sense
+            imageColorModel.setBlackSynchronized(importModel.isBlackSynchronized());
+            imageColorModel.setGammaSynchronized(importModel.isGammaSynchronized());
+            imageColorModel.setWhiteSynchronized(importModel.isWhiteSynchronized());
+            updateLockButtons();
+            
+            // update unmixing parameters
+            imageColorModel.setUnmixParameters(importModel.getUnmixParameters());
+            imageColorModel.fireUnmixingParametersChanged();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void exportCompleteColorModel(File modelFile) {
+        // For now, only need to sync the unmixing params when we export since they aren't used by LVV
+        try (FileOutputStream fileWriter = new FileOutputStream(modelFile)) {
+            // assume at least one color channel
+            ImageColorModel imageColorModel = colorWidgets[0].getImageColorModel();
+            List<String> channelList = new ArrayList<>();
+            for (int i=0; i<imageColorModel.getChannelCount(); i++) {
+                channelList.add(imageColorModel.getChannel(i).asString());
+            }
+
+            // using map to capture all pertinent information
+            Map<String, Object> fullColorModel = new HashMap<>();
+            fullColorModel.put("channels", channelList);
+            fullColorModel.put("topLevelModel", imageColorModel);
+
+            UnmixingParameters unmixingResult = Utilities.actionsGlobalContext().lookup(UnmixingParameters.class);
+            if (unmixingResult!=null) {
+                fullColorModel.put("unmixing", unmixingResult);
+            }
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.writeValue(fileWriter, fullColorModel);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

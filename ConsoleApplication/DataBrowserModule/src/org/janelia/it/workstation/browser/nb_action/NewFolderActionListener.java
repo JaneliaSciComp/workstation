@@ -40,6 +40,12 @@ public final class NewFolderActionListener implements ActionListener {
             // If there is no parent node specified, we'll just use the default workspace.
             parentNode = explorer.getWorkspaceNode();
         }
+        
+        if (parentNode==null) {
+            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                    "Folders have not been loaded. Try refreshing the Explorer view.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         final String name = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Folder Name:\n",
                 "Create new folder", JOptionPane.PLAIN_MESSAGE, null, null, null);

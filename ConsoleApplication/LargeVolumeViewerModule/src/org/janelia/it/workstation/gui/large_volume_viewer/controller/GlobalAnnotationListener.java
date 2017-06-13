@@ -13,9 +13,16 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
  * @author fosterl
  */
 public interface GlobalAnnotationListener {
+    void workspaceUnloaded(TmWorkspace workspace);
     void workspaceLoaded(TmWorkspace workspace);
+    void spatialIndexReady(TmWorkspace workspace);
+    void neuronCreated(TmNeuronMetadata neuron);
+    void neuronDeleted(TmNeuronMetadata neuron);
+    void neuronChanged(TmNeuronMetadata neuron);
+    void neuronRenamed(TmNeuronMetadata neuron);    
     void neuronSelected(TmNeuronMetadata neuron);
     void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style);
     void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap);
     void neuronTagsChanged(List<TmNeuronMetadata> neuronList);
+    
 }

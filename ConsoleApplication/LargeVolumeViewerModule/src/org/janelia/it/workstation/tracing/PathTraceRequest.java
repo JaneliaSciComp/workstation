@@ -6,13 +6,15 @@ public class PathTraceRequest {
 
     private Vec3 xyz1;
     private Vec3 xyz2;
+    private Long neuronGuid;
     private Long anchorGuid1;
     private Long anchorGuid2;
     private SegmentIndex segmentIndex; // for hashing
 
-    public PathTraceRequest(Vec3 xyz1, Vec3 xyz2, Long guid1, Long guid2) {
+    public PathTraceRequest(Vec3 xyz1, Vec3 xyz2, Long neuronGuid, Long guid1, Long guid2) {
         this.xyz1 = xyz1;
         this.xyz2 = xyz2;
+        this.neuronGuid = neuronGuid;
         this.anchorGuid1 = guid1;
         this.anchorGuid2 = guid2;
         this.segmentIndex = new SegmentIndex(guid1, guid2);
@@ -52,6 +54,14 @@ public class PathTraceRequest {
 		return segmentIndex;
 	}
 
+    public Long getNeuronGuid() {
+        return neuronGuid;
+    }
+
+    public void setNeuronGuid(Long neuronGuid) {
+        this.neuronGuid = neuronGuid;
+    }
+    
     public long getAnchor1Guid() {
         return anchorGuid1;
     }

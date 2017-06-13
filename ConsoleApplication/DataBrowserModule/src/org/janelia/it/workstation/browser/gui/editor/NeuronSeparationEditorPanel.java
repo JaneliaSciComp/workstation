@@ -3,6 +3,7 @@ package org.janelia.it.workstation.browser.gui.editor;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -35,8 +36,10 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
@@ -47,7 +50,6 @@ import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
-import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -155,7 +157,12 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             }
         });
         
-        configPanel = new ConfigPanel(true);
+        configPanel = new ConfigPanel(true) {
+            @Override
+            protected void titleClicked(MouseEvent e) {
+                Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, separation, true));
+            }
+        };
         configPanel.addTitleComponent(fragmentSortButton, true, true);
         configPanel.addTitleComponent(openInNAButton, true, true);
         configPanel.addConfigComponent(resultButton);
@@ -348,6 +355,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
     
     private void setResult(final NeuronSeparation separation, final boolean isUserDriven, final StopWatch w) {
+        this.separation = separation;
         this.resultButton.setText(getLabel(separation));
         resultsPanel.showLoadingIndicator();
         

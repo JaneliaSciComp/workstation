@@ -6,18 +6,19 @@ import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
 import org.janelia.it.workstation.browser.gui.support.MailDialogueBox;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,13 +69,18 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
     public void publish(LogRecord record) {
         if (record.getThrown()!=null) {
             this.throwable = record.getThrown();
-            if (AccessManager.getAccessManager().isLoggedIn()) { // JW-25430: Only attempt to auto-send exceptions once the user has logged in
-                try {
-                    autoSendNovelExceptions();
-                }
-                catch (Throwable t) {
-                    log.error("Error attempting to auto-send exceptions", t);
-                }
+            
+            // Only auto-send exceptions which are logged at error ("SEVERE") level or higher
+            if (record.getLevel().intValue() < Level.SEVERE.intValue()) return;
+            
+            // JW-25430: Only attempt to auto-send exceptions once the user has logged in
+            if (ConsoleState.getCurrState()<ConsoleState.LOGGED_IN) return; 
+            
+            try {
+                autoSendNovelExceptions();
+            }
+            catch (Throwable t) {
+                log.error("Error attempting to auto-send exceptions", t);
             }
         }
     }
@@ -96,12 +102,22 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             return;
         }
 
-        String st = getStacktrace(throwable);
-        String sth = hf.newHasher().putString(st, Charsets.UTF_8).hash().toString();
-        log.trace("Got exception hash: {}",sth);
+        String st = ExceptionUtils.getStackTrace(throwable);
         String firstLine = getFirstLine(st);
+
+        if (isIgnoredForAutoSend(throwable, st)) {
+            log.trace("Ignoring exception for auto-send: {}", firstLine);
+            return;
+        }
         
-        if (!exceptionCounts.contains(sth)) {
+        // We remove the first line before checking for uniqueness. 
+        // Ignoring the exception message when looking for duplicates can cause some false positives, but it's better than a flood. 
+        // Even if we miss a novel exception, if it matters then sooner or later it will come up again. 
+        String trace = getTrace(st);
+        String traceHash = hf.newHasher().putString(trace, Charsets.UTF_8).hash().toString();
+        log.trace("Got exception hash: {}",traceHash);
+        
+        if (!exceptionCounts.contains(traceHash)) {  
             // First appearance of this stack trace, let's try to send it to JIRA.
 
             // Allow one exception report every cooldown cycle. Our RateLimiter allows one access every 
@@ -113,14 +129,13 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             sendEmail(st, false);
         }
         else {
-            int count = exceptionCounts.count(sth);
+            int count = exceptionCounts.count(traceHash);
             if (count % 10 == 0) {
                 log.warn("Exception count reached {} for: {}", count, firstLine);
-                // TODO: create another JIRA ticket?
             }
         }
 
-        exceptionCounts.add(sth); // Increment counter
+        exceptionCounts.add(traceHash); // Increment counter
 
         // Make sure we're not devoting too much memory to stack traces
         if (exceptionCounts.size()>MAX_STACKTRACE_CACHE_SIZE) {
@@ -132,13 +147,39 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
                 }
             }
             // Still too big? Just clear it out.
-            if (exceptionCounts.size()>=MAX_STACKTRACE_CACHE_SIZE) {
+            if (exceptionCounts.size()>MAX_STACKTRACE_CACHE_SIZE) {
                 log.info("Clearing exception cache (cacheSize={})", exceptionCounts.size());
                 exceptionCounts.clear();
             }
         }   
     }
 
+    /**
+     * Filter exceptions which should never be reported to JIRA. These are exceptions for
+     * which we can not do anything. They are not caused by bugs in our software, but issues with 
+     * the environment or an acceptable user action which happens to generate an exception. 
+     */
+    private boolean isIgnoredForAutoSend(Throwable throwable, String stacktrace) {
+        
+        // Ignore all space issues, these do not represent bugs
+        if (stacktrace.contains("java.io.IOException: No space left on device")) {
+            return true;
+        }
+        
+        // Ignore all broken pipes, because these are usually caused by user initiated cancellation or network issues
+        if (stacktrace.contains("Caused by: java.io.IOException: Broken pipe")) {
+            return true;
+        }
+        
+        // Ignore network and data issues. If it's in fact a data problem on our end, the user will let us know. 
+        if (stacktrace.contains("java.io.IOException: unexpected end of stream") 
+                || stacktrace.contains("Caused by: java.net.ConnectException: Connection refused")) {
+            return true;
+        }
+        
+        return false;
+    }
+    
     @Override
     public void flush() {
     }
@@ -163,7 +204,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         SwingUtilities.windowForComponent(newFunctionButton).setVisible(false);
         // Due to the way the NotifyExcPanel works, this might not be the exception the user is currently looking at! 
         // Maybe it's better than nothing if it's right 80% of the time? 
-        sendEmail(getStacktrace(throwable), true);
+        sendEmail(ExceptionUtils.getStackTrace(throwable), true);
     }
     
     private void sendEmail(String stacktrace, boolean askForInput) {
@@ -171,38 +212,35 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         try {
             String firstLine = getFirstLine(stacktrace);
             log.info("Reporting exception: "+firstLine);
-            
-            String titleSuffix = " from "+AccessManager.getUsername()+" -- "+firstLine;
 
-            MailDialogueBox mailDialogueBox = new MailDialogueBox(ConsoleApp.getMainFrame(),
-                    (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL),
-                    (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix,
-                    askForInput?"Problem Description: ":"");
-            try {
-                StringBuilder sb = new StringBuilder();
-                sb.append("\nSubject Key: ").append(AccessManager.getSubjectKey());
-                sb.append("\nApplication: ").append(ConsoleApp.getConsoleApp().getApplicationName()).append(" v").append(ConsoleApp.getConsoleApp().getApplicationVersion());
-                sb.append("\nOperating System: ").append(SystemInfo.getOSInfo());
-                sb.append("\nJava: ").append(SystemInfo.getJavaInfo());
-                sb.append("\nRuntime: ").append(SystemInfo.getRuntimeJavaInfo());
-                if (stacktrace!=null) {
-                    sb.append("\n\nStack Trace:\n");
-                    sb.append(stacktrace);
-                }
-                
-                mailDialogueBox.addMessageSuffix(sb.toString());
-            }
-            catch (Exception e) {
-                // Do nothing if the notification attempt fails.
-                log.warn("Error building exception suffix" , e);
-            }
+            String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
+            String titleSuffix = " from "+AccessManager.getUsername()+" -- "+firstLine;
+            String subject = (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix;
+             
+            MailDialogueBox mailDialogueBox = MailDialogueBox.newDialog(ConsoleApp.getMainFrame(), email)
+                    .withTitle("Create A Ticket")
+                    .withPromptText("If possible, please describe what you were doing when the error occured:")
+                    .withEmailSubject(subject)
+                    .appendStandardPrefix();
             
             if (askForInput) {
-                mailDialogueBox.showPopupThenSendEmail();
+                String problemDesc = mailDialogueBox.showPopup();
+                if (problemDesc==null) {
+                    // User pressed cancel
+                    return;
+                }
+                else {
+                    mailDialogueBox.append("\n\nProblem Description:\n");
+                    mailDialogueBox.append(problemDesc);
+                }
             }
-            else {
-                mailDialogueBox.sendEmail();
+
+            if (stacktrace!=null) {
+                mailDialogueBox.append("\n\nStack Trace:\n");
+                mailDialogueBox.append(stacktrace);
             }
+            
+            mailDialogueBox.sendEmail();
         }
         catch (Exception ex) {
             log.warn("Error sending exception email",ex);
@@ -214,29 +252,15 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         }
     }
     
-    private String getStacktrace(Throwable t) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(t.getClass().getName()).append(": "+t.getMessage()).append("\n");
-        int stackLimit = 100;
-        int i = 0;
-        for (StackTraceElement element : t.getStackTrace()) {
-            if (element==null) continue;
-            String s = element.toString();
-            if (!StringUtils.isEmpty(s)) {
-                sb.append("at ");
-                sb.append(element.toString());
-                sb.append("\n");
-                if (i++>stackLimit) {
-                    break;
-                }
-            }
-        }
-        return sb.toString();
-    }
-    
     private String getFirstLine(String st) {
         int n = st.indexOf('\n');
         if (n<1) return st; 
         return st.substring(0, n);
+    }
+
+    private String getTrace(String st) {
+        int n = st.indexOf('\n');
+        if (n+1>st.length()) return st; 
+        return st.substring(n+1);
     }
 }

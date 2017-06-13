@@ -15,6 +15,7 @@ import org.janelia.it.workstation.browser.nb_action.NavigateForward;
 import org.janelia.it.workstation.browser.util.BrandingConfig;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.openide.modules.OnStart;
+import org.openide.util.NbPreferences;
 import org.openide.util.actions.CallableSystemAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,8 @@ public class Startup implements Runnable {
          *       ALL
          */
         System.setProperty("org.janelia.it.workstation.browser.level", "INFO");
+//        System.setProperty("org.janelia.it.workstation.browser.gui.dialogs.download.level", "FINEST");
+        
         try {
             // Re-read the configuration to parse the system properties we just defined
             LogManager.getLogManager().readConfiguration();
@@ -69,7 +72,14 @@ public class Startup implements Runnable {
         for (java.util.logging.Handler handler : logger.getHandlers()) {
             handler.setFormatter(formatter);
         }
-        
+
+        // Override the NetBeans default of "system-wide proxy", because it causes performance problems with VPN clients
+        int proxyPref = NbPreferences.root().node("org/netbeans/core").getInt("proxyType", -1);
+        if (proxyPref==-1) {
+            log.info("Defaulting to direct non-proxy connection");
+            NbPreferences.root().node("org/netbeans/core").putInt("proxyType", 0);
+        }
+
         // Create the main console app frame
         ConsoleApp app = ConsoleApp.getConsoleApp();
         

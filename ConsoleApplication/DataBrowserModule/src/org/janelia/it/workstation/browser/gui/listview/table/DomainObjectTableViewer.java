@@ -6,7 +6,6 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +16,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowSorter;
@@ -45,7 +45,6 @@ import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerType;
-import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerConfiguration;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
@@ -66,18 +65,21 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     private static final String COLUMN_KEY_ANNOTATIONS = "annotations";
 
-    private IconGridViewerConfiguration config;
+    // Configuration
+    private TableViewerConfiguration config;
     private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,null,true,null,null);
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
+
+    // These members deal with the context and entities within it
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
     private SearchProvider searchProvider;
     private List<DomainObjectAttribute> attrs;
 
+    // UI state
     private String sortField;
     private boolean ascending = true;
 
-    // TODO: this is mostly copy and pasted from DomainObjectIconGridViewer, and should be refactored later
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
 
         @Override
@@ -87,12 +89,12 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         @Override
         public String getImageFilepath(DomainObject domainObject) {
-            return null;
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public BufferedImage getStaticIcon(DomainObject imageObject) {
-            return null;
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -102,18 +104,12 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         @Override
         public String getImageTitle(DomainObject domainObject) {
-            String titlePattern = config.getDomainClassTitle(domainObject.getClass().getSimpleName());
-            if (StringUtils.isEmpty(titlePattern)) return domainObject.getName();
-            DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
-            return StringUtils.replaceVariablePattern(titlePattern, proxy);
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public String getImageSubtitle(DomainObject domainObject) {
-            String subtitlePattern = config.getDomainClassSubtitle(domainObject.getClass().getSimpleName());
-            if (StringUtils.isEmpty(subtitlePattern)) return null;
-            DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
-            return StringUtils.replaceVariablePattern(subtitlePattern, proxy);
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -158,7 +154,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     public void showDomainObjects(final AnnotatedDomainObjectList domainObjectList, final Callable<Void> success) {
 
         try {
-            this.config = IconGridViewerConfiguration.loadConfig();
+            this.config = TableViewerConfiguration.loadConfig();
         } catch (Exception ex) {
             ConsoleApp.handleException(ex);
         }
@@ -168,10 +164,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         attributeMap.clear();
 
-        attrs = DomainUtils.getUniqueAttributes(domainObjectList.getDomainObjects());
+        attrs = DomainUtils.getDisplayAttributes(domainObjectList.getDomainObjects());
         attrs.add(0, annotationAttr);
-
-        TableViewerConfiguration config = TableViewerConfiguration.loadConfig();
 
         getDynamicTable().clearColumns();
         for(DomainObjectAttribute attr : attrs) {
@@ -186,9 +180,9 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public void refreshDomainObject(DomainObject domainObject) {
-        // TODO: refresh the table
-        throw new UnsupportedOperationException("refreshDomainObject is not yet supported");
+    public void refreshDomainObject(DomainObject domainObject) {        
+        domainObjectList.updateObject(domainObject);
+        showDomainObjects(domainObjectList, null);
     }
 
     @Override
@@ -204,7 +198,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             ListSelectionModel lsm = table.getSelectionModel();
             if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) {
                 String value = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
-                final String label = value == null ? "null" : value;
+                final String label = StringUtils.isEmpty(value) ? "Empty value" : value;
 
                 JMenuItem titleMenuItem = new JMenuItem(label);
                 titleMenuItem.setEnabled(false);
@@ -221,6 +215,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                 popupMenu.add(copyMenuItem);
             }
 
+            popupMenu.addSeparator();
             popupMenu.addMenuItems();
 
             return popupMenu;
@@ -239,7 +234,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                 DynamicColumn column = getDynamicTable().getVisibleColumn(col);
                 log.info("Hiding column {} ({})",column.getLabel(),col);
                 try {
-                    TableViewerConfiguration config = TableViewerConfiguration.loadConfig();
                     config.getHiddenColumns().add(column.getName());
                     config.save();
                     column.setVisible(false);
@@ -265,14 +259,15 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     protected void chooseColumnsButtonPressed() {
-        TableViewerConfigDialog configDialog = new TableViewerConfigDialog(attrs);
+        TableViewerConfigDialog configDialog = new TableViewerConfigDialog(attrs, config);
         if (configDialog.showDialog(this)==1) {
-            TableViewerConfiguration config = configDialog.getConfig();
             for(String attrName : attributeMap.keySet()) {
                 boolean visible = config.isColumnVisible(attrName);
                 getColumn(attrName).setVisible(visible);
             }
             updateTableModel();
+            updateUI();
+            log.info("Updated table model1");
         }
     }
 
@@ -300,7 +295,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     public void activate() {
-        Hud.getSingletonInstance().setKeyListener(keyListener);
     }
 
     @Override
@@ -337,6 +331,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     }
 
+    @Override
     public AnnotatedDomainObjectList getDomainObjectList() {
         return domainObjectList;
     }
@@ -371,28 +366,18 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     public Object getValue(AnnotatedDomainObjectList domainObjectList, DomainObject object, String columnName) {
-        try {
-            if (COLUMN_KEY_ANNOTATIONS.equals(columnName)) {
-                StringBuilder builder = new StringBuilder();
-                for(Annotation annotation : domainObjectList.getAnnotations(object.getId())) {
-                    if (builder.length()>0) builder.append(", ");
-                    builder.append(annotation.getName());
-                }
-                return builder.toString();
+        if (COLUMN_KEY_ANNOTATIONS.equals(columnName)) {
+            StringBuilder builder = new StringBuilder();
+            for(Annotation annotation : domainObjectList.getAnnotations(object.getId())) {
+                if (builder.length()>0) builder.append(", ");
+                builder.append(annotation.getName());
             }
-            else {
-                DomainObjectAttribute attr = attributeMap.get(columnName);
-                return attr.getGetter().invoke(object);
-            }
+            return builder.toString();
         }
-        catch (IllegalArgumentException e) {
-            // This happens if we have mixed objects and we try to get an attribute from one on another
-            log.debug("Cannot get attribute {} for {}",columnName,object.getType());
-            return null;
-        }
-        catch(IllegalAccessException | InvocationTargetException e) {
-            log.error("Cannot get attribute {} for {}",columnName,object.getType(),e);
-            return null;
+        else {
+            DomainObjectAttribute attr = attributeMap.get(columnName);
+            DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(object);
+            return proxy.get(attr.getLabel());
         }
     }
 
@@ -405,7 +390,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     @Override
     protected void updateHud(boolean toggle) {
 
+        if (!toggle && !Hud.isInitialized()) return;
+        
         Hud hud = Hud.getSingletonInstance();
+        hud.setKeyListener(keyListener);
+        
         try {
             List<DomainObject> selected = getSelectedObjects();
 
@@ -421,7 +410,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             else {
                 hud.setObject(domainObject, null, null, false);
             }
-        } catch (Exception ex) {
+        } 
+        catch (Exception ex) {
             ConsoleApp.handleException(ex);
         }
     }
@@ -543,6 +533,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
     };
 
+    @Override
     public void setSearchProvider(SearchProvider searchProvider) {
         this.searchProvider = searchProvider;
     }
@@ -553,20 +544,31 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     public ListViewerState saveState() {
-        int horizontalScrollValue = getDynamicTable().getScrollPane().getHorizontalScrollBar().getModel().getValue();
+        JScrollPane scrollPane = getDynamicTable().getScrollPane();
+        
+        int horizontalScrollValue = scrollPane.getHorizontalScrollBar().getModel().getValue();
         log.debug("Saving horizontalScrollValue={}",horizontalScrollValue);
-        TableViewerState state = new TableViewerState(horizontalScrollValue);
-        return state;
+        
+        int verticalScrollValue = scrollPane.getVerticalScrollBar().getModel().getValue();
+        log.debug("Saving verticalScrollValue={}",verticalScrollValue);
+        
+        return new TableViewerState(horizontalScrollValue, verticalScrollValue);
     }
 
     @Override
     public void restoreState(ListViewerState viewerState) {
+        final JScrollPane scrollPane = getDynamicTable().getScrollPane();
         final TableViewerState tableViewerState = (TableViewerState)viewerState;
         SwingUtilities.invokeLater(new Runnable() {
                public void run() {
+                   
                    int horizontalScrollValue = tableViewerState.getHorizontalScrollValue();
                    log.debug("Restoring horizontalScrollValue={}",horizontalScrollValue);
-                   getDynamicTable().getScrollPane().getHorizontalScrollBar().setValue(horizontalScrollValue);
+                   scrollPane.getHorizontalScrollBar().setValue(horizontalScrollValue);
+                   
+                   int verticalScrollValue = tableViewerState.getVerticalScrollValue();
+                   log.debug("Restoring verticalScrollValue={}",verticalScrollValue);
+                   scrollPane.getVerticalScrollBar().setValue(verticalScrollValue);
                }
            }
         );
@@ -574,15 +576,21 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     private class TableViewerState extends ListViewerState {
 
-        private int horizontalScrollValue;
+        private final int horizontalScrollValue;
+        private final int verticalScrollValue;
 
-        public TableViewerState(int horizontalScrollValue) {
+        public TableViewerState(int horizontalScrollValue, int verticalScrollValue) {
             super(ListViewerType.TableViewer);
             this.horizontalScrollValue = horizontalScrollValue;
+            this.verticalScrollValue = verticalScrollValue;
         }
 
         public int getHorizontalScrollValue() {
             return horizontalScrollValue;
+        }
+
+        public int getVerticalScrollValue() {
+            return verticalScrollValue;
         }
 
         @Override
@@ -590,6 +598,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             StringBuilder builder = new StringBuilder();
             builder.append("TableViewerState [horizontalScrollValue=");
             builder.append(horizontalScrollValue);
+            builder.append(", verticalScrollValue=");
+            builder.append(verticalScrollValue);
             builder.append("]");
             return builder.toString();
         }

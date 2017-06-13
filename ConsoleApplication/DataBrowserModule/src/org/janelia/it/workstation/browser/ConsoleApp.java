@@ -11,6 +11,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.api.LocalPreferenceMgr;
+import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
 import org.janelia.it.workstation.browser.gui.dialogs.GiantFiberSearchDialog;
@@ -95,6 +96,8 @@ public class ConsoleApp {
     
     public void initSession() {
         log.info("Initializing Session");
+        ConsoleState.setCurrState(ConsoleState.STARTING_SESSION);
+        
         try {
             // Read local user preferences
             LocalPreferenceMgr prefs = LocalPreferenceMgr.getInstance();
@@ -133,6 +136,8 @@ public class ConsoleApp {
                 prefs.setModelProperty(AccessManager.RUN_AS_USER, "");
                 ConsoleApp.handleException(e);
             }
+            
+            ConsoleState.setCurrState(ConsoleState.LOGGED_IN);
             
             // Things that can be lazily initialized 
             SwingUtilities.invokeLater(new Runnable() {

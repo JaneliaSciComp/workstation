@@ -29,6 +29,7 @@
  */
 package org.janelia.horta;
 
+import org.janelia.console.viewerapi.controller.UnmixingListener;
 import org.janelia.horta.render.NeuronMPRenderer;
 import org.janelia.horta.actors.ScaleBar;
 import org.janelia.horta.actors.CenterCrossHairActor;
@@ -116,13 +117,17 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.console.viewerapi.actions.RenameNeuronAction;
+import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
+import org.janelia.console.viewerapi.actions.ToggleNeuronVisibilityAction;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
+import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
+import org.janelia.console.viewerapi.model.NeuronVertexCreationObserver;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
@@ -144,6 +149,8 @@ import org.janelia.horta.volume.BrickInfo;
 import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
+import org.janelia.horta.actions.ResetHortaRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
@@ -160,6 +167,8 @@ import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import org.openide.util.lookup.AbstractLookup;
+import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.NbPreferences;
@@ -201,9 +210,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     public static final String BASE_YML_FILE = "tilebase.cache.yml";
     
     private SceneWindow sceneWindow;
-    private OrbitPanZoomInteractor interactor;
+    private OrbitPanZoomInteractor worldInteractor;
     private HortaMetaWorkspace metaWorkspace;
-    private final NeuronVertexSpatialIndex neuronVertexIndex;
     
     // private MultipassVolumeActor mprActor;
     // private VolumeMipMaterial volumeMipMaterial;
@@ -237,10 +245,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     private boolean doCubifyVoxels = false; // Always begin in "no distortion" state
     
-    private final NeuronManager neuronManager;
+    private final NeuronEditDispatcher neuronEditDispatcher;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
-    
-    private UndoRedo.Manager undoRedoManager = new UndoRedo.Manager();
     
     public static NeuronTracerTopComponent findThisComponent() {
         return (NeuronTracerTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
@@ -250,7 +256,9 @@ public final class NeuronTracerTopComponent extends TopComponent
     private final HortaVolumeCache volumeCache;
     private final HortaMovieSource movieSource = new HortaMovieSource(this);
     
-    private final KtxBlockMenus ktxBlockMenus = new KtxBlockMenus();
+    private final KtxBlockMenuBuilder ktxBlockMenuBuilder = new KtxBlockMenuBuilder();
+    
+    private NeuronSet activeNeuronSet = null;
 
     public static final NeuronTracerTopComponent getInstance() {
         return findThisComponent();
@@ -267,9 +275,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         // Insert a specialized SceneWindow into the component
         initialize3DViewer(); // initializes workspace
 
-        neuronManager = new NeuronManager(metaWorkspace);
-        neuronVertexIndex = new NeuronVertexSpatialIndex(neuronManager);
-        
+        neuronEditDispatcher = new NeuronEditDispatcher(metaWorkspace);
 
         // Change default rotation to Y-down, like large-volume viewer
         sceneWindow.getVantage().setDefaultRotation(new Rotation().setFromAxisAngle(
@@ -278,23 +284,30 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         setupMouseNavigation();
         
-        neuronManager.addNeuronVertexCreationListener(tracingInteractor);
-        neuronManager.addNeuronVertexDeletionListener(tracingInteractor);
+        neuronEditDispatcher.addNeuronVertexCreationListener(tracingInteractor);
+        neuronEditDispatcher.addNeuronVertexDeletionListener(tracingInteractor);
+        neuronEditDispatcher.addNeuronVertexUpdateListener(tracingInteractor);
         
-        // Redraw the density when annotations are added
-        neuronManager.addNeuronVertexCreationListener(new NeuronVertexCreationListener() {
+        // Redraw the density when annotations are added/deleted/moved
+        neuronEditDispatcher.addNeuronVertexCreationListener(new NeuronVertexCreationListener() {
             @Override
             public void neuronVertexCreated(VertexWithNeuron vertexWithNeuron) {
                 neuronMPRenderer.setIntensityBufferDirty();
             }
         });
-        neuronManager.addNeuronVertexDeletionListener(new NeuronVertexDeletionListener() {
+        neuronEditDispatcher.addNeuronVertexDeletionListener(new NeuronVertexDeletionListener() {
             @Override
             public void neuronVertexesDeleted(VertexCollectionWithNeuron vertexesWithNeurons) {
                 neuronMPRenderer.setIntensityBufferDirty();
             }
         });
-
+        neuronEditDispatcher.addNeuronVertexUpdateListener(new NeuronVertexUpdateListener() {
+            @Override
+            public void neuronVertexUpdated(VertexWithNeuron vertexWithNeuron) {
+                neuronMPRenderer.setIntensityBufferDirty();
+            }
+        });
+        
         // Create right-click context menu
         setupContextMenu(sceneWindow.getInnerComponent());
         
@@ -440,7 +453,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 Collection<NeuronSet> sets = metaWorkspace.getNeuronSets();
                 if (sets.isEmpty()) {} // Do nothing
                 else if (sets.size() == 1) {
-                    tracingInteractor.setDefaultWorkspace(sets.iterator().next());                    
+                    setDefaultWorkspace(sets.iterator().next());                    
                 }
                 else {
                     for (NeuronSet ws : sets) {
@@ -448,7 +461,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         if (ws.getName().equals("Temporary Neurons"))
                             continue;
                         // Assume any other set is probably the LVV workspace
-                        tracingInteractor.setDefaultWorkspace(ws);
+                        setDefaultWorkspace(ws);
                     }
                 }
                 
@@ -473,15 +486,32 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     }
     
+    private void setDefaultWorkspace(NeuronSet workspace) {
+        activeNeuronSet = workspace;
+        tracingInteractor.setDefaultWorkspace(activeNeuronSet);
+    }
+    
     // UNDO
     @Override
     public UndoRedo getUndoRedo() {
-        return undoRedoManager;
+        if (getUndoRedoManager() == null)
+            return super.getUndoRedo();
+        return getUndoRedoManager();
+    }
+    
+    private UndoRedo.Manager getUndoRedoManager() {
+        if (activeNeuronSet == null)
+            return null;
+        return activeNeuronSet.getUndoRedo();
     }
     
     public void setVolumeSource(StaticVolumeBrickSource volumeSource) {
         this.volumeSource = volumeSource;
         this.volumeCache.setSource(volumeSource);
+        // Don't load both ktx and raw tiles...
+        if (volumeSource != null) {
+            setKtxSource(null);
+        }
     }
     
     /** Tells caller what source we are examining. */
@@ -535,7 +565,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             if (tracingActor instanceof SpheresActor) // highlight hover actor
             {
                 SpheresActor spheresActor = (SpheresActor)tracingActor;
-                spheresActor.getNeuron().getVertexAddedObservable().addObserver(new NeuronVertexAdditionObserver() {
+                spheresActor.getNeuron().getVertexCreatedObservable().addObserver(new NeuronVertexCreationObserver() {
                     @Override
                     public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg) {
                         redrawNow();
@@ -544,6 +574,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                 spheresActor.getNeuron().getVertexesRemovedObservable().addObserver(new NeuronVertexDeletionObserver() {
                     @Override
                     public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
+                        redrawNow();
+                    }
+                });
+                spheresActor.getNeuron().getVertexUpdatedObservable().addObserver(new NeuronVertexUpdateObserver() {
+                    @Override
+                    public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
                         redrawNow();
                     }
                 });
@@ -609,14 +645,37 @@ public final class NeuronTracerTopComponent extends TopComponent
         return volumeSource;
     }
 
-    private void setupMouseNavigation() {
-        // 1) Delegate tracing interaction to customized class
-        tracingInteractor = new TracingInteractor(this, undoRedoManager);
-
-        // 2) Setup 3D viewer mouse interaction
-        interactor = new OrbitPanZoomInteractor(
+    private void setupMouseNavigation() 
+    {    
+        // Set up tracingInteractor BEFORE OrbitPanZoomInteractor,
+        // so tracingInteractor has the opportunity to take precedence
+        // during dragging.
+        
+        // Delegate tracing interaction to customized class
+        tracingInteractor = new TracingInteractor(this, getUndoRedoManager());
+        
+        // push listening into HortaMouseEventDispatcher
+        final boolean bDispatchMouseEvents = true;
+        
+        Component interactorComponent = getMouseableComponent();
+        MouseInputListener listener = new TolerantMouseClickListener(tracingInteractor, 5);
+        if (! bDispatchMouseEvents) {
+            interactorComponent.addMouseListener(listener);
+            interactorComponent.addMouseMotionListener(listener);
+        }
+        interactorComponent.addKeyListener(tracingInteractor);
+        
+        // Setup 3D viewer mouse interaction
+        worldInteractor = new OrbitPanZoomInteractor(
                 sceneWindow.getCamera(),
                 sceneWindow.getInnerComponent());
+        
+        // TODO: push listening into HortaMouseEventDispatcher
+        if (! bDispatchMouseEvents) {
+            interactorComponent.addMouseListener(worldInteractor);
+            interactorComponent.addMouseMotionListener(worldInteractor);
+        }
+        interactorComponent.addMouseWheelListener(worldInteractor);
         
         // 3) Add custom interactions
         MouseInputListener hortaMouseListener = new MouseInputAdapter() 
@@ -686,10 +745,21 @@ public final class NeuronTracerTopComponent extends TopComponent
                 }
             }
         };
-        // Allow some slop in mouse position during mouse click to match tracing interactor behavior July 2016 CMB
-        TolerantMouseClickListener tolerantMouseClickListener = new TolerantMouseClickListener(hortaMouseListener, 5);
-        sceneWindow.getInnerComponent().addMouseListener(tolerantMouseClickListener);
-        sceneWindow.getInnerComponent().addMouseMotionListener(tolerantMouseClickListener);
+        
+        if (! bDispatchMouseEvents) {
+            // Allow some slop in mouse position during mouse click to match tracing interactor behavior July 2016 CMB
+            TolerantMouseClickListener tolerantMouseClickListener = new TolerantMouseClickListener(hortaMouseListener, 5);
+            interactorComponent.addMouseListener(tolerantMouseClickListener);
+            interactorComponent.addMouseMotionListener(tolerantMouseClickListener);
+        }
+        
+        if (bDispatchMouseEvents) {
+            HortaMouseEventDispatcher listener0 = new HortaMouseEventDispatcher(tracingInteractor, worldInteractor, hortaMouseListener);
+            // Allow some slop in mouse position during mouse click to match tracing interactor behavior July 2016 CMB
+            TolerantMouseClickListener tolerantMouseClickListener = new TolerantMouseClickListener(listener0, 5);
+            interactorComponent.addMouseListener(tolerantMouseClickListener);
+            interactorComponent.addMouseMotionListener(tolerantMouseClickListener);
+        }
 
     }
 
@@ -790,7 +860,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     private void loadStartupPreferences() 
     {
         Preferences prefs = NbPreferences.forModule(getClass());
-        
+   //     final InstanceContent content = new InstanceContent();
+
         // Load brightness and visibility settings for each channel
         for (int cix = 0; cix < imageColorModel.getChannelCount(); ++cix) {
             ChannelColorModel c = imageColorModel.getChannel(cix);
@@ -807,6 +878,10 @@ public final class NeuronTracerTopComponent extends TopComponent
         for (int i = 0; i < unmix.length; ++i) {
             unmix[i] = prefs.getFloat("startupUnmixingParameter"+i, unmix[i]);
         }
+        imageColorModel.setUnmixParameters(unmix);
+    //    AbstractLookup colorLookup = new AbstractLookup(content);
+    //    content.add(imageColorModel);
+
         // Load camera state
         Vantage vantage = sceneWindow.getVantage();
         vantage.setConstrainedToUpDirection(prefs.getBoolean("dorsalIsUp", vantage.isConstrainedToUpDirection()));
@@ -825,7 +900,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                 prefs.getInt("startupRenderFilter", volumeState.filteringOrder);
         setCubifyVoxels(prefs.getBoolean("bCubifyVoxels", doCubifyVoxels));
         volumeCache.setUpdateCache(
-                prefs.getBoolean("bCacheHortaTiles", volumeCache.isUpdateCache()));
+                prefs.getBoolean("bCacheHortaTiles", doesUpdateVolumeCache()));
+        setPreferKtx(prefs.getBoolean("bPreferKtxTiles", isPreferKtx()));
     }
     
     private void saveStartupPreferences() {
@@ -860,7 +936,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         prefs.putInt("startupProjectionMode", volumeState.projectionMode);
         prefs.putInt("startupRenderFilter", volumeState.filteringOrder);
         prefs.putBoolean("bCubifyVoxels", doCubifyVoxels);
-        prefs.putBoolean("bCacheHortaTiles", volumeCache.isUpdateCache());
+        prefs.putBoolean("bCacheHortaTiles", doesUpdateVolumeCache());
+        prefs.putBoolean("bPreferKtxTiles", isPreferKtx());
     }
 
     private void initialize3DViewer() {
@@ -912,6 +989,15 @@ public final class NeuronTracerTopComponent extends TopComponent
             }
         });
 
+        // add TetVolumeActor as listener for ImageColorModel changes from SliderPanel events
+        imageColorModel.addUnmixingParameterListener(new UnmixingListener() {
+            @Override
+            public void unmixingParametersChanged(float[] unmixingParams) {
+                TetVolumeActor.getInstance().setUnmixingParams(unmixingParams);
+            }
+
+        });
+
         this.setLayout(new BorderLayout());
         sceneWindow = new SceneWindow(vantage, CameraType.PERSPECTIVE);
 
@@ -942,7 +1028,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                 metaWorkspace, 
                 frameTracker,
                 movieSource,
-                vp));
+                vp,
+                this));
 
         sceneWindow.setBackgroundColor(Color.DARK_GRAY);
         this.add(sceneWindow.getOuterComponent(), BorderLayout.CENTER);
@@ -1084,22 +1171,59 @@ public final class NeuronTracerTopComponent extends TopComponent
                 
                 Vector3 mouseXyz = worldXyzForScreenXy(popupMenuScreenPoint);
                 Vector3 focusXyz = sceneWindow.getVantage().getFocusPosition();
-                HortaMenuContext menuContext = new HortaMenuContext(
+                final HortaMenuContext menuContext = new HortaMenuContext(
                         topMenu,
                         popupMenuScreenPoint,
                         mouseXyz,
                         focusXyz,
-                        null, // TOreDO: Ktx block tile source
                         neuronMPRenderer,
                         sceneWindow
                 );
-
+                
                 // Setting popup menu title here instead of in JPopupMenu constructor,
                 // because title from constructor is not shown in default look and feel.
                 topMenu.add("Options:").setEnabled(false); // TODO should I place title in constructor?
 
                 // SECTION: View options
                 // menu.add(new JPopupMenu.Separator());
+                
+                boolean showLinkToLvv = true;
+                if ( (mouseStageLocation != null) && (showLinkToLvv) ) {
+                    // Synchronize with LVV
+                    // TODO - is LVV present?
+                    // Want to lookup, get URL and get focus.
+                    SynchronizationHelper helper = new SynchronizationHelper();
+                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
+                            helper.getSampleLocationProviders(HortaLocationProvider.UNIQUE_NAME);
+                    Tiled3dSampleLocationProviderAcceptor origin = 
+                            helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
+                    logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
+                    ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+                            currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
+                    );
+                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
+                    if (locationProviders.size() > 1) {
+                        JMenu synchronizeAllMenu = new JMenu("Synchronize with Other 3D Viewer.");
+                        for (JMenuItem item: menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
+                            synchronizeAllMenu.add(item);
+                        }
+                        topMenu.add(synchronizeAllMenu);
+                    }
+                    else if (locationProviders.size() == 1) {
+                        for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
+                            topMenu.add(item);
+                        }
+                    }
+                    topMenu.add(new JPopupMenu.Separator());
+                }
+                
+                Action resetRotationAction = 
+                        new ResetHortaRotationAction(NeuronTracerTopComponent.this);
+
+
+                // Annotators want "Reset Rotation" on the top level menu
+                // Issue JW-25370
+                topMenu.add(resetRotationAction);
                 
                 JMenu viewMenu = new JMenu("View");
                 topMenu.add(viewMenu);
@@ -1115,15 +1239,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     });
                 }
 
-                viewMenu.add(new AbstractAction("Reset Rotation") {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        Vantage v = sceneWindow.getVantage();
-                        animateToCameraRotation(
-                                v.getDefaultRotation(),
-                                v, 150);
-                    }
-                });
+                viewMenu.add(resetRotationAction);
 
                 // menu.add(new JPopupMenu.Separator());
 
@@ -1134,12 +1250,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
-                ktxBlockMenus.populateMenus(menuContext);
+                ktxBlockMenuBuilder.populateMenus(menuContext);
                 
                 if (currentSource != null) 
                 {
                     JCheckBoxMenuItem enableVolumeCacheMenu = new JCheckBoxMenuItem(
-                            "Auto-load Image Tiles", volumeCache.isUpdateCache());
+                            "Auto-load Image Tiles", doesUpdateVolumeCache());
                     topMenu.add(enableVolumeCacheMenu);
                     enableVolumeCacheMenu.addActionListener(new AbstractAction() {
                         @Override
@@ -1147,12 +1263,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                         {
                             JCheckBoxMenuItem item = (JCheckBoxMenuItem)e.getSource();
                             volumeCache.toggleUpdateCache();
-                            item.setSelected(volumeCache.isUpdateCache());
-                            TetVolumeActor.getInstance().setAutoUpdate(volumeCache.isUpdateCache());
+                            item.setSelected(doesUpdateVolumeCache());
+                            TetVolumeActor.getInstance().setAutoUpdate(doesUpdateVolumeCache());
                         }
                     });
 
-                    topMenu.add(new AbstractAction("Load Image Tile Here") {
+                    topMenu.add(new AbstractAction("Load Image Tile At Focus") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             loadTileAtCurrentFocusAsynchronous();
@@ -1487,35 +1603,11 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
                 
-                // SECTION: Anchors
-                topMenu.add(new JPopupMenu.Separator());
-                final TracingInteractor.InteractorContext interactorContext = tracingInteractor.createContext();
-
-                if (interactorContext.canClearParent()) {
-                    topMenu.add(new AbstractAction("Clear Current Parent Anchor") {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        interactorContext.clearParent();
-                    }
-                });
-                }
-                
-                if (interactorContext.getCurrentParentAnchor() != null) {
-                    topMenu.add(new AbstractAction("Center on Current Parent Anchor") {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-                        Vector3 xyz = new Vector3(interactorContext.getCurrentParentAnchor().getLocation());
-                        loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
-                    }
-                });
-                }
-                
                 // SECTION: Undo/redo
-                
-                if (undoRedoManager.canUndoOrRedo()) {
+                UndoRedo.Manager undoRedo = getUndoRedoManager();
+                if ((undoRedo != null) && (undoRedo.canUndoOrRedo())) {
                     topMenu.add(new JPopupMenu.Separator());                
-                    if (undoRedoManager.canUndo()) {
+                    if (undoRedo.canUndo()) {
                         UndoAction undoAction = SystemAction.get(UndoAction.class);
                         JMenuItem undoItem = undoAction.getPopupPresenter();
                         KeyStroke shortcut = undoItem.getAccelerator();
@@ -1539,7 +1631,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         }
                         topMenu.add(undoItem);
                     }
-                    if (undoRedoManager.canRedo()) {
+                    if (undoRedo.canRedo()) {
                         RedoAction redoAction = SystemAction.get(RedoAction.class);
                         JMenuItem redoItem = redoAction.getPopupPresenter();
                         // For some reason, getPopupPresenter() does not include a keyboard shortcut
@@ -1553,6 +1645,123 @@ public final class NeuronTracerTopComponent extends TopComponent
                         topMenu.add(redoItem);
                     }
                 }
+
+                final TracingInteractor.InteractorContext interactorContext = tracingInteractor.createContext();
+
+                // SECTION: Anchors
+                
+                if ((interactorContext.getCurrentParentAnchor() != null) || (interactorContext.getHighlightedAnchor() != null))
+                {
+                    topMenu.add(new JPopupMenu.Separator());
+                    topMenu.add("Anchor").setEnabled(false);
+
+                    if (interactorContext.canUpdateAnchorRadius()) {
+                        topMenu.add(new AbstractAction("Adjust Anchor Radius") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.updateAnchorRadius();
+                            }
+                        });
+                    }
+
+                    if (interactorContext.canClearParent()) {
+                        topMenu.add(new AbstractAction("Clear Current Parent Anchor") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.clearParent();
+                            }
+                        });
+                    }
+
+                    if (interactorContext.getCurrentParentAnchor() != null) {
+                        topMenu.add(new AbstractAction("Center on Current Parent Anchor") {
+                        @Override
+                            public void actionPerformed(ActionEvent e) {
+                                PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+                                Vector3 xyz = new Vector3(interactorContext.getCurrentParentAnchor().getLocation());
+                                loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
+                            }
+                        });
+                    }
+
+                    if (interactorContext.getHighlightedAnchor() != null) {
+                        // logger.info("Found highlighted anchor");
+                        if (! interactorContext.getHighlightedAnchor().equals(interactorContext.getCurrentParentAnchor())) {
+                            topMenu.add(new SelectParentAnchorAction(
+                                    activeNeuronSet,
+                                    interactorContext.getHighlightedAnchor()
+                            ));
+                        }
+                    }
+                }
+                
+                // SECTION: Neuron edits
+                NeuronModel indicatedNeuron = interactorContext.getHighlightedNeuron();
+                if (indicatedNeuron != null) 
+                {
+                    topMenu.add(new JPopupMenu.Separator());
+                    topMenu.add("Neuron '"
+                            + indicatedNeuron.getName()
+                            + "':").setEnabled(false);
+
+                    // Toggle Visiblity (maybe we could only hide from here though...)
+                    ToggleNeuronVisibilityAction visAction = new ToggleNeuronVisibilityAction(
+                            NeuronTracerTopComponent.this,
+                            activeNeuronSet,
+                            indicatedNeuron);
+                    // NOTE: In my opinion one should be allowed to hide neurons in a read-only workspace.
+                    // But that's not the way it's implemented on the back end...
+                    visAction.setEnabled(! activeNeuronSet.isReadOnly());
+                    topMenu.add(visAction);
+                    
+                    // Change Neuron Color
+                    if (interactorContext.canRecolorNeuron()) {
+                        topMenu.add(new AbstractAction("Change Neuron Color...") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.recolorNeuron();
+                            }
+                        });
+                    }
+
+                    // Change Neuron Name
+                    if (! activeNeuronSet.isReadOnly()) {
+                        topMenu.add(new RenameNeuronAction(
+                                NeuronTracerTopComponent.this,
+                                activeNeuronSet,
+                                indicatedNeuron));
+                    }
+
+                    if (interactorContext.canMergeNeurite()) {
+                        topMenu.add(new AbstractAction("Merge neurites...") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.mergeNeurites();
+                            }
+                        });
+                    }
+                    
+                    if (interactorContext.canSplitNeurite()) {
+                        topMenu.add(new AbstractAction("Split neurite...") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.splitNeurite();
+                            }
+                        });
+                    }
+                    
+                    // Delete Neuron DANGER!
+                    if (interactorContext.canDeleteNeuron()) {
+                        // Extra separator due to danger...
+                        topMenu.add(new JPopupMenu.Separator());                
+                        topMenu.add(new AbstractAction("!!! DELETE Neuron... !!!") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                interactorContext.deleteNeuron();
+                            }
+                        });
+                    }
+                }
                 
                 // SECTION: Tracing options
                 // menu.add(new JPopupMenu.Separator());
@@ -1562,36 +1771,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
                 // tracingInteractor.exportMenuItems(menu, hoverAnchor);
 
-                boolean showLinkToLvv = true;
-                if ( (mouseStageLocation != null) && (showLinkToLvv) ) {
-                    // Synchronize with LVV
-                    // TODO - is LVV present?
-                    topMenu.add(new JPopupMenu.Separator());
-                    // Want to lookup, get URL and get focus.
-                    SynchronizationHelper helper = new SynchronizationHelper();
-                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
-                            helper.getSampleLocationProviders(HortaLocationProvider.UNIQUE_NAME);
-                    Tiled3dSampleLocationProviderAcceptor origin = 
-                            helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
-                    logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
-                    ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                            currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
-                    );
-                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
-                    if (locationProviders.size() > 1) {
-                        JMenu synchronizeAllMenu = new JMenu("Synchronize with Other 3D Viewer.");
-                        for (JMenuItem item: menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
-                            synchronizeAllMenu.add(item);
-                        }
-                        topMenu.add(synchronizeAllMenu);
-                    }
-                    else if (locationProviders.size() == 1) {
-                        for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
-                            topMenu.add(item);
-                        }
-                    }
-                }
-                
                 // Cancel/do nothing action
                 topMenu.add(new JPopupMenu.Separator());
                 topMenu.add(new AbstractAction("Close This Menu [ESC]") {
@@ -1697,6 +1876,17 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     @Override
+    public Vector3 worldXyzForScreenXyInPlane(Point2D xy) {
+        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+        double depthOffset = 0.0;
+        Vector3 xyz = worldXyzForScreenXy(
+                xy,
+                pCam,
+                depthOffset);
+        return xyz;
+    }
+
+    @Override
     public float getPixelsPerSceneUnit() {
         Vantage vantage = sceneWindow.getVantage();
         Viewport viewport = sceneWindow.getCamera().getViewport();
@@ -1787,7 +1977,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     @Override
     public void componentOpened() {
         // logger.info("Horta opened");
-        neuronManager.onOpened();
+        neuronEditDispatcher.onOpened();
         // loadStartupPreferences();
     }
     
@@ -1797,7 +1987,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void componentClosed() {
         // logger.info("Horta closed");
         // saveStartupPreferences(); // not called at application close...
-        neuronManager.onClosed();
+        neuronEditDispatcher.onClosed();
     }
 
     @Override
@@ -1810,12 +2000,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     public boolean isVolumeDensityAt(Point2D xy)
     {
         return neuronMPRenderer.isVolumeDensityAt(xy);
-    }
-
-    @Override
-    public NeuronVertexSpatialIndex getVertexIndex()
-    {
-        return neuronVertexIndex;
     }
 
     void registerLoneDisplayedTile(BrickActor boxMesh) {
@@ -1890,15 +2074,19 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void setKtxSource(BlockTileSource ktxSource) {
         this.ktxSource = ktxSource;
         TetVolumeActor.getInstance().setKtxTileSource(ktxSource);
+        // Don't load both ktx and raw tiles at the same time
+        if (ktxSource != null) {
+            setVolumeSource(null);
+        }
     }
     
-    public void loadTileAtFocus() throws IOException
+    public void loadPersistentTileAtFocus() throws IOException
     {
         Vector3 focus = getVantage().getFocusPosition();
-        loadTileAtLocation(focus);
+        loadPersistentTileAtLocation(focus);
     }
     
-    public void loadTileAtLocation(Vector3 location) throws IOException
+    public void loadPersistentTileAtLocation(Vector3 location) throws IOException
     {
         if (ktxSource == null) {
             BlockTileSource source = promptUserForKtxFolder();
@@ -1906,7 +2094,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 return;
             setKtxSource(source);
         }
-        loader.loadKtxTileAtLocation(ktxSource, location);
+        loader.loadKtxTileAtLocation(ktxSource, location, true);
     }
     
     private BlockTileSource promptUserForKtxFolder() {
@@ -1945,4 +2133,18 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
     }
 
+    public void resetRotation() {
+        Vantage v = sceneWindow.getVantage();
+        animateToCameraRotation(
+                v.getDefaultRotation(),
+                v, 150);
+    }
+
+    public boolean isPreferKtx() {
+        return ktxBlockMenuBuilder.isPreferKtx();
+    }
+
+    public void setPreferKtx(boolean doPreferKtx) {
+        ktxBlockMenuBuilder.setPreferKtx(doPreferKtx);
+    }
 }

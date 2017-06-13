@@ -45,7 +45,7 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeView;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.DomainObjectNodeTracker;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.RootNode;
@@ -331,24 +331,20 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         repaint();
     }
 
-    public void showTree() {
+    private void showTree() {
         treePanel.removeAll();
         treePanel.add(beanTreeView);
         revalidate();
         repaint();
-    }
-    
-    private void showRootNode() {
-        this.root = new RootNode();
-        mgr.setRootContext(root);
-        showTree();
     }
 
     @Subscribe
     public void prefChanged(LocalPreferenceChanged event) {
         if (event.getKey().equals(StateMgr.RECENTLY_OPENED_HISTORY)) {
             // Something was added to the history, so we need to update the node's children
-            root.getRecentlyOpenedItemsNode().refreshChildren();
+            if (root!=null) {
+                root.getRecentlyOpenedItemsNode().refreshChildren();
+            }
             
         }
         else if (event.getKey().equals(SHOW_RECENTLY_OPENED_ITEMS)) {
@@ -363,10 +359,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         final List<Long[]> expanded = beanTreeView.getExpandedPaths();
         DomainObject domainObject = event.getDomainObject();
         
-        Set<DomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
+        Set<AbstractDomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
         if (!nodes.isEmpty()) {
             log.info("Updating removed object: {}",domainObject.getName());
-            for(DomainObjectNode<DomainObject> node : nodes) {
+            for(AbstractDomainObjectNode<DomainObject> node : nodes) {
                 try {
                     log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
                     node.destroy();
@@ -395,10 +391,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             final List<Long[]> expanded = beanTreeView.getExpandedPaths();
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             for(DomainObject domainObject : event.getDomainObjects()) {
-                Set<DomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
+                Set<AbstractDomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
                 if (!nodes.isEmpty()) {
                     log.info("Updating invalidated object: {}",domainObject.getName());
-                    for(DomainObjectNode<DomainObject> node : nodes) {
+                    for(AbstractDomainObjectNode<DomainObject> node : nodes) {
                         try {
                             DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
                             if (refreshed==null) {
@@ -460,7 +456,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             @Override
             protected void hadSuccess() {
                 try {
-                    showRootNode();
+                    root = new RootNode();
+                    mgr.setRootContext(root);
+                    showTree();
+                    
                     int numExpanded = 0;
                     if (restoreState) {
                         numExpanded = beanTreeView.expand(expanded);
@@ -470,7 +469,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                         log.info("Expanding first node");
                         for(Node node : root.getChildren().getNodes()) {
                             beanTreeView.expandNode(node);
-                            break; // For now, we'll only expand first node
+                            if (node instanceof WorkspaceNode) {
+                                break; // Expand everything up to and including the first Home
+                            }
                         }
                     }
 
@@ -503,6 +504,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     public WorkspaceNode getWorkspaceNode() {
+        if (root==null) return null;
         for(Node node : root.getChildren().getNodes()) {
             if (node instanceof WorkspaceNode) {
                 return (WorkspaceNode)node;
@@ -518,10 +520,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     
     public DomainObjectNodeSelectionModel getSelectionModel() {
         return selectionModel;
-    }
-    
-    public RootNode getRoot() {
-        return root;
     }
 
     public void expand(Long[] idPath) {
@@ -575,9 +573,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     private void navigateNode(Node node) {
-        if (node instanceof DomainObjectNode) {
+        if (node instanceof AbstractDomainObjectNode) {
             log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
-            selectionModel.select((DomainObjectNode<?>)node, true, true);
+            selectionModel.select((AbstractDomainObjectNode<?>)node, true, true);
         }
     }
 

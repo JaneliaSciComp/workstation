@@ -247,11 +247,11 @@ public class CustomTreeView extends BeanTreeView {
     
     public void replaceKeyListeners(KeyListener newListener) {
         for(KeyListener listener : getKeyListeners()) {
-            log.debug("Removing from BeanTreeView: "+listener);
+            log.trace("Removing from BeanTreeView: "+listener);
             removeKeyListener(listener);
         }
         for(KeyListener listener : tree.getKeyListeners()) {
-            log.debug("Removing from JTree: "+listener);
+            log.trace("Removing from JTree: "+listener);
             tree.removeKeyListener(listener);
         }
         tree.addKeyListener(newListener);

@@ -12,12 +12,14 @@ import org.janelia.it.jacs.integration.framework.system.ErrorHandler;
 import org.janelia.it.jacs.integration.framework.system.FileAccess;
 import org.janelia.it.jacs.integration.framework.system.ParentFrame;
 import org.janelia.it.jacs.integration.framework.system.SettingsModel;
+import org.openide.util.NbPreferences;
 import org.openide.util.lookup.Lookups;
 
 /**
  * The factory to return implementations from the framework.
  *
  * @author fosterl
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class FrameworkImplProvider {
 
@@ -111,6 +113,63 @@ public class FrameworkImplProvider {
         else {
             model.setModelProperty(propName, value);
         }
+    }
+
+    public static Object getRemotePreferenceValue(String category, String key, String defaultValue) throws Exception {
+        PreferenceHandler model = getPreferenceHandler();
+        if (model == null) {
+            throw new RuntimeException("Failed to find preference handler.  Cannot fetch " + key);
+        }
+        else {
+            return model.getPreferenceValue(category, key, defaultValue);
+        }
+    }
+    
+    public static void setRemotePreferenceValue(String category, String key, Object value) throws Exception {
+        PreferenceHandler model = getPreferenceHandler();
+        if (model == null) {
+            throw new RuntimeException("Failed to find settings handler.  Cannot set " + key);
+        }
+        else {
+            model.setPreferenceValue(category, key, value);
+        }
+    }
+    
+    public static String getLocalPreferenceValue(Class<?> moduleClass, String key, String defaultValue) {
+        return NbPreferences.forModule(moduleClass).get(key, defaultValue);   
+    }
+
+    public static boolean getLocalPreferenceValue(Class<?> moduleClass, String key, boolean defaultValue) {
+        return NbPreferences.forModule(moduleClass).getBoolean(key, defaultValue);   
+    }
+
+    public static int getLocalPreferenceValue(Class<?> moduleClass, String key, int defaultValue) {
+        return NbPreferences.forModule(moduleClass).getInt(key, defaultValue);   
+    }
+
+    public static double getLocalPreferenceValue(Class<?> moduleClass, String key, double defaultValue) {
+        return NbPreferences.forModule(moduleClass).getDouble(key, defaultValue);   
+    }
+    
+    public static void setLocalPreferenceValue(Class<?> moduleClass, String key, String value) {
+        if (value==null) {
+            NbPreferences.forModule(moduleClass).remove(key);
+        }
+        else {
+            NbPreferences.forModule(moduleClass).put(key, value);
+        }
+    }
+
+    public static void setLocalPreferenceValue(Class<?> moduleClass, String key, boolean value) {
+        NbPreferences.forModule(moduleClass).putBoolean(key, value);
+    }
+
+    public static void setLocalPreferenceValue(Class<?> moduleClass, String key, int value) {
+        NbPreferences.forModule(moduleClass).putInt(key, value);
+    }
+    
+    public static void setLocalPreferenceValue(Class<?> moduleClass, String key, double value) {
+        NbPreferences.forModule(moduleClass).putDouble(key, value);
     }
     
     private static <T> T get(String path, Class<T> clazz) {

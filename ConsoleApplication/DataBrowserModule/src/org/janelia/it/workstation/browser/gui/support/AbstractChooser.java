@@ -53,6 +53,9 @@ public abstract class AbstractChooser<T> extends ModalDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 chooseSelection();
+                if (chosenElements.isEmpty()) {
+                    return;
+                }
                 returnValue = CHOOSE_OPTION;
                 setVisible(false);
             }

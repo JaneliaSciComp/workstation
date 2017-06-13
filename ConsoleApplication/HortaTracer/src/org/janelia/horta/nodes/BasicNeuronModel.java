@@ -36,7 +36,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -48,19 +47,20 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.console.viewerapi.BasicGenericObservable;
 import org.janelia.console.viewerapi.ComposableObservable;
-import org.janelia.console.viewerapi.GenericObserver;
 import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.console.viewerapi.model.BasicNeuronVertexAdditionObservable;
+import org.janelia.console.viewerapi.model.BasicNeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.BasicNeuronVertexDeletionObservable;
+import org.janelia.console.viewerapi.model.BasicNeuronVertexUpdateObservable;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.horta.modelapi.SwcVertex;
 import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
+import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
+import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,32 +76,42 @@ public class BasicNeuronModel implements NeuronModel
     private final ObservableInterface colorChangeObservable = new ComposableObservable();
     private final ObservableInterface geometryChangeObservable = new ComposableObservable();
     private final ObservableInterface visibilityChangeObservable = new ComposableObservable();
-    private final NeuronVertexAdditionObservable membersAddedObservable;
+    private final NeuronVertexCreationObservable membersAddedObservable;
+    private final NeuronVertexUpdateObservable vertexUpdatedObservable;
     private final NeuronVertexDeletionObservable membersRemovedObservable;
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private boolean visible = true;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final NeuronSet parentSet;
 
     
     /*
      * Creates an empty neuron model
     */
-    public BasicNeuronModel(String modelName)    
+    public BasicNeuronModel(String modelName, NeuronSet parentSet)    
     {
-        this.membersAddedObservable = new BasicNeuronVertexAdditionObservable();
+        this.membersAddedObservable = new BasicNeuronVertexCreationObservable();
         this.membersRemovedObservable = new BasicNeuronVertexDeletionObservable();
+        this.vertexUpdatedObservable = new BasicNeuronVertexUpdateObservable();
         this.name = modelName;
+        this.parentSet = parentSet;
     }
     
-    public BasicNeuronModel(File swcFile) throws FileNotFoundException, IOException
-    {
-        this(new BufferedInputStream(new FileInputStream(swcFile)), swcFile.getName());
+    public BasicNeuronModel() {
+        this("Unnamed Neuron", null);
     }
     
-    public BasicNeuronModel(InputStream swcStream, String fileName) throws IOException
+    public BasicNeuronModel(File swcFile, NeuronSet parentSet) throws FileNotFoundException, IOException
     {
-        this.membersAddedObservable = new BasicNeuronVertexAdditionObservable();
+        this(new BufferedInputStream(new FileInputStream(swcFile)), swcFile.getName(), parentSet);
+    }
+    
+    public BasicNeuronModel(InputStream swcStream, String fileName, NeuronSet parentSet) throws IOException
+    {
+        this.parentSet = parentSet;
+        this.membersAddedObservable = new BasicNeuronVertexCreationObservable();
         this.membersRemovedObservable = new BasicNeuronVertexDeletionObservable();
+        this.vertexUpdatedObservable = new BasicNeuronVertexUpdateObservable();
         BufferedReader br = new BufferedReader(new InputStreamReader(swcStream));
         String line;
         
@@ -270,7 +280,7 @@ public class BasicNeuronModel implements NeuronModel
     }
 
     @Override
-    public NeuronVertexAdditionObservable getVertexAddedObservable()
+    public NeuronVertexCreationObservable getVertexCreatedObservable()
     {
         return membersAddedObservable;
     }
@@ -283,7 +293,14 @@ public class BasicNeuronModel implements NeuronModel
 
     @Override
     public NeuronVertex appendVertex(NeuronVertex parentVertex, float[] micronXyz, float radius) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        NeuronVertex newVertex = new BasicSwcVertex(micronXyz[0], micronXyz[1], micronXyz[2]);
+        newVertex.setRadius(radius);
+        nodes.add(newVertex);
+        if (parentVertex != null) {
+            edges.add(new BasicNeuronEdge(parentVertex, newVertex));
+        }
+        getVertexCreatedObservable().setChanged();
+        return newVertex;
     }
 
     @Override
@@ -293,6 +310,36 @@ public class BasicNeuronModel implements NeuronModel
 
     @Override
     public boolean mergeNeurite(NeuronVertex source, NeuronVertex target) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public NeuronVertexUpdateObservable getVertexUpdatedObservable() {
+        return vertexUpdatedObservable;
+    }
+
+    @Override
+    public boolean moveVertex(NeuronVertex vertex, float[] micronXyz) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean updateVertexRadius(NeuronVertex vertex, float micronRadius) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    @Override
+    public NeuronVertex getVertexByGuid(Long guid) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean splitNeurite(NeuronVertex anchor1, NeuronVertex anchor2) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean transferNeurite(NeuronVertex anchor) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     

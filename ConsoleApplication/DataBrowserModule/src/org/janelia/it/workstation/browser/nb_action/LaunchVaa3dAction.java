@@ -46,7 +46,7 @@ public final class LaunchVaa3dAction extends CallableSystemAction {
     @Override
     public void performAction() {
         try {
-            ToolMgr.runTool(ToolMgr.TOOL_VAA3D);
+            ToolMgr.runToolSafely(ToolMgr.TOOL_VAA3D);
         }
         catch (Exception e) {
             ConsoleApp.handleException(e);

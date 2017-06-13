@@ -30,6 +30,7 @@
 
 package org.janelia.horta.render;
 
+import com.google.common.base.Stopwatch;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.geom.Point2D;
@@ -44,6 +45,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
+import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.geometry3d.AbstractCamera;
 // import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.gltools.BasicScreenBlitActor;
@@ -67,6 +69,7 @@ import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.GL3Resource;
+import org.janelia.horta.neuronvbo.NeuronVboActor;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,7 +90,9 @@ extends MultipassRenderer
     private final HortaMetaWorkspace workspace;
     private final Observer neuronListRefresher = new NeuronListRefresher(); // helps with signalling
     private final Observer volumeLayerExpirer = new VolumeLayerExpirer();
-    private final AllSwcActor allSwcActor = new AllSwcActor();
+    
+    // private final AllSwcActor allSwcActor = new AllSwcActor();
+    private final NeuronVboActor allSwcActor = new NeuronVboActor();
     
     private final Collection<GL3Resource> obsoleteGLResources = new java.util.concurrent.ConcurrentLinkedQueue<>();
 
@@ -351,13 +356,13 @@ extends MultipassRenderer
     }
 
     private void addNeuronReconstruction(NeuronModel neuron) {
-        allSwcActor.addNeuronReconstruction(neuron);
+        allSwcActor.addNeuron(neuron);
         
         neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
     }
     
     private void removeNeuronReconstruction(NeuronModel neuron) {
-        allSwcActor.removeNeuronReconstruction(neuron);
+        allSwcActor.removeNeuron(neuron);
         neuron.getVisibilityChangeObservable().deleteObserver(volumeLayerExpirer);
     }
     
@@ -445,10 +450,13 @@ extends MultipassRenderer
     public void addNeuronActors(NeuronModel neuron) {
         if (allSwcActor.contains(neuron)) 
             return;
+        allSwcActor.addNeuron(neuron);
+        /*
         SpheresActor sa = allSwcActor.createSpheresActor(neuron);
         ConesActor ca = allSwcActor.createConesActor(neuron);
         // this next step is synchronized but fast
         allSwcActor.setActors(neuron, sa, ca);
+         */
         neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
     }
     
@@ -458,30 +466,37 @@ extends MultipassRenderer
         @Override
         public void update(Observable o, Object arg)
         {
+            // if transactions are enabled don't run this till the endTransaction
+            TransactionManager tm = TransactionManager.getInstance();
+            if (tm.isTransactionStarted()) {
+                tm.addObservables(this, o, arg);
+                return;
+            }
+            
             // Update neuron models
             Set<NeuronModel> latestNeurons = new java.util.HashSet<>();
             Set<NeuronSet> latestNeuronLists = new java.util.HashSet<>();
             // 1 - enumerate latest neurons
+            
+            
             for (NeuronSet neuronList : workspace.getNeuronSets()) {
                 latestNeuronLists.add(neuronList);
-                for (NeuronModel neuron : neuronList) {
-                    latestNeurons.add(neuron);
-                }
+                latestNeurons.addAll(neuronList);
             }
+            
             // 2 - remove obsolete neurons
             Set<NeuronModel> obsoleteNeurons = new HashSet<>();
-            // Perform two passes, to avoid concurrent modification
-            for (NeuronModel neuron : allSwcActor.sphereNeurons()) {
-                if (! latestNeurons.contains(neuron))
+            Set<NeuronModel> newNeurons = new HashSet<>();
+            
+            for (NeuronModel neuron : allSwcActor) {
+                if (!latestNeurons.remove(neuron))
                     obsoleteNeurons.add(neuron);
             }
-            for (NeuronModel neuron : allSwcActor.coneNeurons()) {
-                if (! latestNeurons.contains(neuron))
-                    obsoleteNeurons.add(neuron);
-            }
-            for (NeuronModel neuron : obsoleteNeurons)
+            
+            for (NeuronModel neuron : obsoleteNeurons) {
                 removeNeuronReconstruction(neuron);
-            // Remove obsolete lists too
+            }
+            
             Iterator<NeuronSet> nli = currentNeuronLists.iterator();
             while (nli.hasNext()) {
                 NeuronSet set = nli.next();
@@ -490,191 +505,22 @@ extends MultipassRenderer
                     set.getMembershipChangeObservable().deleteObserver(neuronListRefresher);
                 }
             }
+
             // 3 - add new neurons
+            
             for (NeuronSet neuronList : workspace.getNeuronSets()) {
                 if (currentNeuronLists.add(neuronList)) {
                     neuronList.getMembershipChangeObservable().addObserver(neuronListRefresher);
                 }
-                for (NeuronModel neuron : neuronList) {
-                    addNeuronReconstruction(neuron);
-                }
             }
+            for (NeuronModel neuron : latestNeurons) {
+                 addNeuronReconstruction(neuron);
+            }
+            
+            // 4 - double check for changes in neuron size (e.g. after transfer neurite)
+            allSwcActor.checkForChanges();
+            
         }
     }
-    
-    // One primitive-type at a time renderer for performance efficiency
-    public static class AllSwcActor extends BasicGL3Actor 
-    {
-        // For performance efficiency, render similar primitives all at once
-        // private final Map<NeuronModel, GL3Actor> currentNeuronActors = new HashMap<>();
-        private final Map<NeuronModel, ConesActor> currentNeuronConeActors = new ConcurrentHashMap<>();
-        private final Map<NeuronModel, SpheresActor> currentNeuronSphereActors = new ConcurrentHashMap<>();
 
-        // private final Collection<SpheresActor> sphereActors = new HashSet<>();
-        // private final Collection<ConesActor> coneActors = new HashSet<>();
-        // As performance optimization, create a single instance of certain OpenGL resources:
-        private final Texture2d lightProbeTexture;
-        private final ShaderProgram spheresShader = new SpheresMaterial.SpheresShader();
-        private final ShaderProgram conesShader = new ConesMaterial.ConesShader();
-        
-        private boolean bHideAll = false;
-
-        public AllSwcActor()
-        {
-            super(null);
-            
-            this.lightProbeTexture = new Texture2d();
-            try {
-                this.lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
-                        "/org/janelia/gltools/material/lightprobe/"
-                                + "Office1W165Both.ppm"));
-            } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
-            }
-        }
-        
-        @Override
-        public void init(GL3 gl) {
-            super.init(gl);
-            spheresShader.init(gl);
-            conesShader.init(gl);
-            lightProbeTexture.init(gl);
-            for ( SpheresActor a : currentNeuronSphereActors.values() )
-                a.init(gl);
-            for ( ConesActor a : currentNeuronConeActors.values() )
-                a.init(gl);
-        }
-        
-        @Override
-        public void dispose(GL3 gl) {
-            spheresShader.dispose(gl);
-            conesShader.dispose(gl);
-            lightProbeTexture.dispose(gl);
-            for ( SpheresActor a : currentNeuronSphereActors.values() )
-                a.dispose(gl);
-            for ( ConesActor a : currentNeuronConeActors.values() )
-                a.dispose(gl);
-            super.dispose(gl);
-        }
-    
-        @Override
-        public void display(GL3 gl, AbstractCamera camera, Matrix4 modelViewMatrix) {
-            if (bHideAll)
-                return;
-            super.display(gl, camera, modelViewMatrix);
-            
-            float micrometersPerPixel = 
-                camera.getVantage().getSceneUnitsPerViewportHeight()
-                    / camera.getViewport().getHeightPixels();
-
-            Matrix4 projectionMatrix = camera.getProjectionMatrix();
-            if (modelViewMatrix == null)
-                modelViewMatrix = new Matrix4(camera.getViewMatrix());
-        
-            lightProbeTexture.bind(gl, 0);
-            
-            spheresShader.load(gl);
-            int s = spheresShader.getProgramHandle();
-            int colorIndex = gl.glGetUniformLocation(s, "color");
-            int lightProbeIndex = gl.glGetUniformLocation(s, "lightProbe");
-            int radiusOffsetIndex = gl.glGetUniformLocation(s, "radiusOffset");
-            int modelViewIndex = gl.glGetUniformLocation(s, "modelViewMatrix");
-            int projectionIndex = gl.glGetUniformLocation(s, "projectionMatrix");
-            
-            gl.glUniformMatrix4fv(modelViewIndex, 1, false, modelViewMatrix.asArray(), 0);
-            gl.glUniformMatrix4fv(projectionIndex, 1, false, projectionMatrix.asArray(), 0); 
-            gl.glUniform1i(lightProbeIndex, 0); // use default texture unit, 0
-            
-            for ( SpheresActor a : currentNeuronSphereActors.values() ) {
-                gl.glUniform4fv(colorIndex, 1, a.getColorArray(), 0);
-                gl.glUniform1f(radiusOffsetIndex, a.getMinPixelRadius() * micrometersPerPixel);
-                if (a.isVisible()) {
-                    a.display(gl, camera, null);
-                }
-            }
-            
-            conesShader.load(gl);
-            s = conesShader.getProgramHandle();
-            colorIndex = gl.glGetUniformLocation(s, "color");
-            lightProbeIndex = gl.glGetUniformLocation(s, "lightProbe");
-            radiusOffsetIndex = gl.glGetUniformLocation(s, "radiusOffset");
-            modelViewIndex = gl.glGetUniformLocation(s, "modelViewMatrix");
-            projectionIndex = gl.glGetUniformLocation(s, "projectionMatrix");
-            
-            gl.glUniformMatrix4fv(modelViewIndex, 1, false, modelViewMatrix.asArray(), 0);
-            gl.glUniformMatrix4fv(projectionIndex, 1, false, projectionMatrix.asArray(), 0); 
-            gl.glUniform1i(lightProbeIndex, 0); // use default texture unit, 0
-            for ( ConesActor a : currentNeuronConeActors.values() ) {
-                gl.glUniform4fv(colorIndex, 1, a.getColorArray(), 0);
-                gl.glUniform1f(radiusOffsetIndex, a.getMinPixelRadius() * micrometersPerPixel);
-                if (a.isVisible()) {
-                    a.display(gl, camera, null);
-                }
-            }
-            
-            conesShader.unload(gl);
-            lightProbeTexture.unbind(gl);
-        }
-
-        private void addNeuronReconstruction(NeuronModel neuron)
-        {
-            if (contains(neuron)) return;
-
-            SpheresActor nsa = createSpheresActor(neuron);
-            ConesActor nca = createConesActor(neuron);
-            setActors(neuron, nsa, nca);
-        }
-
-        private boolean contains(NeuronModel neuron) {
-            if (currentNeuronSphereActors.containsKey(neuron)) return true;
-            if (currentNeuronConeActors.containsKey(neuron)) return true;
-            return false;
-        }
-        
-        private SpheresActor createSpheresActor(NeuronModel neuron) {
-            SpheresActor result = new SpheresActor(neuron, lightProbeTexture, spheresShader);
-            result.setVisible(true);
-            return result;
-        }
-
-        private ConesActor createConesActor(NeuronModel neuron) {
-            ConesActor result = new ConesActor(neuron, lightProbeTexture, spheresShader);
-            result.setVisible(true);
-            return result;
-        }
-        
-        private synchronized void setActors(NeuronModel neuron, SpheresActor spheres, ConesActor cones)
-        {
-            currentNeuronSphereActors.put(neuron, spheres);
-            currentNeuronConeActors.put(neuron, cones);
-        }
-
-        private void removeNeuronReconstruction(NeuronModel neuron)
-        {
-            currentNeuronSphereActors.remove(neuron);
-            currentNeuronConeActors.remove(neuron);
-        }
-        
-        public Collection<NeuronModel> sphereNeurons() {
-            return currentNeuronSphereActors.keySet();
-        }
-
-        public Collection<NeuronModel> coneNeurons() {
-            return currentNeuronConeActors.keySet();
-        }
-        
-        public boolean isEmpty() {
-            return currentNeuronConeActors.isEmpty() && currentNeuronSphereActors.isEmpty();
-        }
-        
-        // Returns true if status changed and there exist hideable items;
-        // i.e. if calling this method might have made a difference
-        public boolean setHideAll(boolean doHideAll) {
-            if (doHideAll == bHideAll)
-                return false;
-            bHideAll = doHideAll;
-            return ! isEmpty();
-        }
-    }
-    
 }

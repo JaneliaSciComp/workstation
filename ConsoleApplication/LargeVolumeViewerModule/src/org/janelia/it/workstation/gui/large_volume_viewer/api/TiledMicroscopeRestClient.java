@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.api;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,7 +9,10 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -18,6 +22,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.MultiPartMediaTypes;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
@@ -26,31 +31,57 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientImpl;
-import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientManager;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 
 /**
  * A web client providing access to the Tiled Microscope REST Service.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TiledMicroscopeRestClient extends RESTClientImpl {
+public class TiledMicroscopeRestClient {
 
     private static final Logger log = LoggerFactory.getLogger(TiledMicroscopeRestClient.class);
 
-    private RESTClientManager manager;
+    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
+    private static final String REMOTE_MOUSELIGHT_DATA_PREFIX = "mouselight/data";
+
+    private final Client client;
 
     public TiledMicroscopeRestClient() {
-        super(log);
-        this.manager = RESTClientManager.getInstance();
+        log.info("Using server URL: {}",REMOTE_API_URL);
+        JacksonJsonProvider provider = new JacksonJaxbJsonProvider();
+        ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+        mapper.addHandler(new DeserializationProblemHandler() {
+            @Override
+            public boolean handleUnknownProperty(DeserializationContext ctxt, JsonParser jp, JsonDeserializer<?> deserializer, Object beanOrClass, String propertyName) throws IOException, JsonProcessingException {
+                log.error("Failed to deserialize property which does not exist in model: {}.{}",beanOrClass.getClass().getName(),propertyName);
+                return true;
+            }
+        });
+        this.client = ClientBuilder.newClient();
+        client.register(provider);
+        client.register(MultiPartFeature.class);
+    }
+
+    public WebTarget getMouselightEndpoint(String suffix) {
+        return client.target(REMOTE_API_URL + REMOTE_MOUSELIGHT_DATA_PREFIX + suffix)
+                .queryParam("subjectKey", AccessManager.getSubjectKey());
     }
     
     public List<String> getTmSamplePaths() throws Exception {
-        Response response = manager.getMouselightEndpoint("/sampleRootPaths")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/sampleRootPaths")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response, "getTmSamplePaths")) {
@@ -60,8 +91,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
     }
 
     public void updateSamplePaths(List<String> paths) throws Exception {
-        Response response = manager.getMouselightEndpoint("/sampleRootPaths")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/sampleRootPaths")
                 .request("application/json")
                 .post(Entity.json(paths));
         if (checkBadResponse(response, "update: " + paths)) {
@@ -70,8 +100,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
     }
     
     public Collection<TmSample> getTmSamples() throws Exception {
-        Response response = manager.getMouselightEndpoint("/sample")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/sample")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response, "getTmSamples")) {
@@ -84,7 +113,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(tmSample);
-        Response response = manager.getMouselightEndpoint("/sample")
+        Response response = getMouselightEndpoint("/sample")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response, "create: "+tmSample)) {
@@ -97,7 +126,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(tmSample);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = manager.getMouselightEndpoint("/sample")
+        Response response = getMouselightEndpoint("/sample")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response, "update: " + tmSample)) {
@@ -107,8 +136,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
     }
 
     public void remove(TmSample tmSample) throws Exception {
-        Response response = manager.getMouselightEndpoint("/sample")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/sample")
                 .queryParam("sampleId", tmSample.getId())
                 .request("application/json")
                 .delete();
@@ -118,8 +146,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
     }
 
     public Collection<TmWorkspace> getTmWorkspaces() throws Exception {
-        Response response = manager.getMouselightEndpoint("/workspace")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/workspace")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response, "getTmWorkspaces")) {
@@ -129,8 +156,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
     }
 
     public Collection<TmWorkspace> getTmWorkspacesForSample(Long sampleId) throws Exception {
-        Response response = manager.getMouselightEndpoint("/workspace")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/workspace")
                 .queryParam("sampleId", sampleId)
                 .request("application/json")
                 .get();
@@ -144,7 +170,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(tmWorkspace);
-        Response response = manager.getMouselightEndpoint("/workspace")
+        Response response = getMouselightEndpoint("/workspace")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response, "create: "+tmWorkspace)) {
@@ -153,11 +179,26 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
         return response.readEntity(TmWorkspace.class);
     }
 
+    public TmWorkspace copy(TmWorkspace tmWorkspace, String name) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(tmWorkspace);
+        query.setPropertyName("name");
+        query.setPropertyValue(name);
+        Response response = getMouselightEndpoint("/workspace/copy")
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response, "create: "+tmWorkspace)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(TmWorkspace.class);
+    }
+    
     public TmWorkspace update(TmWorkspace tmWorkspace) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(tmWorkspace);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = manager.getMouselightEndpoint("/workspace")
+        Response response = getMouselightEndpoint("/workspace")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response, "update: " + tmWorkspace)) {
@@ -167,8 +208,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
     }
 
     public void remove(TmWorkspace tmWorkspace) throws Exception {
-        Response response = manager.getMouselightEndpoint("/workspace")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/workspace")
                 .queryParam("workspaceId", tmWorkspace.getId())
                 .request("application/json")
                 .delete();
@@ -178,8 +218,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
     }
 
     public Collection<Pair<TmNeuronMetadata,InputStream>> getWorkspaceNeuronPairs(Long workspaceId) throws Exception {
-        Response response = manager.getMouselightEndpoint("/workspace/neuron")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/workspace/neuron")
                 .queryParam("workspaceId", workspaceId)
                 .request("multipart/mixed")
                 .get();
@@ -209,8 +248,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
     public TmNeuronMetadata createMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
         FormDataMultiPart multiPart = new FormDataMultiPart()
                 .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE);
-        Response response = manager.getMouselightEndpoint("/workspace/neuron")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/workspace/neuron")
                 .request()
                 .put(Entity.entity(multiPart, multiPart.getMediaType()));
         if (checkBadResponse(response, "createMetadata: "+neuronMetadata)) {
@@ -223,8 +261,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
         FormDataMultiPart multiPart = new FormDataMultiPart()
                 .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE)
                 .field("protobufBytes", protobufStream, MediaType.APPLICATION_OCTET_STREAM_TYPE);
-        Response response = manager.getMouselightEndpoint("/workspace/neuron")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/workspace/neuron")
                 .request()
                 .put(Entity.entity(multiPart, multiPart.getMediaType()));
         if (checkBadResponse(response, "create: "+neuronMetadata)) {
@@ -275,8 +312,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
             logStr = neuronPairs.size()+" neurons";
         }
         
-        Response response = manager.getMouselightEndpoint("/workspace/neuron")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/workspace/neuron")
                 .request()
                 .post(Entity.entity(multiPartEntity, MultiPartMediaTypes.MULTIPART_MIXED));
         if (checkBadResponse(response, "update: " +logStr)) {
@@ -290,8 +326,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
 
     public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate) throws Exception {
         if (bulkNeuronStyleUpdate.getNeuronIds()==null || bulkNeuronStyleUpdate.getNeuronIds().isEmpty()) return;
-        Response response = manager.getMouselightEndpoint("/workspace/neuronStyle")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/workspace/neuronStyle")
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.json(bulkNeuronStyleUpdate));
         if (checkBadResponse(response, "updateNeuronStyles")) {
@@ -300,8 +335,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
     }
     
     public void remove(TmNeuronMetadata neuronMetadata) throws Exception {
-        Response response = manager.getMouselightEndpoint("/workspace/neuron")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/workspace/neuron")
                 .queryParam("neuronId", neuronMetadata.getId())
                 .request()
                 .delete();
@@ -313,8 +347,7 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
     public void changeTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) throws Exception {
         if (neurons.isEmpty()) return;
         List<Long> neuronIds = DomainUtils.getIds(neurons);
-        Response response = manager.getMouselightEndpoint("/workspace/neuronTags")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        Response response = getMouselightEndpoint("/workspace/neuronTags")
                 .queryParam("tags", StringUtils.join(tags, ","))
                 .queryParam("tagState", tagState)
                 .request(MediaType.APPLICATION_JSON)
@@ -322,5 +355,26 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
         if (checkBadResponse(response, "bulkEditTags")) {
             throw new WebApplicationException(response);
         }
+    }
+
+    protected boolean checkBadResponse(Response response, String failureError) {
+        int responseStatus = response.getStatus();
+        Response.Status status = Response.Status.fromStatusCode(response.getStatus());
+        if (responseStatus<200 || responseStatus>=300) {
+            log.error("Problem making request for {}", failureError);
+            // TODO: we want to print the request URI here, but I don't have time to search through the JAX-RS APIs right now
+            log.error("Server responded with error code: {} {}",response.getStatus(), status);
+            return true;
+        }
+        return false;
+    }
+
+    protected boolean checkBadResponse(int responseStatus, String failureError) {
+        if (responseStatus<200 || responseStatus>=300) {
+            log.error("ERROR RESPONSE: " + responseStatus);
+            log.error(failureError);
+            return true;
+        }
+        return false;
     }
 }

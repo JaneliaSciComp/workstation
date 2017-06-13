@@ -184,15 +184,10 @@ public class IconGridViewerConfigDialog extends ModalDialog {
     }
 
     private CompletionProvider createCompletionProvider(Class<? extends DomainObject> resultClass) {
-        List<DomainObjectAttribute> attrs = DomainUtils.getUniqueAttributes(resultClass);
+        List<DomainObjectAttribute> attrs = DomainUtils.getDisplayAttributes(resultClass);
         DefaultCompletionProvider provider = new DefaultCompletionProvider();
         for(DomainObjectAttribute attr : attrs) {
             provider.addCompletion(new ShorthandCompletion(provider, attr.getLabel(), "{"+attr.getLabel()+"}", ""));
-        }
-        if (resultClass.equals(Sample.class)) {
-            for (AlignmentScoreType alignmentScoreType : AlignmentScoreType.values()) {
-                provider.addCompletion(new ShorthandCompletion(provider, alignmentScoreType.getLabel(), "{"+alignmentScoreType.getLabel()+"}", ""));
-            }
         }
         return provider;
     }

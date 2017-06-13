@@ -1563,6 +1563,7 @@
                 <package>org.janelia.it.jacs.model.common</package>
                 <package>org.janelia.it.jacs.model.domain</package>
                 <package>org.janelia.it.jacs.model.domain.compartments</package>
+                <package>org.janelia.it.jacs.model.domain.dto</package>
                 <package>org.janelia.it.jacs.model.domain.enums</package>
                 <package>org.janelia.it.jacs.model.domain.gui.alignment_board</package>
                 <package>org.janelia.it.jacs.model.domain.gui.search</package>
@@ -1582,6 +1583,7 @@
                 <package>org.janelia.it.jacs.model.jobs</package>
                 <package>org.janelia.it.jacs.model.ontology</package>
                 <package>org.janelia.it.jacs.model.ontology.types</package>
+                <package>org.janelia.it.jacs.model.domain.orders</package>
                 <package>org.janelia.it.jacs.model.sage</package>
                 <package>org.janelia.it.jacs.model.search</package>
                 <package>org.janelia.it.jacs.model.status</package>

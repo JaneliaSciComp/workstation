@@ -1,3 +1,166 @@
+// 5.14
+
+Workstation Browser
+* Improved usability of Download Wizard
+* Fixed error when right-clicking a folder in the Data Browser
+
+// 5.13
+
+Workstation Browser
+* Added "Disk Space Usage" attribute to Data Sets, Samples, and Results
+* Added a right-click menu option called "Add Related Items", which allows mapping between Samples, LSMs, and Neurons
+* Fixed issue with the Download wizard which caused it to not display certain file types
+* Fixed error when using "Purging and Block" on more than one sample at a time
+* Fixed application deadlock issue which occurred sometimes when pressing the Refresh button
+
+Horta
+* Optimized neuron merge performance
+
+// 5.12
+
+Workstation Browser
+* The "Download" dialog is now a wizard, allowing download of multiple file types at once 
+* Details of pipeline errors now appear in Data Inspector when the error is selected
+* Fixed error popup when marking sample for reprocessing
+* Fixed issues with the "Sample Compression Strategy" feature
+
+MouseLight
+* Import/export color model added
+* Merge performance improved somewhat
+
+// 5.11.1
+
+Workstation Browser
+* Refresh now works for unsaved filters
+* Open in Neuron Annotator fixed for separations with curated neurons
+* Neuron Annotator now displays neurons in the correct order
+* Fixed issue with Data Explorer sometimes not displaying Home folders for admins
+
+MouseLight
+* Make "merge" in Horta undo-able, and remove the confirm dialog.
+* Set primary anchor on downstream anchor after Horta merge operation.
+* Prevent Ktx tile memory from building up when switching between LVV and Horta when auto-load is active.
+* Avoid OutOfBoundException errors when editing neurons JW-28009
+* Added "merge to selected" tool (aka smart merge)
+
+// 5.10.0
+
+Workstation Browser
+* Now defaults to direct non-proxy connection to fix slow performance over VPN
+* Spaces in paths are now supported on Windows
+* Many other minor bug fixes (see JIRA)
+
+MouseLight
+* Allow merging of neurites within a neuron in Horta.
+* Use better radii when adding anchors in LVV.
+* Avoid Horta IndexOutOfBoundsException in NeuronVbo.updateNeuronVisibility (JW-28009).
+* Improve quality of Ktx tile rendering, to reduce popping during zoom.
+* Hide Horta editing options when the workspace is read-only.
+
+// 5.9.0
+
+Workstation Browser
+* Shared annotations can now be searched
+* "View in Fiji" now works on Windows
+* Fixed error when reordering folders that contain non-folders (e.g. neuron fragments) 
+* Many other minor bug fixes (see JIRA)
+
+FlyLight
+* Fixed usability issue with LSMs being annotated instead of sample
+* The separated neurons can now be selected for download from a Sample
+* Alignment scores are now available in Table View and for file naming
+
+MouseLight
+* Fixed point selection issue when using the viewport optimization setting
+* Greatly improved neuron operation performance, supporting millions of anchors 
+* Newly created workspaces are now added to the Recently Opened folder
+* Reopening last workspace on startup now also restores viewer position
+* Improved Horta rendering performance to support up to a million anchors
+* Improve Horta model clearing when loading subsequent workspaces
+* Update Horta display after "transfer neurite" in LVV
+* Restore ability to drag and drop Ktx tiles in Horta
+
+// 5.8.0
+
+Workstation Browser
+* Added "Change Permissions" right-click option on Ontologies to allow sharing of ontologies
+* Fixed issue with viewer state not being properly maintained when using the navigation arrows or refresh button
+
+FlyLight
+* Fixed issue with display not updating after marking a Sample for reprocessing
+
+MouseLight
+* Major improvements in LVV rendering performance for large numbers of neurons 
+* Workspaces created with the "Load Linux SWC Folder" option now keep track of 
+  the SWC Folder that was used to create them.
+* Adjusted rendering of Ktx tiles to better resemble rendering of legacy raw tiles.
+* Fixed occasional non-display of OBJ meshes in Horta (brain compartments).
+* Fixed occasionally missing Horta "clear current parent anchor" context menu option.
+* Improve suggested new neuron name when creating neurons in Horta (was always "Neuron 1").
+
+// 5.7.0
+
+Workstation Browser
+* The project website has been revamped: http://workstation.int.janelia.org
+* Added better error messages for permission errors
+* Fixed error when dragging an item from the Recently Opened folder
+* Added message at startup which alerts the user if they are running Java 7
+* Other minor bug fixes
+
+FlyLight
+* Restored missing Gen1 samples
+* Added "Set Publication Name" right-click option for Samples
+
+MouseLight
+* Raw tile loading in Horta no longer depends on zoom level, even when raw tiles appear to have very different resolutions
+* Move "Navigate to Horta" menu items to top level of context menu
+* Add Horta menu to toggle loading of Ktx/Rendered tiles vs Raw/Unsupported tiles
+* Synchronize Horta display after moving an anchor in LVV
+* Add ability to create new Neurons in Horta
+* Add ability to drag anchors in Horta
+* Reduce blackening of dim KTX intensities in Horta
+* Add ability to edit anchor radius in Horta
+* Synchronize LVV display after moving anchors in Horta
+* Fixed "timer already canceled" error
+
+// 5.6.1
+
+Workstation Browser
+* Fix for stack overflow due to Prefs dir creation issue
+
+// 5.6.0
+
+Workstation Browser
+* Fixed issue preventing the Home folder from being automatically opened at startup
+* Fixed issue where Explorer tree was not refreshed when adding to a folder in some cases
+* Fixed bug where fast background tasks did not show in progress panel
+* Restored missing "Report A Bug" menu item
+* Many other minor bug fixes (see JIRA)
+
+FlyLight
+* Added "apply to all" check box to file download pop-up dialog
+* Fixed bug preventing users from removing neuron fragments from folders 
+
+MouseLight    
+* Added "Save As" feature for Workspaces
+* Restored Horta "Reset Rotation" to top-level context menu, and make it hot-keyable
+* Moved "Navigate to this location in LVV/Horta" context menu items to top of list.
+* Hide/show neuron in LVV now instantly reflected in Horta
+* Fixed Bulk Hide/Show Neurons in LVV not reflected in Horta
+* Fixed problems affecting samples with origin at x=0
+* Fixed problem where neurons did not display when read-only access to granted to a Workspace
+* Greatly improved performance of "Load Linux SWC Folder" action
+* Improved performance of bulk hide/show and other neuron actions
+
+// 5.5.2
+
+Changes
+* Increased update check interval from 1 hour to 15 minutes
+
+Bug fixes
+* Fixed issue with Add to Folder
+* Fixed issues caused by legacy modules
+
 // 5.5.1
 
 Bug fixes

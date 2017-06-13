@@ -9,9 +9,13 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.dto.SampleDispatchRequest;
+import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
+import org.janelia.it.jacs.model.domain.sample.StatusTransition;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SampleFacade;
@@ -21,11 +25,9 @@ import org.slf4j.LoggerFactory;
 public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
 
     private static final Logger log = LoggerFactory.getLogger(SampleFacadeImpl.class);
-    private RESTClientManager manager;
 
     public SampleFacadeImpl() {
         super(log);
-        this.manager = RESTClientManager.getInstance();
     }
 
     @Override
@@ -151,5 +153,22 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         if (checkBadResponse(response.getStatus(), "problem making request removeRelease from server: " + release)) {
             throw new WebApplicationException(response);
         }
+    }
+
+    @Override
+    public String dispatchSamples(List<Reference> sampleRefs, String reprocessPurpose, boolean reuse) throws Exception {
+        SampleDispatchRequest dispatchRequest = new SampleDispatchRequest();
+        dispatchRequest.setProcessLabel(reprocessPurpose);
+        dispatchRequest.setSampleReferences(sampleRefs);
+        dispatchRequest.setReuse(reuse);
+        Response response = manager.getSampleProcessEndpoint()
+                .path("dispatch")
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .request("application/json")
+                .post(Entity.json(dispatchRequest));
+        if (checkBadResponse(response.getStatus(), "problem making request to dispatch samples")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(String.class);
     }
 }

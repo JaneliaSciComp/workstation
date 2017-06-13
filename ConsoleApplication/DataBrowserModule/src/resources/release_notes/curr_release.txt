@@ -1,8 +1,11 @@
-// 5.5.2
+// 5.15
 
-Changes
-* Increased update check interval from 1 hour to 15 minutes
+Workstation Browser
+* Each tab now maintains its own Back/Forward history 
+* You can now navigate backwards to unsaved filters using the Back button
+* LSM attributes (like "Objective" and "Num Channels") can be specified in file names when using the Download Wizard 
 
-Bug fixes
-* Fixed issue with Add to Folder
-* Fixed issues caused by legacy modules
+Large Volume Viewer
+* Fixed issue with progress bar dialog for long running operations
+* Better error dialog when attempting to export neurons to read-only location
+

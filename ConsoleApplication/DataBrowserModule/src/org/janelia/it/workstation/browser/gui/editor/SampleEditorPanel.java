@@ -24,9 +24,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollPane;
+import javax.swing.Scrollable;
 
-import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
@@ -48,9 +57,13 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.model.DomainObjectAnnotationChangeEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.PipelineErrorSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
@@ -73,6 +86,8 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 
 /**
@@ -248,8 +263,13 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         populateViewButton();
         objectiveButton = new DropDownButton("Objective: "+currObjective);
         areaButton = new DropDownButton("Area: "+currArea);
-        
-        configPanel = new ConfigPanel(true);
+
+        configPanel = new ConfigPanel(true) {
+            @Override
+            protected void titleClicked(MouseEvent e) {
+                Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(sample), true, true, true));
+            }
+        };
         configPanel.addTitleComponent(viewButton, true, true);
         
         lsmPanel = new PaginatedResultsPanel(selectionModel, this) {
@@ -295,6 +315,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         if (resultPanel instanceof PipelineResultPanel) {
             PipelineResultPanel resultPanel2 = (PipelineResultPanel)resultPanel;
             Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, resultPanel2.getResult(), isUserDriven));
+        }
+        else if (resultPanel instanceof PipelineErrorPanel) {
+            PipelineErrorPanel resultPanel2 = (PipelineErrorPanel)resultPanel;
+            Events.getInstance().postOnEventBus(new PipelineErrorSelectionEvent(this, resultPanel2.getError(), isUserDriven));
         }
         
         if (isUserDriven) {
@@ -437,6 +461,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     protected void updateHud(boolean toggle) {
 
+        if (!toggle && !Hud.isInitialized()) return;
+        
         Hud hud = Hud.getSingletonInstance();
         hud.setKeyListener(keyListener);
                 
@@ -538,6 +564,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
     private void prepareLsmResults() {
 
+        if (lsms==null) return;
+        
         List<LSMImage> filteredLsms = new ArrayList<>();
         for(LSMImage lsm : lsms) {
 
@@ -566,26 +594,31 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         configPanel.addConfigComponent(objectiveButton);
         configPanel.addConfigComponent(areaButton);
     	
-        Set<String> objectiveSet = new LinkedHashSet<>(sample.getObjectives());
-        Set<String> areaSet = new LinkedHashSet<>();
-    	for(LSMImage lsm : lsms) {
-    		objectiveSet.add(lsm.getObjective());
-                String area = lsm.getAnatomicalArea();
-                if (area==null) {
-                    area = "Unknown";
-                }
-                areaSet.add(area);
-    	}
-    	
-    	List<String> objectives = new ArrayList<>(objectiveSet);
-        objectives.add(0, ALL_VALUE);
-        populateObjectiveButton(objectives);
-        
-        List<String> areas = new ArrayList<>(areaSet);
-        areas.add(0, ALL_VALUE);
-        populateAreaButton(areas);
-
-        lsmPanel.showSearchResults(lsmSearchResults, isUserDriven, null);
+        if (lsms!=null) {
+            Set<String> objectiveSet = new LinkedHashSet<>(sample.getObjectives());
+            Set<String> areaSet = new LinkedHashSet<>();
+        	for(LSMImage lsm : lsms) {
+        		objectiveSet.add(lsm.getObjective());
+                    String area = lsm.getAnatomicalArea();
+                    if (area==null) {
+                        area = "Unknown";
+                    }
+                    areaSet.add(area);
+        	}
+        	
+        	List<String> objectives = new ArrayList<>(objectiveSet);
+            objectives.add(0, ALL_VALUE);
+            populateObjectiveButton(objectives);
+            
+            List<String> areas = new ArrayList<>(areaSet);
+            areas.add(0, ALL_VALUE);
+            populateAreaButton(areas);
+    
+            lsmPanel.showSearchResults(lsmSearchResults, isUserDriven, null);
+        }
+        else {
+            lsmPanel.showNothing();
+        }
         
         removeAll();
         add(configPanel, BorderLayout.NORTH);
@@ -601,103 +634,105 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         configPanel.addConfigComponent(objectiveButton);
         configPanel.addConfigComponent(areaButton);
         
-        Set<String> objectiveSet = new LinkedHashSet<>(sample.getObjectives());
-        Set<String> areaSet = new LinkedHashSet<>();
-        
-        // Populate currRunMap
-        for(String objective : objectiveSet) {
+        if (sample!=null) {
+            Set<String> objectiveSet = new LinkedHashSet<>(sample.getObjectives());
+            Set<String> areaSet = new LinkedHashSet<>();
             
-            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
-            if (objectiveSample==null) continue;
-            
-            // Is there a run already selected?
-            SamplePipelineRun run = currRunMap.get(objective);
-            
-            if (run==null) {
-            	// If not, pick one as the default
-                run = objectiveSample.getLatestRun();
-            	if (run!=null) {
-            		currRunMap.put(objective, run);
-            	}
-            }
-        }
-        
-        // Populate drop down buttons
-        for(String objective : objectiveSet) {
-            
-            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
-            if (objectiveSample==null) continue;
-            SamplePipelineRun run = currRunMap.get(objective);
-            if (run==null || run.getResults()==null) continue;
-
-            for(PipelineResult result : run.getResults()) {
-                String area = null;
-                if (result instanceof HasAnatomicalArea) {
-                    area = ((HasAnatomicalArea)result).getAnatomicalArea();
+            // Populate currRunMap
+            for(String objective : objectiveSet) {
+                
+                ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
+                if (objectiveSample==null) continue;
+                
+                // Is there a run already selected?
+                SamplePipelineRun run = currRunMap.get(objective);
+                
+                if (run==null) {
+                	// If not, pick one as the default
+                    run = objectiveSample.getLatestRun();
+                	if (run!=null) {
+                		currRunMap.put(objective, run);
+                	}
                 }
-                if (area==null) {
-                    area = "Unknown";
-                }
-            	areaSet.add(area);
             }
             
-            DropDownButton historyButton = new DropDownButton(objective+": "+getLabel(run));
-            populateHistoryButton(historyButton.getPopupMenu(), objectiveSample);
-            historyButtonMap.put(objective, historyButton);
-            configPanel.addConfigComponent(historyButton);
-        }
-
-    	List<String> objectives = new ArrayList<>(objectiveSet);
-        objectives.add(0, ALL_VALUE);
-        populateObjectiveButton(objectives);
-        
-        List<String> areas = new ArrayList<>(areaSet);
-        areas.add(0, ALL_VALUE);
-        populateAreaButton(areas);
-        
-        for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
-            
-            String objective = objectiveSample.getObjective();
-            boolean diplayObjective = true;
-            
-            if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !StringUtils.areEqual(currObjective, objective)) {
-                diplayObjective = false;
+            // Populate drop down buttons
+            for(String objective : objectiveSet) {
+                
+                ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
+                if (objectiveSample==null) continue;
+                SamplePipelineRun run = currRunMap.get(objective);
+                if (run==null || run.getResults()==null) continue;
+    
+                for(PipelineResult result : run.getResults()) {
+                    String area = null;
+                    if (result instanceof HasAnatomicalArea) {
+                        area = ((HasAnatomicalArea)result).getAnatomicalArea();
+                    }
+                    if (area==null) {
+                        area = "Unknown";
+                    }
+                	areaSet.add(area);
+                }
+                
+                DropDownButton historyButton = new DropDownButton(objective+": "+getLabel(run));
+                populateHistoryButton(historyButton.getPopupMenu(), objectiveSample);
+                historyButtonMap.put(objective, historyButton);
+                configPanel.addConfigComponent(historyButton);
             }
-
-            SamplePipelineRun run = currRunMap.get(objective);
-            if (run==null || run.getResults()==null) continue;
+    
+        	List<String> objectives = new ArrayList<>(objectiveSet);
+            objectives.add(0, ALL_VALUE);
+            populateObjectiveButton(objectives);
             
-            for(PipelineResult result : run.getResults()) {
-
-                String area = null;
-                if (result instanceof HasAnatomicalArea) {
-                    area = ((HasAnatomicalArea)result).getAnatomicalArea();
+            List<String> areas = new ArrayList<>(areaSet);
+            areas.add(0, ALL_VALUE);
+            populateAreaButton(areas);
+            
+            for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
+                
+                String objective = objectiveSample.getObjective();
+                boolean diplayObjective = true;
+                
+                if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !StringUtils.areEqual(currObjective, objective)) {
+                    diplayObjective = false;
+                }
+    
+                SamplePipelineRun run = currRunMap.get(objective);
+                if (run==null || run.getResults()==null) continue;
+                
+                for(PipelineResult result : run.getResults()) {
+    
+                    String area = null;
+                    if (result instanceof HasAnatomicalArea) {
+                        area = ((HasAnatomicalArea)result).getAnatomicalArea();
+                    }
+                    
+                    if (area==null) {
+                        area = "Unknown";
+                    }
+                    
+                    boolean display = diplayObjective;
+                    if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
+                        display = false;
+                    }
+                    
+                    if (display) {
+                        PipelineResultPanel resultPanel = new PipelineResultPanel(result);
+                        resultPanels.add(resultPanel);
+                        dataPanel.add(resultPanel);
+                    }
                 }
                 
-                if (area==null) {
-                    area = "Unknown";
-                }
-                
-                boolean display = diplayObjective;
-                if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
-                    display = false;
-                }
-                
-                if (display) {
-                    PipelineResultPanel resultPanel = new PipelineResultPanel(result);
+                if (run.hasError()) {
+                    PipelineErrorPanel resultPanel = new PipelineErrorPanel(run);
                     resultPanels.add(resultPanel);
                     dataPanel.add(resultPanel);
                 }
+                
             }
-            
-            if (run.hasError()) {
-                PipelineErrorPanel resultPanel = new PipelineErrorPanel(run);
-                resultPanels.add(resultPanel);
-                dataPanel.add(resultPanel);
-            }
-            
         }
-
+        
         removeAll();
         add(configPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
@@ -966,6 +1001,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         public SamplePipelineRun getRun() {
             return run;
         }
+        
+        public PipelineError getError() {
+            return run.getError();
+        }
     }
 
     @Subscribe
@@ -982,7 +1021,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
                     if (StringUtils.areEqual(domainObject.getId(), sample.getId())) {
-                        log.info("objects set invalidated, reloading...");
+                        log.info("Sample invalidated, reloading...");
                         Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
                         if (updatedSample!=null) {
                             loadDomainObject(updatedSample, false, null);
@@ -992,7 +1031,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                     else if (lsms!=null) {
                         for(LSMImage lsm : lsms) {
                             if (StringUtils.areEqual(domainObject.getId(), lsm.getId())) {
-                                log.info("lsm invalidated, reloading...");
+                                log.info("LSM invalidated, reloading...");
                                 Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
                                 if (updatedSample!=null) {
                                     loadDomainObject(updatedSample, false, null);
@@ -1013,10 +1052,34 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         if (sample==null) return;
         if (StringUtils.areEqual(event.getDomainObject().getId(), sample.getId())) {
             this.sample = null;
-            currRunMap.clear();
-            lsms.clear();
-            lsmAnnotations.clear();
+            if (currRunMap!=null) currRunMap.clear();
+            if (lsms!=null) lsms.clear();
+            if (lsmAnnotations!=null) lsmAnnotations.clear();
             showNothing();
+        }
+    }
+        
+    @Subscribe
+    public void domainObjectSelected(DomainObjectSelectionEvent event) {
+        // Forward to LSM panel
+        if (lsmPanel!=null) {
+            lsmPanel.domainObjectSelected(event);
+        }
+    }
+
+    @Subscribe
+    public void domainObjectChanged(DomainObjectChangeEvent event) {
+        // Forward to LSM panel
+        if (lsmPanel!=null) {
+            lsmPanel.domainObjectChanged(event);
+        }
+    }
+    
+    @Subscribe
+    public void annotationsChanged(DomainObjectAnnotationChangeEvent event) {
+        // Forward to LSM panel
+        if (lsmPanel!=null) {
+            lsmPanel.annotationsChanged(event);
         }
     }
 }

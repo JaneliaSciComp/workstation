@@ -61,7 +61,7 @@ public class WorkspaceInformationAction extends AbstractAction {
             JScrollPane scrollPane = new JScrollPane(table);
 
             table.setFillsViewportHeight(true);
-            tableModel.addNeurons(annotationModel.getNeuronList());
+            tableModel.addNeurons(new ArrayList<>(annotationModel.getNeuronList()));
 
             JOptionPane.showConfirmDialog(null,
                 scrollPane,

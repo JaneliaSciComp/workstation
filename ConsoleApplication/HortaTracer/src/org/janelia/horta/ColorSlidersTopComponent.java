@@ -79,6 +79,7 @@ implements LookupListener
 
     public ColorSlidersTopComponent() {
         initComponents();
+        sliderPanel.setTop(SliderPanel.VIEW.Horta);
         setName(Bundle.CTL_ColorSlidersTopComponent());
         setToolTipText(Bundle.HINT_ColorSlidersTopComponent());
         

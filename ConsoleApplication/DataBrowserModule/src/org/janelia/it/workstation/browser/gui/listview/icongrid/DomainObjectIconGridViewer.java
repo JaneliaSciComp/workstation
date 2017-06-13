@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -62,10 +63,14 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
 
+    // UI Components
     private ResultSelectionButton resultButton;
     private ImageTypeSelectionButton typeButton;
 
+    // Configuration
     private IconGridViewerConfiguration config;
+    
+    // These members deal with the context and entities within it
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
     private DomainObjectSelectionModel editSelectionModel;
@@ -73,6 +78,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @SuppressWarnings("unused")
     private SearchProvider searchProvider;
 
+    // UI state
     private boolean editMode;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
@@ -222,7 +228,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             editSelectionModel.select(domainObjects, true, true);
         }
     }
-
 
     @Override
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
@@ -376,7 +381,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     protected DomainObjectContextMenu getContextualPopupMenu() {
-        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), getSelectedObjects(), resultButton.getResultDescriptor(), typeButton.getImageTypeName());
+        return getPopupMenu(getSelectedObjects());
+    }
+    
+    private DomainObjectContextMenu getPopupMenu(List<DomainObject> domainObjectList) {
+        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), domainObjectList, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
         popupMenu.addMenuItems();
         return popupMenu;
     }
@@ -399,7 +408,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             domainObjectProviderHelper.service(object);
         }
         else {
-            getContextualPopupMenu().runDefaultAction();            
+            getPopupMenu(Arrays.asList(object)).runDefaultAction();            
         }
     }
     
@@ -448,22 +457,29 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     protected void updateHud(boolean toggle) {
 
+        if (!toggle && !Hud.isInitialized()) return;
+        
         Hud hud = Hud.getSingletonInstance();
         hud.setKeyListener(keyListener);
-        
-        List<DomainObject> selected = getSelectedObjects();
-        
-        if (selected.size() != 1) {
-            hud.hideDialog();
-            return;
-        }
-        
-        DomainObject domainObject = selected.get(0);
-        if (toggle) {
-            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
-        }
-        else {
-            hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), false);
+
+        try {
+            List<DomainObject> selected = getSelectedObjects();
+            
+            if (selected.size() != 1) {
+                hud.hideDialog();
+                return;
+            }
+            
+            DomainObject domainObject = selected.get(0);
+            if (toggle) {
+                hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
+            }
+            else {
+                hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), false);
+            }
+        } 
+        catch (Exception ex) {
+            ConsoleApp.handleException(ex);
         }
     }
     
@@ -497,6 +513,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                    int maxImageWidth = tableViewerState.getMaxImageWidth();
                    log.debug("Restoring maxImageWidth={}",maxImageWidth);
                    getToolbar().getImageSizeSlider().setValue(maxImageWidth);
+                   // Wait until slider resizes images, then fix scroll:
+                   SwingUtilities.invokeLater(new Runnable() {
+                       @Override
+                       public void run() {
+                           scrollSelectedObjectsToCenter();
+                       }
+                   });
                }
            }
         );

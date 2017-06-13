@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.browser.actions;
 
+import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -21,6 +23,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -54,15 +57,17 @@ import org.janelia.it.workstation.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
-import org.janelia.it.workstation.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SpecialAnnotationChooserDialog;
+import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadWizardAction;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
+import org.janelia.it.workstation.browser.nb_action.GetRelatedItemsAction;
+import org.janelia.it.workstation.browser.nb_action.SetPublishingNameAction;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
@@ -81,6 +86,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
     public static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
     public static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
+    public static final String NEURON_SEP_REMOVAL_MSG = "Remove/preclude Neuron Separation(s)";
 
     // Current selection
     protected DomainObject contextObject;
@@ -139,6 +145,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getPermissionItem());
 
         add(getAddToFolderItem());
+        add(getRelatedItemsItem());
         add(getRemoveFromFolderItem());
 
         setNextAddRequiresSeparator(true);
@@ -148,15 +155,18 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getVaa3dTriViewItem());
         add(getVaa3d3dViewItem());
         add(getFijiViewerItem());
+
         add(getDownloadItem());
 
+        // TODO: move these options to a separate "Confocal" module 
+        // along with all other Sample-specific functionality 
         setNextAddRequiresSeparator(true);
         add(getReportProblemItem());
-        addRerunSamplesAction();
-        // Removing feature to avoid premature release.
-        addPartialSecondaryDataDeletiontItem();
+        add(getRerunSamplesAction());
         add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
+        add(getPartialSecondaryDataDeletiontItem());
+        add(getApplyPublishingNameItem());
         add(getMergeItem());
         
         setNextAddRequiresSeparator(true);
@@ -347,12 +357,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     final ApplyAnnotationAction action = ApplyAnnotationAction.get();
                     final String value = (String)JOptionPane.showInputDialog(mainFrame,
                             "Please provide details:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
-                    if (value==null || value.equals("")) return;
+                    if (StringUtils.isEmpty(value)) return;
 
                     SimpleWorker simpleWorker = new SimpleWorker() {
                         @Override
                         protected void doStuff() throws Exception {
-                            action.doAnnotation(domainObject, term, value);
+                            action.addAnnotation(domainObject, term, value);
                             String annotationValue = "";
                             List<Annotation> annotations = DomainMgr.getDomainMgr().getModel().getAnnotations(domainObject);
                             for (Annotation annotation : annotations) {
@@ -393,7 +403,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         if (samples.isEmpty()) return null;
 
-        final String samplesText = multiple?samples.size()+" Samples":"Sample";
+        final String samplesText = multiple?samples.size()+" Samples":"1 Sample";
         JMenu submenu = new JMenu("  Change Sample Compression Strategy");
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
@@ -406,7 +416,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                 final String targetCompression = DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
                 String message = "Are you sure you want to convert "+samplesText+" to Visually Lossless (h5j) format?\n"
-                        + "This will immediately delete all Lossless v3dpbd files for this Sample and result in a large decrease in disk space usage.\n"
+                        + "This will immediately delete all Lossless v3dpbd files for these Samples and result in a large decrease in disk space usage.\n"
                         + "Lossless files can be regenerated by reprocessing the Sample later.";
                 int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
 
@@ -489,24 +499,28 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                 ActivityLogHelper.logUserAction("DomainObjectContentMenu.changeSampleCompressionStrategyToLossless", domainObject);
 
                 final String targetCompression = DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J;
-                String message = "Are you sure you want to mark "+samplesText+" for reprocessing into Lossless (v3dpbd) format?";
+                String message = "Are you sure you want to reprocess "+samplesText+" into Lossless (v3dpbd) format?";
                 int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
 
                 if (result != 0) return;
 
-                SimpleWorker worker = new SimpleWorker() {
+                SimpleWorker worker = new SimpleWorker()     {
 
                     @Override
                     protected void doStuff() throws Exception {
-                        for(final Sample sample : samples) {
+                        for(Sample sample : samples) {
                             model.updateProperty(sample, "compressionType", targetCompression);
-                            model.updateProperty(sample, "status", DomainConstants.VALUE_MARKED);
                         }
+                        DomainModel model = DomainMgr.getDomainMgr().getModel(); 
+                        model.dispatchSamples(DomainUtils.getReferences(samples), "User Requested Lossless Results", false);
+
                     }
 
                     @Override
                     protected void hadSuccess() {
-                         JOptionPane.showMessageDialog(mainFrame, samplesText+" are marked for reprocessing to Lossless (v3dpbd) format, and will be available once the pipeline is run.",
+                         JOptionPane.showMessageDialog(mainFrame, 
+                                 "Samples have been dispatched for reprocessing to Lossless (v3dpbd) format. "
+                                         + "Results will be available once the pipeline is run.",
                                  "Marked Samples", JOptionPane.INFORMATION_MESSAGE);
                     }
 
@@ -545,7 +559,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         final String samplesText = multiple?samples.size()+" Samples":"Sample";
 
-        JMenuItem blockItem = new JMenuItem("  Purge And Block "+samplesText+" (Background Task)");
+        JMenuItem blockItem = new JMenuItem("  Purge And Block "+samplesText+"");
         blockItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
@@ -607,38 +621,87 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return blockItem;
     }
 
-    /** Allows users to rerun their own samples. */
-    protected JMenuItem addRerunSamplesAction() {
+    protected JMenuItem getApplyPublishingNameItem() {
+        
+        List<Sample> samples = new ArrayList<>();
+        for(DomainObject domainObject : domainObjectList) {
+            if (domainObject instanceof Sample) {
+                samples.add((Sample)domainObject);
+            }
+        }
+        
+        if (samples.size()!=domainObjectList.size()) return null;
+        
+        JMenuItem menuItem = getNamedActionItem(new SetPublishingNameAction(samples));
+        
+        for(Sample sample : samples) {
+            if (!ClientDomainUtils.hasWriteAccess(sample)) {
+                menuItem.setEnabled(false);
+                break;
+            }
+        }
+        
+        return menuItem;
+    }
 
+    /** Allows users to rerun their own samples. */
+    protected JMenuItem getRerunSamplesAction() {
         JMenuItem rtnVal = null;
         Action rerunAction = RerunSamplesAction.createAction(domainObjectList);
         if (rerunAction != null) {
             rtnVal = getNamedActionItem(rerunAction);
-            add(rtnVal);
         }
         return rtnVal;
     }
     
-    protected JMenuItem addPartialSecondaryDataDeletiontItem() {
-        JMenu secondaryDeletionMenu = new JMenu("  Remove secondary data");
-        JMenuItem itm = getPartialSecondaryDataDeletionItem();
+    protected JMenuItem getPartialSecondaryDataDeletiontItem() {
+
+        List<Sample> samples = new ArrayList<>();
+        for(DomainObject domainObject : domainObjectList) {
+            if (domainObject instanceof Sample) {
+                samples.add((Sample)domainObject);
+            }
+        }
+        
+        if (samples.size()!=domainObjectList.size()) return null;
+        if (samples.size()!=1) return null;
+        
+        JMenu secondaryDeletionMenu = new JMenu("  Remove Secondary Data");
+        
+        JMenuItem itm = getPartialSecondaryDataDeletionItem(samples);
         if (itm != null) {
             secondaryDeletionMenu.add(itm);
         }
-        itm = getStitchedImageDeletionItem();
+        
+        itm = getStitchedImageDeletionItem(samples);
         if (itm != null) {
             secondaryDeletionMenu.add(itm);
         }
+        
+        /* Removing this feature until such time as this level of flexibility has user demand. */
+        if (SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI) {
+            itm = getNeuronSeparationDeletionItem();
+            if (itm != null) {
+                secondaryDeletionMenu.add(itm);
+            }
+        }
+        
         if (secondaryDeletionMenu.getItemCount() > 0) {
-            add(secondaryDeletionMenu);
+            for(Sample sample : samples) {
+                if (!ClientDomainUtils.hasWriteAccess(sample)) {
+                    secondaryDeletionMenu.setEnabled(false);
+                    break;
+                }
+            }
+            return secondaryDeletionMenu;
         }
-        return secondaryDeletionMenu;
+        return null;
     }
     
-    protected JMenuItem getPartialSecondaryDataDeletionItem() {
+    protected JMenuItem getPartialSecondaryDataDeletionItem(List<Sample> samples) {
         JMenuItem rtnVal = null;
-        if (domainObjectList.size() == 1  &&  domainObjectList.get(0) instanceof Sample) {
-            final Sample sample = (Sample)domainObjectList.get(0);
+        if (samples.size() == 1) {
+            final Sample sample = samples.get(0);
             rtnVal = new JMenuItem("  " + WHOLE_AA_REMOVAL_MSG);
             rtnVal.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
@@ -653,14 +716,13 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                 }
             });
         }
-        log.trace("Returning from getPartialSecondaryDataDeletionItem " + rtnVal);
         return rtnVal;
     }
 
-    protected JMenuItem getStitchedImageDeletionItem() {
+    protected JMenuItem getStitchedImageDeletionItem(List<Sample> samples) {
         JMenuItem rtnVal = null;
-        if (domainObjectList.size() == 1  &&  domainObjectList.get(0) instanceof Sample) {
-            final Sample sample = (Sample)domainObjectList.get(0);
+        if (samples.size() == 1) {
+            final Sample sample = samples.get(0);
             rtnVal = new JMenuItem("  " + STITCHED_IMG_REMOVAL_MSG);
             rtnVal.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
@@ -677,11 +739,33 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return rtnVal;
     }
 
+    protected JMenuItem getNeuronSeparationDeletionItem() {
+        JMenuItem rtnVal = null;
+        if (domainObjectList.size() == 1  &&  domainObjectList.get(0) instanceof Sample) {
+            final Sample sample = (Sample)domainObjectList.get(0);
+            rtnVal = new JMenuItem("  " + NEURON_SEP_REMOVAL_MSG);
+            rtnVal.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent ae) {
+                    SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(
+                            FrameworkImplProvider.getMainFrame(),
+                            sample,
+                            NEURON_SEP_REMOVAL_MSG,
+                            Constants.TRIM_DEPTH_NEURON_SEPARATION_VALUE
+                    );
+                    dialog.setVisible(true);
+                }
+            });
+        }
+        return rtnVal;
+    }
+
     protected JMenuItem getAddToFolderItem() {
         AddToFolderAction action = AddToFolderAction.get();
         action.setDomainObjects(domainObjectList);
         JMenuItem item = action.getPopupPresenter();
-        item.setText("  " + item.getText());
+        if (item!=null) {
+            item.setText("  " + item.getText());
+        }
         return item;
     }
 
@@ -727,7 +811,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     protected JMenuItem getNeuronAnnotatorItem() {
         if (multiple) return null;
         if (domainObject instanceof NeuronFragment) {
-            return new JMenuItem(new OpenInNeuronAnnotatorAction((NeuronFragment)domainObject));
+            return getNamedActionItem(new OpenInNeuronAnnotatorAction((NeuronFragment)domainObject));
         }
         return null;
     }
@@ -759,21 +843,21 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_FIJI, path, null));
     }
 
+    protected JMenuItem getRelatedItemsItem() {
+        GetRelatedItemsAction action = GetRelatedItemsAction.get();
+        action.setDomainObjects(domainObjectList);
+        JMenuItem item = action.getPopupPresenter();
+        if (item!=null) {
+            item.setText("  " + item.getText());
+        }
+        return item;
+    }
+    
     protected JMenuItem getDownloadItem() {
-
         String label = domainObjectList.size() > 1 ? "Download " + domainObjectList.size() + " Items..." : "Download...";
-
-        JMenuItem toggleHudMI = new JMenuItem("  "+label);
-        toggleHudMI.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ActivityLogHelper.logUserAction("DomainObjectContextMenu.download", domainObject);
-                DownloadDialog dialog = new DownloadDialog();
-                dialog.showDialog(domainObjectList, resultDescriptor);
-            }
-        });
-
-        return toggleHudMI;
+        JMenuItem menuItem = new JMenuItem("  "+label);
+        menuItem.addActionListener(new DownloadWizardAction(domainObjectList, resultDescriptor));
+        return menuItem;
     }
 
     private long startMergeTask() throws Exception {
@@ -820,65 +904,78 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                 return null;
             }
 
-            HashSet<Long> fragmentIds = new HashSet<>();
+            HashSet<NeuronFragment> fragments = new LinkedHashSet<>();
             for (DomainObject domainObject : domainObjectList) {
                 if (!(domainObject instanceof NeuronFragment)) {
                     continue;
                 }
-                fragmentIds.add(domainObject.getId());
+                fragments.add((NeuronFragment)domainObject);
             }
-            if (fragmentIds.size()<2) {
+            if (fragments.size()<2) {
                 return null;
             }
 
-            JMenuItem mergeItem = new JMenuItem("  Merge " + fragmentIds.size() + " Selected Neurons");
-            NeuronFragment fragment = (NeuronFragment) domainObjectList.get(0);
+            JMenuItem mergeItem = new JMenuItem("  Merge " + fragments.size() + " Selected Neurons");
+            NeuronFragment fragment = (NeuronFragment) fragments.iterator().next();
             Reference sampleRef = fragment.getSample();
             final Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
 
             mergeItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     ActivityLogHelper.logUserAction("DomainObjectContextMenu.mergeSelectedNeurons");
-                    try {
-                        BackgroundWorker executeWorker = new TaskMonitoringWorker() {
+                    BackgroundWorker executeWorker = new TaskMonitoringWorker() {
 
-                            @Override
-                            public String getName() {
-                                return "Merge Neuron Fragments ";
-                            }
+                        @Override
+                        public String getName() {
+                            return "Merge Neuron Fragments ";
+                        }
 
-                            @Override
-                            protected void doStuff() throws Exception {
+                        @Override
+                        protected void doStuff() throws Exception {
 
-                                setStatus("Submitting task");
-                                long taskId = startMergeTask();
-                                setTaskId(taskId);
-                                setStatus("Grid execution");
+                            setStatus("Submitting task");
+                            long taskId = startMergeTask();
+                            setTaskId(taskId);
+                            setStatus("Grid execution");
 
-                                // Wait until task is finished
-                                super.doStuff();
+                            // Wait until task is finished
+                            super.doStuff();
 
-                                if (isCancelled()) throw new CancellationException();
-                                setStatus("Done merging");
-                            }
+                            if (isCancelled()) throw new CancellationException();
+                            setStatus("Done merging");
+                        }
 
-                            @Override
-                            public Callable<Void> getSuccessCallback() {
-                                return new Callable<Void>() {
-                                    @Override
-                                    public Void call() throws Exception {
-                                    	DomainMgr.getDomainMgr().getModel().invalidate(sample);
-                                        return null;
-                                    }
-                                };
-                            }
-                        };
+                        @Override
+                        public Callable<Void> getSuccessCallback() {
+                            return new Callable<Void>() {
+                                @Override
+                                public Void call() throws Exception {
 
-                        executeWorker.executeWithEvents();
-                    }
-                    catch (Exception e) {
-                        ConsoleApp.handleException(e);
-                    }
+                                    // Domain model must be called from a background thread
+                                    SimpleWorker simpleWorker = new SimpleWorker() {
+                                        @Override
+                                        protected void doStuff() throws Exception {
+                                            DomainMgr.getDomainMgr().getModel().invalidate(sample);
+                                        }
+
+                                        @Override
+                                        protected void hadSuccess() {
+                                        }
+
+                                        @Override
+                                        protected void hadError(Throwable error) {
+                                            ConsoleApp.handleException(error);
+                                        }
+                                    };
+
+                                    simpleWorker.execute();
+                                    return null;
+                                }
+                            };
+                        }
+                    };
+
+                    executeWorker.executeWithEvents();
                 }
             });
             mergeItem.setEnabled(multiple);

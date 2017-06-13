@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -16,5 +17,8 @@ public interface TmGeoAnnotationAnchorListener {
     void anchorDeleted(TmGeoAnnotation anchor);
     void anchorReparented(TmGeoAnnotation anchor);
     void anchorMovedBack(TmGeoAnnotation anchor);
+    void anchorMoved(TmGeoAnnotation anchor);
+    void anchorRadiusChanged(TmGeoAnnotation anchor);
+    void clearAnchors(Collection<TmGeoAnnotation> anchors);
     void clearAnchors();
 }

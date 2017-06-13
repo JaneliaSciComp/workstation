@@ -59,6 +59,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     private WheelMode wheelMode;
     private WheelMode.Mode wheelModeId;
     // Popup menu
+    MenuItemGenerator navigationMenuItemGenerator;
     MenuItemGenerator systemMenuItemGenerator;
     MenuItemGenerator modeMenuItemGenerator;
     private Point popupPoint = null; // Cache location of popup menu item
@@ -169,6 +170,15 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                     return;
                 popupPoint = e.getPoint();
                 JPopupMenu popupMenu = new JPopupMenu();
+                
+                // Annotators requested "Navigate to Horta..." menus to appear first
+                for (JMenuItem item : navigationMenuItemGenerator.getMenus(e)) {
+                    if (item == null)
+                        popupMenu.addSeparator();
+                    else
+                        popupMenu.add(item);                    
+                }
+                
                 // Mode specific menu items first
                 List<JMenuItem> modeItems = modeMenuItemGenerator.getMenus(e);
                 List<JMenuItem> systemMenuItems = systemMenuItemGenerator.getMenus(e);
@@ -191,6 +201,15 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                     else
                         popupMenu.add(item);
                 }
+                
+                // Dummy "cancel" item at very bottom
+                popupMenu.addSeparator();
+                popupMenu.add(new JMenuItem(new AbstractAction("Cancel [Escape]") {
+                    private static final long serialVersionUID = 1L;
+                    @Override
+                    public void actionPerformed(ActionEvent e) {} // does nothing (closes context menu)
+                }));
+                
                 popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 e.consume();
             }
@@ -218,10 +237,18 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         mouseMode.setCamera(camera);
         wheelMode.setCamera(camera);
         pointComputer.setCamera(camera);
-        if (skeletonActor != null)
-            skeletonActor.getModel().setCamera(camera);
+        if (skeletonActor != null) {
+            skeletonActor.setCamera(camera);
+            skeletonActor.setViewport(getViewport());
+            skeletonActor.setPointComputer(pointComputer);
+	    }
 	}
 	
+	public void setNavigationMenuItemGenerator(MenuItemGenerator navigationMenuItemGenerator) 
+	{
+		this.navigationMenuItemGenerator = navigationMenuItemGenerator;
+	}
+
 	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) 
 	{
 		this.systemMenuItemGenerator = systemMenuItemGenerator;
@@ -387,7 +414,9 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		if (this.skeletonActor == skeletonActor)
 			return;
 		this.skeletonActor = skeletonActor;
-		skeletonActor.getModel().setCamera(camera);
+		skeletonActor.setCamera(camera);
+        skeletonActor.setViewport(getViewport());
+        skeletonActor.setPointComputer(pointComputer);
         skeletonActor.getModel().getUpdater().addListener(this);
         renderer.addActor(skeletonActor);
 	}

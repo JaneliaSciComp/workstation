@@ -22,7 +22,7 @@ import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -112,6 +112,8 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         this.active = true;
         // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
+        // Take control of the history navigation buttons
+        StateMgr.getStateMgr().updateNavigationButtons(this);
         // Make our ancestor editor the current find context
         if (findContext!=null) {
             FindContextManager.getInstance().activateContext(findContext);
@@ -140,7 +142,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     void writeProperties(java.util.Properties p) {
         p.setProperty("version", TC_VERSION);
         DomainObject current = getCurrent();
-        if (current!=null) {
+        if (current!=null && current.getId()!=null) {
             String objectRef = Reference.createFor(current).toString();
             log.info("Writing state: {}",objectRef);
             p.setProperty("objectRef", objectRef);
@@ -234,7 +236,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     }
 
     @SuppressWarnings({ "unchecked" })
-    public void loadDomainObjectNode(DomainObjectNode<?> domainObjectNode, boolean isUserDriven) {
+    public void loadDomainObjectNode(AbstractDomainObjectNode<?> domainObjectNode, boolean isUserDriven) {
         
         log.trace("loadDomainObjectNode({}, isUserDriven={})", domainObjectNode.getDomainObject().getName(), isUserDriven);
         
@@ -265,7 +267,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             DomainObjectEditorState<?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
-                StateMgr.getStateMgr().getNavigationHistory().pushHistory(state);
+                StateMgr.getStateMgr().getNavigationHistory(DomainListViewTopComponent.this).pushHistory(state);
             }
             else {
                 log.warn("Editor did not provide current state");
@@ -291,12 +293,12 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             return false;
         }
 
-        // Update the previous editor state. Things may have changed. 
+        // Update the previous editor state. Things may have changed since we saved it. 
         if (editor!=null) {
             DomainObjectEditorState<?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
-                StateMgr.getStateMgr().getNavigationHistory().updateCurrentState(state);
+                StateMgr.getStateMgr().getNavigationHistory(DomainListViewTopComponent.this).updateCurrentState(state);
             }
             else {
                 log.warn("Editor did not provide current state");
@@ -308,6 +310,9 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             setEditorClass(editorClass);
         }
         
+        // Reset the editor state
+        editor.resetState();
+        
         return true;
     }
     
@@ -317,7 +322,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         log.trace("loadState({})", state);
         
         if (!prepareForLoad(state.getDomainObject())) return;
-        editor.loadState(state);
+        editor.restoreState(state);
         
         // TODO: this should run as a callback after loadState is fully complete
         // Update the editor name

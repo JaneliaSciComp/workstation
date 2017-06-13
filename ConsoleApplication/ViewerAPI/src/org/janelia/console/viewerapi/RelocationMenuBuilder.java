@@ -30,17 +30,15 @@
 package org.janelia.console.viewerapi;
 
 import java.awt.event.ActionEvent;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.AbstractAction;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+
 import org.openide.util.Exceptions;
 
 /**
@@ -118,22 +116,19 @@ public class RelocationMenuBuilder {
         @Override
         public void actionPerformed(ActionEvent e) {
             SampleLocation sampleLocation = locationProvider.getSampleLocation();
-            double[] focusCoords = new double[] {
-                sampleLocation.getFocusXUm(),
-                sampleLocation.getFocusYUm(),
-                sampleLocation.getFocusZUm()
-            };
             try {
-                locationAcceptor.acceptLocation(sampleLocation);
-                if (focusCoords == null) {
-                    logger.info("Null Coords from " + locationProvider.getClass().getName() + ", sent to " + locationAcceptor.getClass().getName());
+                if (sampleLocation == null) {
+                    throw new IllegalStateException("Null sample location from " + locationProvider.getClass().getName() + ", sent to " + locationAcceptor.getClass().getName());
                 }
-            } catch (Exception ioe) {
-                logger.severe(ioe.getMessage());
+                locationAcceptor.acceptLocation(sampleLocation);
+            } 
+            catch (Exception ioe) {
                 Exceptions.printStackTrace(ioe);
                 JOptionPane.showMessageDialog(
                         null,
-                        "Check that required files exist in synch source"
+                        "Navigation failed. Check that required files exist in synch source.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
                 );
             }
         }

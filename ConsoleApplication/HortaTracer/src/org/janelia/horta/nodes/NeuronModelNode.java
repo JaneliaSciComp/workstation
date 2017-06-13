@@ -62,11 +62,13 @@ public class NeuronModelNode extends AbstractNode
 {
     private final NeuronModel neuron;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final boolean isReadOnly;
 
-    public NeuronModelNode(NeuronModel neuron) {
+    public NeuronModelNode(NeuronModel neuron, boolean isReadOnly) {
         super(Children.create(new NeuronModelChildFactory(neuron), true), Lookups.singleton(neuron));
         setDisplayName(neuron.getName()); //  + " (" + neuron.getVertexes().size() + " vertices)");
         this.neuron = neuron;
+        this.isReadOnly = isReadOnly;
     }
     
     @Override
@@ -135,7 +137,8 @@ public class NeuronModelNode extends AbstractNode
         try { 
             Property prop;
             // visible
-            prop = new PropertySupport.Reflection(this, boolean.class, "isVisible", "setVisible"); 
+            prop = new PropertySupport.Reflection(this, boolean.class, "isVisible", 
+                    isReadOnly ? null : "setVisible"); 
             prop.setName("visible");
             set.put(prop); 
             // size
@@ -143,7 +146,8 @@ public class NeuronModelNode extends AbstractNode
             prop.setName("size"); 
             set.put(prop); 
             // color
-            prop = new PropertySupport.Reflection(this, Color.class, "getColor", "setColor"); 
+            prop = new PropertySupport.Reflection(this, Color.class, "getColor", 
+                    isReadOnly ? null : "setColor"); 
             prop.setName("color");
             set.put(prop); 
         } 

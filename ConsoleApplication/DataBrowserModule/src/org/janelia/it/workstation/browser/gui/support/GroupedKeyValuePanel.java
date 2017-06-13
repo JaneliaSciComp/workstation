@@ -21,9 +21,14 @@ public class GroupedKeyValuePanel extends JPanel {
     private static final Font SEPARATOR_FONT = new Font("Sans Serif", Font.BOLD, 12);
 
     public GroupedKeyValuePanel() {
+        this("wrap 2, ins 10, fillx", "[growprio 0]0[growprio 1, grow]", "");
+    }
+    
+    public GroupedKeyValuePanel(String constraints, String columnConstraints, String rowConstraints) {
         setLayout(new MigLayout(
-                "wrap 2, ins 10, fillx",
-                "[growprio 0]0[growprio 1, grow]"
+                constraints,
+                columnConstraints,
+                rowConstraints
         ));
     }
 
@@ -76,7 +81,10 @@ public class GroupedKeyValuePanel extends JPanel {
      */
     public void addItem(String label, JComponent component, String constraints) {
         if (label!=null) {
-            JLabel attrLabel = new JLabel(label + ": ");
+            if (!StringUtils.isBlank(label)) {
+                label = label + ": ";    
+            }
+            JLabel attrLabel = new JLabel(label);
             attrLabel.setLabelFor(component);
             add(attrLabel, "gap para, gaptop 10lp, ay top");
         }

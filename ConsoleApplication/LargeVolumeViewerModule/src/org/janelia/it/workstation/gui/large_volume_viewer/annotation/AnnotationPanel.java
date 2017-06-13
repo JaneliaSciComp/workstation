@@ -33,6 +33,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronCreateAct
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronDeleteAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronExportAllAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.WorkspaceInformationAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.WorkspaceSaveAsAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 
@@ -87,6 +88,7 @@ public class AnnotationPanel extends JPanel
     };
     
     private JButton createWorkspaceButtonPlus;
+    private WorkspaceSaveAsAction saveAsAction;
     private JCheckBoxMenuItem automaticTracingMenuItem;
     private JCheckBoxMenuItem automaticRefinementMenuItem;
     private NeuronExportAllAction exportAllSWCAction;
@@ -117,6 +119,10 @@ public class AnnotationPanel extends JPanel
 
     }
 
+    public AnnotationModel getAnnotationModel() {
+        return annotationModel;
+    }
+
     public void setViewStateListener(ViewStateListener listener) {
         this.viewStateListener = listener;        
     }
@@ -144,6 +150,7 @@ public class AnnotationPanel extends JPanel
         createNeuronAction.fireEnabledChangeEvent();
         deleteNeuronAction.fireEnabledChangeEvent();
         exportAllSWCAction.fireEnabledChangeEvent();
+        saveAsAction.fireEnabledChangeEvent();
         
         updateUI();
     }
@@ -250,6 +257,9 @@ public class AnnotationPanel extends JPanel
 
         workspaceToolMenu.add(new WorkspaceInformationAction(annotationModel));
 
+        saveAsAction = new WorkspaceSaveAsAction();
+        workspaceToolMenu.add(new JMenuItem(saveAsAction));
+        
         // workspace tool menu button
         final JButton workspaceToolButton = new JButton();
         String gearIconFilename = "cog.png";

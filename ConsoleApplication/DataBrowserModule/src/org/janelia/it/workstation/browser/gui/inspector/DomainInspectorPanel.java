@@ -4,8 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -40,13 +40,15 @@ import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
+import org.janelia.it.jacs.model.domain.sample.PipelineError;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.SampleUtils;
+import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -371,7 +373,7 @@ public class DomainInspectorPanel extends JPanel {
         refresh();
     }
 
-    // TODO: factor this out into a separate module
+    // TODO: factor this out into a separate confocal module
     public void loadPipelineResult(PipelineResult result) {
 
         log.debug("Loading properties for pipeline result {}", result.getId());
@@ -380,6 +382,8 @@ public class DomainInspectorPanel extends JPanel {
         this.propertySet = new TreeSet<>();
 
         addProperty("Creation Date", result.getCreationDate());
+        addProperty("Disk Space Usage (Bytes)", result.getDiskSpaceUsage());
+        addProperty("Disk Space Usage", result.getDiskSpaceUsageForHumans());
         addProperty("Filepath", result.getFilepath());
         addProperty("GUID", result.getId());
         addProperty("Name", result.getName());
@@ -403,15 +407,19 @@ public class DomainInspectorPanel extends JPanel {
                 addProperty(scoretype.getLabel(), score);
             }
         }
-
-        if (result instanceof SampleProcessingResult) {
+        else if (result instanceof SampleProcessingResult) {
             SampleProcessingResult spr = (SampleProcessingResult) result;
             addProperty("Channel Colors", spr.getChannelColors());
             addProperty("Channel Spec", spr.getChannelSpec());
             addProperty("Image Size", spr.getImageSize());
             addProperty("Optical Resolution", spr.getOpticalResolution());
         }
-
+        else if (result instanceof NeuronSeparation) {
+            NeuronSeparation ns = (NeuronSeparation) result;
+            addProperty("Number of Neurons", ns.getFragmentsReference().getCount());
+            addProperty("Neuron Weights", ns.getHasWeights());
+        }
+        
         addPropertiesToTable();
         attributesPanel.removeAll();
         attributesPanel.add(attributesTable, BorderLayout.CENTER);
@@ -421,40 +429,42 @@ public class DomainInspectorPanel extends JPanel {
         tabbedPane.setEnabledAt(2, false);
     }
 
+    // TODO: factor this out into a separate module
+    public void loadPipelineError(PipelineError error) {
+
+        log.debug("Loading properties for pipeline error");
+        showAttributesLoadingIndicator();
+
+        this.propertySet = new TreeSet<>();
+
+        addProperty("Creation Date", error.getCreationDate());
+        addProperty("Filepath", error.getFilepath());
+        addProperty("Operation", error.getOperation());
+        addProperty("Classification", error.getClassification());
+        addProperty("Description", error.getDescription());
+
+        addPropertiesToTable();
+        attributesPanel.removeAll();
+        attributesPanel.add(attributesTable, BorderLayout.CENTER);
+
+        tabbedPane.setSelectedIndex(0);
+        tabbedPane.setEnabledAt(1, false);
+        tabbedPane.setEnabledAt(2, false);
+    }
+    
     private void loadAttributes() {
 
         log.debug("Loading properties for domain object {}", domainObject.getId());
         showAttributesLoadingIndicator();
 
-        List<DomainObjectAttribute> searchAttrs = DomainUtils.getSearchAttributes(domainObject.getClass());
-
+        List<DomainObjectAttribute> searchAttrs = DomainUtils.getDisplayAttributes(Arrays.asList(domainObject));
+        
+        DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
+        
         this.propertySet = new TreeSet<>();
         for(DomainObjectAttribute attr : searchAttrs) {
-            if (attr.isDisplay()) {
-                Object value = null;
-                try {
-                    value = attr.getGetter().invoke(domainObject);
-                }
-                catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                    log.error("Error getting value for attribute: " + attr.getName(), e);
-                }
-                addProperty(attr.getLabel(), value);
-            }
-        }
-
-        if (domainObject instanceof Sample) {
-
-            // TODO: factor this out into a separate confocal module 
-            
-            Sample sample = (Sample)domainObject;
-            Map<AlignmentScoreType, String> scores = SampleUtils.getLatestAlignmentScores(sample);
-
-            for (AlignmentScoreType alignmentScoreType : AlignmentScoreType.values()) {
-                String value = scores.get(alignmentScoreType);
-                if (value!=null) {
-                    addProperty(alignmentScoreType.getLabel(), value);
-                }
-            }
+            Object value = proxy.get(attr.getLabel());
+            addProperty(attr.getLabel(), value);
         }
 
         addPropertiesToTable();

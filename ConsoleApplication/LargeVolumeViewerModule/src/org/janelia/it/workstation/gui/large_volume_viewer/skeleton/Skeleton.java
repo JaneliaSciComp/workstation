@@ -4,7 +4,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.HistoryStack;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -125,7 +124,7 @@ public class Skeleton {
 	
 	private final Map<Long, Anchor> anchorsByGuid = new HashMap<>();
 	// TODO - anchor browsing history should maybe move farther back
-	private final HistoryStack<Anchor> anchorHistory = new HistoryStack<>();
+//	private final HistoryStack<Anchor> anchorHistory = new HistoryStack<>();
 
     public void setController(SkeletonController controller) {
         this.controller = controller;
@@ -140,7 +139,7 @@ public class Skeleton {
 		Long guid = anchor.getGuid();
 		if (guid != null)
 			anchorsByGuid.put(guid, anchor);
-		anchorHistory.push(anchor);
+//		anchorHistory.push(anchor);
 		return anchor;
 	}
 
@@ -248,6 +247,10 @@ public class Skeleton {
         controller.moveNeuriteRequested(anchor);
     }
 
+    public void smartMergeNeuriteRequest(Anchor clickedAnchor) {
+        controller.smartMergeNeuriteRequested(clickedAnchor, getNextParent());
+    }
+
     public void changeNeuronStyle(Anchor anchor) {
         controller.changeNeuronStyleRequested(anchor);
     }
@@ -274,7 +277,7 @@ public class Skeleton {
 		if (guid != null)
 			anchorsByGuid.remove(guid);
 		//
-		anchorHistory.remove(anchor);
+//		anchorHistory.remove(anchor);
 		return true;
 	}
 
@@ -330,6 +333,7 @@ public class Skeleton {
     
     public void reparentTmGeoAnchor(TmGeoAnnotation annotation) {
         Anchor anchor = anchorsByGuid.get(annotation.getId());
+        
         HashSet<Long> annotationNeighbors = new HashSet<Long>(annotation.getChildIds().size() + 1);
         for (Long childId : annotation.getChildIds()) {
             annotationNeighbors.add(childId);
@@ -339,6 +343,9 @@ public class Skeleton {
             annotationNeighbors.add(annotation.getParentId());
         }
 
+        // Update neuron id, in case the anchor was moved to another neuron
+        anchor.setNeuronID(annotation.getNeuronId());
+        
         updateNeighbors(anchor, annotationNeighbors);
     }
     
@@ -351,13 +358,24 @@ public class Skeleton {
         anchor.setLocationSilent(tileFormat.micronVec3ForVoxelVec3Centered(voxelVec3));
     }
     
+    public void moveTmGeoAnchor(TmGeoAnnotation tga) {
+        Anchor anchor = anchorsByGuid.get(tga.getId());
+        if (anchor == null) {
+            return;
+        }
+        final Vec3 voxelVec3 = new Vec3(tga.getX(), tga.getY(), tga.getZ());
+        // "silent" because we don't want to trigger the whole "move or merge?" dialog,
+        // especially when triggered from a Horta/NeuronModelAdapter move
+        anchor.setLocationSilent(tileFormat.micronVec3ForVoxelVec3Centered(voxelVec3));
+    }
+    
 	public void clear() {
 		if (anchors.size() == 0) {
 			return; // no change
 		}
 		anchors.clear();
 		anchorsByGuid.clear();
-		anchorHistory.clear();
+//		anchorHistory.clear();
 	}
 	
     /** given an anchor, update its neighbors to match the input set of
@@ -410,9 +428,9 @@ public class Skeleton {
         return anchorsByGuid.get(anchorID);
     }
 
-	public HistoryStack<Anchor> getHistory() {
-		return anchorHistory;
-	}
+//	public HistoryStack<Anchor> getHistory() {
+//		return anchorHistory;
+//	}
 
     /**
      * request trace path to parent
@@ -424,7 +442,7 @@ public class Skeleton {
             // no parent
             return;
 
-        controller.pathTraceRequested(anchor.getGuid());
+        controller.pathTraceRequested(anchor.getNeuronID(), anchor.getGuid());
     }
 
 	public void addTracedSegment(AnchoredVoxelPath path)
@@ -446,6 +464,18 @@ public class Skeleton {
         tracedSegments.remove(ix);
     }
 
+    public void removeTracedSegments(Long neuronID) {
+        List<SegmentIndex> toDelete = new ArrayList<>();
+        for(AnchoredVoxelPath path : tracedSegments.values()) {
+            if (path.getNeuronID().equals(neuronID)) {
+                toDelete.add(path.getSegmentIndex());
+            }
+        }
+        for (SegmentIndex segmentIndex : toDelete) {
+            tracedSegments.remove(segmentIndex);
+        }
+    }   
+    
 	public Collection<AnchoredVoxelPath> getTracedSegments() {
 		// log.info("tracedSegments.size() [305] = "+tracedSegments.size());
 		Collection<AnchoredVoxelPath> result = tracedSegments.values();

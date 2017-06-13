@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.util;
 
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Desktop;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
@@ -22,12 +23,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -67,13 +74,15 @@ import loci.formats.in.TiffReader;
  */
 public class Utils {
 
+    // Semi, poor-man's feature toggle.
+    public static final boolean SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI = false;
     public static final String EXTENSION_LSM = "lsm";
     public static final String EXTENSION_BZ2 = "bz2";
     public static final String EXTENSION_LSM_BZ2 = EXTENSION_LSM + '.' + EXTENSION_BZ2;
 
     private static final Logger log = LoggerFactory.getLogger(Utils.class);
 
-    private static final boolean TIMER = log.isDebugEnabled();
+    private static final boolean TIMER = log.isTraceEnabled();
 
     private static final int ONE_KILOBYTE = 1024;
     private static final int ONE_MEGABYTE = 1024 * ONE_KILOBYTE;
@@ -728,5 +737,29 @@ public class Utils {
             c = c.getParent();
         }
         return null;
+    }
+    
+    public static void openUrlInBrowser(String url) {
+        Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+        if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+            try {
+                desktop.browse(URI.create(url));
+            }
+            catch (IOException ex) {
+                log.error("Could not open URL: "+url, ex);
+            }
+        }
+    }
+    
+    public static boolean replaceInFile(String filepath, String target, String replacement) throws IOException {
+        Path path = Paths.get(filepath);
+        Charset charset = StandardCharsets.UTF_8;
+        String content = new String(Files.readAllBytes(path), charset);
+        String fixed = content.replace(target, replacement);
+        if (!content.equals(fixed)) {
+            Files.write(path, fixed.getBytes(charset));
+            return true;
+        }
+        return false;
     }
 }

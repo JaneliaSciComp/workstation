@@ -95,10 +95,15 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     URL url = sampleLocation.getSampleUrl();
                     
                     // First check to see if ktx tiles are available
-                    BlockTileSource ktxSource = loadKtxSource(url, progress);
-                    if (ktxSource != null)
-                        nttc.setKtxSource(ktxSource);
-                    // TODO: is ktx loading enabled?
+                    BlockTileSource ktxSource = null;
+                    if (nttc.isPreferKtx()) {
+                        ktxSource = loadKtxSource(url, progress);
+                        if (ktxSource != null)
+                            nttc.setKtxSource(ktxSource);
+                    }
+                    else {
+                        nttc.setKtxSource(null);
+                    }
                     
                     progress.setDisplayName("Centering on location...");
                     setCameraLocation(sampleLocation);
@@ -112,17 +117,16 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         progress.switchToIndeterminate(); // TODO - enhance tile loading with a progress listener
                         progress.setDisplayName("Loading brain tile image...");
                         loader.loadTileAtCurrentFocus(volumeSource, sampleLocation.getDefaultColorChannel());
-                        /*
-                        GLAutoDrawable glAutoDrawable=sceneWindow.getGLAutoDrawable();
-                        try { Thread.sleep(100); } catch (Exception ex) {} // this delay is required to avoid occasional GL exception
-                        glAutoDrawable.display();
-                         */
                     }
                     else { // Load ktx files here
                         progress.switchToIndeterminate(); // TODO: enhance tile loading with a progress listener
                         progress.setDisplayName("Loading KTX brain tile image...");
-                        loader.loadKtxTileAtCurrentFocus(ktxSource);
-                        // TODO:
+                        if (nttc.doesUpdateVolumeCache()) {
+                            loader.loadTransientKtxTileAtCurrentFocus(ktxSource);
+                        }
+                        else {
+                            loader.loadPersistentKtxTileAtCurrentFocus(ktxSource);                            
+                        }
                     }
                     nttc.redrawNow();
                 } catch (final IOException ex) {
@@ -196,14 +200,15 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             URL yamlUrl = yamlUri.toURL();
             try (InputStream stream1 = yamlUrl.openStream()) {
                 volumeSource = nttc.loadYaml(stream1, loader, progress);
-            } catch (ParseException ex) {
-                JOptionPane.showMessageDialog(nttc, 
-                        "Problem Loading Raw Tile Information from " + yamlUrlString + 
-                        "\n  Does the transform contain barycentric coordinates?"
-                        ,
-                        "Tilebase File Problem",
-                        JOptionPane.ERROR_MESSAGE);            }
-        } catch (IOException | URISyntaxException ex) {
+            }
+            catch (ParseException ex) {
+                JOptionPane.showMessageDialog(nttc,
+                        "Problem Loading Raw Tile Information from " + yamlUrlString +
+                        "\n  Does the transform contain barycentric coordinates?",
+                        "Tilebase File Problem", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        catch (IOException | URISyntaxException ex) {
             // Something went wrong with loading the Yaml file
             // Exceptions.printStackTrace(ex);
             JOptionPane.showMessageDialog(nttc, 
@@ -261,7 +266,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         double zoom = sampleLocation.getMicrometersPerWindowHeight();
         if (zoom > 0) {
             v.setSceneUnitsPerViewportHeight((float)zoom);
-            logger.info("Set micrometers per view height to " + zoom);
+            // logger.info("Set micrometers per view height to " + zoom);
             v.setDefaultSceneUnitsPerViewportHeight((float)zoom);
         }
 

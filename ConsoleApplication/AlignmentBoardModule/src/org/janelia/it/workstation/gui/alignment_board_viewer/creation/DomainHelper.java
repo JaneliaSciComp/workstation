@@ -43,6 +43,7 @@ import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
 import org.janelia.it.workstation.gui.alignment_board.util.ABUnspecified;
+import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,8 +80,14 @@ public class DomainHelper {
                                 if (nextCtx.getAlignmentSpace().equals(alignmentSpace)  &&
                                     nextCtx.getImageSize().equals(imageSize)  &&
                                     nextCtx.getOpticalResolution().equals(opticalResolution)) {
-                                    
-                                    rtnVal.add(nextCtx);
+
+                                    // Do not make boards for things without neurons on the given alignment space.
+                                    // To enforce: leave the context off the list, if its neuron rref is empty.
+                                    ReverseReference revRef = getNeuronRRefForSample(sample, nextCtx);
+                                    if (revRef != null  &&  revRef.getCount() > 0) {
+                                        rtnVal.add(nextCtx);
+                                    }
+
                                 }
                             }
                         }
@@ -204,7 +211,19 @@ public class DomainHelper {
                 if (! checkSampleAlignmentResult(sar, context)) {
                     continue;
                 }
-                NeuronSeparation ns = sar.getLatestSeparationResult();
+                NeuronSeparation ns = null;
+                List<NeuronSeparation> results = sar.getResultsOfType(NeuronSeparation.class);
+                sar.getLatestSeparationResult();
+                for (NeuronSeparation nextNeuSep: results) {
+                    ReverseReference fragRef = nextNeuSep.getFragmentsReference();
+                    if (fragRef == null  ||  fragRef.getCount() == 0) {
+                        continue;
+                    }
+                    else {
+                        // Keep the last neuron-bearing separation.
+                        ns = nextNeuSep;
+                    }
+                }
                 if (ns == null) {
                     log.info("No neuron separation for {}, objective {}.", sample.getName(), sar.getObjective());
                 } else {

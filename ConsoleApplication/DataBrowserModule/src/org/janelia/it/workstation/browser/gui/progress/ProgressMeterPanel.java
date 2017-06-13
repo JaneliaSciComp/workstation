@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -20,6 +21,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.workers.WorkerChangedEvent;
 import org.janelia.it.workstation.browser.events.workers.WorkerEndedEvent;
@@ -68,7 +70,6 @@ public class ProgressMeterPanel extends JPanel {
                 "[grow 1, growprio 1, fill]"
         ));
 
-//        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(scrollLayer);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -210,6 +211,15 @@ public class ProgressMeterPanel extends JPanel {
         if (workerPanel!=null) {
             log.debug("Worker ended: {}",e.getWorker().getName());
             workerPanel.update();
+            Throwable error = e.getWorker().getError();
+            if (error!=null) {
+                if (error instanceof CancellationException) {
+                    log.info("Worker was cancelled: {}, Status:{}",e.getWorker().getName(),e.getWorker().getStatus());
+                }
+                else {
+                    log.error("Error occurred while running task", error);
+                }
+            }
         }
     }
 
@@ -261,7 +271,12 @@ public class ProgressMeterPanel extends JPanel {
             nextButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    worker.runSuccessCallback();
+                    if (worker.getError()!=null) {
+                        FrameworkImplProvider.handleException("User viewing background task error", worker.getError());
+                    }
+                    else {
+                        worker.runSuccessCallback();    
+                    }
                 }
             });
             nextButton.setEnabled(false);
@@ -319,8 +334,10 @@ public class ProgressMeterPanel extends JPanel {
                 statusLabel.setText("Cancelled");
             }
             else if (error!=null) {
-                log.error("Error running task",error);
                 statusLabel.setText("ERROR: "+error.getMessage());
+                nextButton.setEnabled(true);
+                nextButton.setIcon(Icons.getIcon("bullet_error.png"));
+                nextButton.setToolTipText("View error details");
             }
             else {
                 if (worker.isDone()) {

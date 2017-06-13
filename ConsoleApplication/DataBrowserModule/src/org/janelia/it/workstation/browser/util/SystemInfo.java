@@ -67,6 +67,8 @@ public class SystemInfo {
 
     public static final String nativeFileManagerName = isMac ? "Finder" : isGnome ? "Nautilus" : isKDE ? "Konqueror" : "Explorer";
 
+    public static final String optionsMenuName = isMac ? "Preferences" : "Tools->Options";
+    
     /**
      * Whether IDEA is running under MacOS X version 10.4 or later.
      *

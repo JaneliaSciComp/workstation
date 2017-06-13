@@ -3,8 +3,7 @@ package org.janelia.it.workstation.browser.workers;
 import java.beans.PropertyChangeEvent;
 import java.util.concurrent.Callable;
 
-import javax.swing.SwingUtilities;
-
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.components.ProgressTopComponent;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.workers.WorkerChangedEvent;
@@ -25,14 +24,29 @@ public abstract class BackgroundWorker extends SimpleWorker {
     public BackgroundWorker() {
     }
     
+    /**
+     * The success callback is not something that is run automatically when the worker completes. 
+     * Instead, it's something that can be triggered by the user if the worker was successful.
+     * When the user triggers the callback (e.g. via a button press), the client should call 
+     * runSuccessCallback() to invoke it. 
+     * @param success
+     */
     public BackgroundWorker(Callable<Void> success) {
         this.success = success;
     }
 
+    /**
+     * This method does nothing. The client must check getError() and deal with errors or success. 
+     * Subclasses can choose to implement this to do something automatically when the worker is 
+     * complete. 
+     */
     @Override
     protected void hadSuccess() {
     }
     
+    /**
+     * This method does nothing. The client must check getError() and deal with the error somehow.
+     */
     @Override
     protected void hadError(Throwable error) {
     }
@@ -78,7 +92,7 @@ public abstract class BackgroundWorker extends SimpleWorker {
             ConcurrentUtils.invoke(getSuccessCallback());
         }
         catch (Exception e) {
-            hadError(e);
+            FrameworkImplProvider.handleException("Problem invoking success callback", e);
         }
     }
     
@@ -86,13 +100,8 @@ public abstract class BackgroundWorker extends SimpleWorker {
      * Same as execute(), except throws events on the EventBus.
      */
     public void executeWithEvents() {
+        ProgressTopComponent.ensureActive();
+        Events.getInstance().postOnEventBus(new WorkerStartedEvent(BackgroundWorker.this));
         execute();
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                ProgressTopComponent.ensureActive();
-            }
-        });
-        Events.getInstance().postOnEventBus(new WorkerStartedEvent(this));
     }
 }

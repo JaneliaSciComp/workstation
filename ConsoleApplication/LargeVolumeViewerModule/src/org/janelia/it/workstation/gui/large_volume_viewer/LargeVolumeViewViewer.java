@@ -7,14 +7,13 @@ import java.util.List;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
 import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.Events;
@@ -26,7 +25,7 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.slf4j.Logger;
@@ -51,9 +50,10 @@ public class LargeVolumeViewViewer extends JPanel {
 
     private TmSample sliceSample;
     private DomainObject initialObject;
+    private Vec3 initialViewFocus;
+    private Double initialZoom;
     private AnnotationModel annotationModel;
     private QuadViewUi viewUI;
-    private final NeuronSetAdapter neuronSetAdapter = new NeuronSetAdapter(); // For communicating annotations to Horta
 
     public LargeVolumeViewViewer() {
         super();
@@ -68,21 +68,19 @@ public class LargeVolumeViewViewer extends JPanel {
     }
     
     public void loadDomainObject(final DomainObject domainObject) {
-        // NOTE: there must be a better way to handle the tasks in and out of
-        //  the UI thread; this version is the result of fixing what
-        //  we had w/o serious rewriting
-
     	logger.info("loadDomainObject({})", domainObject);
-    	
-        //  I have found that with very large numbers of
-        //  neurons in the neurons table, not reloading
-        //  causes GUI lockup.
-        deleteAll();
-    	
+
+        // Clear existing UI state
+        if (annotationModel!=null) {
+            annotationModel.clear();
+        }
+        close();
+        
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
+                
                 initialObject = domainObject;
 
                 // initial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
@@ -120,32 +118,43 @@ public class LargeVolumeViewViewer extends JPanel {
             	logger.info("Found sample {}", sliceSample.getId());
 
                 // but now we have to do the load in another thread, so we don't lock the UI:
-                final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading sample...");
+                final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading image data...");
                 progress.start();
-                progress.setDisplayName("Loading sample");
+                progress.setDisplayName("Loading image data");
                 progress.switchToIndeterminate();
 
                 SimpleWorker volumeLoader = new SimpleWorker() {
+                    boolean success = false;
+                    
                     @Override
                     protected void doStuff() throws Exception {
-                        // be sure we've successfully gotten the sample before loading it!
-                        if (sliceSample != null) {
-                            if (!viewUI.loadFile(sliceSample.getFilepath())) {
-                                SwingUtilities.invokeLater(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
-                                                "Could not open sample entity for this workspace!",
-                                                "Could not open workspace",
-                                                JOptionPane.ERROR_MESSAGE);
-                                    }
-                                });
-                            }
-                        }
+                        success = viewUI.loadFile(sliceSample.getFilepath());
                     }
 
                     @Override
                     protected void hadSuccess() {
+                        if (success) {
+                            logger.info("Image data loading completed");
+                            synchronized(this) {
+                                if (initialViewFocus!=null) {
+                                    logger.info("Setting intial camera focus: {}", initialViewFocus);
+                                    viewUI.setCameraFocus(initialViewFocus);
+                                    initialViewFocus = null;
+                                }
+                                if (initialZoom!=null) {
+                                    logger.info("Setting intial zoom: {}", initialZoom);
+                                    viewUI.setPixelsPerSceneUnit(initialZoom);
+                                    initialZoom = null;
+                                }
+                            }
+                        }
+                        else {
+                            logger.info("Image data loading failed");
+                            JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
+                                    "Could not open sample entity for this workspace!",
+                                    "Could not open workspace",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
                         progress.finish();
                     }
 
@@ -158,9 +167,9 @@ public class LargeVolumeViewViewer extends JPanel {
                 
                 SimpleListenableFuture future1 = volumeLoader.executeWithFuture();
 
-                final ProgressHandle progress2 = ProgressHandleFactory.createHandle("Loading workspace...");
+                final ProgressHandle progress2 = ProgressHandleFactory.createHandle("Loading metadata...");
                 progress2.start();
-                progress2.setDisplayName("Loading workspace");
+                progress2.setDisplayName("Loading metadata");
                 progress2.switchToIndeterminate();
                 
                 SimpleWorker workspaceLoader = new SimpleWorker() {
@@ -180,6 +189,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
                     @Override
                     protected void hadSuccess() {
+                        logger.info("Metadata loading completed");
                         progress2.finish();
                     }
 
@@ -197,6 +207,7 @@ public class LargeVolumeViewViewer extends JPanel {
                 Futures.addCallback(combinedFuture, new FutureCallback<List<Boolean>>() {
                     public void onSuccess(List<Boolean> result) {
                         // If both loads succeeded
+                        logger.info("Loading completed");
                         annotationModel.loadComplete();
                     }
                     public void onFailure(Throwable t) {
@@ -225,6 +236,11 @@ public class LargeVolumeViewViewer extends JPanel {
         worker.execute();
 
     }
+    
+    public void setInitialViewFocus(Vec3 initialViewFocus, Double initialZoom) {
+        this.initialViewFocus = initialViewFocus;
+        this.initialZoom = initialZoom;
+    }
 
     public SampleLocation getSampleLocation() {
         return viewUI.getSampleLocation();
@@ -247,9 +263,41 @@ public class LargeVolumeViewViewer extends JPanel {
     
     public void close() {
         logger.info("Closing");
-        deleteAll();
-    }
+        sliceSample = null;
+        initialObject = null;
+        removeAll();
 
+        if (viewUI != null) {
+            
+            final QuadViewUi oldQuadView = viewUI;
+            viewUI = null;
+            
+            SimpleWorker worker = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    logger.info("Clearing cache...");
+                    oldQuadView.clearCache();
+                }
+    
+                @Override
+                protected void hadSuccess() {
+                    logger.info("Cache cleared");
+                }
+    
+                @Override
+                protected void hadError(Throwable error) {
+                    ConsoleApp.handleException(error);
+                }
+            };
+            worker.execute();
+        }
+        
+        if (annotationModel!=null) {
+            Events.getInstance().unregisterOnEventBus(annotationModel);
+            annotationModel = null;
+        }
+    }
+    
     public void refresh() {
         logger.info("Refreshing");
 
@@ -260,11 +308,15 @@ public class LargeVolumeViewViewer extends JPanel {
                 annotationModel = new AnnotationModel();
                 Events.getInstance().registerOnEventBus(annotationModel);
                 viewUI = new QuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);
-                neuronSetAdapter.observe(annotationModel);
             }
+            
             removeAll();
             viewUI.setVisible(true);
             add(viewUI);
+
+            // Repaint the skeleton
+            SkeletonController.getInstance().skeletonChanged(true);
+            
             revalidate();
             repaint();
             
@@ -279,29 +331,8 @@ public class LargeVolumeViewViewer extends JPanel {
             }
         }
     }    
-
-    public void totalRefresh() {
-        refresh();
-    }
     
     //------------------------------Private Methods
-
-    private void deleteAll() {
-        sliceSample = null;
-        initialObject = null;
-        removeAll();
-        if (viewUI != null)
-        	viewUI.clearCache();
-        viewUI = null;
-        if (annotationModel!=null) {
-            Events.getInstance().unregisterOnEventBus(annotationModel);
-            annotationModel = null;
-        }
-    }
-
-    public NeuronSet getNeuronSetAdapter() {
-        return neuronSetAdapter;
-    }
 
     @Subscribe
     public void objectsInvalidated(DomainObjectInvalidationEvent event) {
@@ -311,7 +342,7 @@ public class LargeVolumeViewViewer extends JPanel {
         }
         else {
             for(DomainObject domainObject : event.getDomainObjects()) {
-                if (DomainUtils.equals(domainObject, sliceSample)) {
+                if (DomainUtils.equals(domainObject, initialObject)) {
                     refresh();
                 }
             }

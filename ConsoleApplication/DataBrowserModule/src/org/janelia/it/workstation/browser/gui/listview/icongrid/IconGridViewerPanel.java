@@ -541,6 +541,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         for(AnnotatedImageButton<T,S> button : imagesPanel.getButtonsByUniqueId(uniqueId)) {
             button.refresh(object);
         }
+        scrollSelectedObjectsToCenter();
     }
 
     private void setObjects(List<T> objectList) {
@@ -618,5 +619,4 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     public void sessionChanged(SessionEvent event) {
         IconGridViewerPanel.this.clear();
     }
-        
 }

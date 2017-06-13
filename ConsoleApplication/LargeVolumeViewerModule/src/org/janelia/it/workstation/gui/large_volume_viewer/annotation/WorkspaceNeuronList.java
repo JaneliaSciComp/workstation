@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -504,12 +505,16 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         }
         updateNeuronLabel();
     }
-
+    
+    public void deleteFromModel(TmNeuronMetadata neuron) {
+        neuronTableModel.deleteNeuron(neuron);
+    }
+    
     /**
      * update the table neuron with a new version of an
      * existing neuron (replaces in place)
      */
-    private void updateModel(TmNeuronMetadata neuron) {
+    public void updateModel(TmNeuronMetadata neuron) {
         neuronTableModel.updateNeuron(neuron);
     }
 
@@ -595,7 +600,7 @@ class NeuronTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
-    public void addNeurons(List<TmNeuronMetadata> neuronList) {
+    public void addNeurons(Collection<TmNeuronMetadata> neuronList) {
         neurons.addAll(neuronList);
         if (hasFilter()) {
             for (TmNeuronMetadata neuron: neuronList) {
@@ -608,27 +613,21 @@ class NeuronTableModel extends AbstractTableModel {
         }
         fireTableDataChanged();
     }
+    
+    public void deleteNeuron(TmNeuronMetadata neuron) {
+        neurons.remove(neuron);
+        matchedNeurons.remove(neuron);
+        unmatchedNeurons.remove(neuron);
+        fireTableDataChanged();
+    }
 
     public void updateNeuron(TmNeuronMetadata neuron) {
         updateNeurons(Arrays.asList(neuron));
+        // To optimize for performance, it would be better to do targeted updates:
+        // fireTableRowsUpdated(firstRow, lastRow);
     }
 
     public void updateNeurons(List<TmNeuronMetadata> neuronList) {
-        if (hasFilter()) {
-            for (TmNeuronMetadata neuron: neuronList) {
-                replaceNeuron(neuron, neurons);
-                if (matchesTagFilter(neuron)) {
-                    replaceNeuron(neuron, matchedNeurons);
-                } else {
-                    replaceNeuron(neuron, unmatchedNeurons);
-                }
-            }
-        }
-        else {
-            for (TmNeuronMetadata neuron: neuronList) {
-                replaceNeuron(neuron, neurons);
-            }
-        }
         fireTableDataChanged();
     }
     

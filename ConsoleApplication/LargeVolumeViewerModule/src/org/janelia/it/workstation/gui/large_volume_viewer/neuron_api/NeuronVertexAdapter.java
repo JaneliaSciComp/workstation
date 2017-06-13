@@ -32,10 +32,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
 import java.util.Objects;
 
+import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.util.MatrixUtilities;
 
 /**
  *
@@ -45,14 +44,12 @@ public class NeuronVertexAdapter implements NeuronVertex
 {
     private final TmGeoAnnotation vertex;
     private final Long vertexId;
-    private final Jama.Matrix voxToMicronMatrix;
-    private final Jama.Matrix micronToVoxMatrix;
+    private final NeuronSetAdapter workspace;
 
-    public NeuronVertexAdapter(TmGeoAnnotation vertex, TmSample sample) {
+    public NeuronVertexAdapter(TmGeoAnnotation vertex, NeuronSetAdapter workspace) {
         this.vertex = vertex;
         this.vertexId = vertex.getId();
-        this.voxToMicronMatrix = MatrixUtilities.deserializeMatrix(sample.getVoxToMicronMatrix(), "voxToMicronMatrix");
-        this.micronToVoxMatrix = MatrixUtilities.deserializeMatrix(sample.getMicronToVoxMatrix(), "micronToVoxMatrix");
+        this.workspace = workspace;
     }
     
     @Override
@@ -67,7 +64,7 @@ public class NeuronVertexAdapter implements NeuronVertex
             {1.0, },
         });
         // NeuronVertex API requires coordinates in micrometers
-        Jama.Matrix micLoc = voxToMicronMatrix.times(voxLoc);
+        Jama.Matrix micLoc = workspace.getVoxToMicronMatrix().times(voxLoc);
         return new float[] {
                 (float) micLoc.get(0, 0),
                 (float) micLoc.get(1, 0),
@@ -86,7 +83,7 @@ public class NeuronVertexAdapter implements NeuronVertex
             {1.0, },
         });
         // TmGeoAnnotation XYZ is in voxel coordinates
-        Jama.Matrix voxLoc = micronToVoxMatrix.times(micLoc);
+        Jama.Matrix voxLoc = workspace.getMicronToVoxMatrix().times(micLoc);
         vertex.setX(new Double(voxLoc.get(0,0)));
         vertex.setY(new Double(voxLoc.get(1,0)));
         vertex.setZ(new Double(voxLoc.get(2,0)));
@@ -106,7 +103,7 @@ public class NeuronVertexAdapter implements NeuronVertex
     @Override
     public float getRadius()
     {
-        return vertex.getRadius().floatValue();
+        return hasRadius() ? vertex.getRadius().floatValue() : DefaultNeuron.radius;
     }
 
     @Override
@@ -140,9 +137,14 @@ public class NeuronVertexAdapter implements NeuronVertex
         return true;
     }
 
-    TmGeoAnnotation getTmGeoAnnotation()
+    public TmGeoAnnotation getTmGeoAnnotation()
     {
         return vertex;
+    }
+
+    @Override
+    public String toString() {
+        return "NeuronVertex[neuronId=" + vertex.getNeuronId() + ", id=" + vertex.getId() + "]";
     }
 
 }

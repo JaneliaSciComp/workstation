@@ -34,6 +34,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -45,6 +46,7 @@ import javax.media.opengl.GL4;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.console.viewerapi.model.UnmixingParameters;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Object3d;
@@ -56,18 +58,21 @@ import org.janelia.geometry3d.camera.BasicViewSlab;
 import org.janelia.geometry3d.camera.ConstViewSlab;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.GL3Actor;
+import org.janelia.gltools.GL3Resource;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.gltools.texture.Texture2d;
 import org.janelia.horta.blocks.BlockChooser;
 import org.janelia.horta.blocks.BlockDisplayUpdater;
+import org.janelia.horta.blocks.BlockTileKey;
 import org.janelia.horta.blocks.BlockTileResolution;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.Finest8DisplayBlockChooser;
 import org.janelia.horta.blocks.KtxTileCache;
 import org.janelia.horta.blocks.OneFineDisplayBlockChooser;
 import org.openide.util.Exceptions;
+import org.openide.util.lookup.Lookups;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,7 +105,7 @@ implements DepthSlabClipper
     private float zFarRelative = 100.0f; // relative z clip planes
     private final float[] zNearFar = new float[] {0.1f, 100.0f, 1.0f}; // absolute clip for shader
     // Initialize tracing channel to average of the first two channels
-    private final float[] unmixMinScale = new float[] {0.0f, 0.0f, 0.5f, 0.5f};
+    private final UnmixingParameters unmixMinScale = new UnmixingParameters(new float[] {0.0f, 0.0f, 0.5f, 0.5f});
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private VolumeState volumeState = new VolumeState();
 
@@ -109,6 +114,8 @@ implements DepthSlabClipper
     private final BlockChooser chooser1 = new OneFineDisplayBlockChooser(); // for proof-of-concept and debugging
     private final BlockChooser chooser8 = new Finest8DisplayBlockChooser();
     private final BlockDisplayUpdater blockDisplayUpdater = new BlockDisplayUpdater(chooser8);
+    
+    private final Collection<GL3Resource> obsoleteActors = new ArrayList<>();
 
     // Singleton actor has private constructor
     private TetVolumeActor() {
@@ -134,8 +141,20 @@ implements DepthSlabClipper
                 dynamicTiles.updateDesiredTiles(blockDisplayUpdater.getDesiredBlocks());
             }
         });
+
+        Lookups.singleton(unmixMinScale);
     }
 
+    public Object3d addPersistentBlock(Object3d child) {
+        // logger.info("Special Ktx volume block added");
+        return addChild(child);
+    }
+    
+    public void addTransientBlock(BlockTileKey key) {
+        // logger.info("Special Ktx volume block added");
+        dynamicTiles.addDesiredTile(key);
+    }
+    
     public void setVolumeState(VolumeState volumeState) {
         this.volumeState = volumeState;
     }
@@ -173,6 +192,10 @@ implements DepthSlabClipper
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) 
     {
         dynamicTiles.disposeObsoleteTiles(gl);
+        for (GL3Resource res : obsoleteActors) {
+            res.dispose(gl);
+        }
+        obsoleteActors.clear();
         
         // 1) Initial fail-fast checks
         if (! isVisible())
@@ -285,7 +308,7 @@ implements DepthSlabClipper
                 gl.glUniform3fv(12, 1, saturations, 0);
                 
                 // unmixing parameters
-                gl.glUniform4fv(7, 1, unmixMinScale, 0);
+                gl.glUniform4fv(7, 1, unmixMinScale.getParams(), 0);
                 
                 gl.glUniform1i(13, volumeState.projectionMode);
                 gl.glUniform1i(14, volumeState.filteringOrder);
@@ -362,47 +385,49 @@ implements DepthSlabClipper
      */
     public void unmixChannelOne() {
         float scale = setChannelMins();
-        unmixMinScale[2] = 1.0f;
-        unmixMinScale[3] = scale;
+        unmixMinScale.getParams()[2] = 1.0f;
+        unmixMinScale.getParams()[3] = scale;
     }
     
     public void unmixChannelTwo() {
         float scale = setChannelMins();
-        unmixMinScale[2] = 1.0f/scale;
-        unmixMinScale[3] = 1.0f;
+        unmixMinScale.getParams()[2] = 1.0f/scale;
+        unmixMinScale.getParams()[3] = 1.0f;
+        // update lookup
     }
     
     public void traceChannelOneTwoAverage() {
         setChannelMins();
-        unmixMinScale[0] = 0.0f;
-        unmixMinScale[1] = 0.0f;
-        unmixMinScale[2] = 0.5f;
-        unmixMinScale[3] = 0.5f;
+        unmixMinScale.getParams()[0] = 0.0f;
+        unmixMinScale.getParams()[1] = 0.0f;
+        unmixMinScale.getParams()[2] = 0.5f;
+        unmixMinScale.getParams()[3] = 0.5f;
+        // update lookup
     }
     
     public void traceChannelOneRaw() {
         setChannelMins();
-        unmixMinScale[0] = 0.0f;
-        unmixMinScale[1] = 0.0f;
-        unmixMinScale[2] = 1.0f;
-        unmixMinScale[3] = 0.0f;
+        unmixMinScale.getParams()[0] = 0.0f;
+        unmixMinScale.getParams()[1] = 0.0f;
+        unmixMinScale.getParams()[2] = 1.0f;
+        unmixMinScale.getParams()[3] = 0.0f;
     }
     
     public void traceChannelTwoRaw() {
         setChannelMins();
-        unmixMinScale[0] = 0.0f;
-        unmixMinScale[1] = 0.0f;
-        unmixMinScale[2] = 0.0f;
-        unmixMinScale[3] = 1.0f;
+        unmixMinScale.getParams()[0] = 0.0f;
+        unmixMinScale.getParams()[1] = 0.0f;
+        unmixMinScale.getParams()[2] = 0.0f;
+        unmixMinScale.getParams()[3] = 1.0f;
     }
     
     public float[] getUnmixingParams() {
-        return unmixMinScale;
+        return unmixMinScale.getParams();
     }
     
     public void setUnmixingParams(float[] minScale) {
         for (int i = 0; i < 4; ++i) {
-            unmixMinScale[i] = minScale[i];
+            unmixMinScale.getParams()[i] = minScale[i];
         }
     }
     
@@ -412,8 +437,8 @@ implements DepthSlabClipper
         ChannelColorModel c2 = brightnessModel.getChannel(1);
         float minA = c1.getNormalizedMinimum();
         float minB = c2.getNormalizedMinimum();
-        unmixMinScale[0] = minA;
-        unmixMinScale[1] = minB;
+        unmixMinScale.getParams()[0] = minA;
+        unmixMinScale.getParams()[1] = minB;
         float range1 = c1.getWhiteLevel() - c1.getBlackLevel();
         float range2 = c2.getWhiteLevel() - c2.getBlackLevel();
         float scaleB = -range1/range2;
@@ -437,7 +462,20 @@ implements DepthSlabClipper
     }
 
     public int getBlockCount() {
-        return getChildren().size();
+        int result = getChildren().size();
+        result += dynamicTiles.getBlockCount();
+        return result;
+    }
+    
+    public void clearAllBlocks() {
+        dynamicTiles.updateDesiredTiles(Collections.<BlockTileKey>emptyList());
+        for (Object3d actor : getChildren()) {
+            if (! (actor instanceof GL3Resource))
+                continue;
+            GL3Resource res = (GL3Resource)actor;
+            obsoleteActors.add(res);
+        }
+        getChildren().clear();
     }
 
     public void setAutoUpdate(boolean updateCache) {

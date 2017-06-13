@@ -45,5 +45,4 @@ public interface NeuronVertex
     boolean hasRadius();
     float getRadius();
     void setRadius(float radius);
-    
 }

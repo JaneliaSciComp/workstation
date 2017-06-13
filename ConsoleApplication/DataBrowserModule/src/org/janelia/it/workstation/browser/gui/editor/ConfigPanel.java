@@ -31,7 +31,7 @@ import org.janelia.it.workstation.browser.gui.support.WrapLayout;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public final class ConfigPanel extends JPanel {
+public class ConfigPanel extends JPanel {
 	
 	private static final Font TITLE_FONT = new Font("Sans Serif", Font.BOLD, 15);
 	private static final ImageIcon EXPAND_ICON = Icons.getIcon("chevron-expand-icon.png");
@@ -78,6 +78,12 @@ public final class ConfigPanel extends JPanel {
 				popupMenu.show(e.getComponent(), e.getX(), e.getY());
 				e.consume();
 			}
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                titleClicked(e);
+            }
+			
 		});
                 
         this.titlePanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 3));
@@ -89,7 +95,10 @@ public final class ConfigPanel extends JPanel {
         toggleCriteriaPanelState();
 	}
 	
-	private void addDefaultTitleComponents() {
+	protected void titleClicked(MouseEvent e) {
+    }
+
+    private void addDefaultTitleComponents() {
 		titlePanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
         titlePanel.add(showConfigPanelButton);
         titlePanel.add(titleLabel);

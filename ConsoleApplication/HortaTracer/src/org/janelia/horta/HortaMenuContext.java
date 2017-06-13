@@ -46,7 +46,6 @@ class HortaMenuContext {
     public final Point popupScreenPoint;
     public final Vector3 mouseXyz; // coordinate at mouse location
     public final Vector3 focusXyz; // coordinate at center of screen
-    public final BlockTileSource ktxBlockTileSource;
     public final NeuronMPRenderer renderer;
     public final SceneWindow sceneWindow;
 
@@ -55,7 +54,6 @@ class HortaMenuContext {
             Point popupScreenPoint,
             Vector3 mouseXyz, 
             Vector3 focusXyz,
-            BlockTileSource ktxBlockSource,
             NeuronMPRenderer renderer,
             SceneWindow sceneWindow
     ) {
@@ -63,7 +61,6 @@ class HortaMenuContext {
         this.popupScreenPoint = popupScreenPoint;
         this.mouseXyz = mouseXyz;
         this.focusXyz = focusXyz;
-        this.ktxBlockTileSource = ktxBlockSource;
         this.renderer = renderer;
         this.sceneWindow = sceneWindow;
     }

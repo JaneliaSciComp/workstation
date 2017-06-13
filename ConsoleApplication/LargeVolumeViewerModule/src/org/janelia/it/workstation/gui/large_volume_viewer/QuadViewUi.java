@@ -10,6 +10,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
@@ -129,6 +131,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewCon
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
@@ -149,7 +152,6 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("serial")
 public class QuadViewUi extends JPanel implements VolumeLoadListener
 {
-	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 	
     private static final String IMAGES_FOLDER_OPEN = "folder_open.png";
@@ -211,7 +213,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private JPanel toolBarPanel = new JPanel();
 	private JSplitPane splitPane = new JSplitPane();    
     private SliderPanel sliderPanel = new SliderPanel(imageColorModel);
-
 	private JLabel statusLabel = new JLabel("status area");
 	private LoadStatusLabel loadStatusLabel = new LoadStatusLabel();
 	
@@ -288,8 +289,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		}
 	};
 
+    private int zSliceIndexForZMicrons(double zMicrons) {
+        return (int)Math.round(zMicrons / volumeImage.getZResolution() - 0.5);
+    }
+    
     public void focusChanged(Vec3 focus) {
-        int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
+        int z = zSliceIndexForZMicrons(focus.getZ());
         zScanSlider.setValue(z);
         spinnerValue.setValue(z);
     }
@@ -311,11 +316,24 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             getSkeletonActor().getModel().setAnchorsVisible(false);
         }
     }
-    
-    public void setCameraFocus( Vec3 focus ) {
+
+    public void setCameraFocus(Vec3 focus) {
+        log.info("Setting camera focus: {}", focus);
         camera.setFocus(focus);
     }
 
+    public Vec3 getCameraFocus() {
+        return camera.getFocus();
+    }
+
+    public boolean setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
+        return camera.setPixelsPerSceneUnit(pixelsPerSceneUnit);
+    }
+    
+    public double getPixelsPerSceneUnit() {
+        return camera.getPixelsPerSceneUnit();
+    }
+    
     /**
      * move toward the neuron root to the next branch or the root
      */
@@ -324,7 +342,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         if (neuron != null) {
             Anchor anchor = getSkeletonActor().getModel().getNextParent();
             if (anchor != null) {
-                TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
+                TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
                 if (!ann.isRoot()) {
                     ann = neuron.getParentOf(ann);
                     while (!ann.isRoot() && !ann.isBranch()) {
@@ -351,8 +369,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
 
         this.annotationModel = annotationModel;
-        this.annotationMgr = new AnnotationManager(annotationModel, this, tileServer);
         this.largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);
+        this.annotationMgr = new AnnotationManager(annotationModel, this, largeVolumeViewerTranslator, tileServer);
 
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);
@@ -383,12 +401,17 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 //cacheController.focusChanged(camera.getFocus());
                 TileStackCacheController.getInstance().setFocus(camera.getFocus());
                 tileServer.refreshCurrentTileSet();
+                // If we are using this optimization, the anchor set needs to be updated whenever the view is changed
+                if (ApplicationPanel.isAnchorsInViewport()) {
+                    getSkeletonActor().getModel().forceUpdateAnchors();
+                }
             }            
         });
 
         setupUi(parentFrame, overrideFrameMenuBar);
         interceptModifierKeyPresses();
         interceptModeChangeGestures();
+        interceptResizeEvents();
         setupAnnotationGestures();
 
         // connect up text UI and model with graphic UI(s):
@@ -466,10 +489,31 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             v.setCamera(camera);
             // TODO - move most of this setup into OrthogonalViewer class.
             v.setSharedVolumeImage(volumeImage);
-            v.setSystemMenuItemGenerator(new MenuItemGenerator() {
+            v.setNavigationMenuItemGenerator(new MenuItemGenerator() {
                 @Override
                 public List<JMenuItem> getMenus(MouseEvent event) {
                     List<JMenuItem> result = new Vector<>();
+                    
+                    // Add menus/items for relocating per other views.
+                    SynchronizationHelper helper = new SynchronizationHelper();
+                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
+                        helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                    Tiled3dSampleLocationProviderAcceptor originator =
+                        helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
+                    // JMenu navigateToHortaMenu = new JMenu("Navigate to this location in Horta");
+                    for (JMenuItem navItem : menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor())) {
+                        result.add(navItem);
+                    }
+                    // result.add(navigateToHortaMenu);
+
+                    return result;
+                }
+            });
+            v.setSystemMenuItemGenerator(new MenuItemGenerator() {
+                @Override
+                public List<JMenuItem> getMenus(MouseEvent event) {
+                    List<JMenuItem> result = new Vector<>();                    
                     result.add(addFileMenuItem());
                     result.add(addCopyMicronLocMenuItem());
                     result.add(addCopyTileLocMenuItem());
@@ -479,14 +523,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());                    
                     
-                    // Add menus/items for relocating per other views.
-                    SynchronizationHelper helper = new SynchronizationHelper();
-                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
-                        helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                    Tiled3dSampleLocationProviderAcceptor originator =
-                        helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
-                    result.addAll( menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor()) );
                     return result;
                 }
             });
@@ -520,7 +556,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         loadStatusLabel.setLoadStatus(loadStatus);
     }
 
-    public void pathTraceRequested(Long annotationID) {
+    public void pathTraceRequested(Long neuronId, Long annotationID) {
         // this needs to happen before you draw anchored paths; should
         //  go somewhere else so it only happens once, but not clear where;
         //  not clear we have a trigger for when the image is loaded enough for
@@ -529,7 +565,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 tileServer.getLoadAdapter().getTileFormat());
 
         // construct new request; add image data to anchor and pass it on
-        PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
+        PathTraceToParentRequest request = new PathTraceToParentRequest(neuronId, annotationID);
         request.setImageVolume(volumeImage);
         request.setTextureCache(tileServer.getTextureCache());
         if (pathTraceListener != null) {
@@ -553,6 +589,14 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		tileServer.clearCache();
 	}
 	
+	public BoundingBox3d getBoundingBox() {
+	    return volumeImage.getBoundingBox3d();
+	}
+	
+    public TileFormat getTileFormat() {
+        return tileFormat;
+    }
+
     // TODO update zoom range too?
     private void updateRanges() {
         // Z range
@@ -570,7 +614,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             largeVolumeViewer.setWheelMode(WheelMode.Mode.SCAN);
             zScanScrollModeAction.setEnabled(true);
             zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
-            int z = (int) Math.round((camera.getFocus().getZ() - 0.5) / volumeImage.getZResolution());
+            int z = zSliceIndexForZMicrons(camera.getFocus().getZ());
             if (z < z0) {
                 z = z0;
             }
@@ -701,6 +745,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }            
         });
 
+        
+        sliderPanel.setTop(SliderPanel.VIEW.LVV);
         sliderPanel.guiInit();
         
         JSplitPane splitPane_1 = new JSplitPane();
@@ -1005,6 +1051,18 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         }
 	}
 
+	private void interceptResizeEvents() {
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                // If we are using this optimization, the anchor set needs to be updated whenever the view is resized
+                if (ApplicationPanel.isAnchorsInViewport()) {
+                    getSkeletonActor().getModel().forceUpdateAnchors();
+                }
+            }
+        });
+	}
+	
     private void setupAnnotationGestures() {
         // like the two "intercept" routines, but annotation-related;
         //  broken out for clarity and organization more than anything
@@ -1120,7 +1178,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	
 	private boolean setZSlice(int z) {
 		Vec3 oldFocus = camera.getFocus();
-		int oldValue = (int)Math.round(oldFocus.getZ() / volumeImage.getZResolution() - 0.5);
+		int oldValue = zSliceIndexForZMicrons(oldFocus.getZ());
 		if (oldValue == z)
 			return false; // camera is already pretty close
 		double halfVoxel = 0.5 * volumeImage.getZResolution();
@@ -1129,7 +1187,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		double maxZ = volumeImage.getBoundingBox3d().getMax().getZ() - halfVoxel;
 		newZ = Math.max(newZ, minZ);
 		newZ = Math.min(newZ, maxZ);
-		camera.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+                if (!Double.isNaN(newZ)) {
+                    camera.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+                }
 		return true;
 	}
 
@@ -1303,6 +1363,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
     public boolean loadFile(String canonicalLinuxPath) throws MalformedURLException {
 
+        log.info("loadFile: {}", canonicalLinuxPath);
+        
         // on Linux, this just works, as the input path is the Linux path;
         //  for Mac and Windows, we need to guess the mount point of the
         //  shared disk and alter the path accordingly
@@ -1319,7 +1381,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     "/nobackup/mousebrainmicro/",
                     "/nobackup2/mouselight",
                     "/tier2/mousebrainmicro/mousebrainmicro/",
-                    "/nrs/mltest/"
+                    "/nrs/mouselight",
+                    "/nrs/mltest/",
+                    "/groups/dickson/dicksonlab",
             };
             Path linuxPrefix = null;
             for (String testPrefix: mbmPrefixes) {
@@ -1353,7 +1417,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             String [] mountNames = {"", "mousebrainmicro", "mouselight",
                     "nobackup/mousebrainmicro", "nobackup2/mouselight",
                     "nobackup/mousebrainmicro/from_tier2", "mousebrainmicro/from_tier2",
-                    "mousebrainmicro/mousebrainmicro", "mltest"};
+                    "mousebrainmicro/mousebrainmicro", "nrs/mouselight",
+                    "mltest", "dicksonlab"};
 
             boolean found = false;
             for (Path prefix: prefixesToTry) {
@@ -1412,7 +1477,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         snapshot3dLauncher.setAnnotationManager(annotationMgr);
         annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
-        volumeImage.setRemoteBasePath(canonicalLinuxPath);        
+        volumeImage.setRemoteBasePath(canonicalLinuxPath);       
+        
         return loadURL(url);
     }
 
@@ -1432,6 +1498,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
 
     public boolean loadURL(URL url) {  
+        log.info("loadURL: {}", url);
         boolean rtnVal = false;
     	// Check if url exists first...
     	try {
@@ -1451,9 +1518,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         try {
             TileStackCacheController.getInstance().init(url);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            log.error(ex.toString());
+        } 
+        catch (Exception ex) {
+            log.error("Error initializing TileStackCacheController", ex);
             rtnVal=false;
         }
 

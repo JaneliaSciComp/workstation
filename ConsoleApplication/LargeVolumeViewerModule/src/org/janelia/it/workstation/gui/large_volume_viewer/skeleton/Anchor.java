@@ -80,40 +80,40 @@ public class Anchor {
 		neighbors.add(neighbor);
 		neighbor.addNeighbor(this); // ensure reciprocity
 		return true;
-	}
+    }
 
-	public Vec3 getLocation() {
-		return location;
-	}
+    public Vec3 getLocation() {
+            return location;
+    }
 
-	public Type getAnchorType() {
-		return anchorType;
-	}
+    public Type getAnchorType() {
+            return anchorType;
+    }
 
-	public Long getGuid() {
-		return this.annotationID;
-	}
-	
-	public void setGuid(Long id) {
-		this.annotationID = id;
-	}
+    public Long getGuid() {
+            return this.annotationID;
+    }
 
-	public double getRadius() {
-		return radius;
-	}
+    public void setGuid(Long id) {
+            this.annotationID = id;
+    }
 
-	public Set<Anchor> getNeighbors() {
-		return neighbors;
-	}
+    public double getRadius() {
+            return radius;
+    }
 
-	public void setLocation(Vec3 location) {
-		if (location.equals(this.location))
-			return;
-		this.location = location;
+    public Set<Anchor> getNeighbors() {
+            return neighbors;
+    }
+
+    public void setLocation(Vec3 location) {
+        if (location.equals(this.location))
+            return;
+        this.location = location;
         if (skeletonAnchorListener != null) {
             skeletonAnchorListener.anchorMoved(this);
         }
-	}
+    }
 
     /**
      * update the anchor location, but send the signal
@@ -122,22 +122,22 @@ public class Anchor {
      * an anchor location programmatically rather
      * than by the user
      */
-	public void setLocationSilent(Vec3 location) {
-		if (location.equals(this.location))
-			return;
-		this.location = location;
-        if (skeletonAnchorListener != null) {
-            skeletonAnchorListener.anchorMovedSilent(this);
-        }
-	}
+    public void setLocationSilent(Vec3 location) {
+            if (location.equals(this.location))
+                    return;
+            this.location = location;
+    if (skeletonAnchorListener != null) {
+        skeletonAnchorListener.anchorMovedSilent(this);
+    }
+    }
 
-	public void setAnchorType(Type anchorType) {
-		this.anchorType = anchorType;
-	}
+    public void setAnchorType(Type anchorType) {
+            this.anchorType = anchorType;
+    }
 
-	public void setRadius(double radius) {
-		this.radius = radius;
-	}
+    public void setRadius(double radius) {
+            this.radius = radius;
+    }
 
     public Long getNeuronID() {
         return neuronID;
@@ -145,6 +145,10 @@ public class Anchor {
 
     public void setNeuronID(Long neuronID) {
         this.neuronID = neuronID;
+    }
+
+    public String toString() {
+        return "Anchor at " + getLocation();
     }
 
 }

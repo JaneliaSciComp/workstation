@@ -46,6 +46,7 @@ import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
 import org.janelia.gltools.texture.Texture2d;
+import org.janelia.horta.neuronvbo.NeuronVboActor;
 
 /**
  *
@@ -214,7 +215,8 @@ public class OpaqueRenderPass extends RenderPass
             // and I'm in a hurry [CMB]
             GL3Actor swcActor = null;
             for (GL3Actor actor : getActors()) {
-                if (actor instanceof NeuronMPRenderer.AllSwcActor) {
+                if (actor instanceof NeuronVboActor)
+                {
                     swcActor = actor;
                     break;
                 }

@@ -4,9 +4,14 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.enums.PipelineStatus;
+import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.StatusTransition;
 
 /**
  * Implementations provide access to Samples, Data Sets, and related concepts. 
@@ -81,5 +86,15 @@ public interface SampleFacade {
      * @throws Exception
      */
     public void remove(LineRelease release) throws Exception;
+
+    /**
+     * Dispatches the given samples for processing.
+     * @param sampleRefs references to the samples
+     * @param reprocessPurpose description of the purpose of reprocessing these samples
+     * @param reuse if true, existing results from the most recent pipeline run will be reused
+     * @return
+     * @throws Exception
+     */
+    public String dispatchSamples(List<Reference> sampleRefs, String reprocessPurpose, boolean reuse) throws Exception;
     
 }

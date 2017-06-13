@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.api;
 
 import java.net.BindException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -38,8 +39,9 @@ public class ServiceMgr {
     private EmbeddedWebServer webServer;
 
     private int axisServerPort;
-
     private int webServerPort;
+    
+    private AtomicBoolean userWasNotified = new AtomicBoolean(false);
     
     private ServiceMgr() {
     }
@@ -65,12 +67,7 @@ public class ServiceMgr {
                         tries++;
                         if (tries >= MAX_PORT_TRIES) {
                             log.error("Tried to start external client web services on " + MAX_PORT_TRIES + " ports, giving up.");
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Could not start external client services. Do you have another instance of the Janelia Workstation already open?");
-                                }
-                            });
+                            notifyUser("Could not start external client services. Do you have another instance of the Janelia Workstation already open?");
                             return -1;
                         }
                     } 
@@ -80,6 +77,11 @@ public class ServiceMgr {
                 }
             }
             return port;
+        }
+        catch (BindException e) {
+            log.warn("Could not start axis server", e);
+            notifyUser("Could not start external client services. Please contact your support representative.");
+            return -1;
         }
         catch (Exception e) {
             ConsoleApp.handleException(e);
@@ -107,12 +109,7 @@ public class ServiceMgr {
                         tries++;
                         if (tries >= MAX_PORT_TRIES) {
                             log.error("Tried to start web server on " + MAX_PORT_TRIES + " ports, giving up.");
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Could not start proxy services. Do you have another instance of the Janelia Workstation already open?");
-                                }
-                            });
+                            notifyUser("Could not start proxy services. Do you have another instance of the Janelia Workstation already open?");
                             return -1;
                         }
                     } 
@@ -123,9 +120,25 @@ public class ServiceMgr {
             }
             return port;
         }
+        catch (BindException e) {
+            log.warn("Could not start web server", e);
+            notifyUser("Could not start proxy services. Please contact your support representative.");
+            return -1;
+        }
         catch (Exception e) {
             ConsoleApp.handleException(e);
             return -1;
+        }
+    }
+    
+    private void notifyUser(final String msg) {
+        if (userWasNotified.compareAndSet(false, true)) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg);
+                }
+            });
         }
     }
     

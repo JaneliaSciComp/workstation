@@ -5,11 +5,17 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
@@ -24,6 +30,7 @@ import org.janelia.it.workstation.browser.nb_action.DownloadAction;
 import org.janelia.it.workstation.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RemoveAction;
+import org.janelia.it.workstation.browser.nb_action.RenameAction;
 import org.janelia.it.workstation.browser.nb_action.SearchHereAction;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.openide.nodes.ChildFactory;
@@ -43,11 +50,15 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TreeNodeNode extends DomainObjectNode<TreeNode> {
+public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
     
     private final static Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
+
+    // We use a single threaded executor so that all node operations are serialized. Re-ordering operations 
+    // in particular must be done sequentially, for obvious reasons.
+    private static final Executor nodeOperationExecutor = Executors.newSingleThreadExecutor();
     
-    private final TreeNodeChildFactory childFactory;
+    private TreeNodeChildFactory childFactory;
     
     public TreeNodeNode(ChildFactory<?> parentChildFactory, TreeNode treeNode) {
         this(parentChildFactory, new TreeNodeChildFactory(treeNode), treeNode);
@@ -71,11 +82,65 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                 }
                 @Override
                 public void reorder(final int[] order) {
+                    
+                    // Get current set of child nodes before going async
+                    final Node[] nodes = getNodes();
+                    
                     SimpleWorker worker = new SimpleWorker() {
                         @Override
                         protected void doStuff() throws Exception {
-                            DomainModel model = DomainMgr.getDomainMgr().getModel();
-                            model.reorderChildren(getTreeNode(), order);
+
+                            // This is a little tricky for two reasons: 
+                            // a) The order parameter is not the reordered indexes of the nodes, as you'd expect
+                            //    but rather the new positions of each of the nodes in the old sequence. The tricky
+                            //    part is that these can be identical in many cases, so it's important to test all
+                            //    the corner cases.
+                            // b) The order only gives the new order for the nodes in the tree, but we have to account 
+                            //    for children of the TreeNode which are not represented as nodes. Currently, this  
+                            //    code just throws those non-node children at the end every time there's a reordering, 
+                            //    but eventually we'll want to make it preserve the ordering. 
+
+                            log.info("Reordering nodes with new permutation: {}", Arrays.toString(order));
+        
+                            // Get current children for the node
+                            final List<Reference> children = getTreeNode().getChildren();
+                                                        
+                            // Build new list of ordered nodes
+                            Map<Reference, Integer> newPositions = new HashMap<>();
+                            for(int i=0; i<nodes.length; i++) {
+                                Node node = nodes[i];
+                                if (node instanceof DomainObjectNode) {
+                                    int newPos = order[i];
+                                    DomainObjectNode<?> domainObjectNode = (DomainObjectNode<?>)node;
+                                    DomainObject domainObject = domainObjectNode.getDomainObject();
+                                    newPositions.put(Reference.createFor(domainObject), newPos);
+                                    log.debug("Setting node {} at {}", domainObject.getName(), newPos);
+                                }
+                                else {
+                                    throw new IllegalStateException("Encountered node that is not DomainObjectNode");
+                                }
+                            }
+                            
+                            // Add the objects which are not represented as nodes
+                            int nextIndex = newPositions.size();
+                            for(Reference ref : children) {
+                                if (!newPositions.containsKey(ref)) {
+                                    int newPos = nextIndex++;
+                                    newPositions.put(ref, newPos);
+                                    log.debug("Setting non-node {} at {}", ref, newPos);
+                                }
+                            }
+                            
+                            // Build the real reordering array, including non-nodes
+                            int[] trueOrder = new int[children.size()];
+                            int i = 0;
+                            for(Reference ref : children) {
+                                int newPos = newPositions.get(ref);
+                                trueOrder[i++] = newPos; 
+                            }
+        
+                            log.info("Reordering children with new permutation: {}", Arrays.toString(trueOrder));
+                            DomainMgr.getDomainMgr().getModel().reorderChildren(getTreeNode(), trueOrder);
                         }
                         @Override
                         protected void hadSuccess() {
@@ -86,30 +151,16 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                             ConsoleApp.handleException(error);
                         }
                     };
-                    worker.execute();
+                    
+                    nodeOperationExecutor.execute(worker);
                 }
             });
         }
     }
-
-    public final void checkChildren() {
-        boolean isLeaf = getChildren()==Children.LEAF;
-        boolean hasChildren = childFactory.hasNodeChildren();
-        if (isLeaf == hasChildren) {
-            log.trace("Node {} changed child-having status",getDisplayName());
-            this.setChildren(createChildren());
-        }
-    }
-
-    public Children createChildren() {
-        if (childFactory.hasNodeChildren()) {
-            return Children.create(new TreeNodeChildFactory(getTreeNode()), false);
-        }
-        else {
-            return Children.LEAF;
-        }
-    }
     
+    /**
+     * This method should be called whenever the underlying domain object changes. It updates the UI to reflect the new object state.
+     */
     @Override
     public void update(TreeNode treeNode) {
         log.debug("Refreshing node@{} -> {}",System.identityHashCode(this),getDisplayName());
@@ -119,9 +170,32 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
         refreshChildren();
     }
     
-    public void refreshChildren() {
+    /**
+     * Updates the UI state of the nodes to reflect the object state. 
+     */
+    private void refreshChildren() {
+        // Update the child factory
         childFactory.refresh();
-        checkChildren();
+        // Ensure that the node has the correct type of "Children" object (leaf or non-leaf)
+        boolean isLeaf = getChildren()==Children.LEAF;
+        boolean hasChildren = childFactory.hasNodeChildren();
+        if (isLeaf == hasChildren) {
+            log.debug("Node {} changed child-having status",getDisplayName());
+            this.setChildren(createChildren());
+        }
+    }
+
+    /**
+     * Creates the correct type of "Children" object (leaf or non-leaf)
+     */
+    private Children createChildren() {
+        if (childFactory.hasNodeChildren()) {
+            childFactory = new TreeNodeChildFactory(getTreeNode());
+            return Children.create(childFactory, false);
+        }
+        else {
+            return Children.LEAF;
+        }
     }
     
     public TreeNode getTreeNode() {
@@ -168,7 +242,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
         actions.add(new ChangePermissionsAction());
         actions.add(NewDomainObjectAction.get());
         actions.add(AddToFolderAction.get());
-        actions.add(new RenameAction());
+        actions.add(RenameAction.get());
         actions.add(RemoveAction.get());
         actions.add(null);
         actions.add(SearchHereAction.get());
@@ -191,11 +265,11 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
             return null;
         }
 
-        List<DomainObjectNode<?>> nodes = new ArrayList<>();
+        List<AbstractDomainObjectNode<?>> nodes = new ArrayList<>();
         
         if (t.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
-            DomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(t);
-            if (node==null || !(node instanceof DomainObjectNode)) { 
+            AbstractDomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(t);
+            if (node==null || !(node instanceof AbstractDomainObjectNode)) { 
                 return null;
             }
             log.trace("  Single drop - {} with parent {}",node.getDisplayName(),node.getParentNode().getDisplayName());
@@ -246,8 +320,8 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
             for(int i=0; i<multi.getCount(); i++) {
                 Transferable st = multi.getTransferableAt(i);
                 if (st.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
-                    DomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(st);
-                    if (node==null || !(node instanceof DomainObjectNode)) {
+                    AbstractDomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(st);
+                    if (node==null || !(node instanceof AbstractDomainObjectNode)) {
                         continue;
                     }   
                     log.trace("  Multi drop #{} - {} with parent {}",i,node.getDisplayName(),node.getParentNode().getDisplayName());
@@ -272,11 +346,11 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
 
     private class TreeNodePasteType extends PasteType {
         
-        private final List<DomainObjectNode<?>> nodes;
+        private final List<AbstractDomainObjectNode<?>> nodes;
         private final TreeNodeNode targetNode;
         private final int startingIndex;
         
-        TreeNodePasteType(List<DomainObjectNode<?>> nodes, TreeNodeNode targetNode, int startingIndex) {
+        TreeNodePasteType(List<AbstractDomainObjectNode<?>> nodes, TreeNodeNode targetNode, int startingIndex) {
             log.trace("TreeNodePasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
             this.nodes = nodes;
             this.targetNode = targetNode;
@@ -296,22 +370,29 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                 // Have to keep track of the original parents before we do anything, 
                 // because once we start moving nodes, the parents will be recreated
                 List<TreeNode> originalParents = new ArrayList<>();
-                for(DomainObjectNode<?> node : nodes) {
-                    TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
-                    TreeNode originalParent = originalParentNode.getTreeNode();
-                    originalParents.add(originalParent);
+                for(AbstractDomainObjectNode<?> node : nodes) {
+                    if (node.getParentNode() instanceof TreeNodeNode) {
+                        TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
+                        TreeNode originalParent = originalParentNode.getTreeNode();
+                        originalParents.add(originalParent);
+                    }
+                    else {
+                        originalParents.add(null);
+                    }
                 }
                 
                 List<DomainObject> toAdd = new ArrayList<>();
-                List<DomainObjectNode<?>> toDestroy = new ArrayList<>();
+                List<AbstractDomainObjectNode<?>> toDestroy = new ArrayList<>();
                 
                 int i = 0;
-                for(DomainObjectNode<?> node : nodes) {
+                for(AbstractDomainObjectNode<?> node : nodes) {
 
                     DomainObject domainObject = node.getDomainObject();
                     
                     TreeNode originalParent = originalParents.get(i);
-                    log.trace("{} has parent {}",newParent.getId(),originalParent.getId());
+                    if (originalParent!=null) {
+                        log.trace("{} has parent {}",newParent.getId(),originalParent.getId());
+                    }
 
                     if (domainObject.getId().equals(newParent.getId())) {
                         log.info("Cannot move a node into itself: {}",domainObject.getId());
@@ -324,7 +405,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                     log.info("Pasting '{}' on '{}'",domainObject.getName(),newParent.getName());
                     toAdd.add(domainObject);
 
-                    if (ClientDomainUtils.hasWriteAccess(originalParent)) {
+                    if (originalParent!=null && ClientDomainUtils.hasWriteAccess(originalParent)) {
                         toDestroy.add(node);
                     }
                     
@@ -342,7 +423,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                 }
                 
                 // Remove the originals
-                for(DomainObjectNode<?> node : toDestroy) {
+                for(AbstractDomainObjectNode<?> node : toDestroy) {
                     node.destroy();
                 }
                 

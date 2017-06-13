@@ -2,8 +2,10 @@ package org.janelia.it.workstation.browser.api;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.UIManager;
@@ -24,6 +26,8 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.state.NavigationHistory;
 import org.janelia.it.workstation.browser.api.state.UserColorMapping;
+import org.janelia.it.workstation.browser.components.DomainListViewManager;
+import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
@@ -32,6 +36,7 @@ import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBind;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBindings;
 import org.janelia.it.workstation.browser.util.RendererType2D;
+import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +69,7 @@ public class StateMgr {
     public static final String ADD_TO_FOLDER_HISTORY = "ADD_TO_FOLDER_HISTORY";
     public static final int MAX_ADD_TO_ROOT_HISTORY = 5;
     
-    private final NavigationHistory navigationHistory = new NavigationHistory();
+    private final Map<TopComponent,NavigationHistory> navigationHistoryMap = new HashMap<>();
     private final UserColorMapping userColorMapping = new UserColorMapping();
     
     private Annotation currentSelectedOntologyAnnotation;
@@ -201,10 +206,27 @@ public class StateMgr {
         ConsoleApp.getConsoleApp().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
     }
 
-    public NavigationHistory getNavigationHistory() {
+    public NavigationHistory getNavigationHistory(DomainListViewTopComponent topComponent) {
+        if (topComponent==null) return null;
+        NavigationHistory navigationHistory = navigationHistoryMap.get(topComponent);
+        if (navigationHistory==null) {
+            navigationHistory = new NavigationHistory();
+            navigationHistoryMap.put(topComponent, navigationHistory);
+        }
         return navigationHistory;
     }
+    
+    public NavigationHistory getNavigationHistory() {
+        return getNavigationHistory(DomainListViewManager.getInstance().getActiveViewer());
+    }
 
+    public void updateNavigationButtons(DomainListViewTopComponent topComponent) {
+        NavigationHistory navigationHistory = getNavigationHistory(topComponent);
+        if (navigationHistory!=null) {
+            navigationHistory.updateButtons();
+        }
+    }
+    
     public UserColorMapping getUserColorMapping() {
         return userColorMapping;
     }
@@ -301,7 +323,9 @@ public class StateMgr {
 
         if (changed) {
             Ontology ontology = DomainMgr.getDomainMgr().getModel().getDomainObject(Ontology.class, ontologyKeyBindings.getOntologyId());
-            Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(ontology));
+            if (ontology!=null) {
+                Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(ontology));
+            }
         }
     }
 

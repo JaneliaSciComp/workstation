@@ -89,7 +89,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
      * Add a new aligned entity to the board. This method must be called from a
      * worker thread. This is the dispatcher, called with abstract instance.
      *
-     * @param domainObject to be added to the board
+     * @param domainObjects to be added to the board
      * @throws Exception
      */
     public void addDomainObjects(List<DomainObject> domainObjects) throws Exception {
@@ -182,7 +182,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
     
     /**
      * Returns parent of the item given.
-     * @param childId whose parent to find.
+     * @param soughtItem whose parent to find.
      * @return parent of this child.
      */
     public AlignmentBoardItem getAlignmentBoardItemParent(ABItem soughtItem) {
