@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.gui.editor;
 
-import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -48,8 +49,8 @@ public final class ConfigPanel extends JPanel {
     
 	public ConfigPanel(boolean expandedByDefault) {
 		
-		setLayout(new BorderLayout());
-
+		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+		
 		this.configExpanded = !expandedByDefault; // We'll toggle it later
 		
         showConfigPanelButton = new JButton();
@@ -141,16 +142,28 @@ public final class ConfigPanel extends JPanel {
 		this.configExpanded = configExpanded;
     	refillTitleComponents();
         removeAll();
+        
+        titlePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(titlePanel, "");
+        
         if (configExpanded) {
         	showConfigPanelButton.setIcon(COLLAPSE_ICON);
-            add(titlePanel, BorderLayout.NORTH);
-            add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.CENTER);
-            add(configPanel, BorderLayout.SOUTH);
+
+            JSeparator sep1 = new JSeparator(JSeparator.HORIZONTAL);
+            sep1.setAlignmentX(Component.LEFT_ALIGNMENT);
+            add(sep1);
+            
+            configPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            add(configPanel);
         }
         else {
         	showConfigPanelButton.setIcon(EXPAND_ICON);
-            add(titlePanel, BorderLayout.CENTER);
         }
+        
+        JSeparator sep2 = new JSeparator(JSeparator.HORIZONTAL);
+        sep2.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(sep2);
+        
         updateUI();
     }
 }

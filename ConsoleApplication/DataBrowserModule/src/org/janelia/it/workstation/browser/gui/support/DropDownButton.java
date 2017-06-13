@@ -14,7 +14,7 @@ public class DropDownButton extends SimpleDropDownButton {
 	
 	protected static final Insets BUTTON_INSETS = new Insets(0,2,0,2);
 	
-    private JYPopupMenu popupMenu;
+    protected JYPopupMenu popupMenu;
 
     public DropDownButton() {
         this(null);

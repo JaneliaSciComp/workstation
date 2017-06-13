@@ -69,7 +69,7 @@ public class ConsoleApp {
         log.debug("Code Source: "+pd.getCodeSource().getLocation());
                 
         // Put the menu bar on the application window, instead of in the Mac OS X menu bar
-        System.setProperty("apple.laf.useScreenMenuBar", "false");
+//        System.setProperty("apple.laf.useScreenMenuBar", "false");
 
         // Put the app name in the Mac OS X menu bar
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", appName);

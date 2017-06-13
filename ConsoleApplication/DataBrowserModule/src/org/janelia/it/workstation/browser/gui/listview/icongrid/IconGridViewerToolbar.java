@@ -78,11 +78,11 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         configButton.addMouseListener(new MouseForwarder(toolbar, "ConfigButton->JToolBar"));
         toolbar.add(configButton);
 
-        toolbar.addSeparator();
+        addSeparator();
 
         customComponentIndex = toolbar.getComponentCount();
                 
-        toolbar.addSeparator();
+        addSeparator();
 
         imageSizeSlider = new JSlider(ImagesPanel.MIN_IMAGE_WIDTH, ImagesPanel.MAX_IMAGE_WIDTH,
                 ImagesPanel.DEFAULT_THUMBNAIL_SIZE);

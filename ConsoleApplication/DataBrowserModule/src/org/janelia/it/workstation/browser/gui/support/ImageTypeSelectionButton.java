@@ -9,8 +9,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
-import com.google.common.collect.LinkedHashMultiset;
-import com.google.common.collect.Multiset;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
@@ -20,9 +18,11 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Multiset;
 
 
 /**
@@ -40,7 +40,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
     private FileType currImageType;
     private boolean only2d;
     private boolean showTitle;
-
+    
     public ImageTypeSelectionButton() {
         this(false, true);
     }

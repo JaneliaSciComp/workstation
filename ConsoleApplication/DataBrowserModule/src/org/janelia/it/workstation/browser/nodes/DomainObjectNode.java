@@ -138,17 +138,17 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         String extra = getExtraLabel();
         StringBuilder sb = new StringBuilder();
         if (primary!=null) {
-            sb.append("<font color='!Label.foreground'>");
+            sb.append("<font color='!Tree.textForeground'>");
             sb.append(primary);
             sb.append("</font>");
         }
         if (secondary!=null) {
-            sb.append(" <font color='#957D47'>");
+            sb.append(" <font color='!Tree.secondaryLabel'>");
             sb.append(secondary);
             sb.append("</font>");
         }
         if (extra!=null) {
-            sb.append(" <font color='#959595'>");
+            sb.append(" <font color='!Tree.extraLabel'>");
             sb.append(extra);
             sb.append("</font>");
         }
