@@ -265,7 +265,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         mainPanel = new ScrollablePanel();
         mainPanel.add(dataPanel, BorderLayout.CENTER);
 
-        scrollPane = new JScrollPane(); 
+        scrollPane = new JScrollPane();
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.setViewportView(mainPanel);
 
         addKeyListener(keyListener);

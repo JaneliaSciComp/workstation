@@ -537,7 +537,6 @@ public class DarculaLFCustoms extends LFCustoms {
             "nb.output.success.foreground", new Color(112, 255, 112),
             "nb.output.debug.foreground", new Color(145, 145, 145),
             "textHighlight", new Color(240, 119, 70),
-        
         };
         
         result = maybeEnableIconFilter(result);
@@ -578,7 +577,7 @@ public class DarculaLFCustoms extends LFCustoms {
                 //Borders for the tab control
                 EDITOR_TAB_OUTER_BORDER, BorderFactory.createEmptyBorder(),
                 EDITOR_TAB_CONTENT_BORDER, BorderFactory.createCompoundBorder(
-                        new MatteBorder(0, 0, 1, 0, new Color(41, 43, 45)),
+                        new MatteBorder(0, 1, 1, 1, new Color(41, 43, 45)),
                         BorderFactory.createEmptyBorder(0, 1, 0, 1)
                 ),
                 EDITOR_TAB_TABS_BORDER, BorderFactory.createEmptyBorder(),
