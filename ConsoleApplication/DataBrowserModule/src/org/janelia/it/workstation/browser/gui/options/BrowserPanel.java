@@ -157,6 +157,7 @@ final class BrowserPanel extends javax.swing.JPanel {
         // Annotation table height
 
         annotationTableHeight = new JSlider(ImagesPanel.MIN_TABLE_HEIGHT, ImagesPanel.MAX_TABLE_HEIGHT, ImagesPanel.DEFAULT_TABLE_HEIGHT);
+        annotationTableHeight.putClientProperty("Slider.paintThumbArrowShape", Boolean.TRUE);
         annotationTableHeight.setMaximumSize(new Dimension(300, Integer.MAX_VALUE));
         annotationTableHeight.addChangeListener(new ChangeListener() {
             @Override
