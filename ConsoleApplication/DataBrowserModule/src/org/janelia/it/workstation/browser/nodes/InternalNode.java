@@ -5,6 +5,9 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.io.IOException;
 
+import javax.swing.text.html.HTML;
+
+import org.apache.commons.lang.StringEscapeUtils;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
@@ -100,17 +103,17 @@ public class InternalNode<T> extends AbstractNode {
         StringBuilder sb = new StringBuilder();
         if (primary!=null) {
             sb.append("<font color='!Tree.textForeground'>");
-            sb.append(primary);
+            sb.append(StringEscapeUtils.escapeHtml(primary));
             sb.append("</font>");
         }
         if (secondary!=null) {
-            sb.append(" <font color='!Tree.secondaryLabel'><i>");
-            sb.append(secondary);
+            sb.append(" <font color='!ws.TreeSecondaryLabel'><i>");
+            sb.append(StringEscapeUtils.escapeHtml(secondary));
             sb.append("</i></font>");
         }
         if (extra!=null) {
-            sb.append(" <font color='!Tree.extraLabel'>");
-            sb.append(extra);
+            sb.append(" <font color='!ws.TreeExtraLabel'>");
+            sb.append(StringEscapeUtils.escapeHtml(extra));
             sb.append("</font>");
         }
         return sb.toString();

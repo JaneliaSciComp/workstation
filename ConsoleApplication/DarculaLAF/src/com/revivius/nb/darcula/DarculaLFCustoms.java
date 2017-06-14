@@ -1,9 +1,5 @@
 package com.revivius.nb.darcula;
 
-import com.revivius.nb.darcula.ui.InreasedInsetsTableHeaderBorder;
-import com.revivius.nb.darcula.ui.ReducedInsetsDarculaButtonPainter;
-import com.revivius.nb.darcula.options.DarculaLAFOptionsPanelController;
-import com.revivius.nb.darcula.options.DarculaLAFPanel;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
@@ -18,6 +14,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
+
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.InputMap;
@@ -26,10 +23,18 @@ import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.border.MatteBorder;
 import javax.swing.plaf.ColorUIResource;
+
 import org.netbeans.swing.plaf.LFCustoms;
 import org.openide.util.ImageUtilities;
 import org.openide.util.Lookup;
 import org.openide.util.NbPreferences;
+
+import com.bulenkov.iconloader.util.EmptyIcon;
+import com.revivius.nb.darcula.options.DarculaLAFOptionsPanelController;
+import com.revivius.nb.darcula.options.DarculaLAFPanel;
+import com.revivius.nb.darcula.ui.InreasedInsetsTableHeaderBorder;
+import com.revivius.nb.darcula.ui.ReducedInsetsDarculaButtonPainter;
+
 import sun.swing.SwingLazyValue;
 
 /**
@@ -172,6 +177,13 @@ public class DarculaLFCustoms extends LFCustoms {
             "Table.cellNoFocusBorder", new TransparentBorder(),
             "Table.focusSelectedCellHighlightBorder", new TransparentBorder(),
 
+            // Fix for submenus
+            "MenuUI", "com.revivius.nb.darcula.ui.FixedMenuUI",
+            "MenuItemUI", "com.revivius.nb.darcula.ui.FixedMenuItemUIBase",
+            "RadioButtonMenuItemUI", "com.revivius.nb.darcula.ui.FixedRadioButtonMenuItemUI",
+            "CheckBoxMenuItemUI", "com.revivius.nb.darcula.ui.FixedCheckBoxMenuItemUI",
+            
+            
             //##################################################################################################################
             // End customizations for Janelia Workstation
             //##################################################################################################################
@@ -359,8 +371,9 @@ public class DarculaLFCustoms extends LFCustoms {
             //##################################################################################################################
 
             // Domain explorer trees
-            "Tree.secondaryLabel", new Color(172, 145, 83), // Yellowish label for displaying the owner of each node 
-            "Tree.extraLabel", new Color(175, 170, 157), // A third (less-important) label which might contain the size or type of the node
+            "ws.TreeSecondaryLabel", new Color(172, 145, 83), // Yellowish label for displaying the owner of each node 
+            "ws.TreeExtraLabel", new Color(175, 170, 157), // A third (less-important) label which might contain the size or type of the node
+            "ws.ComponentBorderColor", new Color(41, 43, 45),
             
             //##################################################################################################################
             // End customizations for Janelia Workstation

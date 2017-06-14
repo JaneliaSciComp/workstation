@@ -15,6 +15,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -139,17 +140,17 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
         StringBuilder sb = new StringBuilder();
         if (primary!=null) {
             sb.append("<font color='!Tree.textForeground'>");
-            sb.append(primary);
+            sb.append(StringEscapeUtils.escapeHtml(primary));
             sb.append("</font>");
         }
         if (secondary!=null) {
-            sb.append(" <font color='!Tree.secondaryLabel'>");
-            sb.append(secondary);
+            sb.append(" <font color='!ws.TreeSecondaryLabel'>");
+            sb.append(StringEscapeUtils.escapeHtml(secondary));
             sb.append("</font>");
         }
         if (extra!=null) {
-            sb.append(" <font color='!Tree.extraLabel'>");
-            sb.append(extra);
+            sb.append(" <font color='!ws.TreeExtraLabel'>");
+            sb.append(StringEscapeUtils.escapeHtml(extra));
             sb.append("</font>");
         }
         return sb.toString();

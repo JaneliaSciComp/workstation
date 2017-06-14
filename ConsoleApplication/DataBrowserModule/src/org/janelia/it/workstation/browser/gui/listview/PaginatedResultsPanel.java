@@ -160,7 +160,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
 
         statusBar = new JPanel();
         statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.LINE_AXIS));
-        statusBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, (Color) UIManager.get("windowBorder")), BorderFactory.createEmptyBorder(0, 5, 2, 5)));
+        statusBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, (Color) UIManager.get("ws.ComponentBorderColor")), BorderFactory.createEmptyBorder(0, 5, 2, 5)));
 
         statusBar.add(viewTypeButton);
         statusBar.add(Box.createHorizontalGlue());

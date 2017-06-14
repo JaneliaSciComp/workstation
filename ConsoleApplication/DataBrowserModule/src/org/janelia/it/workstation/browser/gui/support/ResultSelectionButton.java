@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
@@ -161,7 +162,7 @@ public class ResultSelectionButton extends DropDownButton {
                 group.add(menuItem);
             }
             else {
-                JScrollMenu subMenu = new JScrollMenu(groupLessLabel);
+                JMenu subMenu = new JScrollMenu(groupLessLabel);
                 for(final ResultDescriptor resultDescriptor : resultDescriptors) {
                     int count = countedResultNames.count(resultDescriptor);
                     String resultName = resultDescriptor.getGroupName();

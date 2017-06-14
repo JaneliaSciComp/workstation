@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -100,6 +101,23 @@ public class StateMgr {
     }
 
     public void initLAF() {
+        
+        UIDefaults uiDefaults = UIManager.getDefaults();
+
+        // Workstation LAF defaults. These are overridden by our included Darcula LAF, but should have decent defaults for other LAFs.
+        
+        if (!uiDefaults.containsKey("ws.ComponentBorderColor")) {
+            uiDefaults.put("ws.ComponentBorderColor", uiDefaults.get("windowBorder"));
+        }
+        
+        if (!uiDefaults.containsKey("ws.TreeSecondaryLabel")) {
+            uiDefaults.put("ws.TreeSecondaryLabel", new Color(172, 145, 83));
+        }
+        
+        if (!uiDefaults.containsKey("ws.TreeExtraLabel")) {
+            uiDefaults.put("ws.TreeExtraLabel", uiDefaults.get("Label.disabledForeground"));
+        }
+        
         // TODO: eventually we want to eliminate this dependency entirely, but for now we still use Synthetica Addons in a few places
         
         String[] li = {"Licensee=HHMI", "LicenseRegistrationNumber=122030", "Product=Synthetica", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=2.20.999"};
@@ -110,7 +128,7 @@ public class StateMgr {
         UIManager.put("SyntheticaAddons.license.info", li2);
         UIManager.put("SyntheticaAddons.license.key", "43BF31CE-59317732-9D0D5584-654D216F-7806C681");
     }
-//        // Ensure the synthetical choices are all available.
+//        // Ensure the Synthetica choices are all available.
 //        UIManager.installLookAndFeel("Synthetica AluOxide Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaAluOxideLookAndFeel");
 //        UIManager.installLookAndFeel("Synthetica BlackEye Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
 //        UIManager.installLookAndFeel("Synthetica BlackMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackMoonLookAndFeel");
