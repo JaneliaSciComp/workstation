@@ -29,7 +29,6 @@ import org.openide.util.ImageUtilities;
 import org.openide.util.Lookup;
 import org.openide.util.NbPreferences;
 
-import com.bulenkov.iconloader.util.EmptyIcon;
 import com.revivius.nb.darcula.options.DarculaLAFOptionsPanelController;
 import com.revivius.nb.darcula.options.DarculaLAFPanel;
 import com.revivius.nb.darcula.ui.InreasedInsetsTableHeaderBorder;

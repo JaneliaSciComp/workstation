@@ -40,7 +40,7 @@ import com.google.common.collect.Multiset;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ResultSelectionButton extends DropDownButton {
+public class ResultSelectionButton extends WrappingDropDownButton {
 
     private ResultDescriptor currResult;
     private boolean showTitle;
