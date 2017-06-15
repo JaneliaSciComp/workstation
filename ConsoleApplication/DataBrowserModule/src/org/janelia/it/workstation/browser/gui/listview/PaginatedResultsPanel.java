@@ -35,7 +35,7 @@ import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextRegistration;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.browser.gui.support.WrappingDropDownButton;
+import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
@@ -77,7 +77,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     private final JButton startPageButton;
     private final JButton selectAllButton;
     private final JLabel pagingStatusLabel;
-    private final WrappingDropDownButton viewTypeButton;
+    private final ScrollingDropDownButton viewTypeButton;
 
     // Content
     private SearchResults searchResults;
@@ -99,7 +99,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         splashPanel = new JLabel(Icons.getIcon("workstation_logo_white.png"));
         add(splashPanel);
         
-        viewTypeButton = new WrappingDropDownButton("Choose Viewer...");
+        viewTypeButton = new ScrollingDropDownButton("Choose Viewer...");
         populateViewerPopupMenu(viewTypeButton.getPopupMenu());
 
         prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));

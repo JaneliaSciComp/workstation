@@ -63,7 +63,7 @@ import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
-import org.janelia.it.workstation.browser.gui.support.WrappingDropDownButton;
+import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
@@ -111,8 +111,8 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private final JButton saveButton;
     private final JButton saveAsButton;
     private final PaginatedResultsPanel resultsPanel;
-    private final WrappingDropDownButton typeCriteriaButton;
-    private final WrappingDropDownButton addCriteriaButton;
+    private final ScrollingDropDownButton typeCriteriaButton;
+    private final ScrollingDropDownButton addCriteriaButton;
     private final SmartSearchBox searchBox;
     private final JButton infoButton;
 
@@ -235,12 +235,14 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             }
         });
         
-        this.typeCriteriaButton = new WrappingDropDownButton();
-        this.addCriteriaButton = new WrappingDropDownButton("Add Criteria...");
+        this.typeCriteriaButton = new ScrollingDropDownButton();
+        this.addCriteriaButton = new ScrollingDropDownButton("Add Criteria...");
         this.searchBox = new SmartSearchBox("SEARCH_HISTORY");
 
         infoButton = new JButton(Icons.getIcon("info.png"));
         infoButton.setMargin(new Insets(0,2,0,2));
+        infoButton.setOpaque(false);
+        infoButton.setContentAreaFilled(false);
         infoButton.setBorderPainted(false);
         infoButton.addActionListener(new ActionListener() {
             @Override
@@ -470,7 +472,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
         for (Criteria criteria : filter.getCriteriaList()) {
             if (criteria instanceof TreeNodeCriteria) {
-                WrappingDropDownButton customCriteriaButton = createCustomCriteriaButton((TreeNodeCriteria)criteria);
+                ScrollingDropDownButton customCriteriaButton = createCustomCriteriaButton((TreeNodeCriteria)criteria);
                 if (customCriteriaButton!=null) {
                     configPanel.addConfigComponent(customCriteriaButton);
                 }
@@ -489,7 +491,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                     label.append(StringUtils.getCommaDelimited(values, MAX_VALUES_STRING_LENGTH));
                     label.append(")");
                 }
-                WrappingDropDownButton facetButton = new WrappingDropDownButton(label.toString());
+                ScrollingDropDownButton facetButton = new ScrollingDropDownButton(label.toString());
                 populateFacetMenu(attr, facetButton.getPopupMenu());
                 configPanel.addConfigComponent(facetButton);
             }
@@ -497,7 +499,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
         for (Criteria criteria : filter.getCriteriaList()) {
             if (criteria instanceof AttributeCriteria) {
-                WrappingDropDownButton customCriteriaButton = createCustomCriteriaButton((AttributeCriteria)criteria);
+                ScrollingDropDownButton customCriteriaButton = createCustomCriteriaButton((AttributeCriteria)criteria);
                 if (customCriteriaButton!=null) {
                     configPanel.addConfigComponent(customCriteriaButton);
                 }
@@ -554,9 +556,9 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         configPanel.updateUI();
     }
 
-    private WrappingDropDownButton createCustomCriteriaButton(final TreeNodeCriteria criteria) {
+    private ScrollingDropDownButton createCustomCriteriaButton(final TreeNodeCriteria criteria) {
 
-        WrappingDropDownButton facetButton = new WrappingDropDownButton("In: "+criteria.getTreeNodeName());
+        ScrollingDropDownButton facetButton = new ScrollingDropDownButton("In: "+criteria.getTreeNodeName());
 
         JPopupMenu popupMenu = facetButton.getPopupMenu();
         popupMenu.removeAll();
@@ -574,7 +576,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         return facetButton;
     }
 
-    private WrappingDropDownButton createCustomCriteriaButton(final AttributeCriteria criteria) {
+    private ScrollingDropDownButton createCustomCriteriaButton(final AttributeCriteria criteria) {
         
         String label;
         final DomainObjectAttribute attr = searchConfig.getDomainObjectAttribute(criteria.getAttributeName());
@@ -591,7 +593,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             return null;
         }
         
-        WrappingDropDownButton facetButton = new WrappingDropDownButton(label);
+        ScrollingDropDownButton facetButton = new ScrollingDropDownButton(label);
 
         JPopupMenu popupMenu = facetButton.getPopupMenu();
         popupMenu.removeAll();

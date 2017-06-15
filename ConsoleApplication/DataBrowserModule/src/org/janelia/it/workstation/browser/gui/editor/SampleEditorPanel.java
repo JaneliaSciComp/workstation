@@ -28,7 +28,6 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
@@ -72,20 +71,18 @@ import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.browser.gui.support.WrappingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
+import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.jdesktop.swingx.icon.EmptyIcon;
-import org.openide.awt.DropDownButtonFactory;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,10 +110,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     // UI Components
     private final ConfigPanel configPanel;
-    private final WrappingDropDownButton viewButton;
-    private final WrappingDropDownButton objectiveButton;
-    private final WrappingDropDownButton areaButton;
-    private final Map<String,WrappingDropDownButton> historyButtonMap = new HashMap<>();
+    private final ScrollingDropDownButton viewButton;
+    private final ScrollingDropDownButton objectiveButton;
+    private final ScrollingDropDownButton areaButton;
+    private final Map<String,ScrollingDropDownButton> historyButtonMap = new HashMap<>();
     private final JPanel mainPanel;
     private final PaginatedResultsPanel lsmPanel;
     private final JScrollPane scrollPane;
@@ -262,10 +259,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         setLayout(new BorderLayout());
         setFocusable(true);
         
-        viewButton = new WrappingDropDownButton("View: ");
+        viewButton = new ScrollingDropDownButton("View: ");
         populateViewButton();
-        objectiveButton = new WrappingDropDownButton("Objective: "+currObjective);
-        areaButton = new WrappingDropDownButton("Area: "+currArea);
+        objectiveButton = new ScrollingDropDownButton("Objective: "+currObjective);
+        areaButton = new ScrollingDropDownButton("Area: "+currArea);
 
         configPanel = new ConfigPanel(true) {
             @Override
@@ -678,7 +675,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 	areaSet.add(area);
                 }
                 
-                WrappingDropDownButton historyButton = new WrappingDropDownButton(objective+": "+getLabel(run));
+                ScrollingDropDownButton historyButton = new ScrollingDropDownButton(objective+": "+getLabel(run));
                 populateHistoryButton(historyButton.getPopupMenu(), objectiveSample);
                 historyButtonMap.put(objective, historyButton);
                 configPanel.addConfigComponent(historyButton);

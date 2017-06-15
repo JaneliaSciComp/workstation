@@ -39,7 +39,7 @@ import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.browser.gui.support.WrappingDropDownButton;
+import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.ExpandedTreeState;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
@@ -158,7 +158,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             }
         };
 
-        WrappingDropDownButton configButton = new WrappingDropDownButton();
+        ScrollingDropDownButton configButton = new ScrollingDropDownButton();
         
         configButton.setIcon(Icons.getIcon("cog.png"));
         configButton.setFocusable(false);
