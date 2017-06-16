@@ -52,6 +52,17 @@ of adapter.
         </antcall>
     </target>
 
+    <target name="deploy-production6-nbms">
+        <antcall target="deploy-nbms-env" >
+            <param name="tmp.env" value="workstation6"/>
+            <param name="tmp.destination" value="jacs@jacs-webdav1"/>
+        </antcall>
+        <antcall target="deploy-nbms-env" >
+            <param name="tmp.env" value="workstation6"/>
+            <param name="tmp.destination" value="jacs@jacs-webdav2"/>
+        </antcall>
+    </target>
+
     <target name="deploy-nbms-production">
         <antcall target="deploy-nbms-env" >
             <param name="tmp.env" value="workstation"/>
