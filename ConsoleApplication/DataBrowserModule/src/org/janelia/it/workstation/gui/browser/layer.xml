@@ -6,6 +6,7 @@
         <file name="Build_hidden"/>
         <file name="CommonTestRunner_hidden"/>
         <file name="DOM_hidden"/>
+        <file name="Database_hidden"/>
         <file name="Debug_hidden"/>
         <file name="Diff_hidden"/>
         <folder name="Edit">
@@ -44,6 +45,7 @@
             <file name="org-openide-actions-UndoAction.instance"/>
         </folder>
         <folder name="File">
+            <file name="org-netbeans-modules-docker-ui-build2-BuildActionListener.instance_hidden"/>
             <file name="org-netbeans-modules-print-action-PageSetupAction.instance_hidden"/>
             <file name="org-netbeans-modules-print-action-PrintAction.instance_hidden"/>
         </folder>
@@ -64,6 +66,7 @@
             <file name="org-netbeans-modules-db-sql-editor-ui-actions-RunSQLSelectionAction.instance_hidden"/>
             <file name="org-netbeans-modules-db-sql-editor-ui-actions-SQLHistoryAction.instance_hidden"/>
             <file name="org-netbeans-modules-db-sql-editor-ui-actions-ToggleKeepOldResultTabsAction.instance_hidden"/>
+            <file name="org-netbeans-modules-docker-ui-wizard-AddDockerInstanceAction.instance_hidden"/>
             <file name="org-netbeans-modules-favorites-templates-TemplatesAction.instance_hidden"/>
             <file name="org-netbeans-modules-openfile-OpenFileAction.instance_hidden"/>
             <file name="org-netbeans-modules-openfile-RecentFileAction.instance_hidden"/>
@@ -77,6 +80,7 @@
             <file name="org-openide-actions-SaveAsTemplateAction.instance_hidden"/>
         </folder>
         <file name="Team_hidden"/>
+        <file name="Terminal_hidden"/>
         <folder name="Tools">
             <file name="org-netbeans-modules-beans-beaninfo-GenerateBeanInfoAction.instance_hidden"/>
             <file name="org-netbeans-modules-diff-DiffAction.instance_hidden"/>
@@ -102,6 +106,8 @@
             <file name="LocalTerminalAction.instance_hidden"/>
             <file name="RemoteTerminalAction.instance_hidden"/>
             <file name="SelectDocumentNode_hidden"/>
+            <file name="ShowTerminalTCAction.instance_hidden"/>
+            <file name="TerminalSettingsAction.instance_hidden"/>
             <file name="org-janelia-it-workstation-nb_action-LaunchAppAction.instance_hidden"/>
             <file name="org-netbeans-core-windows-actions-CloneDocumentAction.instance_hidden"/>
             <file name="org-netbeans-core-windows-actions-SwitchRoleKeepDocumentsAction.instance_hidden"/>
@@ -127,7 +133,14 @@
         </folder>
         <file name="XML_hidden"/>
     </folder>
+    <file name="Cloud_hidden"/>
+    <file name="CslPlugins_hidden"/>
+    <file name="Databases_hidden"/>
+    <file name="Debugger_hidden"/>
+    <file name="Docker_hidden"/>
     <folder name="Editors_hidden"/>
+    <file name="HTMLPalette_hidden"/>
+    <file name="HTTPServer_DUMMY_hidden"/>
     <folder name="Menu">
         <folder name="BuildProject_hidden"/>
         <folder name="File">
@@ -186,6 +199,7 @@
         <folder name="Refactoring_hidden"/>
         <folder name="RunProject_hidden"/>
         <folder name="Source_hidden"/>
+        <file name="Versioning_hidden"/>
         <folder name="View">
             <file name="org-netbeans-core-windows-actions-ToolbarsListAction.shadow"/>
             <file name="Separator3.instance_hidden"/>
@@ -246,6 +260,9 @@
         <file name="Java.instance_hidden"/>
     </folder>
     <file name="OptionsExport_hidden"/>
+    <file name="ProjectXMLCatalog_hidden"/>
+    <file name="ProjectsTabActions_hidden"/>
+    <file name="Projects_hidden"/>
     <folder name="Services">
         <folder name="AutoupdateType">
             <file name="org_janelia_it_workstation_nb_action_update_center.instance">
@@ -274,6 +291,10 @@
         <file name="QuickSearch_hidden"/>
         <file name="Debug_hidden"/>
     </folder>
+    <folder name="WarmUp">
+        <file name="org-netbeans-modules-editor-EditorWarmUpTask.instance_hidden"/>
+        <file name="org-netbeans-modules-refactoring-impl-RefactoringWarmUpTask.instance_hidden"/>
+    </folder>
     <folder name="Windows2">
         <file name="WindowManager.wswmgr" url="WindowManager.wswmgr"/> 
         <folder name="Modes">
@@ -290,4 +311,6 @@
             <folder name="rightSlidingSide"/>
         </folder>
     </folder>
+    <file name="csl-hints_hidden"/>
+    <file name="org-netbeans-modules-hudson_hidden"/>
 </filesystem>
