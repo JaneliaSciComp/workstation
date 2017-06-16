@@ -1,4 +1,11 @@
-// 5.15
+// 6.0-RC1
+
+This is the first Release Candidate for the 6.0 release.
+
+In this major release, the Janelia Workstation has been updated to use the latest Java and NetBeans platform 
+libraries. As a consequence, it now requires Java 8 to run. 
+
+In addition, the Look and Feel has been completely replaced in order to address rendering issues on MacOS Sierra.
 
 Workstation Browser
 * Each tab now maintains its own Back/Forward history 
