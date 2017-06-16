@@ -61,6 +61,7 @@ import org.jongo.Aggregate;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
 import org.jongo.MongoCursor;
+import org.jongo.ResultHandler;
 import org.jongo.marshall.jackson.JacksonMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +71,16 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+
+import com.mongodb.DBObject;
+import com.mongodb.DuplicateKeyException;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.MongoException;
+import com.mongodb.ServerAddress;
+import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
+
 
 /**
  * Data access object for the domain object model.
@@ -1263,20 +1274,35 @@ public class DomainDAO {
     public List<NeuronFragment> getNeuronFragmentsBySampleId(String subjectKey, Long sampleId) {
         log.debug("getNeuronFragmentsBySampleId({}, {})", subjectKey, sampleId);
         String refStr = "Sample#"+sampleId;
-        Set<String> subjects = getReaderSet(subjectKey);
-        return toList(fragmentCollection.find("{sampleRef:#, readers:{$in:#}}", refStr, subjects).as(NeuronFragment.class));
+        if (subjectKey == null) {
+            return toList(fragmentCollection.find("{sampleRef:#}", refStr).as(NeuronFragment.class));
+        }
+        else {
+            Set<String> subjects = getReaderSet(subjectKey);
+            return toList(fragmentCollection.find("{sampleRef:#, readers:{$in:#}}", refStr, subjects).as(NeuronFragment.class));
+        }
     }
 
     public List<NeuronFragment> getNeuronFragmentsBySeparationId(String subjectKey, Long separationId) {
         log.debug("getNeuronFragmentsBySeparationId({}, {})", subjectKey, separationId);
-        Set<String> subjects = getReaderSet(subjectKey);
-        return toList(fragmentCollection.find("{separationId:#, readers:{$in:#}}", separationId, subjects).as(NeuronFragment.class));
+        if (subjectKey == null) {
+            return toList(fragmentCollection.find("{separationId:#}", separationId).as(NeuronFragment.class));
+        }
+        else {
+            Set<String> subjects = getReaderSet(subjectKey);
+            return toList(fragmentCollection.find("{separationId:#, readers:{$in:#}}", separationId, subjects).as(NeuronFragment.class));
+        }
     }
 
     public Sample getSampleBySeparationId(String subjectKey, Long separationId) {
         log.debug("getSampleBySeparationId({}, {})", subjectKey, separationId);
-        Set<String> subjects = getReaderSet(subjectKey);
-        return sampleCollection.findOne("{objectiveSamples.pipelineRuns.results.results.id:#, readers:{$in:#}}", separationId, subjects).as(Sample.class);
+        if (subjectKey==null) {
+            return sampleCollection.findOne("{objectiveSamples.pipelineRuns.results.results.id:#}", separationId).as(Sample.class);
+        }
+        else {
+            Set<String> subjects = getReaderSet(subjectKey);
+            return sampleCollection.findOne("{objectiveSamples.pipelineRuns.results.results.id:#, readers:{$in:#}}", separationId, subjects).as(Sample.class);
+        }
     }
 
     public NeuronSeparation getNeuronSeparation(String subjectKey, Long separationId) throws Exception {
@@ -2165,6 +2191,37 @@ public class DomainDAO {
         return save(subjectKey, release);
     }
 
+    /**
+     * Sum the disk space usage of all the samples in the given data set, and cache it within the corresponding DataDet object.
+     * @param dataSetIdentifier unique identifier of the data set to update
+     * @throws Exception 
+     */
+    public void updateDataSetDiskspaceUsage(String dataSetIdentifier) throws Exception {
+
+        log.debug("updateDataSetDiskspaceUsage({})", dataSetIdentifier);
+        
+        Aggregate.ResultsIterator<Long> results = sampleCollection.aggregate("{$match: {\"dataSet\": \"" + dataSetIdentifier + "\"}}")
+                .and("{$group: {_id:\"sum\",count:{$sum:\"$diskSpaceUsage\"}}}").map(new ResultHandler<Long>() {
+                    @Override
+                    public Long map(DBObject result) {
+                        log.trace("Got result: {}", result);
+                        return (Long)result.get("count");
+                    }
+                });
+
+        Long usage = 0L;
+        if (results.hasNext()) {
+            usage = results.next();
+        }
+        
+        log.info("Calculated usage for {} = {} bytes", dataSetIdentifier, usage);
+
+        WriteResult wr = dataSetCollection.update("{identifier:#}", dataSetIdentifier).with("{$set: {\"diskSpaceUsage\":#}}", usage);
+        if (wr.getN() != 1) {
+            throw new Exception("Could not update disk space usage for DataSet " +dataSetIdentifier);
+        }
+    }
+    
     public static void main(String[] args) throws Exception {
         
         String MONGO_SERVER_URL = "dev-mongodb";

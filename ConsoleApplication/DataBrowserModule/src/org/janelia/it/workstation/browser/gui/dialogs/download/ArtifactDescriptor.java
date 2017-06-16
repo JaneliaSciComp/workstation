@@ -8,12 +8,14 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -21,42 +23,96 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * domain object. For example, the LSMs relative to a sample, or the object itself. 
  * 
  * It also describes a set of file types of interest for that resource. For example, the MIPs, or
- * the lossless stack.
+ * the loss-less stack.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 abstract class ArtifactDescriptor {
 
-    private List<FileType> fileTypes = new ArrayList<>();
-        
-    public void setFileTypes(List<FileType> fileTypes) {
-        this.fileTypes = fileTypes;
+    private List<FileType> selectedFileTypes = new ArrayList<>();
+       
+    public void setSelectedFileTypes(List<FileType> selectedFileTypes) {
+        this.selectedFileTypes = selectedFileTypes;
     }
 
-    public List<FileType> getFileTypes() {
-        return fileTypes;
+    /**
+     * The file types that the user has selected.
+     * @return
+     */
+    public List<FileType> getSelectedFileTypes() {
+        return selectedFileTypes;
     }
 
+    /**
+     * The microscope objective, for filtering. May be null if not relevant.
+     * @return
+     */
+    public abstract String getObjective();
+
+    /**
+     * The anatomical area, for filtering. May be null if not relevant.
+     * @return
+     */
+    public abstract String getArea();
+
+    /**
+     * Is this artifact aligned, for filtering. May be null if not relevant.
+     * @return
+     */
+    public abstract boolean isAligned();
+    
+    /**
+     * Maps the source object to a set of objects described by the arfifact descriptor.
+     * For example, this might take a Sample and return a set of LSMs.
+     * @param sourceObject
+     * @return
+     * @throws Exception
+     */
     public abstract List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception;
     
-    public abstract List<Object> getFileSources(DomainObject sourceObject) throws Exception;
+    /**
+     * Gets all the file sources from the source object.
+     * @param sourceObject
+     * @return
+     * @throws Exception
+     */
+    public abstract List<HasFiles> getFileSources(DomainObject sourceObject) throws Exception;
+    
 }
 
 class SelfArtifactDescriptor extends ArtifactDescriptor {
 
+    // Empty constructor needed for JSON deserialization
     public SelfArtifactDescriptor() {
     }
-    
+
+    public String getObjective() {
+        return null;
+    }
+
+    public String getArea() {
+        return null;
+    }
+
+    @JsonIgnore
+    public boolean isAligned() {
+        return false;
+    }
+
+    @JsonIgnore
     public List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception {
         List<DomainObject> objects = new ArrayList<>();
         objects.add(sourceObject);
         return objects;
     }
-    
-    public List<Object> getFileSources(DomainObject sourceObject) throws Exception {
-        List<Object> objects = new ArrayList<>();
-        objects.add(sourceObject);
+
+    @JsonIgnore
+    public List<HasFiles> getFileSources(DomainObject sourceObject) throws Exception {
+        List<HasFiles> objects = new ArrayList<>();
+        if (sourceObject instanceof HasFiles) {
+            objects.add((HasFiles)sourceObject);
+        }
         return objects;
     }
     
@@ -79,52 +135,73 @@ class SelfArtifactDescriptor extends ArtifactDescriptor {
 class LSMArtifactDescriptor extends ArtifactDescriptor {
 
     private String objective;
+    private String area;
 
+    // Empty constructor needed for JSON deserialization
     public LSMArtifactDescriptor() {
     }
     
-    public LSMArtifactDescriptor(String objective) {
+    public LSMArtifactDescriptor(String objective, String area) {
         this.objective = objective;
-    }
-
-    public void setObjective(String objective) {
-        this.objective = objective;
+        this.area = area;
     }
 
     public String getObjective() {
         return objective;
     }
 
+    public String getArea() {
+        return area;
+    }
+
+    @JsonIgnore
+    public boolean isAligned() {
+        return false;
+    }
+
+    @JsonIgnore
     public List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception {
         List<DomainObject> objects = new ArrayList<>();
         if (sourceObject instanceof Sample) {
             Sample sample = (Sample)sourceObject;
             List<Reference> refs = new ArrayList<>();
-            for(SampleTile tile : sample.getObjectiveSample(objective).getTiles()) {
-                refs.addAll(tile.getLsmReferences());
+            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
+            if (objectiveSample!=null) {
+                for(SampleTile tile : objectiveSample.getTiles()) {
+                    if (StringUtils.areEqual(tile.getAnatomicalArea(), area)) {
+                        refs.addAll(tile.getLsmReferences());
+                    }
+                }
             }
-            for (LSMImage lsm : DomainMgr.getDomainMgr().getModel().getDomainObjectsAs(LSMImage.class, refs)) {
-                objects.add(lsm);
+            if (!refs.isEmpty()) {
+                for (LSMImage lsm : DomainMgr.getDomainMgr().getModel().getDomainObjectsAs(LSMImage.class, refs)) {
+                    objects.add(lsm);
+                }
             }
         }
         return objects;
     }
-    
-    public List<Object> getFileSources(DomainObject sourceObject) throws Exception {
-        List<Object> objects = new ArrayList<>();
-        objects.addAll(getDescribedObjects(sourceObject));
+
+    @JsonIgnore
+    public List<HasFiles> getFileSources(DomainObject sourceObject) throws Exception {
+        List<HasFiles> objects = new ArrayList<>();
+        for(DomainObject describedObject : getDescribedObjects(sourceObject))
+        if (describedObject instanceof HasFiles) {
+            objects.add((HasFiles)describedObject);
+        }
         return objects;
     }
     
     @Override
     public String toString() {
-        return objective + " Original LSM Images";
+        return objective + " Original LSM Images ("+area+")";
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((area == null) ? 0 : area.hashCode());
         result = prime * result + ((objective == null) ? 0 : objective.hashCode());
         return result;
     }
@@ -138,6 +215,12 @@ class LSMArtifactDescriptor extends ArtifactDescriptor {
         if (getClass() != obj.getClass())
             return false;
         LSMArtifactDescriptor other = (LSMArtifactDescriptor) obj;
+        if (area == null) {
+            if (other.area != null)
+                return false;
+        }
+        else if (!area.equals(other.area))
+            return false;
         if (objective == null) {
             if (other.objective != null)
                 return false;
@@ -146,55 +229,80 @@ class LSMArtifactDescriptor extends ArtifactDescriptor {
             return false;
         return true;
     }
+    
 }
 
 class ResultArtifactDescriptor extends ArtifactDescriptor {
-    
-    private ResultDescriptor resultDescriptor;
 
+    private String objective;
+    private String area;
+    private String resultName;
+    private boolean aligned;
+
+    // Empty constructor needed for JSON deserialization
     public ResultArtifactDescriptor() {
     }
     
-    public ResultArtifactDescriptor(ResultDescriptor resultDescriptor) {
-        this.resultDescriptor = resultDescriptor;
+    public ResultArtifactDescriptor(String objective, String area, String resultName, boolean aligned) {
+        this.objective = objective;
+        this.area = area;
+        this.resultName = resultName;
+        this.aligned = aligned;
     }
 
-    public void setResultDescriptor(ResultDescriptor resultDescriptor) {
-        this.resultDescriptor = resultDescriptor;
+    public String getObjective() {
+        return objective;
+    }
+    
+    public String getArea() {
+        return area;
     }
 
-    public ResultDescriptor getResultDescriptor() {
-        return resultDescriptor;
+    public String getResultName() {
+        return resultName;
     }
 
+    public boolean isAligned() {
+        return aligned;
+    }
+
+    @JsonIgnore
     public List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception {
         List<DomainObject> objects = new ArrayList<>();
         objects.add(sourceObject);
         return objects;
     }
-    
-    public List<Object> getFileSources(DomainObject sourceObject) throws Exception {
-        List<Object> objects = new ArrayList<>();
+
+    @JsonIgnore
+    public List<HasFiles> getFileSources(DomainObject sourceObject) throws Exception {
+        List<HasFiles> objects = new ArrayList<>();
         if (sourceObject instanceof Sample) {
             Sample sample = (Sample)sourceObject;
-            HasFiles result = SampleUtils.getResult(sample, resultDescriptor);
-            if (result!=null) {
-                objects.add(result);
-            }
+            objects.addAll(SampleUtils.getMatchingResults(sample, objective, area, resultName, null));
         }
         return objects;
     }
-    
+
     @Override
     public String toString() {
-        return resultDescriptor.toString();
+        String suffix = " ("+area+")";
+        StringBuilder sb = new StringBuilder();
+        sb.append(objective);
+        sb.append(" ");
+        sb.append(resultName);
+        if (!resultName.endsWith(suffix)) {
+            sb.append(suffix);
+        }
+        return sb.toString();
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((resultDescriptor == null) ? 0 : resultDescriptor.hashCode());
+        result = prime * result + ((area == null) ? 0 : area.hashCode());
+        result = prime * result + ((objective == null) ? 0 : objective.hashCode());
+        result = prime * result + ((resultName == null) ? 0 : resultName.hashCode());
         return result;
     }
 
@@ -207,12 +315,25 @@ class ResultArtifactDescriptor extends ArtifactDescriptor {
         if (getClass() != obj.getClass())
             return false;
         ResultArtifactDescriptor other = (ResultArtifactDescriptor) obj;
-        if (resultDescriptor == null) {
-            if (other.resultDescriptor != null)
+        if (area == null) {
+            if (other.area != null)
                 return false;
         }
-        else if (!resultDescriptor.equals(other.resultDescriptor))
+        else if (!area.equals(other.area))
+            return false;
+        if (objective == null) {
+            if (other.objective != null)
+                return false;
+        }
+        else if (!objective.equals(other.objective))
+            return false;
+        if (resultName == null) {
+            if (other.resultName != null)
+                return false;
+        }
+        else if (!resultName.equals(other.resultName))
             return false;
         return true;
     }
+    
 }

@@ -3,6 +3,7 @@ package org.janelia.it.jacs.model.domain.support;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -411,6 +412,7 @@ public class DomainUtils {
 
     /**
      * Returns the subject name part of a given subject key. For example, for "group:flylight", this returns "flylight".
+     * For convenience, if you pass in something without a colon, like "flylight", it returns "flylight".
      * @param subjectKey
      * @return
      */
@@ -418,7 +420,11 @@ public class DomainUtils {
         if (subjectKey == null) {
             return null;
         }
-        return subjectKey.substring(subjectKey.indexOf(':') + 1);
+        int i = subjectKey.indexOf(':');
+        if (i<0) {
+            return subjectKey;
+        }
+        return subjectKey.substring(i + 1);
     }
 
     /**
@@ -504,12 +510,17 @@ public class DomainUtils {
         return urlSb.length()>0 ? urlSb.toString() : null;
     }
     
-    public static void setFilepath(HasRelativeFiles hasFiles, FileType fileType, String filepath) {
+    public static void setFilepath(HasFiles hasFiles, FileType fileType, String filepath) {
         if (filepath==null) {
             hasFiles.getFiles().remove(fileType);
         }
         else {
-            hasFiles.getFiles().put(fileType, getRelativeFilename(hasFiles, filepath));    
+            if (hasFiles instanceof HasRelativeFiles) {
+                hasFiles.getFiles().put(fileType, getRelativeFilename((HasRelativeFiles)hasFiles, filepath)); 
+            }
+            else {
+                hasFiles.getFiles().put(fileType, filepath);
+            }
         }
     }
 
@@ -894,5 +905,37 @@ public class DomainUtils {
         }
         
         return false;
+    }
+
+    
+    private static final DecimalFormat df = new DecimalFormat("0.00");
+    public static String formatBytesForHumans(Long bytes) {
+        if (bytes==null) {
+            return "";
+        }
+        double value = bytes;
+        String units = "Bytes";
+        if (value>1024) {
+            value /= 1024;
+            units = "KB";
+        }
+        if (value>1024) {
+            value /= 1024;
+            units = "MB";
+        }
+        if (value>1024) {
+            value /= 1024;
+            units = "GB";
+        }
+        if (value>1024) {
+            value /= 1024;
+            units = "TB";
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append(df.format(value));
+        sb.append(" ");
+        sb.append(units);
+        return sb.toString();
     }
 }

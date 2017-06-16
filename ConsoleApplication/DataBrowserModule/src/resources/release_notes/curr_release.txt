@@ -1,11 +1,11 @@
-// 5.12
+// 5.15
 
 Workstation Browser
-* The "Download" dialog is now a wizard, allowing download of multiple file types at once 
-* Details of pipeline errors now appear in Data Inspector when the error is selected
-* Fixed error popup when marking sample for reprocessing
-* Fixed issues with the "Sample Compression Strategy" feature
+* Each tab now maintains its own Back/Forward history 
+* You can now navigate backwards to unsaved filters using the Back button
+* LSM attributes (like "Objective" and "Num Channels") can be specified in file names when using the Download Wizard 
 
-MouseLight
-* Import/export color model added
-* Merge performance improved somewhat
+Large Volume Viewer
+* Fixed issue with progress bar dialog for long running operations
+* Better error dialog when attempting to export neurons to read-only location
+
