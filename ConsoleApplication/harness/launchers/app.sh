@@ -88,8 +88,7 @@ fi
 
 if [ -n "$jdkhome" -a \! -d "$jdkhome" -a -d "$progdir/../$jdkhome" ]; then
     # #74333: permit jdkhome to be defined as relative to app dir
-    # jdkhome="$progdir/../$jdkhome"
-    --jdkhome '"`/usr/libexec/java_home -v 1.8`"' \
+    jdkhome="$progdir/../$jdkhome"
 fi
 
 readClusters() {
