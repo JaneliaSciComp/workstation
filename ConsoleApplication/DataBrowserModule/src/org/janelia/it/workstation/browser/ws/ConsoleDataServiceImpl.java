@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
+import org.hibernate.HibernateException;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasImageStack;
@@ -48,6 +49,7 @@ public class ConsoleDataServiceImpl {
     private static final Logger log = LoggerFactory.getLogger(ConsoleDataServiceImpl.class);
 
     private DomainModel model = DomainMgr.getDomainMgr().getModel();
+    private long dummyId = 0;
     
     public int reservePort(String clientName) {
         int port = ExternalClientMgr.getInstance().addExternalClient(clientName);
@@ -267,8 +269,16 @@ public class ConsoleDataServiceImpl {
             return PathTranslator.translatePathsToCurrentPlatform(entity);
         }
     }
-    
+
     private Long getNewId() {
-        return TimebasedIdentifierGenerator.generateIdList(1).get(0);
+        if (true) return dummyId++;
+        try {
+            return TimebasedIdentifierGenerator.generateIdList(1).get(0);
+        }
+        catch (HibernateException e) {
+            log.error("Error generating a real GUID, falling back on dummy id", e);
+            return dummyId++;
+        }
+        
     }
 }
