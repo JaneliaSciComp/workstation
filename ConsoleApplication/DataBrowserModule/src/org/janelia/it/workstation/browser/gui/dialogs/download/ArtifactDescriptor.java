@@ -21,8 +21,6 @@ import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -98,10 +96,12 @@ class SelfArtifactDescriptor extends ArtifactDescriptor {
     public SelfArtifactDescriptor() {
     }
 
+    @JsonIgnore
     public String getObjective() {
         return null;
     }
 
+    @JsonIgnore
     public String getArea() {
         return null;
     }
