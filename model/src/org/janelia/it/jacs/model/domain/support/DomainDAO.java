@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.mongodb.*;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -1356,7 +1355,6 @@ public class DomainDAO {
         log.debug("getSamplesByDataSet({})", dataset);
         List<Sample> samples = toList(sampleCollection.find("{dataSet:#}", dataset).sort("{"+sortBy+":1}").skip(pageSize * (pageNumber - 1)).limit(pageSize).as(Sample.class));
             return samples;
-        //return toList(sampleCollection.find("{dataSet:#}", dataset).as(Sample.class));
     }
 
     public boolean isAdmin( String user){
@@ -1367,13 +1365,21 @@ public class DomainDAO {
                 return false;
     }
 
-    public List<Sample> getRecentSamples() {
+    public List<Sample> getRecentSamples(String subjectKey) {
         log.debug("getRecentSamples({})");
-        return toList(sampleCollection.find().sort("{creationDate: -1}").limit(100).as(Sample.class));
+        Set<String> subjects = getReaderSet(subjectKey);
+        if (subjects == null || subjects.contains(Subject.ADMIN_KEY)) {
+            return toList(sampleCollection.find().sort("{creationDate: -1}").limit(100).as(Sample.class));
+        }
+        else {
+            return toList(sampleCollection.find("{readers:{$in:#}}", subjects).sort("{creationDate: -1}").limit(100).as(Sample.class));
+        }
     }
+
 
     public HashMap<Subject, Integer> getGroupNames(){
         log.debug("getGroupNames");
+        //try writing with aggregation
         HashMap<Subject,Integer> hmap = new HashMap<>();
         List<Subject> c = subjectCollection.distinct("userGroupRoles.groupKey").as(Subject.class);
         for (int i = 0; i < c.size(); i++) {
@@ -1383,17 +1389,15 @@ public class DomainDAO {
 
         return hmap;
     }
-
-    public  HashMap<String, List<String>> getDataSetsbyGroupId (String groupId){
+    //guava multimap
+    public  HashMap<String, String> getDataSetsbyGroupName (String groupName){
         log.debug("getDatasets");
-        String refstr = "group:" + groupId;
-        HashMap<String, List<String>> hmap = new HashMap<>();
+        String refstr = "group:" + groupName;
+        HashMap<String, String> hmap = new HashMap<>();
 
         for (DataSet dataSet : getDomainObjects(refstr, DataSet.class)) {
-            List<String> roles = new ArrayList<>();
-            if(groupId.equals("admin")){
-                roles.add("Admin");
-                hmap.put(dataSet.getName(),roles );
+            if(groupName.equals("admin")){
+                hmap.put(dataSet.getName(),"admin" );
             }
             else{
                 String owner = dataSet.getOwnerKey();
@@ -1401,15 +1405,14 @@ public class DomainDAO {
                 Set<String> readers = dataSet.getReaders();
 
                 if (owner.contains(refstr)){
-                    roles.add("Owner");
+                    hmap.put(dataSet.getName(), "Owner");
                 }
                 else if (writers.contains(refstr)){
-                    roles.add("Writer");
+                    hmap.put(dataSet.getName(), "Writer");
                 }
                 else if (readers.contains(refstr)){
-                    roles.add("Reader");
+                    hmap.put(dataSet.getName(), "Reader");
                 }
-                hmap.put(dataSet.getName(), roles);
             }
         }
         return hmap;

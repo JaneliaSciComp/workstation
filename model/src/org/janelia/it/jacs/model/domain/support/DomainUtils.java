@@ -349,9 +349,8 @@ public class DomainUtils {
         Reflections reflections = new Reflections(DOMAIN_OBJECT_PACKAGE_NAME);
         Set<Class<?>> ann1 = reflections.getTypesAnnotatedWith(SearchType.class);
         Set<Class<?>> ann2 = reflections.getTypesAnnotatedWith(MongoMapped.class);
-
+// replace ann1 with getSearchClasses
         for (Class<?> searchClass : ann1) {
-            searchClasses.add((Class<? extends DomainObject>) searchClass);
             log.trace("Getting search attributes for class {}", searchClass.getSimpleName());
             // Look for annotated fields
             for (Field field : ReflectionUtils.getFields(searchClass)) {
@@ -378,7 +377,6 @@ public class DomainUtils {
             }
 
             for (Class<?> searchClass2 : ann2) {
-                searchClasses.add((Class<? extends DomainObject>) searchClass2);
                 log.trace("Getting search attributes for class {}", searchClass2.getSimpleName());
                 // Look for annotated fields
                 for (Field field : ReflectionUtils.getFields(searchClass2)) {
