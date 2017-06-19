@@ -1,26 +1,36 @@
 package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
+import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * An artifact descriptor describes a particular type of resource that is relative to a single 
- * domain object. For example, the LSMs relative to a sample, or the object itself. 
+ * domain object. For example, the LSMs relative to a Sample, or the post-processing results
+ * for a Sample. 
  * 
  * It also describes a set of file types of interest for that resource. For example, the MIPs, or
  * the loss-less stack.
@@ -29,7 +39,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  */
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 abstract class ArtifactDescriptor {
-
+    
     private List<FileType> selectedFileTypes = new ArrayList<>();
        
     public void setSelectedFileTypes(List<FileType> selectedFileTypes) {
@@ -72,7 +82,8 @@ abstract class ArtifactDescriptor {
     public abstract List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception;
     
     /**
-     * Gets all the file sources from the source object.
+     * Gets all the file sources from the source object. For example, this might return 
+     * a SampleAlignmentResult from a Sample.
      * @param sourceObject
      * @return
      * @throws Exception
@@ -162,7 +173,13 @@ class LSMArtifactDescriptor extends ArtifactDescriptor {
     @JsonIgnore
     public List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception {
         List<DomainObject> objects = new ArrayList<>();
-        if (sourceObject instanceof Sample) {
+        if (sourceObject instanceof LSMImage) {
+            LSMImage lsm = (LSMImage)sourceObject;
+            if (objective.equals(lsm.getObjective()) && area.equals(lsm.getAnatomicalArea())) {
+                objects.add(sourceObject);
+            }
+        }
+        else if (sourceObject instanceof Sample) {
             Sample sample = (Sample)sourceObject;
             List<Reference> refs = new ArrayList<>();
             ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
@@ -230,6 +247,124 @@ class LSMArtifactDescriptor extends ArtifactDescriptor {
         return true;
     }
     
+}
+
+
+class NeuronFragmentDescriptor extends ArtifactDescriptor {
+
+    private String objective;
+    private String area;
+    private boolean aligned;
+
+    // Empty constructor needed for JSON deserialization
+    public NeuronFragmentDescriptor() {
+    }
+    
+    public NeuronFragmentDescriptor(String objective, String area, boolean aligned) {
+        this.objective = objective;
+        this.area = area;
+        this.aligned = aligned;
+    }
+
+    public String getObjective() {
+        return objective;
+    }
+
+    public String getArea() {
+        return area;
+    }
+
+    @JsonIgnore
+    public boolean isAligned() {
+        return aligned;
+    }
+
+    @JsonIgnore
+    public List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception {
+        List<DomainObject> objects = new ArrayList<>();
+        if (sourceObject instanceof NeuronFragment) {
+            NeuronFragment neuron = (NeuronFragment)sourceObject;
+
+            Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, neuron.getSample().getTargetId());
+            if (sample!=null) {
+                List<NeuronSeparation> results = sample.getResultsById(NeuronSeparation.class, neuron.getSeparationId());
+                if (!results.isEmpty()) {
+                    NeuronSeparation separation = results.get(0);
+                                                            
+                    PipelineResult parentResult = separation.getParentResult();
+                    boolean alignedResult = (parentResult instanceof SampleAlignmentResult);
+                    if (alignedResult==aligned) {
+
+                        ObjectiveSample objectiveSample = parentResult.getParentRun().getParent();
+                        if (!objective.equals(objectiveSample.getObjective())) {
+                            return Collections.emptyList();
+                        }
+                        
+                        if (parentResult instanceof HasAnatomicalArea) {
+                            HasAnatomicalArea hasAA = (HasAnatomicalArea)parentResult;
+                            if (!area.equals(hasAA.getAnatomicalArea())) {
+                                return Collections.emptyList();
+                            }
+                            return Arrays.asList(sourceObject);
+                        }
+                    }
+                    
+                }
+            }
+        }
+        return objects;
+    }
+
+    @JsonIgnore
+    public List<HasFiles> getFileSources(DomainObject sourceObject) throws Exception {
+        List<HasFiles> objects = new ArrayList<>();
+        for(DomainObject describedObject : getDescribedObjects(sourceObject))
+        if (describedObject instanceof HasFiles) {
+            objects.add((HasFiles)describedObject);
+        }
+        return objects;
+    }
+    
+    @Override
+    public String toString() {
+        return objective + " "+(aligned?"Aligned":"Unaligned")+" Neuron Fragments ("+area+")";
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (aligned ? 1231 : 1237);
+        result = prime * result + ((area == null) ? 0 : area.hashCode());
+        result = prime * result + ((objective == null) ? 0 : objective.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        NeuronFragmentDescriptor other = (NeuronFragmentDescriptor) obj;
+        if (aligned != other.aligned)
+            return false;
+        if (area == null) {
+            if (other.area != null)
+                return false;
+        }
+        else if (!area.equals(other.area))
+            return false;
+        if (objective == null) {
+            if (other.objective != null)
+                return false;
+        }
+        else if (!objective.equals(other.objective))
+            return false;
+        return true;
+    }
 }
 
 class ResultArtifactDescriptor extends ArtifactDescriptor {
