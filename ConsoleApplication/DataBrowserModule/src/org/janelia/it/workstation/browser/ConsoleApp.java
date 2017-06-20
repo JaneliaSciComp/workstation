@@ -14,9 +14,7 @@ import org.janelia.it.workstation.browser.api.LocalPreferenceMgr;
 import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
-import org.janelia.it.workstation.browser.gui.dialogs.GiantFiberSearchDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
-import org.janelia.it.workstation.browser.gui.dialogs.PatternSearchDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.ReleaseNotesDialog;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
@@ -54,8 +52,6 @@ public class ConsoleApp {
     private final ImageCache imageCache;
     
     // Lazily initialized
-    private PatternSearchDialog patternSearchDialog;
-    private GiantFiberSearchDialog fiberSearchDialog;
     private ReleaseNotesDialog releaseNotesDialog;
     
     public ConsoleApp() {
@@ -143,8 +139,6 @@ public class ConsoleApp {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    patternSearchDialog = new PatternSearchDialog();
-                    fiberSearchDialog = new GiantFiberSearchDialog();
                     releaseNotesDialog = new ReleaseNotesDialog();
                     releaseNotesDialog.showIfFirstRunSinceUpdate();
                 }
@@ -259,14 +253,6 @@ public class ConsoleApp {
     
     public ReleaseNotesDialog getReleaseNotesDialog() {
         return releaseNotesDialog;
-    }
-
-    public PatternSearchDialog getPatternSearchDialog() {
-        return patternSearchDialog;
-    }
-
-    public GiantFiberSearchDialog getGiantFiberSearchDialog() {
-        return fiberSearchDialog;
     }
     
     @Subscribe
