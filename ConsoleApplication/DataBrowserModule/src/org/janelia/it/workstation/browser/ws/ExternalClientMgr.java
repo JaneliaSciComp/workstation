@@ -1,20 +1,23 @@
 package org.janelia.it.workstation.browser.ws;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.MapMaker;
 import com.google.common.eventbus.Subscribe;
 
 /**
@@ -35,15 +38,24 @@ public class ExternalClientMgr {
     }
     
 	private final static Logger log = LoggerFactory.getLogger(ExternalClientMgr.class);
-
+	private static final int MAX_CACHE_SIZE = 100;
+	
 	private List<ExternalClient> externalClients = new ArrayList<>();
     private int portOffset = 0;
     private int portCounter = 1;
-	
 
-    Map<Long,NeuronSeparation> separationCache;
+    // TODO: These caches should really respect the DomainModel events, like invalidation
+    private Map<Long,Entity> separationCache;
+    private Map<Long,Entity> sampleCache;
+    private Map<Long,Entity> imageCache;
+    
+    private DomainToEntityTranslator translator;
+    
     public ExternalClientMgr() {
-        this.separationCache = new MapMaker().weakValues().makeMap();
+        this.translator = new DomainToEntityTranslator();
+        this.separationCache = new MaxSizeHashMap<>(MAX_CACHE_SIZE);
+        this.sampleCache = new MaxSizeHashMap<>(MAX_CACHE_SIZE);
+        this.imageCache = new MaxSizeHashMap<>(MAX_CACHE_SIZE);
     }
     
     public void setPortOffset(int portOffset) {
@@ -104,8 +116,6 @@ public class ExternalClientMgr {
         }
     }
     
-    // TODO: move these elsewhere?
-    
     @Subscribe
     public void ontologySelected(DomainObjectSelectionEvent event) {
 
@@ -133,13 +143,47 @@ public class ExternalClientMgr {
     }
     
     public void sendNeuronSeparationRequested(NeuronSeparation separation) {
-        separationCache.put(separation.getId(), separation);
+        separationCache.put(separation.getId(), translator.createSeparationEntity(separation));
+        sampleCache.put(separation.getId(), translator.createSampleEntity(separation.getParentRun().getParent().getParent()));
         Map<String, Object> parameters = new LinkedHashMap<>();
         parameters.put("entityId", separation.getId());
         ExternalClientMgr.getInstance().sendMessageToExternalClients("entityViewRequested", parameters);
     }
 
-    public NeuronSeparation getNeuronSeparation(Long separationId) {
-        return separationCache.get(separationId);
+    public void sendImageRequested(PipelineResult result, FileType fileType) {
+        imageCache.put(result.getId(), translator.createImageEntity(result, fileType));
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("entityId", result.getId());
+        ExternalClientMgr.getInstance().sendMessageToExternalClients("entityViewRequested", parameters);
+    }
+    
+    public Entity getCachedEntity(Long entityId) {
+        Entity entity = separationCache.get(entityId);
+        if (entity!=null) return entity;
+        entity = imageCache.get(entityId);
+        return entity;
+    }
+    
+    public Entity getCachedSampleForSeparation(Long separationId) {
+        return sampleCache.get(separationId);
+    }
+    
+    private class MaxSizeHashMap<K, V> extends HashMap<K, V> {
+
+        private final int max;
+
+        public MaxSizeHashMap(int max) {
+            this.max = max;
+        }
+
+        @Override
+        public V put(K key, V value) {
+            if (size() >= max && !containsKey(key)) {
+                 return null;
+            } 
+            else {
+                 return super.put(key, value);
+            }
+        }
     }
 }
