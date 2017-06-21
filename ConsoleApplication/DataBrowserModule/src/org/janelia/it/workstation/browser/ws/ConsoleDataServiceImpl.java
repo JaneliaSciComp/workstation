@@ -66,8 +66,15 @@ public class ConsoleDataServiceImpl {
 
         if (StateMgr.getStateMgr().getCurrentOntologyId() != null) {
             parameters.clear();
-            parameters.put("rootId", StateMgr.getStateMgr().getCurrentOntologyId());
-            client.sendMessage("ontologySelected", parameters);
+            // Make sure current user has access to the last selected ontology
+            Long currentOntologyId = StateMgr.getStateMgr().getCurrentOntologyId();
+            if (currentOntologyId!=null) {
+                Ontology ontology = model.getDomainObject(Ontology.class, currentOntologyId);
+                if (ontology!=null) {
+                    parameters.put("rootId", StateMgr.getStateMgr().getCurrentOntologyId());
+                    client.sendMessage("ontologySelected", parameters);
+                }
+            }
         }
     }
 
@@ -271,7 +278,6 @@ public class ConsoleDataServiceImpl {
     }
 
     private Long getNewId() {
-        if (true) return dummyId++;
         try {
             return TimebasedIdentifierGenerator.generateIdList(1).get(0);
         }
