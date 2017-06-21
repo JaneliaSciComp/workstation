@@ -143,15 +143,15 @@ public class ExternalClientMgr {
     }
     
     public void sendNeuronSeparationRequested(NeuronSeparation separation) {
-        separationCache.put(separation.getId(), translator.createSeparationEntity(separation));
-        sampleCache.put(separation.getId(), translator.createSampleEntity(separation.getParentRun().getParent().getParent()));
+        separationCache.put(separation.getId(), translator.getSeparationEntity(separation));
+        sampleCache.put(separation.getId(), translator.getSampleEntity(separation.getParentRun().getParent().getParent()));
         Map<String, Object> parameters = new LinkedHashMap<>();
         parameters.put("entityId", separation.getId());
         ExternalClientMgr.getInstance().sendMessageToExternalClients("entityViewRequested", parameters);
     }
 
     public void sendImageRequested(PipelineResult result, FileType fileType) {
-        imageCache.put(result.getId(), translator.createImageEntity(result, fileType));
+        imageCache.put(result.getId(), translator.getImageEntity(result, fileType));
         Map<String, Object> parameters = new LinkedHashMap<>();
         parameters.put("entityId", result.getId());
         ExternalClientMgr.getInstance().sendMessageToExternalClients("entityViewRequested", parameters);

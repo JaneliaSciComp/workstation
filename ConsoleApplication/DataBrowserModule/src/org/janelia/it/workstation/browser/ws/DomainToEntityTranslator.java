@@ -6,6 +6,7 @@ import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasImageStack;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.sample.CuratedNeuron;
@@ -38,17 +39,17 @@ public class DomainToEntityTranslator {
     private DomainModel model = DomainMgr.getDomainMgr().getModel();
     private long dummyId = 0;
 
-    public Entity createOntologyEntity(Long ontologyId) throws Exception {
+    public Entity getOntologyEntity(Long ontologyId) throws Exception {
         Ontology ontology = model.getDomainObject(Ontology.class, ontologyId);
         if (ontology==null) return null;
-        return createOntologyEntity(ontology);
+        return getOntologyEntity(ontology);
     }
     
-    public Entity createOntologyEntity(Ontology ontology) {
-        return createOntologyEntity(ontology.getOwnerKey(), ontology);
+    public Entity getOntologyEntity(Ontology ontology) {
+        return getOntologyEntity(ontology.getOwnerKey(), ontology);
     }
     
-    private Entity createOntologyEntity(String ownerKey, OntologyTerm ontologyTerm) {
+    private Entity getOntologyEntity(String ownerKey, OntologyTerm ontologyTerm) {
         
         Entity termEntity = new Entity();
         
@@ -68,7 +69,7 @@ public class DomainToEntityTranslator {
         if (ontologyTerm.hasChildren()) {
             int index = 0;
             for(OntologyTerm childTerm : ontologyTerm.getTerms()) {
-                Entity childEntity = createOntologyEntity(ownerKey, childTerm);
+                Entity childEntity = getOntologyEntity(ownerKey, childTerm);
                 EntityData ed = termEntity.addChildEntity(childEntity, EntityConstants.ATTRIBUTE_ONTOLOGY_ELEMENT);
                 ed.setId(getNewId());
                 ed.setOrderIndex(index++);
@@ -78,7 +79,7 @@ public class DomainToEntityTranslator {
         return termEntity;
     }
     
-    public Entity createSeparationEntity(NeuronSeparation separation) {
+    public Entity getSeparationEntity(NeuronSeparation separation) {
 
         PipelineResult result = separation.getParentResult();
         String vllFilepath = DomainUtils.getFilepath(result, FileType.VisuallyLosslessStack);
@@ -87,6 +88,7 @@ public class DomainToEntityTranslator {
         
         Entity separationEntity = new Entity();
         separationEntity.setId(separation.getId());
+        separationEntity.setOwnerKey(separation.getParentRun().getParent().getParent().getOwnerKey());
         separationEntity.setName(separation.getName());
         separationEntity.setEntityTypeName(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
         setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_FILE_PATH, separation.getFilepath());
@@ -131,22 +133,42 @@ public class DomainToEntityTranslator {
         return translatePaths(separationEntity);
     }
     
-    public Entity createSampleEntity(Sample sample) {
+    public Entity getSampleEntity(Sample sample) {
         Entity sampleEntity = new Entity();
         sampleEntity.setId(sample.getId());
+        sampleEntity.setOwnerKey(sample.getOwnerKey());
         sampleEntity.setName(sample.getName());
         sampleEntity.setEntityTypeName(EntityConstants.TYPE_SAMPLE);
         return sampleEntity;
     }
 
-    public Entity createImageEntity(PipelineResult result, FileType fileType) {
+    public Entity getImageEntity(PipelineResult result, FileType fileType) {
+        String filepath = DomainUtils.getFilepath(result, fileType);
         Entity imageEntity = new Entity();
         imageEntity.setId(result.getId());
+        imageEntity.setOwnerKey(result.getParentRun().getParent().getParent().getOwnerKey());
         imageEntity.setName(result.getName());
         imageEntity.setEntityTypeName(EntityConstants.TYPE_IMAGE_3D);
         setValueByAttributeName(imageEntity, EntityConstants.ATTRIBUTE_CHANNEL_SPECIFICATION, getChannelSpec(result));
         setValueByAttributeName(imageEntity, EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION, getOpticalResolution(result));
+        setValueByAttributeName(imageEntity, EntityConstants.ATTRIBUTE_FILE_PATH, filepath);
         return translatePaths(imageEntity);
+    }
+
+    public Entity getAnotationEntity(Annotation annotation) {
+        Entity annotationEntity = new Entity();
+        annotationEntity.setId(annotation.getId());
+        annotationEntity.setOwnerKey(annotation.getOwnerKey());
+        annotationEntity.setName(annotation.getName());
+        annotationEntity.setEntityTypeName(EntityConstants.TYPE_ANNOTATION);
+        setValueByAttributeName(annotationEntity, EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_KEY_ENTITY_ID, annotation.getKeyTerm().getOntologyTermId().toString());
+        if (annotation.getValueTerm()!=null) {
+            setValueByAttributeName(annotationEntity, EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_ENTITY_ID, annotation.getValueTerm().getOntologyTermId().toString());
+        }
+        setValueByAttributeName(annotationEntity, EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_KEY_TERM, annotation.getKey());
+        setValueByAttributeName(annotationEntity, EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM, annotation.getValue());
+        setValueByAttributeName(annotationEntity, EntityConstants.ATTRIBUTE_ANNOTATION_TARGET_ID, annotation.getTarget().getTargetId().toString());
+        return annotationEntity;
     }
     
     private void setValueByAttributeName(Entity entity, String attributeName, String value) {

@@ -1,22 +1,31 @@
 package org.janelia.it.workstation.browser.ws;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBindings;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.browser.util.PathTranslator;
+import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +79,21 @@ public class ConsoleDataServiceImpl {
 
     public Entity createAnnotation(OntologyAnnotation annotation) throws Exception {
         log.info("Create annotation {}", annotation.getKeyString());
+
+        // Only support annotations for neuron fragments
+        NeuronFragment domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(NeuronFragment.class, annotation.getTargetEntityId());
+        
+        if (domainObject!=null) {
+            final ApplyAnnotationAction action = ApplyAnnotationAction.get();
+            Long ontologyId = StateMgr.getStateMgr().getCurrentOntologyId();
+            Long ontologyTermId = annotation.getKeyEntityId();
+            OntologyTermReference ref = new OntologyTermReference(ontologyId, ontologyTermId);
+            OntologyTerm term = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(ref);
+            String value = annotation.getValueString();
+            Annotation savedAnnotation = action.addAnnotation(domainObject, term, value);
+            return translator.getAnotationEntity(savedAnnotation);
+        }
+        
         return null;
     }
 
@@ -80,21 +104,29 @@ public class ConsoleDataServiceImpl {
 
     public Entity[] getAnnotationsForEntity(long entityId) throws Exception {
         log.info("Get annotations for entity {}", entityId);
-        return new Entity[0];
+        return getAnnotationsForEntities(Arrays.asList(entityId).toArray(new Long[1]));
     }
 
     public Entity[] getAnnotationsForEntities(Long[] entityIds) throws Exception {
         log.info("Get annotations for {} entities", entityIds.length);
-        return new Entity[0];
+        List<Entity> annotations = new ArrayList<>(); 
+        for(Long entityId : entityIds) {
+            // Only support annotations for neuron fragments
+            for(Annotation annotation : DomainMgr.getDomainMgr().getModel().getAnnotations(Reference.createFor(NeuronFragment.class, entityId))) {
+                annotations.add(translator.getAnotationEntity(annotation));
+            }
+        }
+        return annotations.toArray(new Entity[annotations.size()]);
     }
 
     public Entity getOntology(long rootId) throws Exception {
         log.info("Get ontology {}", rootId);
-        return translator.createOntologyEntity(rootId);
+        return translator.getOntologyEntity(rootId);
     }
     
     public AnnotationSession getAnnotationSession(long sessionId) throws Exception {
         log.info("Get annotation session {}", sessionId);
+        // Annotation sessions are no longer supported, but this method must still exist for backwards compatibility
         return null;
     }
 
@@ -117,6 +149,7 @@ public class ConsoleDataServiceImpl {
     public Entity getEntityTree(long entityId) throws Exception {
         log.info("Get entity tree {}", entityId);
         Entity entity = ExternalClientMgr.getInstance().getCachedEntity(entityId);
+        EntityUtils.logEntity(entity);
         return entity;
     }
     
@@ -136,7 +169,8 @@ public class ConsoleDataServiceImpl {
         Entity entity = ExternalClientMgr.getInstance().getCachedEntity(entityId);
         
         if (entity==null || !EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT.equals(entity.getEntityTypeName())) {
-         // Only supports getting ancestors of neuron separations
+            // Only supports getting ancestors of neuron separations
+            return null;
         }
         
         if (EntityConstants.TYPE_SAMPLE.equals(type)) {

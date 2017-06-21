@@ -25,7 +25,6 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
-import org.janelia.it.workstation.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadWizardAction;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory;
@@ -158,9 +157,6 @@ public class SampleResultContextMenu extends PopupContextMenu {
     }
 
     protected List<JMenuItem> getWrapObjectItems() {
-        //if (multiple) {
-        //    return Collections.EMPTY_LIST;
-        //}
         return new WrapperCreatorItemFactory().makeWrapperCreatorItems(result);
     }
     
@@ -170,7 +166,9 @@ public class SampleResultContextMenu extends PopupContextMenu {
 
     protected JMenuItem getNeuronAnnotatorItem() {
         final NeuronSeparation separation = result.getLatestSeparationResult();
-        if (separation==null) return null;
+        if (separation==null) {
+            return getNamedActionItem(new OpenInNeuronAnnotatorAction(result));
+        }
         return getNamedActionItem(new OpenInNeuronAnnotatorAction(separation));
     }
         
