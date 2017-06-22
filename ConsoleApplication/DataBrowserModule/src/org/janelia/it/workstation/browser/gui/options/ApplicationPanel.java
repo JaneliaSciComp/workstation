@@ -2,11 +2,9 @@ package org.janelia.it.workstation.browser.gui.options;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -14,10 +12,8 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -25,7 +21,6 @@ import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicProgressBarUI;
@@ -49,8 +44,6 @@ final class ApplicationPanel extends javax.swing.JPanel {
     private final GroupedKeyValuePanel mainPanel;
     private MemorySettingPanel pnlMemorySetting;
     
-    private JComboBox<LookAndFeel> lookAndFeelCombobox;
-
     private JCheckBox showReleaseNotesOnStartup;
     private JRadioButton fileCacheEnabledRadioButton;
     private JRadioButton fileCacheDisabledRadioButton;
@@ -94,37 +87,6 @@ final class ApplicationPanel extends javax.swing.JPanel {
         showReleaseNotesOnStartup.setSelected(ReleaseNotesDialog.isShowReleaseNotes());
         mainPanel.addItem(showReleaseNotesOnStartup);
         
-        // L&F
-        
-        mainPanel.addSeparator("User Interface");
-
-        UIManager.LookAndFeelInfo[] infos = UIManager.getInstalledLookAndFeels();
-
-        lookAndFeelCombobox = new JComboBox<>();
-        lookAndFeelCombobox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                controller.changed();
-            }
-        });
-
-        JPanel lafPanel = new JPanel();
-        lafPanel.setLayout(new BoxLayout(lafPanel, BoxLayout.X_AXIS));
-        lookAndFeelCombobox.setAlignmentX(Component.LEFT_ALIGNMENT);
-        lafPanel.add(lookAndFeelCombobox);
-        lafPanel.add(new JLabel(" (requires restart)"));
-
-        DefaultComboBoxModel<LookAndFeel> model = (DefaultComboBoxModel<LookAndFeel>)lookAndFeelCombobox.getModel();
-        String lafClassName = (String)ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
-        for (UIManager.LookAndFeelInfo info : infos) {
-            String name = info.getName() + (info.getName().startsWith("Synthetica") ? "" : " (Unsupported)");
-            LookAndFeel laf = new LookAndFeel(info.getClassName(), name);
-            model.addElement(laf);
-            if (lafClassName.equals(laf.getClassName())) {
-                model.setSelectedItem(laf);
-            }
-        }
-        mainPanel.addItem("Look and Feel", lafPanel);
-
         // Memory
 
         mainPanel.addSeparator("Memory Management");
@@ -145,25 +107,6 @@ final class ApplicationPanel extends javax.swing.JPanel {
         JPanel fileCachePanel = buildFileCachePanel();
         mainPanel.addItem("Local Disk Cache", fileCachePanel);
         
-    }
-    
-    private class LookAndFeel {
-        private final String className;
-        private final String displayName;
-
-        public LookAndFeel(String className, String displayName) {
-            this.className = className;
-            this.displayName = displayName;
-        }
-        
-        public String getClassName() {
-            return className;
-        }
-
-        @Override
-        public String toString() {
-            return displayName;
-        }
     }
 
     private JPanel buildFileCachePanel() {
@@ -340,19 +283,6 @@ final class ApplicationPanel extends javax.swing.JPanel {
         
         if (pnlMemorySetting.isChanged()) {
             pnlMemorySetting.saveSettings();
-        }
-        
-        // L&F
-        
-        try {
-            LookAndFeel lookAndFeel = (LookAndFeel)lookAndFeelCombobox.getSelectedItem();
-            String newLaf = lookAndFeel.getClassName();
-            if (!newLaf.equals(ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL))) {
-                log.info("Saving L&F setting: "+newLaf);
-                ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, newLaf);
-            }
-        } catch (HeadlessException ex) {
-            ConsoleApp.handleException(ex);
         }
         
         // Cache
