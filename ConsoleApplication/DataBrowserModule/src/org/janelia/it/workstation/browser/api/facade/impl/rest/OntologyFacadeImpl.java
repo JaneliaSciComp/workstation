@@ -28,6 +28,10 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
         super(log);
     }
 
+    public OntologyFacadeImpl(RESTClientManager manager) {
+        super(log, manager);
+    }
+    
     @Override
     public Collection<Ontology> getOntologies() {
         Response response = manager.getOntologyEndpoint()

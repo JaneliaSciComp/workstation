@@ -11,11 +11,9 @@ import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.dto.SampleDispatchRequest;
-import org.janelia.it.jacs.model.domain.orders.IntakeOrder;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
-import org.janelia.it.jacs.model.domain.sample.StatusTransition;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SampleFacade;
@@ -30,6 +28,10 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         super(log);
     }
 
+    public SampleFacadeImpl(RESTClientManager manager) {
+        super(log, manager);
+    }
+    
     @Override
     public Collection<DataSet> getDataSets() throws Exception {
         Response response = manager.getDataSetEndpoint()

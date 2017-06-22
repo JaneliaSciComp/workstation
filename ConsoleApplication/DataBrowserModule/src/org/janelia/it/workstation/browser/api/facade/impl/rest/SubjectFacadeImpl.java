@@ -24,6 +24,10 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
         super(log);
     }
 
+    public SubjectFacadeImpl(RESTClientManager manager) {
+        super(log, manager);
+    }
+    
     @Override
     public List<Subject> getSubjects() throws Exception {
         Response response = manager.getUserEndpoint()
