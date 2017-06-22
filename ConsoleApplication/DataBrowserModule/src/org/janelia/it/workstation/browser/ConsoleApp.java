@@ -14,6 +14,7 @@ import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.api.LocalPreferenceMgr;
 import org.janelia.it.workstation.browser.api.exceptions.FatalCommError;
 import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
+import org.janelia.it.workstation.browser.api.lifecycle.GracefulBrick;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
@@ -165,6 +166,15 @@ public class ConsoleApp {
             }
             
             ConsoleState.setCurrState(ConsoleState.LOGGED_IN);
+
+            // Uninstall if bricked
+            try {
+                GracefulBrick uninstaller = new GracefulBrick();
+                uninstaller.brickAndUninstall();
+            }
+            catch (Exception e) {
+                FrameworkImplProvider.handleException(e);
+            }
             
             // Things that can be lazily initialized 
             SwingUtilities.invokeLater(new Runnable() {
