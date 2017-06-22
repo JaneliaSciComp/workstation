@@ -181,7 +181,9 @@ public class DarculaLFCustoms extends LFCustoms {
             "MenuItemUI", "com.revivius.nb.darcula.ui.FixedMenuItemUIBase",
             "RadioButtonMenuItemUI", "com.revivius.nb.darcula.ui.FixedRadioButtonMenuItemUI",
             "CheckBoxMenuItemUI", "com.revivius.nb.darcula.ui.FixedCheckBoxMenuItemUI",
-            
+
+            // Fix for table
+            "TableHeaderUI", "com.revivius.nb.darcula.ui.FixedTableHeaderUI",
             
             //##################################################################################################################
             // End customizations for Janelia Workstation
