@@ -9,10 +9,10 @@ import javax.swing.Action;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.logging.EDTExceptionInterceptor;
 import org.janelia.it.workstation.browser.util.BrandingConfig;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.openide.filesystems.FileUtil;
 import org.openide.windows.OnShowing;
 import org.slf4j.Logger;
@@ -33,8 +33,9 @@ public class ShowingHook implements Runnable {
     public void run() {
         
         JFrame frame = WindowLocator.getMainFrame();
-        String title = ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber");
-        frame.setTitle(title);
+        
+        // Set the title
+        frame.setTitle(ConsoleApp.getConsoleApp().getApplicationTitle());
         
         // Inject special exception handling for uncaught exceptions on the EDT so that they are shown to the user 
         Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EDTExceptionInterceptor());

@@ -39,6 +39,8 @@ import com.google.common.eventbus.Subscribe;
 public class ConsoleApp {
 
     private static final Logger log = LoggerFactory.getLogger(ConsoleApp.class);
+
+    private static final String JACS_SERVER = System.getProperty("jacs.server"); 
     
     // Singleton
     private static ConsoleApp instance;
@@ -52,6 +54,8 @@ public class ConsoleApp {
 
     private final String appName;
     private final String appVersion;
+    private final String remoteHostname;
+    private final String remoteRestUrl;
     private final ImageCache imageCache;
     
     // Lazily initialized
@@ -82,6 +86,24 @@ public class ConsoleApp {
 
         // Work-around for NetBeans/OSXSierra bug which causes display issues if a resources cache file is loaded
         System.setProperty("org.netbeans.core.update.all.resources", "never");
+        
+        if (JACS_SERVER==null) {
+            this.remoteHostname = ConsoleProperties.getInstance().getProperty("interactive.server.url"); 
+            log.info("Using remote hostname defined in console.properties as interactive.server.url: "+remoteHostname);
+        }
+        else {
+            this.remoteHostname = JACS_SERVER;
+            log.info("Using remote hostname defined by -Djacs.server parameter: "+remoteHostname);
+        }
+
+        if (JACS_SERVER==null) {
+            this.remoteRestUrl = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"); 
+            log.info("Using remote REST URL defined in console.properties as domain.facade.rest.url: "+remoteRestUrl);
+        }
+        else {
+            this.remoteRestUrl = String.format("http://%s:8180/rest-v1/", JACS_SERVER);
+            log.info("Derived remote REST URL from -Djacs.server parameter: "+remoteRestUrl);
+        }        
         
         // Init in-memory image cache
         this.imageCache = new ImageCache();
@@ -268,5 +290,21 @@ public class ConsoleApp {
     public void systemWillExit(ApplicationClosing closingEvent) {
         log.info("Memory in use at exit: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000f + " MB");
         findAndRemoveWindowsSplashFile();
+    }
+    
+    public String getRemoteHostname() {
+        return remoteHostname;
+    }
+    
+    public String getRemoteRestUrl() {
+        return remoteRestUrl;
+    }
+
+    public String getApplicationTitle() {
+        String title = String.format("%s %s", ConsoleProperties.getString("console.Title"), ConsoleProperties.getString("console.versionNumber"));
+        if (!StringUtils.isBlank(JACS_SERVER)) {
+            title += String.format(" (%s)", JACS_SERVER);
+        }
+        return title;
     }
 }

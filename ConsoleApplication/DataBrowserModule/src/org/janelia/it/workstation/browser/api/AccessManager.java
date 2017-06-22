@@ -103,7 +103,7 @@ public final class AccessManager {
         catch (Exception e) {
             isLoggedIn = false;
             log.error("Error logging in", e);
-            throw new FatalCommError(ConsoleProperties.getInstance().getProperty("interactive.server.url"),
+            throw new FatalCommError(ConsoleApp.getConsoleApp().getRemoteRestUrl(),
                     "Cannot authenticate login. The server may be down. Please try again later.");
         }
     }
