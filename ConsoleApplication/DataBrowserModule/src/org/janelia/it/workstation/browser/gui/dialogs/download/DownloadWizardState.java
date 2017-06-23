@@ -31,8 +31,8 @@ class DownloadWizardState {
     
     // Calculated from Wizard input
     private List<DownloadObject> downloadObjects;
-    private List<ArtifactDescriptor> artifactDescriptors;
-    private Map<ArtifactDescriptor,Multiset<FileType>> artifactFileCounts;
+    private List<ArtifactDescriptor> artifactDescriptors = new ArrayList<>();
+    private Map<ArtifactDescriptor,Multiset<FileType>> artifactFileCounts = new HashMap<>();
     
     // User input from panel 1
     private String objective;

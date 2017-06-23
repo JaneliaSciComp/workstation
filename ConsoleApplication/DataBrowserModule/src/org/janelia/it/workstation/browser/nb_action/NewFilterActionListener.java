@@ -59,16 +59,7 @@ public final class NewFilterActionListener implements ActionListener {
             // If there is no parent node specified, we don't actually have to
             // save a new filter. Just open up the editor:
             DomainListViewTopComponent browser = initView();
-            FilterEditorPanel editor = ((FilterEditorPanel)browser.getEditor());
-            if (searchString==null) {
-                editor.loadNewFilter();
-            }
-            else {
-                Filter filter = new Filter();
-                filter.setSearchClass(searchClass);
-                filter.setSearchString(searchString);
-                editor.loadDomainObject(filter, true, null);
-            }
+            browser.loadDomainObject(FilterEditorPanel.createUnsavedFilter(null), true);
             return;
         }
 
@@ -86,12 +77,7 @@ public final class NewFilterActionListener implements ActionListener {
 
             @Override
             protected void doStuff() throws Exception {
-                filter = new Filter();
-                filter.setName(name);
-                filter.setSearchClass(searchClass);
-                if (searchString!=null) {
-                    filter.setSearchString(searchString);
-                }
+                filter = FilterEditorPanel.createUnsavedFilter(name);
                 filter = model.save(filter);
                 TreeNode parentFolder = parentNode.getTreeNode();
                 model.addChild(parentFolder, filter);

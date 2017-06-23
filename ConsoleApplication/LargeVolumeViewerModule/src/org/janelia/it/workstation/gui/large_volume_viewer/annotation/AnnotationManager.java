@@ -1653,6 +1653,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
+        if (!swcFile.canWrite()) {
+            presentError("Cannot write to this directory!", "Export error");
+            return;
+        }
+
         BackgroundWorker saver = new BackgroundWorker() {
             
             @Override

@@ -55,7 +55,7 @@ public final class AccessManager {
     private Subject loggedInSubject;
     private Subject authenticatedSubject;
 
-    private Map<CategoryString, Long> categoryInstanceCount = new HashMap<>();
+    private final Map<CategoryString, Long> categoryInstanceCount = new HashMap<>();
     
     private AccessManager() {
         log.info("Initializing Access Manager");
@@ -86,6 +86,14 @@ public final class AccessManager {
                 isLoggedIn = true;                
                 setSubject(authenticatedSubject);
                 log.info("Authenticated as {}", authenticatedSubject.getKey());
+                
+                String email = ((User)authenticatedSubject).getEmail();
+                if (email==null) {
+                    // Take a guess
+                    email = authenticatedSubject.getName()+"@janelia.hhmi.org";
+                }
+                ConsoleApp.getConsoleApp().setModelProperty(AccessManager.USER_EMAIL, email);
+                
                 Events.getInstance().postOnEventBus(new LoginEvent(authenticatedSubject));
                 beginSession();
             }
@@ -95,33 +103,25 @@ public final class AccessManager {
         catch (Exception e) {
             isLoggedIn = false;
             log.error("Error logging in", e);
-            throw new FatalCommError(ConsoleProperties.getInstance().getProperty("interactive.server.url"),
+            throw new FatalCommError(ConsoleApp.getConsoleApp().getRemoteRestUrl(),
                     "Cannot authenticate login. The server may be down. Please try again later.");
         }
     }
 
-    private Subject authenticateSubject(final String username, final String password) {
+    private Subject authenticateSubject(final String username, final String password) throws Exception {
         // make RESTful call to authenticate user
-
-        try {
-            Subject authenticatedSubject = DomainMgr.getDomainMgr().getModel().loginSubject(username, password);
-
-            if (authenticatedSubject!=null) {
-                log.debug("Setting default authenticator");
-                Authenticator.setDefault(new Authenticator() {
-                    @Override
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(username, password.toCharArray());
-                    }
-                });
-                FileMgr.getFileMgr().getWebDavClient().setCredentialsUsingAuthenticator();
-            }
-            return authenticatedSubject;
-        } 
-        catch (Exception e) {
-            log.error("Problem getting the subject using key " + username, e);
+        Subject authenticatedSubject = DomainMgr.getDomainMgr().getModel().loginSubject(username, password);
+        if (authenticatedSubject!=null) {
+            log.debug("Setting default authenticator");
+            Authenticator.setDefault(new Authenticator() {
+                @Override
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(username, password.toCharArray());
+                }
+            });
+            FileMgr.getFileMgr().getWebDavClient().setCredentialsUsingAuthenticator();
         }
-        return null;
+        return authenticatedSubject;
     }
 
     private void beginSession() {

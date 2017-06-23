@@ -112,6 +112,8 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         this.active = true;
         // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
+        // Take control of the history navigation buttons
+        StateMgr.getStateMgr().updateNavigationButtons(this);
         // Make our ancestor editor the current find context
         if (findContext!=null) {
             FindContextManager.getInstance().activateContext(findContext);
@@ -265,7 +267,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             DomainObjectEditorState<?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
-                StateMgr.getStateMgr().getNavigationHistory().pushHistory(state);
+                StateMgr.getStateMgr().getNavigationHistory(DomainListViewTopComponent.this).pushHistory(state);
             }
             else {
                 log.warn("Editor did not provide current state");
@@ -296,7 +298,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             DomainObjectEditorState<?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
-                StateMgr.getStateMgr().getNavigationHistory().updateCurrentState(state);
+                StateMgr.getStateMgr().getNavigationHistory(DomainListViewTopComponent.this).updateCurrentState(state);
             }
             else {
                 log.warn("Editor did not provide current state");

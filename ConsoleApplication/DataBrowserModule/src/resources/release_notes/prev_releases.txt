@@ -1,3 +1,9 @@
+// 5.14
+
+Workstation Browser
+* Improved usability of Download Wizard
+* Fixed error when right-clicking a folder in the Data Browser
+
 // 5.13
 
 Workstation Browser

@@ -12,6 +12,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.ForbiddenEntity;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.ServiceMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,10 +98,11 @@ public class PathTranslator {
     public static Entity translatePathsToProxy(Entity entity) {
 
         for (EntityData entityData : getAccessibleEntityDatas(entity)) {
-            if (entityData.getEntityAttrName().equals(EntityConstants.ATTRIBUTE_FILE_PATH)) {
+            if (isTranslatePath(entityData)) {
                 String path = entityData.getValue();
                 try {
                     String url = getProxiedFileUrl(path).toString();
+                    log.info("Returning filepath = "+url);
                     entityData.setValue(url);
                 }
                 catch (MalformedURLException e) {
@@ -116,6 +118,12 @@ public class PathTranslator {
         }
 
         return entity;
+    }
+    
+    private static boolean isTranslatePath(EntityData entityData) {
+        String attrName = entityData.getEntityAttrName();
+        return EntityConstants.ATTRIBUTE_FILE_PATH.equals(attrName)
+                || EntityConstants.ATTRIBUTE_VISUALLY_LOSSLESS_IMAGE.equals(attrName);
     }
 
     private static String getOsSpecificRootPath() {
@@ -133,7 +141,7 @@ public class PathTranslator {
     
     // TODO: move this somewhere. It used to be in the FileProxyService before NG refactoring madness. 
     public static URL getProxiedFileUrl(String standardPath) throws MalformedURLException {
-        return new URL("http://localhost:40001/webdav"+standardPath);
+        return new URL("http://localhost:"+ServiceMgr.getServiceMgr().getWebServerPort()+"/webdav"+standardPath);
     }
 
     private static List<EntityData> getAccessibleEntityDatas(Entity entity) {

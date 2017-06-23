@@ -101,7 +101,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setObjective(objective);
-                    refreshCheckboxPanel();
+                    refreshCheckboxPanel(false);
                 }
             });
             group.add(menuItem);
@@ -130,7 +130,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setArea(area);
-                    refreshCheckboxPanel();
+                    refreshCheckboxPanel(false);
                 }
             });
             group.add(menuItem);
@@ -159,7 +159,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setResultCategory(resultCategory);
-                    refreshCheckboxPanel();
+                    refreshCheckboxPanel(false);
                 }
             });
             group.add(menuItem);
@@ -188,7 +188,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setImageCategory(imageCategory);
-                    refreshCheckboxPanel();
+                    refreshCheckboxPanel(false);
                 }
             });
             group.add(menuItem);
@@ -213,11 +213,12 @@ public final class DownloadVisualPanel1 extends JPanel {
         this.artifactDescriptors = state.getArtifactDescriptors();
         this.artifactFileCounts = state.getArtifactFileCounts();
         
-        // TODO: select the artifact descriptors matching the default result descriptor
-//        if (artifactDescriptors==null) {
-//            artifactDescriptors = new ArrayList<>();
-//            artifactDescriptors.add(defaultResultDescriptor);
-//        }
+        if (artifactDescriptors==null) {
+            artifactDescriptors = new ArrayList<>();
+            if (defaultResultDescriptor!=null) {
+                artifactDescriptors.add(new ResultArtifactDescriptor(defaultResultDescriptor.getObjective(), null, defaultResultDescriptor.getResultName(), defaultResultDescriptor.isAligned()));
+            }
+        }
         
         // Init filter values
         buildFilterValueLists();
@@ -233,11 +234,7 @@ public final class DownloadVisualPanel1 extends JPanel {
         resetButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) { 
-                setObjective(ALL_VALUE);
-                setArea(ALL_VALUE);
-                setResultCategory(ALL_VALUE);
-                setImageCategory(ALL_VALUE);
-                refreshCheckboxPanel();
+                resetFilters();
             }
         });
         
@@ -301,7 +298,7 @@ public final class DownloadVisualPanel1 extends JPanel {
         
         checkboxPanel = new JPanel();
         checkboxPanel.setLayout(new BoxLayout(checkboxPanel, BoxLayout.PAGE_AXIS));
-        refreshCheckboxPanel();
+        refreshCheckboxPanel(true);
         
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(checkboxPanel);
@@ -316,6 +313,15 @@ public final class DownloadVisualPanel1 extends JPanel {
         add(outerPanel, BorderLayout.CENTER);
         
         triggerValidation();
+    }
+
+    private void resetFilters() {
+        setObjective(ALL_VALUE);
+        setArea(ALL_VALUE);
+        setResultCategory(ALL_VALUE);
+        setImageCategory(ALL_VALUE);
+        refreshCheckboxPanel(false);
+        configPane.updateUI();
     }
     
     private void buildFilterValueLists() {
@@ -355,10 +361,10 @@ public final class DownloadVisualPanel1 extends JPanel {
         }
     }
 
-    private void refreshCheckboxPanel() {
+    private void refreshCheckboxPanel(boolean clearFilterIfEmptyList) {
         checkboxPanel.removeAll();
         try {
-            addCheckboxes(initialState.getDownloadObjects(), checkboxPanel);
+            addCheckboxes(initialState.getDownloadObjects(), checkboxPanel, clearFilterIfEmptyList);
             checkboxPanel.updateUI();
         }
         catch (Exception e) {
@@ -366,7 +372,7 @@ public final class DownloadVisualPanel1 extends JPanel {
         }
     }
 
-    private void addCheckboxes(Collection<DownloadObject> domainObjects, JPanel checkboxPanel) throws Exception {
+    private void addCheckboxes(Collection<DownloadObject> domainObjects, JPanel checkboxPanel, boolean clearFilterIfEmptyList) throws Exception {
 
         fileTypesCheckboxes.clear();
         
@@ -392,32 +398,15 @@ public final class DownloadVisualPanel1 extends JPanel {
                 log.debug("Adding previously selected file types: "+oldAd.getSelectedFileTypes());
             }
             
-            if (currObjective!=null && !ALL_VALUE.equals(currObjective) && !currObjective.equals(artifactDescriptor.getObjective())) {
-                continue;
-            }
-
-            if (currArea!=null && !ALL_VALUE.equals(currArea) && !currArea.equals(artifactDescriptor.getArea())) {
-                continue;
-            }
-            
-            ResultCategory resultCategory = ResultCategory.getByLabel(currResultCategory);
-            if (ResultCategory.OriginalLSM.equals(resultCategory) && !(artifactDescriptor instanceof LSMArtifactDescriptor)) {
-                continue;
-            }
-            else if (ResultCategory.PreAligned.equals(resultCategory) && (artifactDescriptor.isAligned() || (artifactDescriptor instanceof LSMArtifactDescriptor))) {
-                continue;
-            }
-            else if (ResultCategory.PostAligned.equals(resultCategory) && !artifactDescriptor.isAligned()) {
+            if (!accept(artifactDescriptor)) {
                 continue;
             }
             
             final JPanel subPanel = new JPanel();
             subPanel.setLayout(new BoxLayout(subPanel, BoxLayout.PAGE_AXIS));
-            //subPanel.setVisible(selected);
             subPanel.setBorder(BorderFactory.createEmptyBorder(0, 30, 5, 0));
 
             Multiset<FileType> fileTypesCounts = artifactFileCounts.get(artifactDescriptor);
-            
             HashMap<FileType, JCheckBox> fileTypeMap = new LinkedHashMap<>();
             
             for(final FileType fileType : FileType.values()) {
@@ -451,7 +440,44 @@ public final class DownloadVisualPanel1 extends JPanel {
                 checkboxPanel.add(new JLabel(resultName));
                 checkboxPanel.add(subPanel);
             }
-        }        
+        }
+        
+        if (fileTypesCheckboxes.isEmpty() && clearFilterIfEmptyList) {
+            // Nothing selected and this is the init step, so clear the filters and re-run
+            log.info("Existing filters match nothing, resetting and trying again.");
+            resetFilters();
+        }
+    }
+    
+    private boolean accept(ArtifactDescriptor artifactDescriptor) {
+
+        if (artifactDescriptor instanceof SelfArtifactDescriptor) {
+            // Always accept the self descriptor
+            return true;
+        }
+    
+        // For other descriptors, check the filter values
+
+        if (currObjective!=null && !ALL_VALUE.equals(currObjective) && !currObjective.equals(artifactDescriptor.getObjective())) {
+            return false;
+        }
+
+        if (currArea!=null && !ALL_VALUE.equals(currArea) && !currArea.equals(artifactDescriptor.getArea())) {
+            return false;
+        }
+        
+        ResultCategory resultCategory = ResultCategory.getByLabel(currResultCategory);
+        if (ResultCategory.OriginalLSM.equals(resultCategory) && !(artifactDescriptor instanceof LSMArtifactDescriptor)) {
+            return false;
+        }
+        else if (ResultCategory.PreAligned.equals(resultCategory) && (artifactDescriptor.isAligned() || (artifactDescriptor instanceof LSMArtifactDescriptor))) {
+            return false;
+        }
+        else if (ResultCategory.PostAligned.equals(resultCategory) && !artifactDescriptor.isAligned()) {
+            return false;
+        }
+        
+        return true;
     }
     
     public List<ArtifactDescriptor> getArtifactDescriptors() {

@@ -123,13 +123,13 @@ of adapter.
         <echo message="Copying new installers to archive at workstation.int.janelia.org" />
         <echo message="SCP Common Params ${scp.common.params} for ${scp}"/>
         <exec executable="bash" description="Copying Windows installer to archive at workstation.int.janelia.org">
-            <arg line="-c '${scp} ${basedir}/dist/JaneliaWorkstation-windows.zip ${ssh.common.params}:/var/www/files/archive/${git.branch}-windows.zip'"/>
+            <arg line="-c '${scp} ${basedir}/dist/JaneliaWorkstation-windows.zip ${ssh.common.params}:/opt/files/${git.branch}-windows.zip'"/>
         </exec>
         <exec executable="bash" description="Copying Mac installer to archive at workstation.int.janelia.org">
-            <arg line="-c '${scp} ${basedir}/dist/JaneliaWorkstation-macosx.tgz ${ssh.common.params}:/var/www/files/archive/${git.branch}-macosx.tgz'"/>
+            <arg line="-c '${scp} ${basedir}/dist/JaneliaWorkstation-macosx.tgz ${ssh.common.params}:/opt/files/${git.branch}-macosx.tgz'"/>
         </exec>
         <exec executable="bash" description="Copying Linux installer to archive at workstation.int.janelia.org">
-            <arg line="-c '${scp} ${basedir}/dist/JaneliaWorkstation-linux.tgz ${ssh.common.params}:/var/www/files/archive/${git.branch}-linux.tgz'"/>
+            <arg line="-c '${scp} ${basedir}/dist/JaneliaWorkstation-linux.tgz ${ssh.common.params}:/opt/files/${git.branch}-linux.tgz'"/>
         </exec>
         <echo message="Done : ${exec.output}"  />
         <echo message="Done : ${exec.error}"  />

@@ -21,7 +21,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.ProgressMonitor;
-import javax.swing.SwingUtilities;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
@@ -33,6 +32,8 @@ import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
@@ -245,11 +246,41 @@ public final class DownloadWizardAction implements ActionListener {
         for(DownloadObject downloadObject : downloadItems) {
             DomainObject domainObject = downloadObject.getDomainObject();
             log.trace("Inspecting object: {}", domainObject);
-            if (domainObject instanceof HasFiles) {
+            if (domainObject instanceof LSMImage) {
+                LSMImage image = (LSMImage)domainObject;
+                LSMArtifactDescriptor desc = new LSMArtifactDescriptor(image.getObjective(), image.getAnatomicalArea());
+                countedArtifacts.add(desc);
+                log.trace("  Adding self LSM descriptor for objective: {}", desc);
+            }
+            else if (domainObject instanceof NeuronFragment) {
+                NeuronFragment neuron = (NeuronFragment)domainObject;
+                try {
+                    Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, neuron.getSample().getTargetId());
+                    if (sample!=null) {
+                        List<NeuronSeparation> results = sample.getResultsById(NeuronSeparation.class, neuron.getSeparationId());
+                        if (!results.isEmpty()) {
+                            NeuronSeparation separation = results.get(0);
+                            PipelineResult parentResult = separation.getParentResult();
+                            if (parentResult instanceof HasAnatomicalArea) {
+                                HasAnatomicalArea hasAA = (HasAnatomicalArea)parentResult;
+                                boolean aligned = (parentResult instanceof SampleAlignmentResult);
+                                ObjectiveSample objectiveSample = parentResult.getParentRun().getParent();
+                                NeuronFragmentDescriptor desc = new NeuronFragmentDescriptor(objectiveSample.getObjective(), hasAA.getAnatomicalArea(), aligned);
+                                countedArtifacts.add(desc);
+                                log.trace("  Adding neuron fragment self descriptor: {}", desc);
+                            }
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    FrameworkImplProvider.handleException(e);
+                }
+            }
+            else if (domainObject instanceof HasFiles) {
                 log.trace("  Adding self descriptor");
                 countedArtifacts.add(new SelfArtifactDescriptor());
             }
-            if (domainObject instanceof Sample) {
+            else if (domainObject instanceof Sample) {
                 Sample sample = (Sample)domainObject;
                 log.trace("  Inspecting sample: {}", sample.getName());
                 
@@ -332,6 +363,24 @@ public final class DownloadWizardAction implements ActionListener {
                     log.trace("    Adding type names: {}",typeNames);
                     countedTypeNames.addAll(typeNames);
                 }
+            }
+            if (source instanceof NeuronFragment) {
+                NeuronFragment neuron = (NeuronFragment)source;
+                Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, neuron.getSample().getTargetId());
+                if (sample!=null) {
+                    List<NeuronSeparation> results = sample.getResultsById(NeuronSeparation.class, neuron.getSeparationId());
+                    if (!results.isEmpty()) {
+                        NeuronSeparation separation = results.get(0);
+                        log.trace("  Source has separation: {}",separation);
+                        Set<FileType> typeNames = new HashSet<>();
+                        typeNames.add(FileType.NeuronAnnotatorLabel);
+                        typeNames.add(FileType.NeuronAnnotatorSignal);
+                        typeNames.add(FileType.NeuronAnnotatorReference);
+                        log.trace("    Adding type names: {}",typeNames);
+                        countedTypeNames.addAll(typeNames);
+                    }
+                }
+                
             }
         }
         
