@@ -32,7 +32,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.api.sage_responder.SageResponderRestClient;
+import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -214,7 +214,7 @@ public final class SetPublishingNameActionListener implements ActionListener {
 
                     String currValue = getCurrAnnotationValue();
 
-                    final SageResponderRestClient sageClient = DomainMgr.getDomainMgr().getSageClient();
+                    final SageRestClient sageClient = DomainMgr.getDomainMgr().getSageClient();
                     
                     Collection<String> possibleNames = sageClient.getPublishingNames(lineName);
                     log.info("Creating drop down menu with possible names: "+possibleNames);
