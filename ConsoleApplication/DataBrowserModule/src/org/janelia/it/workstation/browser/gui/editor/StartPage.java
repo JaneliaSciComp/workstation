@@ -12,6 +12,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.math.BigDecimal;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -28,16 +30,23 @@ import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.janelia.it.jacs.model.domain.report.DataSummary;
+import org.janelia.it.jacs.model.domain.report.QuotaUsage;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.browser.nb_action.NewFilterActionListener;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import groovy.sql.DataSet;
 import net.miginfocom.swing.MigLayout;
 
 /**
@@ -128,18 +137,18 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.X_AXIS));
 
-        JToggleButton button0 = new JToggleButton("Everything");
-        button0.setSelected(true);
-        button0.setMargin(new Insets(5,5,5,5));
-        button0.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // TODO: this needs to search everything
-                searchClass = Sample.class.getSimpleName();
-            }
-        });
-        group.add(button0);
-        buttonsPanel.add(button0);
+//        JToggleButton button0 = new JToggleButton("Everything");
+//        button0.setSelected(true);
+//        button0.setMargin(new Insets(5,5,5,5));
+//        button0.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                // TODO: this needs to search everything
+//                searchClass = Sample.class.getSimpleName();
+//            }
+//        });
+//        group.add(button0);
+//        buttonsPanel.add(button0);
         
         JToggleButton button1 = new JToggleButton("Confocal Samples");
         button1.setMargin(new Insets(5,5,5,5));
@@ -186,9 +195,9 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 
         // Disk Space Panel
 
-        spaceUsedLabel = getMediumLabel("4.00 TB");
-        labSpaceUsedLabel = getMediumLabel("34.00 TB");
-        spaceAvailableLabel = getMediumLabel("34.33 TB");
+        spaceUsedLabel = getMediumLabel("");
+        labSpaceUsedLabel = getMediumLabel("");
+        spaceAvailableLabel = getMediumLabel("");
         
         diskSpacePanel = new SelectablePanel();
         diskSpacePanel.setLayout(new MigLayout("gap 50, fillx, wrap 3", "[grow 10]5[grow 0]5[grow 10]", "[]2[]5[]5[]"));
@@ -207,15 +216,15 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 
         // Data Summary Panel
         
-        dataSetCountLabel = getMediumLabel("4");
-        sampleCountLabel = getMediumLabel("2303");
-        lsmCountLabel = getMediumLabel("5314");
-        neuronCountLabel = getMediumLabel("1034535");
+        dataSetCountLabel = getMediumLabel("");
+        sampleCountLabel = getMediumLabel("");
+        lsmCountLabel = getMediumLabel("");
+        neuronCountLabel = getMediumLabel("");
 
         dataSummaryPanel = new SelectablePanel();
         dataSummaryPanel.setLayout(new MigLayout("gap 50, fillx, wrap 3", "[grow 10]5[grow 0]5[grow 10]", "[]2[]5[]5[]5[]6[]"));
         
-        dataSummaryPanel.add(getLargeLabel("Data Summary"), "spanx 3, gapbottom 10, al center");
+        dataSummaryPanel.add(getLargeLabel("Confocal Data Summary"), "spanx 3, gapbottom 10, al center");
         dataSummaryPanel.add(new JLabel(sampleIcon), "spany 5, al right top");
         
         dataSummaryPanel.add(getMediumLabel("Data Sets:"), "al left top");
@@ -237,10 +246,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.SELECTED || e.getSource() instanceof JCheckBox) {
-                    log.trace("Item state changed: {}", e);
-                    final String summaryState = (String)summaryCombo.getSelectedItem();
-                    
-                    // TODO: change display
+                    populateView(dataSummary);
                 }
             }
         });
@@ -256,8 +262,6 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         mainPanel = new JPanel();
         mainPanel.setLayout(new MigLayout("gap 50, fillx, wrap 2", "[]5[]", "[]10[]"));
         mainPanel.add(searchPanel, "span 2, al center top");
-        mainPanel.add(diskSpacePanel, "al center top, grow 50");
-        mainPanel.add(dataSummaryPanel, "al center top, grow 50");
         
         // Lower panel
         
@@ -276,8 +280,91 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         add(topPanel, BorderLayout.NORTH);
         add(mainPanel, BorderLayout.CENTER);
         add(lowerPanel, BorderLayout.SOUTH);
+        
+        refresh();
     }
 
+    private DataSummary dataSummary;
+    
+    private void refresh() {
+
+        mainPanel.remove(diskSpacePanel);
+        mainPanel.remove(dataSummaryPanel);
+        
+        SimpleWorker worker = new SimpleWorker() {
+
+            private DataSummary summary;
+            
+            @Override
+            protected void doStuff() throws Exception {
+                summary = DomainMgr.getDomainMgr().getDomainFacade().getDataSummary();   
+            }
+
+            @Override
+            protected void hadSuccess() {
+                dataSummary = summary;
+                populateView(dataSummary);
+            }
+
+            @Override
+            protected void hadError(Throwable e) {
+                ConsoleApp.handleException(e);
+            }
+        };
+
+        worker.execute();
+    }
+    
+    private void populateView(DataSummary dataSummary) {
+
+        // Reset components
+        String text = "";
+        spaceUsedLabel.setText(text);
+        labSpaceUsedLabel.setText(text);
+        spaceAvailableLabel.setText(text);
+        dataSetCountLabel.setText(text);
+        sampleCountLabel.setText(text);
+        lsmCountLabel.setText(text);
+        neuronCountLabel.setText(text);   
+        if (dataSummary==null) return;
+
+        Double userDataSetsTB = dataSummary.getUserDataSetsTB();
+        if (userDataSetsTB!=null) {
+            spaceUsedLabel.setText(String.format("%2.2f TB", userDataSetsTB));
+        }
+        
+        QuotaUsage quotaUsage = dataSummary.getQuotaUsage();
+        if (quotaUsage!=null) {
+            Double spaceUsedTB = quotaUsage.getSpaceUsedTB();
+            Double totalSpaceTB = quotaUsage.getTotalSpaceTB();
+            if (spaceUsedTB!=null) {
+                labSpaceUsedLabel.setText(String.format("%2.2f TB", spaceUsedTB));
+                if (totalSpaceTB!=null) {
+                    double spaceAvailable = totalSpaceTB - spaceUsedTB;
+                    spaceAvailableLabel.setText(String.format("%2.2f TB", spaceAvailable));
+                }
+            }
+        }
+        
+        Map<String, Long> counts = null;
+        if (SUMMARY_MINE.equals(summaryCombo.getSelectedItem())) {
+            counts = dataSummary.getUserCounts(); 
+        }
+        else if (SUMMARY_ALL.equals(summaryCombo.getSelectedItem())) {
+            counts = dataSummary.getAllCounts(); 
+        }
+
+        if (counts!=null) {
+            dataSetCountLabel.setText(counts.get(DataSet.class.getSimpleName())+"");
+            sampleCountLabel.setText(counts.get(Sample.class.getSimpleName())+"");
+            lsmCountLabel.setText(counts.get(LSMImage.class.getSimpleName())+"");
+            neuronCountLabel.setText(counts.get(NeuronFragment.class.getSimpleName())+"");   
+        }
+        
+        mainPanel.add(diskSpacePanel, "al center top, grow 50");
+        mainPanel.add(dataSummaryPanel, "al center top, grow 50");
+    }
+    
     private ImageIcon getScaledIcon(ImageIcon icon, int width, int height) {
         Image img = icon.getImage();
         Image newimg = img.getScaledInstance(width, height,  java.awt.Image.SCALE_SMOOTH);

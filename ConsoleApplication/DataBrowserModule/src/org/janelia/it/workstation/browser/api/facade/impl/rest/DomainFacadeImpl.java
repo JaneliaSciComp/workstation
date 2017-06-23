@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
+import org.janelia.it.jacs.model.domain.report.DataSummary;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.DomainFacade;
@@ -209,5 +210,16 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
             throw new WebApplicationException(response);
         }
     }
-    
+
+    @Override
+    public DataSummary getDataSummary() throws Exception {
+        Response response = manager.getSummaryEndpoint()
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request to remove getDataSummary")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(DataSummary.class);
+    }
 }

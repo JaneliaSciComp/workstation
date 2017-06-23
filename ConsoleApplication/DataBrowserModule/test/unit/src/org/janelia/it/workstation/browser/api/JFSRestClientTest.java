@@ -2,8 +2,8 @@ package org.janelia.it.workstation.browser.api;
 
 import java.util.Map;
 
+import org.janelia.it.jacs.model.domain.report.QuotaUsage;
 import org.janelia.it.workstation.browser.api.web.JFSRestClient;
-import org.janelia.it.workstation.browser.api.web.QuotaUsage;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -26,7 +26,7 @@ public class JFSRestClientTest {
     public void testDiskQuota() throws Exception {
         
         String username = "rokickik";
-        Map<String, QuotaUsage> diskQuotas = client.getDiskQuota("user:"+username);
+        Map<String, QuotaUsage> diskQuotas = client.getDiskQuotas("user:"+username);
 
         Assert.assertTrue(diskQuotas.size()==1);
         System.out.println(">> "+diskQuotas);

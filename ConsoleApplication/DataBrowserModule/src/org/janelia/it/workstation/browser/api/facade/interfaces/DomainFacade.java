@@ -6,6 +6,7 @@ import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
+import org.janelia.it.jacs.model.domain.report.DataSummary;
 
 /**
  * Implementations provide generic access to domain objects.
@@ -98,4 +99,11 @@ public interface DomainFacade {
      * @throws Exception
      */
     public DomainObject save(DomainObject domainObject) throws Exception;
+    
+    /**
+     * Returns the data summary for the current user.
+     * @return
+     * @throws Exception
+     */
+    public DataSummary getDataSummary() throws Exception;
 }

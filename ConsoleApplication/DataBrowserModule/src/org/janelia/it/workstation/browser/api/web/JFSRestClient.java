@@ -6,6 +6,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+import org.janelia.it.jacs.model.domain.report.QuotaUsage;
 import org.janelia.it.jacs.model.domain.support.SubjectUtils;
 import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientImpl;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
@@ -36,7 +37,7 @@ public class JFSRestClient extends RESTClientImpl {
         this.service = RestJsonClientManager.getInstance().getTarget(serverUrl);
     }
 
-    public Map<String,QuotaUsage> getDiskQuota(String subjectKey) throws Exception {
+    public Map<String,QuotaUsage> getDiskQuotas(String subjectKey) throws Exception {
         String subjectName = SubjectUtils.getSubjectName(subjectKey);
         WebTarget target = service.path("quota").path(STORE_NAME).path("report").path(subjectName);
         Response response = target
@@ -49,5 +50,10 @@ public class JFSRestClient extends RESTClientImpl {
         finally {
             response.close();
         }
+    }
+
+    public QuotaUsage getDiskQuota(String subjectKey) throws Exception {
+        String subjectName = SubjectUtils.getSubjectName(subjectKey);
+        return getDiskQuotas(subjectKey).get(subjectName);
     }
 }
