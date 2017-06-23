@@ -1,22 +1,17 @@
 package org.janelia.it.workstation.browser.api.web;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+import org.janelia.it.jacs.model.domain.support.SubjectUtils;
 import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientImpl;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * RESTful client for getting data from the SAGE Responder web service. 
@@ -26,58 +21,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class JFSRestClient extends RESTClientImpl {
 
     private static final Logger log = LoggerFactory.getLogger(JFSRestClient.class);
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("jfs.rest.url");
-    private WebTarget service;    
     
+    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("jfs.rest.url");
+    private static final String STORE_NAME = "filestore";
+    
+    private WebTarget service;    
+
     public JFSRestClient() {
+        this(REMOTE_API_URL);
+    }
+    
+    public JFSRestClient(String serverUrl) {
         super(log);
-        this.service = RestJsonClientManager.getInstance().getTarget(REMOTE_API_URL);
+        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl);
     }
 
-    public Collection<String> getPublishingNames(String lineName) throws Exception {
-        Set<String> names = new LinkedHashSet<>();
-        WebTarget target = service.path("publishing");
-        Response response = target.queryParam("line", lineName)
-                .request("application/json")
-                .get();
-        try {
-            checkBadResponse(target, response);
-            JsonNode data = response.readEntity(new GenericType<JsonNode>() {});
-            if (data!=null) {
-                JsonNode publishingData = data.get("publishing_data");
-                if (publishingData.isArray()) {
-                    for (final JsonNode objNode : publishingData) {
-                        String publishingName = objNode.get("publishing_name").asText();
-                        names.add(publishingName);
-                    }
-                }
-            }
-            return names;
-        }
-        finally {
-            response.close();
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> getImageProperties(Integer sageImageId) throws Exception {
-        WebTarget target = service.path("images").path(sageImageId.toString());
+    public Map<String,QuotaUsage> getDiskQuota(String subjectKey) throws Exception {
+        String subjectName = SubjectUtils.getSubjectName(subjectKey);
+        WebTarget target = service.path("quota").path(STORE_NAME).path("report").path(subjectName);
         Response response = target
                 .request("application/json")
                 .get();
         try {
             checkBadResponse(target, response);
-            JsonNode data = response.readEntity(new GenericType<JsonNode>() {});
-            if (data!=null) {
-                JsonNode imageData = data.get("image_data");
-                if (imageData.isArray()) {
-                    for (final JsonNode objNode : imageData) {
-                        ObjectMapper mapper = new ObjectMapper();
-                        return mapper.convertValue(objNode, Map.class);
-                    }
-                }
-            }
-            return null;
+            return response.readEntity(new GenericType<Map<String,QuotaUsage>>() {});
         }
         finally {
             response.close();
