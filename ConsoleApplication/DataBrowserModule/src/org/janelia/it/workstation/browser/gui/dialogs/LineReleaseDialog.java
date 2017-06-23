@@ -323,11 +323,13 @@ public class LineReleaseDialog extends ModalDialog {
                     lagTimeInput.setText("");
                 }
 
+                Utils.setDefaultCursor(LineReleaseDialog.this);
                 pack();
             }
 
             @Override
             protected void hadError(Throwable error) {
+                Utils.setDefaultCursor(LineReleaseDialog.this);
                 ConsoleApp.handleException(error);
             }
         };
