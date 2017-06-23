@@ -134,7 +134,7 @@ made subject to such option by the copyright holder.
         <property name="disabled.modules" value=""/>
         <property name="enabled.clusters" value=""/>
         <property name="disabled.clusters" value=""/>
-        <property name="app.version" value="0.1"/>
+        <property name="app.version" value="0.2"/>
         <property name="branding.dir" location="branding"/>
         <property name="dist.dir" location="dist"/>
         <property name="test.xml.results.dir" value="${suite.build.dir}/test/xmldata" />
