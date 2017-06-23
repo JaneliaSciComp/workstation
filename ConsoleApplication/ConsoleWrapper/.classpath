@@ -214,5 +214,6 @@
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/slf4j-api-1.7.21.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/slf4j-jdk14-1.7.21.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="release/modules/ext/commons-pool2-2.4.2.jar"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>

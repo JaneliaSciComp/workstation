@@ -1005,6 +1005,9 @@
                 <package>org.apache.commons.lang3.tuple</package>
                 <package>org.apache.commons.logging</package>
                 <package>org.apache.commons.logging.impl</package>
+                <package>org.apache.commons.pool2</package>
+                <package>org.apache.commons.pool2.impl</package>
+                <package>org.apache.commons.pool2.proxy</package>
                 <package>org.apache.html.dom</package>
                 <package>org.apache.http</package>
                 <package>org.apache.http.entity</package>
@@ -1562,6 +1565,7 @@
                 <package>org.janelia.it.jacs.model.domain.gui.search.criteria</package>
                 <package>org.janelia.it.jacs.model.domain.interfaces</package>
                 <package>org.janelia.it.jacs.model.domain.ontology</package>
+                <package>org.janelia.it.jacs.model.domain.orders</package>
                 <package>org.janelia.it.jacs.model.domain.sample</package>
                 <package>org.janelia.it.jacs.model.domain.screen</package>
                 <package>org.janelia.it.jacs.model.domain.subjects</package>
@@ -1575,7 +1579,6 @@
                 <package>org.janelia.it.jacs.model.jobs</package>
                 <package>org.janelia.it.jacs.model.ontology</package>
                 <package>org.janelia.it.jacs.model.ontology.types</package>
-                <package>org.janelia.it.jacs.model.domain.orders</package>
                 <package>org.janelia.it.jacs.model.sage</package>
                 <package>org.janelia.it.jacs.model.search</package>
                 <package>org.janelia.it.jacs.model.status</package>
@@ -1612,7 +1615,6 @@
                 <package>org.janelia.it.jacs.model.user_data.tic</package>
                 <package>org.janelia.it.jacs.model.user_data.tiledMicroscope</package>
                 <package>org.janelia.it.jacs.model.user_data.tiled_microscope_builder</package>
-                <package>org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf</package>
                 <package>org.janelia.it.jacs.model.user_data.tools</package>
                 <package>org.janelia.it.jacs.model.user_data.validation</package>
                 <package>org.janelia.it.jacs.model.util</package>
@@ -2476,6 +2478,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/protostuff-parser-1.3.9-SNAPSHOT.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/protostuff-parser-1.3.9-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/commons-pool2-2.4.2.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-pool2-2.4.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/forms-1.2.1.jar</runtime-relative-path>

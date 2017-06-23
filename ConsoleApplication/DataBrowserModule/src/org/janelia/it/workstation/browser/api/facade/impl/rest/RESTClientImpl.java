@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.api.facade.impl.rest;
 
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
@@ -38,4 +39,14 @@ public class RESTClientImpl {
         }
         return false;
     }
+    
+    protected boolean checkBadResponse(WebTarget target, Response response) {
+        int responseStatus = response.getStatus();
+        Response.Status status = Response.Status.fromStatusCode(response.getStatus());
+        if (responseStatus<200 || responseStatus>=300) {
+            log.error("Request for {} returned {}", target.getUri(), responseStatus);
+        }
+        return false;
+    }
+    
 }
