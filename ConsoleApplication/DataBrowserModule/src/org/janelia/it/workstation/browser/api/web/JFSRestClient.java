@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class JFSRestClient extends RESTClientImpl {
 
     private static final Logger log = LoggerFactory.getLogger(JFSRestClient.class);
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("sageResponder.rest.url");
+    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("jfs.rest.url");
     private WebTarget service;    
     
     public JFSRestClient() {

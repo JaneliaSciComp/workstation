@@ -36,7 +36,7 @@ public class SageResponderRestClient extends RESTClientImpl {
 
     public Collection<String> getPublishingNames(String lineName) throws Exception {
         Set<String> names = new LinkedHashSet<>();
-        WebTarget target = service.path("publishing");
+        WebTarget target = service.path("/publishing");
         Response response = target.queryParam("line", lineName)
                 .request("application/json")
                 .get();
@@ -61,7 +61,7 @@ public class SageResponderRestClient extends RESTClientImpl {
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> getImageProperties(Integer sageImageId) throws Exception {
-        WebTarget target = service.path("images").path(sageImageId.toString());
+        WebTarget target = service.path("/images").path(sageImageId.toString());
         Response response = target
                 .request("application/json")
                 .get();
