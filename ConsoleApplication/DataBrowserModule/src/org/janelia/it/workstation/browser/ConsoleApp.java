@@ -4,6 +4,7 @@ import java.io.File;
 import java.security.ProtectionDomain;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
@@ -11,13 +12,14 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.api.LocalPreferenceMgr;
+import org.janelia.it.workstation.browser.api.exceptions.FatalCommError;
 import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
+import org.janelia.it.workstation.browser.api.lifecycle.GracefulBrick;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
-import org.janelia.it.workstation.browser.gui.dialogs.GiantFiberSearchDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
-import org.janelia.it.workstation.browser.gui.dialogs.PatternSearchDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.ReleaseNotesDialog;
+import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog.ErrorType;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.ImageCache;
@@ -38,6 +40,8 @@ import com.google.common.eventbus.Subscribe;
 public class ConsoleApp {
 
     private static final Logger log = LoggerFactory.getLogger(ConsoleApp.class);
+
+    private static final String JACS_SERVER = System.getProperty("jacs.server"); 
     
     // Singleton
     private static ConsoleApp instance;
@@ -51,11 +55,11 @@ public class ConsoleApp {
 
     private final String appName;
     private final String appVersion;
+    private final String remoteHostname;
+    private final String remoteRestUrl;
     private final ImageCache imageCache;
     
     // Lazily initialized
-    private PatternSearchDialog patternSearchDialog;
-    private GiantFiberSearchDialog fiberSearchDialog;
     private ReleaseNotesDialog releaseNotesDialog;
     
     public ConsoleApp() {
@@ -84,6 +88,24 @@ public class ConsoleApp {
         // Work-around for NetBeans/OSXSierra bug which causes display issues if a resources cache file is loaded
         System.setProperty("org.netbeans.core.update.all.resources", "never");
         
+        if (JACS_SERVER==null) {
+            this.remoteHostname = ConsoleProperties.getInstance().getProperty("interactive.server.url"); 
+            log.info("Using remote hostname defined in console.properties as interactive.server.url: "+remoteHostname);
+        }
+        else {
+            this.remoteHostname = JACS_SERVER;
+            log.info("Using remote hostname defined by -Djacs.server parameter: "+remoteHostname);
+        }
+
+        if (JACS_SERVER==null) {
+            this.remoteRestUrl = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"); 
+            log.info("Using remote REST URL defined in console.properties as domain.facade.rest.url: "+remoteRestUrl);
+        }
+        else {
+            this.remoteRestUrl = String.format("http://%s:8180/rest-v1/", JACS_SERVER);
+            log.info("Derived remote REST URL from -Djacs.server parameter: "+remoteRestUrl);
+        }        
+        
         // Init in-memory image cache
         this.imageCache = new ImageCache();
 
@@ -109,23 +131,29 @@ public class ConsoleApp {
             String username = (String)prefs.getModelProperty(AccessManager.USER_NAME);
             String password = (String)prefs.getModelProperty(AccessManager.USER_PASSWORD);
             String runAsUser = (String)prefs.getModelProperty(AccessManager.RUN_AS_USER);
-            String email = (String)prefs.getModelProperty(AccessManager.USER_EMAIL);
 
             if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(password)) {
-                AccessManager.getAccessManager().loginSubject(username, password);
+                try {
+                    if (!AccessManager.getAccessManager().loginSubject(username, password)) {
+                        // If it didn't work for any reason, show the login dialog without any errors and let the user correct it
+                        LoginDialog loginDialog = new LoginDialog();
+                        loginDialog.showDialog();
+                    }
+                }
+                catch (FatalCommError e) {
+                    LoginDialog loginDialog = new LoginDialog();
+                    loginDialog.showDialog(ErrorType.NetworkError);
+                }
             }
-            
-            if (!AccessManager.getAccessManager().isLoggedIn() || email==null) {
-                // If it didn't work for any reason, show the login dialog
+            else {
                 LoginDialog loginDialog = new LoginDialog();
                 loginDialog.showDialog();
             }
-
-            email = (String)prefs.getModelProperty(AccessManager.USER_EMAIL);
             
-            if (!AccessManager.getAccessManager().isLoggedIn() || email==null) {
+            if (!AccessManager.getAccessManager().isLoggedIn()) {
                 log.warn("User closed login window without successfully logging in, exiting program.");
                 LifecycleManager.getDefault().exit(0);
+                return;
             }
 
             // Set run-as user if any
@@ -138,13 +166,20 @@ public class ConsoleApp {
             }
             
             ConsoleState.setCurrState(ConsoleState.LOGGED_IN);
+
+            // Uninstall if bricked
+            try {
+                GracefulBrick uninstaller = new GracefulBrick();
+                uninstaller.brickAndUninstall();
+            }
+            catch (Exception e) {
+                FrameworkImplProvider.handleException(e);
+            }
             
             // Things that can be lazily initialized 
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    patternSearchDialog = new PatternSearchDialog();
-                    fiberSearchDialog = new GiantFiberSearchDialog();
                     releaseNotesDialog = new ReleaseNotesDialog();
                     releaseNotesDialog.showIfFirstRunSinceUpdate();
                 }
@@ -260,18 +295,26 @@ public class ConsoleApp {
     public ReleaseNotesDialog getReleaseNotesDialog() {
         return releaseNotesDialog;
     }
-
-    public PatternSearchDialog getPatternSearchDialog() {
-        return patternSearchDialog;
-    }
-
-    public GiantFiberSearchDialog getGiantFiberSearchDialog() {
-        return fiberSearchDialog;
-    }
     
     @Subscribe
     public void systemWillExit(ApplicationClosing closingEvent) {
         log.info("Memory in use at exit: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000f + " MB");
         findAndRemoveWindowsSplashFile();
+    }
+    
+    public String getRemoteHostname() {
+        return remoteHostname;
+    }
+    
+    public String getRemoteRestUrl() {
+        return remoteRestUrl;
+    }
+
+    public String getApplicationTitle() {
+        String title = String.format("%s %s", ConsoleProperties.getString("console.Title"), ConsoleProperties.getString("console.versionNumber"));
+        if (!StringUtils.isBlank(JACS_SERVER)) {
+            title += String.format(" (%s)", JACS_SERVER);
+        }
+        return title;
     }
 }

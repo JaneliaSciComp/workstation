@@ -28,6 +28,10 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         super(log);
     }
 
+    public DomainFacadeImpl(RESTClientManager manager) {
+        super(log, manager);
+    }
+    
     @Override
     public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) throws Exception {
         Collection<Long> ids = new ArrayList<>();

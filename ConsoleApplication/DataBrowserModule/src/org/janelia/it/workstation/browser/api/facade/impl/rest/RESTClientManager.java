@@ -11,7 +11,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +31,7 @@ public class RESTClientManager {
 
     private static final Logger log = LoggerFactory.getLogger(RESTClientManager.class);
 
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
-
+    private static final String DEFAULT_REMOTE_REST_URL = ConsoleApp.getConsoleApp().getRemoteRestUrl();
     private static final String REMOTE_DATA_PREFIX = "data";
     private static final String REMOTE_PROCESS_PREFIX = "process";
     
@@ -51,7 +50,7 @@ public class RESTClientManager {
     private LoadingCache<String, Boolean> failureCache;
     
     public RESTClientManager() {
-        this(REMOTE_API_URL);
+        this(DEFAULT_REMOTE_REST_URL);
     }
 
     public RESTClientManager(String serverUrl) {

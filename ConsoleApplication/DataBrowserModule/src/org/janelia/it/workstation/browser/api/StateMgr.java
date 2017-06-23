@@ -269,6 +269,12 @@ public class StateMgr {
         Events.getInstance().postOnEventBus(new OntologySelectionEvent(ontologyId));
     }
 
+    public Ontology getCurrentOntology() throws Exception {
+        Long currentOntologyId = getCurrentOntologyId();
+        if (currentOntologyId==null) return null;
+        return DomainMgr.getDomainMgr().getModel().getDomainObject(Ontology.class, currentOntologyId);
+    }
+    
     public Annotation getCurrentSelectedOntologyAnnotation() {
         return currentSelectedOntologyAnnotation;
     }

@@ -7,9 +7,12 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -34,6 +37,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
     
     private NeuronFragment fragment;
     private NeuronSeparation separation;
+    private PipelineResult result;
 
     public OpenInNeuronAnnotatorAction(NeuronFragment fragment) {
         super("View In Neuron Annotator");
@@ -44,6 +48,11 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
         super("View In Neuron Annotator");
         this.separation = separation;
     }
+
+    public OpenInNeuronAnnotatorAction(PipelineResult result) {
+        super("View In Neuron Annotator");
+        this.result = result;
+    }
     
     @Override
     public void actionPerformed(ActionEvent event) {
@@ -51,8 +60,13 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
         ActivityLogHelper.logUserAction("OpenInNeuronAnnotatorAction.doAction", fragment==null?separation:fragment.getSeparationId());
 
         if (separation!=null) {
-            open();
+            openSeparation();
             return;
+        }
+        
+        if (result!=null) {
+            openStack();
+            return;  
         }
 
         SimpleWorker worker = new SimpleWorker() {
@@ -78,7 +92,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
                     JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "This neuron fragment is orphaned and its separation cannot be loaded.", "Neuron separation data missing", JOptionPane.ERROR_MESSAGE);
                 }
                 else {
-                    open();
+                    openSeparation();
                 }
             }
 
@@ -91,46 +105,72 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
         worker.execute();
     }
 
-    private void open() {
-
+    private void openSeparation() {
         try {
-            // Check that there is a valid NA instance running
-            List<ExternalClient> clients = ExternalClientMgr.getInstance().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME);
-            // If no NA client then try to start one
-            if (clients.isEmpty()) {
-                startNA();
-            }
-            // If NA clients "exist", make sure they are up
-            else {
-                ArrayList<ExternalClient> finalList = new ArrayList<>();
-                for (ExternalClient client : clients) {
-                    boolean connected = client.isConnected();
-                    if (!connected) {
-                        log.debug("Removing client "+client.getName()+" as the heartbeat came back negative.");
-                        ExternalClientMgr.getInstance().removeExternalClientByPort(client.getClientPort());
-                    }
-                    else {
-                        finalList.add(client);
-                    }
-                }
-                // If none are up then start one
-                if (finalList.isEmpty()) {
-                    startNA();
-                }
-            }
-
-            if (ExternalClientMgr.getInstance().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
-                        "Could not get Neuron Annotator to launch and connect. "
-                                + "Please contact support.", "Launch ERROR", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            log.debug("Requesting entity view in Neuron Annotator: " + separation.getId());
+            ensureNAIsRunning();
+            log.debug("Requesting view of separation {} in Neuron Annotator: ", separation.getId());
             ExternalClientMgr.getInstance().sendNeuronSeparationRequested(separation);
         }
         catch (Exception e) {
             ConsoleApp.handleException(e);
+        }
+    }
+
+    private void openStack() {
+        try {
+            ensureNAIsRunning();
+            
+            if (DomainUtils.getFilepath(result, FileType.LosslessStack)!=null) {
+                log.debug("Requesting view of lossless result {} in Neuron Annotator: ", result.getId());
+                ExternalClientMgr.getInstance().sendImageRequested(result, FileType.LosslessStack);
+            }
+            else if (DomainUtils.getFilepath(result, FileType.VisuallyLosslessStack)!=null) {
+                log.debug("Requesting view of lossy result {} in Neuron Annotator: ", result.getId());
+                ExternalClientMgr.getInstance().sendImageRequested(result, FileType.VisuallyLosslessStack);
+            }
+            else {
+                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                    "Result has no associated image stack that can be viewed in Neuron Annotator.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        catch (Exception e) {
+            ConsoleApp.handleException(e);
+        }
+    }
+    
+    private void ensureNAIsRunning() throws Exception {
+
+        // Check that there is a valid NA instance running
+        List<ExternalClient> clients = ExternalClientMgr.getInstance().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME);
+
+        if (clients.isEmpty()) {
+            // If no NA client then try to start one
+            startNA();
+        }
+        else {
+            // If NA clients "exist", make sure they are up
+            ArrayList<ExternalClient> finalList = new ArrayList<>();
+            for (ExternalClient client : clients) {
+                boolean connected = client.isConnected();
+                if (!connected) {
+                    log.debug("Removing client "+client.getName()+" as the heartbeat came back negative.");
+                    ExternalClientMgr.getInstance().removeExternalClientByPort(client.getClientPort());
+                }
+                else {
+                    finalList.add(client);
+                }
+            }
+            // If none are up then start one
+            if (finalList.isEmpty()) {
+                startNA();
+            }
+        }
+
+        if (ExternalClientMgr.getInstance().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                    "Could not get Neuron Annotator to launch and connect. "
+                            + "Please contact support.", "Launch Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
     }
 

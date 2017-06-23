@@ -15,9 +15,6 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
@@ -29,6 +26,7 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.gui.support.TreeNodeChooser;
+import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.UserViewConfiguration;
@@ -282,7 +280,7 @@ public class GetRelatedItemsAction extends NodePresenterAction {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
 
         // Map the items first
-        List<T> mapped = map(domainObjects, targetClass);
+        List<T> mapped = DomainModelViewUtils.map(domainObjects, targetClass);
         
         // Add them to the given folder
         model.addChildren(treeNode, mapped);
@@ -296,100 +294,10 @@ public class GetRelatedItemsAction extends NodePresenterAction {
         
         Set<Class<? extends DomainObject>> types = new HashSet<>();
         for (DomainObject domainObject : domainObjects) {
-            types.addAll(getMappableTypes(domainObject));
+            types.addAll(DomainModelViewUtils.getMappableTypes(domainObject));
         }
         
         return types;
     }
     
-    // TODO: move all this domain-specific logic to a confocal module
-
-    private Set<Class<? extends DomainObject>> getMappableTypes(DomainObject domainObject) {
-
-        Set<Class<? extends DomainObject>> types = new HashSet<>();
-        
-        if (domainObject instanceof Sample) {
-            types.add(LSMImage.class);
-        }
-        else if (domainObject instanceof LSMImage) {
-            types.add(Sample.class);
-        }
-
-        else if (domainObject instanceof NeuronFragment) {
-            types.add(Sample.class);
-            types.add(LSMImage.class);
-        }
-
-        return types;
-    }
-    
-    private <T extends DomainObject> List<T> map(Collection<DomainObject> domainObjects, Class<T> targetClass) throws Exception {
-
-        List<T> mapped = new ArrayList<>();
-        for (DomainObject domainObject : domainObjects) {
-            for(T result : map(domainObject, targetClass)) {
-                if (result != null) {
-                    mapped.add(result);
-                }
-            }
-        }
-        
-        return mapped;
-    }
-    
-    private <T extends DomainObject> List<T> map(DomainObject domainObject, Class<T> targetClass) throws Exception {
-
-        List<T> mapped = new ArrayList<>();
-        
-        if (domainObject instanceof Sample) {
-            Sample sample = (Sample)domainObject;
-            
-            if (targetClass.equals(LSMImage.class)) {
-                List<LSMImage> lsms = DomainMgr.getDomainMgr().getModel().getDomainObjectsAs(LSMImage.class, sample.getLsmReferences());
-                mapped.addAll((Collection<? extends T>) lsms);
-            }
-            else if (targetClass.equals(Sample.class)) {
-                mapped.add((T)sample);
-            }
-            else {
-                log.warn("Cannot map Samples to "+targetClass.getSimpleName());
-            }
-            
-        }
-        else if (domainObject instanceof LSMImage) {
-            LSMImage lsm = (LSMImage)domainObject;
-            
-            if (targetClass.equals(Sample.class)) {
-                Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(lsm.getSample());
-                mapped.add((T) sample);
-            }
-            else if (targetClass.equals(LSMImage.class)) {
-                mapped.add((T)lsm);
-            }
-            else {
-                log.warn("Cannot map LSMImage to "+targetClass.getSimpleName());
-            }
-            
-        }
-        else if (domainObject instanceof NeuronFragment) {
-            NeuronFragment fragment = (NeuronFragment)domainObject;
-            Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
-
-            if (targetClass.equals(Sample.class)) {
-                mapped.add((T) sample);
-            }
-            else if (targetClass.equals(LSMImage.class)) {
-                mapped.addAll(map(sample, targetClass));
-            }
-            else if (targetClass.equals(NeuronFragment.class)) {
-                mapped.add((T)fragment);
-            }
-            else {
-                log.warn("Cannot map NeuronFragment to "+targetClass.getSimpleName());
-            }
-            
-        }
-        
-        return mapped;
-    }
 }
