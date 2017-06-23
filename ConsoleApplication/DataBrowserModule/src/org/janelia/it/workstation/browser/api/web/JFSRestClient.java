@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.api.sage_responder;
+package org.janelia.it.workstation.browser.api.web;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -23,13 +23,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SageResponderRestClient extends RESTClientImpl {
+public class JFSRestClient extends RESTClientImpl {
 
-    private static final Logger log = LoggerFactory.getLogger(SageResponderRestClient.class);
+    private static final Logger log = LoggerFactory.getLogger(JFSRestClient.class);
     private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("sageResponder.rest.url");
     private WebTarget service;    
     
-    public SageResponderRestClient() {
+    public JFSRestClient() {
         super(log);
         this.service = RestJsonClientManager.getInstance().getTarget(REMOTE_API_URL);
     }
