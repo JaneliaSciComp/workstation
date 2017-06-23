@@ -1113,8 +1113,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (neuronName == null || neuronName.length() == 0) {
             return null;
         } else {
-            // if we had any validation to do, we'd do it
-            // here...but we don't
+            // turns out ? or * will mess with Java's file dialogs
+            //  (something about how file filters works)
+            if (neuronName.contains("?") || neuronName.contains("*")) {
+                presentError("Neuron names can't contain the ? or * characters!", "Could not rename neuron");
+                return null;
+            }
             return neuronName;
         }
     }
