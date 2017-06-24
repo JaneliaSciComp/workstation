@@ -7,6 +7,9 @@ import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.subjects.Group;
+import org.janelia.it.jacs.model.domain.subjects.GroupRole;
+import org.janelia.it.jacs.model.domain.subjects.User;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.ReflectionsHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -142,7 +145,25 @@ public class DomainMgr {
         DomainUtils.sortSubjects(subjects);
         return subjects;
     }
+    
+    /**
+     * Save changes to the given subject's metadata.
+     * @param subject
+     * @return
+     * @throws Exception
+     */
+    public <T extends Subject> T saveSubject(T subject) throws Exception {
+        return subjectFacade.save(subject);
+    }
 
+    public User setUserGroupRole(User user, Group group, GroupRole groupRole) throws Exception {
+        return subjectFacade.addUserGroupRole(user, group, groupRole);
+    }
+    
+    public User removeUserGroupRoles(User user, Group group) throws Exception {
+        return subjectFacade.removeUserGroupRoles(user, group);
+    }
+    
     private void loadPreferences() throws Exception {
         if (preferenceMap==null) {
             preferenceMap = new HashMap<>();
@@ -240,6 +261,10 @@ public class DomainMgr {
 
     private String getPreferenceMapKey(Preference preference) {
         return preference.getCategory()+":"+preference.getKey();
+    }
+    
+    private void notifySubjectChanged(Subject subject) {
+        
     }
     
     private void notifyPreferenceChanged(Preference preference) {

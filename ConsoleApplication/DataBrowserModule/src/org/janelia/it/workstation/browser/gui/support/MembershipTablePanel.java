@@ -12,8 +12,6 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JList;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
@@ -44,7 +42,7 @@ public abstract class MembershipTablePanel<T> extends JPanel {
         setLayout(new MigLayout(
                 "ins 0, flowy, fillx",
                 "[fill]",
-                "[grow 0, growprio 0][grow 1, growprio 1, fill]"
+                "[grow 1, growprio 1, fill][grow 0, growprio 0]"
         ));
         
         table = new DynamicTable(true, true) {
@@ -94,8 +92,8 @@ public abstract class MembershipTablePanel<T> extends JPanel {
         buttonPane.add(addItemButton);
         buttonPane.add(Box.createHorizontalGlue());
 
-        add(buttonPane, "width 10:300:3000");
         add(table, "");
+        add(buttonPane, "width 10:300:3000");
     }
 
     public JButton getAddItemButton() {

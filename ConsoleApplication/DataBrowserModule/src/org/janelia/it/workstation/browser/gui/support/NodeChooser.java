@@ -1,8 +1,10 @@
 package org.janelia.it.workstation.browser.gui.support;
 
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import javax.swing.tree.TreeSelectionModel;
 
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeView;
@@ -18,15 +20,17 @@ import org.openide.nodes.Node;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class NodeChooser extends AbstractChooser<Node> implements ExplorerManager.Provider {
+public class NodeChooser extends AbstractChooser implements ExplorerManager.Provider {
 
     private final ExplorerManager mgr = new ExplorerManager();  
     private final Node root;
     private final BeanTreeView beanTreeView;
     private final List<String> selectedPaths = new ArrayList<>();
-
+    private final List<Node> selectedNodeList = new ArrayList<>();
+    
     public NodeChooser(Node rootNode, String title) {
         setTitle(title);
+        setPreferredSize(new Dimension(600, 800));
         this.root = rootNode;
         this.beanTreeView = new CustomTreeView(this);
         beanTreeView.setDefaultActionAllowed(false);
@@ -59,7 +63,10 @@ public class NodeChooser extends AbstractChooser<Node> implements ExplorerManage
     }
 
     @Override
-    protected List<Node> choosePressed() {
+    protected void choosePressed() {
+        selectedPaths.clear();
+        selectedNodeList.clear();
+        
         Node[] selectedNodes = mgr.getSelectedNodes();
         
         for(Node selectedNode : selectedNodes) {
@@ -68,9 +75,13 @@ public class NodeChooser extends AbstractChooser<Node> implements ExplorerManage
             }
         }
         
-        return Arrays.asList(selectedNodes);
+        this.selectedNodeList.addAll(Arrays.asList(selectedNodes));
     }
 
+    public List<Node> getChosenElements() {
+        return selectedNodeList;
+    }
+    
     public List<String> getSelectedPaths() {
     	return selectedPaths;
     }

@@ -8,8 +8,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -26,15 +24,13 @@ import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class AbstractChooser<T> extends ModalDialog {
+public abstract class AbstractChooser extends ModalDialog {
 
     public static final int ERROR_OPTION = -1;
     public static final int CANCEL_OPTION = 0;
     public static final int CHOOSE_OPTION = 1;
 
     private int returnValue = ERROR_OPTION;
-
-    private final List<T> chosenElements = new ArrayList<>();
 
     public AbstractChooser() {
         this("Choose", "Choose the selected elements");
@@ -44,7 +40,6 @@ public abstract class AbstractChooser<T> extends ModalDialog {
 
         super();
 
-        setPreferredSize(new Dimension(600, 800));
         setLayout(new BorderLayout());
 
         JButton okButton = new JButton(okButtonText);
@@ -52,7 +47,7 @@ public abstract class AbstractChooser<T> extends ModalDialog {
         okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                chooseSelection();
+                choosePressed();
                 returnValue = CHOOSE_OPTION;
                 setVisible(false);
             }
@@ -96,19 +91,14 @@ public abstract class AbstractChooser<T> extends ModalDialog {
         return returnValue;
     }
 
-    protected void chooseSelection() {
-        chosenElements.clear();
-        chosenElements.addAll(choosePressed());
-    }
-
-    public List<T> getChosenElements() {
-        return chosenElements;
+    public int getReturnValue() {
+        return returnValue;
     }
 
     /**
      * Override this to provide functionality that runs when the user presses
      * the "Choose" button.
      */
-    protected abstract List<T> choosePressed();
+    protected abstract void choosePressed();
 
 }

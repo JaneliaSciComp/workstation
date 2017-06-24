@@ -21,10 +21,15 @@ public class GroupedKeyValuePanel extends JPanel {
     private static final Font SEPARATOR_FONT = new Font("Sans Serif", Font.BOLD, 12);
 
     public GroupedKeyValuePanel() {
-        setLayout(new MigLayout(
-                "wrap 2, ins 10, fillx",
-                "[growprio 0]0[growprio 1, grow]"
-        ));
+        this(null);
+    }
+            
+    public GroupedKeyValuePanel(String rowConstraints) {
+        this("wrap 2, ins 10, fill", "[growprio 0, fill]0[growprio 1, grow, fill]", rowConstraints);
+    }
+    
+    public GroupedKeyValuePanel(String layoutConstraints, String columnConstraints, String rowConstraints) {
+        setLayout(new MigLayout(layoutConstraints, columnConstraints, rowConstraints));
     }
 
     /**
@@ -52,13 +57,18 @@ public class GroupedKeyValuePanel extends JPanel {
      * @param constraints additional MIG layout constraints
      */
     public void addItem(JComponent component, String constraints) {
-        String compConstraints = "span 2";
-        if (!StringUtils.isEmpty(constraints)) {
-            compConstraints += ", "+constraints;
-        }
+        String compConstraints = addConstraints("span 2", constraints);
         addItem(null, component, compConstraints);
     }
 
+    private String addConstraints(String staticConstraints, String additionalConstraints) {
+        StringBuilder compConstraints = new StringBuilder(staticConstraints);
+        if (!StringUtils.isEmpty(additionalConstraints)) {
+            compConstraints.append(", ").append(additionalConstraints);
+        }
+        return compConstraints.toString();
+    }
+    
     /**
      * Add a component with a label.
      * @param label

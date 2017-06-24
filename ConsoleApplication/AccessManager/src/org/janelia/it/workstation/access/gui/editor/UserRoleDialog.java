@@ -1,131 +1,93 @@
 package org.janelia.it.workstation.access.gui.editor;
 
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.Component;
 import java.util.List;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
+import javax.swing.JList;
+import javax.swing.ListCellRenderer;
 
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.subjects.Group;
 import org.janelia.it.jacs.model.domain.subjects.GroupRole;
 import org.janelia.it.jacs.model.domain.subjects.User;
 import org.janelia.it.jacs.model.domain.subjects.UserGroupRole;
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.access.model.UserGroupRoleTemplate;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
+import org.janelia.it.workstation.browser.gui.support.AbstractChooser;
+import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
-import org.janelia.it.workstation.browser.model.DomainObjectPermission;
-import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
-
-import net.miginfocom.swing.MigLayout;
 
 /**
  * A dialog for viewing and editing a user's role in a group.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class UserRoleDialog<T extends Subject> extends ModalDialog {
+public class UserRoleDialog<T extends Subject, S extends Subject> extends AbstractChooser {
 
-    private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
-
-    private final JPanel attrPanel;
+    private final GroupedKeyValuePanel attrPanel;
+    private final JLabel subjectLabel;
     private final JComboBox<Subject> subjectCombobox;
-    private final JComboBox<String> roleCombobox;
+    private final JComboBox<GroupRole> roleCombobox;
 
     private List<Subject> allSubjects;
     private T subject;
+    private S roleSubject;
     private boolean isUser;
-    private Subject roleSubject;
+    private UserGroupRoleTemplate roleTemplate;
 
-    public UserRoleDialog(List<Subject> allSubjects, T subject) {
+    public UserRoleDialog(List<Subject> allSubjects, T subject, S roleSubject, GroupRole role) {
 
         this.allSubjects = allSubjects;
         this.subject = subject;
+        this.roleSubject = roleSubject;
         this.isUser = subject instanceof User;
         
         setTitle("Set Group Role");
 
-        attrPanel = new JPanel(new MigLayout("wrap 2, ins 20"));
-        add(attrPanel, BorderLayout.CENTER);
+        attrPanel = new GroupedKeyValuePanel();
 
-        addSeparator(attrPanel, subject instanceof User ? "User" : "Group");
-
+        subjectLabel = new JLabel();
+        
         subjectCombobox = new JComboBox<>();
         subjectCombobox.setEditable(false);
         subjectCombobox.setToolTipText("Choose a "+ (isUser?"group":"user"));
         subjectCombobox.setRenderer(new SubjectComboBoxRenderer());
         subjectCombobox.setMaximumRowCount(20);
 
-        attrPanel.add(subjectCombobox, "gap para, span 2");
-
+        if (isUser) {
+            attrPanel.addItem("User", subjectLabel);
+            attrPanel.addItem("Group", subjectCombobox);    
+        }
+        else {
+            attrPanel.addItem("User", subjectCombobox);
+            attrPanel.addItem("Group", subjectLabel);
+        }
+        
         roleCombobox = new JComboBox<>();
         roleCombobox.setEditable(false);
         roleCombobox.setToolTipText("Choose a role");
         roleCombobox.setMaximumRowCount(20);
 
-        attrPanel.add(subjectCombobox, "gap para, span 2");
+        roleCombobox.setRenderer(new ListCellRenderer<GroupRole>() {
+            @Override
+            public Component getListCellRendererComponent(JList<? extends GroupRole> list, 
+                    GroupRole value, int index, boolean isSelected, boolean cellHasFocus) {
+                return new JLabel(value.getLabel());
+            }
+        });
         
-        JButton cancelButton = new JButton("Cancel");
-        cancelButton.setToolTipText("Close without saving changes");
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
-
-        JButton okButton = new JButton("OK");
-        okButton.setToolTipText("Close and save changes");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                saveAndClose();
-            }
-        });
-
-        JPanel buttonPane = new JPanel();
-        buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
-        buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
-        buttonPane.add(Box.createHorizontalGlue());
-        buttonPane.add(cancelButton);
-        buttonPane.add(okButton);
-
-        add(buttonPane, BorderLayout.SOUTH);
-    }
-
-    private void addSeparator(JPanel panel, String text) {
-        JLabel label = new JLabel(text);
-        label.setFont(separatorFont);
-        panel.add(label, "split 2, span, gaptop 10lp");
-        panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
-    }
-
-    public void showForNewRole() {
-        showDialog();
+        attrPanel.addItem("Role", roleCombobox);
+        
+        addChooser(attrPanel);
     }
     
-    public void showForExistingRole(Subject roleSubject) {
-        this.roleSubject = roleSubject;
-        showDialog();
-    }
-    
-    private void showDialog() {
+    public int showDialog() {
 
+        subjectLabel.setText(subject.getFullName());
+        
         DefaultComboBoxModel<Subject> model = (DefaultComboBoxModel<Subject>) subjectCombobox.getModel();
         model.removeAllElements();
         Subject currSubject = null;
@@ -150,51 +112,43 @@ public class UserRoleDialog<T extends Subject> extends ModalDialog {
             currRole = ugr.getRole();
         }
 
-        DefaultComboBoxModel<String> model2 = (DefaultComboBoxModel<String>) roleCombobox.getModel();
+        DefaultComboBoxModel<GroupRole> model2 = (DefaultComboBoxModel<GroupRole>) roleCombobox.getModel();
         model2.removeAllElements();
         for (GroupRole role : GroupRole.values()) {
-            model2.addElement(role.getLabel());
+            model2.addElement(role);
         }
+        
         if (currRole != null) {
             model2.setSelectedItem(currRole);
+        }
+        else {
+            model2.setSelectedItem(GroupRole.Reader);
         }
         
         ActivityLogHelper.logUserAction("UserRoleDialog.showDialog", roleSubject);
         packAndShow();
+        return getReturnValue();
     }
 
-    private void saveAndClose() {
+    @Override
+    protected void choosePressed() {
 
-        final Subject subject = (Subject) subjectCombobox.getSelectedItem();
-        final String role = (String) roleCombobox.getSelectedItem();
+        final Subject targetSubject = (Subject) subjectCombobox.getSelectedItem();
+        final GroupRole role = (GroupRole) roleCombobox.getSelectedItem();
         
-        final DomainModel model = DomainMgr.getDomainMgr().getModel();
+        if (isUser) {
+            this.roleTemplate = new UserGroupRoleTemplate(
+                    (User)subject, (Group)targetSubject, role);
+        }
+        else {
+            this.roleTemplate = new UserGroupRoleTemplate(
+                    (User)targetSubject, (Group)subject, role);
+        }
         
-        SimpleWorker worker = new SimpleWorker() {
-
-            @Override
-            protected void doStuff() throws Exception {
-//                if (dop == null) {
-//                    dop = new DomainObjectPermission(domainObject, subject.getKey());    
-//                }
-//                dop.setRead(readCheckbox.isSelected());
-//                dop.setWrite(writeCheckbox.isSelected());
-//                model.changePermissions(domainObject, dop.getSubjectKey(), dop.getPermissions());
-            }
-
-            @Override
-            protected void hadSuccess() {
-//                parent.refresh();
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
-            }
-        };
-        //worker.setProgressMonitor(new IndeterminateProgressMonitor(parent, "Granting permissions...", ""));
-        worker.execute();
-
         setVisible(false);
+    }
+
+    public UserGroupRoleTemplate getRoleTemplate() {
+        return roleTemplate;
     }
 }

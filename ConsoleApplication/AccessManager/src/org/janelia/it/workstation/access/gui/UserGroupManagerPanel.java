@@ -47,7 +47,7 @@ public class UserGroupManagerPanel extends JPanel {
         setLayout(new BorderLayout());
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setDividerLocation(0.3);
+        splitPane.setDividerLocation(0.4);
 
         this.subjectListModel = new DefaultListModel<>();
         this.subjectList = new JList<>(subjectListModel);

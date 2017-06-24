@@ -10,6 +10,9 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.internal.util.Base64;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.subjects.Group;
+import org.janelia.it.jacs.model.domain.subjects.GroupRole;
+import org.janelia.it.jacs.model.domain.subjects.User;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
@@ -50,6 +53,49 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
         }
         return response.readEntity(Subject.class);
     }
+
+    @Override
+    public User addUserGroupRole(User user, Group group, GroupRole groupRole) throws Exception {
+        Response response = manager.getUserEndpoint()
+                .path("addRole")
+                .queryParam("subjectKey", AccessManager.getAccessManager().getAuthenticatedSubject().getKey())
+                .queryParam("userNameOrKey", user.getKey())
+                .queryParam("groupNameOrKey", group.getKey())
+                .queryParam("groupRole", groupRole.name())
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request to addRole on server")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(User.class);
+    }
+
+    @Override
+    public User removeUserGroupRoles(User user, Group group) throws Exception {
+        Response response = manager.getUserEndpoint()
+                .path("removeRoles")
+                .queryParam("subjectKey", AccessManager.getAccessManager().getAuthenticatedSubject().getKey())
+                .queryParam("userNameOrKey", user.getKey())
+                .queryParam("groupNameOrKey", group.getKey())
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request to removeRoles on server")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(User.class);
+    }
+
+    @Override
+    public <T extends Subject> T save(T subject) throws Exception {
+        Response response = manager.getUserEndpoint()
+                .queryParam("subjectKey", AccessManager.getAccessManager().getAuthenticatedSubject().getKey())
+                .request("application/json")
+                .put(Entity.json(subject));
+        if (checkBadResponse(response.getStatus(), "problem making request to save subject on server: " + subject.getId())) {
+            throw new WebApplicationException(response);
+        }
+        return (T)response.readEntity(Subject.class);
+    }
     
     @Override
     public Subject loginSubject(String username, String password) throws Exception {
@@ -61,8 +107,7 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
         if (checkBadResponse(response.getStatus(), "problem making authenticating user against the server")) {
             throw new WebApplicationException(response);
         }
-        Subject authSubject = response.readEntity(Subject.class);
-        return authSubject;
+        return response.readEntity(Subject.class);
     }
 
     @Override
