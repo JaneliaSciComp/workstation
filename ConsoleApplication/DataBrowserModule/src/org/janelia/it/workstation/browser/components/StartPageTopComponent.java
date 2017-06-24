@@ -3,12 +3,16 @@ package org.janelia.it.workstation.browser.components;
 import java.awt.BorderLayout;
 import java.lang.ref.WeakReference;
 
+import javax.swing.SwingUtilities;
+
 import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
 import org.janelia.it.workstation.browser.gui.editor.StartPage;
+import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.explorer.ExplorerUtils;
 import org.openide.util.NbBundle.Messages;
 import org.openide.nodes.Node;
 import org.openide.windows.TopComponent;
@@ -74,7 +78,7 @@ public class StartPageTopComponent extends TopComponent {
         if (null == startPage) {
             startPage = new StartPage();
             add(startPage, BorderLayout.CENTER);
-            setFocusable(false);
+            //setFocusable(false);
         }
     }
 
@@ -158,6 +162,7 @@ public class StartPageTopComponent extends TopComponent {
             }
         }
         ApplicationOptions.getInstance().addPropertyChangeListener(startPage);
+        startPage.getSearchField().requestFocusInWindow();
     }
 
     @Override
@@ -173,6 +178,15 @@ public class StartPageTopComponent extends TopComponent {
             // need to periodically refresh their content (e.g. RSS feeds)
             remove(startPage);
         }
+    }
+
+    @Override
+    protected void componentActivated() {
+        startPage.getSearchField().requestFocusInWindow();
+    }
+    
+    @Override
+    protected void componentDeactivated() {
     }
 
     @Override

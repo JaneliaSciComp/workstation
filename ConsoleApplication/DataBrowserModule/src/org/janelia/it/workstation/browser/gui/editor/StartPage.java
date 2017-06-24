@@ -1,11 +1,14 @@
 package org.janelia.it.workstation.browser.gui.editor;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
@@ -14,6 +17,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
@@ -23,6 +27,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -30,6 +35,7 @@ import javax.swing.event.ChangeListener;
 import org.janelia.it.jacs.model.domain.report.DatabaseSummary;
 import org.janelia.it.jacs.model.domain.report.DiskUsageSummary;
 import org.janelia.it.jacs.model.domain.report.QuotaUsage;
+import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
@@ -44,7 +50,6 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import groovy.sql.DataSet;
 import net.miginfocom.swing.MigLayout;
 
 /**
@@ -61,8 +66,6 @@ public class StartPage extends JPanel implements PropertyChangeListener {
     private static final ImageIcon SAMPLE_ICON = Icons.getIcon("microscope_400.png");
     
     private static final int iconSize = 150;
-    private static final String SUMMARY_MINE = " My data ";
-    private static final String SUMMARY_ALL = " All data ";
     
     private final JPanel topPanel;
     private final JPanel mainPanel;
@@ -98,7 +101,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         sampleIcon = getScaledIcon(SAMPLE_ICON, iconSize, iconSize);
         
         JLabel titleLabel = new JLabel("Welcome to the Janelia Workstation");
-        titleLabel.setForeground(UIManager.getColor("textInactiveText"));
+        //titleLabel.setForeground(UIManager.getColor("textInactiveText"));
         
         titleFont = titleLabel.getFont().deriveFont(Font.BOLD, 20);
         largeFont = titleLabel.getFont().deriveFont(Font.BOLD, 16);
@@ -130,6 +133,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         });
         
         searchButton = new JButton("Search");
+        searchButton.setFont(mediumFont);
         searchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -156,6 +160,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 //        buttonsPanel.add(button0);
                 
         JToggleButton button1 = new JToggleButton("Confocal Samples");
+        button1.setFont(mediumFont);
         button1.setMargin(new Insets(5,5,5,5));
         button1.addActionListener(new ActionListener() {
             @Override
@@ -164,9 +169,9 @@ public class StartPage extends JPanel implements PropertyChangeListener {
             }
         });
         group.add(button1);
-        buttonsPanel.add(button1);
 
         JToggleButton button2 = new JToggleButton("LSM Images");
+        button2.setFont(mediumFont);
         button2.setMargin(new Insets(5,5,5,5));
         button2.addActionListener(new ActionListener() {
             @Override
@@ -175,9 +180,9 @@ public class StartPage extends JPanel implements PropertyChangeListener {
             }
         });
         group.add(button2);
-        buttonsPanel.add(button2);
 
         JToggleButton button3 = new JToggleButton("Mouse Samples");
+        button3.setFont(mediumFont);
         button3.setMargin(new Insets(5,5,5,5));
         button3.addActionListener(new ActionListener() {
             @Override
@@ -186,8 +191,13 @@ public class StartPage extends JPanel implements PropertyChangeListener {
             }
         });
         group.add(button3);
-        buttonsPanel.add(button3);
 
+        buttonsPanel.add(button1);
+        buttonsPanel.add(Box.createRigidArea(new Dimension(5,0)));
+        buttonsPanel.add(button2);
+        buttonsPanel.add(Box.createRigidArea(new Dimension(5,0)));
+        buttonsPanel.add(button3);
+        
         // Default search button
         button1.setSelected(true);
         searchClass = Sample.class;
@@ -196,7 +206,10 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         promptLabel.setFont(largeFont);
         
         searchPanel = new JPanel();
-        searchPanel.setLayout(new MigLayout("gap 50, fill, wrap 2", "[grow 50]5[grow 50]", "[grow 50]5[grow 0]5[grow 75]"));
+        searchPanel.setLayout(new MigLayout(
+                "gap 50, fill, wrap 2", // Layout constraints
+                "[grow 50]5[grow 50]", // Column constraints
+                "[grow 50]5[grow 0]5[grow 0]5[grow 75, fill]")); // Row constraints
         searchPanel.add(titleLabel, "gap 10, span 2, al center bottom");
         searchPanel.add(promptLabel, "gap 10, span 2, al center bottom");
         searchPanel.add(buttonsPanel, "span 2, al center");
@@ -242,6 +255,10 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         refresh();
     }
     
+    public JTextField getSearchField() {
+        return searchField;
+    }
+
     private void refresh() {
         
         log.info("Refreshing start page");
@@ -405,6 +422,12 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         JLabel label = new JLabel(text);
         label.setFont(mediumFont);
         return label;
+    }
+
+    @Override
+    public boolean requestFocusInWindow() {
+        getSearchField().requestFocusInWindow();
+        return super.requestFocusInWindow();
     }
     
     @Override

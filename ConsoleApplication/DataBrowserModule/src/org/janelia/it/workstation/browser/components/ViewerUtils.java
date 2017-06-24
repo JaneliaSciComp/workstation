@@ -61,6 +61,7 @@ public class ViewerUtils {
         T tc;
         try {
             tc = manager.getViewerClass().newInstance();
+            manager.activate(tc);
         }
         catch (Exception e) {
             throw new IllegalStateException("Viewer instantiation failed",e);
@@ -77,6 +78,7 @@ public class ViewerUtils {
         // Against all reason, dockInto may cause the component to close after docking. 
         // So, unintuitively, this open() has to happen at the end. Thanks, NetBeans.
         tc.open();
+        tc.requestActive();
         
         return tc;
     }
@@ -87,14 +89,14 @@ public class ViewerUtils {
         log.info("Provisioning viewer: {}",manager.getViewerName());
         
         T tc = manager.getActiveViewer();
-        if (tc==null) {
-            log.info("No active viewer, looking up TC by name: {}",manager.getViewerClass().getSimpleName());
-            tc = (T)WindowManager.getDefault().findTopComponent(manager.getViewerClass().getSimpleName());
-            if (tc!=null) {
-                log.info("Found TC, activating");
-                manager.activate(tc);
-            }
-        }
+//        if (tc==null) {
+//            log.info("No active viewer, looking up TC by name: {}",manager.getViewerClass().getSimpleName());
+//            tc = (T)WindowManager.getDefault().findTopComponent(manager.getViewerClass().getSimpleName());
+//            if (tc!=null) {
+//                log.info("Found TC, activating");
+//                manager.activate(tc);
+//            }
+//        }
 
         if (tc==null) {
             log.info("Active viewer not found, creating...");
