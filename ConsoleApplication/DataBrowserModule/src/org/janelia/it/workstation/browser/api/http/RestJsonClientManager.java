@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.api.sage_responder;
+package org.janelia.it.workstation.browser.api.http;
 
 import java.io.IOException;
 
@@ -7,7 +7,6 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,31 +21,22 @@ import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 
-public class RESTClientManager {
+public class RestJsonClientManager {
 
-    private static final Logger log = LoggerFactory.getLogger(RESTClientManager.class);
+    private static final Logger log = LoggerFactory.getLogger(RestJsonClientManager.class);
 
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("sageResponder.rest.url");
-    
     // Singleton
-    private static RESTClientManager instance;
-    public static RESTClientManager getInstance() {
+    private static RestJsonClientManager instance;
+    public static RestJsonClientManager getInstance() {
         if (instance==null) {
-            instance = new RESTClientManager();
+            instance = new RestJsonClientManager();
         }
         return instance;
     }
     
     private Client client;
-    private String serverUrl;
 
-    private RESTClientManager() {
-        this(REMOTE_API_URL);
-    }
-
-    public RESTClientManager(String serverUrl) {
-        this.serverUrl = serverUrl;
-        log.info("Using server URL: {}",serverUrl);
+    public RestJsonClientManager() {
         client = ClientBuilder.newClient();
         JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -63,11 +53,7 @@ public class RESTClientManager {
         client.register(provider);
     }
 
-    public WebTarget getPublishingInfoLineEndpoint() {
-        return client.target(serverUrl + "publishing");
-    }
-
-    public WebTarget getImageInfoLineEndpoint() {
-        return client.target(serverUrl + "images");
+    public WebTarget getTarget(String serverUrl) {
+        return client.target(serverUrl);
     }
 }

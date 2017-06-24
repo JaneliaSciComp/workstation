@@ -15,19 +15,43 @@ public class ViewerUtils {
 
     private final static Logger log = LoggerFactory.getLogger(ViewerUtils.class);
 
-    public static <T extends TopComponent> T getViewer(ViewerManager<T> manager) {
+//    public static <T extends TopComponent> T getViewer(ViewerManager<T> manager) {
+//
+//        log.info("Getting viewer: {}",manager.getViewerName());
+//        
+//        T targetViewer = manager.getActiveViewer();
+//        if (targetViewer!=null) {
+//            if (!targetViewer.isOpened()) {
+//                targetViewer.open();
+//            }
+//            targetViewer.requestVisible();
+//        }
+//        
+//        return targetViewer;
+//    }
 
-        log.info("Getting viewer: {}",manager.getViewerName());
+    public static <T extends TopComponent> T getViewer(ViewerManager<T> manager, final String modeName) {
         
-        T targetViewer = manager.getActiveViewer();
-        if (targetViewer!=null) {
-            if (!targetViewer.isOpened()) {
-                targetViewer.open();
-            }
-            targetViewer.requestVisible();
+        log.info("Getting viewer: {} (mode={})",manager.getViewerName(), modeName);
+        
+        T tc = manager.getActiveViewer();
+        if (tc==null) {
+            log.warn("No active viewer");
+            return null;
         }
-        
-        return targetViewer;
+        else if (!tc.isVisible()) {
+            log.warn("Active viewer is not visible");
+            return null;
+        }
+        else if (!tc.isOpened()) {
+            log.warn("Viewer is not open");
+            return null;
+        }
+        else {
+            // TODO: this should probably also check to make sure the viewer is in the correct mode
+            log.warn("Returning active, visible viewer");
+            return tc;
+        }
     }
 
     public static <T extends TopComponent> T createNewViewer(ViewerManager<T> manager, final String modeName) {
@@ -43,7 +67,6 @@ public class ViewerUtils {
         }
         
         log.debug("Docking new instance of {} into {}",tc.getName(),modeName);
-
         Mode mode = WindowManager.getDefault().findMode(modeName);
         if (mode!=null) {
             mode.dockInto(tc);
@@ -56,19 +79,6 @@ public class ViewerUtils {
         tc.open();
         
         return tc;
-    }
-
-    public static <T extends TopComponent> T getViewer(ViewerManager<T> manager, final String modeName) {
-
-        T tc = manager.getActiveViewer();
-        if (tc==null || !tc.isVisible() || !tc.isOpened()) {
-            return null;
-        }
-        else {
-            // TODO: this should probably also check to make sure the viewer is in the correct mode
-            log.info("Getting viewer: {}",manager.getViewerName());
-            return tc;
-        }
     }
     
     @SuppressWarnings("unchecked")
@@ -93,10 +103,11 @@ public class ViewerUtils {
         else {
             log.info("Found active viewer");
             if (!tc.isOpened()) {
+                log.info("Viewer is not open, opening.");
                 tc.open();
             }
             if (!tc.isVisible()) {
-                log.info("Viewer is not visible, making active");
+                log.info("Viewer is not visible, requesting active.");
                 tc.requestActive();
             }
         }

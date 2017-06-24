@@ -9,9 +9,11 @@ import javax.swing.Action;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.logging.EDTExceptionInterceptor;
+import org.janelia.it.workstation.browser.nb_action.StartPageMenuAction;
 import org.janelia.it.workstation.browser.util.BrandingConfig;
 import org.openide.filesystems.FileUtil;
 import org.openide.windows.OnShowing;
@@ -57,6 +59,12 @@ public class ShowingHook implements Runnable {
 //        //discriminators.add(ReportRunner.BUTTON_EVENT_DISCRIMINATOR);
 //        new ReportRunner(sources, discriminators); // This starts a thread
 
+        // Open the start page, if necessary
+        if (ApplicationOptions.getInstance().isShowStartPageOnStartup()) {
+            StartPageMenuAction action = new StartPageMenuAction();
+            action.actionPerformed(null);
+        }
+        
         log.info("Showing main window");
         frame.setVisible(true);
 

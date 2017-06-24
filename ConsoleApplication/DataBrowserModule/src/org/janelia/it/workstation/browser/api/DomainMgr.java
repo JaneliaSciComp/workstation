@@ -18,7 +18,7 @@ import org.janelia.it.workstation.browser.api.facade.interfaces.OntologyFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SampleFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.WorkspaceFacade;
-import org.janelia.it.workstation.browser.api.sage_responder.SageResponderRestClient;
+import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.RunAsEvent;
 import org.janelia.it.workstation.browser.events.model.PreferenceChangeEvent;
@@ -57,7 +57,7 @@ public class DomainMgr {
     private SampleFacade sampleFacade;
     private SubjectFacade subjectFacade;
     private WorkspaceFacade workspaceFacade;
-    private SageResponderRestClient sageClient;
+    private SageRestClient sageClient;
     private LegacyFacade legacyFacade;
     
     private DomainModel model;
@@ -72,7 +72,7 @@ public class DomainMgr {
             sampleFacade = getNewInstance(reflections, SampleFacade.class);
             subjectFacade = getNewInstance(reflections, SubjectFacade.class);
             workspaceFacade = getNewInstance(reflections, WorkspaceFacade.class);
-            sageClient = new SageResponderRestClient();
+            sageClient = new SageRestClient();
             legacyFacade = new LegacyFacadeImpl();
             
         }
@@ -113,7 +113,7 @@ public class DomainMgr {
         return workspaceFacade;
     }
     
-    public SageResponderRestClient getSageClient() {
+    public SageRestClient getSageClient() {
         return sageClient;
     }
 
