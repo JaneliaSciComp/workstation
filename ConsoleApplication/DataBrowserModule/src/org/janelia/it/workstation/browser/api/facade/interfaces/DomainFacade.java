@@ -6,7 +6,8 @@ import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
-import org.janelia.it.jacs.model.domain.report.DataSummary;
+import org.janelia.it.jacs.model.domain.report.DatabaseSummary;
+import org.janelia.it.jacs.model.domain.report.DiskUsageSummary;
 
 /**
  * Implementations provide generic access to domain objects.
@@ -101,9 +102,16 @@ public interface DomainFacade {
     public DomainObject save(DomainObject domainObject) throws Exception;
     
     /**
-     * Returns the data summary for the current user.
+     * Returns the database summary for the current user.
      * @return
      * @throws Exception
      */
-    public DataSummary getDataSummary() throws Exception;
+    public DatabaseSummary getDatabaseSummary() throws Exception;
+    
+    /**
+     * Returns the disk usage summary for the current user.
+     * @return
+     * @throws Exception
+     */
+    public DiskUsageSummary getDiskUsageSummary() throws Exception;
 }

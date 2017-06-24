@@ -43,6 +43,7 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.TreeNodeCriteria;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -793,14 +794,16 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         }
     }
 
-    public static Filter createUnsavedFilter(String name) {
+    public static Filter createUnsavedFilter(Class<?> searchClass, String name) {
         Filter filter = new Filter();
+        filter.setSearchClass(searchClass.getName());
         filter.setName(name==null?DEFAULT_FILTER_NAME:name);
-        filter.setSearchClass(DEFAULT_SEARCH_CLASS.getName());
-        FacetCriteria facet = new FacetCriteria();
-        facet.setAttributeName("sageSynced");
-        facet.setValues(Sets.newHashSet("true"));
-        filter.addCriteria(facet);
+        if (Sample.class.equals(searchClass) || LSMImage.class.equals(searchClass)) {
+            FacetCriteria facet = new FacetCriteria();
+            facet.setAttributeName("sageSynced");
+            facet.setValues(Sets.newHashSet("true"));
+            filter.addCriteria(facet);
+        }
         return filter;
     }
     
