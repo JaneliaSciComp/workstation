@@ -6,8 +6,6 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
@@ -18,11 +16,9 @@ import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -35,7 +31,6 @@ import org.janelia.it.jacs.model.domain.report.DatabaseSummary;
 import org.janelia.it.jacs.model.domain.report.DiskUsageSummary;
 import org.janelia.it.jacs.model.domain.report.QuotaUsage;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -90,9 +85,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
     private JLabel dataSetCountLabel;
     private JLabel sampleCountLabel;
     private JLabel lsmCountLabel;
-//    private JLabel neuronCountLabel;
     private JLabel annotationCountLabel;
-//    private JComboBox<String> summaryCombo;
 
     private DiskUsageSummary diskUsageSummary;
     private DatabaseSummary dataSummary;
@@ -218,23 +211,6 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         // Data Summary Panel
         dataSummaryPanel = new SelectablePanel();
         dataSummaryPanel.setLayout(new MigLayout("gap 50, fillx, wrap 3", "[grow 10]5[grow 0]5[grow 10]", "[]2[]5[]5[]5[]5[]"));
-        
-//        summaryCombo = new JComboBox<>();
-//        summaryCombo.setEditable(false);
-//        summaryCombo.setToolTipText("Choose an export format");
-//        summaryCombo.addItemListener(new ItemListener() {
-//            @Override
-//            public void itemStateChanged(ItemEvent e) {
-//                if (e.getStateChange() == ItemEvent.SELECTED || e.getSource() instanceof JCheckBox) {
-//                    populateDataView(dataSummary);
-//                }
-//            }
-//        });
-//        DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) summaryCombo.getModel();
-//        model.addElement(SUMMARY_MINE);
-//        model.addElement(SUMMARY_ALL);
-//
-//        dataSummaryPanel.add(summaryCombo, "spanx 2, al left top");
         
         
         // Main Panel
@@ -384,7 +360,6 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         dataSetCountLabel = getMediumLabel("");
         sampleCountLabel = getMediumLabel("");
         lsmCountLabel = getMediumLabel("");
-//        neuronCountLabel = getMediumLabel("");
         annotationCountLabel = getMediumLabel("");
 
         dataSummaryPanel.add(getLargeLabel("Confocal Data Summary"), "spanx 3, gapbottom 10, al center");
@@ -399,28 +374,17 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         dataSummaryPanel.add(getMediumLabel("LSM Images:"), "al left top");
         dataSummaryPanel.add(lsmCountLabel, "al left top");
         
-//        dataSummaryPanel.add(getMediumLabel("Neurons:"), "al left top");
-//        dataSummaryPanel.add(neuronCountLabel, "al left top");
-
         dataSummaryPanel.add(getMediumLabel("Annotations:"), "al left top");
         dataSummaryPanel.add(annotationCountLabel, "al left top");
         
         if (dataSummary==null) return;
 
         Map<String, Long> counts = dataSummary.getUserCounts(); 
-//        Map<String, Long> counts = null;
-//        if (SUMMARY_MINE.equals(summaryCombo.getSelectedItem())) {
-//            counts = dataSummary.getUserCounts(); 
-//        }
-//        else if (SUMMARY_ALL.equals(summaryCombo.getSelectedItem())) {
-//            counts = dataSummary.getAllCounts(); 
-//        }
 
         if (counts!=null) {
             dataSetCountLabel.setText(counts.get(DataSet.class.getSimpleName())+"");
             sampleCountLabel.setText(counts.get(Sample.class.getSimpleName())+"");
             lsmCountLabel.setText(counts.get(LSMImage.class.getSimpleName())+"");
-//            neuronCountLabel.setText(counts.get(NeuronFragment.class.getSimpleName())+"");
             annotationCountLabel.setText(counts.get(Annotation.class.getSimpleName())+"");
         }
     }
