@@ -2,11 +2,11 @@ package org.janelia.it.workstation.browser.api.lifecycle;
 
 import java.io.File;
 import java.net.HttpURLConnection;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import javax.swing.JOptionPane;
 
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.janelia.it.workstation.browser.api.http.HttpClientManager;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
@@ -150,12 +150,20 @@ public class GracefulBrick {
         }
         
         String brickUrl = null;
-        ResourceBundle rb = ResourceBundle.getBundle("org.janelia.it.workstation.gui.browser.Bundle");
-        if (rb!=null) {
-            String updateCenterUrl = rb.getString("org_janelia_it_workstation_nb_action_update_center");
-            if (updateCenterUrl!=null) {
-                brickUrl = updateCenterUrl.replace("updates.xml", "brick.xml");
+        String bundleKey = "org.janelia.it.workstation.gui.browser.Bundle";
+        
+        try {
+            ResourceBundle rb = ResourceBundle.getBundle(bundleKey);
+            if (rb!=null) {
+                String updateCenterUrl = rb.getString("org_janelia_it_workstation_nb_action_update_center");
+                if (updateCenterUrl!=null) {
+                    brickUrl = updateCenterUrl.replace("updates.xml", "brick.xml");
+                }
             }
+        }
+        catch (MissingResourceException e) {
+            // Ignore this. It's probably just development.
+            log.trace("Error finding bundle "+bundleKey, e);
         }
         
         if (brickUrl==null) return false;
