@@ -28,7 +28,7 @@ public abstract class ViewerToolbar extends JPanel {
     public ViewerToolbar() {
         super(new BorderLayout());
 
-        toolbar = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 3));
+        toolbar = new JPanel(new WrapLayout(WrapLayout.LEFT, 2, 3));
         toolbar.setBorder(BorderFactory.createEmptyBorder(2, 2, 8, 2));
         
         refreshButton = new JButton();

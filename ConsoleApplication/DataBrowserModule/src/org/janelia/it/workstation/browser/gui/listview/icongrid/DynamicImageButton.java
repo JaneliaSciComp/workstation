@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
-import java.awt.Dimension;
 import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
@@ -34,7 +33,6 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
     public void setImageSize(int width, int height) {
         super.setImageSize(width, height);
         dynamicImagePanel.rescaleImage(width);
-        dynamicImagePanel.setPreferredSize(new Dimension(width, height));
     }
 
     @Override

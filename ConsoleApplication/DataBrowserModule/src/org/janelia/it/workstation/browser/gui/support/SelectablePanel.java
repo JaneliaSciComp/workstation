@@ -54,8 +54,9 @@ public class SelectablePanel extends JPanel {
     
     public SelectablePanel() {
         normalBackground = getBackground();
-        setBackground(normalBackground);   
+        setBackground(normalBackground);
         setFocusable(true);
+        setOpaque(false);
     }
 
     /**

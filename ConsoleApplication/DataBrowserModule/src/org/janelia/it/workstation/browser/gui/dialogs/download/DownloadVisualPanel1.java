@@ -238,7 +238,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             }
         });
         
-        this.configPane = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 3));
+        this.configPane = new JPanel(new WrapLayout(WrapLayout.LEFT, 2, 3));
         configPane.setBorder(BorderFactory.createEmptyBorder(2, 2, 8, 2));
         configPane.add(objectiveButton);
         configPane.add(areaButton);

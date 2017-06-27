@@ -114,6 +114,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
 
     public ImagesPanel() {
         buttonsPanel = new ScrollableGridPanel();
+        setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         setViewportView(buttonsPanel);
         setBorder(BorderFactory.createEmptyBorder());
         // When scrolling, only update the visible part of the panel
@@ -256,6 +257,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         for (AnnotatedImageButton<T,S> button : buttons.values()) {
             try {
                 button.setImageSize(maxImageWidth, maxImageHeight);
+                button.invalidate(); // Will be validated by recalculateGrid below
             }
             catch (Exception e) {
                 ConsoleApp.handleException(e);
@@ -586,14 +588,16 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
     public synchronized void recalculateGrid() {
 
         log.trace("Recalculating image grid");
-
-        double maxButtonWidth = 0;
-        for (AnnotatedImageButton<T,S> button : buttons.values()) {
-            int w = button.getPreferredSize().width;
-            if (w > maxButtonWidth) {
-                maxButtonWidth = w;
-            }
-        }
+        
+        double maxButtonWidth = maxImageWidth + 35;
+//        double maxButtonWidth = 0;
+//        for (AnnotatedImageButton<T,S> button : buttons.values()) {            
+//                int w = button.getPreferredSize().width;
+//                if (w > maxButtonWidth) {
+//                    maxButtonWidth = w;
+//                }
+//        }
+        log.trace("  maxButtonWidth={}", maxButtonWidth);
 
         // Should not be needed, but just in case, lets make sure we never divide by zero
         if (maxButtonWidth == 0) {
@@ -601,14 +605,20 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         }
 
         int fullWidth = getSize().width - getVerticalScrollBar().getWidth();
-
         int numCols = (int) Math.max(Math.floor(fullWidth / maxButtonWidth), 1);
+        
         if (buttonsPanel.getColumns() != numCols) {
             buttonsPanel.setColumns(numCols);
-            buttonsPanel.revalidate();
-            buttonsPanel.repaint();
+//            buttonsPanel.revalidate();
+//            buttonsPanel.repaint();
         }
-
+        
+        validate();
+        
+//        for (AnnotatedImageButton<T,S> button : buttons.values()) {            
+//            log.info("  {} = {} ", button.getUserObject(), button.getPreferredSize());
+//        }
+        
         loadUnloadImages();
     }
 
@@ -652,9 +662,15 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
 
     private class ScrollableGridPanel extends JPanel implements Scrollable {
 
+        private static final int BORDER_WIDTH = 5;
+        private static final int ITEM_SPACING = 4;
+        
         public ScrollableGridPanel() {
-            setLayout(new GridLayout(0, 2));
-            setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+            GridLayout gridLayout = new GridLayout(0, 2);
+            gridLayout.setHgap(ITEM_SPACING);
+            gridLayout.setVgap(ITEM_SPACING);
+            setLayout(gridLayout);
+            setBorder(BorderFactory.createEmptyBorder(BORDER_WIDTH, BORDER_WIDTH, BORDER_WIDTH, BORDER_WIDTH));
             setOpaque(false);
             for (ComponentListener l : getComponentListeners()) {
                 removeComponentListener(l);
@@ -682,7 +698,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
 
         @Override
         public boolean getScrollableTracksViewportWidth() {
-            return false;
+            return true;
         }
 
         @Override

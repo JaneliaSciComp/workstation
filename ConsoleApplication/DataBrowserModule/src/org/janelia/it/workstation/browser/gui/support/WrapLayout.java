@@ -9,26 +9,16 @@ import java.awt.Insets;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * FlowLayout subclass that fully supports wrapping of components.
  * Borrowed from http://tips4java.wordpress.com/2008/11/06/wrap-layout
  */
 public class WrapLayout extends FlowLayout {
 
-    private boolean useSiblingWidth;
-
-    /**
-     * Constructs a new <code>WrapLayout</code> with a left
-     * alignment and a default 5-unit horizontal and vertical gap.
-     */
-    public WrapLayout() {
-        this(true);
-    }
-
-    public WrapLayout(boolean useSiblingWidth) {
-        super();
-        this.useSiblingWidth = useSiblingWidth;
-    }
+    private static final Logger log = LoggerFactory.getLogger(WrapLayout.class);
 
     /**
      * Constructs a new <code>FlowLayout</code> with the specified
@@ -39,9 +29,8 @@ public class WrapLayout extends FlowLayout {
      *
      * @param align the alignment value
      */
-    public WrapLayout(boolean useSiblingWidth, int align) {
+    public WrapLayout(int align) {
         super(align);
-        this.useSiblingWidth = useSiblingWidth;
     }
 
     /**
@@ -56,9 +45,8 @@ public class WrapLayout extends FlowLayout {
      * @param hgap the horizontal gap between components
      * @param vgap the vertical gap between components
      */
-    public WrapLayout(boolean useSiblingWidth, int align, int hgap, int vgap) {
+    public WrapLayout(int align, int hgap, int vgap) {
         super(align, hgap, vgap);
-        this.useSiblingWidth = useSiblingWidth;
     }
 
     /**
@@ -85,7 +73,8 @@ public class WrapLayout extends FlowLayout {
     @Override
     public Dimension minimumLayoutSize(Container target) {
         Dimension minimum = layoutSize(target, false);
-        minimum.width -= (getHgap() + 1);
+//        minimum.width -= (getHgap() + 1);
+        minimum.width = 0;
         return minimum;
     }
 
@@ -99,33 +88,19 @@ public class WrapLayout extends FlowLayout {
      */
     private Dimension layoutSize(Container target, boolean preferred) {
 
+        log.trace("layoutSize (preferred={})",preferred);
+        
         synchronized (target.getTreeLock()) {
 
-            int targetWidth = 0;
-            if (useSiblingWidth) {
-                // Use the max width of the other components
-                for (Component c : target.getParent().getComponents()) {
-                    if (c == target) {
-                        continue;
-                    }
-                    if (!c.isVisible()) {
-                        continue;
-                    }
-                    int cw = c.getPreferredSize().width;
-                    if (cw > targetWidth) {
-                        targetWidth = cw;
-                    }
-                }
+            //  Each row must fit with the width allocated to the container.
+            //  When the container width = 0, the preferred width of the container
+            //  has not yet been calculated so lets ask for the maximum.
+            int targetWidth = target.getSize().width;
+            if (targetWidth == 0) {
+                targetWidth = Integer.MAX_VALUE;
             }
-            else {
-                //  Each row must fit with the width allocated to the containter.
-                //  When the container width = 0, the preferred width of the container
-                //  has not yet been calculated so lets ask for the maximum.
-                targetWidth = target.getParent().getSize().width;
-                if (targetWidth == 0) {
-                    targetWidth = Integer.MAX_VALUE;
-                }
-            }
+            
+//            log.info("layoutSize with targetWidth={}",targetWidth);
 
             int hgap = getHgap();
             int vgap = getVgap();
@@ -145,6 +120,7 @@ public class WrapLayout extends FlowLayout {
 
                 if (m.isVisible()) {
                     Dimension d = preferred ? m.getPreferredSize() : m.getMinimumSize();
+                    log.trace("component d={}",d);
 
                     //  Can't add the component to current row. Start a new row.
                     if (rowWidth + d.width > maxWidth) {
@@ -159,6 +135,8 @@ public class WrapLayout extends FlowLayout {
                     }
 
                     rowWidth += d.width;
+                    if (rowWidth>maxWidth) rowWidth=maxWidth;
+                    
                     rowHeight = Math.max(rowHeight, d.height);
                 }
             }
@@ -199,4 +177,161 @@ public class WrapLayout extends FlowLayout {
 
         dim.height += rowHeight;
     }
+
+    /**
+     * Centers the elements in the specified row, if there is any slack.
+     * @param target the component which needs to be moved
+     * @param x the x coordinate
+     * @param y the y coordinate
+     * @param width the width dimensions
+     * @param height the height dimensions
+     * @param rowStart the beginning of the row
+     * @param rowEnd the the ending of the row
+     * @param useBaseline Whether or not to align on baseline.
+     * @param ascent Ascent for the components. This is only valid if
+     *               useBaseline is true.
+     * @param descent Ascent for the components. This is only valid if
+     *               useBaseline is true.
+     * @return actual row height
+     */
+    private int moveComponents(Container target, int x, int y, int width, int height,
+                                int rowStart, int rowEnd, boolean ltr,
+                                boolean useBaseline, int[] ascent,
+                                int[] descent, int maxwidth) {
+        
+        switch (getAlignment()) {
+        case LEFT:
+            x += ltr ? 0 : width;
+            break;
+        case CENTER:
+            x += width / 2;
+            break;
+        case RIGHT:
+            x += ltr ? width : 0;
+            break;
+        case LEADING:
+            break;
+        case TRAILING:
+            x += width;
+            break;
+        }
+        int maxAscent = 0;
+        int nonbaselineHeight = 0;
+        int baselineOffset = 0;
+        int hgap = getHgap();
+        if (useBaseline) {
+            int maxDescent = 0;
+            for (int i = rowStart ; i < rowEnd ; i++) {
+                Component m = target.getComponent(i);
+                if (m.isVisible()) {
+                    if (ascent[i] >= 0) {
+                        maxAscent = Math.max(maxAscent, ascent[i]);
+                        maxDescent = Math.max(maxDescent, descent[i]);
+                    }
+                    else {
+                        nonbaselineHeight = Math.max(m.getHeight(),
+                                                     nonbaselineHeight);
+                    }
+                }
+            }
+            height = Math.max(maxAscent + maxDescent, nonbaselineHeight);
+            baselineOffset = (height - maxAscent - maxDescent) / 2;
+        }
+        for (int i = rowStart ; i < rowEnd ; i++) {
+            Component m = target.getComponent(i);
+            if (m.isVisible()) {
+                int cy;
+                if (useBaseline && ascent[i] >= 0) {
+                    cy = y + baselineOffset + maxAscent - ascent[i];
+                }
+                else {
+                    cy = y + (height - m.getHeight()) / 2;
+                }
+                
+                int mw = Math.min(m.getWidth(), maxwidth);
+                if (ltr) {
+                    m.setLocation(x, cy);
+                } else {
+                    // KR: added this to make sure components are not drawn larger than possible
+                    m.setLocation(target.getWidth() - x - mw, cy);
+                }
+                x += mw + hgap;
+            }
+        }
+        return height;
+    }
+
+    /**
+     * Lays out the container. This method lets each
+     * <i>visible</i> component take
+     * its preferred size by reshaping the components in the
+     * target container in order to satisfy the alignment of
+     * this <code>FlowLayout</code> object.
+     *
+     * @param target the specified component being laid out
+     * @see Container
+     * @see       java.awt.Container#doLayout
+     */
+    public void layoutContainer(Container target) {
+      synchronized (target.getTreeLock()) {
+        Insets insets = target.getInsets();
+        int hgap = getHgap();
+        int vgap = getVgap();
+        int maxwidth = target.getWidth() - (insets.left + insets.right + hgap*2);
+        int nmembers = target.getComponentCount();
+        int x = 0, y = insets.top + vgap;
+        int rowh = 0, start = 0;
+
+        boolean ltr = target.getComponentOrientation().isLeftToRight();
+
+        boolean useBaseline = getAlignOnBaseline();
+        int[] ascent = null;
+        int[] descent = null;
+
+        if (useBaseline) {
+            ascent = new int[nmembers];
+            descent = new int[nmembers];
+        }
+
+        for (int i = 0 ; i < nmembers ; i++) {
+            Component m = target.getComponent(i);
+            if (m.isVisible()) {
+                Dimension d = m.getPreferredSize();
+                // KR: added this to make sure components are not drawn larger than possible
+                int mw = Math.min(d.width, maxwidth);
+                int mh = d.height;
+                m.setSize(mw, mh);
+                
+                if (useBaseline) {
+                    int baseline = m.getBaseline(mw, mh);
+                    if (baseline >= 0) {
+                        ascent[i] = baseline;
+                        descent[i] = mh - baseline;
+                    }
+                    else {
+                        ascent[i] = -1;
+                    }
+                }
+                if ((x == 0) || ((x + mw) <= maxwidth)) {
+                    if (x > 0) {
+                        x += hgap;
+                    }
+                    x += mw;
+                    rowh = Math.max(rowh, mh);
+                } else {
+                    rowh = moveComponents(target, insets.left + hgap, y,
+                                   maxwidth - x, rowh, start, i, ltr,
+                                   useBaseline, ascent, descent, maxwidth);
+                    x = mw;
+                    y += vgap + rowh;
+                    rowh = mh;
+                    start = i;
+                }
+            }
+        }
+        moveComponents(target, insets.left + hgap, y, maxwidth - x, rowh,
+                       start, nmembers, ltr, useBaseline, ascent, descent, maxwidth);
+      }
+    }
+
 }

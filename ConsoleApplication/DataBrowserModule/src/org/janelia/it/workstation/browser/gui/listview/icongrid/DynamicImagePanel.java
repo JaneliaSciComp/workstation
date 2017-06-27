@@ -52,9 +52,6 @@ public class DynamicImagePanel extends JPanel {
 
         this.imageFilename = imageFilename;
         this.maxSize = maxSize;
-        if (maxSize != null) {
-            setPreferredSize(new Dimension(maxSize, maxSize));
-        }
 
         loadingLabel = new JLabel();
         loadingLabel.setOpaque(false);
@@ -117,6 +114,8 @@ public class DynamicImagePanel extends JPanel {
     }
 
     public synchronized void rescaleImage(int imageSize) {
+        setPreferredSize(new Dimension(imageSize, imageSize));
+        log.trace("Set image size: {}", getPreferredSize());
         if (displaySize == imageSize) {
             return;
         }

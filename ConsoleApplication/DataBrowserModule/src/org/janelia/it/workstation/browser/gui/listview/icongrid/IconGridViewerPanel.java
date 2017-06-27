@@ -132,13 +132,12 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             @Override
             protected void currImageSizeChanged(int imageSize) {
                 imagesPanel.setMaxImageWidth(imageSize);
-                imagesPanel.recalculateGrid();
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        imagesPanel.scrollSelectedObjectsToCenter();
-                    }
-                });
+//                SwingUtilities.invokeLater(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        imagesPanel.scrollSelectedObjectsToCenter();
+//                    }
+//                });
             }
         };
     }

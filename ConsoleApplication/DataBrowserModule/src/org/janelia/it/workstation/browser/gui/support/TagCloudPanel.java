@@ -30,7 +30,7 @@ public class TagCloudPanel<T> extends JPanel {
     private List<T> tags = new ArrayList<>();
 
     public TagCloudPanel() {
-        setLayout(new WrapLayout(true));
+        setLayout(new WrapLayout(WrapLayout.CENTER));
         setOpaque(false);
     }
 

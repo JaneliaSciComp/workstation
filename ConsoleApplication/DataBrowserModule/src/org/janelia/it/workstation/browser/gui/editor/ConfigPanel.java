@@ -86,10 +86,10 @@ public class ConfigPanel extends JPanel {
 			
 		});
                 
-        this.titlePanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 3));
+        this.titlePanel = new JPanel(new WrapLayout(WrapLayout.LEFT, 2, 3));
         addDefaultTitleComponents();
         
-        this.configPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 3));
+        this.configPanel = new JPanel(new WrapLayout(WrapLayout.LEFT, 2, 3));
         configPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 8, 2));
         
         toggleCriteriaPanelState();

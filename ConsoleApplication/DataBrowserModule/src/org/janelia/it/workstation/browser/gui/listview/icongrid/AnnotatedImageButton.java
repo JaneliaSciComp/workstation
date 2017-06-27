@@ -3,9 +3,6 @@ package org.janelia.it.workstation.browser.gui.listview.icongrid;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
 import java.awt.dnd.DragGestureListener;
@@ -39,6 +36,8 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 
+import net.miginfocom.swing.MigLayout;
+
 /**
  * A SelectablePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an
  * ImagesPanel.
@@ -50,7 +49,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
     protected final JLabel titleLabel;
     protected final JLabel subtitleLabel;
     protected final JPanel mainPanel;
-    protected final JPanel buttonPanel;
+//    protected final JPanel buttonPanel;
     protected final JLabel loadingLabel;
     protected final JPanel annotationPanel;
     protected boolean viewable = false;
@@ -97,11 +96,18 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
                 setTransferHandler(new DomainObjectTransferHandler((ImageModel<DomainObject,Reference>)imageModel, (DomainObjectSelectionModel)selectionModel));
             }
         }
-
-        GridBagConstraints c = new GridBagConstraints();
-        buttonPanel = new JPanel(new GridBagLayout());
-        buttonPanel.setOpaque(false);
-        add(buttonPanel);
+        
+//        buttonPanel = new JPanel();
+        setLayout(new MigLayout(
+                "flowy, fillx",
+                "[fill]",
+                "[grow 0, growprio 0]5[grow 0, growprio 0]10[grow 0, growprio 0]5[grow 50, growprio 1]"
+        ));
+        
+        setOpaque(false);
+        
+//        setLayout(new BorderLayout());
+//        add(buttonPanel, BorderLayout.CENTER);
 
         titleLabel = new JLabel(" ");
         titleLabel.setFocusable(false);
@@ -132,49 +138,25 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
             }
         });
 
-        c.gridx = 0;
-        c.gridy = 0;
-        c.insets = new Insets(0, 0, 0, 0);
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.anchor = GridBagConstraints.PAGE_START;
-        c.weighty = 0;
-        buttonPanel.add(editMode, c);
+//        c.gridx = 0;
+//        c.gridy = 0;
+//        c.insets = new Insets(0, 0, 0, 0);
+//        c.fill = GridBagConstraints.HORIZONTAL;
+//        c.anchor = GridBagConstraints.PAGE_START;
+//        c.weighty = 0;
+//        buttonPanel.add(editMode, "");
 
-        c.gridx = 0;
-        c.gridy = 0;
-        c.insets = new Insets(0, 0, 5, 0);
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.anchor = GridBagConstraints.PAGE_START;
-        c.weighty = 0;
-        buttonPanel.add(titleLabel, c);
-
-        c.gridx = 0;
-        c.gridy = 1;
-        c.insets = new Insets(0, 0, 10, 0);
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.anchor = GridBagConstraints.PAGE_START;
-        c.weighty = 0;
-        buttonPanel.add(subtitleLabel, c);
+        add(titleLabel, "wmin 10lp, al center bottom");
+        add(subtitleLabel, "wmin 10lp, al center top");
 
         mainPanel = new JPanel();
         mainPanel.setOpaque(false);
 
-        c.gridx = 0;
-        c.gridy = 2;
-        c.insets = new Insets(0, 0, 5, 0);
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.anchor = GridBagConstraints.CENTER;
-        c.weighty = 0;
-        buttonPanel.add(mainPanel, c);
+        add(mainPanel, "al center center");
 
         annotationPanel = new JPanel(new BorderLayout());
-        
-        c.gridx = 0;
-        c.gridy = 3;
-        c.fill = GridBagConstraints.BOTH;
-        c.anchor = GridBagConstraints.PAGE_START;
-        c.weighty = 1;
-        buttonPanel.add(annotationPanel, c);
+       
+        add(annotationPanel, "al center top");
         
         
         // Remove all default mouse listeners except drag gesture recognizer
@@ -218,7 +200,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         int fontSize = (int) Math.round(maxWidth * 0.005) + 10;
         Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
         titleLabel.setFont(titleLabelFont);
-        titleLabel.setPreferredSize(new Dimension(maxWidth, titleLabel.getFontMetrics(titleLabelFont).getHeight()));
+//        titleLabel.setPreferredSize(new Dimension(maxWidth-45, titleLabel.getFontMetrics(titleLabelFont).getHeight()));
         titleLabel.setText(title);
         titleLabel.setToolTipText(title);
     }
@@ -232,7 +214,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         int fontSize = (int) Math.round(maxWidth * 0.003) + 10;
         Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
         subtitleLabel.setFont(titleLabelFont);
-        subtitleLabel.setPreferredSize(new Dimension(maxWidth, subtitleLabel.getFontMetrics(titleLabelFont).getHeight()));
+//        subtitleLabel.setPreferredSize(new Dimension(maxWidth-45, subtitleLabel.getFontMetrics(titleLabelFont).getHeight()));
         subtitleLabel.setText(subtitle);
         subtitleLabel.setToolTipText(subtitle);
         subtitleLabel.setVisible(true);
@@ -270,7 +252,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         annotationView.setAnnotations(annotations);
         annotationPanel.removeAll();
         annotationPanel.add((JPanel)annotationView, BorderLayout.CENTER);
-        buttonPanel.revalidate();
+        revalidate();
     }
 
     public T getUserObject() {
@@ -297,14 +279,14 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         setTitle(titleLabel.getText(), maxWidth);
         JPanel annotationPanel = (JPanel) annotationView;
         if (annotationView instanceof AnnotationTablePanel) {
-            annotationPanel.setPreferredSize(new Dimension(maxWidth, annotationPanel.getPreferredSize().height));
+//            annotationPanel.setPreferredSize(new Dimension(maxWidth, annotationPanel.getPreferredSize().height));
         }
     }
 
     public synchronized void resizeTable(int tableHeight) {
         JPanel annotationPanel = (JPanel) annotationView;
         if (annotationView instanceof AnnotationTablePanel) {
-            annotationPanel.setPreferredSize(new Dimension(annotationPanel.getPreferredSize().width, tableHeight));
+//            annotationPanel.setPreferredSize(new Dimension(annotationPanel.getPreferredSize().width, tableHeight));
         }
     }
 

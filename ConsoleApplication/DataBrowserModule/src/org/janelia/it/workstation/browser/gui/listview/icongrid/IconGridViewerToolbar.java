@@ -98,9 +98,9 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
             public void stateChanged(ChangeEvent e) {
                 JSlider source = (JSlider) e.getSource();
                 int imageSize = source.getValue();
-                if (currImageSize == imageSize) {
-                    return;
-                }
+//                if (currImageSize == imageSize) {
+//                    return;
+//                }
                 currImageSize = imageSize;
                 currImageSizeChanged(currImageSize);
             }
