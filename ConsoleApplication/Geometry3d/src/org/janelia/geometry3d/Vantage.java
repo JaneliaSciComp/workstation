@@ -258,6 +258,11 @@ implements CompositeObject3d, ObservableInterface, VantageInterface, ConstVantag
     public void notifyObservers() {
         changeObservable.notifyObservers();
     }
+    
+    @Override
+    public void notifyObservers(Object arg) {
+        changeObservable.notifyObservers();
+    }
 
     @Override
     public void addObserver(Observer observer) {
