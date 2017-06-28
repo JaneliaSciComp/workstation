@@ -14,3 +14,4 @@ Large Volume Viewer
 * Better error dialog when attempting to export neurons to read-only location
 * Fixed issue with reselecting merge origin in Horta after a merge
 * Added "Hide others" to neuron gear menu
+* Improved UI update performance for neuron actions (including merge)
