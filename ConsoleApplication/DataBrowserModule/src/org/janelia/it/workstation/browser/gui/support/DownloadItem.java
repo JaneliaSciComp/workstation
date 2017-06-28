@@ -25,8 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An item to be downloaded, possibly with some other processing such as file format conversion. 
- * 
+ * An item to be downloaded, possibly with some other processing such as file format conversion.
+ *  
+ * @deprecated Use DownloadFileItem instead
+
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DownloadItem {

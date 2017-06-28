@@ -149,11 +149,11 @@ public class ServiceMgr {
     }
 
     public int getAxisServerPort() {
-        return axisServerPort;
+        return axisServer.getPort();
     }
 
     public int getWebServerPort() {
-        return webServerPort;
+        return webServer.getPort();
     }
     
 }

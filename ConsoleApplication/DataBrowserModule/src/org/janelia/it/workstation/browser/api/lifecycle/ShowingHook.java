@@ -5,13 +5,15 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Toolkit;
 
+import javax.swing.Action;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.logging.EDTExceptionInterceptor;
 import org.janelia.it.workstation.browser.util.BrandingConfig;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.openide.filesystems.FileUtil;
 import org.openide.windows.OnShowing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +33,9 @@ public class ShowingHook implements Runnable {
     public void run() {
         
         JFrame frame = WindowLocator.getMainFrame();
-        String title = ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber");
-        frame.setTitle(title);
+        
+        // Set the title
+        frame.setTitle(ConsoleApp.getConsoleApp().getApplicationTitle());
         
         // Inject special exception handling for uncaught exceptions on the EDT so that they are shown to the user 
         Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EDTExceptionInterceptor());
@@ -83,6 +86,7 @@ public class ShowingHook implements Runnable {
             frame.setSize(env.getMaximumWindowBounds().getSize());
             frame.setMaximizedBounds(env.getMaximumWindowBounds());
             frame.setExtendedState(frame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+            resetWindows();
         }
         else {
             Dimension currSize = frame.getSize();
@@ -93,6 +97,7 @@ public class ShowingHook implements Runnable {
                 double height = screenSize.getHeight();
                 frame.setLocation(new Point(0, 30)); // 30 pixels down to avoid Mac toolbar at the top of the screen
                 frame.setSize(new Dimension((int)Math.round(width*0.8), (int)Math.round(height*0.8)));
+                resetWindows();
             }
         }
         
@@ -133,5 +138,11 @@ public class ShowingHook implements Runnable {
 //                
 //            }
 //        }
+    }
+
+    private void resetWindows() {
+        log.info("Resetting windows");
+        Action action = FileUtil.getConfigObject("Actions/Window/org-netbeans-core-windows-actions-ResetWindowsAction.instance", Action.class);
+        action.actionPerformed(null);
     }
 }

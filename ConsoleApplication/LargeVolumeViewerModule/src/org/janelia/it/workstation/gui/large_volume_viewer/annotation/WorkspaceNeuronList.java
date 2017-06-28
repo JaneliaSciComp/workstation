@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -570,6 +571,28 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         }
         return neuronList;
     }
+
+    /**
+     * return list of neurons that aren't currently visible
+     * (useful for "hide others")
+     */
+    public List<TmNeuronMetadata> getUnshownNeuronList() {
+        // get all indices, then remove the one that are visible
+        Set<Integer> neuronIndexSet = new HashSet<>();
+        for (int i=0; i<neuronTableModel.getRowCount(); i++) {
+            neuronIndexSet.add(i);
+        }
+        for (int i=0; i<neuronTable.getRowCount(); i++) {
+            int index = neuronTable.convertRowIndexToModel(i);
+            neuronIndexSet.remove(index);
+        }
+        List<TmNeuronMetadata> neuronList = new ArrayList<>();
+        for (Integer index: neuronIndexSet) {
+            neuronList.add(neuronTableModel.getNeuronAtRow(index));
+        }
+        return neuronList;
+    }
+
 }
 
 class NeuronTableModel extends AbstractTableModel {

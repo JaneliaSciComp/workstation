@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -10,9 +12,12 @@ import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.interfaces.HasFilepath;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
 import org.janelia.it.jacs.model.domain.support.MapUnion;
@@ -21,6 +26,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.gui.support.DownloadItem;
+import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,23 +84,29 @@ public class DownloadFileItem extends DownloadItem {
         this.targetFile = null;
         
         String sourceFilePath = DomainUtils.getFilepath(fileProvider, fileType);
-        
-        if (fileProvider instanceof PipelineResult) {
-            PipelineResult result = (PipelineResult)fileProvider;
-            resultName = result.getName();
-            
-            if (sourceFilePath==null) {
+        if (sourceFilePath==null) {
+            if (fileProvider instanceof PipelineResult) {
                 // Try separation
+                PipelineResult result = (PipelineResult)fileProvider;
+                log.debug("Trying neuron separation: {}", result.getId());
                 NeuronSeparation separation = result.getLatestSeparationResult();
                 if (separation!=null) {
-                    resultName = separation.getName();
                     sourceFilePath = DomainUtils.getFilepath(separation, fileType); 
                     if (sourceFilePath==null) {
                         sourceFilePath = getStaticPath(separation, fileType);
                     }
                 }
             }
-        } 
+            else if (fileProvider instanceof NeuronFragment) {
+                NeuronFragment fragment = (NeuronFragment)fileProvider;
+                log.debug("Trying neuron fragment: {}", fragment);
+                // Try separation
+                sourceFilePath = DomainUtils.getFilepath(fragment, fileType); 
+                if (sourceFilePath==null) {
+                    sourceFilePath = getStaticPath(fragment, fileType);
+                }
+            }
+        }
         
         if (sourceFilePath==null) {
             errorMessage = "Cannot find '"+artifactDescriptor+"' with '"+fileType.getLabel()+"' file in: "+domainObject.getName();
@@ -141,6 +153,7 @@ public class DownloadFileItem extends DownloadItem {
     }
     
     private String getStaticPath(HasFilepath hasFilePath, FileType fileType) {
+        if (hasFilePath.getFilepath()==null) return null;
         switch (fileType) {
             case NeuronAnnotatorLabel: return new File(hasFilePath.getFilepath(),"ConsolidatedLabel.v3dpbd").getAbsolutePath();
             case NeuronAnnotatorSignal: return new File(hasFilePath.getFilepath(),"ConsolidatedSignal.v3dpbd").getAbsolutePath();
@@ -158,34 +171,13 @@ public class DownloadFileItem extends DownloadItem {
         
         keyValues.addMap(new DynamicDomainObjectProxy(domainObject));
         log.debug("  domainObject: {}", domainObject);
-        
-        if (fileProvider instanceof DomainObject) {
-            keyValues.addMap(new DynamicDomainObjectProxy((DomainObject)fileProvider));
-            log.debug("  fileProvider: {}", fileProvider);
-        }
-        
-        keyValues.put(ATTR_LABEL_RESULT_NAME, resultName);
-        log.debug("  {}: {}", ATTR_LABEL_RESULT_NAME, resultName);
-        
+
         String baseName = FileUtil.getBasename(new File(sourceFile).getName());
         keyValues.put(ATTR_LABEL_FILE_NAME, baseName);
         log.debug("  {}: {}", ATTR_LABEL_FILE_NAME, baseName);
         
         keyValues.put(ATTR_LABEL_EXTENSION, targetExtension);
         log.debug("  {}: {}", ATTR_LABEL_EXTENSION, targetExtension);
-
-        if (domainObject instanceof Sample) {
-            keyValues.put(ATTR_LABEL_SAMPLE_NAME, domainObject.getName());
-            log.debug("  {}: {}", ATTR_LABEL_SAMPLE_NAME, domainObject.getName());
-        }
-        else if (domainObject instanceof LSMImage) {
-            LSMImage lsm = (LSMImage) domainObject;
-            Sample sample = (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(lsm.getSample());
-            if (sample != null) {
-                keyValues.put(ATTR_LABEL_SAMPLE_NAME, sample.getName());
-                log.debug("  {}: {}", ATTR_LABEL_SAMPLE_NAME, sample.getName());
-            }
-        }
 
         if (fileProvider instanceof HasAnatomicalArea) {
             HasAnatomicalArea aaResult = (HasAnatomicalArea)fileProvider;
@@ -195,8 +187,61 @@ public class DownloadFileItem extends DownloadItem {
 
         if (fileProvider instanceof PipelineResult) {
             PipelineResult result = (PipelineResult)fileProvider;
-            keyValues.put(ATTR_LABEL_OBJECTIVE, result.getParentRun().getParent().getObjective());
-            log.debug("  {}: {}", ATTR_LABEL_OBJECTIVE, result.getParentRun().getParent().getObjective());
+            String objective = result.getParentRun().getParent().getObjective();
+            keyValues.put(ATTR_LABEL_OBJECTIVE, objective);
+            log.debug("  {}: {}", ATTR_LABEL_OBJECTIVE, objective);
+        }
+        else if (fileProvider instanceof DomainObject) {
+            keyValues.addMap(new DynamicDomainObjectProxy((DomainObject)fileProvider));
+            log.debug("  fileProvider: {}", fileProvider);
+        }
+
+        if (domainObject instanceof Sample) {
+            keyValues.put(ATTR_LABEL_SAMPLE_NAME, domainObject.getName());
+            log.debug("  {}: {}", ATTR_LABEL_SAMPLE_NAME, domainObject.getName());
+            keyValues.put(ATTR_LABEL_RESULT_NAME, resultName);
+            log.debug("  {}: {}", ATTR_LABEL_RESULT_NAME, resultName);
+        }
+        else if (domainObject instanceof LSMImage) {
+            List<Sample> mapped = DomainModelViewUtils.map(domainObject, Sample.class);
+            if (!mapped.isEmpty()) {
+                Sample sample = mapped.get(0);
+                keyValues.addMap(new DynamicDomainObjectProxy(sample));
+                log.debug("  sample: {}", domainObject);
+                keyValues.put(ATTR_LABEL_SAMPLE_NAME, sample.getName());
+                log.debug("  {}: {}", ATTR_LABEL_SAMPLE_NAME, sample.getName());
+            }
+        }
+        else if (domainObject instanceof NeuronFragment) {
+            NeuronFragment neuron = (NeuronFragment)domainObject;
+            List<Sample> mapped = DomainModelViewUtils.map(neuron, Sample.class);
+            if (!mapped.isEmpty()) {
+                Sample sample = mapped.get(0);
+                keyValues.addMap(new DynamicDomainObjectProxy(sample));
+                log.debug("  sample: {}", domainObject);
+                keyValues.put(ATTR_LABEL_SAMPLE_NAME, sample.getName());
+                log.debug("  {}: {}", ATTR_LABEL_SAMPLE_NAME, sample.getName());
+                
+                List<NeuronSeparation> results = sample.getResultsById(NeuronSeparation.class, neuron.getSeparationId());
+                if (!results.isEmpty()) {
+                    NeuronSeparation separation = results.get(0);
+                                                            
+                    PipelineResult parentResult = separation.getParentResult();
+
+                    keyValues.put(ATTR_LABEL_RESULT_NAME, parentResult.getName());
+                    log.debug("  {}: {}", ATTR_LABEL_RESULT_NAME, parentResult.getName());
+                    
+                    if (parentResult instanceof HasAnatomicalArea) {
+                        HasAnatomicalArea hasAA = (HasAnatomicalArea)parentResult;
+                        keyValues.put(ATTR_LABEL_ANATOMICAL_AREA, hasAA.getAnatomicalArea());
+                        log.debug("  {}: {}", ATTR_LABEL_ANATOMICAL_AREA, hasAA.getAnatomicalArea());
+                    }
+
+                    ObjectiveSample objectiveSample = parentResult.getParentRun().getParent();
+                    keyValues.put(ATTR_LABEL_OBJECTIVE, objectiveSample.getObjective());
+                    log.debug("  {}: {}", ATTR_LABEL_OBJECTIVE, objectiveSample.getObjective());
+                }       
+            }
         }
         
         log.debug("Filepath pattern: {}", filePattern);

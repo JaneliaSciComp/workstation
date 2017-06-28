@@ -413,6 +413,7 @@ public class DomainInspectorPanel extends JPanel {
             addProperty("Channel Spec", spr.getChannelSpec());
             addProperty("Image Size", spr.getImageSize());
             addProperty("Optical Resolution", spr.getOpticalResolution());
+            addProperty("Distortion Corrected", spr.isDistortionCorrected());
         }
         else if (result instanceof NeuronSeparation) {
             NeuronSeparation ns = (NeuronSeparation) result;
