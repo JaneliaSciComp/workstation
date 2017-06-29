@@ -1,17 +1,5 @@
-// 5.15
+// 5.16
 
 Workstation Browser
-* Each tab now maintains its own Back/Forward history 
-* You can now navigate backwards to unsaved filters using the Back button
-* LSM attributes (like "Objective" and "Num Channels") can be specified in file names when using the Download Wizard 
-* Removed "Pattern Annotation Search" and "Giant Fiber Mask Search" features
-* Fixed issue with creating annotations from within Neuron Annotator
-* Support for opening unseparated results and visually lossless separations in Neuron Annotator. Note that this update
-  implements this feature on the Workstation side. The required update to NA will be made available separately. 
-
-Large Volume Viewer
-* Fixed issue with progress bar dialog for long running operations
-* Better error dialog when attempting to export neurons to read-only location
-* Fixed issue with reselecting merge origin in Horta after a merge
-* Added "Hide others" to neuron gear menu
-* Improved UI update performance for neuron actions (including merge)
+* Changes to "Download Directory" now take effect without restart
+* Convert special characters in filenames, e.g. allowing Capture Date 

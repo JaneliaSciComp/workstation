@@ -1,8 +1,6 @@
 package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -17,14 +15,12 @@ import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
 import org.janelia.it.jacs.model.domain.support.MapUnion;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.gui.support.DownloadItem;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.util.SystemInfo;
@@ -42,8 +38,6 @@ public class DownloadFileItem extends DownloadItem {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadFileItem.class);
     
-    public static final File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
-    
     public static final String ATTR_LABEL_RESULT_NAME = "Result Name";
     public static final String ATTR_LABEL_OBJECTIVE = "Objective";
     public static final String ATTR_LABEL_ANATOMICAL_AREA = "Anatomical Area";
@@ -51,6 +45,7 @@ public class DownloadFileItem extends DownloadItem {
     public static final String ATTR_LABEL_SAMPLE_NAME = "Sample Name";
     public static final String ATTR_LABEL_EXTENSION = "Extension";
     
+    private final File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
     private final List<String> itemPath;
     private final DomainObject domainObject;
     private HasFiles fileProvider;
@@ -247,6 +242,8 @@ public class DownloadFileItem extends DownloadItem {
         log.debug("Filepath pattern: {}", filePattern);
         String filepath = StringUtils.replaceVariablePattern(filePattern, keyValues);
         log.debug("Interpolated filepath: {}", filepath);
+        filepath = filepath.replaceAll("[^\\w\\.\\(\\)\\- /]", "_");
+        log.debug("Corrected filepath: {}", filepath);
         
         StringBuilder sb = new StringBuilder(filepath);
 
