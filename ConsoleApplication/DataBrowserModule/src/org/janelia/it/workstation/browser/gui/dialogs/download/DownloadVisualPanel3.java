@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,7 +129,8 @@ public final class DownloadVisualPanel3 extends JPanel {
         downloadItemCountLabel = new JLabel();
         attrPanel.addItem("File count", downloadItemCountLabel);
         
-        JLabel downloadDirLabel = new JLabel(DownloadFileItem.workstationImagesDir.getAbsolutePath());
+        File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
+        JLabel downloadDirLabel = new JLabel(workstationImagesDir.getAbsolutePath());
         attrPanel.addItem("Destination folder", downloadDirLabel);
         
         downloadItemList = new JList<>(new DefaultListModel<DownloadFileItem>());

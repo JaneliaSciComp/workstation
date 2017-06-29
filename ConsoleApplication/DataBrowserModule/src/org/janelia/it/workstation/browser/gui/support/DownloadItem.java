@@ -35,13 +35,12 @@ public class DownloadItem {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadItem.class);
     
-    public static final File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
-    
     public static final String ATTR_LABEL_RESULT_NAME = "Result Name";
     public static final String ATTR_LABEL_FILE_NAME = "File Name";
     public static final String ATTR_LABEL_SAMPLE_NAME = "Sample Name";
     public static final String ATTR_LABEL_EXTENSION = "Extension";
     
+    private final File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
     private final List<String> itemPath;
     private final DomainObject domainObject;
     private boolean splitChannels = false;
