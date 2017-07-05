@@ -1,11 +1,8 @@
-// 5.13
+// 5.16
 
 Workstation Browser
-* Added "Disk Space Usage" attribute to Data Sets, Samples, and Results
-* Added a right-click menu option called "Add Related Items", which allows mapping between Samples, LSMs, and Neurons
-* Fixed issue with the Download wizard which caused it to not display certain file types
-* Fixed error when using "Purging and Block" on more than one sample at a time
-* Fixed application deadlock issue which occurred sometimes when pressing the Refresh button
+* Changes to "Download Directory" now take effect without restart
+* Convert special characters in filenames, e.g. allowing Capture Date 
 
-Horta
-* Optimized neuron merge performance
+Large Volume Viewer
+* Workspace info table is now sortable

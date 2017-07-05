@@ -216,11 +216,11 @@ public class ApplyAnnotationAction extends NodeAction {
         }
     }
 
-    public void addAnnotation(DomainObject target, OntologyTerm ontologyTerm, Object value) throws Exception {
-        doAnnotation(target, null, ontologyTerm, value);
+    public Annotation addAnnotation(DomainObject target, OntologyTerm ontologyTerm, Object value) throws Exception {
+        return doAnnotation(target, null, ontologyTerm, value);
     }
     
-    private void doAnnotation(DomainObject target, Annotation existingAnnotation, OntologyTerm ontologyTerm, Object value) throws Exception {
+    private Annotation doAnnotation(DomainObject target, Annotation existingAnnotation, OntologyTerm ontologyTerm, Object value) throws Exception {
         
         // TODO: after domainModel.createAnnotation is implemented in the web service, we can use it instead, like this:
 //        DomainModel model = DomainMgr.getDomainMgr().getModel();
@@ -255,10 +255,10 @@ public class ApplyAnnotationAction extends NodeAction {
                      annotation.getKey() + " = " + annotation.getValue());
         annotation.setName(tag);
         
-        createAndShareAnnotation(annotation);
+        return createAndShareAnnotation(annotation);
     }
     
-    private void createAndShareAnnotation(Annotation annotation) throws Exception {
+    private Annotation createAndShareAnnotation(Annotation annotation) throws Exception {
         
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         Annotation savedAnnotation = model.save(annotation);
@@ -269,5 +269,7 @@ public class ApplyAnnotationAction extends NodeAction {
             model.changePermissions(savedAnnotation, template.getSubjectKey(), template.getPermissions());
             log.info("Auto-shared annotation with " + template.getSubjectKey());
         }
+        
+        return savedAnnotation;
     }
 }

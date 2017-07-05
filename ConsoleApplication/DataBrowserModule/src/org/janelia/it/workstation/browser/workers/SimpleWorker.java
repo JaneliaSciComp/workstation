@@ -131,6 +131,10 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
      */
 	public void setProgressMonitor(ProgressMonitor progressMonitor) {
 		this.progressMonitor = progressMonitor;
+		if (progressMonitor!=null) {
+            String message = String.format("Completed %d%%", 0);
+            progressMonitor.setNote(message);
+		}
 	}
 
 	/**

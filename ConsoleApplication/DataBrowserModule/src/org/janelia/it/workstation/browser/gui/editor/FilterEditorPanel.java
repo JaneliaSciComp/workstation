@@ -340,10 +340,10 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             updateView();
             
             configPanel.removeAllTitleComponents();
-            if (ClientDomainUtils.hasWriteAccess(filter) || filter.getName().equals(DEFAULT_FILTER_NAME)) {
+            if (ClientDomainUtils.hasWriteAccess(filter)) {
 	            configPanel.addTitleComponent(saveButton, false, true);
-	            configPanel.addTitleComponent(saveAsButton, false, true);
             }
+            configPanel.addTitleComponent(saveAsButton, false, true);
             configPanel.setExpanded(filter.getId()==null);
 
             search();
@@ -793,10 +793,24 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         }
     }
 
+    public static Filter createUnsavedFilter(String name) {
+        Filter filter = new Filter();
+        filter.setName(name==null?DEFAULT_FILTER_NAME:name);
+        filter.setSearchClass(DEFAULT_SEARCH_CLASS.getName());
+        FacetCriteria facet = new FacetCriteria();
+        facet.setAttributeName("sageSynced");
+        facet.setValues(Sets.newHashSet("true"));
+        filter.addCriteria(facet);
+        return filter;
+    }
+    
     @Override
     public String getName() {
         if (filter==null) {
             return "Filter Editor";
+        }
+        if (DEFAULT_FILTER_NAME.equals(filter.getName())) {
+            return filter.getName();
         }
         return "Filter: "+StringUtils.abbreviate(filter.getName(), 15);
     }

@@ -16,6 +16,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolume
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceInfoPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceNeuronList;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This will have access to setters, etc. on the panels, to provide
@@ -32,12 +34,15 @@ public class PanelController {
     private FilteredAnnotationList filteredAnnotationList;
     private PanelNotesUpdateListener notesListener;
     private PanelAnnotationListener annotationListener;
+    private static final Logger log = LoggerFactory.getLogger(PanelController.class);
+    
     
     public PanelController(
             AnnotationPanel annoPanel,
             FilteredAnnotationList filteredAnnotationList,
             WorkspaceNeuronList wsNeuronList,
             LargeVolumeViewerTranslator lvvTranslator
+            
     ) {
         this.annotationPanel = annoPanel;
         this.filteredAnnotationList = filteredAnnotationList;

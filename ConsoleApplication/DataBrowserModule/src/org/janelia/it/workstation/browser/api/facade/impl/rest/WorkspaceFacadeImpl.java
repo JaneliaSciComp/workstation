@@ -30,6 +30,10 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
         super(log);
     }
 
+    public WorkspaceFacadeImpl(RESTClientManager manager) {
+        super(log, manager);
+    }
+    
     /**
      * Performs a search against the SolrServer and returns the results.
      * @param query the query to execute against the search server

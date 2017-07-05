@@ -25,21 +25,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An item to be downloaded, possibly with some other processing such as file format conversion. 
- * 
+ * An item to be downloaded, possibly with some other processing such as file format conversion.
+ *  
+ * @deprecated Use DownloadFileItem instead
+
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DownloadItem {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadItem.class);
     
-    public static final File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
-    
     public static final String ATTR_LABEL_RESULT_NAME = "Result Name";
     public static final String ATTR_LABEL_FILE_NAME = "File Name";
     public static final String ATTR_LABEL_SAMPLE_NAME = "Sample Name";
     public static final String ATTR_LABEL_EXTENSION = "Extension";
     
+    private final File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
     private final List<String> itemPath;
     private final DomainObject domainObject;
     private boolean splitChannels = false;

@@ -6,11 +6,16 @@ import org.slf4j.Logger;
 
 public class RESTClientImpl {
 
-    protected final RESTClientManager manager = RESTClientManager.getInstance();
-    private final Logger log;
+    protected final RESTClientManager manager;
+    protected final Logger log;
 
     protected RESTClientImpl(Logger log) {
+        this(log, RESTClientManager.getInstance());
+    }
+    
+    protected RESTClientImpl(Logger log, RESTClientManager manager) {
         this.log = log;
+        this.manager = manager;
     }
 
     protected boolean checkBadResponse(Response response, String failureError) {

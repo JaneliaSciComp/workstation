@@ -46,19 +46,16 @@ public final class DownloadWizardIterator implements WizardDescriptor.Iterator<W
             DownloadWizardPanel1 panel1 = new DownloadWizardPanel1();
             DownloadWizardPanel2 panel2 = new DownloadWizardPanel2();
             DownloadWizardPanel3 panel3 = new DownloadWizardPanel3();
-            DownloadWizardPanel4 panel4 = new DownloadWizardPanel4();
 
             // Listen to changes on each panel
             panel1.addChangeListener(this);
             panel2.addChangeListener(this);
             panel3.addChangeListener(this);
-            panel4.addChangeListener(this);
             
             allPanels = new ArrayList<WizardDescriptor.Panel<WizardDescriptor>>();
             allPanels.add(panel1);
             allPanels.add(panel2);
             allPanels.add(panel3);
-            allPanels.add(panel4);
             String[] steps = new String[allPanels.size()];
 
             Component mainFrame = ConsoleApp.getMainFrame();
@@ -74,22 +71,20 @@ public final class DownloadWizardIterator implements WizardDescriptor.Iterator<W
                     jc.putClientProperty(WizardDescriptor.PROP_AUTO_WIZARD_STYLE, true);
                     jc.putClientProperty(WizardDescriptor.PROP_CONTENT_DISPLAYED, true);
                     jc.putClientProperty(WizardDescriptor.PROP_CONTENT_NUMBERED, true);
-                    jc.setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.5), (int) (mainFrame.getHeight() * 0.4)));
+                    jc.setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.6), (int) (mainFrame.getHeight() * 0.6)));
                 }
             }
 
-            seq3dIndex = new String[] { steps[0], steps[1], steps[2], steps[3] };
+            seq3dIndex = new String[] { steps[0], steps[1], steps[2] };
             seq3dPanels = new ArrayList<WizardDescriptor.Panel<WizardDescriptor>>();
             seq3dPanels.add(panel1);
             seq3dPanels.add(panel2);
             seq3dPanels.add(panel3);
-            seq3dPanels.add(panel4);
 
-            seq2dIndex = new String[] { steps[0], steps[1], steps[3] };
+            seq2dIndex = new String[] { steps[0], steps[2] };
             seq2dPanels = new ArrayList<WizardDescriptor.Panel<WizardDescriptor>>();
             seq2dPanels.add(panel1);
-            seq2dPanels.add(panel2);
-            seq2dPanels.add(panel4);
+            seq2dPanels.add(panel3);
 
             currPanels = seq3dPanels;   
         }

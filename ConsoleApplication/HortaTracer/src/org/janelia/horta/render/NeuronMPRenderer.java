@@ -30,7 +30,6 @@
 
 package org.janelia.horta.render;
 
-import com.google.common.base.Stopwatch;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.geom.Point2D;
@@ -90,6 +89,8 @@ extends MultipassRenderer
     private final HortaMetaWorkspace workspace;
     private final Observer neuronListRefresher = new NeuronListRefresher(); // helps with signalling
     private final Observer volumeLayerExpirer = new VolumeLayerExpirer();
+    
+    private static final Logger log = LoggerFactory.getLogger(NeuronMPRenderer.class);
     
     // private final AllSwcActor allSwcActor = new AllSwcActor();
     private final NeuronVboActor allSwcActor = new NeuronVboActor();
@@ -483,7 +484,6 @@ extends MultipassRenderer
                 latestNeuronLists.add(neuronList);
                 latestNeurons.addAll(neuronList);
             }
-            
             // 2 - remove obsolete neurons
             Set<NeuronModel> obsoleteNeurons = new HashSet<>();
             Set<NeuronModel> newNeurons = new HashSet<>();
@@ -516,10 +516,14 @@ extends MultipassRenderer
             for (NeuronModel neuron : latestNeurons) {
                  addNeuronReconstruction(neuron);
             }
-            
             // 4 - double check for changes in neuron size (e.g. after transfer neurite)
-            allSwcActor.checkForChanges();
-            
+            if (arg==null) {
+                allSwcActor.checkForChanges();
+            } else {
+                // single neuron changes, no need to check everything
+                allSwcActor.checkForChanges((NeuronModel)arg);
+                
+            }
         }
     }
 

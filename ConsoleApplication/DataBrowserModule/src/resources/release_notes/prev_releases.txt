@@ -1,3 +1,39 @@
+// 5.15
+
+Workstation Browser
+* Each tab now maintains its own Back/Forward history 
+* You can now navigate backwards to unsaved filters using the Back button
+* LSM attributes (like "Objective" and "Num Channels") can be specified in file names when using the Download Wizard 
+* Removed "Pattern Annotation Search" and "Giant Fiber Mask Search" features
+* Fixed issue with creating annotations from within Neuron Annotator
+* Support for opening unseparated results and visually lossless separations in Neuron Annotator. Note that this update
+  implements this feature on the Workstation side. The required update to NA will be made available separately. 
+
+Large Volume Viewer
+* Fixed issue with progress bar dialog for long running operations
+* Better error dialog when attempting to export neurons to read-only location
+* Fixed issue with reselecting merge origin in Horta after a merge
+* Added "Hide others" to neuron gear menu
+* Improved UI update performance for neuron actions (including merge)
+
+// 5.14
+
+Workstation Browser
+* Improved usability of Download Wizard
+* Fixed error when right-clicking a folder in the Data Browser
+
+// 5.13
+
+Workstation Browser
+* Added "Disk Space Usage" attribute to Data Sets, Samples, and Results
+* Added a right-click menu option called "Add Related Items", which allows mapping between Samples, LSMs, and Neurons
+* Fixed issue with the Download wizard which caused it to not display certain file types
+* Fixed error when using "Purging and Block" on more than one sample at a time
+* Fixed application deadlock issue which occurred sometimes when pressing the Refresh button
+
+Horta
+* Optimized neuron merge performance
+
 // 5.12
 
 Workstation Browser

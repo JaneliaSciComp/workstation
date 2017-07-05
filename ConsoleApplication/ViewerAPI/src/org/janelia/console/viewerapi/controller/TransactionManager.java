@@ -57,7 +57,7 @@ public class TransactionManager {
     // event information
     public void addObservables(Observer observer, Observable observable, Object arg) {
         Map<String,Object> arguments = new HashMap<String,Object>();
-        arguments.put("observer", observable);
+        arguments.put("observable", observable);
         arguments.put("meta", arg);
         delayedItems.put(observer, arguments);
     }

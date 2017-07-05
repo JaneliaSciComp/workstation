@@ -1,41 +1,37 @@
 package org.janelia.it.workstation.browser.ws;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
-import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.interfaces.HasImageStack;
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.jacs.model.domain.sample.CuratedNeuron;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
-import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBindings;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.browser.util.PathTranslator;
+import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of the Console server interface which translates domain objects 
- * into Entity objects for compatability with Neuron Annotator. 
+ * into Entity objects for compatibility with Neuron Annotator. 
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -47,7 +43,7 @@ public class ConsoleDataServiceImpl {
 
     private static final Logger log = LoggerFactory.getLogger(ConsoleDataServiceImpl.class);
 
-    private DomainModel model = DomainMgr.getDomainMgr().getModel();
+    private DomainToEntityTranslator translator = new DomainToEntityTranslator();
     
     public int reservePort(String clientName) {
         int port = ExternalClientMgr.getInstance().addExternalClient(clientName);
@@ -64,8 +60,12 @@ public class ConsoleDataServiceImpl {
 
         if (StateMgr.getStateMgr().getCurrentOntologyId() != null) {
             parameters.clear();
-            parameters.put("rootId", StateMgr.getStateMgr().getCurrentOntologyId());
-            client.sendMessage("ontologySelected", parameters);
+            // Make sure current user has access to the last selected ontology
+            Ontology ontology = StateMgr.getStateMgr().getCurrentOntology();
+            if (ontology!=null) {
+                parameters.put("rootId", ontology.getId());
+                client.sendMessage("ontologySelected", parameters);
+            }
         }
     }
 
@@ -79,6 +79,21 @@ public class ConsoleDataServiceImpl {
 
     public Entity createAnnotation(OntologyAnnotation annotation) throws Exception {
         log.info("Create annotation {}", annotation.getKeyString());
+
+        // Only support annotations for neuron fragments
+        NeuronFragment domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(NeuronFragment.class, annotation.getTargetEntityId());
+        
+        if (domainObject!=null) {
+            final ApplyAnnotationAction action = ApplyAnnotationAction.get();
+            Long ontologyId = StateMgr.getStateMgr().getCurrentOntologyId();
+            Long ontologyTermId = annotation.getKeyEntityId();
+            OntologyTermReference ref = new OntologyTermReference(ontologyId, ontologyTermId);
+            OntologyTerm term = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(ref);
+            String value = annotation.getValueString();
+            Annotation savedAnnotation = action.addAnnotation(domainObject, term, value);
+            return translator.getAnotationEntity(savedAnnotation);
+        }
+        
         return null;
     }
 
@@ -89,53 +104,29 @@ public class ConsoleDataServiceImpl {
 
     public Entity[] getAnnotationsForEntity(long entityId) throws Exception {
         log.info("Get annotations for entity {}", entityId);
-        return new Entity[0];
+        return getAnnotationsForEntities(Arrays.asList(entityId).toArray(new Long[1]));
     }
 
     public Entity[] getAnnotationsForEntities(Long[] entityIds) throws Exception {
         log.info("Get annotations for {} entities", entityIds.length);
-        return new Entity[0];
+        List<Entity> annotations = new ArrayList<>(); 
+        for(Long entityId : entityIds) {
+            // Only support annotations for neuron fragments
+            for(Annotation annotation : DomainMgr.getDomainMgr().getModel().getAnnotations(Reference.createFor(NeuronFragment.class, entityId))) {
+                annotations.add(translator.getAnotationEntity(annotation));
+            }
+        }
+        return annotations.toArray(new Entity[annotations.size()]);
     }
 
     public Entity getOntology(long rootId) throws Exception {
         log.info("Get ontology {}", rootId);
-        Ontology ontology = model.getDomainObject(Ontology.class, rootId);
-        if (ontology==null) return null;
-        return translateToEntity(ontology.getOwnerKey(), ontology);
-    }
-    
-    private Entity translateToEntity(String ownerKey, OntologyTerm ontologyTerm) {
-        
-        Entity termEntity = new Entity();
-        
-        termEntity.setId(ontologyTerm.getId());
-        termEntity.setName(ontologyTerm.getName());
-        termEntity.setOwnerKey(ownerKey);
-        
-        if (ontologyTerm instanceof Ontology) {
-            termEntity.setEntityTypeName(EntityConstants.TYPE_ONTOLOGY_ROOT);
-        }
-        else {   
-            termEntity.setEntityTypeName(EntityConstants.TYPE_ONTOLOGY_ELEMENT);
-        }
-        
-        setValueByAttributeName(termEntity, EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE, ontologyTerm.getTypeName());
-        
-        if (ontologyTerm.hasChildren()) {
-            int index = 0;
-            for(OntologyTerm childTerm : ontologyTerm.getTerms()) {
-                Entity childEntity = translateToEntity(ownerKey, childTerm);
-                EntityData ed = termEntity.addChildEntity(childEntity, EntityConstants.ATTRIBUTE_ONTOLOGY_ELEMENT);
-                ed.setId(getNewId());
-                ed.setOrderIndex(index++);
-            }
-        }
-        
-        return termEntity;
+        return translator.getOntologyEntity(rootId);
     }
     
     public AnnotationSession getAnnotationSession(long sessionId) throws Exception {
         log.info("Get annotation session {}", sessionId);
+        // Annotation sessions are no longer supported, but this method must still exist for backwards compatibility
         return null;
     }
 
@@ -157,72 +148,11 @@ public class ConsoleDataServiceImpl {
 
     public Entity getEntityTree(long entityId) throws Exception {
         log.info("Get entity tree {}", entityId);
-
-        NeuronSeparation separation = ExternalClientMgr.getInstance().getNeuronSeparation(entityId);
-        if (separation==null) return null; // Only supports getting neuron separations
-        
-        String opticalRes = null;
-        
-        PipelineResult result = separation.getParentResult();
-        if (result instanceof SampleProcessingResult) {
-            SampleProcessingResult sr = (SampleProcessingResult)result;
-            opticalRes = sr.getOpticalResolution();
-        }
-        else if (result instanceof SampleAlignmentResult) {
-            HasImageStack sr = (HasImageStack)result;
-            opticalRes = sr.getOpticalResolution();
-        }
-        
-        Entity separationEntity = new Entity();
-        separationEntity.setId(separation.getId());
-        separationEntity.setName(separation.getName());
-        separationEntity.setEntityTypeName(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
-        setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION, opticalRes);
-        setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_FILE_PATH, separation.getFilepath());
-        
-        Entity fragmentsEntity = new Entity();
-        fragmentsEntity.setId(getNewId());
-        fragmentsEntity.setName("Neuron Fragments");
-        fragmentsEntity.setEntityTypeName(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
-        EntityData sed = separationEntity.addChildEntity(fragmentsEntity, EntityConstants.ATTRIBUTE_MASK_ENTITY_COLLECTION);
-        sed.setOrderIndex(1);
-        sed.setId(getNewId());
-        
-        int orderIndex = 0;
-        for(DomainObject domainObject : model.getDomainObjects(separation.getFragmentsReference())) {
-            NeuronFragment fragment = (NeuronFragment)domainObject;
-            if (fragment instanceof CuratedNeuron) {
-                log.trace("Omitting curated fragment: {}", fragment);
-                continue;
-            }
-            if (fragment.getNumber()==null) {
-                log.warn("Omitting neuron fragment which has no number: {}", fragment);
-                continue;
-            }
-            Entity fragmentEntity = new Entity();
-            fragmentEntity.setId(fragment.getId());
-            fragmentEntity.setName(fragment.getName());
-            fragmentEntity.setEntityTypeName(EntityConstants.TYPE_NEURON_FRAGMENT);
-            setValueByAttributeName(fragmentEntity, EntityConstants.ATTRIBUTE_NUMBER, fragment.getNumber().toString());
-            EntityData fed = fragmentsEntity.addChildEntity(fragmentEntity, EntityConstants.ATTRIBUTE_ENTITY);
-            fed.setOrderIndex(orderIndex++);
-            fed.setId(getNewId());
-        }
-        
-        return translatePaths(separationEntity);
+        Entity entity = ExternalClientMgr.getInstance().getCachedEntity(entityId);
+        EntityUtils.logEntity(entity);
+        return entity;
     }
     
-    private void setValueByAttributeName(Entity entity, String attributeName, String value) {
-        // Can't use Entity.setValueByAttributeName, because it doesn't set an id
-        EntityData ed=new EntityData();
-        ed.setId(getNewId());
-        ed.setParentEntity(entity);
-        ed.setEntityAttrName(attributeName);
-        ed.setValue(value);
-        ed.setOwnerKey(entity.getOwnerKey());
-        entity.getEntityData().add(ed);
-    }
-
     public Entity[] getParentEntityArray(long childEntityId) throws Exception {
         log.info("Get parent entity array for entity {}", childEntityId);
         return new Entity[0];
@@ -236,18 +166,15 @@ public class ConsoleDataServiceImpl {
     public Entity getAncestorWithType(long entityId, String type) throws Exception {
         log.info("Get ancestor {} for entity {}", type, entityId);
 
-        NeuronSeparation separation = ExternalClientMgr.getInstance().getNeuronSeparation(entityId);
-        if (separation==null) return null; // Only supports getting ancestors of neuron separations
+        Entity entity = ExternalClientMgr.getInstance().getCachedEntity(entityId);
+        
+        if (entity==null || !EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT.equals(entity.getEntityTypeName())) {
+            // Only supports getting ancestors of neuron separations
+            return null;
+        }
         
         if (EntityConstants.TYPE_SAMPLE.equals(type)) {
-            
-            Sample sample = separation.getParentRun().getParent().getParent();
-            
-            Entity sampleEntity = new Entity();
-            sampleEntity.setId(sample.getId());
-            sampleEntity.setName(sample.getName());
-            sampleEntity.setEntityTypeName(EntityConstants.TYPE_SAMPLE);
-            return sampleEntity;
+            return ExternalClientMgr.getInstance().getCachedSampleForSeparation(entityId);
         }
         
         return null;
@@ -260,15 +187,4 @@ public class ConsoleDataServiceImpl {
         return rgb;
     }
 
-    private Entity translatePaths(Entity entity) {
-        if (ConsoleProperties.getBoolean("console.WebServer.proxyFiles")) {
-            return PathTranslator.translatePathsToProxy(entity);
-        } else {
-            return PathTranslator.translatePathsToCurrentPlatform(entity);
-        }
-    }
-    
-    private Long getNewId() {
-        return TimebasedIdentifierGenerator.generateIdList(1).get(0);
-    }
 }

@@ -157,6 +157,11 @@ implements ObservableInterface,
     public void notifyObservers() {
         changeObservable.notifyObservers();
     }
+    
+    @Override
+    public void notifyObservers(Object arg) {
+        changeObservable.notifyObservers(arg);
+    }
 
     @Override
     public void addObserver(Observer observer) {

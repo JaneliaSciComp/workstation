@@ -74,6 +74,11 @@ public class BasicHortaWorkspace implements HortaMetaWorkspace
     }
 
     @Override
+    public void notifyObservers(Object arg) {
+        changeObservable.notifyObservers(arg);
+    }
+    
+    @Override
     public void addObserver(Observer observer)
     {
         changeObservable.addObserver(observer);

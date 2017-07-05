@@ -285,6 +285,15 @@ implements NeuronSet// , LookupListener
         getMetaWorkspace().setChanged();
         getMetaWorkspace().notifyObservers();                
     }
+    
+    // repaint for single neuron changes
+    private void repaintHorta(NeuronModel neuron) {
+        if (getMetaWorkspace() == null)
+            return;
+        // Below is the way to trigger a repaint, without changing the viewpoint
+        getMetaWorkspace().setChanged();
+        getMetaWorkspace().notifyObservers(neuron);                
+    }
 
     private NeuronModelAdapter neuronModelForTmGeoAnnotation(TmGeoAnnotation annotation) 
     {
@@ -551,8 +560,8 @@ implements NeuronSet// , LookupListener
             }
             neuronModel.getGeometryChangeObservable().setChanged();
             getMembershipChangeObservable().setChanged();
-            getMembershipChangeObservable().notifyObservers();
-            repaintHorta();
+            getMembershipChangeObservable().notifyObservers(neuronModel);
+            repaintHorta(neuronModel);
         }
 
         @Override
@@ -572,8 +581,8 @@ implements NeuronSet// , LookupListener
             neuronModel.getGeometryChangeObservable().setChanged();
             innerList.removeFromCache(neuron.getId());
             getMembershipChangeObservable().setChanged();
-            getMembershipChangeObservable().notifyObservers();
-            repaintHorta();
+            getMembershipChangeObservable().notifyObservers(neuronModel);
+            repaintHorta(neuronModel);
         }
 
         @Override
@@ -596,8 +605,7 @@ implements NeuronSet// , LookupListener
             
             // Recreate edges from the updated vertex list
             neuronModel.updateEdges();
-            
-            repaintHorta();
+            repaintHorta(neuronModel);
         }
         
         @Override

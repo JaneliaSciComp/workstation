@@ -1049,7 +1049,7 @@ public class TracingInteractor extends MouseAdapter
                     undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
                 }
                 // TODO: maybe walk down merged subtree to next branch or tip
-                selectParentVertex(hoveredVertex, hoveredNeuron);
+                selectParent();
                 
                 return true;
             }

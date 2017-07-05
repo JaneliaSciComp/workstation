@@ -227,6 +227,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         for (TmAnchoredPath path: pathList) {
             voxelPathList.add(TAP2AVP(neuronID, path));
         }
+        
         for (AnchoredVoxelPathListener l: avpListeners) {
             l.addAnchoredVoxelPaths(voxelPathList);
         }
@@ -372,7 +373,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
     @Override
     public void neuronCreated(TmNeuronMetadata neuron) {
-
         logger.info("neuronCreated: {}", neuron);
         
         Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
@@ -398,7 +398,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         
         addAnchoredPaths(neuron.getId(), annList);
         logger.info("  added {} anchored paths", annList.size());
-        
     }
 
     @Override
@@ -422,6 +421,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         if (nextParent != null && neuron.getGeoAnnotationMap().containsKey(nextParent.getGuid())) {
             fireNextParentEvent(nextParent.getGuid());
         }
+
     }
     
     @Override

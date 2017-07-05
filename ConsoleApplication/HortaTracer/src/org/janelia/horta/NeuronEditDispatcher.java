@@ -42,6 +42,7 @@ import java.util.Set;
 import org.janelia.console.viewerapi.BasicGenericObservable;
 import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.GenericObserver;
+import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
@@ -289,13 +290,25 @@ public class NeuronEditDispatcher implements LookupListener
         @Override
         public void update(Observable o, Object arg)
         {
-            Collection<NeuronModel> newModels = new ArrayList<>();
-            for (NeuronModel model : neuronSet) {
-                if (currentNeuronModels.contains(model))
-                    continue;
-                newModels.add(model);
-                addNeuronModel(model);
+            TransactionManager tm = TransactionManager.getInstance();
+            if (tm.isTransactionStarted()) {
+                tm.addObservables(this, o, arg);
+                return;
             }
+        
+            Collection<NeuronModel> newModels = new ArrayList<>();
+            if (arg!=null) {
+                newModels.add((NeuronModel)arg);
+                addNeuronModel((NeuronModel)arg);
+            } else {
+                for (NeuronModel model : neuronSet) {
+                    if (currentNeuronModels.contains(model))
+                        continue;
+                    newModels.add(model);
+                    addNeuronModel(model);
+                }
+            }
+                 
             if (newModels.size() > 0) {
                 neuronCreationObservable.addNewNeurons(newModels);
                 neuronCreationObservable.notifyObservers();
