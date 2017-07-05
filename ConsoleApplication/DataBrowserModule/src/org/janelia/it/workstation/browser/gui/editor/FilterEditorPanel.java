@@ -301,16 +301,6 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         }
         this.searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
     }
-    
-    public void loadNewFilter() {
-        Filter newFilter = new Filter();
-        newFilter.setSearchClass(Sample.class.getSimpleName());
-        FacetCriteria facet = new FacetCriteria();
-        facet.setAttributeName("sageSynced");
-        facet.setValues(Sets.newHashSet("true"));
-        newFilter.addCriteria(facet);
-        loadDomainObject(newFilter, true, null);
-    }
 
     @Override
     public void loadDomainObjectNode(AbstractDomainObjectNode<Filtering> filterNode, boolean isUserDriven, Callable<Void> success) {
@@ -798,7 +788,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
     public static Filter createUnsavedFilter(Class<?> searchClass, String name) {
         Filter filter = new Filter();
-        filter.setSearchClass(searchClass.getName());
+        filter.setSearchClass(searchClass==null?DEFAULT_SEARCH_CLASS.getName():searchClass.getName());
         filter.setName(name==null?DEFAULT_FILTER_NAME:name);
         if (Sample.class.equals(searchClass) || LSMImage.class.equals(searchClass)) {
             FacetCriteria facet = new FacetCriteria();
@@ -849,7 +839,9 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
         if (filter==null) return;
         if (event.getDomainObject().getId().equals(filter.getId())) {
-            loadNewFilter();
+            // Reset filter
+            Filter newFilter = createUnsavedFilter(null, null);
+            loadDomainObject(newFilter, true, null);
         }
     }
 

@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.util.Set;
 
 import javax.swing.AbstractAction;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.components.StartPageTopComponent;
@@ -43,7 +44,14 @@ public final class StartPageMenuAction extends AbstractAction {
         if (topComp!=null) {
             topComp.openAtTabPosition(0);
             topComp.requestActive();
-            topComp.requestFocusInWindow();
+            // This runs later to avoid NPE from Swing EventQueue
+            final StartPageTopComponent tc = topComp;
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    tc.requestFocusInWindow();
+                }
+            });
         }
     }
 }
