@@ -40,7 +40,10 @@ public final class StartPageMenuAction extends AbstractAction {
             topComp = StartPageTopComponent.findComp();
         }
        
-        topComp.open();
-        topComp.requestActive();
+        if (topComp!=null) {
+            topComp.openAtTabPosition(0);
+            topComp.requestActive();
+            topComp.requestFocusInWindow();
+        }
     }
 }

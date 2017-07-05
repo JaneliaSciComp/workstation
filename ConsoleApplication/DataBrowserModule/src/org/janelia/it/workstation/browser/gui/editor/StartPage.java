@@ -7,8 +7,6 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
@@ -27,8 +25,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -426,8 +422,11 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 
     @Override
     public boolean requestFocusInWindow() {
-        getSearchField().requestFocusInWindow();
-        return super.requestFocusInWindow();
+        boolean success = super.requestFocusInWindow();
+        if (getSearchField()!=null) {
+            success = getSearchField().requestFocusInWindow();
+        }
+        return success;
     }
     
     @Override

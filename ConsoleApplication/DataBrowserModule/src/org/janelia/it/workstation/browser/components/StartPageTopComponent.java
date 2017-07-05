@@ -7,14 +7,12 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
 import org.janelia.it.workstation.browser.gui.editor.StartPage;
-import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.explorer.ExplorerUtils;
-import org.openide.util.NbBundle.Messages;
 import org.openide.nodes.Node;
+import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
@@ -162,7 +160,12 @@ public class StartPageTopComponent extends TopComponent {
             }
         }
         ApplicationOptions.getInstance().addPropertyChangeListener(startPage);
-        startPage.getSearchField().requestFocusInWindow();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                requestFocusInWindow();
+            }
+        });
     }
 
     @Override
@@ -182,7 +185,12 @@ public class StartPageTopComponent extends TopComponent {
 
     @Override
     protected void componentActivated() {
-        startPage.getSearchField().requestFocusInWindow();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                requestFocusInWindow();
+            }
+        });
     }
     
     @Override
@@ -191,14 +199,16 @@ public class StartPageTopComponent extends TopComponent {
 
     @Override
     public void requestFocus() {
-        if (null != startPage)
+        if (null != startPage) {
             startPage.requestFocus();
+        }
     }
 
     @Override
     public boolean requestFocusInWindow() {
-        if (null != startPage)
+        if (null != startPage) {
             return startPage.requestFocusInWindow();
+        }
         return super.requestFocusInWindow();
     }
 }
