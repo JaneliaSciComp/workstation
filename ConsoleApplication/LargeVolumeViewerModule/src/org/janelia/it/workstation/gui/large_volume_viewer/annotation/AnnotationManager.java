@@ -5,10 +5,7 @@ import java.awt.Frame;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.net.URL;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,15 +20,12 @@ import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
@@ -1119,8 +1113,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (neuronName == null || neuronName.length() == 0) {
             return null;
         } else {
-            // if we had any validation to do, we'd do it
-            // here...but we don't
+            // turns out ? or * will mess with Java's file dialogs
+            //  (something about how file filters works)
+            if (neuronName.contains("?") || neuronName.contains("*")) {
+                presentError("Neuron names can't contain the ? or * characters!", "Could not rename neuron");
+                return null;
+            }
             return neuronName;
         }
     }
@@ -1653,10 +1651,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        if (!swcFile.canWrite()) {
-            presentError("Cannot write to this directory!", "Export error");
-            return;
-        }
+        // note: I wanted to test file writeability here, where I can report back
+        //  to the user, but it just doesn't work; both file.canWrite() and
+        //  Files.isWritable() give wrong values for reasons I don't understand
+
 
         BackgroundWorker saver = new BackgroundWorker() {
             

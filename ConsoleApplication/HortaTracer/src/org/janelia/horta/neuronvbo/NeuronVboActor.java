@@ -168,4 +168,8 @@ public class NeuronVboActor
         vboPool.checkForChanges();
     }
     
+    public void checkForChanges(NeuronModel neuron) {
+        vboPool.checkForChanges(neuron);
+    }
+    
 }

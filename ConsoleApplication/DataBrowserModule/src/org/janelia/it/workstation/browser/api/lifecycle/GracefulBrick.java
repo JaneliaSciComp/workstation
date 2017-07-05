@@ -2,10 +2,11 @@ package org.janelia.it.workstation.browser.api.lifecycle;
 
 import java.io.File;
 import java.net.HttpURLConnection;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import javax.swing.JOptionPane;
 
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.janelia.it.workstation.browser.api.http.HttpClientManager;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
@@ -36,17 +37,7 @@ public class GracefulBrick {
         }
         
         log.info("THIS CLIENT IS BRICKED. PROCEEDING TO FORCED UNINSTALL.");
-        
-        String html = "<html><body width='420'>" +
-        "<p>This version of the Workstation is no longer supported and must be manually upgraged to the latest release, based on Java 8.</p>" +
-        "<br>" +
-        "<p>When you press the Continue button below, the Workstation will exit and a web page will open describing how to install the new version.</p>" +
-        "</body></html>";
-      
-        String[] buttons = { "Continue" };
-        JOptionPane.showOptionDialog(WindowLocator.getMainFrame(), html,
-              "Manual Update Required", JOptionPane.WARNING_MESSAGE, 0, null, buttons, buttons[0]);
-   
+
         String helpPage = "manual/";
         File uninstaller = null;
         if (SystemInfo.isMac) {
@@ -68,20 +59,30 @@ public class GracefulBrick {
         }
         else {
             log.error("Unknown system: "+SystemInfo.OS_NAME);
+            helpPage = "upgrade";
         }
-
-        // Mark user dir for deletion
-//        log.info("Deleting user directory: "+Places.getUserDirectory());
-//        deleteDirectory(Places.getUserDirectory());
-        
-        // Delete any logs to ensure that the install directory is properly cleaned up
-        log.info("Deleting logs in install directory: "+uninstaller.getParentFile());
-        deleteLogs(uninstaller.getParentFile());
-        
-//        final File uninstallerFile = uninstaller;
-//        final File uninstallerFile = new File("/Applications/JaneliaWorkstation.app/uninstall.command");
         
         final String helpUrl = String.format("http://workstation.int.janelia.org/%s", helpPage);
+        final String simpleHelpUrl = "http://workstation.int.janelia.org/upgrade";
+        
+        String html = "<html><body width='420'>" +
+        "<p>This version of the Workstation is no longer supported and must be manually upgraged to the latest release.</p>" +
+        "<br>" +
+        "<p>When you press the Continue button below, the Workstation will exit and you will be taken to the following web page, which describes how to install the new version: " + simpleHelpUrl + 
+        "</p>" +
+        "</body></html>";
+      
+        String[] buttons = { "Continue" };
+        JOptionPane.showOptionDialog(WindowLocator.getMainFrame(), html,
+              "Manual Update Required", JOptionPane.WARNING_MESSAGE, 0, null, buttons, buttons[0]);
+        
+        // Delete any logs to ensure that the install directory is properly cleaned up
+        if (uninstaller!=null) {
+            log.info("Deleting logs in install directory: "+uninstaller.getParentFile());
+            deleteLogs(uninstaller.getParentFile());
+        }
+        
+//        final File uninstallerFile = uninstaller;
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
 
@@ -143,13 +144,35 @@ public class GracefulBrick {
             log.info("Client bricked by system property");
             return true;
         }
-
-        HttpClient httpClient = HttpClientManager.getHttpClient();
-        // TODO: get this from Bundle.properties
-        GetMethod method = new GetMethod("http://jacs-webdav.int.janelia.org/workstation/brick.xml");
+        else if ("false".equals(brickedProp)) {
+            log.info("Client unbricked by system property");
+            return false;
+        }
+        
+        String brickUrl = null;
+        String bundleKey = "org.janelia.it.workstation.gui.browser.Bundle";
         
         try {
-            int responseCode = httpClient.executeMethod(method);
+            ResourceBundle rb = ResourceBundle.getBundle(bundleKey);
+            if (rb!=null) {
+                String updateCenterUrl = rb.getString("org_janelia_it_workstation_nb_action_update_center");
+                if (updateCenterUrl!=null) {
+                    brickUrl = updateCenterUrl.replace("updates.xml", "brick.xml");
+                }
+            }
+        }
+        catch (MissingResourceException e) {
+            // Ignore this. It's probably just development.
+            log.trace("Error finding bundle "+bundleKey, e);
+        }
+        
+        if (brickUrl==null) return false;
+        log.info("Checking for brick at {}", brickUrl);
+        
+        GetMethod method = new GetMethod(brickUrl);
+        
+        try {
+            int responseCode = HttpClientManager.getHttpClient().executeMethod(method);
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 if (method.getResponseBodyAsString().contains("brick")) {
                     log.info("Client bricked by remote brick");

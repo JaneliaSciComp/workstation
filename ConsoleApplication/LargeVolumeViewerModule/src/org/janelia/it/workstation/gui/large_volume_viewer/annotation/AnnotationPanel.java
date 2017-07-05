@@ -98,6 +98,7 @@ public class AnnotationPanel extends JPanel
 
     private AbstractAction showAllNeuronsAction;
     private AbstractAction hideAllNeuronsAction;
+    private AbstractAction hideOtherNeuronsAction;
     private AbstractAction bulkChangeNeuronStyleAction;
     private AbstractAction bulkNeuronTagAction;
     
@@ -307,6 +308,14 @@ public class AnnotationPanel extends JPanel
         };
         neuronToolMenu.add(hideAllNeuronsAction);
         
+        hideOtherNeuronsAction = new AbstractAction("Hide other neurons") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                annotationMgr.setBulkNeuronVisibility(workspaceNeuronList.getUnshownNeuronList(), false);
+            }
+        };
+        neuronToolMenu.add(hideOtherNeuronsAction);
+
         bulkChangeNeuronStyleAction = new BulkChangeNeuronColorAction(annotationModel, workspaceNeuronList);
         neuronToolMenu.add(bulkChangeNeuronStyleAction);
         

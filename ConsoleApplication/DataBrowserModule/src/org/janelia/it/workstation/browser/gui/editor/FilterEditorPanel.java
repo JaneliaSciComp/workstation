@@ -343,10 +343,10 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             updateView();
             
             configPanel.removeAllTitleComponents();
-            if (ClientDomainUtils.hasWriteAccess(filter) || filter.getName().equals(DEFAULT_FILTER_NAME)) {
+            if (ClientDomainUtils.hasWriteAccess(filter)) {
 	            configPanel.addTitleComponent(saveButton, false, true);
-	            configPanel.addTitleComponent(saveAsButton, false, true);
             }
+            configPanel.addTitleComponent(saveAsButton, false, true);
             configPanel.setExpanded(filter.getId()==null);
 
             search();

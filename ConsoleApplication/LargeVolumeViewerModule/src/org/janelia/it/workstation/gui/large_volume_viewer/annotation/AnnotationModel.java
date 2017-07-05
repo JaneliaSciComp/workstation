@@ -831,11 +831,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         else {
             neuronManager.saveNeuronData(sourceNeuron);
         }
-
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-
                 beginTransaction();
                 try {
                     if (notesChangedSource) {
@@ -853,7 +851,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     fireNeuronChanged(targetNeuron);
                 }
                 finally {
-                    endTransaction();
+                    endTransaction();                
                 }
                 
                 activityLog.logEndOfOperation(getWsId(), targetAnnotation);

@@ -452,6 +452,11 @@ implements Collection<Vertex>, ObservableInterface
     public void notifyObservers() {
         observable.notifyObservers();
     }
+    
+    @Override
+    public void notifyObservers(Object arg) {
+        observable.notifyObservers(arg);
+    }
 
     @Override
     public void addObserver(Observer observer) {
