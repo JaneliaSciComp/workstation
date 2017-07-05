@@ -61,7 +61,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
     private static final ImageIcon DISK_USAGE_ICON = Icons.getIcon("database_400.png");
     private static final ImageIcon SAMPLE_ICON = Icons.getIcon("microscope_400.png");
     
-    private static final int iconSize = 150;
+    private static final int iconSize = 128;
     
     private final JPanel topPanel;
     private final JPanel mainPanel;
