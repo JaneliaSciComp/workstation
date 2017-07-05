@@ -18,6 +18,13 @@ import org.openide.modules.Places;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Implements the ability to "brick" a Workstation installation, either through a local configuration option, 
+ * or globally, through the update center. This is necessary because we don't support backwards compatibility for 
+ * older clients, so every user should always be using the latest client version.   
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public class GracefulBrick {
 
     private static final Logger log = LoggerFactory.getLogger(GracefulBrick.class);
