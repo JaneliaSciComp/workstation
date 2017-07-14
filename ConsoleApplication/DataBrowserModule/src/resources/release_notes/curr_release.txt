@@ -1,3 +1,9 @@
 // 5.16.1
 
 No changes (This is a server-side only release to support the LSF cluster)
+
+
+// for the next one:
+
+Large Volume Viewer
+* Fixed bug: lines drawn properly after importing multiple swc files
