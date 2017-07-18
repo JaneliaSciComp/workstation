@@ -87,7 +87,7 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
 
     @Override
     public <T extends Subject> T save(T subject) throws Exception {
-        Response response = manager.getUserEndpoint()
+        Response response = manager.getUserEndpoint().path("subject")
                 .queryParam("subjectKey", AccessManager.getAccessManager().getAuthenticatedSubject().getKey())
                 .request("application/json")
                 .put(Entity.json(subject));
