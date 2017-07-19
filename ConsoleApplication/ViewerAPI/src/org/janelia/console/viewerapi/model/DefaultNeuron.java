@@ -35,6 +35,6 @@ package org.janelia.console.viewerapi.model;
  * @author brunsc
  */
 public class DefaultNeuron {
-    public static float radius = 0.5f;
+    public static float radius = 1.0f;
     private DefaultNeuron() {} // cannot be instantiated
 }

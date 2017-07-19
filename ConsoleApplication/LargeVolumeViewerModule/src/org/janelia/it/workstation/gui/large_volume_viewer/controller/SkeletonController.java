@@ -336,6 +336,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         annoMgr.editNeuronTagsRequested(anchor);
     }
 
+    public void setNeuronRadiusRequested(Anchor anchor) {
+        annoMgr.setNeuronRadiusRequested(anchor);
+    }
+
     public void moveNeuriteRequested(Anchor anchor) {
         annoMgr.moveNeuriteRequested(anchor);
     }
@@ -404,6 +408,12 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void anchorRadiusChanged(TmGeoAnnotation anchor) {
         // Do nothing: radius has no effect on skeleton view
     }
+
+    @Override
+    public void anchorRadiiChanged(List<TmGeoAnnotation> anchorList) {
+        // nothing: radius not indicated in skeleton view
+    }
+
 
     private class ControllerSkeletonAnchorListener implements SkeletonAnchorListener {
 

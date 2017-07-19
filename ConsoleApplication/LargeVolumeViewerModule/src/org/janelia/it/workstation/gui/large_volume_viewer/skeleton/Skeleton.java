@@ -243,6 +243,10 @@ public class Skeleton {
         controller.editNeuronTagRequested(anchor);
     }
 
+    public void setNeuronRadiusRequest(Anchor anchor) {
+        controller.setNeuronRadiusRequested(anchor);
+    }
+
     public void moveNeuriteRequest(Anchor anchor) {
         controller.moveNeuriteRequested(anchor);
     }

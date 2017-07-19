@@ -617,6 +617,15 @@ implements NeuronSet// , LookupListener
         }
 
         @Override
+        public void neuronRadiusUpdated(TmNeuronMetadata neuron) {
+
+            log.debug("neuronRadiusUpdated");
+
+            // all the vertices could change, so just proceed with that
+            neuronChanged(neuron);
+        }
+
+        @Override
         public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style)
         {
             // log.info("neuronStyleChanged");
