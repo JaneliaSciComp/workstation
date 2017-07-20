@@ -41,7 +41,6 @@ public final class ViewDetailsAction implements ActionListener {
                 if (domainObject!=null) {
                     new DomainDetailsDialog().showForDomainObject(domainObject);
                 }
-
             }
         }
         catch (Exception ex) {
