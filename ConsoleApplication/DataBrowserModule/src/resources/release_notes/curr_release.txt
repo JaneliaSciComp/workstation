@@ -7,7 +7,8 @@ has been completely replaced in order to address rendering issues on MacOS Sierr
 Other improvements:
 
 Data Browser
-* Added the "Start Page" for quickly creating basic filters and viewing data statistics
+* Added the "Start Page" for quickly performing searches and viewing data statistics
+* Added a quick search box in the top toolbar, to make searching easier
 * Improved the user interface for the login dialog
 * Improved performance of removal of items from folders
 
