@@ -762,6 +762,52 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     /**
+     * change radius for every annotation in a neuron
+     *
+     * @param neuronID = neuron ID
+     * @param radius = radius, microns
+     * @throws Exception
+     */
+    public synchronized void updateNeuronRadius(final Long neuronID, final float radius) throws Exception {
+
+        final TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronID);
+        Map<Long, Double> oldRadii = new HashMap<>();
+
+        for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+            for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
+                oldRadii.put(ann.getId(), ann.getRadius());
+                synchronized (ann) {
+                    ann.setRadius(new Double(radius));
+                }
+            }
+        }
+        try {
+            synchronized (neuron) {
+                neuronManager.saveNeuronData(neuron);
+            }
+        } catch (Exception e) {
+            // roll back
+            for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+                for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
+                    synchronized (ann) {
+                        ann.setRadius(oldRadii.get(ann.getId()));
+                    }
+                }
+            }
+            throw e;
+        }
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                fireNeuronRadiusUpdated(neuron);
+            }
+        });
+
+        log.info("Updated radius for neuron {}", neuronID);
+    }
+
+    /**
      * merge the neurite that has source Annotation into the neurite containing
      * targetAnnotation
      */
@@ -1760,6 +1806,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public void fireAnnotationRadiusUpdated(TmGeoAnnotation annotation) {
         for (TmGeoAnnotationModListener l: tmGeoAnnoModListeners) {
             l.annotationRadiusUpdated(annotation);
+        }
+    }
+
+    public void fireNeuronRadiusUpdated(TmNeuronMetadata neuron) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+             l.neuronRadiusUpdated(neuron);
         }
     }
 

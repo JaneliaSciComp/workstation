@@ -65,8 +65,8 @@ public class Events {
 
     public void postOnEventBus(Object object) {
         try {
-            if (log.isDebugEnabled()) {
-                log.debug("Post on event bus from " + 
+            if (log.isTraceEnabled()) {
+                log.trace("Post on event bus from " + 
                         Thread.currentThread().getClass().getClassLoader() + "/" + 
                         Thread.currentThread().getContextClassLoader() + " in thread " + 
                         Thread.currentThread());

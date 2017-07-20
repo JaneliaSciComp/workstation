@@ -506,6 +506,15 @@ implements MouseMode, KeyListener
                     editNeuronTagsAction.setEnabled(controller.editsAllowed());
                     result.add(new JMenuItem(editNeuronTagsAction));
 
+                    AbstractAction setNeuronRadiusAction = new AbstractAction("Set neuron radius...") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            skeleton.setNeuronRadiusRequest(hover);
+                        }
+                    };
+                    setNeuronRadiusAction.setEnabled(controller.editsAllowed());
+                    result.add(new JMenuItem(setNeuronRadiusAction));
+
                     result.add(null); // separator
 
                     AbstractAction changeNeuronStyleAction = new AbstractAction("Change neuron color...") {

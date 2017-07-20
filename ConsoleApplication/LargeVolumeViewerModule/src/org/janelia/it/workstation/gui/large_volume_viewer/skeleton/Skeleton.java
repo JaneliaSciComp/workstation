@@ -243,6 +243,10 @@ public class Skeleton {
         controller.editNeuronTagRequested(anchor);
     }
 
+    public void setNeuronRadiusRequest(Anchor anchor) {
+        controller.setNeuronRadiusRequested(anchor);
+    }
+
     public void moveNeuriteRequest(Anchor anchor) {
         controller.moveNeuriteRequested(anchor);
     }
@@ -298,22 +302,22 @@ public class Skeleton {
     }
     
     public List<Anchor> addTmGeoAnchors(List<TmGeoAnnotation> annotationList) {
-        List<Anchor> anchorList = new ArrayList<Anchor>();
-        Map<Long, Anchor> tempAnchorsByGuid = new HashMap<Long, Anchor>();
+        List<Anchor> anchorList = new ArrayList<>();
+        Map<Long, Anchor> tempAnchorsByGuid = new HashMap<>();
         for (TmGeoAnnotation ann : annotationList) {
             Vec3 location = new Vec3(ann.getX(), ann.getY(), ann.getZ());
 
-            // anchorsByGuid isn't populated until the next call, so we
-            //  need to check for parents in the batch we're adding as
-            //  well; this is a bit redundant, but it maintatins the
-            //  separation; this observer only prepares a list, it doesn't
-            //  write to any of Skeleton's data structures
-            Anchor parentAnchor = anchorsByGuid.get(ann.getParentId());
-            if (parentAnchor == null) {
-                // check our batch, too
-                parentAnchor = tempAnchorsByGuid.get(ann.getParentId());
-            }
-
+            // only check the current batch of anchors for the parent, not the cache;
+            //  we need to work with the latest anchor objects, not
+            //  retrieve older objects that aren't connected right;
+            //  currently parents are guaranteed to precede children in
+            //  the input list (true as of July 2017); also true in July
+            //  2017: list will include only complete neurons (ie, all
+            //  annotations in one neuron); this is fragile! in the future,
+            //  should probably handle situations where we aren't getting
+            //  the full neuron (so do need to check the cache), and are
+            //  possibly getting parents out of order (so ugh)
+            Anchor parentAnchor = tempAnchorsByGuid.get(ann.getParentId());
             Anchor anchor = new Anchor(location, parentAnchor, ann.getNeuronId(), tileFormat);
             anchor.setGuid(ann.getId());
             tempAnchorsByGuid.put(anchor.getGuid(), anchor);
