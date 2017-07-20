@@ -620,9 +620,13 @@ implements NeuronSet// , LookupListener
         public void neuronRadiusUpdated(TmNeuronMetadata neuron) {
 
             log.debug("neuronRadiusUpdated");
-
-            // all the vertices could change, so just proceed with that
-            neuronChanged(neuron);
+            
+            // neuron radius update can only be triggered if there are
+            //  annotations, so this should be safe:
+            NeuronModelAdapter neuronModel = neuronModelForTmGeoAnnotation(neuron.getRootAnnotations().get(0));
+            neuronModel.getGeometryChangeObservable().setChanged();
+            neuronModel.getGeometryChangeObservable().notifyObservers();
+            repaintHorta(neuronModel);
         }
 
         @Override
