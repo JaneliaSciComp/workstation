@@ -145,6 +145,11 @@ public class PanelController {
         }
 
         @Override
+        public void neuronRadiusUpdated(TmNeuronMetadata neuron) {
+            // currently nothing in the panel is aware of or cares about radii
+        }
+
+        @Override
         public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
             wsNeuronList.neuronStyleChanged(neuron, style);
         }

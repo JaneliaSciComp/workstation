@@ -71,7 +71,7 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
                 }
             }
             else {
-                log.info("Removal not supported for {}", domainObject);
+                log.trace("Removal not supported for {}", domainObject);
             }
             
             removeFromFolders.put(treeNode,domainObject);
@@ -108,10 +108,7 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
                 
                 // Delete references
                 for (TreeNode treeNode : removeFromFolders.keySet()) {
-                    for (DomainObject domainObject : removeFromFolders.get(treeNode)) {
-                        log.info("Removing {} from {}", domainObject, treeNode);
-                        model.removeChild(treeNode, domainObject);
-                    }
+                    model.removeChildren(treeNode, removeFromFolders.get(treeNode));
                 }
             }
 

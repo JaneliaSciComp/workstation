@@ -77,7 +77,7 @@ public class NavigationHistory {
             throw new IllegalStateException("State with null domain object");
         }
         
-        log.info("Pushing editor state: {}",state);
+        log.debug("Pushing editor state: {}",state);
                     
         if (clearForward) {
             // Clear out navigation in the future direction

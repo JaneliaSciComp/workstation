@@ -7,3 +7,4 @@ No changes (This is a server-side only release to support the LSF cluster)
 
 Large Volume Viewer
 * Fixed bug: lines drawn properly after importing multiple swc files
+* Added "set radius for neuron" feature in LVV
