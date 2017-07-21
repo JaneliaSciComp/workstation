@@ -66,15 +66,16 @@ public class GracefulBrick {
         final String simpleHelpUrl = "http://workstation.int.janelia.org/upgrade";
         
         String html = "<html><body width='420'>" +
-        "<p>This version of the Workstation is no longer supported and must be manually upgraded to the latest release.</p>" +
+        "<p>Great news! There's a new version of the Workstation available which fixes rendering issues on MacOS Sierra. This is a major upgrade, so we'll first need to uninstall the existing Workstation version.</p>" +
         "<br>" +
-        "<p>When you press the Continue button below, the Workstation will exit and you will be taken to the following web page, which describes how to install the new version: " + simpleHelpUrl + 
-        "</p>" +
+        "<p>When you press the Continue button below, the Workstation will exit and you will be taken to the following web page, which describes how to perform the uninstall and then reinstall the new version: " + simpleHelpUrl + "</p>" +
+        "<br>" +
+        "<p>If you'd rather not upgrade on your own, please contact Konrad Rokicki (rokickik@janelia.hhmi.org, x4242) and schedule an upgrade time at your convenience.</p>" +
         "</body></html>";
       
         String[] buttons = { "Continue" };
         JOptionPane.showOptionDialog(WindowLocator.getMainFrame(), html,
-              "Manual Update Required", JOptionPane.WARNING_MESSAGE, 0, null, buttons, buttons[0]);
+              "New Version Available", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, buttons, buttons[0]);
         
         // Delete any logs to ensure that the install directory is properly cleaned up
         if (uninstaller!=null) {
@@ -82,21 +83,8 @@ public class GracefulBrick {
             deleteLogs(uninstaller.getParentFile());
         }
         
-//        final File uninstallerFile = uninstaller;
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-
-//                log.info("Executing uninstaller: "+uninstallerFile);
-//                if (uninstallerFile!=null && uninstallerFile.exists()) {
-//                    // Execute the uninstaller
-//                    try {
-//                        Runtime.getRuntime().exec(uninstallerFile.getAbsolutePath());
-//                    }
-//                    catch (IOException e) {
-//                        // Ignore. It's too late now!
-//                    }
-//                }
-
                 Utils.openUrlInBrowser(helpUrl);
             }
         });
