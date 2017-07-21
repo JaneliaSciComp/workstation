@@ -66,6 +66,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private NeuronTableModel neuronTableModel;
     private DefaultRowSorter<TableModel, String> sorter;
     private JTextField filterField;
+    private JTextField ignoreField;
     private JComboBox<String> tagModeMenu;
     private JComboBox<String> tagMenu;
 
@@ -297,6 +298,41 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         c3.fill = GridBagConstraints.HORIZONTAL;
         add(filterPanel, c3);
 
+        // text field for ignore pattern
+        JPanel ignorePanel = new JPanel();
+        ignorePanel.setLayout(new BoxLayout(ignorePanel, BoxLayout.LINE_AXIS));
+        ignorePanel.add(new JLabel("Ignore pattern:"));
+        ignoreField = new JTextField();
+        ignoreField.getDocument().addDocumentListener(
+                new DocumentListener() {
+                    @Override
+                    public void insertUpdate(DocumentEvent e) {
+                        updateRowFilter();
+                    }
+
+                    @Override
+                    public void removeUpdate(DocumentEvent e) {
+                        updateRowFilter();
+                    }
+
+                    @Override
+                    public void changedUpdate(DocumentEvent e) {
+                        updateRowFilter();
+                    }
+                }
+        );
+        ignorePanel.add(ignoreField);
+        JButton clearIgnore = new JButton("Clear");
+        clearIgnore.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ignoreField.setText("");
+            }
+        });
+        ignorePanel.add(clearIgnore);
+
+        add(ignorePanel, c3);
+
 
         // tag filter
         JPanel tagFilterPanel = new JPanel();
@@ -385,7 +421,27 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private void updateRowFilter() {
         RowFilter<TableModel, String> rowFilter = null;
         try {
-            rowFilter = RowFilter.regexFilter(filterField.getText());
+            // old: get regex from one text field
+            // rowFilter = RowFilter.regexFilter(filterField.getText());
+
+            // new: get desired filter and filter to ignore from two
+            //  fields and combine them, carefully
+            // note if include filter is empty, it's ok, but if
+            //  exclude pattern is empty, don't use it
+            String ignoreText = ignoreField.getText();
+            String includeText = filterField.getText();
+
+            String pattern = includeText;
+            System.out.println("new row filter with pattern = " + pattern);
+            rowFilter = RowFilter.regexFilter(pattern);
+
+            /*
+            String pattern = ignoreText;
+            System.out.println("new row filter with not patter = " + pattern);
+            // types aren't matching here?
+            rowFilter = RowFilter.notFilter(RowFilter.regexFilter(pattern));
+             */
+
         } catch (java.util.regex.PatternSyntaxException e) {
             // if the regex doesn't parse, don't update the filter
             return;
