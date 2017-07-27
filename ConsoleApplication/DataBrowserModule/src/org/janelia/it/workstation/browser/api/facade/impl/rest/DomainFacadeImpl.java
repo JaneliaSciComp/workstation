@@ -14,6 +14,8 @@ import javax.ws.rs.core.Response;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
+import org.janelia.it.jacs.model.domain.report.DatabaseSummary;
+import org.janelia.it.jacs.model.domain.report.DiskUsageSummary;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.DomainFacade;
@@ -209,5 +211,28 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
             throw new WebApplicationException(response);
         }
     }
+
+    @Override
+    public DatabaseSummary getDatabaseSummary() throws Exception {
+        Response response = manager.getSummaryEndpoint().path("database")
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request to remove getDatabaseSummary")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(DatabaseSummary.class);
+    }
     
+    @Override
+    public DiskUsageSummary getDiskUsageSummary() throws Exception {
+        Response response = manager.getSummaryEndpoint().path("disk")
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request to remove getDiskUsageSummary")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(DiskUsageSummary.class);
+    }
 }

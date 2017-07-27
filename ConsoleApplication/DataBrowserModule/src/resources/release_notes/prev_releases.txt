@@ -1,3 +1,12 @@
+// 5.16
+
+Workstation Browser
+* Changes to "Download Directory" now take effect without restart
+* Convert special characters in filenames, e.g. allowing Capture Date 
+
+Large Volume Viewer
+* Workspace info table is now sortable
+
 // 5.15
 
 Workstation Browser

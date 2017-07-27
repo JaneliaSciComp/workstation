@@ -1,8 +1,6 @@
 package org.janelia.it.workstation.browser.api;
 
 import java.awt.Color;
-import java.awt.IllegalComponentStateException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,11 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.swing.LookAndFeel;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
-import javax.swing.text.html.HTMLEditorKit;
-import javax.swing.text.html.StyleSheet;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.Preference;
@@ -47,8 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-
-import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
 
 /**
  * Singleton for tracking and restoring the current state of the GUI. The
@@ -84,7 +77,7 @@ public class StateMgr {
     private OntologyTerm errorOntology;
     private PermissionTemplate autoShareTemplate;
 
-    public static boolean isDarkLook = false;
+    public static boolean isDarkLook = true;
     
     private StateMgr() {     
         log.info("Initializing State Manager");
@@ -108,6 +101,25 @@ public class StateMgr {
     }
 
     public void initLAF() {
+        
+        UIDefaults uiDefaults = UIManager.getDefaults();
+
+        // Workstation LAF defaults. These are overridden by our included Darcula LAF, but should have decent defaults for other LAFs.
+        
+        if (!uiDefaults.containsKey("ws.ComponentBorderColor")) {
+            uiDefaults.put("ws.ComponentBorderColor", uiDefaults.get("windowBorder"));
+        }
+        
+        if (!uiDefaults.containsKey("ws.TreeSecondaryLabel")) {
+            uiDefaults.put("ws.TreeSecondaryLabel", new Color(172, 145, 83));
+        }
+        
+        if (!uiDefaults.containsKey("ws.TreeExtraLabel")) {
+            uiDefaults.put("ws.TreeExtraLabel", uiDefaults.get("Label.disabledForeground"));
+        }
+        
+        // TODO: eventually we want to eliminate this dependency entirely, but for now we still use Synthetica Addons in a few places
+        
         String[] li = {"Licensee=HHMI", "LicenseRegistrationNumber=122030", "Product=Synthetica", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=2.20.999"};
         UIManager.put("Synthetica.license.info", li);
         UIManager.put("Synthetica.license.key", "9A519ECE-5BB55629-B2E1233E-9E3E72DB-19992C5D");
@@ -115,94 +127,95 @@ public class StateMgr {
         String[] li2 = {"Licensee=HHMI", "LicenseRegistrationNumber=142016", "Product=SyntheticaAddons", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=1.10.999"};
         UIManager.put("SyntheticaAddons.license.info", li2);
         UIManager.put("SyntheticaAddons.license.key", "43BF31CE-59317732-9D0D5584-654D216F-7806C681");
-
-        // Ensure the synthetical choices are all available.
-        UIManager.installLookAndFeel("Synthetica AluOxide Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaAluOxideLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlackEye Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlackMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackMoonLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlackStar Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackStarLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlueIce Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueIceLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlueLight Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueLightLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlueMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueMoonLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlueSteel Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueSteelLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica Classy Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaClassyLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica GreenDream Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaGreenDreamLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica MauveMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaMauveMetallicLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica OrangeMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaOrangeMetallicLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica SilverMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSilverMoonLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica Simple2D Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSimple2DLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica SkyMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSkyMetallicLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica WhiteVision Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaWhiteVisionLookAndFeel");
-        LookAndFeelInfo[] installedInfos = UIManager.getInstalledLookAndFeels();
-
-        String lafName = (String) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
-        LookAndFeel currentLaf = UIManager.getLookAndFeel();
-        LookAndFeelInfo currentLafInfo = null;
-        if (lafName==null) lafName = "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel";
-        try {
-            boolean installed = false;
-            for (LookAndFeelInfo lafInfo : installedInfos) {
-                if (lafInfo.getClassName().equals(lafName)) {
-                    installed = true;
-                }
-                if (lafInfo.getName().equals(currentLaf.getName())) {
-                    currentLafInfo = lafInfo;
-                }
-            }
-            if (installed) {
-                setLookAndFeel(lafName);
-            }
-            else if (currentLafInfo != null) {
-                setLookAndFeel(currentLafInfo.getName());
-                ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
-            }
-            else {
-                log.error("Could not set Look and Feel: {}",lafName);
-            }
-        }
-        catch (Exception ex) {
-            ConsoleApp.handleException(ex);
-        }
     }
+//        // Ensure the Synthetica choices are all available.
+//        UIManager.installLookAndFeel("Synthetica AluOxide Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaAluOxideLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica BlackEye Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica BlackMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackMoonLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica BlackStar Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackStarLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica BlueIce Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueIceLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica BlueLight Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueLightLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica BlueMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueMoonLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica BlueSteel Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueSteelLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica Classy Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaClassyLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica GreenDream Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaGreenDreamLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica MauveMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaMauveMetallicLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica OrangeMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaOrangeMetallicLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica SilverMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSilverMoonLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica Simple2D Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSimple2DLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica SkyMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSkyMetallicLookAndFeel");
+//        UIManager.installLookAndFeel("Synthetica WhiteVision Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaWhiteVisionLookAndFeel");
+//        LookAndFeelInfo[] installedInfos = UIManager.getInstalledLookAndFeels();
+//
+//        String lafName = (String) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
+//        LookAndFeel currentLaf = UIManager.getLookAndFeel();
+//        LookAndFeelInfo currentLafInfo = null;
+//        if (lafName==null) lafName = "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel";
+//        try {
+//            boolean installed = false;
+//            for (LookAndFeelInfo lafInfo : installedInfos) {
+//                if (lafInfo.getClassName().equals(lafName)) {
+//                    installed = true;
+//                }
+//                if (lafInfo.getName().equals(currentLaf.getName())) {
+//                    currentLafInfo = lafInfo;
+//                }
+//            }
+//            if (installed) {
+//                setLookAndFeel(lafName);
+//            }
+//            else if (currentLafInfo != null) {
+//                setLookAndFeel(currentLafInfo.getName());
+//                ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
+//            }
+//            else {
+//                log.error("Could not set Look and Feel: {}",lafName);
+//            }
+//        }
+//        catch (Exception ex) {
+//            ConsoleApp.handleException(ex);
+//        }
+//    }
 
-    private void setLookAndFeel(String lookAndFeelClassName) {
-        try {
-            if (lookAndFeelClassName.contains("BlackEye")) {
-                isDarkLook = true;
-                try {
-                    
-                    UIManager.setLookAndFeel(new SyntheticaBlackEyeLookAndFeel() {
-                        @Override
-                        protected void loadCustomXML() throws ParseException {
-                            loadXMLConfig("/SyntheticaBlackEyeLookAndFeel.xml");
-                        }
-                    });
-                    
-                    // Override HTML link color to baby blue, which is the same as the Synthetica black eye highlight color. 
-                    // Don't ask me why the following works even after the HTMLEditorKit instance goes out of scope. Some stones are best left unturned.
-                    HTMLEditorKit kit = new HTMLEditorKit();
-                    StyleSheet styleSheet = kit.getStyleSheet();
-                    styleSheet.addRule("a {color:#BADCFB;}");
-                    
-                }
-                catch (IllegalComponentStateException ex) {
-                    ConsoleApp.handleException(ex);
-                }
-            }
-            else {
-                UIManager.setLookAndFeel(lookAndFeelClassName);
-            }
-
-            ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
-            log.info("Configured Look and Feel: {}", lookAndFeelClassName);
-        }
-        catch (Exception ex) {
-            ConsoleApp.handleException(ex);
-        }
-    }
+//    private void setLookAndFeel(String lookAndFeelClassName) {
+//        try {
+//            if (lookAndFeelClassName.contains("BlackEye")) {
+//                isDarkLook = true;
+//                try {
+//                    
+//                    UIManager.setLookAndFeel(new SyntheticaBlackEyeLookAndFeel() {
+//                        @Override
+//                        protected void loadCustomXML() throws ParseException {
+//                            loadXMLConfig("/SyntheticaBlackEyeLookAndFeel.xml");
+//                        }
+//                    });
+//                    
+//                    // Override HTML link color to baby blue, which is the same as the Synthetica black eye highlight color. 
+//                    // Don't ask me why the following works even after the HTMLEditorKit instance goes out of scope. Some stones are best left unturned.
+//                    HTMLEditorKit kit = new HTMLEditorKit();
+//                    StyleSheet styleSheet = kit.getStyleSheet();
+//                    styleSheet.addRule("a {color:#BADCFB;}");
+//                    
+//                }
+//                catch (IllegalComponentStateException ex) {
+//                    ConsoleApp.handleException(ex);
+//                }
+//            }
+//            else {
+//                UIManager.setLookAndFeel(lookAndFeelClassName);
+//            }
+//
+//            ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
+//            log.info("Configured Look and Feel: {}", lookAndFeelClassName);
+//        }
+//        catch (Exception ex) {
+//            ConsoleApp.handleException(ex);
+//        }
+//    }
     
     public boolean isDarkLook() {
-        return isDarkLook;
+        Boolean dark = (Boolean) UIManager.get("nb.dark.theme");
+        return (dark != null && dark);
     }
     
     @Subscribe

@@ -9,9 +9,11 @@ import javax.swing.Action;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.logging.EDTExceptionInterceptor;
+import org.janelia.it.workstation.browser.nb_action.StartPageMenuAction;
 import org.janelia.it.workstation.browser.util.BrandingConfig;
 import org.openide.filesystems.FileUtil;
 import org.openide.windows.OnShowing;
@@ -56,9 +58,38 @@ public class ShowingHook implements Runnable {
 //        //sources.add(loggingEventListener);
 //        //discriminators.add(ReportRunner.BUTTON_EVENT_DISCRIMINATOR);
 //        new ReportRunner(sources, discriminators); // This starts a thread
-
+        
         log.info("Showing main window");
         frame.setVisible(true);
+
+        // Open the start page, if necessary
+        if (ApplicationOptions.getInstance().isShowStartPageOnStartup()) {
+            StartPageMenuAction action = new StartPageMenuAction();
+            action.actionPerformed(null);
+        }
+        
+        if (frame.getExtendedState()==JFrame.MAXIMIZED_BOTH) {
+            // Workaround for a framework bug. Ensure the window doesn't cover the Windows toolbar. 
+            log.info("Window is maximized. Resizing to make sure it doesn't cover Windows toolbar.");
+            GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            frame.setSize(env.getMaximumWindowBounds().getSize());
+            frame.setMaximizedBounds(env.getMaximumWindowBounds());
+            frame.setExtendedState(frame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+        }
+        else {
+            Dimension currSize = frame.getSize();
+            if (currSize.width<20 || currSize.height<20) {
+                log.info("Window is too small. Resetting to 80% of screen size.");
+                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                double width = screenSize.getWidth();
+                double height = screenSize.getHeight();
+                frame.setLocation(new Point(0, 30)); // 30 pixels down to avoid Mac toolbar at the top of the screen
+                frame.setSize(new Dimension((int)Math.round(width*0.8), (int)Math.round(height*0.8)));
+                resetWindows();
+            }
+        }
+        
+        ConsoleState.setCurrState(ConsoleState.WINDOW_SHOWN);
 
         if (Startup.isBrandingValidationException()) {
             JOptionPane.showMessageDialog(
@@ -78,30 +109,6 @@ public class ShowingHook implements Runnable {
                     null
             );
         }
-        
-        if (frame.getExtendedState()==JFrame.MAXIMIZED_BOTH) {
-            // Workaround for a framework bug. Ensure the window doesn't cover the Windows toolbar. 
-            log.info("Window is maximized. Resizing to make sure it doesn't cover Windows toolbar.");
-            GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            frame.setSize(env.getMaximumWindowBounds().getSize());
-            frame.setMaximizedBounds(env.getMaximumWindowBounds());
-            frame.setExtendedState(frame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
-            resetWindows();
-        }
-        else {
-            Dimension currSize = frame.getSize();
-            if (currSize.width<20 || currSize.height<20) {
-                log.info("Window is too small. Resetting to 80% of screen size.");
-                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-                double width = screenSize.getWidth();
-                double height = screenSize.getHeight();
-                frame.setLocation(new Point(0, 30)); // 30 pixels down to avoid Mac toolbar at the top of the screen
-                frame.setSize(new Dimension((int)Math.round(width*0.8), (int)Math.round(height*0.8)));
-                resetWindows();
-            }
-        }
-        
-        ConsoleState.setCurrState(ConsoleState.WINDOW_SHOWN);
         
 //        if (SystemInfo.getJavaInfo().contains("1.7")) {
 //

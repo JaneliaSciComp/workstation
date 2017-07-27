@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -12,7 +11,7 @@ import java.util.Set;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ConsoleProperties extends Properties {
+public class ConsoleProperties extends XProperties {
 
     private static ConsoleProperties me;
     private static Set<String> fileNames = new HashSet<String>();

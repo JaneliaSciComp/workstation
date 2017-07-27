@@ -34,7 +34,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.gui.support.DropDownButton;
+import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.WrapLayout;
 import org.janelia.it.workstation.browser.model.ImageCategory;
 import org.janelia.it.workstation.browser.model.ResultCategory;
@@ -56,10 +56,10 @@ public final class DownloadVisualPanel1 extends JPanel {
     
     // GUI
     private JPanel configPane;
-    private final DropDownButton objectiveButton = new DropDownButton();
-    private final DropDownButton areaButton = new DropDownButton();
-    private final DropDownButton resultCategoryButton = new DropDownButton();
-    private final DropDownButton imageCategoryButton = new DropDownButton();
+    private final ScrollingDropDownButton objectiveButton = new ScrollingDropDownButton();
+    private final ScrollingDropDownButton areaButton = new ScrollingDropDownButton();
+    private final ScrollingDropDownButton resultCategoryButton = new ScrollingDropDownButton();
+    private final ScrollingDropDownButton imageCategoryButton = new ScrollingDropDownButton();
     private final HashMap<ArtifactDescriptor, HashMap<FileType, JCheckBox>> fileTypesCheckboxes = new LinkedHashMap<>();
     private JPanel checkboxPanel;
     

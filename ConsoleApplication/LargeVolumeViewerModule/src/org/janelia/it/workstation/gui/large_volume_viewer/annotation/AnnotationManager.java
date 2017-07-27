@@ -149,6 +149,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
+    public void setNeuronRadiusRequested(Anchor anchor) {
+        if (anchor != null) {
+            setNeuronRadius(anchor.getNeuronID());
+        }
+    }
+
     public void anchorAdded(AnchorSeed seed) {
         addAnnotation(seed.getLocation(), seed.getParentGuid());
     }
@@ -980,6 +986,54 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         NeuronTagsAction action = new NeuronTagsAction();
         action.setTargetNeuron(neuron);
         action.actionPerformed(new ActionEvent(this, -1, "dummy event"));
+    }
+
+    public void setNeuronRadius(final Long neuronID) {
+        String ans = (String) JOptionPane.showInputDialog(
+                ComponentUtil.getLVVMainWindow(),
+                "Set radius for neuron (µm): ",
+                "Set radius",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                null,
+                "1.0");
+
+        if (ans == null || ans.length() == 0) {
+            // canceled or no input
+            return;
+        }
+
+        Float radius = -1.0f;
+        try {
+            radius = Float.parseFloat(ans);
+        } catch(NumberFormatException e) {
+            presentError(ans + " cannot be parsed into a radius", "Can't parse");
+            return;
+        }
+
+        if (radius <= 0.0f) {
+            presentError("Radius must be positive, not " + radius, "Invalid radius");
+            return;
+        }
+
+        final Float finalRadius = radius;
+        SimpleWorker setter = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.updateNeuronRadius(neuronID, finalRadius);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing; listeners will update
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                ConsoleApp.handleException(error);
+            }
+        };
+        setter.execute();
     }
 
     /**

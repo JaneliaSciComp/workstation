@@ -1,18 +1,18 @@
 package org.janelia.it.workstation.browser.gui.listview;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
-import javax.swing.JToolBar;
-import javax.swing.UIManager;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
 
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.browser.gui.support.WrapLayout;
 
 
 /**
@@ -22,18 +22,15 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
  */
 public abstract class ViewerToolbar extends JPanel {
 
-    protected JToolBar toolbar;
+    protected JPanel toolbar;
     protected JButton refreshButton;
 
     public ViewerToolbar() {
         super(new BorderLayout());
 
-        toolbar = new JToolBar();
-        toolbar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, (Color) UIManager.get("windowBorder")), BorderFactory.createEmptyBorder(0, 5, 2, 5)));
-        toolbar.setFloatable(false);
-        toolbar.setRollover(true);
-        add(toolbar);
-
+        toolbar = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 3));
+        toolbar.setBorder(BorderFactory.createEmptyBorder(2, 2, 8, 2));
+        
         refreshButton = new JButton();
         refreshButton.setIcon(Icons.getRefreshIcon());
         refreshButton.setFocusable(false);
@@ -44,21 +41,21 @@ public abstract class ViewerToolbar extends JPanel {
                 refresh();
             }
         });
-        refreshButton.addMouseListener(new MouseForwarder(toolbar, "RefreshButton->JToolBar"));
+        refreshButton.addMouseListener(new MouseForwarder(this, "RefreshButton->JToolBar"));
         toolbar.add(refreshButton);
 
-        toolbar.addSeparator();
-
-        toolbar.addMouseListener(new MouseForwarder(this, "JToolBar->ViewerToolbar"));
+        add(toolbar, BorderLayout.CENTER);
+        
+        addSeparator();
     }
     
     protected abstract void refresh();
 
-    public JToolBar getToolbar() {
-        return toolbar;
-    }
-
     public JButton getRefreshButton() {
         return refreshButton;
+    }
+    
+    public void addSeparator() {
+        toolbar.add(new JSeparator(SwingConstants.VERTICAL));
     }
 }

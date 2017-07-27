@@ -128,7 +128,8 @@ made subject to such option by the copyright holder.
         <available property="have-jdk-1.6" classname="java.util.ServiceLoader" classpath="${nbjdk.bootclasspath}" ignoresystemclasses="true"/>
         <available property="have-jdk-1.7" classname="java.lang.ReflectiveOperationException" classpath="${nbjdk.bootclasspath}" ignoresystemclasses="true"/>
         <available property="have-jdk-1.8" classname="java.lang.FunctionalInterface" classpath="${nbjdk.bootclasspath}" ignoresystemclasses="true"/>
-        <echo level="verbose">nbjdk.active=${nbjdk.active} nbjdk.home=${nbjdk.home} nbjdk.java=${nbjdk.java} nbjdk.javac=${nbjdk.javac} nbjdk.javadoc=${nbjdk.javadoc} nbjdk.bootclasspath=${nbjdk.bootclasspath} nbjdk.valid=${nbjdk.valid} have-jdk-1.4=${have-jdk-1.4} have-jdk-1.5=${have-jdk-1.5} have-jdk-1.6=${have-jdk-1.6} have-jdk-1.7=${have-jdk-1.7} have-jdk-1.8=${have-jdk-1.8}</echo>
+        <available property="have-jdk-1.9" classname="java.util.zip.CRC32C" classpath="${nbjdk.bootclasspath}" ignoresystemclasses="true"/>
+        <echo level="verbose">nbjdk.active=${nbjdk.active} nbjdk.home=${nbjdk.home} nbjdk.java=${nbjdk.java} nbjdk.javac=${nbjdk.javac} nbjdk.javadoc=${nbjdk.javadoc} nbjdk.bootclasspath=${nbjdk.bootclasspath} nbjdk.valid=${nbjdk.valid} have-jdk-1.4=${have-jdk-1.4} have-jdk-1.5=${have-jdk-1.5} have-jdk-1.6=${have-jdk-1.6} have-jdk-1.7=${have-jdk-1.7} have-jdk-1.8=${have-jdk-1.8} have-jdk-1.9=${have-jdk-1.9}</echo>
     </target>
 
     <target name="-jdk-warn" depends="-jdk-preinit" if="nbjdk.active-or-nbjdk.home" unless="nbjdk.valid">
@@ -231,6 +232,8 @@ made subject to such option by the copyright holder.
         <available property="have-jdk-1.5" classname="java.lang.StringBuilder"/>
         <available property="have-jdk-1.6" classname="java.util.ServiceLoader"/>
         <available property="have-jdk-1.7" classname="java.lang.ReflectiveOperationException"/>
+        <available property="have-jdk-1.8" classname="java.lang.FunctionalInterface"/>
+        <available property="have-jdk-1.9" classname="java.util.zip.CRC32C"/>
         <property name="nbjdk.home.defaulted" value="true"/>
     </target>
 

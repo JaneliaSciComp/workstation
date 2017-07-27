@@ -73,7 +73,6 @@ public abstract class CustomTreeToolbar extends JPanel {
         });
         
         toolBar.add(refreshButton);
-        toolBar.addSeparator();
         toolBar.add(expandAllButton);
         toolBar.add(collapseAllButton);
         add(toolBar, BorderLayout.CENTER);

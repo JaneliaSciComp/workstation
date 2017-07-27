@@ -1,20 +1,17 @@
 package org.janelia.it.workstation.browser.components;
 
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.NAVIGATE_ON_CLICK;
-
 import java.awt.Component;
 
-import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Manages the life cycle of domain list viewers based on user generated selected events. This manager

@@ -61,4 +61,19 @@ made subject to such option by the copyright holder.
         </transformation>
     </transformationgroup>
 
+    <transformationgroup>
+        <description>Separation of desktop and cleanup</description>
+        <transformation>
+            <trigger-dependency type="older">
+                <module-dependency codenamebase="org.openide.filesystems" spec="9.0"/>
+            </trigger-dependency>
+            <implies>
+                <result>
+                    <module-dependency codenamebase="org.openide.filesystems.nb"/>
+                    <module-dependency codenamebase="org.openide.filesystems.compat8"/>
+                </result>
+            </implies>
+        </transformation>
+    </transformationgroup>
+
 </transformations>

@@ -287,7 +287,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     protected JMenuItem getDetailsItem() {
         if (multiple) return null;
         JMenuItem detailsMenuItem = new JMenuItem("  View Details");
-        detailsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.META_MASK));
+        detailsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.META_DOWN_MASK));
         detailsMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -318,7 +318,10 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getHudMenuItem() {
+        if (multiple) return null;
+        
         JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
+        toggleHudMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
         toggleHudMI.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -857,6 +860,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         String label = domainObjectList.size() > 1 ? "Download " + domainObjectList.size() + " Items..." : "Download...";
         JMenuItem menuItem = new JMenuItem("  "+label);
         menuItem.addActionListener(new DownloadWizardAction(domainObjectList, resultDescriptor));
+        menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.META_DOWN_MASK));
         return menuItem;
     }
 

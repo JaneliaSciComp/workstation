@@ -190,6 +190,14 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         fireAnchorRadiusChanged(annotation);
     }
 
+    public void updateNeuronRadius(TmNeuronMetadata neuron) {
+        List<TmGeoAnnotation> annList = new ArrayList<>();
+        for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+            annList.addAll(neuron.getSubTreeList(root));
+        }
+        fireAnchorRadiiChanged(annList);
+    }
+
     //-----------------------------IMPLEMENTS TmAnchoredPathListener
     //  This listener functions as a value-remarshalling relay to next listener.
 
@@ -263,6 +271,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     @Override
     public void annotationRadiusUpdated(TmGeoAnnotation annotation) {
         updateAnnotationRadius(annotation);
+    }
+
+    @Override
+    public void neuronRadiusUpdated(TmNeuronMetadata neuron) {
+        updateNeuronRadius(neuron);
     }
 
     @Override
@@ -508,6 +521,12 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             l.anchorRadiusChanged(anchor);
         }
     }
+    private void fireAnchorRadiiChanged(List<TmGeoAnnotation> anchorList) {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.anchorRadiiChanged(anchorList);
+        }
+    }
+
     private void fireClearAnchors(Collection<TmGeoAnnotation> annotations) {
         for (TmGeoAnnotationAnchorListener l: anchorListeners) {
             l.clearAnchors(annotations);

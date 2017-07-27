@@ -50,8 +50,8 @@ import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
+import org.jdesktop.swingx.JXDatePicker;
 
-import de.javasoft.swing.DateComboBox;
 import net.miginfocom.swing.MigLayout;
 
 /**
@@ -69,7 +69,7 @@ public class LineReleaseDialog extends ModalDialog {
     private JPanel attrPanel;
     private JTextField nameInput = new JTextField(30);
     private JCheckBox autoReleaseCheckbox;
-    private DateComboBox dateInput = new DateComboBox();
+    private JXDatePicker dateInput = new JXDatePicker();
     private JTextField lagTimeInput = new JTextField(10);
     private JCheckBox sageSyncCheckbox;
     private ComboMembershipListPanel<DataSet> dataSetPanel;
@@ -323,11 +323,13 @@ public class LineReleaseDialog extends ModalDialog {
                     lagTimeInput.setText("");
                 }
 
+                Utils.setDefaultCursor(LineReleaseDialog.this);
                 pack();
             }
 
             @Override
             protected void hadError(Throwable error) {
+                Utils.setDefaultCursor(LineReleaseDialog.this);
                 ConsoleApp.handleException(error);
             }
         };

@@ -24,15 +24,28 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 
 public final class NewFilterActionListener implements ActionListener {
 
-    private TreeNodeNode parentNode;
-
+    private final TreeNodeNode parentNode;
+    private final Class<?> searchClass;
+    private final String searchString;
+    
     public NewFilterActionListener() {
+        this.searchString = null;
+        this.searchClass = FilterEditorPanel.DEFAULT_SEARCH_CLASS;
+        this.parentNode = null;
     }
 
+    public NewFilterActionListener(String searchString, Class<?> searchClass) {
+        this.searchString = searchString;
+        this.searchClass = searchClass == null ? FilterEditorPanel.DEFAULT_SEARCH_CLASS : searchClass;
+        this.parentNode = null;
+    }
+    
     public NewFilterActionListener(TreeNodeNode parentNode) {
+        this.searchString = null;
+        this.searchClass = FilterEditorPanel.DEFAULT_SEARCH_CLASS;
         this.parentNode = parentNode;
     }
-
+    
     @Override
     public void actionPerformed(ActionEvent e) {
 
@@ -42,10 +55,11 @@ public final class NewFilterActionListener implements ActionListener {
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
         if (parentNode==null) {
+            Filter filter = createUnsavedFilter(null);
             // If there is no parent node specified, we don't actually have to
             // save a new filter. Just open up the editor:
             DomainListViewTopComponent browser = initView();
-            browser.loadDomainObject(FilterEditorPanel.createUnsavedFilter(null), true);
+            browser.loadDomainObject(filter, true);
             return;
         }
 
@@ -63,7 +77,7 @@ public final class NewFilterActionListener implements ActionListener {
 
             @Override
             protected void doStuff() throws Exception {
-                filter = FilterEditorPanel.createUnsavedFilter(name);
+                filter = createUnsavedFilter(name);
                 filter = model.save(filter);
                 TreeNode parentFolder = parentNode.getTreeNode();
                 model.addChild(parentFolder, filter);
@@ -88,6 +102,14 @@ public final class NewFilterActionListener implements ActionListener {
         };
 
         newFilterWorker.execute();
+    }
+
+    private Filter createUnsavedFilter(String name) {
+        Filter filter = FilterEditorPanel.createUnsavedFilter(searchClass, name);
+        if (searchString!=null) {
+            filter.setSearchString(searchString);
+        }
+        return filter;
     }
 
     private DomainListViewTopComponent initView() {

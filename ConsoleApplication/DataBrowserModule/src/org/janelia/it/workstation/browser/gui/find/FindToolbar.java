@@ -88,7 +88,7 @@ public class FindToolbar extends JPanel {
             }
         });
         
-        setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, (Color) UIManager.get("windowBorder")), BorderFactory.createEmptyBorder(2, 5, 3, 5)));
+        setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, (Color) UIManager.get("ws.ComponentBorderColor")), BorderFactory.createEmptyBorder(2, 5, 3, 5)));
         add(label);
         add(textField, "width 100:250:400");
         add(prevButton);

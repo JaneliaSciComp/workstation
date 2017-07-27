@@ -43,7 +43,7 @@ import org.janelia.it.workstation.browser.events.selection.PipelineResultSelecti
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.browser.gui.support.DropDownButton;
+import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
@@ -74,7 +74,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     
     // UI Elements
     private final ConfigPanel configPanel;
-    private final DropDownButton resultButton;
+    private final ScrollingDropDownButton resultButton;
     private final JButton editModeButton;
     private final JButton openInNAButton;
     private final JButton fragmentSortButton;
@@ -101,7 +101,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         setLayout(new BorderLayout());
         setFocusable(true);
         
-        resultButton = new DropDownButton();
+        resultButton = new ScrollingDropDownButton();
         
         editModeButton = new JButton();
         editModeButton.setIcon(Icons.getIcon("page_white_edit.png"));

@@ -32,7 +32,7 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerConfiguration;
-import org.janelia.it.workstation.browser.gui.support.DropDownButton;
+import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.TemplateEditorTextbox;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -55,7 +55,7 @@ public class IconGridViewerConfigDialog extends ModalDialog {
 
     private int returnValue = ERROR_OPTION;
 
-    private final DropDownButton typeCriteriaButton;
+    private final ScrollingDropDownButton typeCriteriaButton;
     private final JPanel attrPanel;
     private final TemplateEditorTextbox titleInputBox;
     private final TemplateEditorTextbox subtitleInputBox;
@@ -78,7 +78,7 @@ public class IconGridViewerConfigDialog extends ModalDialog {
 
         attrPanel = new JPanel(new MigLayout("wrap 2, ins 20", "[grow 0, growprio 0][grow 100, growprio 100]"));
 
-        this.typeCriteriaButton = new DropDownButton();
+        this.typeCriteriaButton = new ScrollingDropDownButton();
         attrPanel.add(typeCriteriaButton,"gap para, span 2");
 
         attrPanel.add(new JLabel(PATTERN_HELP),"gap para, span 2, width 100:400:600, height 50:100:150, growx, ay top");

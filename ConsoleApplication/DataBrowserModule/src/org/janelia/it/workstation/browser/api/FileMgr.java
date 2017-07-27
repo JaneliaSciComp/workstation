@@ -25,6 +25,8 @@ public class FileMgr {
 
     private static final Logger log = LoggerFactory.getLogger(FileMgr.class);
     
+    private static final String webdavBaseUrl = ConsoleProperties.getString("console.webDavClient.baseUrl", WebDavClient.JACS_WEBDAV_BASE_URL);
+    
     // Singleton
     private static FileMgr instance;
     public static synchronized FileMgr getFileMgr() {
@@ -47,11 +49,10 @@ public class FileMgr {
         
         log.info("Initializing File Manager");
 
+        log.info("Using WebDAV server: {}",webdavBaseUrl);
         // TODO: most of this initialization should be done in a background thread, to improve start-up time for the Workstation
-        
         this.webDavClient = new WebDavClient(
-                ConsoleProperties.getString("console.webDavClient.baseUrl",
-                        WebDavClient.JACS_WEBDAV_BASE_URL),
+                webdavBaseUrl,
                 ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100),
                 ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100));
         
