@@ -266,9 +266,11 @@ public class SkeletonActor implements GLActor {
     }
     
     private synchronized void displayLines(GLAutoDrawable glDrawable) {
-        if (model.getNeuronLineIndices().isEmpty()) {
-            return;
-        }
+
+        // at one point, this routine tested model.getNeuronLineIndices().isEmpty() and
+        //  returned immediately if true; this is a bug--it prevents model.updateVertices()
+        //  from running when it needs to; instead, in the loop, skip past the iterations
+        //  that have no elements to draw
 
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
         GL2 gl2 = gl.getGL2();
@@ -309,6 +311,11 @@ public class SkeletonActor implements GLActor {
 
         n=0;
         for (ElementDataOffset lineElementOffset : lineOffsets) {
+            // see comment at top of method
+            if (lineElementOffset.size == 0) {
+                continue;
+            }
+
             ElementDataOffset vertexElementOffset = vertexOffsets.get(n);
             ElementDataOffset colorElementOffset = colorOffsets.get(n);
 
