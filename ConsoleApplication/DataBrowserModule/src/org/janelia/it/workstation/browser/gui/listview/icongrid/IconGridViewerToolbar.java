@@ -88,7 +88,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
                 ImagesPanel.DEFAULT_THUMBNAIL_SIZE);
         imageSizeSlider.putClientProperty("Slider.paintThumbArrowShape", Boolean.TRUE);
         imageSizeSlider.setFocusable(false);
-        imageSizeSlider.setMaximumSize(new Dimension(200, Integer.MAX_VALUE));
+        imageSizeSlider.setMaximumSize(new Dimension(120, Integer.MAX_VALUE));
         imageSizeSlider.setToolTipText("Image size percentage");
         imageSizeSlider.addMouseListener(new MouseForwarder(toolbar, "ImageSizeSlider->JToolBar"));
         toolbar.add(imageSizeSlider);

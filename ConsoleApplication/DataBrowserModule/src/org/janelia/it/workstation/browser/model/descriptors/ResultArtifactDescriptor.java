@@ -19,17 +19,11 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
     private String objective;
     private String area;
     private String resultName;
+    private String alignSpace;
     private boolean aligned;
 
     // Empty constructor needed for JSON deserialization
     public ResultArtifactDescriptor() {
-    }
-    
-    public ResultArtifactDescriptor(String objective, String area, String resultName, boolean aligned) {
-        this.objective = objective;
-        this.area = area;
-        this.resultName = resultName;
-        this.aligned = aligned;
     }
     
     public ResultArtifactDescriptor(PipelineResult result) {
@@ -39,8 +33,21 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
         }
         this.resultName = result.getName();
         this.aligned = result instanceof SampleAlignmentResult;
+        if (aligned) {
+            this.alignSpace = ((SampleAlignmentResult) result).getAlignmentSpace();
+        }
     }
 
+    public ResultArtifactDescriptor(PipelineResult result, String area) {
+        this.objective = result.getParentRun().getParent().getObjective();
+        this.area = area;
+        this.resultName = result.getName();
+        this.aligned = result instanceof SampleAlignmentResult;
+        if (aligned) {
+            this.alignSpace = ((SampleAlignmentResult) result).getAlignmentSpace();
+        }
+    }
+    
     public String getObjective() {
         return objective;
     }
@@ -51,6 +58,10 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
 
     public String getResultName() {
         return resultName;
+    }
+
+    public String getAlignSpace() {
+        return alignSpace;
     }
 
     public boolean isAligned() {
@@ -76,17 +87,26 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
 
     @Override
     public String toString() {
+
+        String realArea = area;
+        if (StringUtils.isBlank(area)) {
+            realArea = "Brain";
+        }
+
+        // Strip area from result name
+        String areaSuffix = " ("+realArea+")";
+        String realResultName = resultName.replace(areaSuffix, "");
         
         StringBuilder sb = new StringBuilder();
         sb.append(objective);
         sb.append(" ");
-        sb.append(resultName);
-        
-        if (!StringUtils.isBlank(area)) {
-            String suffix = " ("+area+")";
-            if (!resultName.endsWith(suffix)) {
-                sb.append(suffix);
-            }
+        sb.append(realArea);
+        sb.append(" - ");
+        if (alignSpace!=null) {
+            sb.append(alignSpace);
+        }
+        else {
+            sb.append(realResultName);
         }
         
         return sb.toString();

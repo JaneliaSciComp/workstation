@@ -24,7 +24,6 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -144,7 +143,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     public DomainObjectIconGridViewer() {
         setImageModel(imageModel);
         this.config = IconGridViewerConfiguration.loadConfig();
-        resultButton = new ResultSelectionButton() {
+        resultButton = new ResultSelectionButton(true) {
             @Override
             protected void resultChanged(ArtifactDescriptor resultDescriptor) {
                 log.info("Setting result preference: "+resultDescriptor.toString());
@@ -156,7 +155,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 }
             }
         };
-        typeButton = new ImageTypeSelectionButton() {
+        typeButton = new ImageTypeSelectionButton(true, true) {
             @Override
             protected void imageTypeChanged(FileType fileType) {
                 log.info("Setting image type preference: "+fileType);

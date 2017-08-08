@@ -42,7 +42,6 @@ public class NeuronFragmentDescriptor extends ArtifactDescriptor {
         return area;
     }
 
-    @JsonIgnore
     public boolean isAligned() {
         return aligned;
     }

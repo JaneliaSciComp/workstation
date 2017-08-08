@@ -43,7 +43,7 @@ public class DescriptorUtils {
      * @param domainObjects
      * @return
      */
-    public static Multiset<ArtifactDescriptor> getArtifactCounts(Collection<DomainObject> domainObjects) {
+    public static Multiset<ArtifactDescriptor> getArtifactCounts(Collection<? extends DomainObject> domainObjects) {
 
         Multiset<ArtifactDescriptor> countedArtifacts = LinkedHashMultiset.create();
             
@@ -108,14 +108,13 @@ public class DescriptorUtils {
                             if (result instanceof SamplePostProcessingResult) {
                                 // Add a descriptor for every anatomical area in the sample
                                 for (SampleTile sampleTile : objectiveSample.getTiles()) {
-                                    ResultArtifactDescriptor rad = new ResultArtifactDescriptor(objectiveSample.getObjective(), sampleTile.getAnatomicalArea(), result.getName(), false);
+                                    ResultArtifactDescriptor rad = new ResultArtifactDescriptor(result, sampleTile.getAnatomicalArea());
                                     log.trace("    Adding result artifact descriptor: {}", rad);
                                     countedArtifacts.add(rad);
                                 }
                             }
                             else if (result instanceof HasAnatomicalArea){
-                                HasAnatomicalArea aaResult = (HasAnatomicalArea)result;
-                                ResultArtifactDescriptor rad = new ResultArtifactDescriptor(objectiveSample.getObjective(), aaResult.getAnatomicalArea(), result.getName(), result instanceof SampleAlignmentResult);
+                                ResultArtifactDescriptor rad = new ResultArtifactDescriptor(result);
                                 log.trace("    Adding result artifact descriptor: {}", rad);
                                 countedArtifacts.add(rad);
                             }

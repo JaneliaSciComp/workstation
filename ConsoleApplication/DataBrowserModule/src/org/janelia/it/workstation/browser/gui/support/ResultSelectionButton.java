@@ -5,34 +5,27 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
-import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
-import org.janelia.it.jacs.model.domain.sample.SamplePostProcessingResult;
-import org.janelia.it.jacs.model.domain.sample.SampleTile;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.model.ResultCategory;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.Ordering;
 
 /**
  * Drop-down button for selecting the result to use. Currently it only supports Samples,
@@ -41,27 +34,19 @@ import com.google.common.collect.Multiset;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ResultSelectionButton extends ScrollingDropDownButton {
-
-    private static final Logger log = LoggerFactory.getLogger(ResultSelectionButton.class);
+    
+    private static final int MAX_TITLE_LENGTH = 30;
     
     private ArtifactDescriptor currResult;
     private boolean showTitle;
 
     private ButtonGroup group;
-    private JPopupMenu popupMenu;
 
     public ResultSelectionButton() {
         this(false);
     }
     
     public ResultSelectionButton(boolean showTitle) {
-
-        // We don't use the default DropDownButton menu because it's a JYPopupmenu that
-        // doesn't play nicely with the scrollable popup menus we need
-        popupMenu = new JPopupMenu();
-        popupMenu.setLightWeightPopupEnabled(true);
-        setPopupMenu(popupMenu);
-
         this.showTitle = showTitle;
         setIcon(Icons.getIcon("folder_open_page.png"));
         setToolTipText("Select the result to display");
@@ -75,7 +60,8 @@ public class ResultSelectionButton extends ScrollingDropDownButton {
     public void setResultDescriptor(ArtifactDescriptor currResult) {
         this.currResult = currResult;
         if (showTitle) {
-            setText(currResult.toString());
+            String title = StringUtils.abbreviate(currResult.toString(), MAX_TITLE_LENGTH);
+            setText(title);
         }
     }
 
@@ -89,58 +75,34 @@ public class ResultSelectionButton extends ScrollingDropDownButton {
         this.group = new ButtonGroup();
         getPopupMenu().removeAll();
         
-        Multiset<ArtifactDescriptor> countedArtifacts = LinkedHashMultiset.create();
+        List<DomainObject> samplesOnly = domainObjects.stream()
+                .filter((domainObject) -> (domainObject instanceof Sample))
+                .collect(Collectors.toList());
         
-        Collection<Sample> samplesOnly = new ArrayList<>();
-        for (DomainObject domainObject : domainObjects) {
-            if (domainObject instanceof Sample) {
-                samplesOnly.add((Sample)domainObject);
-            }
-        }
-        
-        for(Sample sample : samplesOnly) {
-            for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
-                SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
-                if (run==null || run.getResults()==null) {
-                    run = objectiveSample.getLatestRun();
-                    if (run==null || run.getResults()==null) continue;
-                }
-                if (run!=null) {
-                    for(PipelineResult result : run.getResults()) {
-                        log.trace("  Inspecting pipeline result: {}", result.getName());
-                        if (result instanceof SamplePostProcessingResult) {
-                            // Add a descriptor for every anatomical area in the sample
-                            for (SampleTile sampleTile : objectiveSample.getTiles()) {
-                                ResultArtifactDescriptor rad = new ResultArtifactDescriptor(objectiveSample.getObjective(), sampleTile.getAnatomicalArea(), result.getName(), false);
-                                log.trace("    Adding result artifact descriptor: {}", rad);
-                                countedArtifacts.add(rad);
-                            }
-                        }
-                        else if (result instanceof HasAnatomicalArea){
-                            HasAnatomicalArea aaResult = (HasAnatomicalArea)result;
-                            ResultArtifactDescriptor rad = new ResultArtifactDescriptor(objectiveSample.getObjective(), aaResult.getAnatomicalArea(), result.getName(), result instanceof SampleAlignmentResult);
-                            log.trace("    Adding result artifact descriptor: {}", rad);
-                            countedArtifacts.add(rad);
-                        }
-                        else {
-                            log.trace("Cannot handle result '"+result.getName()+"' of type "+result.getClass().getSimpleName());
-                        }
-                    }
-                }
-            }
-        }
-        
-        setVisible(!countedArtifacts.isEmpty());
-        
-        // Sort in alphanumeric order, with Latest first
-        List<ArtifactDescriptor> sortedResults = new ArrayList<>(countedArtifacts.elementSet());
-        Collections.sort(sortedResults, new Comparator<ArtifactDescriptor>() {
-            @Override
-            public int compare(ArtifactDescriptor o1, ArtifactDescriptor o2) {
-                return o1.toString().compareTo(o2.toString());
-            }
-        });
+        Multiset<ArtifactDescriptor> countedArtifacts = DescriptorUtils.getArtifactCounts(samplesOnly);
+                
+        // Sorted list of ResultArtifactDescriptor
+        List<ArtifactDescriptor> sortedResults = countedArtifacts.elementSet().stream()
+                .filter((artifact) -> (artifact instanceof ResultArtifactDescriptor))
+                .sorted(new Comparator<ArtifactDescriptor>() {
+                    @Override
+                    public int compare(ArtifactDescriptor o1, ArtifactDescriptor o2) {
 
+                        ResultArtifactDescriptor r1 = (ResultArtifactDescriptor)o1;
+                        ResultArtifactDescriptor r2 = (ResultArtifactDescriptor)o2;
+                        boolean r1Post = r1.getResultName().startsWith("Post");
+                        boolean r2Post = r2.getResultName().startsWith("Post");
+                        
+                        return ComparisonChain.start()
+                                .compare(r1.getObjective(), r2.getObjective(), Ordering.natural().nullsLast())
+                                .compare(r1.getArea(), r2.getArea(), Ordering.natural().nullsFirst())
+                                .compare(r1Post, r2Post, Ordering.natural())
+                                .compare(r1.toString(), r2.toString(), Ordering.natural())
+                                .result();
+                    }
+                })
+                .collect(Collectors.toList());
+        
         List<ArtifactDescriptor> genericDescriptors = new ArrayList<>();  
         genericDescriptors.add(ArtifactDescriptor.LATEST);      
         genericDescriptors.add(ArtifactDescriptor.LATEST_UNALIGNED);
@@ -179,6 +141,9 @@ public class ResultSelectionButton extends ScrollingDropDownButton {
                 getPopupMenu().add(createMenuItem(descriptor, count));
             }
         }
+        
+        // Hide the button if there are no artifacts
+        setVisible(!countedArtifacts.isEmpty());
     }
     
     private JMenuItem createLabelItem(String text) {

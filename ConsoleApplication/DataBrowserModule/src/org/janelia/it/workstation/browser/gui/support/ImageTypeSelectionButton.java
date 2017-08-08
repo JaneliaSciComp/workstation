@@ -11,6 +11,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
@@ -38,7 +39,8 @@ public class ImageTypeSelectionButton extends ScrollingDropDownButton {
 
     private static final Logger log = LoggerFactory.getLogger(ImageTypeSelectionButton.class);
 
-    private FileType DEFAULT_TYPE = FileType.FirstAvailable2d;
+    private static final int MAX_TITLE_LENGTH = 30;
+    private static final FileType DEFAULT_TYPE = FileType.FirstAvailable2d;
 
     private ArtifactDescriptor currResult;
     private FileType currImageType;
@@ -76,7 +78,8 @@ public class ImageTypeSelectionButton extends ScrollingDropDownButton {
     public void setImageType(FileType imageType) {
         this.currImageType = imageType == null ? DEFAULT_TYPE : imageType;
         if (showTitle) {
-            setText(currImageType.getLabel());
+            String title = StringUtils.abbreviate(currImageType.getLabel(), MAX_TITLE_LENGTH);
+            setText(title);
         }
     }
 
@@ -133,6 +136,7 @@ public class ImageTypeSelectionButton extends ScrollingDropDownButton {
         getPopupMenu().removeAll();
         
         ButtonGroup group = new ButtonGroup();
+        boolean oneSelected = false;
         
         log.trace("{} domain objects have {} type names",sourceList.size(),countedTypeNames.elementSet().size());
         for(final FileType fileType : FileType.values()) {
@@ -142,7 +146,9 @@ public class ImageTypeSelectionButton extends ScrollingDropDownButton {
             if (count>0 || (only2d && fileType.equals(FileType.FirstAvailable2d)) || (!only2d && fileType.equals(FileType.FirstAvailable3d))) {
                 String typeLabel = fileType.getLabel();
                 if (count>0) typeLabel += " ("+count+" items)";
-                JMenuItem menuItem = new JRadioButtonMenuItem(typeLabel, fileType.equals(currImageType));
+                boolean selected = fileType.equals(currImageType);
+                if (selected) oneSelected = true;
+                JMenuItem menuItem = new JRadioButtonMenuItem(typeLabel, selected);
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         setImageType(fileType);
@@ -153,6 +159,11 @@ public class ImageTypeSelectionButton extends ScrollingDropDownButton {
                 getPopupMenu().add(menuItem);
                 group.add(menuItem);
             }
+        }
+        
+        if (!oneSelected) {
+            // Last user selection was not found, so reset to default
+            reset();
         }
     }
     
