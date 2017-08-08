@@ -237,4 +237,14 @@ implements NeuronSet
     public NeuronModel getNeuronByGuid(Long guid) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    
+    @Override
+    public void addEditNote(NeuronVertex anchor) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+        
+    @Override
+    public void addTraceEndNote(NeuronVertex anchor) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

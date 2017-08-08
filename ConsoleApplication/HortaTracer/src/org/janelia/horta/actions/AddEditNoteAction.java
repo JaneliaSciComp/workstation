@@ -27,43 +27,54 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.janelia.horta.actions;
 
-package org.janelia.console.viewerapi.model;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import javax.swing.AbstractAction;
+import javax.swing.KeyStroke;
+import org.janelia.horta.NeuronTracerTopComponent;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.awt.ActionRegistration;
+import org.openide.util.NbBundle.Messages;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.List;
-
-import org.janelia.console.viewerapi.ObservableInterface;
-import org.openide.awt.UndoRedo;
-
-/**
- *
- * @author Christopher Bruns
- */
-public interface NeuronSet extends Collection<NeuronModel>
+@ActionID(
+        category = "Horta",
+        id = "org.janelia.horta.actions.AddEditNoteAction"
+)
+@ActionRegistration(
+        displayName = "#CTL_AddEditNote",
+        lazy = true
+)
+@ActionReferences({
+    @ActionReference(path = "Menu/View", position = 1400),
+    @ActionReference(path = "Shortcuts", name = "D-N")
+})
+@Messages("CTL_AddEditNote=Add/Edit Note")
+// Based on example at http://wiki.netbeans.org/DevFaqActionNodePopupSubmenu
+public final class AddEditNoteAction
+extends AbstractAction
+implements ActionListener
 {
-    boolean isReadOnly();
+    private final NeuronTracerTopComponent context;
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
     
-    // getMembershipChangeObservable() signals when whole neurons are added or removed from the collection
-    ObservableInterface getMembershipChangeObservable();
-    ObservableInterface getNameChangeObservable();
-    String getName();
-    NeuronModel createNeuron(String initialNeuronName);
+    // Netbeans magically enables this menu Action when the current Lookup
+    // contains a NeuronTracerTopComponent
+    public AddEditNoteAction(NeuronTracerTopComponent horta) {
+        context = horta;
+        putValue(NAME, Bundle.CTL_AddEditNote());
+        // Repeat key shortcut, so it could appear on the Horta context menu item
+        putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK));
+    }
 
-    boolean isSpatialIndexValid();
-    List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2);
-    List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n);
-    NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ);
-
-    NeuronModel getNeuronForAnchor(NeuronVertex anchor);
-
-    UndoRedo.Manager getUndoRedo(); // Manage edit operations per neuron collection
-    // Sometimes there is one anchor selected for edit operations
-    NeuronVertex getPrimaryAnchor(); // can be null
-    void setPrimaryAnchor(NeuronVertex anchor); // set to null to clear
-    ObservableInterface getPrimaryAnchorObservable();
-    
-    NeuronModel getNeuronByGuid(Long guid);
-    void addEditNote(NeuronVertex anchor);
-    void addTraceEndNote(NeuronVertex anchor);
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        context.addEditNote();
+    }
 }
