@@ -1,3 +1,21 @@
+// 6.0
+
+In this major release, the Janelia Workstation has been updated to use the latest Java and NetBeans platform
+libraries. As a consequence, it now requires Java 8 and a clean reinstall. In addition, the Look and Feel
+has been completely replaced in order to address rendering issues on MacOS Sierra.
+
+Other improvements:
+
+Data Browser
+* Added the "Start Page" for quickly performing searches and viewing data statistics
+* Added a quick search box in the top toolbar, to make searching easier
+* Improved the user interface for the login dialog
+* Improved performance of removal of items from folders
+
+Large Volume Viewer
+* Fixed bug: lines drawn properly after importing multiple swc files
+* Added "set radius for neuron" feature in LVV
+
 // 5.16
 
 Workstation Browser
