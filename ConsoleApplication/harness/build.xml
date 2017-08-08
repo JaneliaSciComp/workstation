@@ -293,7 +293,10 @@ made subject to such option by the copyright holder.
         <mkdir dir="${netbeans.javadoc.dir}/${code.name.base.dashes}"/>
         <javadoc destdir="${netbeans.javadoc.dir}/${code.name.base.dashes}" packagenames="${module.javadoc.packages}" source="${javac.source}" windowtitle="${javadoc.title}" encoding="UTF-8" charset="UTF-8">
             <classpath refid="processor.cp"/> <!-- #157320 -->
-            <sourcepath location="${src.dir}"/>
+            <sourcepath>
+                <pathelement location="${src.dir}"/>
+                <pathelement location="${build.dir}/classes-generated"/>
+            </sourcepath>
             <doctitle>${javadoc.title}</doctitle>
             <header>${javadoc.header}</header>
         </javadoc>

@@ -104,7 +104,7 @@ public class LVVDevPanel extends JPanel {
 
             }
         });
-        buttons.add(testButton1);
+        // buttons.add(testButton1);
 
 
         // for testing how anchored paths are drawn; for the given
@@ -163,7 +163,7 @@ public class LVVDevPanel extends JPanel {
                 worker.execute();
             }
         });
-        buttons.add(testButton2);
+        // buttons.add(testButton2);
 
 
         /*

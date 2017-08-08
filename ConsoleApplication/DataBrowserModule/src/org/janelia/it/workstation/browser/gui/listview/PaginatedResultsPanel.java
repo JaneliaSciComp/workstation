@@ -35,7 +35,7 @@ import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextRegistration;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.browser.gui.support.DropDownButton;
+import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
@@ -77,7 +77,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     private final JButton startPageButton;
     private final JButton selectAllButton;
     private final JLabel pagingStatusLabel;
-    private final DropDownButton viewTypeButton;
+    private final ScrollingDropDownButton viewTypeButton;
 
     // Content
     private SearchResults searchResults;
@@ -99,7 +99,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         splashPanel = new JLabel(Icons.getIcon("workstation_logo_white.png"));
         add(splashPanel);
         
-        viewTypeButton = new DropDownButton("Choose Viewer...");
+        viewTypeButton = new ScrollingDropDownButton("Choose Viewer...");
         populateViewerPopupMenu(viewTypeButton.getPopupMenu());
 
         prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));
@@ -160,7 +160,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
 
         statusBar = new JPanel();
         statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.LINE_AXIS));
-        statusBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, (Color) UIManager.get("windowBorder")), BorderFactory.createEmptyBorder(0, 5, 2, 5)));
+        statusBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, (Color) UIManager.get("ws.ComponentBorderColor")), BorderFactory.createEmptyBorder(0, 5, 2, 5)));
 
         statusBar.add(viewTypeButton);
         statusBar.add(Box.createHorizontalGlue());

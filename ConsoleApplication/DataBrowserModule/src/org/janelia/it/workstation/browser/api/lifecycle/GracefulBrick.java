@@ -18,6 +18,13 @@ import org.openide.modules.Places;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Implements the ability to "brick" a Workstation installation, either through a local configuration option, 
+ * or globally, through the update center. This is necessary because we don't support backwards compatibility for 
+ * older clients, so every user should always be using the latest client version.   
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public class GracefulBrick {
 
     private static final Logger log = LoggerFactory.getLogger(GracefulBrick.class);
@@ -66,7 +73,7 @@ public class GracefulBrick {
         final String simpleHelpUrl = "http://workstation.int.janelia.org/upgrade";
         
         String html = "<html><body width='420'>" +
-        "<p>This version of the Workstation is no longer supported and must be manually upgraged to the latest release.</p>" +
+        "<p>This version of the Workstation is no longer supported and must be manually upgraded to the latest release.</p>" +
         "<br>" +
         "<p>When you press the Continue button below, the Workstation will exit and you will be taken to the following web page, which describes how to install the new version: " + simpleHelpUrl + 
         "</p>" +

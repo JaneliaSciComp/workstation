@@ -29,5 +29,8 @@ public abstract class GlobalAnnotationAdapter implements GlobalAnnotationListene
 
     @Override
     public void neuronTagsChanged(List<TmNeuronMetadata> neuronList) {}
+
+    @Override
+    public void neuronRadiusUpdated(TmNeuronMetadata neuron) {}
     
 }

@@ -28,13 +28,11 @@ public class SelectablePanel extends JPanel {
     private static Color selectedBackground;
     
     static {
-        // TODO: this should be done whenever the L&F changes, but currently we need to restart anyway, 
-        // so it doesn't matter until that is fixed
-
+        // TODO: This needs to be redone for non-dark LNF's, but for now this looks the best: 
         String normalBorder = "border_normal.png";
-        String selectedBorder = "border_selected.png";
-        normalBackground = new Color(241, 241, 241);
-        selectedBackground = new Color(203, 203, 203);
+        String selectedBorder = "border_dark_selected.png";
+//        normalBackground = new Color(241, 241, 241);
+//        selectedBackground = new Color(203, 203, 203);
 
         if (StateMgr.getStateMgr().isDarkLook()) {
             normalBorder = "border_dark_normal.png";
@@ -52,7 +50,7 @@ public class SelectablePanel extends JPanel {
         }
     }
     
-    private boolean selected;
+    private boolean selected = false;
     
     public SelectablePanel() {
         normalBackground = getBackground();

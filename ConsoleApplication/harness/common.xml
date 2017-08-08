@@ -102,6 +102,10 @@ made subject to such option by the copyright holder.
         <tstamp>
             <format property="module.build.started.time" pattern="yyyy-MM-dd'T'HH:mm:ss.SSSZ"/>
         </tstamp>
+        <condition property="asm.jar" value="${nbplatform.active.dir}/platform/core/asm-all-5.0.1.jar">
+            <available file="${nbplatform.active.dir}/platform/core/asm-all-5.0.1.jar"/>
+        </condition>
+        <property name="asm.jar" location="${libs.asm.dir}/core/asm-all-5.0.1.jar"/>
     </target>
 
     <target name="-release.dir">
@@ -138,11 +142,12 @@ made subject to such option by the copyright holder.
         <macrodef name="custom-javac-presetdef">
             <attribute name="javacval"/>
             <sequential>
-                <presetdef name="custom-javac">
+               <presetdef name="custom-javac">
                     <custom-javac executable="@{javacval}"/>
                 </presetdef>
             </sequential>
         </macrodef>
+        <custom-javac-presetdef javacval="${nbjdk.javac}"/>
     </target>
 
     <target name="-javac-init-bootclasspath-prepend" depends="build-init" if="bootclasspath.prepend">
@@ -213,8 +218,11 @@ made subject to such option by the copyright holder.
         <depend srcdir="${src.dir}" destdir="${build.classes.dir}" cache="${build.dir}/depcache">
             <classpath refid="cp"/>
         </depend>
+        <property name="javac.fork" value="false"/>
         <nb-javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${build.compiler.debug}" debuglevel="${build.compiler.debuglevel}" encoding="UTF-8"
-                  deprecation="${build.compiler.deprecation}" optimize="${build.compiler.optimize}" source="${javac.source}" target="${javac.target}" includeantruntime="false">
+                  deprecation="${build.compiler.deprecation}" optimize="${build.compiler.optimize}" source="${javac.source}" target="${javac.target}" includeantruntime="false"
+                  fork="${javac.fork}"
+        >
             <classpath refid="cp"/>
             <compilerarg line="${javac.compilerargs}"/>
             <processorpath refid="processor.cp"/>
@@ -222,6 +230,9 @@ made subject to such option by the copyright holder.
         <copy todir="${build.classes.dir}">
             <fileset dir="${src.dir}" excludes="${jar-excludes}"/>
         </copy>
+        <processjsannotation classes="${build.classes.dir}" asm="${asm.jar}">
+            <classpath refid="cp"/>
+        </processjsannotation>
     </target>
 
     <target name="compile-single" depends="init">
@@ -248,6 +259,9 @@ made subject to such option by the copyright holder.
             <compilerarg line="${javac.compilerargs}"/>
             <processorpath refid="processor.cp"/>
         </nb-javac>
+        <processjsannotation classes="${build.classes.dir}" asm="${asm.jar}">
+            <classpath refid="cp"/>
+        </processjsannotation>
     </target>
 
     <target name="jar-prep" depends="init">
@@ -469,13 +483,46 @@ made subject to such option by the copyright holder.
         </makenbm>
     </target>
 
+    <target name="nbm-nosignature" depends="init,netbeans,-nbm-prompt-for-storepass,-init-executables" description="Build NBM archive.">
+        <mkdir dir="${build.dir}"/>
+        <property name="nbm.target.cluster" value=""/> <!-- fallback -->
+        <property name="license.file.override" value="${license.file}"/>
+        <property name="use.pack200" value="true"/>
+        <property name="pack200.excludes" value=""/>
+        <property name="nbm.locales" value="${locales}"/>
+        <makenbm file="${build.dir}/${nbm}"
+                 productdir="${cluster}"
+                 module="${module.jar}"
+                 homepage="${nbm.homepage}"
+                 distribution="${nbm.distribution}"
+                 needsrestart="${nbm.needs.restart}"
+                 global="${nbm.is.global}"
+                 preferredupdate="${nbm.is.preferredupdate}"
+                 usepack200="${use.pack200}"
+                 pack200excludes="${pack200.excludes}"
+                 targetcluster="${nbm.target.cluster}"
+                 releasedate="${nbm.release.date}"
+                 moduleauthor="${nbm.module.author}"
+                 locales="${nbm.locales}"
+                 >
+            <license file="${license.file.override}"/>
+            <updaterjar>
+                <pathfileset>
+                    <path refid="cluster.path.id"/>
+                    <filename name="modules/ext/updater.jar"/>
+                </pathfileset>
+            </updaterjar>
+            <executables refid="module.executable.files"/>
+        </makenbm>
+    </target>
+
     <target name="test-preinit" depends="init"/>
     <target name="test-init" depends="init,test-preinit,test-lib-init">
         <property name="test.timeout" value="600000"/> <!-- 10min per test -->
         <property name="test.run.args" value="-ea"/>
         <property name="test.filter.trace" value="true"/>
-        <condition property="test.bootclasspath.prepend.args" value="-Xbootclasspath/p:${bootclasspath.prepend}">
-            <isset property="bootclasspath.prepend"/>
+        <condition property="test.bootclasspath.prepend.args" value="-Xbootclasspath/p:${run.bootclasspath.prepend}">
+            <isset property="run.bootclasspath.prepend"/>
         </condition>
         <property name="test.bootclasspath.prepend.args" value="-Dno.netbeans.bootclasspath.prepend.needed=true"/>
         <macrodef name="test-init">
@@ -585,6 +632,9 @@ made subject to such option by the copyright holder.
                 <compilerarg line="${javac.compilerargs}"/>
                 <processorpath refid="test.@{test.type}.cp"/>
             </nb-javac>
+            <processjsannotation classes="${build.test.@{test.type}.classes.dir}" asm="${asm.jar}">
+                <classpath refid="test.@{test.type}.cp"/>
+            </processjsannotation>
             <copy todir="${build.test.@{test.type}.classes.dir}">
                 <fileset dir="${test.@{test.type}.src.dir}">
                     <exclude name="**/*.java"/>
@@ -624,6 +674,9 @@ made subject to such option by the copyright holder.
                     <compilerarg line="${javac.compilerargs}"/>
                     <processorpath refid="test.@{test.type}.cp"/>
                 </nb-javac>
+                <processjsannotation classes="${build.test.@{test.type}.classes.dir}" asm="${asm.jar}">
+                    <classpath refid="test.@{test.type}.cp"/>
+                </processjsannotation>
                 <copy todir="${build.test.@{test.type}.classes.dir}">
                     <fileset dir="${test.@{test.type}.src.dir}">
                         <exclude name="**/*.java"/>
@@ -861,7 +914,7 @@ made subject to such option by the copyright holder.
                     <available classname="org.testng.annotations.Test" classpath="${test.@{test.type}.runtime.cp}"/>
                 </condition>
                 <condition property="is.test.suite" value ="-suite" else="">
-                    <contains string="${test.class}" substring=".xml"/>
+                    <matches pattern="([a-zA-Z_$][a-zA-Z\d_$]*\.)*xml$" string="${test.class}"/>
                 </condition>
                 <antcall target="-do-${test.runner}-debug-single${is.test.suite}">
                     <param name="test.type" value="@{test.type}"/>
@@ -1203,7 +1256,14 @@ made subject to such option by the copyright holder.
 
     <target name="-javadoc-init" depends="init">
         <!-- #71884: default Javadoc title and header -->
-        <property file="${manifest.mf}" prefix="mf."/>
+        <loadproperties srcFile="${manifest.mf}" prefix="mf.">
+            <filterchain>
+                <replaceregex pattern="[\n\r]+ ([^ ][^\n\r]*)"
+                            replace="\1"
+                            flags="g"
+                            byline="false"/>
+            </filterchain>
+        </loadproperties>
         <property file="${src.dir}/${mf.OpenIDE-Module-Localizing-Bundle}" prefix="bundle."/>
         <condition property="javadoc.title" value="${bundle.OpenIDE-Module-Name}">
             <isset property="bundle.OpenIDE-Module-Name"/>
@@ -1276,7 +1336,8 @@ made subject to such option by the copyright holder.
 
     <target name="fix-dependencies" depends="basic-init" description="Removes unused compilation dependencies on other modules.">
         <property name="build.compiler.deprecation" value="false" />
-        <fixdependencies antfile="../../build.xml" buildtarget="netbeans" cleantarget="clean" failonerror="true" sanitycheck="false">
+        <property name="fix.dependencies.modules" value=""/>
+        <fixdependencies antfile="../../build.xml" buildtarget="netbeans" cleantarget="clean" failonerror="true" sanitycheck="false" moduleFilter="${fix.dependencies.modules}" strip="false">
             <replace codenamebase="org.openide" addcompiletime="true" >
                 <module codenamebase="org.openide.filesystems" spec="6.2"/>
                 <module codenamebase="org.openide.util" spec="6.2"/>
@@ -1305,7 +1366,76 @@ made subject to such option by the copyright holder.
                 <module codenamebase="org.openide.filesystems" spec="8.0"/>
                 <module codenamebase="org.openide.util.lookup" spec="8.16"/>
             </replace>
+            <replace codenamebase="org.openide.util" addcompiletime="true">
+                <module codenamebase="org.openide.util" spec="9.0"/>
+                <module codenamebase="org.openide.util.ui" spec="9.3"/>
+            </replace>
+            <replace codenamebase="org.openide.util" addcompiletime="true">
+                <module codenamebase="org.openide.util" spec="9.3"/>
+            </replace>
 
+            <replace codenamebase="org.openide.filesystems" addcompiletime="true">
+                <module codenamebase="org.openide.filesystems" spec="9.0"/>
+                <module codenamebase="org.openide.filesystems.nb" spec="9.0"/>
+                <module codenamebase="org.openide.filesystems.compat8" spec="9.0"/>
+            </replace>
+            <replace codenamebase="org.openide.execution" addcompiletime="true">
+                <module codenamebase="org.openide.execution" spec="9.0"/>
+                <module codenamebase="org.openide.execution.compat8" spec="9.0"/>
+            </replace>
+            <replace codenamebase="org.netbeans.modules.parsing.api" addcompiletime="true">
+                <module codenamebase="org.netbeans.modules.parsing.api" release="1" spec="9.0"/>
+                <module codenamebase="org.netbeans.modules.parsing.indexing" spec="9.0"/>
+            </replace>
+            <replace codenamebase="org.netbeans.modules.projectuiapi" addcompiletime="true">
+                <module codenamebase="org.netbeans.modules.projectuiapi" release="1" spec="1.78"/>
+                <module codenamebase="org.netbeans.modules.projectuiapi.base" release="1" spec="1.78"/>
+            </replace>
+            <replace codenamebase="org.netbeans.modules.project.ant" addcompiletime="true">
+                <module codenamebase="org.netbeans.modules.project.ant" release="1" spec="1.62"/>
+                <module codenamebase="org.netbeans.modules.project.ant.ui" spec="1.62"/>
+            </replace>
+            <replace codenamebase="org.netbeans.modules.java.project" addcompiletime="true">
+                <module codenamebase="org.netbeans.modules.java.project" release="1" spec="1.62"/>
+                <module codenamebase="org.netbeans.modules.java.project.ui" release="1" spec="1.62"/>
+            </replace>
+            <replace codenamebase="org.netbeans.api.xml" addcompiletime="true">
+                <module codenamebase="org.netbeans.api.xml" release="1" spec="1.41"/>
+                <module codenamebase="org.netbeans.api.xml.ui" release="1" spec="1.41"/>
+            </replace>
+            <replace codenamebase="org.netbeans.modules.editor.lib" addcompiletime="true">
+                <module codenamebase="org.netbeans.modules.editor.lib" release="3" spec="4.0"/>
+                <module codenamebase="org.netbeans.modules.editor.document" spec="1.0"/>
+            </replace>
+            <replace codenamebase="org.netbeans.modules.editor.lib2" addcompiletime="true">
+                <module codenamebase="org.netbeans.modules.editor.lib2" release="1" spec="2.0"/>
+                <module codenamebase="org.netbeans.modules.editor.document" spec="1.0"/>
+            </replace>
+            <replace codenamebase="org.netbeans.api.progress" addcompiletime="true">
+                <module codenamebase="org.netbeans.api.progress" release="1" spec="1.40"/>
+                <module codenamebase="org.netbeans.api.progress.nb" spec="1.40"/>
+            </replace>
+            <replace codenamebase="org.netbeans.modules.java.source" addcompiletime="true">
+                <module codenamebase="org.netbeans.modules.java.source.base" spec="1.1"/>
+                <module codenamebase="org.netbeans.modules.java.source" spec="0.141"/>
+                <module codenamebase="org.netbeans.modules.java.source.compat8" spec="9.0"/>
+            </replace>
+            <replace codenamebase="org.netbeans.modules.project.libraries" addcompiletime="true">
+                <module codenamebase="org.netbeans.modules.project.libraries" release="1" spec="1.49"/>
+                <module codenamebase="org.netbeans.modules.project.libraries.ui" release="1" spec="1.49"/>
+            </replace>
+            <replace codenamebase="org.netbeans.modules.xml.catalog" addcompiletime="true">
+                <module codenamebase="org.netbeans.modules.xml.catalog" release="2" spec="2.0"/>
+                <module codenamebase="org.netbeans.modules.xml.catalog.ui" spec="1.0"/>
+            </replace>
+            <replace codenamebase="org.openide.loaders" addcompiletime="true">
+                <module codenamebase="org.openide.loaders" spec="7.61"/>
+                <module codenamebase="org.netbeans.api.templates" spec="1.0"/>
+            </replace>
+            <replace codenamebase="org.netbeans.core.startup" addcompiletime="true">
+                <module codenamebase="org.netbeans.core.startup" release="1" spec="1.60"/>
+                <module codenamebase="org.netbeans.core.startup.base" spec="1.60"/>
+            </replace>
             <fileset dir="nbproject" >
                 <include name="project.xml" />
             </fileset>

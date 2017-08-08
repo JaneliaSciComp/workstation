@@ -35,7 +35,7 @@ public class Icons {
      * @return
      */
     public static ImageIcon getLoadingIcon() {
-    	return getIcon("spinner.gif");
+    	return getIcon("loader.gif");
     }
 
     /**

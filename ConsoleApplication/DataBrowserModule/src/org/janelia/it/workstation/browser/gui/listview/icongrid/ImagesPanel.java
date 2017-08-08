@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -32,7 +31,6 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.browser.gui.support.AnnotationTagCloudPanel;
@@ -118,9 +116,6 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         buttonsPanel = new ScrollableGridPanel();
         setViewportView(buttonsPanel);
         setBorder(BorderFactory.createEmptyBorder());
-        if (!StateMgr.getStateMgr().isDarkLook()) {
-            getViewport().setBackground(Color.white);
-        }
         // When scrolling, only update the visible part of the panel
         getViewport().putClientProperty("EnableWindowBlit", Boolean.TRUE);
     }

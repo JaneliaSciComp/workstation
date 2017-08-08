@@ -62,5 +62,18 @@ made subject to such option by the copyright holder.
             </implies>
         </transformation>
     </transformationgroup>
+    <transformationgroup>
+        <description>Removal of FileSystemCapability</description>
+        <transformation>
+            <trigger-dependency type="older">
+                <module-dependency codenamebase="org.openide.execution" spec="9.0"/>
+            </trigger-dependency>
+            <implies>
+                <result>
+                    <module-dependency codenamebase="org.openide.execution.compat8" spec="9.0"/>
+                </result>
+            </implies>
+        </transformation>
+    </transformationgroup>
 
 </transformations>

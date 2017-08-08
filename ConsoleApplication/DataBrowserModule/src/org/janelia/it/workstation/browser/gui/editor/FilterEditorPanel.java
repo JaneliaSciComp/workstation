@@ -43,6 +43,7 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.TreeNodeCriteria;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -63,7 +64,7 @@ import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
-import org.janelia.it.workstation.browser.gui.support.DropDownButton;
+import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
@@ -111,8 +112,8 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private final JButton saveButton;
     private final JButton saveAsButton;
     private final PaginatedResultsPanel resultsPanel;
-    private final DropDownButton typeCriteriaButton;
-    private final DropDownButton addCriteriaButton;
+    private final ScrollingDropDownButton typeCriteriaButton;
+    private final ScrollingDropDownButton addCriteriaButton;
     private final SmartSearchBox searchBox;
     private final JButton infoButton;
 
@@ -235,12 +236,14 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             }
         });
         
-        this.typeCriteriaButton = new DropDownButton();
-        this.addCriteriaButton = new DropDownButton("Add Criteria...");
+        this.typeCriteriaButton = new ScrollingDropDownButton();
+        this.addCriteriaButton = new ScrollingDropDownButton("Add Criteria...");
         this.searchBox = new SmartSearchBox("SEARCH_HISTORY");
 
         infoButton = new JButton(Icons.getIcon("info.png"));
         infoButton.setMargin(new Insets(0,2,0,2));
+        infoButton.setOpaque(false);
+        infoButton.setContentAreaFilled(false);
         infoButton.setBorderPainted(false);
         infoButton.addActionListener(new ActionListener() {
             @Override
@@ -298,16 +301,6 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         }
         this.searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
     }
-    
-    public void loadNewFilter() {
-        Filter newFilter = new Filter();
-        newFilter.setSearchClass(Sample.class.getSimpleName());
-        FacetCriteria facet = new FacetCriteria();
-        facet.setAttributeName("sageSynced");
-        facet.setValues(Sets.newHashSet("true"));
-        newFilter.addCriteria(facet);
-        loadDomainObject(newFilter, true, null);
-    }
 
     @Override
     public void loadDomainObjectNode(AbstractDomainObjectNode<Filtering> filterNode, boolean isUserDriven, Callable<Void> success) {
@@ -340,10 +333,10 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             updateView();
             
             configPanel.removeAllTitleComponents();
-            if (ClientDomainUtils.hasWriteAccess(filter) || filter.getName().equals(DEFAULT_FILTER_NAME)) {
+            if (ClientDomainUtils.hasWriteAccess(filter)) {
 	            configPanel.addTitleComponent(saveButton, false, true);
-	            configPanel.addTitleComponent(saveAsButton, false, true);
             }
+            configPanel.addTitleComponent(saveAsButton, false, true);
             configPanel.setExpanded(filter.getId()==null);
 
             search();
@@ -470,7 +463,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
         for (Criteria criteria : filter.getCriteriaList()) {
             if (criteria instanceof TreeNodeCriteria) {
-                DropDownButton customCriteriaButton = createCustomCriteriaButton((TreeNodeCriteria)criteria);
+                ScrollingDropDownButton customCriteriaButton = createCustomCriteriaButton((TreeNodeCriteria)criteria);
                 if (customCriteriaButton!=null) {
                     configPanel.addConfigComponent(customCriteriaButton);
                 }
@@ -489,7 +482,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                     label.append(StringUtils.getCommaDelimited(values, MAX_VALUES_STRING_LENGTH));
                     label.append(")");
                 }
-                DropDownButton facetButton = new DropDownButton(label.toString());
+                ScrollingDropDownButton facetButton = new ScrollingDropDownButton(label.toString());
                 populateFacetMenu(attr, facetButton.getPopupMenu());
                 configPanel.addConfigComponent(facetButton);
             }
@@ -497,7 +490,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
         for (Criteria criteria : filter.getCriteriaList()) {
             if (criteria instanceof AttributeCriteria) {
-                DropDownButton customCriteriaButton = createCustomCriteriaButton((AttributeCriteria)criteria);
+                ScrollingDropDownButton customCriteriaButton = createCustomCriteriaButton((AttributeCriteria)criteria);
                 if (customCriteriaButton!=null) {
                     configPanel.addConfigComponent(customCriteriaButton);
                 }
@@ -554,9 +547,9 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         configPanel.updateUI();
     }
 
-    private DropDownButton createCustomCriteriaButton(final TreeNodeCriteria criteria) {
+    private ScrollingDropDownButton createCustomCriteriaButton(final TreeNodeCriteria criteria) {
 
-        DropDownButton facetButton = new DropDownButton("In: "+criteria.getTreeNodeName());
+        ScrollingDropDownButton facetButton = new ScrollingDropDownButton("In: "+criteria.getTreeNodeName());
 
         JPopupMenu popupMenu = facetButton.getPopupMenu();
         popupMenu.removeAll();
@@ -574,7 +567,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         return facetButton;
     }
 
-    private DropDownButton createCustomCriteriaButton(final AttributeCriteria criteria) {
+    private ScrollingDropDownButton createCustomCriteriaButton(final AttributeCriteria criteria) {
         
         String label;
         final DomainObjectAttribute attr = searchConfig.getDomainObjectAttribute(criteria.getAttributeName());
@@ -591,7 +584,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             return null;
         }
         
-        DropDownButton facetButton = new DropDownButton(label);
+        ScrollingDropDownButton facetButton = new ScrollingDropDownButton(label);
 
         JPopupMenu popupMenu = facetButton.getPopupMenu();
         popupMenu.removeAll();
@@ -793,14 +786,16 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         }
     }
 
-    public static Filter createUnsavedFilter(String name) {
+    public static Filter createUnsavedFilter(Class<?> searchClass, String name) {
         Filter filter = new Filter();
+        filter.setSearchClass(searchClass==null?DEFAULT_SEARCH_CLASS.getName():searchClass.getName());
         filter.setName(name==null?DEFAULT_FILTER_NAME:name);
-        filter.setSearchClass(DEFAULT_SEARCH_CLASS.getName());
-        FacetCriteria facet = new FacetCriteria();
-        facet.setAttributeName("sageSynced");
-        facet.setValues(Sets.newHashSet("true"));
-        filter.addCriteria(facet);
+        if (Sample.class.equals(searchClass) || LSMImage.class.equals(searchClass)) {
+            FacetCriteria facet = new FacetCriteria();
+            facet.setAttributeName("sageSynced");
+            facet.setValues(Sets.newHashSet("true"));
+            filter.addCriteria(facet);
+        }
         return filter;
     }
     
@@ -844,7 +839,9 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
         if (filter==null) return;
         if (event.getDomainObject().getId().equals(filter.getId())) {
-            loadNewFilter();
+            // Reset filter
+            Filter newFilter = createUnsavedFilter(null, null);
+            loadDomainObject(newFilter, true, null);
         }
     }
 

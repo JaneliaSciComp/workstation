@@ -11,7 +11,7 @@
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <specification-version>1.34.1</specification-version>
+                        <specification-version>1.41.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -19,7 +19,7 @@
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <specification-version>1.46.1</specification-version>
+                        <specification-version>1.56.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -27,7 +27,7 @@
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <specification-version>7.59.1</specification-version>
+                        <specification-version>7.67.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -35,7 +35,15 @@
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <specification-version>7.36.1</specification-version>
+                        <specification-version>7.45.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.openide.util.ui</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>9.6.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -43,7 +51,7 @@
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <specification-version>6.65.1</specification-version>
+                        <specification-version>6.75.1</specification-version>
                     </run-dependency>
                 </dependency>
             </module-dependencies>
@@ -334,54 +342,6 @@
                 <package>de.hunsicker.swing.util</package>
                 <package>de.hunsicker.util</package>
                 <package>de.hunsicker.util.concurrent</package>
-                <package>de.javasoft.io</package>
-                <package>de.javasoft.plaf.synthetica</package>
-                <package>de.javasoft.plaf.synthetica.aluoxide</package>
-                <package>de.javasoft.plaf.synthetica.aluoxide.xml</package>
-                <package>de.javasoft.plaf.synthetica.blackeye</package>
-                <package>de.javasoft.plaf.synthetica.blackeye.xml</package>
-                <package>de.javasoft.plaf.synthetica.blackmoon.xml</package>
-                <package>de.javasoft.plaf.synthetica.blackstar.xml</package>
-                <package>de.javasoft.plaf.synthetica.blueice.xml</package>
-                <package>de.javasoft.plaf.synthetica.bluelight</package>
-                <package>de.javasoft.plaf.synthetica.bluelight.xml</package>
-                <package>de.javasoft.plaf.synthetica.bluemoon.xml</package>
-                <package>de.javasoft.plaf.synthetica.bluesteel.xml</package>
-                <package>de.javasoft.plaf.synthetica.classy</package>
-                <package>de.javasoft.plaf.synthetica.classy.xml</package>
-                <package>de.javasoft.plaf.synthetica.filechooser</package>
-                <package>de.javasoft.plaf.synthetica.flexdock</package>
-                <package>de.javasoft.plaf.synthetica.greendream.xml</package>
-                <package>de.javasoft.plaf.synthetica.mauvemetallic.xml</package>
-                <package>de.javasoft.plaf.synthetica.orangemetallic.xml</package>
-                <package>de.javasoft.plaf.synthetica.painter</package>
-                <package>de.javasoft.plaf.synthetica.silvermoon.xml</package>
-                <package>de.javasoft.plaf.synthetica.simple2D</package>
-                <package>de.javasoft.plaf.synthetica.simple2D.iconPainter</package>
-                <package>de.javasoft.plaf.synthetica.simple2D.xml</package>
-                <package>de.javasoft.plaf.synthetica.skymetallic.xml</package>
-                <package>de.javasoft.plaf.synthetica.standard.xml</package>
-                <package>de.javasoft.plaf.synthetica.styles</package>
-                <package>de.javasoft.plaf.synthetica.whitevision.xml</package>
-                <package>de.javasoft.swing</package>
-                <package>de.javasoft.swing.jycombobox</package>
-                <package>de.javasoft.swing.plaf</package>
-                <package>de.javasoft.swing.plaf.addons</package>
-                <package>de.javasoft.swing.plaf.basic</package>
-                <package>de.javasoft.swing.plaf.datecombobox</package>
-                <package>de.javasoft.swing.plaf.jycombobox</package>
-                <package>de.javasoft.swing.plaf.jysearchfield</package>
-                <package>de.javasoft.swing.plaf.jytabbedpane</package>
-                <package>de.javasoft.swing.plaf.synthetica</package>
-                <package>de.javasoft.swing.table</package>
-                <package>de.javasoft.synthetica.addons</package>
-                <package>de.javasoft.synthetica.addons.flexdock</package>
-                <package>de.javasoft.synthetica.addons.flexdock.dockbar</package>
-                <package>de.javasoft.synthetica.addons.systemmonitor</package>
-                <package>de.javasoft.synthetica.addons.table</package>
-                <package>de.javasoft.synthetica.netbeans</package>
-                <package>de.javasoft.util</package>
-                <package>de.javasoft.util.java2d</package>
                 <package>de.undercouch.bson4jackson</package>
                 <package>de.undercouch.bson4jackson.deserializers</package>
                 <package>de.undercouch.bson4jackson.io</package>
@@ -1562,6 +1522,8 @@
                 <package>org.janelia.it.jacs.model.domain.gui.search.criteria</package>
                 <package>org.janelia.it.jacs.model.domain.interfaces</package>
                 <package>org.janelia.it.jacs.model.domain.ontology</package>
+                <package>org.janelia.it.jacs.model.domain.orders</package>
+                <package>org.janelia.it.jacs.model.domain.report</package>
                 <package>org.janelia.it.jacs.model.domain.sample</package>
                 <package>org.janelia.it.jacs.model.domain.screen</package>
                 <package>org.janelia.it.jacs.model.domain.subjects</package>
@@ -1575,7 +1537,6 @@
                 <package>org.janelia.it.jacs.model.jobs</package>
                 <package>org.janelia.it.jacs.model.ontology</package>
                 <package>org.janelia.it.jacs.model.ontology.types</package>
-                <package>org.janelia.it.jacs.model.domain.orders</package>
                 <package>org.janelia.it.jacs.model.sage</package>
                 <package>org.janelia.it.jacs.model.search</package>
                 <package>org.janelia.it.jacs.model.status</package>
@@ -1612,7 +1573,6 @@
                 <package>org.janelia.it.jacs.model.user_data.tic</package>
                 <package>org.janelia.it.jacs.model.user_data.tiledMicroscope</package>
                 <package>org.janelia.it.jacs.model.user_data.tiled_microscope_builder</package>
-                <package>org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf</package>
                 <package>org.janelia.it.jacs.model.user_data.tools</package>
                 <package>org.janelia.it.jacs.model.user_data.validation</package>
                 <package>org.janelia.it.jacs.model.util</package>
@@ -2066,32 +2026,12 @@
                 <binary-origin>release/modules/ext/mail-1.4.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/synthetica.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/synthetica.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/syntheticaAddonsWithThemes.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaAddonsWithThemes.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/hk2-utils-2.4.0-b31.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/hk2-utils-2.4.0-b31.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/syntheticaOrangeMetallic.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaOrangeMetallic.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/syntheticaBlueIce.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaBlueIce.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/kd.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/kd.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/syntheticaBlueLight.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaBlueLight.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/ffmpeg-windows-x86.jar</runtime-relative-path>
@@ -2112,10 +2052,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/hk2-locator-2.4.0-b31.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/hk2-locator-2.4.0-b31.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/syntheticaGreenDream.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaGreenDream.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-soapmonitor-servlet-1.5.5.jar</runtime-relative-path>
@@ -2166,20 +2102,12 @@
                 <binary-origin>release/modules/ext/javassist-3.16.1-GA.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/syntheticaAluOxide.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaAluOxide.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/saaj-impl-1.3.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/saaj-impl-1.3.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/bson4jackson-2.4.0.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/bson4jackson-2.4.0.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/syntheticaSilverMoon.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaSilverMoon.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/protostuff-runtime-md-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
@@ -2210,16 +2138,8 @@
                 <binary-origin>release/modules/ext/vlcj-1.3.0-b1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/syntheticaSimple2D.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaSimple2D.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/neethi-2.0.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/neethi-2.0.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/syntheticaMauveMetallic.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaMauveMetallic.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jersey-guava-2.21.jar</runtime-relative-path>
@@ -2252,10 +2172,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/XmlSchema-1.4.3.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/XmlSchema-1.4.3.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/syntheticaBlackEye.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaBlackEye.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/activation-1.1.jar</runtime-relative-path>
@@ -2292,10 +2208,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/protostuff-api-1.3.9-SNAPSHOT.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/protostuff-api-1.3.9-SNAPSHOT.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/syntheticaBlueMoon.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaBlueMoon.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jackson-databind-2.5.4.jar</runtime-relative-path>
@@ -2378,10 +2290,6 @@
                 <binary-origin>release/modules/ext/protostuff-xml-1.3.9-SNAPSHOT-sources.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/syntheticaBlackStar.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaBlackStar.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/geronimo-saaj_1.3_spec-1.0.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/geronimo-saaj_1.3_spec-1.0.1.jar</binary-origin>
             </class-path-extension>
@@ -2406,10 +2314,6 @@
                 <binary-origin>release/modules/ext/ffmpeg.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/syntheticaBlackMoon.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaBlackMoon.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/hk2-api-2.4.0-b31.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/hk2-api-2.4.0-b31.jar</binary-origin>
             </class-path-extension>
@@ -2424,10 +2328,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/bio-formats.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/bio-formats.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/syntheticaClassy.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaClassy.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jersey-media-multipart-2.21.jar</runtime-relative-path>
@@ -2454,10 +2354,6 @@
                 <binary-origin>release/modules/ext/ome-xml.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/syntheticaWhiteVision.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaWhiteVision.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/commons-lang3-3.3.2-javadoc.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/commons-lang3-3.3.2-javadoc.jar</binary-origin>
             </class-path-extension>
@@ -2468,10 +2364,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/protostuff-runtime-1.3.9-SNAPSHOT.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/protostuff-runtime-1.3.9-SNAPSHOT.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/syntheticaSkyMetallic.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaSkyMetallic.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/protostuff-parser-1.3.9-SNAPSHOT.jar</runtime-relative-path>
@@ -2500,10 +2392,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/protostuff-runtime-view-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/protostuff-runtime-view-1.3.9-SNAPSHOT-sources.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/syntheticaBlueSteel.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaBlueSteel.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-jaxbri-1.5.5.jar</runtime-relative-path>
@@ -2712,10 +2600,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/jersey-common-2.21.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jersey-common-2.21.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/de-javasoft-synthetica-netbeans.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/de-javasoft-synthetica-netbeans.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/lz4-1.3.0-sources.jar</runtime-relative-path>

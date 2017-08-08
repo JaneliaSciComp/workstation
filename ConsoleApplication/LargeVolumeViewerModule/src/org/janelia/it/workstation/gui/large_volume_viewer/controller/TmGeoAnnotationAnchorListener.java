@@ -19,6 +19,7 @@ public interface TmGeoAnnotationAnchorListener {
     void anchorMovedBack(TmGeoAnnotation anchor);
     void anchorMoved(TmGeoAnnotation anchor);
     void anchorRadiusChanged(TmGeoAnnotation anchor);
+    void anchorRadiiChanged(List<TmGeoAnnotation> anchorList);
     void clearAnchors(Collection<TmGeoAnnotation> anchors);
     void clearAnchors();
 }

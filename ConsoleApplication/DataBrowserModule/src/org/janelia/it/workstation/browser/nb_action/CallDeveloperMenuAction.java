@@ -24,7 +24,6 @@ public final class CallDeveloperMenuAction extends AbstractAction implements Pre
     private final JMenu subMenu = new JMenu("Contact A Developer");
     
     public CallDeveloperMenuAction() {
-        subMenu.add(new JMenuItem("Call Christopher - x4662"));
         subMenu.add(new JMenuItem("Call David  - x4649"));
         subMenu.add(new JMenuItem("Call Don    - x4656"));
         subMenu.add(new JMenuItem("Call Eric   - x4655"));

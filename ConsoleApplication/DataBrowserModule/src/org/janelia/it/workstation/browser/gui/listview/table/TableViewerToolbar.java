@@ -52,7 +52,7 @@ public abstract class TableViewerToolbar extends ViewerToolbar {
         exportButton.addMouseListener(new MouseForwarder(toolbar, "ExportButton->JToolBar"));
         toolbar.add(exportButton);
 
-        toolbar.addSeparator();
+        addSeparator();
     }
 
     public JButton getChooseColumnsButton() {

@@ -369,6 +369,7 @@ public class SkeletonActorModel {
     }
 
     public synchronized void forceUpdateAnchors() {
+        log.trace("forceUpdateAnchors; currently at version " + mostRecentAnchorVersion);
         mostRecentAnchorVersion--; // trick to trigger update
         updateAnchors();
     }
@@ -390,13 +391,15 @@ public class SkeletonActorModel {
         StopWatch w = new StopWatch();
         w.start();
 
+        log.trace("skeleton has anchor set version = " + skeleton.getAnchorSetVersion());
+        log.trace("mostRecentAnchorVerion = " + mostRecentAnchorVersion);
         if (mostRecentAnchorVersion == skeleton.getAnchorSetVersion()) {
             log.trace("updateAnchors() skipping redundant update");
             return;
         }
         else {
             mostRecentAnchorVersion = skeleton.getAnchorSetVersion();
-            log.trace("updateAnchors() - updating to version=" + mostRecentAnchorVersion);
+            log.trace("updateAnchors() - updating to version = " + mostRecentAnchorVersion);
         }
 
         // we do the point update in this method, then call out

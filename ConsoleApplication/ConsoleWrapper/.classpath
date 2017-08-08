@@ -43,7 +43,6 @@
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/commons-lang3-3.3.2-javadoc.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/commons-lang3-3.3.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/commons-logging-1.1.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/de-javasoft-synthetica-netbeans.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/ehcache-core-2.5.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/ffmpeg-linux-x86_64.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/ffmpeg-linux-x86.jar"/>
@@ -177,24 +176,6 @@
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/snappy-java-1.0.5-M3.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/swingx-1.6.5.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/swingx-all-1.6.3.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/synthetica.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaAddonsWithThemes.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaAluOxide.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaBlackEye.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaBlackMoon.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaBlackStar.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaBlueIce.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaBlueLight.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaBlueMoon.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaBlueSteel.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaClassy.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaGreenDream.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaMauveMetallic.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaOrangeMetallic.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaSilverMoon.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaSimple2D.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaSkyMetallic.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/syntheticaWhiteVision.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/tribes-6.0.16.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/vecmath.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/VIB-lib-2.0.0-SNAPSHOT.jar"/>

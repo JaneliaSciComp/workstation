@@ -8,7 +8,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
@@ -61,10 +64,18 @@ public class WorkspaceInformationAction extends AbstractAction {
             JScrollPane scrollPane = new JScrollPane(table);
 
             table.setFillsViewportHeight(true);
+            table.setAutoCreateRowSorter(true);
             tableModel.addNeurons(new ArrayList<>(annotationModel.getNeuronList()));
 
+            JPanel panel = new JPanel();
+            panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+            panel.add(scrollPane);
+            panel.add(new JLabel("                totals:        " + tableModel.getRowCount() + " neurons        "
+                + tableModel.getNpoints()+ " points        " + tableModel.getNbranches() + " branches"));
+
             JOptionPane.showConfirmDialog(null,
-                scrollPane,
+                // scrollPane,
+                panel,
                 "Workspace information",
                 JOptionPane.DEFAULT_OPTION,
                 JOptionPane.INFORMATION_MESSAGE,
@@ -116,6 +127,14 @@ class InfoTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
+    public int getNpoints() {
+        return npoints;
+    }
+
+    public int getNbranches() {
+        return nbranches;
+    }
+
     public String getColumnName(int column) {
         return columnNames[column];
     }
@@ -125,36 +144,38 @@ class InfoTableModel extends AbstractTableModel {
     }
 
     public int getRowCount() {
-        // add one for totals at the end
-        return neurons.size() + 1;
+        return neurons.size();
+    }
+
+    public Class<?> getColumnClass(int column) {
+        switch (column) {
+            case 0:
+                // neuron name
+                return String.class;
+            case 1:
+                // # points
+                return Integer.class;
+            case 2:
+                // # branches
+                return Integer.class;
+            default:
+                throw new IllegalStateException("Table column is not configured: "+column);
+        }
     }
 
     public Object getValueAt(int row, int column) {
-        if (row == neurons.size()) {
-            switch (column) {
-                case 0:
-                    return "totals: " + neurons.size() + " neurons";
-                case 1:
-                    return npoints;
-                case 2:
-                    return nbranches;
-                default:
-                    return null;
-            }
-        } else {
-            switch (column) {
-                case 0:
-                    // name
-                    return neurons.get(row).getName();
-                case 1:
-                    // # points
-                    return neurons.get(row).getGeoAnnotationMap().size();
-                case 2:
-                    // # branches
-                    return branchMap.get(neurons.get(row).getId());
-                default:
-                    return null;
-            }
+        switch (column) {
+            case 0:
+                // name
+                return neurons.get(row).getName();
+            case 1:
+                // # points
+                return neurons.get(row).getGeoAnnotationMap().size();
+            case 2:
+                // # branches
+                return branchMap.get(neurons.get(row).getId());
+            default:
+                return null;
         }
     }
 

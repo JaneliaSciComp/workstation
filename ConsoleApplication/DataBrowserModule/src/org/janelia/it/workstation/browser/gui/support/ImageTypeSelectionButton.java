@@ -34,7 +34,7 @@ import com.google.common.collect.Multiset;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ImageTypeSelectionButton extends DropDownButton {
+public class ImageTypeSelectionButton extends ScrollingDropDownButton {
 
     private static final Logger log = LoggerFactory.getLogger(ImageTypeSelectionButton.class);
 
@@ -44,7 +44,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
     private FileType currImageType;
     private boolean only2d;
     private boolean showTitle;
-
+    
     public ImageTypeSelectionButton() {
         this(false, true);
     }

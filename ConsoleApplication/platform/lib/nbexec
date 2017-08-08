@@ -1,7 +1,7 @@
 #!/bin/sh
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 #
-# Copyright 1997-2013 Oracle and/or its affiliates. All rights reserved.
+# Copyright 1997-2016 Oracle and/or its affiliates. All rights reserved.
 #
 # Oracle and Java are registered trademarks of Oracle and/or its affiliates.
 # Other names may be trademarks of their respective owners.
@@ -158,11 +158,11 @@ if [ -z "$jdkhome" ] ; then
         Darwin*)
         # read Java Preferences
         if [ -x "/usr/libexec/java_home" ]; then
-            jdkhome=`/usr/libexec/java_home --version 1.7.0_10+ --failfast`
+            jdkhome=`/usr/libexec/java_home --version 1.8.0+ --failfast`
 
-        # JDK1.7 Update 10 as a fallback
-        elif [ -f "/Library/Java/JavaVirtualMachines/jdk1.7.0_10.jdk/Contents/Home/bin/java" ] ; then
-            jdkhome="/Library/Java/JavaVirtualMachines/jdk1.7.0_10.jdk/Contents/Home"
+        # JDK1.8 as a fallback
+        elif [ -f "/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home/bin/java" ] ; then
+            jdkhome="/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home"
         fi         
    
         # JRE fallback
@@ -210,15 +210,23 @@ if [ `uname` = "Darwin" ] ; then
     fi
 fi
 
-# if the Java option for heap dump on OOME is supported enable it
-if "${jdkhome}/bin/java" -XX:+HeapDumpOnOutOfMemoryError -cp "${progdir}/boot.jar" org.netbeans.NbExecJavaStartTry > /dev/null 2>&1 ; then
-   jargs="$jargs -XX:+HeapDumpOnOutOfMemoryError"
-   if [ -z "`echo $jargs | grep -- "-XX:HeapDumpPath="`" ] ; then
-      jargs="$jargs -XX:HeapDumpPath=\"${userdir}/var/log/heapdump.hprof\""
-   fi
-   # rename old heap dump to .old
-   mv "${userdir}/var/log/heapdump.hprof" "${userdir}/var/log/heapdump.hprof.old" > /dev/null 2>&1
+# addExports for JDK9
+case "`uname`" in
+    Darwin*)
+        addExports="-DaddExports:java.desktop/com.apple.eawt=ALL-UNNAMED -DaddExports:java.desktop/sun.awt=ALL-UNNAMED -DaddExports:java.base/jdk.internal.jrtfs=ALL-UNNAMED -DaddExports:java.desktop/apple.laf=ALL-UNNAMED -DaddExports:java.desktop/java.awt.peer=ALL-UNNAMED -DaddExports:java.desktop/com.sun.beans.editors=ALL-UNNAMED -DaddExports:java.desktop/sun.awt.im=ALL-UNNAMED -DaddExports:java.management/sun.management=ALL-UNNAMED"
+    ;;
+    *)
+        addExports="-DaddExports:java.desktop/sun.awt=ALL-UNNAMED -DaddExports:java.base/jdk.internal.jrtfs=ALL-UNNAMED -DaddExports:java.desktop/java.awt.peer=ALL-UNNAMED -DaddExports:java.desktop/com.sun.beans.editors=ALL-UNNAMED -DaddExports:java.desktop/sun.awt.im=ALL-UNNAMED -DaddExports:java.desktop/com.sun.java.swing.plaf.gtk=ALL-UNNAMED -DaddExports:java.management/sun.management=ALL-UNNAMED"
+    ;;
+esac
+jargs="$jargs $addExports"
+
+jargs="$jargs -XX:+HeapDumpOnOutOfMemoryError"
+if [ -z "`echo $jargs | grep -- "-XX:HeapDumpPath="`" ] ; then
+  jargs="$jargs -XX:HeapDumpPath=\"${userdir}/var/log/heapdump.hprof\""
 fi
+# rename old heap dump to .old
+mv "${userdir}/var/log/heapdump.hprof" "${userdir}/var/log/heapdump.hprof.old" > /dev/null 2>&1
 
 jargs_without_clusters="$jargs"
 jargs="-Dnetbeans.dirs=\"${clusters}\" $jargs_without_clusters"
@@ -370,10 +378,11 @@ install_new_updater() {
         if [ -f "${newUpdaterDir}/updater.jar" ]; then
             mv -f "${newUpdaterDir}/updater.jar" "${base}/modules/ext/"
         fi
-        ls -l "${newUpdaterDir}/"updater_*.jar
-        for i in "${newUpdaterDir}/"updater_*.jar; do
-            mkdir -p "${base}/modules/ext/locale/"
-            mv -f "$i" "${base}/modules/ext/locale/"
+        for i in "${newUpdaterDir}/locale/"updater_*.jar; do
+            if [ -f "$i" ]; then
+                mkdir -p "${base}/modules/ext/locale/"
+                mv -f "$i" "${base}/modules/ext/locale/"
+            fi
         done
         rmdir "${newUpdaterDir}"
     fi

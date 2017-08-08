@@ -94,7 +94,7 @@
         <condition property="icon.extension" value=".gif">
              <or>
                  <matches string="${icon.file.name}" pattern="^.*\.gif$"/>
-                 <matches string="${icon.file.name}" pattern="^.*\.gif$"/>
+                 <matches string="${icon.file.name}" pattern="^.*\.GIF$"/>
              </or>
         </condition>
         <condition property="icon.extension" value=".png">
