@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
@@ -517,12 +518,14 @@ extends MultipassRenderer
                  addNeuronReconstruction(neuron);
             }
             // 4 - double check for changes in neuron size (e.g. after transfer neurite)
-            if (arg==null) {
-                allSwcActor.checkForChanges();
+            if (arg!=null && arg instanceof List) {
+                List neuronsToRefresh = (List)arg;
+                for (int i=0; i<neuronsToRefresh.size(); i++) {
+                     allSwcActor.checkForChanges((NeuronModel)neuronsToRefresh.get(i));
+                }
             } else {
+                allSwcActor.checkForChanges();
                 // single neuron changes, no need to check everything
-                allSwcActor.checkForChanges((NeuronModel)arg);
-                
             }
         }
     }
