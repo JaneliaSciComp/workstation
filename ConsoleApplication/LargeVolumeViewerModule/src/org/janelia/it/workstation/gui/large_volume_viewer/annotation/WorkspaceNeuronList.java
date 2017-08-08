@@ -8,7 +8,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -282,12 +281,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         );
         filterPanel.add(filterField);
         JButton clearFilter = new JButton("Clear");
-        clearFilter.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                filterField.setText("");
-            }
-        });
+        clearFilter.addActionListener(event -> filterField.setText(""));
         filterPanel.add(clearFilter);
 
         GridBagConstraints c3 = new GridBagConstraints();
@@ -298,10 +292,10 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         c3.fill = GridBagConstraints.HORIZONTAL;
         add(filterPanel, c3);
 
-        // text field for ignore pattern
+        // text field for ignore prefix
         JPanel ignorePanel = new JPanel();
         ignorePanel.setLayout(new BoxLayout(ignorePanel, BoxLayout.LINE_AXIS));
-        ignorePanel.add(new JLabel("Ignore pattern:"));
+        ignorePanel.add(new JLabel("Ignore prefix:"));
         ignoreField = new JTextField();
         ignoreField.getDocument().addDocumentListener(
                 new DocumentListener() {
@@ -323,12 +317,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         );
         ignorePanel.add(ignoreField);
         JButton clearIgnore = new JButton("Clear");
-        clearIgnore.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ignoreField.setText("");
-            }
-        });
+        clearIgnore.addActionListener(event -> ignoreField.setText(""));
         ignorePanel.add(clearIgnore);
 
         add(ignorePanel, c3);
@@ -419,7 +408,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
      * annotation information that we do explicitly above
      */
     private void updateRowFilter() {
-        RowFilter<TableModel, String> rowFilter = null;
+        RowFilter<TableModel, String> rowFilter = RowFilter.regexFilter("");
         try {
             // old: get regex from one text field
             // rowFilter = RowFilter.regexFilter(filterField.getText());
@@ -428,19 +417,31 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
             //  fields and combine them, carefully
             // note if include filter is empty, it's ok, but if
             //  exclude pattern is empty, don't use it
+
             String ignoreText = ignoreField.getText();
             String includeText = filterField.getText();
 
-            String pattern = includeText;
-            System.out.println("new row filter with pattern = " + pattern);
-            rowFilter = RowFilter.regexFilter(pattern);
+            // note: RowFilter.regexFilter() doesn't seem to like single-character
+            //  patterns; we'll live with having to type two characters on
+            //  the include side, but for the exclude side, I limited the
+            //  ignore filter to prefixes so I can always force the pattern
+            //  to be two characters, and it behaves predictably
 
-            /*
-            String pattern = ignoreText;
-            System.out.println("new row filter with not patter = " + pattern);
-            // types aren't matching here?
-            rowFilter = RowFilter.notFilter(RowFilter.regexFilter(pattern));
-             */
+            RowFilter includeFilter = RowFilter.regexFilter(includeText);
+            RowFilter ignoreFilter = RowFilter.notFilter(RowFilter.regexFilter("^" + ignoreText));
+
+            if (ignoreText.length() > 0 && includeText.length() > 0) {
+                List<RowFilter<Object,Object>> filters = new ArrayList<>();
+                filters.add(includeFilter);
+                filters.add(ignoreFilter);
+                rowFilter = RowFilter.andFilter(filters);
+            } else if (ignoreText.length() > 0) {
+                rowFilter = ignoreFilter;
+            } else if (includeText.length() > 0) {
+                rowFilter = includeFilter;
+            } else {
+                // no filter text = return the null filter as-is
+            }
 
         } catch (java.util.regex.PatternSyntaxException e) {
             // if the regex doesn't parse, don't update the filter
