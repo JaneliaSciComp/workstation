@@ -2,6 +2,8 @@ package org.janelia.it.workstation.browser.model.descriptors;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -107,8 +109,14 @@ public class DescriptorUtils {
                             log.trace("  Inspecting pipeline result: {}", result.getName());
                             if (result instanceof SamplePostProcessingResult) {
                                 // Add a descriptor for every anatomical area in the sample
+
+                                Set<String> areas = new TreeSet<>();
                                 for (SampleTile sampleTile : objectiveSample.getTiles()) {
-                                    ResultArtifactDescriptor rad = new ResultArtifactDescriptor(result, sampleTile.getAnatomicalArea());
+                                    areas.add(sampleTile.getAnatomicalArea());    
+                                }
+                                
+                                for(String area : areas) {
+                                    ResultArtifactDescriptor rad = new ResultArtifactDescriptor(result, area);
                                     log.trace("    Adding result artifact descriptor: {}", rad);
                                     countedArtifacts.add(rad);
                                 }
