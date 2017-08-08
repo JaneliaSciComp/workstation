@@ -7,31 +7,31 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.swing.ButtonGroup;
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
-import org.janelia.it.jacs.model.domain.sample.LSMSummaryResult;
+import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.sample.SamplePostProcessingResult;
+import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.model.ResultCategory;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Supplier;
 import com.google.common.collect.LinkedHashMultiset;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.Multiset;
 
 /**
@@ -42,9 +42,12 @@ import com.google.common.collect.Multiset;
  */
 public class ResultSelectionButton extends ScrollingDropDownButton {
 
-    private ResultDescriptor currResult;
+    private static final Logger log = LoggerFactory.getLogger(ResultSelectionButton.class);
+    
+    private ArtifactDescriptor currResult;
     private boolean showTitle;
 
+    private ButtonGroup group;
     private JPopupMenu popupMenu;
 
     public ResultSelectionButton() {
@@ -66,10 +69,10 @@ public class ResultSelectionButton extends ScrollingDropDownButton {
     }
 
     public void reset() {
-        setResultDescriptor(ResultDescriptor.LATEST);
+        setResultDescriptor(ArtifactDescriptor.LATEST);
     }
 
-    public void setResultDescriptor(ResultDescriptor currResult) {
+    public void setResultDescriptor(ArtifactDescriptor currResult) {
         this.currResult = currResult;
         if (showTitle) {
             setText(currResult.toString());
@@ -82,140 +85,127 @@ public class ResultSelectionButton extends ScrollingDropDownButton {
     
     public synchronized void populate(Collection<DomainObject> domainObjects) {
 
-        Multiset<ResultDescriptor> countedResultNames = LinkedHashMultiset.create();
-            
-        for(DomainObject domainObject : domainObjects) {
+        // Reset state
+        this.group = new ButtonGroup();
+        getPopupMenu().removeAll();
+        
+        Multiset<ArtifactDescriptor> countedArtifacts = LinkedHashMultiset.create();
+        
+        Collection<Sample> samplesOnly = new ArrayList<>();
+        for (DomainObject domainObject : domainObjects) {
             if (domainObject instanceof Sample) {
-                Sample sample = (Sample)domainObject;
-                for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
-                    SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
-                    if (run==null || run.getResults()==null) {
-                        run = objectiveSample.getLatestRun();
-                        if (run==null || run.getResults()==null) continue;
-                    }
+                samplesOnly.add((Sample)domainObject);
+            }
+        }
+        
+        for(Sample sample : samplesOnly) {
+            for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
+                SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
+                if (run==null || run.getResults()==null) {
+                    run = objectiveSample.getLatestRun();
+                    if (run==null || run.getResults()==null) continue;
+                }
+                if (run!=null) {
                     for(PipelineResult result : run.getResults()) {
-                        if (result instanceof HasFileGroups && !(result instanceof LSMSummaryResult)) {
-                            HasFileGroups hasGroups = (HasFileGroups)result;
-                            for(String groupKey : hasGroups.getGroupKeys()) {
-                                ResultDescriptor rd = ResultDescriptor.create().setObjective(objectiveSample.getObjective()).setResultName(result.getName()).setGroupName(groupKey);
-                                countedResultNames.add(rd);
+                        log.trace("  Inspecting pipeline result: {}", result.getName());
+                        if (result instanceof SamplePostProcessingResult) {
+                            // Add a descriptor for every anatomical area in the sample
+                            for (SampleTile sampleTile : objectiveSample.getTiles()) {
+                                ResultArtifactDescriptor rad = new ResultArtifactDescriptor(objectiveSample.getObjective(), sampleTile.getAnatomicalArea(), result.getName(), false);
+                                log.trace("    Adding result artifact descriptor: {}", rad);
+                                countedArtifacts.add(rad);
                             }
                         }
-                        if (!DomainUtils.get2dTypeNames(result).isEmpty()) {
-                            ResultDescriptor rd = ResultDescriptor.create().setObjective(objectiveSample.getObjective()).setResultName(result.getName());
-                            countedResultNames.add(rd);
+                        else if (result instanceof HasAnatomicalArea){
+                            HasAnatomicalArea aaResult = (HasAnatomicalArea)result;
+                            ResultArtifactDescriptor rad = new ResultArtifactDescriptor(objectiveSample.getObjective(), aaResult.getAnatomicalArea(), result.getName(), result instanceof SampleAlignmentResult);
+                            log.trace("    Adding result artifact descriptor: {}", rad);
+                            countedArtifacts.add(rad);
+                        }
+                        else {
+                            log.trace("Cannot handle result '"+result.getName()+"' of type "+result.getClass().getSimpleName());
                         }
                     }
                 }
             }
         }
         
-        setVisible(!countedResultNames.isEmpty());
-        getPopupMenu().removeAll();
+        setVisible(!countedArtifacts.isEmpty());
         
         // Sort in alphanumeric order, with Latest first
-        List<ResultDescriptor> sortedResults = new ArrayList<>(countedResultNames.elementSet());
-        Collections.sort(sortedResults, new Comparator<ResultDescriptor>() {
+        List<ArtifactDescriptor> sortedResults = new ArrayList<>(countedArtifacts.elementSet());
+        Collections.sort(sortedResults, new Comparator<ArtifactDescriptor>() {
             @Override
-            public int compare(ResultDescriptor o1, ResultDescriptor o2) {
+            public int compare(ArtifactDescriptor o1, ArtifactDescriptor o2) {
                 return o1.toString().compareTo(o2.toString());
             }
         });
 
-        sortedResults.add(0, ResultDescriptor.LATEST_ALIGNED);
-        sortedResults.add(0, ResultDescriptor.LATEST_UNALIGNED);
-        sortedResults.add(0, ResultDescriptor.LATEST);
-        
-        ButtonGroup group = new ButtonGroup();
+        List<ArtifactDescriptor> genericDescriptors = new ArrayList<>();  
+        genericDescriptors.add(ArtifactDescriptor.LATEST);      
+        genericDescriptors.add(ArtifactDescriptor.LATEST_UNALIGNED);
+        genericDescriptors.add(ArtifactDescriptor.LATEST_ALIGNED);
 
-        // Need linked hash map to maintain sorted keys
-        Multimap<String,ResultDescriptor> groupedResults = Multimaps.newListMultimap(
-                new LinkedHashMap<String,Collection<ResultDescriptor>>(),
-                new Supplier<List<ResultDescriptor>>() {
-                    @Override
-                    public List<ResultDescriptor> get() {
-                        return Lists.newArrayList();
-                    }
-                });
-
-        for(final ResultDescriptor resultDescriptor : sortedResults) {
-            groupedResults.put(getGroupLessLabel(resultDescriptor), resultDescriptor);
-        }
-
-        for(final String groupLessLabel : groupedResults.keySet()) {
-
-            Collection<ResultDescriptor> resultDescriptors = groupedResults.get(groupLessLabel);
-            if (resultDescriptors.size()==1) {
-                final ResultDescriptor resultDescriptor = resultDescriptors.iterator().next();
-                int count = countedResultNames.count(resultDescriptor);
-                String resultName = resultDescriptor.toString();
-                if (count > 0) resultName += " (" + count + " items)";
-                JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultDescriptor.equals(currResult));
-                menuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        setResultDescriptor(resultDescriptor);
-                        resultChanged(currResult);
-                        ActivityLogHelper.logUserAction("ResultSelectionButton.resultChanged", resultDescriptor.toString());
-                    }
-                });
-                getPopupMenu().add(menuItem);
-                group.add(menuItem);
+        List<ArtifactDescriptor> unalignedDescriptors = new ArrayList<>();  
+        List<ArtifactDescriptor> alignedDescriptors = new ArrayList<>();
+        for(final ArtifactDescriptor descriptor : sortedResults) {
+            if (descriptor.isAligned()) {
+                alignedDescriptors.add(descriptor);
             }
             else {
-                JMenu subMenu = new JScrollMenu(groupLessLabel);
-                for(final ResultDescriptor resultDescriptor : resultDescriptors) {
-                    int count = countedResultNames.count(resultDescriptor);
-                    String resultName = resultDescriptor.getGroupName();
-                    if (resultName==null) resultName = "Default";
-                    if (count > 0) resultName += " (" + count + " items) ";
-                    JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultDescriptor.equals(currResult));
-                    menuItem.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            setResultDescriptor(resultDescriptor);
-                            resultChanged(currResult);
-                            ActivityLogHelper.logUserAction("ResultSelectionButton.resultChanged", resultDescriptor.toString());
-                        }
-                    });
-                    subMenu.add(menuItem);
-                    group.add(menuItem);
-                }
-                getPopupMenu().add(subMenu);
+                unalignedDescriptors.add(descriptor);
+            }
+        }
+        
+        // Add everything to the menu
+        for (ArtifactDescriptor descriptor : genericDescriptors) {
+            getPopupMenu().add(createMenuItem(descriptor, 0));
+        }
+
+        if (!unalignedDescriptors.isEmpty()) {
+            getPopupMenu().add(createLabelItem(""));
+            getPopupMenu().add(createLabelItem(ResultCategory.PreAligned.getLabel()));
+            for (ArtifactDescriptor descriptor : unalignedDescriptors) {
+                int count = countedArtifacts.count(descriptor);
+                getPopupMenu().add(createMenuItem(descriptor, count));
+            }
+        }
+
+        if (!alignedDescriptors.isEmpty()) {
+            getPopupMenu().add(createLabelItem(""));
+            getPopupMenu().add(createLabelItem(ResultCategory.PostAligned.getLabel()));
+            for (ArtifactDescriptor descriptor : alignedDescriptors) {
+                int count = countedArtifacts.count(descriptor);
+                getPopupMenu().add(createMenuItem(descriptor, count));
             }
         }
     }
     
-    protected void resultChanged(ResultDescriptor resultDescriptor) {}
-
-    public ResultDescriptor getResultDescriptor() {
-        return currResult;
+    private JMenuItem createLabelItem(String text) {
+        JMenuItem menuItem = new JMenuItem(text);
+        menuItem.setEnabled(false);
+        return menuItem;
     }
+    
+    private JMenuItem createMenuItem(final ArtifactDescriptor descriptor, int count) {
 
-    public String getGroupLessLabel(ResultDescriptor resultDescriptor) {
-        String objective = resultDescriptor.getObjective();
-        String resultName = resultDescriptor.getResultName();
-        Boolean aligned = resultDescriptor.isAligned();
-        StringBuilder sb =  new StringBuilder();
-        if (objective!=null) {
-            sb.append(objective).append(" ");
-        }
-        if (resultName!=null) {
-            sb.append(resultName).append(" ");
-        }
-        else {
-            sb.append("Latest ");
-        }
-        if (aligned!=null) {
-            String alignment = aligned ? "Aligned" : "Unaligned";
-            if (resultName==null) {
-                sb.append(alignment).append(" ");
+        String resultName = descriptor.toString();
+        if (count > 0) resultName += " (" + count + " items)";
+        JMenuItem menuItem = new JRadioButtonMenuItem(resultName, descriptor.equals(currResult));
+        menuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setResultDescriptor(descriptor);
+                resultChanged(currResult);
+                ActivityLogHelper.logUserAction("ResultSelectionButton.resultChanged", descriptor.toString());
             }
-            else {
-                sb.append("(").append(alignment).append(") ");
-            }
-        }
-        if (sb.length()>0 && sb.charAt(sb.length()-1)==' ') {
-            sb.deleteCharAt(sb.length()-1);
-        }
-        return sb.toString();
+        });
+        group.add(menuItem);
+        return menuItem;
+    }
+    
+    protected void resultChanged(ArtifactDescriptor resultDescriptor) {}
+
+    public ArtifactDescriptor getResultDescriptor() {
+        return currResult;
     }
 }

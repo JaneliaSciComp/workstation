@@ -21,8 +21,8 @@ import org.janelia.it.jacs.model.domain.support.MapUnion;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.gui.support.DownloadItem;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DownloadFileItem extends DownloadItem {
+public class DownloadFileItem {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadFileItem.class);
     
@@ -60,7 +60,6 @@ public class DownloadFileItem extends DownloadItem {
     private String targetExtension;
     
     public DownloadFileItem(List<String> itemPath, DomainObject domainObject) {
-        super(itemPath, domainObject);
         this.itemPath = itemPath;
         this.domainObject = domainObject;
     }

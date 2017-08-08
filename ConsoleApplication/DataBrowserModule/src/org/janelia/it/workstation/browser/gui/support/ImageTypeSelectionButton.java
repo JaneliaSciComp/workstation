@@ -19,9 +19,9 @@ import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
-import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ public class ImageTypeSelectionButton extends ScrollingDropDownButton {
 
     private FileType DEFAULT_TYPE = FileType.FirstAvailable2d;
 
-    private ResultDescriptor currResult;
+    private ArtifactDescriptor currResult;
     private FileType currImageType;
     private boolean only2d;
     private boolean showTitle;
@@ -61,7 +61,7 @@ public class ImageTypeSelectionButton extends ScrollingDropDownButton {
         setImageType(DEFAULT_TYPE);
     }
 
-    public void setResultDescriptor(ResultDescriptor currResult) {
+    public void setResultDescriptor(ArtifactDescriptor currResult) {
         this.currResult = currResult;
     }
 
@@ -87,7 +87,7 @@ public class ImageTypeSelectionButton extends ScrollingDropDownButton {
     public synchronized void populate(Collection<? extends Object> sourceList) {
         
         if (currResult == null) {
-            this.currResult = ResultDescriptor.LATEST;
+            this.currResult = ArtifactDescriptor.LATEST;
         }
 
         Multiset<String> countedTypeNames = LinkedHashMultiset.create();
@@ -96,7 +96,7 @@ public class ImageTypeSelectionButton extends ScrollingDropDownButton {
             if (source instanceof Sample) {
                 Sample sample = (Sample)source;
                 log.trace("Source is sample: {}",sample.getId());
-                HasFiles result = SampleUtils.getResult(sample, currResult);
+                HasFiles result = DescriptorUtils.getResult(sample, currResult);
                 if (result!=null) {
                     source = result;
                 }

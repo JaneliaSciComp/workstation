@@ -25,7 +25,6 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
-import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -48,6 +47,8 @@ import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -93,7 +94,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             HasFiles result = null;
             if (domainObject instanceof Sample) {
                 Sample sample = (Sample)domainObject;
-                result = SampleUtils.getResult(sample, resultButton.getResultDescriptor());
+                result = DescriptorUtils.getResult(sample, resultButton.getResultDescriptor());
             }
             else if (domainObject instanceof HasFiles) {
                 result = (HasFiles)domainObject;
@@ -145,10 +146,10 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         this.config = IconGridViewerConfiguration.loadConfig();
         resultButton = new ResultSelectionButton() {
             @Override
-            protected void resultChanged(ResultDescriptor resultDescriptor) {
+            protected void resultChanged(ArtifactDescriptor resultDescriptor) {
                 log.info("Setting result preference: "+resultDescriptor.toString());
                 try {
-                    setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, ResultDescriptor.serialize(resultDescriptor));
+                    setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, DescriptorUtils.serialize(resultDescriptor));
                 }
                 catch (Exception e) {
                     log.error("Error serializing sample result preference: "+resultDescriptor,e);
@@ -276,7 +277,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                     log.debug("Got result preference: "+preference);
                     if (preference!=null) {
                         try {
-                            ResultDescriptor resultDescriptor = ResultDescriptor.deserialize((String) preference.getValue());
+                            ArtifactDescriptor resultDescriptor = DescriptorUtils.deserialize((String) preference.getValue());
                             resultButton.setResultDescriptor(resultDescriptor);
                         }
                         catch (Exception e) {

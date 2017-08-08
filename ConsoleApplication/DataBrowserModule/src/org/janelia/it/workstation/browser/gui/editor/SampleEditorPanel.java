@@ -49,7 +49,6 @@ import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
@@ -75,10 +74,12 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
+import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
-import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
@@ -469,7 +470,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         SelectablePanel pipelineResultPanel = resultPanels.get(currResultIndex);
         
         if (pipelineResultPanel instanceof PipelineResultPanel) {
-            ResultDescriptor resultDescriptor = ((PipelineResultPanel)pipelineResultPanel).getResultDescriptor();
+            ArtifactDescriptor resultDescriptor = ((PipelineResultPanel)pipelineResultPanel).getResultDescriptor();
             
             if (toggle) {
                 hud.setObjectAndToggleDialog(sample, resultDescriptor, null);
@@ -885,7 +886,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
     private class PipelineResultPanel extends SelectablePanel {
         
-        private final ResultDescriptor resultDescriptor;
+        private final ArtifactDescriptor resultDescriptor;
         private final PipelineResult result;
         private JLabel label = new JLabel();
         private JLabel subLabel = new JLabel();
@@ -902,7 +903,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             imagePanel.setLayout(new GridLayout(1, 2, 5, 0));
 
             if (result!=null) {
-                this.resultDescriptor = new ResultDescriptor(result);
+                this.resultDescriptor = new ResultArtifactDescriptor(result);
                 label.setText(resultDescriptor.toString());
                 subLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
                 
@@ -939,7 +940,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             return result;
         }
       
-        public ResultDescriptor getResultDescriptor() {
+        public ArtifactDescriptor getResultDescriptor() {
             return resultDescriptor;
         }
     

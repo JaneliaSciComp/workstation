@@ -14,7 +14,6 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OpenInFinderAction;
@@ -29,6 +28,8 @@ import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadWizardAct
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
 
 /**
@@ -195,7 +196,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         String path = DomainUtils.getDefault3dImageFilePath(result);
         ObjectiveSample objectiveSample = result.getParentRun().getParent();
         final Sample sample = objectiveSample.getParent();
-        final ResultDescriptor descriptor = new ResultDescriptor(result);
+        final ArtifactDescriptor descriptor = new ResultArtifactDescriptor(result);
         
         JMenuItem downloadItem = new JMenuItem("  Download...");
         downloadItem.addActionListener(new DownloadWizardAction(Arrays.asList(sample), descriptor));
@@ -232,7 +233,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
                 ActivityLogHelper.logUserAction("SampleResultContextMenu.showInLightbox", result);
                 ObjectiveSample objectiveSample = result.getParentRun().getParent();
                 Sample sample = objectiveSample.getParent();
-                ResultDescriptor descriptor = new ResultDescriptor(result);
+                ArtifactDescriptor descriptor = new ResultArtifactDescriptor(result);
                 Hud.getSingletonInstance().setObjectAndToggleDialog(sample, descriptor, FileType.SignalMip.toString());
             }
         });

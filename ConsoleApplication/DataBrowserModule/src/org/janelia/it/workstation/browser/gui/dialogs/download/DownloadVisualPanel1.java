@@ -32,12 +32,14 @@ import javax.swing.JScrollPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.WrapLayout;
 import org.janelia.it.workstation.browser.model.ImageCategory;
 import org.janelia.it.workstation.browser.model.ResultCategory;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.LSMArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.SelfArtifactDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +66,7 @@ public final class DownloadVisualPanel1 extends JPanel {
     private JPanel checkboxPanel;
     
     // Inputs
-    private ResultDescriptor defaultResultDescriptor;
+    private ArtifactDescriptor defaultResultDescriptor;
     private Map<ArtifactDescriptor, Multiset<FileType>> artifactFileCounts;
     private String currObjective;
     private String currArea;
@@ -216,7 +218,7 @@ public final class DownloadVisualPanel1 extends JPanel {
         if (artifactDescriptors==null) {
             artifactDescriptors = new ArrayList<>();
             if (defaultResultDescriptor!=null) {
-                artifactDescriptors.add(new ResultArtifactDescriptor(defaultResultDescriptor.getObjective(), null, defaultResultDescriptor.getResultName(), defaultResultDescriptor.isAligned()));
+                artifactDescriptors.add(defaultResultDescriptor);
             }
         }
         
