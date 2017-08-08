@@ -44,6 +44,7 @@ public class DownloadFileItem {
     public static final String ATTR_LABEL_FILE_NAME = "File Name";
     public static final String ATTR_LABEL_SAMPLE_NAME = "Sample Name";
     public static final String ATTR_LABEL_EXTENSION = "Extension";
+    public static final String ATTR_LABEL_GUID = "GUID";
     
     private final File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
     private final List<String> itemPath;
@@ -181,6 +182,8 @@ public class DownloadFileItem {
 
         if (fileProvider instanceof PipelineResult) {
             PipelineResult result = (PipelineResult)fileProvider;
+            keyValues.put(ATTR_LABEL_GUID, result.getId());
+            log.debug("  {}: {}", ATTR_LABEL_GUID, result.getId());
             String objective = result.getParentRun().getParent().getObjective();
             keyValues.put(ATTR_LABEL_OBJECTIVE, objective);
             log.debug("  {}: {}", ATTR_LABEL_OBJECTIVE, objective);
