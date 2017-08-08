@@ -1,7 +1,7 @@
 apply plugin: 'groovy'
 
 // set general info and version
-sourceCompatibility = 1.7
+sourceCompatibility = 1.8
 
 // import some ant dependencies in case we need them
 ant.importBuild ('buildprocess/build-module.xml') { antTargetName ->
