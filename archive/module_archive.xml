@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_archive" default="compile.module.archive">
+  <dirname property="module.archive.basedir" file="${ant.file.module_archive}"/>
+  
+  <property name="module.jdk.home.archive" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.archive" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.archive" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.archive" value="-encoding UTF-8 -source 8 ${compiler.args}"/>
+  
+  <property name="archive.output.dir" value="${module.archive.basedir}/../buildprocess/intellij-make/production/archive"/>
+  <property name="archive.testoutput.dir" value="${module.archive.basedir}/../buildprocess/intellij-make/test/archive"/>
+  
+  <path id="archive.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="archive.module.production.classpath">
+    <path refid="${module.jdk.classpath.archive}"/>
+  </path>
+  
+  <path id="archive.runtime.production.module.classpath">
+    <pathelement location="${archive.output.dir}"/>
+  </path>
+  
+  <path id="archive.module.classpath">
+    <path refid="${module.jdk.classpath.archive}"/>
+    <pathelement location="${archive.output.dir}"/>
+  </path>
+  
+  <path id="archive.runtime.module.classpath">
+    <pathelement location="${archive.testoutput.dir}"/>
+    <pathelement location="${archive.output.dir}"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.archive">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.archive">
+    <patternset refid="compiler.excluded"/>
+    <patternset refid="excluded.from.module.archive"/>
+  </patternset>
+  
+  
+  <target name="compile.module.archive" depends="compile.module.archive.production,compile.module.archive.tests" description="Compile module archive"/>
+  
+  <target name="compile.module.archive.production" depends="register.custom.compilers" description="Compile module archive; production classes"/>
+  
+  <target name="compile.module.archive.tests" depends="register.custom.compilers,compile.module.archive.production" description="compile module archive; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.archive" description="cleanup module">
+    <delete dir="${archive.output.dir}"/>
+    <delete dir="${archive.testoutput.dir}"/>
+  </target>
+</project>
