@@ -66,9 +66,9 @@ public final class SelectParentAnchorAction extends AbstractAction implements Ac
             if (cmd.execute()) {
                 // Actions, like this one, are responsible for the undo/redo stack
                 // log.info("Parent anchor selected");
-                UndoRedo.Manager undoRedo = workspace.getUndoRedo();
-                if (undoRedo != null)
-                    undoRedo.undoableEditHappened(new UndoableEditEvent(this, cmd));
+                //UndoRedo.Manager undoRedo = workspace.getUndoRedo();
+                //if (undoRedo != null)
+                 //   undoRedo.undoableEditHappened(new UndoableEditEvent(this, cmd));
             }
         }
         catch (Exception exc) {
