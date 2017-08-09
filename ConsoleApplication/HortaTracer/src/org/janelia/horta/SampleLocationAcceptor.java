@@ -85,6 +85,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             @Override
             public void run()
             {
+                System.out.println ("DFDDFGFDSGFDG");
                 ProgressHandle progress
                         = ProgressHandleFactory.createHandle("Loading View in Horta...");
                 progress.start();
