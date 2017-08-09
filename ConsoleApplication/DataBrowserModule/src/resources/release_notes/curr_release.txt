@@ -5,3 +5,6 @@ Data Browser
 Large Volume Viewer
 * Added "Ignore prefix" filter for neuron list
 
+Horta
+* Added Note shortcut (Ctrl-N) and 'Traced End' shortcut (Ctrl-E) 
+* Fixed issues with Undo Merge refresh 
