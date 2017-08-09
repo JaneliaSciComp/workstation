@@ -274,7 +274,7 @@ implements NeuronSet// , LookupListener
         this.metaWorkspace = metaWorkspace;
     }
     
-    private HortaMetaWorkspace getMetaWorkspace() {
+    public HortaMetaWorkspace getMetaWorkspace() {
         return metaWorkspace;
     }
     
@@ -692,7 +692,9 @@ implements NeuronSet// , LookupListener
 
         @Override
         public void neuronTagsChanged(List<TmNeuronMetadata> neuronList)
-        {}
+        {
+            repaintHorta();
+        }
         
     }
     

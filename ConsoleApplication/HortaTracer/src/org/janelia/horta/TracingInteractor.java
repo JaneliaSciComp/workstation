@@ -43,7 +43,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
@@ -52,6 +54,7 @@ import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JOptionPane;
 import javax.swing.JSlider;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -65,11 +68,13 @@ import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.commands.MergeNeuriteCommand;
 import org.janelia.console.viewerapi.commands.MoveNeuronAnchorCommand;
 import org.janelia.console.viewerapi.commands.SplitNeuriteCommand;
+import org.janelia.console.viewerapi.commands.ToggleNeuronVisibilityCommand;
 import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
@@ -85,6 +90,9 @@ import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronTagMap;
+import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
 import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
 import org.slf4j.Logger;
@@ -100,6 +108,7 @@ public class TracingInteractor extends MouseAdapter
         NeuronVertexUpdateListener
 {
     private final VolumeProjection volumeProjection;
+    private HortaMetaWorkspace metaWorkspace;
     private final int max_tol = 5; // pixels
         
     // For selection affordance
@@ -158,6 +167,10 @@ public class TracingInteractor extends MouseAdapter
             }
         }
     };
+    
+    public void setMetaWorkspace (HortaMetaWorkspace metaWorkspace) {
+        this.metaWorkspace = metaWorkspace;
+    }
 
     public void setDefaultWorkspace(NeuronSet defaultWorkspace) {
         if (this.defaultWorkspace == defaultWorkspace)
@@ -174,11 +187,53 @@ public class TracingInteractor extends MouseAdapter
     public void keyTyped(KeyEvent keyEvent) {
         // System.out.println("KeyTyped");
         // System.out.println(keyEvent.getKeyCode()+", "+KeyEvent.VK_ESCAPE);
+        
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        // System.out.println("KeyPressed");
+        TmNeuronTagMap tagMeta = metaWorkspace.getTagMetadata();
+        
+        Map<String,Map<String,Object>> groupMappings = tagMeta.getAllTagMeta();
+        Iterator<String> groups = tagMeta.getAllTagMeta().keySet().iterator();
+        while (groups.hasNext()) {
+            String groupName = groups.next();
+            Map<String,Object> fooMap = groupMappings.get(groupName);
+            String keyMap = (String)fooMap.get("keymap");
+            if (keyMap!=null && keyMap.equals(KeymapUtil.getTextByKeyStroke(KeyStroke.getKeyStrokeForEvent(e)))) {
+                // toggle property
+                Boolean toggled = (Boolean)fooMap.get("toggled");
+                if (toggled==null) 
+                    toggled = Boolean.FALSE;
+                toggled = !toggled;
+                fooMap.put("toggled", toggled);
+                        
+                // get all neurons in group
+                Set<TmNeuronMetadata> neurons = tagMeta.getNeurons(groupName);
+                        
+                // set toggle state
+                String property =(String)fooMap.get("toggleprop");
+                if (property!=null) {
+                    Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
+                    if (property.equals("Radius")) {
+                        float radius = toggled ? (float) 0.3 : 1;
+                        while (neuronsIter.hasNext()) {
+                            TmNeuronMetadata neuronMeta = neuronsIter.next();
+                            defaultWorkspace.getNeuronByGuid(neuronMeta.getId()).updateNeuronRadius(neuronMeta, radius);
+                        }
+
+                    } else if (property.equals("Visibility")) {
+                        while (neuronsIter.hasNext()) {
+                            TmNeuronMetadata neuronMeta = neuronsIter.next();
+                            ToggleNeuronVisibilityCommand command = new ToggleNeuronVisibilityCommand(defaultWorkspace.getNeuronByGuid(neuronMeta.getId()));
+                            command.execute();
+                            defaultWorkspace.getNeuronByGuid(neuronMeta.getId()).getVisibilityChangeObservable().setChanged();
+                            defaultWorkspace.getNeuronByGuid(neuronMeta.getId()).getVisibilityChangeObservable().notifyObservers();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Override

@@ -250,6 +250,19 @@ public class NeuronModelAdapter implements NeuronModel
     }
     
     @Override
+    public boolean updateNeuronRadius(TmNeuronMetadata neuron, float radius) {
+        try {
+            neuronSet.annotationModel.updateNeuronRadius(neuron.getId(), radius);
+            return true;
+        }
+        catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+            return false;
+        }
+    }
+
+    
+    @Override
     public boolean updateVertexRadius(NeuronVertex vertex, float micronRadius) {
         try {
             if (! (vertex instanceof NeuronVertexAdapter) )

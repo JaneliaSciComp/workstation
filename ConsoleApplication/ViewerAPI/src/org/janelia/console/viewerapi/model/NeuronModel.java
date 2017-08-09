@@ -33,6 +33,7 @@ package org.janelia.console.viewerapi.model;
 import java.awt.Color;
 import java.util.Collection;
 import org.janelia.console.viewerapi.ObservableInterface;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 
 /**
  *
@@ -67,6 +68,7 @@ extends Hideable
     // Custom methods to help hook into LVV model from Horta
     NeuronVertex appendVertex(NeuronVertex parentVertex, float[] micronXyz, float radius);
     boolean mergeNeurite(NeuronVertex source, NeuronVertex target);
+    boolean updateNeuronRadius(TmNeuronMetadata neuron, float radius);
     boolean splitNeurite(NeuronVertex anchor1, NeuronVertex anchor2);
     boolean transferNeurite(NeuronVertex anchor);
     boolean moveVertex(NeuronVertex vertex, float[] micronXyz);

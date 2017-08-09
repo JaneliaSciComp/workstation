@@ -10,26 +10,35 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
+import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
+import javax.swing.KeyStroke;
 
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.MenuItemGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.MouseModalWidget;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -505,6 +514,15 @@ implements MouseMode, KeyListener
                     };
                     editNeuronTagsAction.setEnabled(controller.editsAllowed());
                     result.add(new JMenuItem(editNeuronTagsAction));
+                    
+                    AbstractAction setNeuronGroupsAction = new AbstractAction("Edit neuron group visibility...") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().editNeuronGroups();
+                        }
+                    };
+                    setNeuronGroupsAction.setEnabled(controller.editsAllowed());
+                    result.add(new JMenuItem(setNeuronGroupsAction));
 
                     AbstractAction setNeuronRadiusAction = new AbstractAction("Set neuron radius...") {
                         @Override
@@ -577,6 +595,9 @@ implements MouseMode, KeyListener
 		int keyCode = event.getKeyCode();
 		Anchor historyAnchor = null;
 		Anchor nextParent = skeletonActor.getModel().getNextParent();
+                
+                
+                
 		switch(keyCode) {
 		case KeyEvent.VK_BACK_SPACE:
 		case KeyEvent.VK_DELETE:
@@ -636,6 +657,53 @@ implements MouseMode, KeyListener
 			}
 			break;
 		}
+                
+                // if not normal key event, check our group toggle events
+                AnnotationModel annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
+                Map<String, Map<String,Object>> groupMappings = annModel.getAllTagMeta();
+                Iterator<String> groups = groupMappings.keySet().iterator();
+                while (groups.hasNext()) {
+                    String groupName = groups.next();
+                    Map<String,Object> fooMap = groupMappings.get(groupName);
+                    String keyMap = (String)fooMap.get("keymap");
+                    if (keyMap!=null && keyMap.equals(KeymapUtil.getTextByKeyStroke(KeyStroke.getKeyStrokeForEvent(event)))) {
+                        // toggle property
+                        Boolean toggled = (Boolean)fooMap.get("toggled");
+                        if (toggled==null) 
+                            toggled = Boolean.FALSE;
+                        toggled = !toggled;
+                        fooMap.put("toggled", toggled);
+                        
+                        // get all neurons in group
+                        Set<TmNeuronMetadata> neurons = annModel.getNeuronsForTag(groupName);
+                        
+                        // set toggle state
+                        String property =(String)fooMap.get("toggleprop");
+                        if (property!=null) {
+                            try {
+                                Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
+                                if (property.equals("Radius")) {
+                                    float radius = toggled ? (float) 0.3 : 1;                                    
+                                    while (neuronsIter.hasNext()) {
+                                        annModel.updateNeuronRadius(neuronsIter.next().getId(), radius);
+                                    }
+
+                                } else if (property.equals("Visibility")) {
+                                    while (neuronsIter.hasNext()) {
+                                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuronsIter.next(), !toggled);
+                                    }
+                                   
+                                } else if (property.equals("ReadOnly")) {
+                                    // don't display anchors both in LVV and Horta
+                                }
+                            } catch (Exception error) {
+
+                                ConsoleApp.handleException(error);
+                            }
+                        }
+                        
+                    }
+                }
 		if (historyAnchor != null)
 			camera.setFocus(historyAnchor.getLocation());
 	}

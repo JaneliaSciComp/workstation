@@ -49,6 +49,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceLi
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
+import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
@@ -153,6 +154,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (anchor != null) {
             setNeuronRadius(anchor.getNeuronID());
         }
+    }
+    
+    public void editNeuronGroups() {
+        NeuronGroupsDialog ngDialog = new NeuronGroupsDialog();
+        ngDialog.showDialog();
     }
 
     public void anchorAdded(AnchorSeed seed) {

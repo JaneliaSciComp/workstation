@@ -63,6 +63,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
 import Jama.Matrix;
+import java.util.Iterator;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 
@@ -1744,6 +1745,28 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     public Set<String> getAllNeuronTags() {
         return currentTagMap.getAllTags();
+    }
+    
+    public void saveTagMeta(Map<String,Map<String,Object>> allTagMeta) {
+        Iterator<String> foo = allTagMeta.keySet().iterator();
+        while (foo.hasNext()) {
+            Iterator<String> foo2 = allTagMeta.get(foo.next()).keySet().iterator();
+        }
+        currentTagMap.saveTagMeta(allTagMeta);
+        // sync up with Horta
+        neuronSetAdapter.getMetaWorkspace().setTagMetadata(currentTagMap);
+    }
+    
+    public void setTagMeta(String tagName, Map<String,Object> meta) {
+        currentTagMap.setTagMeta(tagName, meta);
+    }
+    
+    public Map<String,Object> getTagMeta(String tagName) {
+        return currentTagMap.getMetaForTag(tagName);
+    }
+    
+    public Map<String,Map<String,Object>> getAllTagMeta() {
+        return currentTagMap.getAllTagMeta();
     }
 
     public Set<TmNeuronMetadata> getNeuronsForTag(String tag) {

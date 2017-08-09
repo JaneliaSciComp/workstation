@@ -61,6 +61,7 @@ import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -325,6 +326,11 @@ public class BasicNeuronModel implements NeuronModel
 
     @Override
     public boolean updateVertexRadius(NeuronVertex vertex, float micronRadius) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    @Override
+    public boolean updateNeuronRadius(TmNeuronMetadata neuron, float radius) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
