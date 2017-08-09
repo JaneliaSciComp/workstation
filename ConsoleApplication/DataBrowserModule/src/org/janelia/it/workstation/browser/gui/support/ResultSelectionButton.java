@@ -11,12 +11,12 @@ import java.util.stream.Collectors;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.SamplePostProcessingResult;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.model.ResultCategory;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
@@ -82,8 +82,9 @@ public class ResultSelectionButton extends ScrollingDropDownButton {
         Multiset<ArtifactDescriptor> countedArtifacts = DescriptorUtils.getArtifactCounts(samplesOnly);
                 
         // Sorted list of ResultArtifactDescriptor
-        List<ArtifactDescriptor> sortedResults = countedArtifacts.elementSet().stream()
-                .filter((artifact) -> (artifact instanceof ResultArtifactDescriptor))
+        List<ResultArtifactDescriptor> sortedResults = countedArtifacts.elementSet().stream()
+                .filter(artifact -> artifact instanceof ResultArtifactDescriptor)
+                .map(artifact -> (ResultArtifactDescriptor)artifact)
                 .sorted(new Comparator<ArtifactDescriptor>() {
                     @Override
                     public int compare(ArtifactDescriptor o1, ArtifactDescriptor o2) {
@@ -109,13 +110,19 @@ public class ResultSelectionButton extends ScrollingDropDownButton {
         genericDescriptors.add(ArtifactDescriptor.LATEST_ALIGNED);
 
         List<ArtifactDescriptor> unalignedDescriptors = new ArrayList<>();  
+        List<ArtifactDescriptor> postDescriptors = new ArrayList<>();  
         List<ArtifactDescriptor> alignedDescriptors = new ArrayList<>();
-        for(final ArtifactDescriptor descriptor : sortedResults) {
+        for(final ResultArtifactDescriptor descriptor : sortedResults) {
             if (descriptor.isAligned()) {
                 alignedDescriptors.add(descriptor);
             }
             else {
-                unalignedDescriptors.add(descriptor);
+                if (descriptor.getResultClass().equals(SamplePostProcessingResult.class.getName())) {
+                    postDescriptors.add(descriptor);
+                }
+                else {
+                    unalignedDescriptors.add(descriptor);
+                }
             }
         }
         
@@ -126,16 +133,25 @@ public class ResultSelectionButton extends ScrollingDropDownButton {
 
         if (!unalignedDescriptors.isEmpty()) {
             getPopupMenu().add(createLabelItem(""));
-            getPopupMenu().add(createLabelItem(ResultCategory.PreAligned.getLabel()));
+            getPopupMenu().add(createLabelItem(ResultCategory.PROCESSED.getLabel()));
             for (ArtifactDescriptor descriptor : unalignedDescriptors) {
                 int count = countedArtifacts.count(descriptor);
                 getPopupMenu().add(createMenuItem(descriptor, count));
             }
         }
 
+        if (!postDescriptors.isEmpty()) {
+            getPopupMenu().add(createLabelItem(""));
+            getPopupMenu().add(createLabelItem(ResultCategory.POST_PROCESSED.getLabel()));
+            for (ArtifactDescriptor descriptor : postDescriptors) {
+                int count = countedArtifacts.count(descriptor);
+                getPopupMenu().add(createMenuItem(descriptor, count));
+            }
+        }
+        
         if (!alignedDescriptors.isEmpty()) {
             getPopupMenu().add(createLabelItem(""));
-            getPopupMenu().add(createLabelItem(ResultCategory.PostAligned.getLabel()));
+            getPopupMenu().add(createLabelItem(ResultCategory.ALIGNED.getLabel()));
             for (ArtifactDescriptor descriptor : alignedDescriptors) {
                 int count = countedArtifacts.count(descriptor);
                 getPopupMenu().add(createMenuItem(descriptor, count));

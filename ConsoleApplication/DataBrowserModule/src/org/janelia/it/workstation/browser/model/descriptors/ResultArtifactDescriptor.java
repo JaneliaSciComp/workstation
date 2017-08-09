@@ -18,6 +18,7 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
 
     private String objective;
     private String area;
+    private String resultClass;
     private String resultName;
     private String alignSpace;
     private boolean aligned;
@@ -31,6 +32,7 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
         if (result instanceof HasAnatomicalArea) {
             this.area = ((HasAnatomicalArea) result).getAnatomicalArea();
         }
+        this.resultClass = result.getClass().getName();
         this.resultName = result.getName();
         this.aligned = result instanceof SampleAlignmentResult;
         if (aligned) {
@@ -41,6 +43,7 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
     public ResultArtifactDescriptor(PipelineResult result, String area) {
         this.objective = result.getParentRun().getParent().getObjective();
         this.area = area;
+        this.resultClass = result.getClass().getName();
         this.resultName = result.getName();
         this.aligned = result instanceof SampleAlignmentResult;
         if (aligned) {
@@ -54,6 +57,10 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
     
     public String getArea() {
         return area;
+    }
+
+    public String getResultClass() {
+        return resultClass;
     }
 
     public String getResultName() {
