@@ -25,7 +25,7 @@ public interface LegacyFacade {
 
     public void submitJob(String processDefName, Long taskId) throws Exception;
 
-    public void dispatchJob(String processDefName, Long taskId) throws Exception;
+    public void dispatchJob(String processDefName, Long taskId, String dispatchHost) throws Exception;
 
     public List<Task> getUserTasks() throws Exception;
 

@@ -438,10 +438,11 @@ public class StateMgr {
      *
      * @param processDefName name for labeling.
      * @param task with all params
+     * @param dispatchHost dispatch host
      * @return the request created.
      * @throws Exception
      */
-    public void dispatchJob(String processDefName, Task task) throws Exception {
-        DomainMgr.getDomainMgr().getLegacyFacade().dispatchJob(processDefName, task.getObjectId());
+    public void dispatchJob(String processDefName, Task task, String dispatchHost) throws Exception {
+        DomainMgr.getDomainMgr().getLegacyFacade().dispatchJob(processDefName, task.getObjectId(), dispatchHost);
     }
 }

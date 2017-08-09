@@ -52,9 +52,9 @@ public class LegacyFacadeImpl implements LegacyFacade {
     }
 
     @Override
-    public void dispatchJob(String processDefName, Long taskId) throws Exception {
+    public void dispatchJob(String processDefName, Long taskId, String dispatchHost) throws Exception {
         if (taskId == null) throw new IllegalArgumentException("Task id may not be null");
-        EJBFactory.getRemoteComputeBean(true).dispatchJob(processDefName, taskId);
+        EJBFactory.getRemoteComputeBean(true).dispatchJob(processDefName, taskId, dispatchHost);
     }
 
     @Override
