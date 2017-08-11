@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.model.descriptors;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -50,11 +51,14 @@ public class DescriptorUtils {
         Multiset<ArtifactDescriptor> countedArtifacts = LinkedHashMultiset.create();
             
         for(DomainObject domainObject : domainObjects) {
+            
+            Set<ArtifactDescriptor> sampleArtifacts = new HashSet<>();
+            
             log.trace("Inspecting object: {}", domainObject);
             if (domainObject instanceof LSMImage) {
                 LSMImage image = (LSMImage)domainObject;
                 LSMArtifactDescriptor desc = new LSMArtifactDescriptor(image.getObjective(), image.getAnatomicalArea());
-                countedArtifacts.add(desc);
+                sampleArtifacts.add(desc);
                 log.trace("  Adding self LSM descriptor for objective: {}", desc);
             }
             else if (domainObject instanceof NeuronFragment) {
@@ -71,7 +75,7 @@ public class DescriptorUtils {
                                 boolean aligned = (parentResult instanceof SampleAlignmentResult);
                                 ObjectiveSample objectiveSample = parentResult.getParentRun().getParent();
                                 NeuronFragmentDescriptor desc = new NeuronFragmentDescriptor(objectiveSample.getObjective(), hasAA.getAnatomicalArea(), aligned);
-                                countedArtifacts.add(desc);
+                                sampleArtifacts.add(desc);
                                 log.trace("  Adding neuron fragment self descriptor: {}", desc);
                             }
                         }
@@ -83,7 +87,7 @@ public class DescriptorUtils {
             }
             else if (domainObject instanceof HasFiles) {
                 log.trace("  Adding self descriptor");
-                countedArtifacts.add(new SelfArtifactDescriptor());
+                sampleArtifacts.add(new SelfArtifactDescriptor());
             }
             else if (domainObject instanceof Sample) {
                 Sample sample = (Sample)domainObject;
@@ -97,14 +101,11 @@ public class DescriptorUtils {
                         
                         for (Reference reference : tile.getLsmReferences()) {
                             log.trace("         Adding LSM descriptor for objective: {}", objectiveSample.getObjective());
-                            countedArtifacts.add(new LSMArtifactDescriptor(objectiveSample.getObjective(), tile.getAnatomicalArea()));
+                            sampleArtifacts.add(new LSMArtifactDescriptor(objectiveSample.getObjective(), tile.getAnatomicalArea()));
                         }
                     }
-                    SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
-                    if (run==null || run.getResults()==null) {
-                        run = objectiveSample.getLatestRun();
-                    }
-                    if (run!=null) {
+                    
+                    for (SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
                         for(PipelineResult result : run.getResults()) {
                             log.trace("  Inspecting pipeline result: {}", result.getName());
                             if (result instanceof SamplePostProcessingResult) {
@@ -118,21 +119,23 @@ public class DescriptorUtils {
                                 for(String area : areas) {
                                     ResultArtifactDescriptor rad = new ResultArtifactDescriptor(result, area);
                                     log.trace("    Adding result artifact descriptor: {}", rad);
-                                    countedArtifacts.add(rad);
+                                    sampleArtifacts.add(rad);
                                 }
                             }
                             else if (result instanceof HasAnatomicalArea){
                                 ResultArtifactDescriptor rad = new ResultArtifactDescriptor(result);
                                 log.trace("    Adding result artifact descriptor: {}", rad);
-                                countedArtifacts.add(rad);
+                                sampleArtifacts.add(rad);
                             }
                             else {
-                                log.trace("Cannot handle result '"+result.getName()+"' of type "+result.getClass().getSimpleName());
+                                log.trace("    Cannot handle result '"+result.getName()+"' of type "+result.getClass().getSimpleName());
                             }
                         }
                     }
                 }
             }
+            
+            countedArtifacts.addAll(sampleArtifacts);
         }
         
         return countedArtifacts;
