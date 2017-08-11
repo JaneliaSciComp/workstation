@@ -189,9 +189,11 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
             osToAA.put(os.getObjective(), aaList);
 
             SamplePipelineRun run = os.getLatestSuccessfulRun();
-            for (SampleProcessingResult spr: run.getSampleProcessingResults()) {
-                aaList.add(spr.getAnatomicalArea());
-                rowCount ++;
+            if (run!=null) {
+                for (SampleProcessingResult spr: run.getSampleProcessingResults()) {
+                    aaList.add(spr.getAnatomicalArea());
+                    rowCount ++;
+                }
             }
         }
         final String[][] rowData = new String[rowCount][COLUMN_HEADERS.length];
