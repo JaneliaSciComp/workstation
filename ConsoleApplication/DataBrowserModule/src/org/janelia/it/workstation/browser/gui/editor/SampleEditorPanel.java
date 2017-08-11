@@ -39,6 +39,7 @@ import javax.swing.Scrollable;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
+import org.janelia.it.jacs.model.domain.enums.ErrorType;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
@@ -965,7 +966,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         
         private SamplePipelineRun run;
         private JLabel label = new JLabel();
-        private JLabel subLabel = new JLabel();
+        private JLabel subLabel1 = new JLabel();
+        private JLabel subLabel2 = new JLabel();
         
         private PipelineErrorPanel(SamplePipelineRun run) {
                         
@@ -977,15 +979,21 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             PipelineError error = run.getError();
             if (error==null) throw new IllegalStateException("Cannot create a PipelineErrorPanel for non-error run");
 
-            String errorClass = error.getClassification()==null?"Unclassified Error":error.getClassification();
-            String title = run.getParent().getObjective()+" "+errorClass;
+            ErrorType errorType = ErrorType.UnclassifiedError;
+            if (error.getClassification()!=null) {
+                errorType = ErrorType.valueOf(error.getClassification());
+            }
+            
+            String title = run.getParent().getObjective()+" "+errorType.getLabel();
             label.setText(title);
-            subLabel.setText(error.getDescription());
-            subLabel.setText(DomainModelViewUtils.getDateString(error.getCreationDate()));
+            label.setToolTipText(errorType.getDescription());
+            subLabel1.setText(DomainModelViewUtils.getDateString(error.getCreationDate()));
+            subLabel2.setText("Error detail: "+error.getDescription());
 
             JPanel titlePanel = new JPanel(new BorderLayout());
             titlePanel.add(label, BorderLayout.PAGE_START);
-            titlePanel.add(subLabel, BorderLayout.PAGE_END);
+            titlePanel.add(subLabel1, BorderLayout.CENTER);
+            titlePanel.add(subLabel2, BorderLayout.PAGE_END);
 
             JPanel imagePanel = new JPanel();
             imagePanel.setLayout(new BorderLayout());
