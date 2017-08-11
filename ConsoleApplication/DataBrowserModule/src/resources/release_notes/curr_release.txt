@@ -1,10 +1,9 @@
-// 6.1
+// 6.2
 
 Data Browser
 
 Large Volume Viewer
-* Added "Ignore prefix" filter for neuron list
+* Import/export swc file dialogs remember their last location
+
 
 Horta
-* Added Note shortcut (Ctrl-N) and 'Traced End' shortcut (Ctrl-E) 
-* Fixed issues with Undo Merge refresh 
