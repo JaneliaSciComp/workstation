@@ -1,7 +1,5 @@
 // 6.1
 
-Data Browser
-
 Large Volume Viewer
 * Added "Ignore prefix" filter for neuron list
 
@@ -17,7 +15,7 @@ has been completely replaced in order to address rendering issues on MacOS Sierr
 
 Other improvements:
 
-Data Browser
+Workstation Browser
 * Added the "Start Page" for quickly performing searches and viewing data statistics
 * Added a quick search box in the top toolbar, to make searching easier
 * Improved the user interface for the login dialog
