@@ -31,7 +31,6 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -50,6 +49,7 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -192,7 +192,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         try {
             List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
             // TODO: should this use the same result as the icon grid viewer?
-            DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject) selectionModel.getParentObject(), selected, ResultDescriptor.LATEST, null);
+            DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject) selectionModel.getParentObject(), selected, ArtifactDescriptor.LATEST, null);
 
             JTable table = getTable();
             ListSelectionModel lsm = table.getSelectionModel();

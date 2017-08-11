@@ -35,7 +35,6 @@ import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.tasks.Task;
@@ -64,6 +63,8 @@ import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.browser.nb_action.GetRelatedItemsAction;
@@ -93,10 +94,10 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     protected List<DomainObject> domainObjectList;
     protected DomainObject domainObject;
     protected boolean multiple;
-    protected ResultDescriptor resultDescriptor;
+    protected ArtifactDescriptor resultDescriptor;
     protected String typeName;
 
-    public DomainObjectContextMenu(DomainObject contextObject, List<DomainObject> domainObjectList, ResultDescriptor resultDescriptor, String typeName) {
+    public DomainObjectContextMenu(DomainObject contextObject, List<DomainObject> domainObjectList, ArtifactDescriptor resultDescriptor, String typeName) {
         this.contextObject = contextObject;
         this.domainObjectList = domainObjectList;
         this.domainObject = domainObjectList.size() == 1 ? domainObjectList.get(0) : null;
@@ -920,7 +921,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             }
 
             JMenuItem mergeItem = new JMenuItem("  Merge " + fragments.size() + " Selected Neurons");
-            NeuronFragment fragment = (NeuronFragment) fragments.iterator().next();
+            NeuronFragment fragment = fragments.iterator().next();
             Reference sampleRef = fragment.getSample();
             final Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
 
@@ -1040,7 +1041,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         HasFiles result = null;
         if (domainObject instanceof Sample) {
             Sample sample = (Sample)domainObject;
-            result = SampleUtils.getResult(sample, resultDescriptor);
+            result = DescriptorUtils.getResult(sample, resultDescriptor);
         }
         else if (domainObject instanceof HasFiles) {
             result = (HasFiles)domainObject;

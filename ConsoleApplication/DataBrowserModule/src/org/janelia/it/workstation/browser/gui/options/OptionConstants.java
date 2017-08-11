@@ -11,7 +11,6 @@ public class OptionConstants {
     public static final String SHOW_RECENTLY_OPENED_ITEMS = "SessionMgr.ShowRecentlyOpenedItems";
     public static final String SHOW_RELEASE_NOTES = "SessionMgr.ShowReleaseNotes";
     public static final String LAST_SHOWN_RELEASE_NOTES = "SessionMgr.LastShownReleaseNotes";
-    public static final String LEGACY_DOWNLOAD_DIALOG = "SessionMgr.LegacyDownloadDialog";
     public static final String UNLOAD_IMAGES_PROPERTY = "SessionMgr.UnloadImagesProperty";
     public static final String DISABLE_IMAGE_DRAG_PROPERTY = "SessionMgr.DisableImageDragProperty";
     public static final String SHOW_ANNOTATION_TABLES_PROPERTY = "SessionMgr.ShowAnnotationTablesProperty";

@@ -10,9 +10,14 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptorList;
+import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Multiset;
+
+import javassist.runtime.Desc;
 
 /**
  * Holds the entire state of the download wizard, including the initial state, 
@@ -27,7 +32,7 @@ class DownloadWizardState {
     
     // Wizard input
     private List<? extends DomainObject> inputObjects;
-    private ResultDescriptor defaultResultDescriptor;
+    private ArtifactDescriptor defaultResultDescriptor;
     
     // Calculated from Wizard input
     private List<DownloadObject> downloadObjects;
@@ -59,14 +64,35 @@ class DownloadWizardState {
         this.inputObjects = inputObjects;
     }
 
-    public ResultDescriptor getDefaultResultDescriptor() {
+    public ArtifactDescriptor getDefaultResultDescriptor() {
         return defaultResultDescriptor;
     }
 
-    public void setDefaultArtifactDescriptor(ResultDescriptor defaultResultDescriptor) {
+    public void setDefaultArtifactDescriptor(ArtifactDescriptor defaultResultDescriptor) {
         this.defaultResultDescriptor = defaultResultDescriptor;
     }
 
+    public String getDefaultArtifactDescriptorString() {
+        try {
+            return DescriptorUtils.serialize(defaultResultDescriptor);
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
+            return null;
+        }
+    }
+
+    public void setDefaultArtifactDescriptorString(String artifactDescriptorString) {
+        if (StringUtils.isBlank(artifactDescriptorString)) return;
+        try {
+            this.defaultResultDescriptor = DescriptorUtils.deserialize(artifactDescriptorString);
+        }
+        catch (Exception e) {
+            this.defaultResultDescriptor = null;
+            FrameworkImplProvider.handleExceptionQuietly(e);
+        }
+    }
+    
     public List<DownloadObject> getDownloadObjects() {
         return downloadObjects;
     }

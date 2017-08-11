@@ -33,14 +33,14 @@ import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
-import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.MissingIcon;
 import org.janelia.it.workstation.browser.gui.support.ResultSelectionButton;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.util.ImageCache;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -110,7 +110,7 @@ public class Hud extends ModalDialog {
 
         resultButton = new ResultSelectionButton() {
             @Override
-            protected void resultChanged(ResultDescriptor resultDescriptor) {
+            protected void resultChanged(ArtifactDescriptor resultDescriptor) {
                 setObjectAndToggleDialog(domainObject, resultDescriptor, typeButton.getImageTypeName(), false, true);
             }
         };
@@ -194,17 +194,17 @@ public class Hud extends ModalDialog {
         setVisible(false);
     }
 
-    public void setObjectAndToggleDialog(DomainObject domainObject, ResultDescriptor resultDescriptor, String typeName) {
+    public void setObjectAndToggleDialog(DomainObject domainObject, ArtifactDescriptor resultDescriptor, String typeName) {
         log.debug("setObjectAndToggleDialog({})",domainObject);
         setObjectAndToggleDialog(domainObject, resultDescriptor, typeName, true, true);
     }
 
-    public void setObject(DomainObject domainObject, ResultDescriptor resultDescriptor, String typeName, boolean overrideSettings) {
+    public void setObject(DomainObject domainObject, ArtifactDescriptor resultDescriptor, String typeName, boolean overrideSettings) {
         log.debug("setObject({})",domainObject);
         setObjectAndToggleDialog(domainObject, resultDescriptor, typeName, false, overrideSettings);
     }
 
-    public void setObjectAndToggleDialog(final DomainObject domainObject, ResultDescriptor resultDescriptor, String typeName, final boolean toggle, boolean overrideSettings) {
+    public void setObjectAndToggleDialog(final DomainObject domainObject, ArtifactDescriptor resultDescriptor, String typeName, final boolean toggle, boolean overrideSettings) {
         this.domainObject = domainObject;
         if (domainObject == null) {
             dirtyEntityFor3D = false;
@@ -217,13 +217,13 @@ public class Hud extends ModalDialog {
             log.debug("HUD: entity type is {}", domainObject.getType());
         }
 
-        ResultDescriptor currResult = (overrideSettings && resultDescriptor!=null) ? resultDescriptor : resultButton.getResultDescriptor();
+        ArtifactDescriptor currResult = (overrideSettings && resultDescriptor!=null) ? resultDescriptor : resultButton.getResultDescriptor();
         String currImageType  = (overrideSettings && typeName!=null) ? typeName : typeButton.getImageTypeName();
 
         log.debug("setObjectAndToggleDialog - name:{}, toggle:{}, currResult:{}, currImageType:{}",domainObject.getName(),toggle,currResult,currImageType);
         
         if (currResult==null) {
-            currResult = ResultDescriptor.LATEST;
+            currResult = ArtifactDescriptor.LATEST;
         }
         
         if (currImageType==null) {
@@ -239,7 +239,7 @@ public class Hud extends ModalDialog {
 
         if (domainObject instanceof Sample) {
             Sample sample = (Sample)domainObject;
-            fileProvider = SampleUtils.getResult(sample, resultButton.getResultDescriptor());
+            fileProvider = DescriptorUtils.getResult(sample, resultButton.getResultDescriptor());
         }
         else if (domainObject instanceof HasFiles) {
             fileProvider = (HasFiles)domainObject;

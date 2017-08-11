@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.gui.dialogs.download;
+package org.janelia.it.workstation.browser.model.descriptors;
 
 import java.util.ArrayList;
 

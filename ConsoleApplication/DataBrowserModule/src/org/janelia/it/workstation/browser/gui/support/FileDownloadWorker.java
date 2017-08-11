@@ -16,6 +16,7 @@ import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.StateMgr;
+import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadFileItem;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
@@ -33,14 +34,14 @@ public class FileDownloadWorker {
 
     private static final Logger log = LoggerFactory.getLogger(FileDownloadWorker.class);
     
-    private final DownloadItem downloadItem;
+    private final DownloadFileItem downloadItem;
     private final Lock copyFileLock;
     private final String objectName;
     private final String targetExtension;
     private final String sourceFilePath;
     private final File targetDir;
 
-    public FileDownloadWorker(DownloadItem downloadItem, Lock copyFileLock) {
+    public FileDownloadWorker(DownloadFileItem downloadItem, Lock copyFileLock) {
         this.downloadItem = downloadItem;
         this.copyFileLock = copyFileLock;
         this.objectName = downloadItem.getDomainObject().getName();
@@ -232,7 +233,7 @@ public class FileDownloadWorker {
         };
     }
 
-    public DownloadItem getDownloadItem() {
+    public DownloadFileItem getDownloadItem() {
         return downloadItem;
     }
 
