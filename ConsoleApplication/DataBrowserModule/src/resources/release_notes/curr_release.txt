@@ -1,10 +1,11 @@
-// 6.1
+// 6.2
 
-Data Browser
+Workstation Browser
+* Reorganized the result drop-down button to group results by processing stage
+* Added additional "Post-processed" result category in the Download dialog
+* Renamed alignment results to show their alignment space (template and target resolution)
+* Added Hideo's color depth MIPs for new alignment results
+* Improved error reporting 
 
 Large Volume Viewer
-* Added "Ignore prefix" filter for neuron list
-
-Horta
-* Added Note shortcut (Ctrl-N) and 'Traced End' shortcut (Ctrl-E) 
-* Fixed issues with Undo Merge refresh 
+* Import/export swc file dialogs remember their last location

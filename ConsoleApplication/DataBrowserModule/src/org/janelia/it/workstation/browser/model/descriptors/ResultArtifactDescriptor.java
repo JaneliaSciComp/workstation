@@ -14,13 +14,17 @@ import org.janelia.it.jacs.model.domain.support.SampleUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+/**
+ * Descriptor for a pipeline result. 
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public class ResultArtifactDescriptor extends ArtifactDescriptor {
 
     private String objective;
     private String area;
     private String resultClass;
     private String resultName;
-    private String alignSpace;
     private boolean aligned;
 
     // Empty constructor needed for JSON deserialization
@@ -33,22 +37,29 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
             this.area = ((HasAnatomicalArea) result).getAnatomicalArea();
         }
         this.resultClass = result.getClass().getName();
-        this.resultName = result.getName();
         this.aligned = result instanceof SampleAlignmentResult;
         if (aligned) {
-            this.alignSpace = ((SampleAlignmentResult) result).getAlignmentSpace();
+            this.resultName = ((SampleAlignmentResult) result).getAlignmentSpace();
+            if (StringUtils.isBlank(resultName)) {
+                // If the alignment space is empty, fallback on the result name. 
+                // This shouldn't happen, but it does for legacy or broken data.
+                this.resultName = result.getName();
+            }
+        }
+        else {
+            this.resultName = result.getName();
         }
     }
 
+    /**
+     * For special cases where the result does not have its own area,
+     * this allows you to override it. Useful for e.g. SamplePostProcessingResult
+     * @param result
+     * @param area
+     */
     public ResultArtifactDescriptor(PipelineResult result, String area) {
-        this.objective = result.getParentRun().getParent().getObjective();
+        this(result);
         this.area = area;
-        this.resultClass = result.getClass().getName();
-        this.resultName = result.getName();
-        this.aligned = result instanceof SampleAlignmentResult;
-        if (aligned) {
-            this.alignSpace = ((SampleAlignmentResult) result).getAlignmentSpace();
-        }
     }
     
     public String getObjective() {
@@ -65,10 +76,6 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
 
     public String getResultName() {
         return resultName;
-    }
-
-    public String getAlignSpace() {
-        return alignSpace;
     }
 
     public boolean isAligned() {
@@ -102,19 +109,14 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
 
         // Strip area from result name
         String areaSuffix = " ("+realArea+")";
-        String realResultName = resultName.replace(areaSuffix, "");
+        String realResultName = resultName==null?null:resultName.replace(areaSuffix, "");
         
         StringBuilder sb = new StringBuilder();
         sb.append(objective);
         sb.append(" ");
         sb.append(realArea);
         sb.append(" - ");
-        if (alignSpace!=null) {
-            sb.append(alignSpace);
-        }
-        else {
-            sb.append(realResultName);
-        }
+        sb.append(realResultName);
         
         return sb.toString();
     }
@@ -125,6 +127,7 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
         int result = 1;
         result = prime * result + ((area == null) ? 0 : area.hashCode());
         result = prime * result + ((objective == null) ? 0 : objective.hashCode());
+        result = prime * result + ((resultClass == null) ? 0 : resultClass.hashCode());
         result = prime * result + ((resultName == null) ? 0 : resultName.hashCode());
         return result;
     }
@@ -150,6 +153,12 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
         }
         else if (!objective.equals(other.objective))
             return false;
+        if (resultClass == null) {
+            if (other.resultClass != null)
+                return false;
+        }
+        else if (!resultClass.equals(other.resultClass))
+            return false;
         if (resultName == null) {
             if (other.resultName != null)
                 return false;
@@ -158,5 +167,4 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
             return false;
         return true;
     }
-    
 }

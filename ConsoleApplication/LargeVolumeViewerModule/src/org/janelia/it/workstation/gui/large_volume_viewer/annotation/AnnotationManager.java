@@ -92,6 +92,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     private LargeVolumeViewerTranslator lvvTranslator;
 
+    private File swcDirectory = new File(System.getProperty("user.home"));
+
+
     // ----- constants
     // AUTOMATIC_TRACING_TIMEOUT for automatic tracing in seconds
     private static final double AUTOMATIC_TRACING_TIMEOUT = 10.0;
@@ -109,6 +112,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         this.quadViewUi = quadViewUi;
         this.tileServer = tileServer;
         this.lvvTranslator = lvvTranslator;
+    }
+
+    public File getSwcDirectory() {
+        return swcDirectory;
+    }
+
+    public void setSwcDirectory(File swcDirectory) {
+        this.swcDirectory = swcDirectory;
     }
 
     public boolean editsAllowed() {

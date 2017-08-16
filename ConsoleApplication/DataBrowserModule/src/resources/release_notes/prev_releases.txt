@@ -1,3 +1,12 @@
+// 6.1
+
+Large Volume Viewer
+* Added "Ignore prefix" filter for neuron list
+
+Horta
+* Added Note shortcut (Ctrl-N) and 'Traced End' shortcut (Ctrl-E)
+* Fixed issues with Undo Merge refresh
+
 // 6.0
 
 In this major release, the Janelia Workstation has been updated to use the latest Java and NetBeans platform
@@ -6,7 +15,7 @@ has been completely replaced in order to address rendering issues on MacOS Sierr
 
 Other improvements:
 
-Data Browser
+Workstation Browser
 * Added the "Start Page" for quickly performing searches and viewing data statistics
 * Added a quick search box in the top toolbar, to make searching easier
 * Improved the user interface for the login dialog

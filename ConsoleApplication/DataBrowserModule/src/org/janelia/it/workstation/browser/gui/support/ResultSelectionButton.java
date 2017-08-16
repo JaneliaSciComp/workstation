@@ -91,8 +91,8 @@ public class ResultSelectionButton extends ScrollingDropDownButton {
 
                         ResultArtifactDescriptor r1 = (ResultArtifactDescriptor)o1;
                         ResultArtifactDescriptor r2 = (ResultArtifactDescriptor)o2;
-                        boolean r1Post = r1.getResultName().startsWith("Post");
-                        boolean r2Post = r2.getResultName().startsWith("Post");
+                        boolean r1Post = r1.getResultName()!=null && r1.getResultName().startsWith("Post");
+                        boolean r2Post = r2.getResultName()!=null && r2.getResultName().startsWith("Post");
                         
                         return ComparisonChain.start()
                                 .compare(r1.getObjective(), r2.getObjective(), Ordering.natural().nullsLast())
