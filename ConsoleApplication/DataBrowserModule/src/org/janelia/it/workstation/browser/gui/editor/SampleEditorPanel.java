@@ -984,7 +984,15 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 errorType = ErrorType.valueOf(error.getClassification());
             }
             
-            String title = run.getParent().getObjective()+" "+errorType.getLabel();
+            String title;
+            String op = error.getOperation();
+            if (StringUtils.isBlank(op)) {
+                title = run.getParent().getObjective()+" "+errorType.getLabel();    
+            }
+            else {
+                title = run.getParent().getObjective()+" "+op+" - "+errorType.getLabel();
+            }
+            
             label.setText(title);
             label.setToolTipText(errorType.getDescription());
             subLabel1.setText(DomainModelViewUtils.getDateString(error.getCreationDate()));
