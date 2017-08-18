@@ -4,9 +4,13 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.swing.ImageIcon;
@@ -14,10 +18,12 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.ToolTipManager;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.util.Utils;
@@ -36,10 +42,6 @@ public class DynamicImagePanel extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(DynamicImagePanel.class);
 
-    private static final ImageIcon ICON_TRASH = Icons.getIcon("decorator_trash.png");
-    private static final ImageIcon ICON_CONNECT = Icons.getIcon("decorator_connect.png");
-    private static final ImageIcon ICON_DISCONNECT = Icons.getIcon("decorator_disconnect.png");
-    
     protected final List<ImageDecorator> decorators;
     protected final String imageFilename;
     protected final Integer maxSize;
@@ -83,6 +85,7 @@ public class DynamicImagePanel extends JPanel {
         errorLabel.setHorizontalTextPosition(JLabel.CENTER);
 
         imageLabel = new DecoratedImagePanel();
+        imageLabel.addMouseListener(new MouseForwarder(this, "DecoratedImagePanel->DynamicImagePanel"));
         imageLabel.setOpaque(false);
 
         setImageLabel(loadingLabel);
@@ -311,6 +314,7 @@ public class DynamicImagePanel extends JPanel {
         private BufferedImage image;
         
         public DecoratedImagePanel() {
+            ToolTipManager.sharedInstance().registerComponent(this);
         }
         
         public BufferedImage getImage() {
@@ -336,7 +340,7 @@ public class DynamicImagePanel extends JPanel {
                 for (ImageDecorator imageDecorator : decorators) {
                     ImageIcon icon = imageDecorator.getIcon();
                     x -= icon.getIconWidth();
-                    paintDecorator(g, icon, x, decoratorOffset);
+                    paintDecorator(g, imageDecorator, icon, x, decoratorOffset);
                     x -= decoratorSpacing;
                 }
             }
@@ -373,8 +377,24 @@ public class DynamicImagePanel extends JPanel {
 //            }
         }  
         
-        private void paintDecorator(Graphics g, ImageIcon decorator, int x, int y) {
+        private void paintDecorator(Graphics g, ImageDecorator imageDecorator, ImageIcon decorator, int x, int y) {
+            Rectangle rect = new Rectangle(x, y, decorator.getIconWidth(), decorator.getIconHeight());
+            decoratorLocations.put(rect, imageDecorator);
             g.drawImage(decorator.getImage(), x, y, decorator.getIconWidth(), decorator.getIconHeight(), null);
+        }
+
+        private Map<Rectangle, ImageDecorator> decoratorLocations = new HashMap<>();
+        
+        @Override
+        public String getToolTipText(MouseEvent e) {
+            
+            for (Rectangle rect : decoratorLocations.keySet()) {
+                if (rect.contains(e.getPoint())) {
+                    return decoratorLocations.get(rect).getLabel();
+                }
+            }
+            
+            return super.getToolTipText(e);
         }
     }
 }

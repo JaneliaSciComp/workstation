@@ -6,6 +6,7 @@ import java.util.concurrent.Callable;
 import javax.swing.JComponent;
 
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
+import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 
 /**
  * An AnnotatedImageButton with a dynamic image, i.e. one that is loaded
@@ -23,6 +24,7 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
     public JComponent init(T imageObject, ImageModel<T,S> imageModel, String filepath) {
         this.dynamicImagePanel = new DynamicImagePanel(filepath, imageModel.getDecorators(imageObject), ImagesPanel.MAX_IMAGE_WIDTH);
+        dynamicImagePanel.addMouseListener(new MouseForwarder(this, "DynamicImagePanel->DynamicImageButton"));
         return dynamicImagePanel;
     }
 
