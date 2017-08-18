@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -21,6 +22,7 @@ import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
@@ -46,6 +48,7 @@ import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
+import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
@@ -137,6 +140,28 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         @Override
         public List<Annotation> getAnnotations(DomainObject domainObject) {
             return domainObjectList.getAnnotations(domainObject.getId());
+        }
+        
+        @Override
+        public List<ImageDecorator> getDecorators(DomainObject imageObject) {
+            List<ImageDecorator> decorators = new ArrayList<>();
+            if (imageObject instanceof Sample) {
+                Sample sample = (Sample)imageObject;
+                if (sample.isSamplePurged()) {
+                    decorators.add(ImageDecorator.PURGED);
+                }
+                if (!sample.isSampleSageSynced()) {
+                    decorators.add(ImageDecorator.DESYNC);
+                }   
+            }
+            else if (imageObject instanceof LSMImage) {
+                LSMImage lsm = (LSMImage)imageObject;
+                if (!lsm.isLSMSageSynced()) {
+                    decorators.add(ImageDecorator.DESYNC);
+                }   
+            }
+            
+            return decorators;
         }
     };
 

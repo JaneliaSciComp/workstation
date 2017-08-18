@@ -38,7 +38,7 @@ public class StaticImageButton<T,S> extends AnnotatedImageButton<T,S> {
         super.setImageSize(width, height);
         if (staticIcon != null) {
             if (width <= staticIcon.getWidth()) { // Don't scale up icons
-                label.setIcon(new ImageIcon(Utils.getScaledImage(staticIcon, width)));
+                label.setIcon(new ImageIcon(Utils.getScaledImageByWidth(staticIcon, width)));
             }
             else {
                 label.setIcon(new ImageIcon(staticIcon));
@@ -64,7 +64,7 @@ public class StaticImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
             int width = imagesPanel.getMaxImageWidth();
             if (width <= staticIcon.getWidth()) { // Don't scale up icons
-                label.setIcon(new ImageIcon(Utils.getScaledImage(staticIcon, width)));
+                label.setIcon(new ImageIcon(Utils.getScaledImageByWidth(staticIcon, width)));
             }
             else {
                 label.setIcon(new ImageIcon(staticIcon));

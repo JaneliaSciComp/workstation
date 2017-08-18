@@ -22,7 +22,7 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
     }
 
     public JComponent init(T imageObject, ImageModel<T,S> imageModel, String filepath) {
-        this.dynamicImagePanel = new DynamicImagePanel(filepath, ImagesPanel.MAX_IMAGE_WIDTH);
+        this.dynamicImagePanel = new DynamicImagePanel(filepath, imageModel.getDecorators(imageObject), ImagesPanel.MAX_IMAGE_WIDTH);
         return dynamicImagePanel;
     }
 
@@ -44,8 +44,8 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
             public Void call() throws Exception {
                 // Register our image height
                 if (dynamicImagePanel.getMaxSizeImage() != null && dynamicImagePanel.getImage() != null) {
-                    double w = dynamicImagePanel.getImage().getIconWidth();
-                    double h = dynamicImagePanel.getImage().getIconHeight();
+                    double w = dynamicImagePanel.getWidth();
+                    double h = dynamicImagePanel.getHeight();
                     registerAspectRatio(w, h);
                 }
                 return null;
@@ -53,4 +53,18 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
         });
     }
+    
+    // TODO: in the future, we may want to display titles directly on the image. 
+    // Currently disabled, because it will take a bit more work to finish the implementation.
+    
+//    @Override
+//    public void setTitle(String title, int maxWidth) {
+//        dynamicImagePanel.setTitle(title);
+//    }
+//
+//    @Override
+//    public void setSubtitle(String subtitle, int maxWidth) {
+//        dynamicImagePanel.setSubtitle(subtitle);
+//    }
+    
 }

@@ -1,14 +1,16 @@
 package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.GridBagLayout;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.concurrent.Callable;
 
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
@@ -16,6 +18,7 @@ import javax.swing.SwingConstants;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.slf4j.Logger;
@@ -33,6 +36,11 @@ public class DynamicImagePanel extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(DynamicImagePanel.class);
 
+    private static final ImageIcon ICON_TRASH = Icons.getIcon("decorator_trash.png");
+    private static final ImageIcon ICON_CONNECT = Icons.getIcon("decorator_connect.png");
+    private static final ImageIcon ICON_DISCONNECT = Icons.getIcon("decorator_disconnect.png");
+    
+    protected final List<ImageDecorator> decorators;
     protected final String imageFilename;
     protected final Integer maxSize;
     protected BufferedImage maxSizeImage;
@@ -40,17 +48,22 @@ public class DynamicImagePanel extends JPanel {
     protected boolean viewable = false;
 
     protected final JLabel loadingLabel;
-    protected final JLabel imageLabel;
+    protected final DecoratedImagePanel imageLabel;
     protected final JLabel errorLabel;
 
     private LoadImageWorker loadWorker;
+    
+    private String title;
+    private String subtitle;
+    
 
-    public DynamicImagePanel(String imageFilename, Integer maxSize) {
+    public DynamicImagePanel(String imageFilename, List<ImageDecorator> decorators, Integer maxSize) {
 
-        setLayout(new GridBagLayout());
+        setLayout(new BorderLayout());
         setOpaque(false);
 
         this.imageFilename = imageFilename;
+        this.decorators = decorators;
         this.maxSize = maxSize;
         if (maxSize != null) {
             setPreferredSize(new Dimension(maxSize, maxSize));
@@ -69,10 +82,8 @@ public class DynamicImagePanel extends JPanel {
         errorLabel.setVerticalTextPosition(JLabel.BOTTOM);
         errorLabel.setHorizontalTextPosition(JLabel.CENTER);
 
-        imageLabel = new JLabel();
+        imageLabel = new DecoratedImagePanel();
         imageLabel.setOpaque(false);
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        imageLabel.setVerticalAlignment(SwingConstants.CENTER);
 
         setImageLabel(loadingLabel);
     }
@@ -103,8 +114,8 @@ public class DynamicImagePanel extends JPanel {
      *
      * @return
      */
-    public Icon getImage() {
-        return imageLabel.getIcon();
+    public BufferedImage getImage() {
+        return imageLabel.getImage();
     }
 
     /**
@@ -126,8 +137,8 @@ public class DynamicImagePanel extends JPanel {
                 // Must be currently loading, in which case this method will get called again when the loading is done
             }
             else {
-                BufferedImage image = Utils.getScaledImage(maxSizeImage, imageSize);
-                imageLabel.setIcon(new ImageIcon(image));
+                BufferedImage image = Utils.getScaledImageByWidth(maxSizeImage, imageSize);
+                imageLabel.setImage(image);
             }
         }
 
@@ -152,7 +163,8 @@ public class DynamicImagePanel extends JPanel {
                 if (!this.viewable) {
 
                     log.trace("LoadImageWorker: {}",imageFilename);
-                    loadWorker = new LoadImageWorker(imageFilename, getDisplaySize()) {
+                    
+                    loadWorker = new LoadImageWorker(imageFilename, displaySize) {
 
                         @Override
                         protected void hadSuccess() {
@@ -166,12 +178,14 @@ public class DynamicImagePanel extends JPanel {
 
                             setDisplaySize(getNewDisplaySize());
 
-                            if (getNewScaledImage() == null) {
+                            BufferedImage newScaledImage = getNewScaledImage();
+                            
+                            if (newScaledImage == null) {
                                 log.warn("Scaled image is null: {}",imageFilename);
                                 return;
                             }
-
-                            imageLabel.setIcon(new ImageIcon(getNewScaledImage()));
+                            
+                            imageLabel.setImage(newScaledImage);
                             setMaxSizeImage(getNewMaxSizeImage());
                             setImageLabel(imageLabel);
                             revalidate();
@@ -216,7 +230,7 @@ public class DynamicImagePanel extends JPanel {
                 if (isUnloadImages()) {
                     // Clear all references to the image data so that it can be cleared out of memory
                     maxSizeImage = null;
-                    imageLabel.setIcon(null);
+                    imageLabel.setImage(null);
                     // Show the loading label until the image needs to be loaded again
                     setImageLabel(loadingLabel);
                 }
@@ -242,16 +256,28 @@ public class DynamicImagePanel extends JPanel {
     public BufferedImage getMaxSizeImage() {
         return maxSizeImage;
     }
-
+    
+    @Override
+    public int getWidth() {
+        if (imageLabel.getImage()==null) return 0;
+        return imageLabel.getImage().getWidth();
+    }
+    
+    @Override
+    public int getHeight() {
+        if (imageLabel.getImage()==null) return 0;
+        return imageLabel.getImage().getHeight();
+    }
+    
     private void setMaxSizeImage(BufferedImage maxSizeImage) {
         if (viewable && maxSizeImage != null) {
             this.maxSizeImage = maxSizeImage;
         }
     }
 
-    private void setImageLabel(JLabel label) {
+    private void setImageLabel(JComponent label) {
         removeAll();
-        add(label);
+        add(label, BorderLayout.CENTER);
     }
 
     public Integer getMaxSize() {
@@ -261,6 +287,94 @@ public class DynamicImagePanel extends JPanel {
     public void setDisplaySize(int displaySize) {
         if (displaySize>0) {
             this.displaySize = displaySize;
+        }
+    }
+    
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getSubtitle() {
+        return subtitle;
+    }
+
+    public void setSubtitle(String subtitle) {
+        this.subtitle = subtitle;
+    }
+
+    class DecoratedImagePanel extends JPanel {
+        
+        private BufferedImage image;
+        
+        public DecoratedImagePanel() {
+        }
+        
+        public BufferedImage getImage() {
+            return image;
+        }
+
+        public void setImage(BufferedImage image) {
+            this.image = image;
+        }
+
+        public void paintComponent(Graphics g) {
+            super.paintComponent(g);       
+    
+            g.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), null);
+
+            if (decorators!=null && !decorators.isEmpty()) {
+                
+                int decoratorOffset = 5;
+                int decoratorSpacing = 10;
+                int totalWidth = (int)getSize().getWidth();
+                int x = totalWidth-decoratorOffset;
+                
+                for (ImageDecorator imageDecorator : decorators) {
+                    ImageIcon icon = imageDecorator.getIcon();
+                    x -= icon.getIconWidth();
+                    paintDecorator(g, icon, x, decoratorOffset);
+                    x -= decoratorSpacing;
+                }
+            }
+            
+//            int textY = decoratorOffset; 
+//
+//            g.setColor(UIManager.getColor("Label.foreground"));
+//            
+//            if (!StringUtils.isBlank(title)) {
+//                int fontSize = (int) Math.round(image.getWidth() * 0.005) + 10;
+//                Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
+//                
+//                FontMetrics metrics = g.getFontMetrics(titleLabelFont);
+//                Rectangle2D stringBounds = metrics.getStringBounds(title, g);
+//
+//                textY += stringBounds.getHeight();
+//                
+//                g.setFont(titleLabelFont);
+//                g.drawString(title, decoratorOffset, textY);
+//                
+//            }
+//
+//            if (!StringUtils.isBlank(subtitle)) {
+//                int fontSize = (int) Math.round(image.getWidth() * 0.003) + 10;
+//                Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
+//
+//                FontMetrics metrics = g.getFontMetrics(titleLabelFont);
+//                Rectangle2D stringBounds = metrics.getStringBounds(subtitle, g);
+//                
+//                textY += stringBounds.getHeight();
+//                
+//                g.setFont(titleLabelFont);
+//                g.drawString(subtitle, decoratorOffset, textY);
+//            }
+        }  
+        
+        private void paintDecorator(Graphics g, ImageIcon decorator, int x, int y) {
+            g.drawImage(decorator.getImage(), x, y, decorator.getIconWidth(), decorator.getIconHeight(), null);
         }
     }
 }

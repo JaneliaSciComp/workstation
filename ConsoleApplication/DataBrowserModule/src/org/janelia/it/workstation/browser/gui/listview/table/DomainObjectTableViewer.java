@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,7 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
+import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.slf4j.Logger;
@@ -115,6 +117,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         @Override
         public List<Annotation> getAnnotations(DomainObject domainObject) {
             return domainObjectList.getAnnotations(domainObject.getId());
+        }
+
+        @Override
+        public List<ImageDecorator> getDecorators(DomainObject imageObject) {
+            return Collections.emptyList();
         }
     };
 

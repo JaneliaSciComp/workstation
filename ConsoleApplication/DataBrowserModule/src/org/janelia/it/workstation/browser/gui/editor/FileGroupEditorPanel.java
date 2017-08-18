@@ -36,6 +36,7 @@ import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.perf4j.StopWatch;
@@ -265,6 +266,11 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
         @Override
         public List<Annotation> getAnnotations(FileGroup imageObject) {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<ImageDecorator> getDecorators(FileGroup imageObject) {
             return Collections.emptyList();
         }
     };

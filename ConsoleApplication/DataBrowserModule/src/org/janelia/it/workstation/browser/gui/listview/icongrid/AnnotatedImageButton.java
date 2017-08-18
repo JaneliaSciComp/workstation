@@ -277,7 +277,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         return imageObject;
     }
 
-    public void toggleEditMode (boolean mode) {
+    public void toggleEditMode(boolean mode) {
         // if hiding edit mode, clear out checkbox
         if (!mode) {
             this.setEditModeValue(false);
@@ -285,16 +285,17 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         editMode.setVisible(mode);
     }
 
-    public void setEditModeValue (boolean selection) {
+    public void setEditModeValue(boolean selection) {
         editMode.setSelected(selection);
     }
 
-    public boolean getEditModeValue () {
+    public boolean getEditModeValue() {
         return editMode.isSelected();
     }
 
     public synchronized void setImageSize(int maxWidth, int maxHeight) {
         setTitle(titleLabel.getText(), maxWidth);
+        setSubtitle(subtitleLabel.getText(), maxWidth);
         JPanel annotationPanel = (JPanel) annotationView;
         if (annotationView instanceof AnnotationTablePanel) {
             annotationPanel.setPreferredSize(new Dimension(maxWidth, annotationPanel.getPreferredSize().height));
