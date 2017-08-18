@@ -88,7 +88,7 @@ public class LoadedImagePanel extends JPanel {
                 }
                 
                 BufferedImage image = getNewScaledImage();
-                if (getNewScaledImage() == null) {
+                if (image == null) {
                     log.warn("Scaled image is null");
                     return;
                 }

@@ -3,22 +3,15 @@ package org.janelia.it.workstation.browser.gui.listview.icongrid;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
-import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
-import javax.swing.ToolTipManager;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
@@ -41,24 +34,24 @@ import loci.formats.FormatException;
 public class DynamicImagePanel extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(DynamicImagePanel.class);
-
-    protected final List<ImageDecorator> decorators;
+    
     protected final String imageFilename;
+    protected final List<ImageDecorator> decorators;
     protected final Integer maxSize;
+    
     protected BufferedImage maxSizeImage;
     protected int displaySize;
     protected boolean viewable = false;
 
     protected final JLabel loadingLabel;
-    protected final DecoratedImagePanel imageLabel;
     protected final JLabel errorLabel;
+    protected DecoratedImagePanel imagePanel;
 
     private LoadImageWorker loadWorker;
     
     private String title;
     private String subtitle;
     
-
     public DynamicImagePanel(String imageFilename, List<ImageDecorator> decorators, Integer maxSize) {
 
         setLayout(new BorderLayout());
@@ -76,6 +69,8 @@ public class DynamicImagePanel extends JPanel {
         loadingLabel.setIcon(Icons.getLoadingIcon());
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
         loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
+        loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
+        loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         errorLabel = new JLabel();
         errorLabel.setOpaque(false);
@@ -83,12 +78,10 @@ public class DynamicImagePanel extends JPanel {
         errorLabel.setIcon(Icons.getMissingIcon());
         errorLabel.setVerticalTextPosition(JLabel.BOTTOM);
         errorLabel.setHorizontalTextPosition(JLabel.CENTER);
+        errorLabel.setVerticalAlignment(SwingConstants.CENTER);
+        errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        imageLabel = new DecoratedImagePanel();
-        imageLabel.addMouseListener(new MouseForwarder(this, "DecoratedImagePanel->DynamicImagePanel"));
-        imageLabel.setOpaque(false);
-
-        setImageLabel(loadingLabel);
+        setMainComponent(loadingLabel);
     }
 
     /**
@@ -118,7 +111,7 @@ public class DynamicImagePanel extends JPanel {
      * @return
      */
     public BufferedImage getImage() {
-        return imageLabel.getImage();
+        return imagePanel.getImage();
     }
 
     /**
@@ -141,7 +134,7 @@ public class DynamicImagePanel extends JPanel {
             }
             else {
                 BufferedImage image = Utils.getScaledImageByWidth(maxSizeImage, imageSize);
-                imageLabel.setImage(image);
+                imagePanel.setImage(image);
             }
         }
 
@@ -181,18 +174,18 @@ public class DynamicImagePanel extends JPanel {
 
                             setDisplaySize(getNewDisplaySize());
 
-                            BufferedImage newScaledImage = getNewScaledImage();
-                            
-                            if (newScaledImage == null) {
+                            BufferedImage image = getNewScaledImage();
+                            if (image == null) {
                                 log.warn("Scaled image is null: {}",imageFilename);
                                 return;
                             }
-                            
-                            imageLabel.setImage(newScaledImage);
+
                             setMaxSizeImage(getNewMaxSizeImage());
-                            setImageLabel(imageLabel);
-                            revalidate();
-                            repaint();
+                            
+                            imagePanel = new DecoratedImagePanel(decorators);
+                            imagePanel.addMouseListener(new MouseForwarder(DynamicImagePanel.this, "DecoratedImagePanel->DynamicImagePanel"));
+                            imagePanel.setImage(image);
+                            setMainComponent(imagePanel);
 
                             ConcurrentUtils.invokeAndHandleExceptions(success);
 
@@ -201,21 +194,27 @@ public class DynamicImagePanel extends JPanel {
 
                         @Override
                         protected void hadError(Throwable error) {
+                            
+                            String errorType;
                             if (error instanceof FileNotFoundException) {
                                 log.warn("File not found: " + imageFilename);
-                                errorLabel.setText("File not found");
+                                errorType = "File not found";
                             }
                             else if (error.getCause() != null && (error.getCause() instanceof FormatException)) {
                                 log.warn("Image format not supported for: " + imageFilename, error);
-                                errorLabel.setText("Image format not supported");
+                                errorType = "Image format not supported";
                             }
                             else {
                                 log.warn("Image could not be loaded: " + imageFilename, error);
-                                errorLabel.setText("Image could not be loaded");
+                                errorType = "Image could not be loaded";
                             }
-                            setImageLabel(errorLabel);
-                            revalidate();
-                            repaint();
+
+                            BufferedImage image = Icons.getImage("file_error.png");
+                            Color fontColor = Color.red;
+                            imagePanel = new DecoratedErrorPanel(decorators, errorType, fontColor);
+                            imagePanel.addMouseListener(new MouseForwarder(DynamicImagePanel.this, "DecoratedErrorPanel->DynamicImagePanel"));
+                            imagePanel.setImage(image);
+                            setMainComponent(imagePanel);
                         }
                     };
                     
@@ -233,9 +232,9 @@ public class DynamicImagePanel extends JPanel {
                 if (isUnloadImages()) {
                     // Clear all references to the image data so that it can be cleared out of memory
                     maxSizeImage = null;
-                    imageLabel.setImage(null);
+                    imagePanel.setImage(null);
                     // Show the loading label until the image needs to be loaded again
-                    setImageLabel(loadingLabel);
+                    setMainComponent(loadingLabel);
                 }
                 // Call the callback
                 try {
@@ -262,14 +261,24 @@ public class DynamicImagePanel extends JPanel {
     
     @Override
     public int getWidth() {
-        if (imageLabel.getImage()==null) return 0;
-        return imageLabel.getImage().getWidth();
+        if (getPreferredSize()!=null) {
+            return getPreferredSize().width;
+        }
+        if (imagePanel.getImage()!=null) {
+            return imagePanel.getImage().getWidth();
+        }
+        return super.getWidth();
     }
     
     @Override
     public int getHeight() {
-        if (imageLabel.getImage()==null) return 0;
-        return imageLabel.getImage().getHeight();
+        if (getPreferredSize()!=null) {
+            return getPreferredSize().height;
+        }
+        if (imagePanel.getImage()!=null) {
+            return imagePanel.getImage().getHeight();
+        }
+        return super.getHeight();
     }
     
     private void setMaxSizeImage(BufferedImage maxSizeImage) {
@@ -278,9 +287,11 @@ public class DynamicImagePanel extends JPanel {
         }
     }
 
-    private void setImageLabel(JComponent label) {
+    private void setMainComponent(JComponent component) {
         removeAll();
-        add(label, BorderLayout.CENTER);
+        add(component, BorderLayout.CENTER);
+        revalidate();
+        repaint();
     }
 
     public Integer getMaxSize() {
@@ -309,92 +320,4 @@ public class DynamicImagePanel extends JPanel {
         this.subtitle = subtitle;
     }
 
-    class DecoratedImagePanel extends JPanel {
-        
-        private BufferedImage image;
-        
-        public DecoratedImagePanel() {
-            ToolTipManager.sharedInstance().registerComponent(this);
-        }
-        
-        public BufferedImage getImage() {
-            return image;
-        }
-
-        public void setImage(BufferedImage image) {
-            this.image = image;
-        }
-
-        public void paintComponent(Graphics g) {
-            super.paintComponent(g);       
-    
-            g.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), null);
-
-            if (decorators!=null && !decorators.isEmpty()) {
-                
-                int decoratorOffset = 5;
-                int decoratorSpacing = 10;
-                int totalWidth = (int)getSize().getWidth();
-                int x = totalWidth-decoratorOffset;
-                
-                for (ImageDecorator imageDecorator : decorators) {
-                    ImageIcon icon = imageDecorator.getIcon();
-                    x -= icon.getIconWidth();
-                    paintDecorator(g, imageDecorator, icon, x, decoratorOffset);
-                    x -= decoratorSpacing;
-                }
-            }
-            
-//            int textY = decoratorOffset; 
-//
-//            g.setColor(UIManager.getColor("Label.foreground"));
-//            
-//            if (!StringUtils.isBlank(title)) {
-//                int fontSize = (int) Math.round(image.getWidth() * 0.005) + 10;
-//                Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
-//                
-//                FontMetrics metrics = g.getFontMetrics(titleLabelFont);
-//                Rectangle2D stringBounds = metrics.getStringBounds(title, g);
-//
-//                textY += stringBounds.getHeight();
-//                
-//                g.setFont(titleLabelFont);
-//                g.drawString(title, decoratorOffset, textY);
-//                
-//            }
-//
-//            if (!StringUtils.isBlank(subtitle)) {
-//                int fontSize = (int) Math.round(image.getWidth() * 0.003) + 10;
-//                Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
-//
-//                FontMetrics metrics = g.getFontMetrics(titleLabelFont);
-//                Rectangle2D stringBounds = metrics.getStringBounds(subtitle, g);
-//                
-//                textY += stringBounds.getHeight();
-//                
-//                g.setFont(titleLabelFont);
-//                g.drawString(subtitle, decoratorOffset, textY);
-//            }
-        }  
-        
-        private void paintDecorator(Graphics g, ImageDecorator imageDecorator, ImageIcon decorator, int x, int y) {
-            Rectangle rect = new Rectangle(x, y, decorator.getIconWidth(), decorator.getIconHeight());
-            decoratorLocations.put(rect, imageDecorator);
-            g.drawImage(decorator.getImage(), x, y, decorator.getIconWidth(), decorator.getIconHeight(), null);
-        }
-
-        private Map<Rectangle, ImageDecorator> decoratorLocations = new HashMap<>();
-        
-        @Override
-        public String getToolTipText(MouseEvent e) {
-            
-            for (Rectangle rect : decoratorLocations.keySet()) {
-                if (rect.contains(e.getPoint())) {
-                    return decoratorLocations.get(rect).getLabel();
-                }
-            }
-            
-            return super.getToolTipText(e);
-        }
-    }
 }
