@@ -1473,7 +1473,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         Color color = askForNeuronColor(getNeuronStyle(neuron));
         if (color != null) {
-            NeuronStyle style = new NeuronStyle(color, neuron.isVisible());
+            NeuronStyle style = new NeuronStyle(color, neuron.isVisible(), false);
             setNeuronStyle(neuron, style);
         }
     }
@@ -1585,6 +1585,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void setNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
         NeuronStyle style = getNeuronStyle(neuron);
         style.setVisible(visibility);
+        setNeuronStyle(neuron, style);
+    }
+    
+    public void setNeuronReadOnly(TmNeuronMetadata neuron, boolean readonly) {
+        NeuronStyle style = getNeuronStyle(neuron);
+        style.setReadOnly(readonly);
         setNeuronStyle(neuron, style);
     }
 

@@ -68,6 +68,7 @@ import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.commands.MergeNeuriteCommand;
 import org.janelia.console.viewerapi.commands.MoveNeuronAnchorCommand;
 import org.janelia.console.viewerapi.commands.SplitNeuriteCommand;
+import org.janelia.console.viewerapi.commands.ToggleNeuronInteractionCommand;
 import org.janelia.console.viewerapi.commands.ToggleNeuronVisibilityCommand;
 import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
@@ -226,6 +227,14 @@ public class TracingInteractor extends MouseAdapter
                         while (neuronsIter.hasNext()) {
                             TmNeuronMetadata neuronMeta = neuronsIter.next();
                             ToggleNeuronVisibilityCommand command = new ToggleNeuronVisibilityCommand(defaultWorkspace.getNeuronByGuid(neuronMeta.getId()));
+                            command.execute();
+                            defaultWorkspace.getNeuronByGuid(neuronMeta.getId()).getVisibilityChangeObservable().setChanged();
+                            defaultWorkspace.getNeuronByGuid(neuronMeta.getId()).getVisibilityChangeObservable().notifyObservers();
+                        }
+                    } else if (property.equals("Read Only")) {
+                        while (neuronsIter.hasNext()) {
+                            TmNeuronMetadata neuronMeta = neuronsIter.next();
+                            ToggleNeuronInteractionCommand command = new ToggleNeuronInteractionCommand(defaultWorkspace.getNeuronByGuid(neuronMeta.getId()));
                             command.execute();
                             defaultWorkspace.getNeuronByGuid(neuronMeta.getId()).getVisibilityChangeObservable().setChanged();
                             defaultWorkspace.getNeuronByGuid(neuronMeta.getId()).getVisibilityChangeObservable().notifyObservers();
@@ -708,6 +717,8 @@ public class TracingInteractor extends MouseAdapter
 
             if (defaultWorkspace != null) {
                 try {
+                    
+                                System.out.println ("dddddDDD");
                     double[] loc = new double[]{cursorXyz.getX(), cursorXyz.getY(), cursorXyz.getZ()};
                     final boolean bSearchMultipleAnchors = true;
                     if (bSearchMultipleAnchors) {
@@ -720,10 +731,11 @@ public class TracingInteractor extends MouseAdapter
                             NeuronModel neuron = defaultWorkspace.getNeuronForAnchor(v);
                             if (neuron == null) 
                                 continue;
-                            if (! neuron.isVisible()) {
+                            if (!neuron.isVisible() || neuron.isReadOnly()) {
                                 // log.info("skipping invisible neuron");
                                 continue;
                             }
+                            
                             Vector3 xyz = new Vector3(v.getLocation()).minus(cursorXyz);
                             float d2 = xyz.dot(xyz);
                             // log.info("vertex distance = {} um", Math.sqrt(d2));

@@ -73,10 +73,10 @@ public class ModelTranslation {
 
     public static NeuronStyle translateNeuronStyle(TmNeuronMetadata tmNeuronMetadata) {
         if (tmNeuronMetadata.getColor()==null) {
-            return NeuronStyle.getStyleForNeuron(tmNeuronMetadata.getId(), tmNeuronMetadata.isVisible());
+            return NeuronStyle.getStyleForNeuron(tmNeuronMetadata.getId(), tmNeuronMetadata.isVisible(), false);
         }
         else {
-            return new NeuronStyle(tmNeuronMetadata.getColor(), tmNeuronMetadata.isVisible());
+            return new NeuronStyle(tmNeuronMetadata.getColor(), tmNeuronMetadata.isVisible(), false);
         }
     }
 

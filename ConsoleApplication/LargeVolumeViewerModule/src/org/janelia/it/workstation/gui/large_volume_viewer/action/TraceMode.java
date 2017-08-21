@@ -215,7 +215,9 @@ implements MouseMode, KeyListener
 		if (skeletonActor != null && closest != hoverAnchor) {
 			// test for closest == null because null will come back invisible,
 			//	and we need hover-->null to unhover
-			if (closest == null || skeletonActorModel.anchorIsVisible(closest)){
+			if ((closest == null || skeletonActorModel.anchorIsVisible(closest)) && !skeletonActorModel.anchorIsReadOnly(closest)) {
+                            
+                                System.out.println ("BBBBB");
 				hoverAnchor = closest;
 				skeletonActor.getModel().setHoverAnchor(hoverAnchor);
 			}
@@ -238,7 +240,7 @@ implements MouseMode, KeyListener
             // we don't interact with invisible anchors, and since hovering
             //  is the key to all interactions, we can elegantly prevent that
             // interaction here
-            if (!skeletonActorModel.anchorIsVisible(anchor)) {
+            if (!skeletonActorModel.anchorIsVisible(anchor) && !skeletonActorModel.anchorIsReadOnly(anchor)) {
                 continue;
             }
             double dz = Math.abs(2.0 * (xyz.getZ() - anchor.getLocation().getZ()) * camera.getPixelsPerSceneUnit());
@@ -677,11 +679,13 @@ implements MouseMode, KeyListener
                         // get all neurons in group
                         Set<TmNeuronMetadata> neurons = annModel.getNeuronsForTag(groupName);
                         
+                                System.out.println ("QQQQQ" + fooMap);
                         // set toggle state
                         String property =(String)fooMap.get("toggleprop");
                         if (property!=null) {
                             try {
                                 Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
+                                System.out.println ("QQQQQ" + property);
                                 if (property.equals("Radius")) {
                                     float radius = toggled ? (float) 0.3 : 1;                                    
                                     while (neuronsIter.hasNext()) {
@@ -693,8 +697,11 @@ implements MouseMode, KeyListener
                                         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuronsIter.next(), !toggled);
                                     }
                                    
-                                } else if (property.equals("ReadOnly")) {
-                                    // don't display anchors both in LVV and Horta
+                                } else if (property.equals("Read Only")) {
+                                    System.out.println ("READONLY");
+                                    while (neuronsIter.hasNext()) {
+                                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronReadOnly(neuronsIter.next(), !toggled);
+                                    }
                                 }
                             } catch (Exception error) {
 

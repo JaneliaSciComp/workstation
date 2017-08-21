@@ -295,6 +295,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         log.info("Creating tag map for workspace {}", workspace.getId());
         currentTagMap = new TmNeuronTagMap();
         for(TmNeuronMetadata tmNeuronMetadata : neuronManager.getNeurons()) {
+            for (TmGeoAnnotation wack: tmNeuronMetadata.getGeoAnnotationMap().values()) {
+                 System.out.println ("coordinates:" + wack.getX() + "," + wack.getY() + "," + wack.getZ());
+            }
             for(String tag : tmNeuronMetadata.getTags()) {
                 currentTagMap.addTag(tag, tmNeuronMetadata);
             }
@@ -1748,10 +1751,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public void saveTagMeta(Map<String,Map<String,Object>> allTagMeta) {
-        Iterator<String> foo = allTagMeta.keySet().iterator();
-        while (foo.hasNext()) {
-            Iterator<String> foo2 = allTagMeta.get(foo.next()).keySet().iterator();
-        }
         currentTagMap.saveTagMeta(allTagMeta);
         // sync up with Horta
         neuronSetAdapter.getMetaWorkspace().setTagMetadata(currentTagMap);

@@ -223,7 +223,6 @@ public class NeuronGroupsDialog extends ModalDialog {
                     data.get(row).set(col, value);
                     break;
                 case COL_PROPTOGGLE:
-                    System.out.println ("toggleprop set");
                     meta.put("toggleprop", value);
                     data.get(row).set(col, value);
                     break;
@@ -251,12 +250,14 @@ public class NeuronGroupsDialog extends ModalDialog {
                     ((ShortcutTextField) component).setText((String) value);
                      return ((ShortcutTextField)component);
                 case COL_PROPTOGGLE:
-                    String[] propertyStrings = { PROPERTY_RADIUS, PROPERTY_VISIBILITY };
+                    String[] propertyStrings = { PROPERTY_RADIUS, PROPERTY_VISIBILITY, PROPERTY_READONLY };
                     component = new JComboBox(propertyStrings);
                     if (value==PROPERTY_VISIBILITY) {
                         ((JComboBox)component).setSelectedIndex(0);
                     } else if (value==PROPERTY_RADIUS) {
                         ((JComboBox)component).setSelectedIndex(1);
+                    } else if (value==PROPERTY_READONLY) {
+                        ((JComboBox)component).setSelectedIndex(2);
                     } 
                     return ((JComboBox)component);
             }

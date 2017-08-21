@@ -18,11 +18,13 @@ public class NeuronStyle {
 
     private Color color;
     private boolean visible = true;
+    private boolean readOnly = false;
     float[] cachedColorArray=new float[3]; // needed for performance
 
     // constants, because I already used "visible" instead of "visibility" once...
     private static final String COLOR_KEY = "color";
     private static final String VISIBILITY_KEY = "visibility";
+    private static final String READONLY_KEY = "readonly";
 
     // default colors; we index into this list with neuron ID;
     //  note that our neuron IDs are all of the form 8*n+4,
@@ -49,11 +51,11 @@ public class NeuronStyle {
      * get a default style for a neuron
      */
     public static NeuronStyle getStyleForNeuron(Long neuronID) {
-        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true);
+        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true, false);
     }
 
-    public static NeuronStyle getStyleForNeuron(Long neuronID, boolean visible) {
-        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], visible);
+    public static NeuronStyle getStyleForNeuron(Long neuronID, boolean visible, boolean readonly) {
+        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], visible, readonly);
     }
 
     /**
@@ -78,8 +80,14 @@ public class NeuronStyle {
             return null;
         }
         boolean visibility = visibilityNode.asBoolean();
+        
+        JsonNode readOnlyNode = rootNode.path(READONLY_KEY);
+        if (readOnlyNode.isMissingNode() || !readOnlyNode.isBoolean()) {
+            return null;
+        }
+        boolean readOnly = readOnlyNode.asBoolean();
 
-        return new NeuronStyle(color, visibility);
+        return new NeuronStyle(color, visibility, readOnly);
     }
 
     public NeuronStyle() {
@@ -87,9 +95,10 @@ public class NeuronStyle {
         this.visible = true;
     }
 
-    public NeuronStyle(Color color, boolean visible) {
+    public NeuronStyle(Color color, boolean visible, boolean readOnly) {
         setColor(color);
         this.visible = visible;
+        this.readOnly = readOnly;
     }
 
     public float getRedAsFloat() {
@@ -126,6 +135,7 @@ public class NeuronStyle {
     public void setVisible(boolean visible) {
         this.visible = visible;
     }
+    
 
     /**
      * returns a json node object, to be used in persisting styles; the
@@ -142,6 +152,7 @@ public class NeuronStyle {
         rootNode.put(COLOR_KEY, colors);
 
         rootNode.put(VISIBILITY_KEY, isVisible());
+        rootNode.put(READONLY_KEY, isReadOnly());
 
         return rootNode;
     }
@@ -149,5 +160,20 @@ public class NeuronStyle {
     @Override
     public String toString() {
         return "NeuronStyle(" + color + ", visibility: " + visible + ")";
+    }
+
+    /**
+     * @return the readOnly
+     */
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
+    /**
+     * @param readOnly the readOnly to set
+     */
+    public void setReadOnly(boolean readOnly) {
+        System.out.println ("FFFFFF");
+        this.readOnly = readOnly;
     }
 }

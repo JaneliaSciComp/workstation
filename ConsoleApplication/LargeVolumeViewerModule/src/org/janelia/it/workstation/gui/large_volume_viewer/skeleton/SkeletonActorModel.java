@@ -686,6 +686,16 @@ public class SkeletonActorModel {
         }
     }
     
+    public boolean anchorIsReadOnly(Anchor anchor) {
+        if (anchor == null || anchor.getNeuronID() == null || !neuronStyles.containsKey(anchor.getNeuronID())) {
+            return false;
+        } else {
+            System.out.println ("GGGGGG");
+            System.out.println (neuronStyles.get(anchor.getNeuronID()).isReadOnly());
+            return neuronStyles.get(anchor.getNeuronID()).isReadOnly();
+        }
+    }
+    
     private Collection<Anchor> getAllAnchors() {
         Set<Anchor> anchors = skeleton.getAnchors();
         synchronized (anchors) {

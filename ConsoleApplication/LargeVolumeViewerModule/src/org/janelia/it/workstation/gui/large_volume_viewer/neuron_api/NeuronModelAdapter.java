@@ -87,6 +87,7 @@ public class NeuronModelAdapter implements NeuronModel
     // TODO: Stop using locally cached color and visibility, in favor of proper syncing with underlying Style
     // private AnnotationModel annotationModel;
     private boolean bIsVisible; // TODO: sync visibility with LVV eventually. For now, we want fast toggle from Horta.
+    private boolean readOnly; 
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
     // private TmWorkspace workspace;
@@ -102,6 +103,7 @@ public class NeuronModelAdapter implements NeuronModel
         this.neuronSet = workspace;
         // this.annotationModel = annotationModel;
         bIsVisible = true; // TODO: 
+        readOnly = false; // TODO: 
         vertexes = new VertexList(neuron.getGeoAnnotationMap(), neuronSet);
         edges = new EdgeList(vertexes);
         // this.workspace = workspace;
@@ -430,7 +432,7 @@ public class NeuronModelAdapter implements NeuronModel
         // Avoid multiple style setting calls
         if (! color.equals(deepColor)) {
             try {
-                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, vis));
+                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, vis, isReadOnly()));
             } catch (Exception ex) {
                 logger.error("Error setting neuron style", ex);
             }
@@ -517,7 +519,7 @@ public class NeuronModelAdapter implements NeuronModel
         // Don't keep updating visibility, if it's already set correctly
         if (visible != deepVisibility) {
             try {
-                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, visible));
+                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, visible, isReadOnly()));
             } catch (Exception ex) {
                 logger.error("Error setting neuron style", ex);
             }
@@ -559,6 +561,16 @@ public class NeuronModelAdapter implements NeuronModel
     @Override
     public NeuronVertexUpdateObservable getVertexUpdatedObservable() {
         return vertexUpdatedObservable;
+    }
+
+    @Override
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
+    @Override
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
     }
 
     // TODO: - implement Edges correctly

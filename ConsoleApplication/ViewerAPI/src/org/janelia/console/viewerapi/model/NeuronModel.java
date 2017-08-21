@@ -40,7 +40,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
  * @author Christopher Bruns
  */
 public interface NeuronModel 
-extends Hideable
+extends Hideable, NonInteractable
 {
     String getName();
     void setName(String name);
