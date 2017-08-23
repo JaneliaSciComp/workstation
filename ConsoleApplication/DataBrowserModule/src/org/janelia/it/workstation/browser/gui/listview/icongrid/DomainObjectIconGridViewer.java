@@ -106,14 +106,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
         @Override
         public BufferedImage getStaticIcon(DomainObject imageObject) {
-            String filename = "question_block_large.png";
+            String filename = null;
             DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(imageObject);
             if (provider!=null) {
                 filename = provider.getLargeIcon(imageObject);
             }
-            ImageIcon icon = Icons.getIcon(filename);
-            if (icon==null) return null;
-            return Utils.toBufferedImage(icon.getImage());
+            return filename==null?null:Icons.getImage(filename);
         }
 
         @Override

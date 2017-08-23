@@ -428,6 +428,9 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
     public synchronized void registerAspectRatio(Double aspectRatio) {
         if (lowestAspectRatio == null || aspectRatio < lowestAspectRatio) {
             this.lowestAspectRatio = aspectRatio;
+            // Aspect ratio has changed, repaint everything 
+            buttonsPanel.revalidate();
+            buttonsPanel.repaint();
         }
     }
 

@@ -7,6 +7,8 @@ import javax.swing.JComponent;
 
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An AnnotatedImageButton with a dynamic image, i.e. one that is loaded
@@ -16,6 +18,8 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
  */
 public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
+    private static final Logger log = LoggerFactory.getLogger(DynamicImageButton.class);
+    
     private DynamicImagePanel dynamicImagePanel;
 
     public DynamicImageButton(T imageObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, ImagesPanel<T,S> imagesPanel, String filepath) {
@@ -46,8 +50,8 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
             public Void call() throws Exception {
                 // Register our image height
                 if (dynamicImagePanel.getMaxSizeImage() != null && dynamicImagePanel.getImage() != null) {
-                    double w = dynamicImagePanel.getWidth();
-                    double h = dynamicImagePanel.getHeight();
+                    double w = dynamicImagePanel.getPreferredSize().width;
+                    double h = dynamicImagePanel.getPreferredSize().height;
                     registerAspectRatio(w, h);
                 }
                 return null;
