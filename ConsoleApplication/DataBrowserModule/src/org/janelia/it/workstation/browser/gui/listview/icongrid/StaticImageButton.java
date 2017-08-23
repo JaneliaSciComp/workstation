@@ -39,6 +39,7 @@ public class StaticImageButton<T,S> extends AnnotatedImageButton<T,S> {
             errorText = "Selected result type not available";
         }
         this.infoPanel = new DecoratedErrorPanel(decorators, errorText, null);
+        infoPanel.setImage(maxSizeImage);
         infoPanel.addMouseListener(new MouseForwarder(this, "DecoratedInfoPanel->StaticImageButton"));
         return infoPanel;
     }
@@ -61,16 +62,16 @@ public class StaticImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
     @Override
     public void setViewable(boolean viewable) {
-        if (viewable) {
-            if (infoPanel.getImage()==null) {
-                infoPanel.setImage(maxSizeImage);
-            }
-        }
-        else {
-            infoPanel.setImage(null);
-        }
-
-        infoPanel.revalidate();
-        infoPanel.repaint();
+//        if (viewable) {
+//            if (infoPanel.getImage()==null) {
+//                infoPanel.setImage(maxSizeImage);
+//            }
+//        }
+//        else {
+//            infoPanel.setImage(null);
+//        }
+//
+//        infoPanel.revalidate();
+//        infoPanel.repaint();
     }
 }
