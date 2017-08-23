@@ -33,6 +33,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
 
     protected int currImageSize;
     protected int customComponentIndex;
+    private JCheckBoxMenuItem mustHaveImageMenuItem;
     
     public IconGridViewerToolbar() {
         super();
@@ -73,7 +74,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         configButton.setFocusable(false);
         configButton.setToolTipText("Options for the image viewer");
 
-        final JCheckBoxMenuItem mustHaveImageMenuItem = new JCheckBoxMenuItem("Show only items with selected imagery", isMustHaveImage());
+        mustHaveImageMenuItem = new JCheckBoxMenuItem("Show only items with selected imagery");
         mustHaveImageMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setMustHaveImage(mustHaveImageMenuItem.isSelected());
@@ -139,6 +140,10 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
 
     public JButton getConfigButton() {
         return configButton;
+    }
+
+    public JCheckBoxMenuItem getMustHaveImageMenuItem() {
+        return mustHaveImageMenuItem;
     }
 
     public JSlider getImageSizeSlider() {

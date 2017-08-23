@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,12 +7,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -314,6 +312,10 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             @Override
             protected void doStuff() throws Exception {
 
+                // Update toolbar
+                boolean mustHaveImage = isMustHaveImage();
+                getToolbar().getMustHaveImageMenuItem().setSelected(mustHaveImage);
+                
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject!=null && parentObject.getId()!=null) {
                     
@@ -339,14 +341,14 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                     }
                     else {
                         typeButton.reset();
-                    }
+                    }   
                 }
 
                 resultButton.populate(domainObjectList.getDomainObjects());
                 typeButton.setResultDescriptor(resultButton.getResultDescriptor());
                 typeButton.populate(domainObjectList.getDomainObjects());
 
-                if (isMustHaveImage()) {
+                if (mustHaveImage) {
                     domainObjects = domainObjectList.getDomainObjects().stream()
                         .filter(domainObject -> imageModel.getImageFilepath(domainObject)!=null || ServiceAcceptorHelper.findFirstHelper(domainObject)!=null)
                         .collect(Collectors.toList());
@@ -513,19 +515,31 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     protected void setMustHaveImage(boolean mustHaveImage) {
-        setPreference(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, mustHaveImage);
-        refreshDomainObjects();
+        try {
+            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, mustHaveImage);
+            refreshDomainObjects();
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleException(e);
+        }
     }
 
     @Override
     protected boolean isMustHaveImage() {
         boolean defaultValue = false;
-        Preference preference3 = getPreference(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE);
-        if (preference3==null) {
+        Preference preference;
+        try {
+            preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE);
+        }
+        catch (Exception e) {
+            log.error("Error getting preference", e);
             return defaultValue;
         }
-        log.info("Got must have image preference: "+preference3);
-        Boolean value = (Boolean)preference3.getValue();
+        if (preference==null) {
+            return defaultValue;
+        }
+        log.info("Got must have image preference: "+preference);
+        Boolean value = (Boolean)preference.getValue();
         return value==null ? defaultValue : value;
     }
     
