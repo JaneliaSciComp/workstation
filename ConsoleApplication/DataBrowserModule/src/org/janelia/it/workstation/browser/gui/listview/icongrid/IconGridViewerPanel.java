@@ -140,6 +140,18 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                     }
                 });
             }
+
+            @Override
+            protected boolean isMustHaveImage() {
+                return IconGridViewerPanel.this.isMustHaveImage();
+            }
+
+            @Override
+            protected void setMustHaveImage(boolean mustHaveImage) {
+                IconGridViewerPanel.this.setMustHaveImage(mustHaveImage);
+            }
+            
+            
         };
     }
 
@@ -308,6 +320,10 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
     protected abstract void configButtonPressed();
 
+    protected abstract void setMustHaveImage(boolean mustHaveImage);
+
+    protected abstract boolean isMustHaveImage();
+    
     protected void updateHud(boolean toggle) {}
 
     protected void buttonSelection(AnnotatedImageButton<T,S> button, boolean multiSelect, boolean rangeSelect) {

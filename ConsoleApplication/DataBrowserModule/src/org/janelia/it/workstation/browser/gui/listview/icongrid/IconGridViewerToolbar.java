@@ -5,7 +5,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
+import javax.swing.JMenuItem;
 import javax.swing.JSlider;
 import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
@@ -15,6 +17,7 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.ViewerToolbar;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 
 /**
  * Tool bar for icon panels.
@@ -64,18 +67,29 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         showTagsButton.addMouseListener(new MouseForwarder(toolbar, "ShowTagsButton->JToolBar"));
         toolbar.add(showTagsButton);
 
-        configButton = new JButton("Titles...");
+
+        ScrollingDropDownButton configButton = new ScrollingDropDownButton();
         configButton.setIcon(Icons.getIcon("cog.png"));
         configButton.setFocusable(false);
-        configButton.setToolTipText("Configure the icon viewer.");
-        configButton.addActionListener(new ActionListener() {
-            @Override
+        configButton.setToolTipText("Options for the image viewer");
+
+        final JCheckBoxMenuItem mustHaveImageMenuItem = new JCheckBoxMenuItem("Show only items with selected imagery", isMustHaveImage());
+        mustHaveImageMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setMustHaveImage(mustHaveImageMenuItem.isSelected());
+            }
+        });
+        configButton.getPopupMenu().add(mustHaveImageMenuItem);
+
+        final JMenuItem titlesMenuItem = new JMenuItem("Customize titles...");
+        titlesMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ActivityLogHelper.logUserAction("IconGridViewerToolbar.configButtonPressed");
                 configButtonPressed();
             }
         });
-        configButton.addMouseListener(new MouseForwarder(toolbar, "ConfigButton->JToolBar"));
+        configButton.getPopupMenu().add(titlesMenuItem);
+        
         toolbar.add(configButton);
 
         addSeparator();
@@ -144,7 +158,11 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
     protected abstract void showTagsButtonPressed();
 
     protected abstract void configButtonPressed();
-
+    
+    protected abstract boolean isMustHaveImage();
+    
+    protected abstract void setMustHaveImage(boolean mustHaveImage);
+    
     protected abstract void currImageSizeChanged(int imageSize);
 
 }
