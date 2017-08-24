@@ -103,9 +103,6 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
     public String toString() {
 
         String realArea = area;
-        if (StringUtils.isBlank(area)) {
-            realArea = "Brain";
-        }
 
         // Strip area from result name
         String areaSuffix = " ("+realArea+")";
@@ -113,8 +110,10 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
         
         StringBuilder sb = new StringBuilder();
         sb.append(objective);
-        sb.append(" ");
-        sb.append(realArea);
+        if (!StringUtils.isBlank(realArea)) {
+            sb.append(" ");
+            sb.append(realArea);
+        }
         sb.append(" - ");
         sb.append(realResultName);
         
