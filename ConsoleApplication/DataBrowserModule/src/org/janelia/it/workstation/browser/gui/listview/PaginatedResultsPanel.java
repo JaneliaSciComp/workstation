@@ -525,7 +525,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                     public Void call() throws Exception {
 
                         TopComponent topComponent = Utils.getAncestorWithType(PaginatedResultsPanel.this, TopComponent.class);
-                        boolean notifyModel = topComponent.isVisible();
+                        boolean notifyModel = topComponent==null || topComponent.isVisible();
                     
                         log.info("updateResultsView complete, restoring selection");
                         if (selectedRefs.isEmpty()) {
