@@ -86,7 +86,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     // State
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     private final DomainObjectSelectionModel editSelectionModel = new DomainObjectSelectionModel();
-    private boolean hideFragments = false;
     private NeuronSeparation separation;
     
     // Results
@@ -173,8 +172,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         enableVisibilityCheckBox = new JCheckBox(new AbstractAction("Hide/Unhide") {
             public void actionPerformed(ActionEvent e) {
                 JCheckBox cb = (JCheckBox) e.getSource();
-                hideFragments = cb.isSelected();
-                performHideAction(hideFragments);
+                search();
             }
         });
         configPanel.addConfigComponent(enableVisibilityCheckBox);
@@ -189,36 +187,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         resultsPanel.getViewer().setEditSelectionModel(editSelectionModel);
     }
 
-    @SuppressWarnings("unchecked")
-    private void performHideAction(boolean hideMode) {
-        try {
-            // find the list of visibilities for this separation Id
-
-            if (hideMode) {
-                Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
-                        Long.toString(separation.getId()));
-                if (neuronSepVisibility!=null) {
-                    Set<Long> fragmentVis = new HashSet<>((List<Long>)neuronSepVisibility.getValue());
-                    for (int i=domainObjects.size()-1; i>=0; i--) {
-                        NeuronFragment neuronFragment = (NeuronFragment) domainObjects.get(i);
-
-                        // remove items that are hidden
-                        if (fragmentVis.contains(neuronFragment.getId())) {
-                            domainObjects.remove(i);
-                        }
-
-                    }
-                }
-            } else {
-                domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference());
-            }
-            showResults(true, null);
-        }
-        catch (Exception e) {
-            ConsoleApp.handleException(e);
-        }
-    }
-    
     @SuppressWarnings("unchecked")
     private void enterEditMode() {
         try {
@@ -259,7 +227,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         editCancelButton.setVisible(false);
         resultsPanel.getViewer().toggleEditMode(false);
         enableVisibilityCheckBox.setVisible(true);
-        performHideAction(hideFragments);
+        search();
     }
 
     private void saveVisibilities() {
@@ -416,6 +384,30 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
 
     private void prepareResults() throws Exception {
+        
+        if (enableVisibilityCheckBox.isSelected()) {
+            
+            Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(
+                    DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
+                    Long.toString(separation.getId()));
+            
+            if (neuronSepVisibility!=null) {
+                @SuppressWarnings("unchecked")
+                Set<Long> fragmentVis = new HashSet<>((List<Long>)neuronSepVisibility.getValue());
+                for (int i=domainObjects.size()-1; i>=0; i--) {
+                    NeuronFragment neuronFragment = (NeuronFragment) domainObjects.get(i);
+                    // remove items that are hidden
+                    if (fragmentVis.contains(neuronFragment.getId())) {
+                        domainObjects.remove(i);
+                    }
+
+                }
+            }
+        } 
+        else {
+            domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference());
+        }
+        
         DomainUtils.sortDomainObjects(domainObjects, sortCriteria);
         this.searchResults = SearchResults.paginate(domainObjects, annotations);
     }
