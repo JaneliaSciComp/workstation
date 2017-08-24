@@ -137,7 +137,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 prefixesToTry.add(fileRoot.toPath());
             }
         } else if (osName.contains("os x")) {
-            // for Mac, it's a lot simpler:
+            // for Mac, it's simpler:
             prefixesToTry.add(new File("/Volumes").toPath());
         } else if (osName.contains("lin")) {
             // Linux
@@ -147,8 +147,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         // java and its "may not have been initialized" errors...
         File testFile = new File(System.getProperty("user.home"));
         for (Path prefix: prefixesToTry) {
-            // only one mount name to check
+            // test with and without the first part
+            testFile = prefix.resolve("shared_tracing/Finished_Neurons").toFile();
+            System.out.println("testing " + testFile);
+            if (testFile.exists()) {
+                found = true;
+                break;
+            }
             testFile = prefix.resolve("mousebrainmicro/shared_tracing/Finished_Neurons").toFile();
+            System.out.println("testing " + testFile);
             if (testFile.exists()) {
                 found = true;
                 break;
