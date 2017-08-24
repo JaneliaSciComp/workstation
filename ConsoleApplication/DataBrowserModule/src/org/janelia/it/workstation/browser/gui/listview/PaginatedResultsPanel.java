@@ -15,10 +15,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
+import javax.swing.UIManager;
 import javax.swing.text.Position;
 
-import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -35,9 +44,9 @@ import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextRegistration;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.search.ResultIterator;
 import org.janelia.it.workstation.browser.model.search.ResultIteratorFind;
@@ -47,8 +56,11 @@ import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * A panel that displays a paginated result set inside of a user-configurable AnnotatedDomainObjectListViewer.
@@ -210,13 +222,12 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                         }
                     }
 
-                    // Set user driven to false in order to avoid selecting the first item
                     updateResultsView(new Callable<Void>() {
                         @Override
                         public Void call() throws Exception {
                             // Reselect the items that were selected
                             log.info("Reselecting {} domain objects in the {} viewer",selectedDomainObjects.size(),type.getName());
-                            resultsView.selectDomainObjects(selectedDomainObjects, true, true, true);
+                            resultsView.selectDomainObjects(selectedDomainObjects, true, true, true, false);
                             return null;
                         }
                     });
@@ -512,21 +523,26 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                 updateResultsView(new Callable<Void>() {   
                     @Override
                     public Void call() throws Exception {
+
+                        TopComponent topComponent = Utils.getAncestorWithType(PaginatedResultsPanel.this, TopComponent.class);
+                        boolean notifyModel = topComponent.isVisible();
+                    
                         log.info("updateResultsView complete, restoring selection");
                         if (selectedRefs.isEmpty()) {
                             // If the selection model is empty, just select the first item to make it appear in the inspector
                             List<DomainObject> objects = resultPage.getDomainObjects();
                             if (!objects.isEmpty()) {
                                 log.debug("Auto-selecting first object");
-                                resultsView.selectDomainObjects(Arrays.asList(objects.get(0)), true, true, false);
+                                resultsView.selectDomainObjects(Arrays.asList(objects.get(0)), true, true, false, notifyModel);
                             }
                         }
                         else {
                             // There's already something in the selection model, so we should attempt to reselect it
                             log.debug("Reselecting {} objects",selectedRefs.size());
                             List<DomainObject> domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectedRefs);
-                            resultsView.selectDomainObjects(domainObjects, true, true, false);
+                            resultsView.selectDomainObjects(domainObjects, true, true, false, notifyModel);
                         }
+                            
                         resultsView.refreshEditMode();
                         ConcurrentUtils.invokeAndHandleExceptions(success);
                         return null;
@@ -657,7 +673,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                         showCurrPage(false); // isUserDriven=false in order to "reselect" the match
                     }
                     else {
-                        resultsView.selectDomainObjects(Arrays.asList(match), true, true, true);
+                        resultsView.selectDomainObjects(Arrays.asList(match), true, true, true, true);
                     }
                 }
                 else {

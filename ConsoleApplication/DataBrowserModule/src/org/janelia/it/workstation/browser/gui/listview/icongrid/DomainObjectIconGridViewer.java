@@ -260,18 +260,18 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
-    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
-        log.info("selectDomainObjects(domainObjects={},select={},clearAll={},isUserDriven={})", DomainUtils.abbr(domainObjects), select, clearAll, isUserDriven);
+    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
+        log.info("selectDomainObjects(domainObjects={},select={},clearAll={},isUserDriven={},notifyModel={})", DomainUtils.abbr(domainObjects), select, clearAll, isUserDriven, notifyModel);
 
         if (domainObjects.isEmpty()) {
             return;
         }
 
         if (select) {
-            selectObjects(domainObjects, clearAll, isUserDriven);
+            selectObjects(domainObjects, clearAll, isUserDriven, notifyModel);
         }
         else {
-            deselectObjects(domainObjects, isUserDriven);
+            deselectObjects(domainObjects, isUserDriven, notifyModel);
         }
 
         SwingUtilities.invokeLater(new Runnable() {

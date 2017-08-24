@@ -123,7 +123,7 @@ public class DownloadWizardPanel3 implements WizardDescriptor.ValidatingPanel<Wi
         FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "flattenStructure", state.isFlattenStructure());
         FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "filenamePattern", state.getFilenamePattern());
 
-        String filePattern = (String) getComponent().getFilenamePattern();
+        String filePattern = getComponent().getFilenamePattern();
         boolean found = false;
         for (String pattern : DownloadVisualPanel3.STANDARD_FILE_PATTERNS) {
             if (pattern.equals(filePattern)) {
