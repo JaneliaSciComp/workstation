@@ -149,13 +149,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         for (Path prefix: prefixesToTry) {
             // test with and without the first part
             testFile = prefix.resolve("shared_tracing/Finished_Neurons").toFile();
-            System.out.println("testing " + testFile);
             if (testFile.exists()) {
                 found = true;
                 break;
             }
             testFile = prefix.resolve("mousebrainmicro/shared_tracing/Finished_Neurons").toFile();
-            System.out.println("testing " + testFile);
             if (testFile.exists()) {
                 found = true;
                 break;
