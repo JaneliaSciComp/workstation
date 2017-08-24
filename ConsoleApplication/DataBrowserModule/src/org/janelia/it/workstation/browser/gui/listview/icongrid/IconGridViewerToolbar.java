@@ -28,7 +28,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
 
     protected JToggleButton showTitlesButton;
     protected JToggleButton showTagsButton;
-    protected JButton configButton;
+    protected ScrollingDropDownButton configButton;
     protected JSlider imageSizeSlider;
 
     protected int currImageSize;
@@ -69,7 +69,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         toolbar.add(showTagsButton);
 
 
-        ScrollingDropDownButton configButton = new ScrollingDropDownButton();
+        configButton = new ScrollingDropDownButton();
         configButton.setIcon(Icons.getIcon("cog.png"));
         configButton.setFocusable(false);
         configButton.setToolTipText("Options for the image viewer");
