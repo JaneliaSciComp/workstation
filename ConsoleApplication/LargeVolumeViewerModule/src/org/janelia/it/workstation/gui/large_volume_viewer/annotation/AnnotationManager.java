@@ -1741,11 +1741,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         PathTraceToParentWorker worker = new PathTraceToParentWorker(request, AUTOMATIC_TRACING_TIMEOUT);
         worker.setPathTraceListener(this);
         worker.execute();
-
-        // we'd really prefer to see this worker's status in the Progress Monitor, but as of
-        //  Jan. 2014, that monitor's window repositions itself and comes to front on every
-        //  new task, so it's far too intrusive to be used for our purpose; see FW-2191
-        // worker.executeWithEvents();
     }
 
     public void exportNeuronsAsSWC(final File swcFile, final int downsampleModulo, final Collection<TmNeuronMetadata> neurons) {
