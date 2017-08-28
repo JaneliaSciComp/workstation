@@ -16,7 +16,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -43,10 +42,10 @@ import org.janelia.it.workstation.browser.events.selection.PipelineResultSelecti
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
@@ -74,7 +73,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     
     // UI Elements
     private final ConfigPanel configPanel;
-    private final ScrollingDropDownButton resultButton;
+    private final DropDownButton resultButton;
     private final JButton editModeButton;
     private final JButton openInNAButton;
     private final JButton fragmentSortButton;
@@ -100,7 +99,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         setLayout(new BorderLayout());
         setFocusable(true);
         
-        resultButton = new ScrollingDropDownButton();
+        resultButton = new DropDownButton();
         
         editModeButton = new JButton();
         editModeButton.setIcon(Icons.getIcon("page_white_edit.png"));
@@ -258,8 +257,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         this.sortCriteria = "-voxelWeight";
     }
     
-    private JPopupMenu populateResultPopupMenu(JPopupMenu popupMenu, PipelineResult pipelineResult) {
-        popupMenu.removeAll();
+    private void populateResultPopupMenu(DropDownButton button, PipelineResult pipelineResult) {
+        button.removeAll();
         if (pipelineResult.hasResults()) {
             for(final PipelineResult result : pipelineResult.getResults()) {
                 if (result instanceof NeuronSeparation) {
@@ -270,12 +269,10 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                             setResult(separation, true, null);
                         }
                     });
-                    popupMenu.add(viewItem);
+                    button.addMenuItem(viewItem);
                 }
             }
         }
-
-        return popupMenu;
     }
     
     private String getLabel(NeuronSeparation separation) {
@@ -309,7 +306,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         Sample sample = parentResult.getParentRun().getParent().getParent();
         selectionModel.setParentObject(sample);
         
-        populateResultPopupMenu(resultButton.getPopupMenu(), result);
+        populateResultPopupMenu(resultButton, result);
         
         if (separation==null) {
             showNothing();

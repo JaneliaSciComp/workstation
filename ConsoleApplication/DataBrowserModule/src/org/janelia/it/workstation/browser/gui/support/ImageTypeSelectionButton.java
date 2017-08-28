@@ -21,6 +21,7 @@ import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ import com.google.common.collect.Multiset;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ImageTypeSelectionButton extends ScrollingDropDownButton {
+public class ImageTypeSelectionButton extends DropDownButton {
 
     private static final Logger log = LoggerFactory.getLogger(ImageTypeSelectionButton.class);
 
@@ -133,7 +134,7 @@ public class ImageTypeSelectionButton extends ScrollingDropDownButton {
         }
         
         setVisible(!countedTypeNames.isEmpty());
-        getPopupMenu().removeAll();
+        removeAll();
         
         ButtonGroup group = new ButtonGroup();
         boolean oneSelected = false;
@@ -156,7 +157,7 @@ public class ImageTypeSelectionButton extends ScrollingDropDownButton {
                         ActivityLogHelper.logUserAction("ImageTypeSelectionButton.imageTypeChanged", fileType.getLabel());
                     }
                 });
-                getPopupMenu().add(menuItem);
+                addMenuItem(menuItem);
                 group.add(menuItem);
             }
         }

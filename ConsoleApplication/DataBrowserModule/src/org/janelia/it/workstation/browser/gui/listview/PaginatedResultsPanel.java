@@ -23,7 +23,6 @@ import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.UIManager;
 import javax.swing.text.Position;
@@ -46,8 +45,8 @@ import org.janelia.it.workstation.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.search.ResultIterator;
 import org.janelia.it.workstation.browser.model.search.ResultIteratorFind;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
@@ -89,7 +88,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     private final JButton startPageButton;
     private final JButton selectAllButton;
     private final JLabel pagingStatusLabel;
-    private final ScrollingDropDownButton viewTypeButton;
+    private final DropDownButton viewTypeButton;
 
     // Content
     private SearchResults searchResults;
@@ -111,8 +110,8 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         splashPanel = new JLabel(Icons.getIcon("workstation_logo_white.png"));
         add(splashPanel);
         
-        viewTypeButton = new ScrollingDropDownButton("Choose Viewer...");
-        populateViewerPopupMenu(viewTypeButton.getPopupMenu());
+        viewTypeButton = new DropDownButton("Choose Viewer...");
+        populateViewerPopupMenu(viewTypeButton);
 
         prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));
         prevPageButton.setToolTipText("Back a page");
@@ -201,7 +200,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         setViewerType(ListViewerType.IconViewer);
     }
     
-    private void populateViewerPopupMenu(JPopupMenu popupMenu) {
+    private void populateViewerPopupMenu(DropDownButton button) {
         for(final ListViewerType type : ListViewerType.values()) {
             JMenuItem viewItem = new JMenuItem(type.getName());
             viewItem.addActionListener(new ActionListener() {
@@ -233,7 +232,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                     });
                 }
             });
-            popupMenu.add(viewItem);
+            button.addMenuItem(viewItem);
         }
     }
     

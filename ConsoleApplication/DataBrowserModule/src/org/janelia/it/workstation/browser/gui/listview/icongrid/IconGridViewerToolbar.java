@@ -17,7 +17,7 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.ViewerToolbar;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 
 /**
  * Tool bar for icon panels.
@@ -28,7 +28,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
 
     protected JToggleButton showTitlesButton;
     protected JToggleButton showTagsButton;
-    protected ScrollingDropDownButton configButton;
+    protected DropDownButton configButton;
     protected JSlider imageSizeSlider;
 
     protected int currImageSize;
@@ -69,7 +69,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         toolbar.add(showTagsButton);
 
 
-        configButton = new ScrollingDropDownButton();
+        configButton = new DropDownButton();
         configButton.setIcon(Icons.getIcon("cog.png"));
         configButton.setFocusable(false);
         configButton.setToolTipText("Options for the image viewer");
@@ -80,7 +80,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
                 setMustHaveImage(mustHaveImageMenuItem.isSelected());
             }
         });
-        configButton.getPopupMenu().add(mustHaveImageMenuItem);
+        configButton.addMenuItem(mustHaveImageMenuItem);
 
         final JMenuItem titlesMenuItem = new JMenuItem("Customize titles...");
         titlesMenuItem.addActionListener(new ActionListener() {
@@ -89,7 +89,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
                 configButtonPressed();
             }
         });
-        configButton.getPopupMenu().add(titlesMenuItem);
+        configButton.addMenuItem(titlesMenuItem);
         
         toolbar.add(configButton);
 
