@@ -44,7 +44,6 @@ public class DynamicImagePanel extends JPanel {
     protected boolean viewable = false;
 
     protected final JLabel loadingLabel;
-    protected final JLabel errorLabel;
     protected DecoratedImagePanel imagePanel;
 
     private LoadImageWorker loadWorker;
@@ -65,22 +64,12 @@ public class DynamicImagePanel extends JPanel {
         }
 
         loadingLabel = new JLabel();
-        loadingLabel.setOpaque(false);
         loadingLabel.setIcon(Icons.getLoadingIcon());
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
         loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
         loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
-        errorLabel = new JLabel();
-        errorLabel.setOpaque(false);
-        errorLabel.setForeground(Color.red);
-        errorLabel.setIcon(Icons.getMissingIcon());
-        errorLabel.setVerticalTextPosition(JLabel.BOTTOM);
-        errorLabel.setHorizontalTextPosition(JLabel.CENTER);
-        errorLabel.setVerticalAlignment(SwingConstants.CENTER);
-        errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
+        
         setMainComponent(loadingLabel);
     }
 
@@ -186,6 +175,8 @@ public class DynamicImagePanel extends JPanel {
                             imagePanel.addMouseListener(new MouseForwarder(DynamicImagePanel.this, "DecoratedImagePanel->DynamicImagePanel"));
                             imagePanel.setImage(image);
                             setMainComponent(imagePanel);
+                            
+                            DynamicImagePanel.this.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
 
                             ConcurrentUtils.invokeAndHandleExceptions(success);
 
@@ -259,27 +250,27 @@ public class DynamicImagePanel extends JPanel {
         return maxSizeImage;
     }
     
-    @Override
-    public int getWidth() {
-        if (getPreferredSize()!=null) {
-            return getPreferredSize().width;
-        }
-        if (imagePanel.getImage()!=null) {
-            return imagePanel.getImage().getWidth();
-        }
-        return super.getWidth();
-    }
-    
-    @Override
-    public int getHeight() {
-        if (getPreferredSize()!=null) {
-            return getPreferredSize().height;
-        }
-        if (imagePanel.getImage()!=null) {
-            return imagePanel.getImage().getHeight();
-        }
-        return super.getHeight();
-    }
+//    @Override
+//    public int getWidth() {
+//        if (imagePanel!=null && imagePanel.getImage()!=null) {
+//            return imagePanel.getImage().getWidth();
+//        }
+//        if (getPreferredSize()!=null) {
+//            return getPreferredSize().width;
+//        }
+//        return super.getWidth();
+//    }
+//    
+//    @Override
+//    public int getHeight() {
+//        if (imagePanel!=null && imagePanel.getImage()!=null) {
+//            return imagePanel.getImage().getHeight();
+//        }
+//        if (getPreferredSize()!=null) {
+//            return getPreferredSize().height;
+//        }
+//        return super.getHeight();
+//    }
     
     private void setMaxSizeImage(BufferedImage maxSizeImage) {
         if (viewable && maxSizeImage != null) {

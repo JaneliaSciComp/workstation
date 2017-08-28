@@ -428,6 +428,9 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
     public synchronized void registerAspectRatio(Double aspectRatio) {
         if (lowestAspectRatio == null || aspectRatio < lowestAspectRatio) {
             this.lowestAspectRatio = aspectRatio;
+            // Aspect ratio has changed, repaint everything 
+            buttonsPanel.revalidate();
+            buttonsPanel.repaint();
         }
     }
 
@@ -504,6 +507,10 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
     }
 
     public void updateEditSelectModel(T imgObject, boolean select) {
+        if (editSelectionModel==null) {
+            log.warn("No SelectionModel defined for editing");
+            return;
+        }
         if (select) {
             editSelectionModel.select(imgObject, false, true);
         } else {

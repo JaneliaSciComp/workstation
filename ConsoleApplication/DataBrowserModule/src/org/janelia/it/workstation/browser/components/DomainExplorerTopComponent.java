@@ -159,7 +159,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         };
 
         ScrollingDropDownButton configButton = new ScrollingDropDownButton();
-        
         configButton.setIcon(Icons.getIcon("cog.png"));
         configButton.setFocusable(false);
         configButton.setToolTipText("Options for the Data Explorer");

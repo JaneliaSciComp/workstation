@@ -5,13 +5,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
-import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -69,7 +70,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     // UI Components
     private ResultSelectionButton resultButton;
     private ImageTypeSelectionButton typeButton;
-
+    
     // Configuration
     private IconGridViewerConfiguration config;
     
@@ -106,14 +107,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
         @Override
         public BufferedImage getStaticIcon(DomainObject imageObject) {
-            String filename = "question_block_large.png";
+            String filename = null;
             DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(imageObject);
             if (provider!=null) {
                 filename = provider.getLargeIcon(imageObject);
             }
-            ImageIcon icon = Icons.getIcon(filename);
-            if (icon==null) return null;
-            return Utils.toBufferedImage(icon.getImage());
+            return filename==null?null:Icons.getImage(filename);
         }
 
         @Override
@@ -187,11 +186,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, fileType.name());
             }
         };
+                
         getToolbar().addCustomComponent(resultButton);
         getToolbar().addCustomComponent(typeButton);
     }
-
-    private void setPreference(final String name, final String value) {
+    
+    private void setPreference(final String name, final Object value) {
 
         Utils.setMainFrameCursorWaitStatus(true);
 
@@ -207,13 +207,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
             @Override
             protected void hadSuccess() {
-                showDomainObjects(domainObjectList, new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        Utils.setMainFrameCursorWaitStatus(false);
-                        return null;
-                    }
-                });
+                refreshDomainObjects();
             }
 
             @Override
@@ -224,6 +218,17 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         };
 
         worker.execute();
+    }
+    
+    private Preference getPreference(String category) {
+        try {
+            final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
+            return DomainMgr.getDomainMgr().getPreference(category, parentObject.getId().toString());
+        }
+        catch (Exception e) {
+            log.error("Error getting preference", e);
+            return null;
+        }
     }
     
     @Override
@@ -255,18 +260,18 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
-    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
-        log.info("selectDomainObjects(domainObjects={},select={},clearAll={},isUserDriven={})", DomainUtils.abbr(domainObjects), select, clearAll, isUserDriven);
+    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
+        log.info("selectDomainObjects(domainObjects={},select={},clearAll={},isUserDriven={},notifyModel={})", DomainUtils.abbr(domainObjects), select, clearAll, isUserDriven, notifyModel);
 
         if (domainObjects.isEmpty()) {
             return;
         }
 
         if (select) {
-            selectObjects(domainObjects, clearAll, isUserDriven);
+            selectObjects(domainObjects, clearAll, isUserDriven, notifyModel);
         }
         else {
-            deselectObjects(domainObjects, isUserDriven);
+            deselectObjects(domainObjects, isUserDriven, notifyModel);
         }
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -284,6 +289,16 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         updateUI();
     }
 
+    private void refreshDomainObjects() {
+        showDomainObjects(domainObjectList, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                Utils.setMainFrameCursorWaitStatus(false);
+                return null;
+            }
+        });
+    }
+    
     @Override
     public void showDomainObjects(AnnotatedDomainObjectList objects, final Callable<Void> success) {
 
@@ -291,13 +306,20 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         log.debug("showDomainObjects(domainObjectList={})",DomainUtils.abbr(domainObjectList.getDomainObjects()));
 
         SimpleWorker worker = new SimpleWorker() {
-
+            
+            List<DomainObject> domainObjects;
+            
             @Override
             protected void doStuff() throws Exception {
 
+                // Update toolbar
+                boolean mustHaveImage = isMustHaveImage();
+                getToolbar().getMustHaveImageMenuItem().setSelected(mustHaveImage);
+                
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject!=null && parentObject.getId()!=null) {
-                    Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, parentObject.getId().toString());
+                    
+                    Preference preference = getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT);
                     log.debug("Got result preference: "+preference);
                     if (preference!=null) {
                         try {
@@ -311,24 +333,35 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                     else {
                         resultButton.reset();
                     }
-                    Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
+                    
+                    Preference preference2 = getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE);
                     log.info("Got image type preference: "+preference2);
                     if (preference2!=null) {
                         typeButton.setImageTypeName((String)preference2.getValue());
                     }
                     else {
                         typeButton.reset();
-                    }
+                    }   
                 }
 
                 resultButton.populate(domainObjectList.getDomainObjects());
                 typeButton.setResultDescriptor(resultButton.getResultDescriptor());
                 typeButton.populate(domainObjectList.getDomainObjects());
+
+                if (mustHaveImage) {
+                    domainObjects = domainObjectList.getDomainObjects().stream()
+                        .filter(domainObject -> imageModel.getImageFilepath(domainObject)!=null || ServiceAcceptorHelper.findFirstHelper(domainObject)!=null)
+                        .collect(Collectors.toList());
+                }
+                else {
+                    domainObjects = domainObjectList.getDomainObjects();
+                }
+                
             }
 
             @Override
             protected void hadSuccess() {
-                showObjects(domainObjectList.getDomainObjects(), success);
+                showObjects(domainObjects, success);
             }
 
             @Override
@@ -455,6 +488,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
     }
 
+    @Override
     protected void configButtonPressed() {
         try {
             if (domainObjectList.getDomainObjects().isEmpty()) return;
@@ -479,6 +513,36 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
     }
 
+    @Override
+    protected void setMustHaveImage(boolean mustHaveImage) {
+        try {
+            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, mustHaveImage);
+            refreshDomainObjects();
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleException(e);
+        }
+    }
+
+    @Override
+    protected boolean isMustHaveImage() {
+        boolean defaultValue = false;
+        Preference preference;
+        try {
+            preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE);
+        }
+        catch (Exception e) {
+            log.error("Error getting preference", e);
+            return defaultValue;
+        }
+        if (preference==null) {
+            return defaultValue;
+        }
+        log.info("Got must have image preference: "+preference);
+        Boolean value = (Boolean)preference.getValue();
+        return value==null ? defaultValue : value;
+    }
+    
     @Override
     protected void updateHud(boolean toggle) {
 

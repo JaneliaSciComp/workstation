@@ -3,7 +3,6 @@ package org.janelia.it.workstation.browser.gui.listview.icongrid;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -24,6 +23,9 @@ import org.janelia.it.workstation.browser.model.ImageDecorator;
 public class DecoratedErrorPanel extends DecoratedImagePanel {
 
     private static final float ICON_OPACITY = 1.0f;
+
+    protected final int padding = 5;
+    protected final int textSpacing = 5;
     
     private String text;
     private Color fontColor;
@@ -47,54 +49,76 @@ public class DecoratedErrorPanel extends DecoratedImagePanel {
         int fontSize = (int) Math.round(getWidth() * 0.005) + 10;
         Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
         
-        FontMetrics metrics = g.getFontMetrics(titleLabelFont);
-        
         Rectangle iconR = new Rectangle();
         Rectangle textR = new Rectangle();
+        String clippedLabel = null;
+        if (text!=null) {
+            clippedLabel = SwingUtilities.layoutCompoundLabel(
+                    this, 
+                    g.getFontMetrics(titleLabelFont), 
+                    text,
+                    null,
+                    SwingConstants.CENTER,
+                    SwingConstants.CENTER,
+                    SwingConstants.CENTER,
+                    SwingConstants.CENTER,
+                    viewRect,
+                    iconR,
+                    textR,
+                    0);
+        }
         
-        String clippedLabel = SwingUtilities.layoutCompoundLabel(
-                this, 
-                metrics, 
-                text,
-                null,
-                SwingConstants.CENTER,
-                SwingConstants.CENTER,
-                SwingConstants.CENTER,
-                SwingConstants.CENTER,
-                viewRect,
-                iconR,
-                textR,
-                0);
-        
-        int yLimit = textR.y - metrics.getHeight();
-        int iconX = (viewRect.width - image.getWidth()) / 2;
-        int iconY = (viewRect.height - image.getHeight()) / 2;
-        
-        if (image.getHeight() < yLimit) {
-            // Both icon and label fit. Draw the label first.
-            g.setFont(titleLabelFont);  
-            if (fontColor!=null) {
-                g.setColor(fontColor);
+        if (image==null) {
+            // No image, draw only the text
+            if (clippedLabel!=null) {
+                paintText(g, clippedLabel, titleLabelFont, textR);
             }
-            else {
-                g.setColor(UIManager.getColor("Label.disabledForeground"));    
-            }
-            g.drawString(clippedLabel, textR.x, textR.y);
-            // Put the icon above the text
-            iconY = yLimit - image.getHeight();
-            // Tooltip on the text
-            tooltipLocations.put(textR, text);
         }
         else {
-            // Tooltip everywhere
-            tooltipLocations.put(viewRect, text);
+            // Center the icon by itself
+            int iconX = (viewRect.width - image.getWidth()) / 2;
+            int iconY = (viewRect.height - image.getHeight()) / 2;
+            
+            // Add text, if necessary
+            if (clippedLabel!=null) {    
+                // Calculate the full content height (icon + text)
+                int contentHeight = image.getHeight() + textSpacing + textR.height;
+                
+                if (contentHeight + padding*2 < viewRect.getHeight()) {
+                    // Both icon and label fit, center both vertically.
+                    iconY = (viewRect.height - contentHeight) / 2;
+                    textR.y = iconY + image.getHeight() + textSpacing; 
+                    
+                    // Draw the text
+                    paintText(g, clippedLabel, titleLabelFont, textR);
+                    
+                    // Add a tooltip on the text
+                    tooltipLocations.put(textR, text);
+                }
+                else {
+                    // Only the icon fits, it will be drawn centered.
+                    // Make sure to show the tooltip everywhere.
+                    tooltipLocations.put(viewRect, text);
+                }
+            }
+            
+            // Draw the icon 
+            Graphics2D g2 = (Graphics2D)g;
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, ICON_OPACITY));
+            g2.drawImage(image, iconX, iconY, image.getWidth(), image.getHeight(), null);
         }
+    }
+    
+    protected void paintText(Graphics g, String text, Font titleLabelFont, Rectangle textR) {
+        g.setFont(titleLabelFont);  
+        if (fontColor!=null) {
+            g.setColor(fontColor);
+        }
+        else {
+            g.setColor(UIManager.getColor("Label.disabledForeground"));    
+        }
+        g.drawString(text, textR.x, textR.y + textR.height);
         
-        // Draw the icon with lowered opacity
-        Graphics2D g2 = (Graphics2D)g;
-        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, ICON_OPACITY));
-        
-        g2.drawImage(image, iconX, iconY, image.getWidth(), image.getHeight(), null);
     }
     
     @Override

@@ -164,8 +164,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
     public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 
-	private boolean bAllowOrthoView = true; // false until ready for release
-	
+	private boolean bAllowOrthoView = false;    // this disabled switching between single and multiple ortho views
+
 	// One shared camera for all viewers.
 	// (there's only one viewer now actually, but you know...)
 	private BasicObservableCamera3d camera = new BasicObservableCamera3d();
@@ -193,6 +193,15 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	JComponent seViewer = zViewerPanel; // should be same as Z...
     JPanel viewerPanel = new JPanel();
 
+    // we never finished the multi-panel orthogonal view, and it's not
+    //  on the agenda now; so in this list, only leave the one we use
+    // at some point we should disentangle and remove all the unused viewers
+    List<TileConsumer> allSliceViewers = Arrays.asList(new TileConsumer[] {
+            nwViewer.getViewer()
+    });
+
+    /*
+    // old:
 	// Group orthogonal viewers for use in action constructors
 	List<TileConsumer> allSliceViewers = Arrays.asList(new TileConsumer[] {
 			nwViewer.getViewer(),
@@ -200,6 +209,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 			swViewer.getViewer(),
             largeVolumeViewer
 		});
+    */
 	
 	private boolean modifierKeyPressed = false;
 	private JPanel zScanPanel = new JPanel();
@@ -666,25 +676,24 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	private double getMinZoom() {
 		double result = getMaxZoom();
 		BoundingBox3d box = volumeImage.getBoundingBox3d();
-		Vec3 volSize = new Vec3(box.getWidth(), box.getHeight(), box.getDepth());
-		for (TileConsumer viewer : allSliceViewers) {
-			if (! viewer.isShowing())
-				continue;
-			int w = viewer.getViewport().getWidth();
-			int h = viewer.getViewport().getHeight();
-			if (w <= 0)
-				continue;
-			if (h <= 0)
-				continue;
-			// Fit two of the whole volume on the screen
-			// Rotate volume to match viewer orientation
-			Vec3 rotSize = viewer.getViewerInGround().inverse().times(volSize);
-			double zx = 0.5 * w / Math.abs(rotSize.x());
-			double zy = 0.5 * h / Math.abs(rotSize.y());
-			double z = Math.min(zx, zy);
-			result = Math.min(z, result);	
-		}
-		return result;
+        Vec3 volSize = new Vec3(box.getWidth(), box.getHeight(), box.getDepth());
+        // note: this used to loop over allSliceViewers, at a point in time
+        //  when we thought we would have more than one, to find the active one;
+        // this is problematic when the active viewer is not visible at startup
+        // now just take the first viewer, since it's the only one
+        TileConsumer viewer = allSliceViewers.get(0);
+        int w = viewer.getViewport().getWidth();
+        int h = viewer.getViewport().getHeight();
+        if (w > 0 && h > 0) {
+            // Fit two of the whole volume on the screen
+            // Rotate volume to match viewer orientation
+            Vec3 rotSize = viewer.getViewerInGround().inverse().times(volSize);
+            double zx = 0.5 * w / Math.abs(rotSize.x());
+            double zy = 0.5 * h / Math.abs(rotSize.y());
+            double z = Math.min(zx, zy);
+            result = Math.min(z, result);
+        }
+        return result;
 	}
 	
     private void updateSWCDataConverter() {
@@ -1147,8 +1156,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		
 		toolBar.addSeparator();
 		
-		// Temporarily disable orthogonal mode button for next release
-		// (until feature is done)
+		// disable orthogonal mode button; we never finished the feature
+        // we use a single ortho view, but we can't switch to a multi-panel ortho view
 		if (bAllowOrthoView) {
 			JButton orthogonalModeButton = new JButton("");
 			orthogonalModeButton.setAction(orthogonalModeAction);
@@ -1395,6 +1404,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             if (linuxPrefix != null) // Avoid NPE
                 pathPrefixDepth = linuxPrefix.getNameCount();
             Path partialPath = testFile.toPath().subpath(pathPrefixDepth, testFile.toPath().getNameCount());           
+            // System.out.println("linuxPrefix = " + linuxPrefix);
             // System.out.println("linuxPrefix = " + linuxPrefix);
             // System.out.println("partialPath = " + partialPath);
 

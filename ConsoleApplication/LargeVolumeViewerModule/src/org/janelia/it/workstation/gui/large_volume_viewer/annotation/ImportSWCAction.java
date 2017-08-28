@@ -55,7 +55,7 @@ public class ImportSWCAction extends AbstractAction {
             chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             final FileFilter swcAndDirFilter = new SwcDirAndFileFilter();
             chooser.setFileFilter(swcAndDirFilter);
-            int returnValue = chooser.showOpenDialog(annotationPanel);
+            int returnValue = chooser.showOpenDialog(FrameworkImplProvider.getMainFrame());
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 List<File> swcFiles = getFilesList(chooser.getSelectedFile());
                 if (swcFiles.size() > 0) {

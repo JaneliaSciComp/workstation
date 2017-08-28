@@ -137,12 +137,12 @@ public class LargeVolumeViewViewer extends JPanel {
                             logger.info("Image data loading completed");
                             synchronized(this) {
                                 if (initialViewFocus!=null) {
-                                    logger.info("Setting intial camera focus: {}", initialViewFocus);
+                                    logger.info("Setting initial camera focus: {}", initialViewFocus);
                                     viewUI.setCameraFocus(initialViewFocus);
                                     initialViewFocus = null;
                                 }
                                 if (initialZoom!=null) {
-                                    logger.info("Setting intial zoom: {}", initialZoom);
+                                    logger.info("Setting initial zoom: {}", initialZoom);
                                     viewUI.setPixelsPerSceneUnit(initialZoom);
                                     initialZoom = null;
                                 }
