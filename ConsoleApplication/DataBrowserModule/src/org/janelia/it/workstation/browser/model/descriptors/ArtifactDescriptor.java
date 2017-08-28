@@ -72,8 +72,8 @@ public abstract class ArtifactDescriptor {
      */
     public abstract List<HasFiles> getFileSources(DomainObject sourceObject) throws Exception;
  
-    public static final ArtifactDescriptor LATEST = new LatestDescriptor();
-    public static final ArtifactDescriptor LATEST_ALIGNED = new LatestDescriptor(true);
-    public static final ArtifactDescriptor LATEST_UNALIGNED = new LatestDescriptor(false);
+    public static final ArtifactDescriptor LATEST = new LatestDescriptor(true, false);
+    public static final ArtifactDescriptor LATEST_ALIGNED = new LatestDescriptor(false, true);
+    public static final ArtifactDescriptor LATEST_UNALIGNED = new LatestDescriptor(false, false);
     
 }
