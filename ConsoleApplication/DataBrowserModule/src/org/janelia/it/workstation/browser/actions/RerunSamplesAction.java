@@ -48,13 +48,17 @@ public class RerunSamplesAction extends AbstractAction {
                 continue;
             }
             if (re instanceof Sample) {
+                
                 Sample sample = (Sample)re;
                 if (sample.getStatus() == null) {
                     log.info("Null sample status in selection Name={}, ID={}.", sample.getName(), sample.getId());
                 }
-                if (!PipelineStatus.Processing.toString().equals(sample.getStatus())  &&
-                    !PipelineStatus.Scheduled.toString().equals(sample.getStatus())  &&
-                    ClientDomainUtils.hasWriteAccess(sample)) {
+                
+                boolean canWrite = ClientDomainUtils.hasWriteAccess(sample) || AccessManager.getAccessManager().isAdmin();
+                
+                if (canWrite &&
+                        !PipelineStatus.Processing.toString().equals(sample.getStatus())  &&
+                        !PipelineStatus.Scheduled.toString().equals(sample.getStatus())) {
                     samples.add(sample);
                 }
             }
@@ -92,6 +96,13 @@ public class RerunSamplesAction extends AbstractAction {
             return;
         }
         
+        int numBlocked = 0;
+        for (Sample sample : samples) {
+            if (sample.isSampleBlocked()) {
+                numBlocked++;
+            }
+        }
+        
         StringBuilder sampleText = new StringBuilder();
         if (samples.size() == 1) {
             sampleText.append("sample");
@@ -100,11 +111,18 @@ public class RerunSamplesAction extends AbstractAction {
             sampleText.append(samples.size());
             sampleText.append(" samples");
         }
+        
         int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), "Are you sure you want the "+sampleText+" to be reprocessed?",
                 "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
 
         if (result != 0) return;
 
+        if (numBlocked>0) {
+            int result2 = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), "You have selected "+numBlocked+" blocked samples for reprocessing. Continue with unblocking and reprocessing?",
+                    "Blocked Samples Selected", JOptionPane.OK_CANCEL_OPTION);
+            if (result2 != 0) return;
+        }
+        
         SimpleWorker sw = new SimpleWorker() {
 
             @Override
@@ -112,7 +130,7 @@ public class RerunSamplesAction extends AbstractAction {
                 for (Sample sample : samples) {
                     ActivityLogHelper.logUserAction("DomainObjectContentMenu.markForReprocessing", sample);    
                 }
-                DomainModel model = DomainMgr.getDomainMgr().getModel(); 
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
                 model.dispatchSamples(DomainUtils.getReferences(samples), "User Requested Reprocessing", false);
             }
 
