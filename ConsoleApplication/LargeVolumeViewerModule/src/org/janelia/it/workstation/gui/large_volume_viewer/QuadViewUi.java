@@ -1584,7 +1584,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         // Use the pointer location, not camera focus
         Vec3 focus = null;
         for (TileConsumer viewer : allSliceViewers) {
-            Vec3 w = ((OrthogonalViewer)viewer).getPopupPositionInWorld();
+            Vec3 w = null;
+            if (viewer instanceof OrthogonalViewer) {
+                w = ((OrthogonalViewer)viewer).getPopupPositionInWorld();
+            }
             if (w != null) {
                 focus = w;
                 break;
