@@ -10,6 +10,7 @@ import java.io.File;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -75,10 +76,18 @@ public class SwcExport {
 
         panel.add(densityPanel, c2);
 
+        // export notes option
+        JPanel notesPanel = new JPanel();
+        notesPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        JCheckBox notesCheckBox = new JCheckBox("Export notes");
+        notesCheckBox.setSelected(true);
+        notesPanel.add(notesCheckBox);
+        panel.add(notesPanel, c2);
 
         chooser.setAccessory(panel);
         int returnValue = chooser.showSaveDialog(FrameworkImplProvider.getMainFrame());
         final String textInput = downsampleModuloField.getText().trim();
+        final boolean notesInput = notesCheckBox.isSelected();
         
         ExportParameters rtnVal = null;
         try {
@@ -87,6 +96,7 @@ public class SwcExport {
                 rtnVal = new ExportParameters();
                 rtnVal.setDownsampleModulo(downsampleModulo);
                 rtnVal.setSelectedFile(chooser.getSelectedFile().getAbsoluteFile());
+                rtnVal.setExportNotes(notesInput);
                 annotationMgr.setSwcDirectory(rtnVal.getSelectedFile().getParentFile());
             }
         } catch (NumberFormatException nfe) {
@@ -99,6 +109,7 @@ public class SwcExport {
     public class ExportParameters {
         private File selectedFile;
         private int downsampleModulo;
+        private boolean exportNotes;
 
         public File getSelectedFile() { return selectedFile; }
         public void setSelectedFile(File selectedFile) {
@@ -109,5 +120,13 @@ public class SwcExport {
         public void setDownsampleModulo(int downsampleModulo) {
             this.downsampleModulo = downsampleModulo;
         }
+
+        public boolean getExportNotes() {
+            return exportNotes;
+        }
+        public void setExportNotes(boolean exportNotes) {
+            this.exportNotes = exportNotes;
+        }
+
     }
 }

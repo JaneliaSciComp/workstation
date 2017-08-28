@@ -39,6 +39,7 @@ import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionSupport;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
+import org.janelia.it.workstation.gui.large_volume_viewer.NoteExporter;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
@@ -1576,13 +1577,17 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * export the neurons in the input list into the given file, in swc format;
      * all neurons (and all their neurites!) are crammed into a single file
      */
-    public void exportSWCData(File swcFile, int downsampleModulo, Collection<TmNeuronMetadata> neurons, Progress progress) throws Exception {
+    public void exportSWCData(File swcFile, int downsampleModulo, Collection<TmNeuronMetadata> neurons,
+        boolean exportNotes, Progress progress) throws Exception {
 
         log.info("Exporting {} neurons to SWC file {}",neurons.size(),swcFile);
         progress.setStatus("Creating headers");
-        
+
+        // I need the neuron order to be deterministic:
+        List<TmNeuronMetadata> neuronList = new ArrayList<>(neurons);
+
         Map<Long,List<String>> neuronHeaders = new HashMap<>();
-        for (TmNeuronMetadata neuron: neurons) {
+        for (TmNeuronMetadata neuron: neuronList) {
             List<String> headers = neuronHeaders.get(neuron.getId());
             if (headers == null) {
                 headers = new ArrayList<>();
@@ -1591,7 +1596,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             NeuronStyle style = getNeuronStyle(neuron);
             float[] color = style.getColorAsFloatArray();
             headers.add(String.format(COLOR_FORMAT, color[0], color[1], color[2]));
-            if (neurons.size() > 1) {
+            if (neuronList.size() > 1) {
                 // Allow user to pick name as name of file, if saving individual neuron.
                 // Do not save the internal name.
                 headers.add(String.format(NAME_FORMAT, neuron.getName()));
@@ -1603,31 +1608,42 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // get swcdata via converter, then write; conversion from TmNeurons is done
         //  all at once so all neurons are off set from the same center of mass
         // First write one file per neuron.
-        List<SWCData> swcDatas = swcDataConverter.fromTmNeuron(neurons, neuronHeaders, downsampleModulo);
-        int total = swcDatas.size()+1;
+        List<SWCData> swcDatas = swcDataConverter.fromTmNeuron(neuronList, neuronHeaders, downsampleModulo);
+        // there's one swc and one note file per neuron, plus aggregate; note how
+        //  we set progress; i only increments per neuron, but we show progress over
+        //  all files
+        int total = 2 * (swcDatas.size() + 1);
         if (swcDatas != null && !swcDatas.isEmpty()) {
             int i = 0;
             for (SWCData swcData: swcDatas) {
-                progress.setStatus("Exporting neuron file "+(i+1));
+                progress.setStatus("Exporting neuron file " + (i + 1));
                 if (swcDatas.size() == 1) {
                     swcData.write(swcFile, -1);
                 }
                 else {
                     swcData.write(swcFile, i);
                 }
-                progress.setProgress(i, total);
+                progress.setProgress(2 * i, total);
+
+                progress.setStatus("Exporting notes file " + (i + 1));
+                NoteExporter.exportNotes(swcData.getPath(), getWsId(), neuronList.get(i));
+                progress.setProgress(2 * i + 1, total);
+
                 i++;
             }
         }
 
-        progress.setStatus("Exporting combined file");
-        
+
         // Next write one file containing all neurons, if there are more than one.
         if (swcDatas != null  &&  swcDatas.size() > 1) {
-            SWCData swcData = swcDataConverter.fromAllTmNeuron(neurons, downsampleModulo);
+            SWCData swcData = swcDataConverter.fromAllTmNeuron(neuronList, downsampleModulo);
             if (swcData != null) {
                 swcData.write(swcFile);
+                progress.setStatus("Exporting combined neuron file");
                 activityLog.logExportSWCFile(getCurrentWorkspace().getId(), swcFile.getName());
+
+                progress.setStatus("Exporting combined notes file");
+                NoteExporter.exportNotes(swcData.getPath(), getWsId(), neuronList);
             }
         }
 

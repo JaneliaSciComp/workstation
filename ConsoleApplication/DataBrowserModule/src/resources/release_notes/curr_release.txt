@@ -9,3 +9,4 @@ Workstation Browser
 
 Large Volume Viewer
 * Import/export swc file dialogs default to Mouselight standard directory
+* Added help button for "point density" option when exporting SWC files

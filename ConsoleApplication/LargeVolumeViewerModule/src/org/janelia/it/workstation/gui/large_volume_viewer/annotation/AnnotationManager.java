@@ -1743,7 +1743,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         worker.execute();
     }
 
-    public void exportNeuronsAsSWC(final File swcFile, final int downsampleModulo, final Collection<TmNeuronMetadata> neurons) {
+    public void exportNeuronsAsSWC(final File swcFile, final int downsampleModulo, final Collection<TmNeuronMetadata> neurons,
+       final boolean exportNotes) {
         int nannotations = 0;
         for (TmNeuronMetadata neuron : neurons) {
             nannotations += neuron.getGeoAnnotationMap().size();
@@ -1762,7 +1763,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         //  to the user, but it just doesn't work; both file.canWrite() and
         //  Files.isWritable() give wrong values for reasons I don't understand
 
-
         BackgroundWorker saver = new BackgroundWorker() {
             
             @Override
@@ -1772,7 +1772,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.exportSWCData(swcFile, downsampleModulo, neurons, this);
+                annotationModel.exportSWCData(swcFile, downsampleModulo, neurons, exportNotes, this);
             }
 
             @Override
