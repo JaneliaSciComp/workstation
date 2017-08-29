@@ -77,6 +77,11 @@ public class RelocationMenuBuilder {
                 }
             });
              */
+            // kludge to get around syncing issues
+            if (description.equals("Horta - Focus On Location")) {
+                continue;
+            }
+            
             // Here, the provider is being inverted, to accept the new location.
             if (providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.both)  ||
                 providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.acceptor)) {

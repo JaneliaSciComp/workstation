@@ -13,19 +13,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class LatestDescriptor extends ArtifactDescriptor {
     
-    private Boolean aligned;
+    private boolean all;
+    private boolean aligned;
 
     public LatestDescriptor() {
     }
     
-    public LatestDescriptor(Boolean aligned) {
+    public LatestDescriptor(boolean all, boolean aligned) {
+        this.all = all;
         this.aligned = aligned;
     }
     
-    public void setAligned(Boolean aligned) {
-        this.aligned = aligned;
-    }
-
     @JsonIgnore
     @Override
     public String getObjective() {
@@ -38,9 +36,21 @@ public class LatestDescriptor extends ArtifactDescriptor {
         return null;
     }
 
+    public boolean isAll() {
+        return all;
+    }
+
+    public void setAll(boolean all) {
+        this.all = all;
+    }
+
+    public void setAligned(boolean aligned) {
+        this.aligned = aligned;
+    }
+    
     @Override
     public boolean isAligned() {
-        return aligned!=null && aligned;
+        return aligned;
     }
 
     @Override
@@ -60,7 +70,7 @@ public class LatestDescriptor extends ArtifactDescriptor {
 
     @Override
     public String toString() {
-        if (aligned==null) {
+        if (all) {
             return "Latest";
         }
         else if (aligned) {
@@ -75,7 +85,8 @@ public class LatestDescriptor extends ArtifactDescriptor {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((aligned == null) ? 0 : aligned.hashCode());
+        result = prime * result + (aligned ? 1231 : 1237);
+        result = prime * result + (all ? 1231 : 1237);
         return result;
     }
 
@@ -88,11 +99,9 @@ public class LatestDescriptor extends ArtifactDescriptor {
         if (getClass() != obj.getClass())
             return false;
         LatestDescriptor other = (LatestDescriptor) obj;
-        if (aligned == null) {
-            if (other.aligned != null)
-                return false;
-        }
-        else if (!aligned.equals(other.aligned))
+        if (aligned != other.aligned)
+            return false;
+        if (all != other.all)
             return false;
         return true;
     }
