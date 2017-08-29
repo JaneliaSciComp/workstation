@@ -1,11 +1,15 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -66,7 +70,23 @@ public class NoteExporter {
         // loop over neurons; loop over notes; add note to neuron; add neuron to master obj
         // count notes!
 
+
+        ArrayNode neuronNode = mapper.createArrayNode();
+        rootNode.put("neurons", neuronNode);
+
         // if # notes > 0, write json file from object
+
+
+        // testing: write whatever we have
+        ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
+        try {
+            writer.writeValue(noteFile, rootNode);
+        }
+        catch (IOException e) {
+            System.out.println("note export exception");
+            e.printStackTrace();
+        }
+
 
     }
 
