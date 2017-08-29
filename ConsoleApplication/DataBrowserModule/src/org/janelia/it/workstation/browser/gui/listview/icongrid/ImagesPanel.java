@@ -249,10 +249,10 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         log.trace("setMaxImageWidth: {}", maxImageWidth);
         this.maxImageWidth = maxImageWidth;
 
-        double aspectRatio = lowestAspectRatio == null ? 1.0 : lowestAspectRatio;
+        double aspectRatio = lowestAspectRatio == null ? 4.0 : lowestAspectRatio;
 
         int maxImageHeight = (int) Math.round(maxImageWidth / aspectRatio);
-
+        
         for (AnnotatedImageButton<T,S> button : buttons.values()) {
             try {
                 button.setImageSize(maxImageWidth, maxImageHeight);
@@ -428,9 +428,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
     public synchronized void registerAspectRatio(Double aspectRatio) {
         if (lowestAspectRatio == null || aspectRatio < lowestAspectRatio) {
             this.lowestAspectRatio = aspectRatio;
-            // Aspect ratio has changed, repaint everything 
-            buttonsPanel.revalidate();
-            buttonsPanel.repaint();
+            log.debug("Aspect ratio has changed to "+lowestAspectRatio);
         }
     }
 

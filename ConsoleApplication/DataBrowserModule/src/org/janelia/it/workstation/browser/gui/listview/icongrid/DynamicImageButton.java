@@ -94,13 +94,14 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
     @Override
     public void setViewable(boolean viewable) {
+        super.setViewable(viewable);
         setViewable(viewable, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
                 // Register our image height
                 if (getMaxSizeImage() != null && imagePanel.getImage() != null) {
-                    double w = imagePanel.getImage().getWidth();
-                    double h = imagePanel.getImage().getHeight();
+                    int w = imagePanel.getImage().getWidth();
+                    int h = imagePanel.getImage().getHeight();
                     registerAspectRatio(w, h);
                 }
                 return null;

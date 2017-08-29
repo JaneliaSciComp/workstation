@@ -52,9 +52,4 @@ public class StaticImageButton<T,S> extends AnnotatedImageButton<T,S> {
         infoPanel.revalidate();
         infoPanel.repaint();
     }
-
-    @Override
-    public void setViewable(boolean viewable) {
-        // Nothing needs to change
-    }
 }

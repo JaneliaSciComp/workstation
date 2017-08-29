@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -58,6 +57,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
     private final JPanel buttonPanel;
     private final JPanel annotationPanel;
     private AnnotationView annotationView;
+    private boolean wantViewable = false;
     private double aspectRatio;
     private final ImagesPanel<T,S> imagesPanel;
     private final ImageModel<T,S> imageModel;
@@ -337,6 +337,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
     }
 
     public synchronized void setImageSize(int maxWidth, int maxHeight) {
+        log.trace("setImageSize({}x{})", maxWidth, maxHeight);
         mainPanel.setPreferredSize(new Dimension(maxWidth, maxHeight));
         setTitle(titleLabel.getText(), maxWidth);
         setSubtitle(subtitleLabel.getText(), maxWidth);
@@ -353,10 +354,20 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         }
     }
 
-    public abstract void setViewable(boolean wantViewable);
+    public void setViewable(boolean wantViewable) {
+        this.wantViewable = wantViewable;
+    }
+    
+    public boolean isViewable() {
+        return wantViewable;
+    }
 
-    protected synchronized void registerAspectRatio(double width, double height) {
-        double a = width / height;
+    protected synchronized void registerAspectRatio(int width, int height) {
+        log.trace("registerAspectRatio({}x{})", width, height);
+        mainPanel.setPreferredSize(new Dimension(width, height));
+        revalidate();
+        repaint();
+        double a = (double)width / (double)height;
         if (a != this.aspectRatio) {
             this.aspectRatio = a;
             if (imagesPanel!=null) {
