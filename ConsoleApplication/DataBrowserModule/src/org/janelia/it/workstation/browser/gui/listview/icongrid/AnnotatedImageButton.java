@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -18,6 +19,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -35,9 +37,10 @@ import org.janelia.it.workstation.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.browser.gui.support.AnnotationView;
-import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A SelectablePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an
@@ -45,25 +48,53 @@ import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implements DragGestureListener {
+public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
 
-    protected final JLabel titleLabel;
-    protected final JLabel subtitleLabel;
-    protected final JPanel mainPanel;
-    protected final JPanel buttonPanel;
-    protected final JLabel loadingLabel;
-    protected final JPanel annotationPanel;
-    protected boolean viewable = false;
-    protected AnnotationView annotationView;
-    protected DragSource source;
-    protected double aspectRatio;
-    protected final ImagesPanel<T,S> imagesPanel;
-    protected final ImageModel<T,S> imageModel;
-    protected final SelectionModel<T,S> selectionModel;
-    protected final T imageObject;
-    protected final JCheckBox editMode;
-    protected List<Annotation> annotations;
-    protected final JComponent innerComponent;
+    private static final Logger log = LoggerFactory.getLogger(AnnotatedImageButton.class);
+    
+    private final JLabel titleLabel;
+    private final JLabel subtitleLabel;
+    private final JPanel mainPanel;
+    private final JPanel buttonPanel;
+    private final JPanel annotationPanel;
+    private AnnotationView annotationView;
+    private double aspectRatio;
+    private final ImagesPanel<T,S> imagesPanel;
+    private final ImageModel<T,S> imageModel;
+    private final SelectionModel<T,S> selectionModel;
+    private final T imageObject;
+    private final JCheckBox editMode;
+    private List<Annotation> annotations;
+
+    // For drag and drop functionality
+    private DragSource source = new DragSource();
+    private boolean dragEnabled = false;
+    private DomainObjectTransferHandler transferHandler;
+    private DragGestureListener dragGestureListener = new DragGestureListener() {
+        @Override
+        public void dragGestureRecognized(DragGestureEvent dge) {
+            log.info("dragGestureRecognized: {}",dge);
+            if (!dragEnabled) {
+                throw new IllegalStateException("Dragging is not enabled");
+            }
+            InputEvent inputevent = dge.getTriggerEvent();
+            boolean keyDown = false;
+            if (inputevent instanceof MouseEvent) {
+                MouseEvent mouseevent = (MouseEvent) inputevent;
+                if (mouseevent.isShiftDown() || mouseevent.isAltDown() || mouseevent.isAltGraphDown() || mouseevent.isControlDown() || mouseevent.isMetaDown()) {
+                    keyDown = true;
+                }
+            }
+            if (!isSelected() && !keyDown) {
+                log.info("selecting image: {}",dge);
+                selectionModel.select(imageObject, true, true);
+            }
+            getTransferHandler().exportAsDrag(AnnotatedImageButton.this, dge.getTriggerEvent(), TransferHandler.LINK);
+        }
+    };
+
+    private boolean titleVisible;
+
     
     /**
      * Factory method for creating AnnotatedImageButtons. 
@@ -87,40 +118,31 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         this.imageModel = imageModel;
         this.selectionModel = selectionModel;
         this.imagesPanel = imagesPanel;
-
+        
         Boolean disableImageDrag = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY);
         if (disableImageDrag == null || disableImageDrag == false) {
             if (selectionModel instanceof DomainObjectSelectionModel) {
-                this.source = new DragSource();
-                source.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_LINK, this);
-                // TODO: this class should not know about DomainObjects
-                setTransferHandler(new DomainObjectTransferHandler((ImageModel<DomainObject,Reference>)imageModel, (DomainObjectSelectionModel)selectionModel));
+                dragEnabled = true;
             }
         }
-
+        
         GridBagConstraints c = new GridBagConstraints();
         buttonPanel = new JPanel(new GridBagLayout());
         buttonPanel.setOpaque(false);
         add(buttonPanel);
-
+        
         titleLabel = new JLabel(" ");
         titleLabel.setFocusable(false);
         titleLabel.setFont(new Font("Sans Serif", Font.PLAIN, 12));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titleLabel.setOpaque(false);
-
+        
         subtitleLabel = new JLabel();
         subtitleLabel.setFocusable(false);
         subtitleLabel.setFont(new Font("Sans Serif", Font.PLAIN, 12));
         subtitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         subtitleLabel.setOpaque(false);
         subtitleLabel.setVisible(false);
-
-        loadingLabel = new JLabel();
-        loadingLabel.setOpaque(false);
-        loadingLabel.setIcon(Icons.getLoadingIcon());
-        loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
 
         editMode = new JCheckBox();
         editMode.setHorizontalAlignment(SwingConstants.LEFT);
@@ -156,7 +178,8 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         c.weighty = 0;
         buttonPanel.add(subtitleLabel, c);
 
-        mainPanel = new JPanel();
+        mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         mainPanel.setOpaque(false);
 
         c.gridx = 0;
@@ -190,13 +213,33 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
 
         imagesPanel.ensureCorrectAnnotationView(this);
 
-        mainPanel.removeAll();
-        this.innerComponent = init(imageObject, imageModel, filepath);
-        mainPanel.add(innerComponent);
+        // If dragging is enabled, add the gesture recognizer to this panel, and all children where dragging can be initiated
+        if (dragEnabled) {
+            // TODO: this class should not know about DomainObjects
+            this.transferHandler = new DomainObjectTransferHandler((ImageModel<DomainObject,Reference>)imageModel, (DomainObjectSelectionModel)selectionModel);
+            setDraggable(this);
+            setDraggable(titleLabel);
+            setDraggable(subtitleLabel);
+            setDraggable(annotationPanel);     
+        }
         
         refresh(imageObject);
     }
 
+    protected void setMainComponent(JComponent component) {
+        mainPanel.removeAll();
+        mainPanel.add(component, BorderLayout.CENTER);
+        component.addMouseListener(new MouseForwarder(this, "MainComponent->AnnotatedImageButton"));
+        setDraggable(component);
+        revalidate();
+        repaint();
+    }
+    
+    protected final void setDraggable(JComponent component) {
+        source.createDefaultDragGestureRecognizer(component, DnDConstants.ACTION_LINK, dragGestureListener);
+        component.setTransferHandler(transferHandler);
+    }
+    
     public final void refresh(T imageObject) {
 
         String title = null;
@@ -221,6 +264,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         titleLabel.setPreferredSize(new Dimension(maxWidth, titleLabel.getFontMetrics(titleLabelFont).getHeight()));
         titleLabel.setText(title);
         titleLabel.setToolTipText(title);
+        titleLabel.setVisible(titleVisible);
     }
 
     public void setSubtitle(String subtitle, int maxWidth) {
@@ -235,12 +279,11 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         subtitleLabel.setPreferredSize(new Dimension(maxWidth, subtitleLabel.getFontMetrics(titleLabelFont).getHeight()));
         subtitleLabel.setText(subtitle);
         subtitleLabel.setToolTipText(subtitle);
-        subtitleLabel.setVisible(true);
+        subtitleLabel.setVisible(titleVisible);
     }
 
-    public abstract JComponent init(T imageObject, ImageModel<T,S> imageModel, String filepath);
-
     public synchronized void setTitleVisible(boolean visible) {
+        this.titleVisible = visible;
         titleLabel.setVisible(visible);
         subtitleLabel.setVisible(visible & !StringUtils.isEmpty(subtitleLabel.getText()));
     }
@@ -294,6 +337,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
     }
 
     public synchronized void setImageSize(int maxWidth, int maxHeight) {
+        mainPanel.setPreferredSize(new Dimension(maxWidth, maxHeight));
         setTitle(titleLabel.getText(), maxWidth);
         setSubtitle(subtitleLabel.getText(), maxWidth);
         JPanel annotationPanel = (JPanel) annotationView;
@@ -319,21 +363,5 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
                 imagesPanel.registerAspectRatio(a);
             }
         }
-    }
-
-    @Override
-    public void dragGestureRecognized(DragGestureEvent dge) {
-        InputEvent inputevent = dge.getTriggerEvent();
-        boolean keyDown = false;
-        if (inputevent instanceof MouseEvent) {
-            MouseEvent mouseevent = (MouseEvent) inputevent;
-            if (mouseevent.isShiftDown() || mouseevent.isAltDown() || mouseevent.isAltGraphDown() || mouseevent.isControlDown() || mouseevent.isMetaDown()) {
-                keyDown = true;
-            }
-        }
-        if (!isSelected() && !keyDown) {
-            selectionModel.select(imageObject, true, true);
-        }
-        getTransferHandler().exportAsDrag(this, dge.getTriggerEvent(), TransferHandler.LINK);
     }
 }
