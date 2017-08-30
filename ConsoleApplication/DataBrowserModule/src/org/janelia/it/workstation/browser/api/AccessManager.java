@@ -317,7 +317,7 @@ public final class AccessManager {
     
     public boolean setRunAsUser(String runAsUser) {
         
-        if (!AccessManager.authenticatedSubjectIsInGroup(SubjectRole.Admin) && !StringUtils.isEmpty(runAsUser)) {
+        if (!isAdmin() && !StringUtils.isEmpty(runAsUser)) {
             throw new IllegalStateException("Non-admin user cannot run as another user");
         }
         
@@ -373,6 +373,10 @@ public final class AccessManager {
         return isLoggedIn;
     }
 
+    public boolean isAdmin() {
+        return AccessManager.authenticatedSubjectIsInGroup(SubjectRole.Admin);
+    }
+    
     private void setSubject(Subject subject) {
         this.loggedInSubject = subject;
     }

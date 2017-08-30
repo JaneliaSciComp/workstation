@@ -132,7 +132,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             @Override
             protected void currImageSizeChanged(int imageSize) {
                 imagesPanel.setMaxImageWidth(imageSize);
-                imagesPanel.recalculateGrid();
+                //imagesPanel.recalculateGrid();
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
@@ -140,6 +140,18 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                     }
                 });
             }
+
+            @Override
+            protected boolean isMustHaveImage() {
+                return IconGridViewerPanel.this.isMustHaveImage();
+            }
+
+            @Override
+            protected void setMustHaveImage(boolean mustHaveImage) {
+                IconGridViewerPanel.this.setMustHaveImage(mustHaveImage);
+            }
+            
+            
         };
     }
 
@@ -308,6 +320,10 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
     protected abstract void configButtonPressed();
 
+    protected abstract void setMustHaveImage(boolean mustHaveImage);
+
+    protected abstract boolean isMustHaveImage();
+    
     protected void updateHud(boolean toggle) {}
 
     protected void buttonSelection(AnnotatedImageButton<T,S> button, boolean multiSelect, boolean rangeSelect) {
@@ -401,13 +417,19 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     }
     
     protected void selectObjects(List<T> objects, boolean clearAll, boolean isUserDriven) {
+        selectObjects(objects, clearAll, isUserDriven, true);
+    }
+    
+    protected void selectObjects(List<T> objects, boolean clearAll, boolean isUserDriven, boolean informModel) {
         if (objects==null) return;
         List<S> ids = new ArrayList<>();
         for(T object : objects) {
             ids.add(getImageModel().getImageUniqueId(object));
         }
         imagesPanel.setSelectionByUniqueIds(ids, true, clearAll);
-        selectionModel.select(objects, clearAll, isUserDriven);
+        if (informModel) {
+            selectionModel.select(objects, clearAll, isUserDriven);    
+        }
     }
 
     protected void selectEditObjects(List<T> objects) {
@@ -418,15 +440,21 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         }
         imagesPanel.setEditSelection(ids, true);
     }
-    
+
     protected void deselectObjects(List<T> objects, boolean isUserDriven) {
+        deselectObjects(objects, isUserDriven, true);
+    }
+    
+    protected void deselectObjects(List<T> objects, boolean isUserDriven, boolean informModel) {
         if (objects==null) return;
         List<S> ids = new ArrayList<>();
         for(T object : objects) {
             ids.add(getImageModel().getImageUniqueId(object));
         }
         imagesPanel.setSelectionByUniqueIds(ids, false, false);
-        selectionModel.deselect(objects, isUserDriven);
+        if (informModel) {
+            selectionModel.deselect(objects, isUserDriven);
+        }
     }
 
     public T getPreviousObject() {
@@ -520,7 +548,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                    public void run() {
                        imagesPanel.loadUnloadImages();
                    }
-               });
+                });
 
                 // Finally, we're done, we can call the success callback
                 ConcurrentUtils.invokeAndHandleExceptions(success);

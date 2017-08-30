@@ -16,7 +16,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -43,10 +42,10 @@ import org.janelia.it.workstation.browser.events.selection.PipelineResultSelecti
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
@@ -74,7 +73,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     
     // UI Elements
     private final ConfigPanel configPanel;
-    private final ScrollingDropDownButton resultButton;
+    private final DropDownButton resultButton;
     private final JButton editModeButton;
     private final JButton openInNAButton;
     private final JButton fragmentSortButton;
@@ -86,7 +85,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     // State
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     private final DomainObjectSelectionModel editSelectionModel = new DomainObjectSelectionModel();
-    private boolean hideFragments = false;
     private NeuronSeparation separation;
     
     // Results
@@ -101,7 +99,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         setLayout(new BorderLayout());
         setFocusable(true);
         
-        resultButton = new ScrollingDropDownButton();
+        resultButton = new DropDownButton();
         
         editModeButton = new JButton();
         editModeButton.setIcon(Icons.getIcon("page_white_edit.png"));
@@ -173,8 +171,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         enableVisibilityCheckBox = new JCheckBox(new AbstractAction("Hide/Unhide") {
             public void actionPerformed(ActionEvent e) {
                 JCheckBox cb = (JCheckBox) e.getSource();
-                hideFragments = cb.isSelected();
-                performHideAction(hideFragments);
+                search();
             }
         });
         configPanel.addConfigComponent(enableVisibilityCheckBox);
@@ -189,36 +186,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         resultsPanel.getViewer().setEditSelectionModel(editSelectionModel);
     }
 
-    @SuppressWarnings("unchecked")
-    private void performHideAction(boolean hideMode) {
-        try {
-            // find the list of visibilities for this separation Id
-
-            if (hideMode) {
-                Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
-                        Long.toString(separation.getId()));
-                if (neuronSepVisibility!=null) {
-                    Set<Long> fragmentVis = new HashSet<>((List<Long>)neuronSepVisibility.getValue());
-                    for (int i=domainObjects.size()-1; i>=0; i--) {
-                        NeuronFragment neuronFragment = (NeuronFragment) domainObjects.get(i);
-
-                        // remove items that are hidden
-                        if (fragmentVis.contains(neuronFragment.getId())) {
-                            domainObjects.remove(i);
-                        }
-
-                    }
-                }
-            } else {
-                domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference());
-            }
-            showResults(true, null);
-        }
-        catch (Exception e) {
-            ConsoleApp.handleException(e);
-        }
-    }
-    
     @SuppressWarnings("unchecked")
     private void enterEditMode() {
         try {
@@ -259,7 +226,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         editCancelButton.setVisible(false);
         resultsPanel.getViewer().toggleEditMode(false);
         enableVisibilityCheckBox.setVisible(true);
-        performHideAction(hideFragments);
+        search();
     }
 
     private void saveVisibilities() {
@@ -290,8 +257,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         this.sortCriteria = "-voxelWeight";
     }
     
-    private JPopupMenu populateResultPopupMenu(JPopupMenu popupMenu, PipelineResult pipelineResult) {
-        popupMenu.removeAll();
+    private void populateResultPopupMenu(DropDownButton button, PipelineResult pipelineResult) {
+        button.removeAll();
         if (pipelineResult.hasResults()) {
             for(final PipelineResult result : pipelineResult.getResults()) {
                 if (result instanceof NeuronSeparation) {
@@ -302,12 +269,10 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                             setResult(separation, true, null);
                         }
                     });
-                    popupMenu.add(viewItem);
+                    button.addMenuItem(viewItem);
                 }
             }
         }
-
-        return popupMenu;
     }
     
     private String getLabel(NeuronSeparation separation) {
@@ -341,7 +306,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         Sample sample = parentResult.getParentRun().getParent().getParent();
         selectionModel.setParentObject(sample);
         
-        populateResultPopupMenu(resultButton.getPopupMenu(), result);
+        populateResultPopupMenu(resultButton, result);
         
         if (separation==null) {
             showNothing();
@@ -416,6 +381,30 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
 
     private void prepareResults() throws Exception {
+        
+        if (enableVisibilityCheckBox.isSelected()) {
+            
+            Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(
+                    DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
+                    Long.toString(separation.getId()));
+            
+            if (neuronSepVisibility!=null) {
+                @SuppressWarnings("unchecked")
+                Set<Long> fragmentVis = new HashSet<>((List<Long>)neuronSepVisibility.getValue());
+                for (int i=domainObjects.size()-1; i>=0; i--) {
+                    NeuronFragment neuronFragment = (NeuronFragment) domainObjects.get(i);
+                    // remove items that are hidden
+                    if (fragmentVis.contains(neuronFragment.getId())) {
+                        domainObjects.remove(i);
+                    }
+
+                }
+            }
+        } 
+        else {
+            domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference());
+        }
+        
         DomainUtils.sortDomainObjects(domainObjects, sortCriteria);
         this.searchResults = SearchResults.paginate(domainObjects, annotations);
     }

@@ -39,10 +39,10 @@ import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.ExpandedTreeState;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
@@ -158,8 +158,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             }
         };
 
-        ScrollingDropDownButton configButton = new ScrollingDropDownButton();
-        
+        DropDownButton configButton = new DropDownButton();
         configButton.setIcon(Icons.getIcon("cog.png"));
         configButton.setFocusable(false);
         configButton.setToolTipText("Options for the Data Explorer");
@@ -170,7 +169,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 setNavigateOnClick(navigateOnClickMenuItem.isSelected());   
             }
         });
-        configButton.getPopupMenu().add(navigateOnClickMenuItem);
+        configButton.addMenuItem(navigateOnClickMenuItem);
 
         final JCheckBoxMenuItem showRecentItemsMenuItem = new JCheckBoxMenuItem("Show recently opened items", isShowRecentMenuItems());
         showRecentItemsMenuItem.addActionListener(new ActionListener() {
@@ -178,7 +177,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 setShowRecentMenuItems(showRecentItemsMenuItem.isSelected());
             }
         });
-        configButton.getPopupMenu().add(showRecentItemsMenuItem);
+        configButton.addMenuItem(showRecentItemsMenuItem);
         
         toolbar.getJToolBar().add(configButton);
         

@@ -1,14 +1,11 @@
 package org.janelia.it.workstation.browser.model.descriptors;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.SampleUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -75,117 +72,8 @@ public abstract class ArtifactDescriptor {
      */
     public abstract List<HasFiles> getFileSources(DomainObject sourceObject) throws Exception;
  
-    public static final ArtifactDescriptor LATEST = new ArtifactDescriptor() {
-
-        @Override
-        public String getObjective() {
-            return null;
-        }
-
-        @Override
-        public String getArea() {
-            return null;
-        }
-
-        @Override
-        public boolean isAligned() {
-            return false;
-        }
-
-        @Override
-        public List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception {
-            return Arrays.asList(sourceObject);
-        }
-
-        @Override
-        public List<HasFiles> getFileSources(DomainObject sourceObject) throws Exception {
-            List<HasFiles> objects = new ArrayList<>();
-            if (sourceObject instanceof Sample) {
-                Sample sample = (Sample)sourceObject;
-                objects.addAll(SampleUtils.getMatchingResults(sample, null, null, null, null, null));
-            }
-            return objects;
-        }
-
-        @Override
-        public String toString() {
-            return "Latest";
-        }
-    };
-
-    public static final ArtifactDescriptor LATEST_ALIGNED = new ArtifactDescriptor() {
-
-        @Override
-        public String getObjective() {
-            return null;
-        }
-
-        @Override
-        public String getArea() {
-            return null;
-        }
-
-        @Override
-        public boolean isAligned() {
-            return true;
-        }
-
-        @Override
-        public List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception {
-            return Arrays.asList(sourceObject);
-        }
-
-        @Override
-        public List<HasFiles> getFileSources(DomainObject sourceObject) throws Exception {
-            List<HasFiles> objects = new ArrayList<>();
-            if (sourceObject instanceof Sample) {
-                Sample sample = (Sample)sourceObject;
-                objects.addAll(SampleUtils.getMatchingResults(sample, null, null, true, null, null));
-            }
-            return objects;
-        }
-
-        @Override
-        public String toString() {
-            return "Latest aligned";
-        }
-    };
-
-    public static final ArtifactDescriptor LATEST_UNALIGNED = new ArtifactDescriptor() {
-
-        @Override
-        public String getObjective() {
-            return null;
-        }
-
-        @Override
-        public String getArea() {
-            return null;
-        }
-
-        @Override
-        public boolean isAligned() {
-            return false;
-        }
-
-        @Override
-        public List<DomainObject> getDescribedObjects(DomainObject sourceObject) throws Exception {
-            return Arrays.asList(sourceObject);
-        }
-
-        @Override
-        public List<HasFiles> getFileSources(DomainObject sourceObject) throws Exception {
-            List<HasFiles> objects = new ArrayList<>();
-            if (sourceObject instanceof Sample) {
-                Sample sample = (Sample)sourceObject;
-                objects.addAll(SampleUtils.getMatchingResults(sample, null, null, false, null, null));
-            }
-            return objects;
-        }
-        
-        @Override
-        public String toString() {
-            return "Latest unaligned";
-        }
-    };
+    public static final ArtifactDescriptor LATEST = new LatestDescriptor(true, false);
+    public static final ArtifactDescriptor LATEST_ALIGNED = new LatestDescriptor(false, true);
+    public static final ArtifactDescriptor LATEST_UNALIGNED = new LatestDescriptor(false, false);
+    
 }

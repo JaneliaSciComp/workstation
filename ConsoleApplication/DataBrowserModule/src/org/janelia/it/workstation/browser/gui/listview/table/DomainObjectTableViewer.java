@@ -146,8 +146,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
-        super.selectObjects(domainObjects, select, clearAll, isUserDriven);
+    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
+        super.selectObjects(domainObjects, select, clearAll, isUserDriven, notifyModel);
     }
 
     @Override

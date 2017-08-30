@@ -307,6 +307,15 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
         protected void configButtonPressed() {
 
         }
+
+        @Override
+        protected void setMustHaveImage(boolean mustHaveImage) {
+        }
+
+        @Override
+        protected boolean isMustHaveImage() {
+            return false;
+        }
     }
 
     private void setPreference(final String name, final String value) {
