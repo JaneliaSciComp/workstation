@@ -1612,7 +1612,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // there's one swc and one note file per neuron, plus aggregate; note how
         //  we set progress; i only increments per neuron, but we show progress over
         //  all files
-        int total = 2 * (swcDatas.size() + 1);
+        int total = 1;
+        if (exportNotes) {
+            total = 2 * (swcDatas.size() + 1);
+        } else {
+            total = swcDatas.size() + 1;
+        }
         if (swcDatas != null && !swcDatas.isEmpty()) {
             int i = 0;
             for (SWCData swcData: swcDatas) {
@@ -1625,9 +1630,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 }
                 progress.setProgress(2 * i, total);
 
-                progress.setStatus("Exporting notes file " + (i + 1));
-                NoteExporter.exportNotes(swcData.getPath(), getWsId(), neuronList.get(i));
-                progress.setProgress(2 * i + 1, total);
+                if (exportNotes) {
+                    progress.setStatus("Exporting notes file " + (i + 1));
+                    NoteExporter.exportNotes(swcData.getPath(), getWsId(), swcData.getNeuronCenter(),
+                        neuronList.get(i), swcDataConverter);
+                    progress.setProgress(2 * i + 1, total);
+                }
 
                 i++;
             }
@@ -1642,8 +1650,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 progress.setStatus("Exporting combined neuron file");
                 activityLog.logExportSWCFile(getCurrentWorkspace().getId(), swcFile.getName());
 
-                progress.setStatus("Exporting combined notes file");
-                NoteExporter.exportNotes(swcData.getPath(), getWsId(), neuronList);
+                if (exportNotes) {
+                    progress.setStatus("Exporting combined notes file");
+                    NoteExporter.exportNotes(swcData.getPath(), getWsId(), swcData.getNeuronCenter(),
+                        neuronList, swcDataConverter);
+                }
             }
         }
 
