@@ -2,11 +2,14 @@ package org.janelia.it.workstation.browser.gui.support.buttons;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.AbstractButton;
 import javax.swing.DefaultButtonModel;
@@ -17,10 +20,12 @@ import javax.swing.JPopupMenu;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
+import org.janelia.it.workstation.browser.gui.support.JScrollPopupMenu;
 import org.openide.util.ImageUtilities;
 
+
 /**
- * A simple drop down button supporting text and/or an icon, with a rollover effect. 
+ * A simple drop down button supporting text and/or an icon, with a rollover effect, and a scrolling menu. 
  * 
  * Parts of this code were adapted from the DropDownButton in OpenIDE.
  * 
@@ -28,18 +33,32 @@ import org.openide.util.ImageUtilities;
  */
 public class DropDownButton extends JButton {
 
-    private JPopupMenu popupMenu;
+    private List<Component> components = new ArrayList<>();
+    private int maxVisibleElements = 30;
+    
+    private JScrollPopupMenu popupMenu;
     private PopupMenuListener menuListener;
 
-    public DropDownButton(Icon icon, JPopupMenu popup) {
+    public DropDownButton() {
+        this(null, null);
+    }
 
-        this.popupMenu = popup;
+    public DropDownButton(String title) {
+        this(title, null);
+    }
+
+    public DropDownButton(Icon icon) {
+        this(null, icon);
+    }
+    
+    public DropDownButton(String text, Icon icon) {
         
+        setText(text);
+        setIcon(icon);
         setFocusable(false);
         setRolloverEnabled(true);
         setVerticalTextPosition(AbstractButton.CENTER);
         setHorizontalTextPosition(AbstractButton.LEADING);
-        setIcon(icon);
         if (icon!=null) {
             setDisabledIcon(ImageUtilities.createDisabledIcon(icon));
         }
@@ -51,19 +70,31 @@ public class DropDownButton extends JButton {
             public void mousePressed(MouseEvent e) {
                 popupMenuOperation = false;
                 if (!isEnabled()) return;
-                JPopupMenu menu = getPopupMenu();
-                if (menu != null && getModel() instanceof Model) {
-                    Model model = (Model) getModel();
-                    if (!model._isPressed()) {
-                        model._press();
-                        menu.addPopupMenuListener(getMenuListener());
-                        menu.show(DropDownButton.this, 0, getHeight());
-                        popupMenuOperation = true;
-                    }
-                    else {
-                        model._release();
-                        menu.setVisible(false);
-                        menu.removePopupMenuListener(getMenuListener());
+                if (getModel() instanceof Model) {
+                    synchronized (DropDownButton.this) {
+                        Model model = (Model) getModel();
+                        if (!model._isPressed()) {
+                            model._press();
+                            if (popupMenu != null) {
+                                // This should never happen, but just in case..
+                                popupMenu.removeAll();
+                            }
+                            JScrollPopupMenu popupMenu = new JScrollPopupMenu();
+                            for (Component component : components) {
+                                popupMenu.add(component);
+                            }
+                            popupMenu.setMaximumVisibleRows(maxVisibleElements);
+                            popupMenu.show(DropDownButton.this, 0, getHeight());
+                            DropDownButton.this.popupMenu = popupMenu;
+                        }
+                        else {
+                            model._release();
+                            if (popupMenu != null) {
+                                popupMenu.removeAll();
+                                popupMenu.setVisible(false);
+                                popupMenu = null;
+                            }
+                        }
                         popupMenuOperation = true;
                     }
                 }
@@ -95,6 +126,44 @@ public class DropDownButton extends JButton {
         setModel(new Model());
     }
 
+    public int getMaxVisibleElements() {
+        return maxVisibleElements;
+    }
+
+    public void setMaxVisibleElements(int maxVisibleElements) {
+        this.maxVisibleElements = maxVisibleElements;
+    }
+
+
+    private PopupMenuListener getMenuListener() {
+        if (null == menuListener) {
+            menuListener = new PopupMenuListener() {
+                public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                }
+
+                public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+                    synchronized (DropDownButton.this) {
+                        // If inside the button let the button's mouse listener
+                        // deal with the state. The popup menu will be hidden and
+                        // we should not show it again.
+                        if (getModel() instanceof Model) {
+                            ((Model) getModel())._release();
+                        }
+                        if (popupMenu != null) {
+                            popupMenu.removeAll();
+                            popupMenu.removePopupMenuListener(this);
+                            popupMenu = null;
+                        }
+                    }
+                }
+
+                public void popupMenuCanceled(PopupMenuEvent e) {
+                }
+            };
+        }
+        return menuListener;
+    }
+    
     public void paint(Graphics g) {
 
         super.paint(g);
@@ -113,48 +182,18 @@ public class DropDownButton extends JButton {
         }
     }
     
-    private PopupMenuListener getMenuListener() {
-        if (null == menuListener) {
-            menuListener = new PopupMenuListener() {
-                public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-                }
-
-                public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-                    // If inside the button let the button's mouse listener
-                    // deal with the state. The popup menu will be hidden and
-                    // we should not show it again.
-                    if (getModel() instanceof Model) {
-                        ((Model) getModel())._release();
-                    }
-                    JPopupMenu menu = getPopupMenu();
-                    if (null != menu) {
-                        menu.removePopupMenuListener(this);
-                    }
-                }
-
-                public void popupMenuCanceled(PopupMenuEvent e) {
-                }
-            };
-        }
-        return menuListener;
-    }
-
     @Override
     public void setIcon(Icon icon) {
         Icon iconWithArrow = new ImageIcon(ImageUtilities.icon2Image(new IconWithArrow(icon, false)));
         super.setIcon(iconWithArrow);
     }
 
-    public JPopupMenu getPopupMenu() {
-        return popupMenu;
-    }
-
-    public void setPopupMenu(JPopupMenu popup) {
-        this.popupMenu = popup;
+    public void removeAll() {
+        components.clear();
     }
     
-    boolean hasPopupMenu() {
-        return null != getPopupMenu();
+    public void addMenuItem(Component component) {
+        components.add(component);
     }
 
     private class Model extends DefaultButtonModel {

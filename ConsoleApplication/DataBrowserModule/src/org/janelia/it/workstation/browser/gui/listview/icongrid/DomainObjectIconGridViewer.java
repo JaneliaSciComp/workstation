@@ -320,7 +320,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 if (parentObject!=null && parentObject.getId()!=null) {
                     
                     Preference preference = getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT);
-                    log.debug("Got result preference: "+preference);
+                    log.info("Got result preference: "+preference);
                     if (preference!=null) {
                         try {
                             ArtifactDescriptor resultDescriptor = DescriptorUtils.deserialize((String) preference.getValue());

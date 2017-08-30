@@ -27,7 +27,6 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
@@ -64,12 +63,12 @@ import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
-import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SmartSearchBox;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
@@ -112,8 +111,8 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private final JButton saveButton;
     private final JButton saveAsButton;
     private final PaginatedResultsPanel resultsPanel;
-    private final ScrollingDropDownButton typeCriteriaButton;
-    private final ScrollingDropDownButton addCriteriaButton;
+    private final DropDownButton typeCriteriaButton;
+    private final DropDownButton addCriteriaButton;
     private final SmartSearchBox searchBox;
     private final JButton infoButton;
 
@@ -236,8 +235,8 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             }
         });
         
-        this.typeCriteriaButton = new ScrollingDropDownButton();
-        this.addCriteriaButton = new ScrollingDropDownButton("Add Criteria...");
+        this.typeCriteriaButton = new DropDownButton();
+        this.addCriteriaButton = new DropDownButton("Add Criteria...");
         this.searchBox = new SmartSearchBox("SEARCH_HISTORY");
 
         infoButton = new JButton(Icons.getIcon("info.png"));
@@ -436,7 +435,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         final String currType = DomainUtils.getTypeName(searchConfig.getSearchClass());
         typeCriteriaButton.setText("Result Type: " + currType);
 
-        typeCriteriaButton.getPopupMenu().removeAll();
+        typeCriteriaButton.removeAll();
         ButtonGroup typeGroup = new ButtonGroup();
         for (final Class<? extends DomainObject> searchClass : DomainUtils.getSearchClasses()) {
             final String type = DomainUtils.getTypeName(searchClass);
@@ -450,7 +449,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                 }
             });
             typeGroup.add(menuItem);
-            typeCriteriaButton.getPopupMenu().add(menuItem);
+            typeCriteriaButton.addMenuItem(menuItem);
         }
 
         configPanel.setTitle(filter.getName());
@@ -463,7 +462,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
         for (Criteria criteria : filter.getCriteriaList()) {
             if (criteria instanceof TreeNodeCriteria) {
-                ScrollingDropDownButton customCriteriaButton = createCustomCriteriaButton((TreeNodeCriteria)criteria);
+                DropDownButton customCriteriaButton = createCustomCriteriaButton((TreeNodeCriteria)criteria);
                 if (customCriteriaButton!=null) {
                     configPanel.addConfigComponent(customCriteriaButton);
                 }
@@ -482,23 +481,22 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                     label.append(StringUtils.getCommaDelimited(values, MAX_VALUES_STRING_LENGTH));
                     label.append(")");
                 }
-                ScrollingDropDownButton facetButton = new ScrollingDropDownButton(label.toString());
-                populateFacetMenu(attr, facetButton.getPopupMenu());
+                DropDownButton facetButton = new DropDownButton(label.toString());
+                populateFacetMenu(attr, facetButton);
                 configPanel.addConfigComponent(facetButton);
             }
         }
 
         for (Criteria criteria : filter.getCriteriaList()) {
             if (criteria instanceof AttributeCriteria) {
-                ScrollingDropDownButton customCriteriaButton = createCustomCriteriaButton((AttributeCriteria)criteria);
+                DropDownButton customCriteriaButton = createCustomCriteriaButton((AttributeCriteria)criteria);
                 if (customCriteriaButton!=null) {
                     configPanel.addConfigComponent(customCriteriaButton);
                 }
             }
         }
 
-        JPopupMenu addCriteriaPopupMenu = addCriteriaButton.getPopupMenu();
-        addCriteriaPopupMenu.removeAll();
+        addCriteriaButton.removeAll();
 
         for (final DomainObjectAttribute attr : searchConfig.getDomainObjectAttributes()) {
 
@@ -540,19 +538,18 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                     }
                 }
             });
-            addCriteriaPopupMenu.add(menuItem);
+            addCriteriaButton.addMenuItem(menuItem);
         }
         
         configPanel.addConfigComponent(addCriteriaButton);
         configPanel.updateUI();
     }
 
-    private ScrollingDropDownButton createCustomCriteriaButton(final TreeNodeCriteria criteria) {
+    private DropDownButton createCustomCriteriaButton(final TreeNodeCriteria criteria) {
 
-        ScrollingDropDownButton facetButton = new ScrollingDropDownButton("In: "+criteria.getTreeNodeName());
+        DropDownButton facetButton = new DropDownButton("In: "+criteria.getTreeNodeName());
 
-        JPopupMenu popupMenu = facetButton.getPopupMenu();
-        popupMenu.removeAll();
+        facetButton.removeAll();
 
         final JMenuItem removeMenuItem = new JMenuItem("Remove");
         removeMenuItem.addActionListener(new ActionListener() {
@@ -562,12 +559,12 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                 refreshSearchResults(true);
             }
         });
-        popupMenu.add(removeMenuItem);
+        facetButton.addMenuItem(removeMenuItem);
 
         return facetButton;
     }
 
-    private ScrollingDropDownButton createCustomCriteriaButton(final AttributeCriteria criteria) {
+    private DropDownButton createCustomCriteriaButton(final AttributeCriteria criteria) {
         
         String label;
         final DomainObjectAttribute attr = searchConfig.getDomainObjectAttribute(criteria.getAttributeName());
@@ -584,10 +581,8 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             return null;
         }
         
-        ScrollingDropDownButton facetButton = new ScrollingDropDownButton(label);
-
-        JPopupMenu popupMenu = facetButton.getPopupMenu();
-        popupMenu.removeAll();
+        DropDownButton facetButton = new DropDownButton(label);
+        facetButton.removeAll();
         
         final JMenuItem editMenuItem = new JMenuItem("Edit");
         editMenuItem.addActionListener(new ActionListener() {
@@ -599,7 +594,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                 }
             }
         });
-        popupMenu.add(editMenuItem);
+        facetButton.addMenuItem(editMenuItem);
         
         final JMenuItem removeMenuItem = new JMenuItem("Remove");
         removeMenuItem.addActionListener(new ActionListener() {
@@ -609,12 +604,12 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                 refreshSearchResults(true);
             }
         });
-        popupMenu.add(removeMenuItem);
+        facetButton.addMenuItem(removeMenuItem);
         
         return facetButton;
     }
     
-    private void populateFacetMenu(final DomainObjectAttribute attr, JPopupMenu popupMenu) {
+    private void populateFacetMenu(final DomainObjectAttribute attr, DropDownButton button) {
 
         Set<String> selectedValues = getSelectedFacetValues(attr.getName());
 
@@ -627,7 +622,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                     refreshSearchResults(true);
                 }
             });
-            popupMenu.add(menuItem);
+            button.addMenuItem(menuItem);
         }
         
         Collection<FacetValue> attrFacetValues = searchConfig.getFacetValues(attr.getFacetKey());
@@ -653,7 +648,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                         refreshSearchResults(true);
                     }
                 });
-                popupMenu.add(menuItem);
+                button.addMenuItem(menuItem);
             }
         }
     }

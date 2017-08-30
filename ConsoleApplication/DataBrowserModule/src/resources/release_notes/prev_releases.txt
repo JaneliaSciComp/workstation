@@ -1,3 +1,17 @@
+// 6.3
+
+Workstation Browser
+* Added option to "Show only items with selected imagery" which will filter out any "question mark" boxes 
+  in the current result set.
+* Added badge indicators which are displayed on top of samples which have been purged or desynchronized
+* Improved icons and info messages when images can't be loaded
+* Allow reprocessing of previously blocked samples
+* Fixed some image sizing issues
+* Fixed issue preventing long popup menus from getting scroll bars
+
+Large Volume Viewer
+* Import/export swc file dialogs default to Mouselight standard directory
+
 // 6.2
 
 Workstation Browser
