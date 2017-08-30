@@ -263,6 +263,9 @@ implements NeuronSet// , LookupListener
             getNameChangeObservable().setChanged();
         this.workspace = workspace;
         TmSample sample = annotationModel.getCurrentSample();
+        if (this.metaWorkspace!=null) {
+            this.metaWorkspace.setSample(sample);
+        }
         updateVoxToMicronMatrices(sample);
         NeuronList nl = (NeuronList) neurons;
         nl.wrap(this);
@@ -274,6 +277,9 @@ implements NeuronSet// , LookupListener
         if (this.metaWorkspace == metaWorkspace)
             return;
         this.metaWorkspace = metaWorkspace;
+        this.metaWorkspace.setSample(annotationModel.getCurrentSample());
+        getMetaWorkspace().setChanged();
+        getMetaWorkspace().notifyObservers();  
     }
     
     private HortaMetaWorkspace getMetaWorkspace() {

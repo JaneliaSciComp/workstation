@@ -31,6 +31,7 @@
 package org.janelia.console.viewerapi;
 
 import java.net.URL;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 
 /**
  *
@@ -60,4 +61,6 @@ public interface SampleLocation
     Long getWorkspaceId();
     /** Optional, may not be supported. */
     Long getSampleId();
+    /** Optional, may not be supported. */
+    TmSample getSample();
 }

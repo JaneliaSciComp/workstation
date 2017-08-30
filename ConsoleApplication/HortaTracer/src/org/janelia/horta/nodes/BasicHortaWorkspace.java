@@ -39,6 +39,7 @@ import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.VantageInterface;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 
 /**
  * @author Christopher Bruns
@@ -49,6 +50,7 @@ public class BasicHortaWorkspace implements HortaMetaWorkspace
     private final ComposableObservable changeObservable = new ComposableObservable();
     private Color backgroundColor = new Color(0.1f, 0.1f, 0.1f, 1f);
     private final Collection<NeuronSet> neuronLists = new HashSet<>();
+    private TmSample sample;
 
     public BasicHortaWorkspace(VantageInterface vantage) {
         this.vantage = vantage;
@@ -120,5 +122,15 @@ public class BasicHortaWorkspace implements HortaMetaWorkspace
     public boolean hasChanged()
     {
         return changeObservable.hasChanged();
+    }
+
+    @Override
+    public TmSample getSample() {
+        return sample;
+    }
+
+    @Override
+    public void setSample(TmSample sample) {
+        this.sample = sample;
     }
 }
