@@ -62,16 +62,58 @@ public class DecoratedImagePanel extends JPanel {
 
     public void setImage(BufferedImage image) {
         this.image = image;
-        if (image!=null) {
-            setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
-        }
+        updatePreferredSize();
     }
     
     public void setText(String text, Color fontColor) {
         this.text = text;
         this.fontColor = fontColor;
+        updatePreferredSize();
     }
 
+    private void updatePreferredSize() {
+
+        int w = 100;
+        int h = 100;
+        
+        if (image!=null) {
+            w = image.getWidth();
+            h = image.getHeight();
+        }
+
+        if (text!=null) {
+
+            int fontSize = (int) Math.round(w * 0.005) + 10;
+            Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
+
+            Rectangle viewRect = new Rectangle(0, 0, w, h);
+            Rectangle iconR = new Rectangle();
+            Rectangle textR = new Rectangle();
+            String clippedLabel = null;
+            if (text!=null) {
+                clippedLabel = SwingUtilities.layoutCompoundLabel(
+                        this, 
+                        getFontMetrics(titleLabelFont), 
+                        text,
+                        null,
+                        SwingConstants.CENTER,
+                        SwingConstants.CENTER,
+                        SwingConstants.CENTER,
+                        SwingConstants.CENTER,
+                        viewRect,
+                        iconR,
+                        textR,
+                        0);
+            }
+            
+            // TODO: calculate this
+            if (textR.width > w) w = textR.width;
+            h += textR.height + textSpacing;
+        }
+        
+        setPreferredSize(new Dimension(w, h));
+    }
+    
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -96,27 +138,6 @@ public class DecoratedImagePanel extends JPanel {
         }
     }
 
-    private void paintDecorators(Graphics g) {
-        if (decorators!=null && !decorators.isEmpty()) {
-            
-            int totalWidth = (int)getSize().getWidth();
-            int x = totalWidth-decoratorOffset;
-            
-            for (ImageDecorator imageDecorator : decorators) {
-                ImageIcon icon = imageDecorator.getIcon();
-                x -= icon.getIconWidth();
-                paintDecorator(g, imageDecorator, icon, x, decoratorOffset);
-                x -= decoratorSpacing;
-            }
-        }
-    }
-    
-    private void paintDecorator(Graphics g, ImageDecorator imageDecorator, ImageIcon decorator, int x, int y) {
-        Rectangle rect = new Rectangle(x, y, decorator.getIconWidth(), decorator.getIconHeight());
-        tooltipLocations.put(rect, imageDecorator.getLabel());
-        g.drawImage(decorator.getImage(), x, y, decorator.getIconWidth(), decorator.getIconHeight(), null);
-    }
-
     private void paintImageWithText(Graphics g) {
         
         Rectangle viewRect = new Rectangle(0, 0, getWidth(), getHeight());
@@ -130,7 +151,7 @@ public class DecoratedImagePanel extends JPanel {
         if (text!=null) {
             clippedLabel = SwingUtilities.layoutCompoundLabel(
                     this, 
-                    g.getFontMetrics(titleLabelFont), 
+                    getFontMetrics(titleLabelFont), 
                     text,
                     null,
                     SwingConstants.CENTER,
@@ -183,7 +204,7 @@ public class DecoratedImagePanel extends JPanel {
             g2.drawImage(image, imageX, imageY, image.getWidth(), image.getHeight(), null);
         }
     }
-    
+
     private void paintText(Graphics g, String text, Font titleLabelFont, Rectangle textR) {
         g.setFont(titleLabelFont);  
         if (fontColor!=null) {
@@ -194,6 +215,27 @@ public class DecoratedImagePanel extends JPanel {
         }
         g.drawString(text, textR.x, textR.y + textR.height);
         
+    }
+
+    private void paintDecorators(Graphics g) {
+        if (decorators!=null && !decorators.isEmpty()) {
+            
+            int totalWidth = (int)getSize().getWidth();
+            int x = totalWidth-decoratorOffset;
+            
+            for (ImageDecorator imageDecorator : decorators) {
+                ImageIcon icon = imageDecorator.getIcon();
+                x -= icon.getIconWidth();
+                paintDecorator(g, imageDecorator, icon, x, decoratorOffset);
+                x -= decoratorSpacing;
+            }
+        }
+    }
+    
+    private void paintDecorator(Graphics g, ImageDecorator imageDecorator, ImageIcon decorator, int x, int y) {
+        Rectangle rect = new Rectangle(x, y, decorator.getIconWidth(), decorator.getIconHeight());
+        tooltipLocations.put(rect, imageDecorator.getLabel());
+        g.drawImage(decorator.getImage(), x, y, decorator.getIconWidth(), decorator.getIconHeight(), null);
     }
     
     private void paintTitles(Graphics g) {

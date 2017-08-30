@@ -100,8 +100,8 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
             public Void call() throws Exception {
                 // Register our image height
                 if (getMaxSizeImage() != null && imagePanel.getImage() != null) {
-                    int w = imagePanel.getImage().getWidth();
-                    int h = imagePanel.getImage().getHeight();
+                    int w = imagePanel.getPreferredSize().width;
+                    int h = imagePanel.getPreferredSize().height;
                     registerAspectRatio(w, h);
                 }
                 return null;
@@ -154,7 +154,6 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
                             setMainComponent(imagePanel);
 
                             ConcurrentUtils.invokeAndHandleExceptions(success);
-
                             loadWorker = null;
                         }
 
@@ -179,6 +178,7 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
                             imagePanel.setText(errorType, Color.red);
                             setMainComponent(imagePanel);
                             
+                            ConcurrentUtils.invokeAndHandleExceptions(success);
                             loadWorker = null;
                         }
                     };

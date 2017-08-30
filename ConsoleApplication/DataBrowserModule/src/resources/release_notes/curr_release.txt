@@ -1,8 +1,8 @@
-// 6.4
+\// 6.4
 
 Workstation Browser
 * Fixed bug with drag and drop that was introduced in the previous release
-* Fixed layout for images with many annotations
+* Fixed grid layout for images with many annotations
 
 Large Volume Viewer
 * None

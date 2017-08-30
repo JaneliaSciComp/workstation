@@ -55,17 +55,18 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
     private final JLabel subtitleLabel;
     private final JPanel mainPanel;
     private final JPanel buttonPanel;
-    private final JPanel annotationPanel;
+//    private final JPanel annotationPanel;
     private AnnotationView annotationView;
     private boolean wantViewable = false;
     private double aspectRatio;
-    private final ImagesPanel<T,S> imagesPanel;
-    private final ImageModel<T,S> imageModel;
-    private final SelectionModel<T,S> selectionModel;
-    private final T imageObject;
     private final JCheckBox editMode;
     private List<Annotation> annotations;
-
+    
+    protected final T imageObject;
+    protected final ImageModel<T,S> imageModel;
+    protected final SelectionModel<T,S> selectionModel;
+    protected final ImagesPanel<T,S> imagesPanel;
+    
     // For drag and drop functionality
     private DragSource source = new DragSource();
     private boolean dragEnabled = false;
@@ -189,15 +190,6 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         c.anchor = GridBagConstraints.CENTER;
         c.weighty = 0;
         buttonPanel.add(mainPanel, c);
-
-        annotationPanel = new JPanel(new BorderLayout());
-        
-        c.gridx = 0;
-        c.gridy = 3;
-        c.fill = GridBagConstraints.BOTH;
-        c.anchor = GridBagConstraints.PAGE_START;
-        c.weighty = 1;
-        buttonPanel.add(annotationPanel, c);
         
         
         // Remove all default mouse listeners except drag gesture recognizer
@@ -220,7 +212,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
             setDraggable(this);
             setDraggable(titleLabel);
             setDraggable(subtitleLabel);
-            setDraggable(annotationPanel);     
+//            setDraggable(annotationPanel);     
         }
         
         refresh(imageObject);
@@ -298,7 +290,19 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
 
     public final synchronized void setAnnotationView(AnnotationView annotationView) {
         if (annotationView==null) throw new IllegalArgumentException("Annotation view cannot be null");
+        if (this.annotationView!=null) {
+            buttonPanel.remove((JPanel)this.annotationView);
+        }
         this.annotationView = annotationView;
+        
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 3;
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.PAGE_START;
+        c.weighty = 1;
+        buttonPanel.add((JPanel)annotationView, c);
+        
         // Fix event dispatching so that user can click on the tags and still select the button
         ((JPanel) annotationView).addMouseListener(new MouseForwarder(this, "JPanel(annotationView)->AnnotatedImageButton"));
         showAnnotations();
@@ -311,8 +315,6 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
     
     private void showAnnotations() {
         annotationView.setAnnotations(annotations);
-        annotationPanel.removeAll();
-        annotationPanel.add((JPanel)annotationView, BorderLayout.CENTER);
         buttonPanel.revalidate();
     }
 
@@ -339,6 +341,8 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
     public synchronized void setImageSize(int maxWidth, int maxHeight) {
         log.trace("setImageSize({}x{})", maxWidth, maxHeight);
         mainPanel.setPreferredSize(new Dimension(maxWidth, maxHeight));
+        mainPanel.revalidate();
+        mainPanel.repaint();
         setTitle(titleLabel.getText(), maxWidth);
         setSubtitle(subtitleLabel.getText(), maxWidth);
         JPanel annotationPanel = (JPanel) annotationView;

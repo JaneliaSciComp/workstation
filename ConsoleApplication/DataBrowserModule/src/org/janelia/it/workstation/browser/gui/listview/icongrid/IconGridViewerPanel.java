@@ -548,7 +548,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                    public void run() {
                        imagesPanel.loadUnloadImages();
                    }
-               });
+                });
 
                 // Finally, we're done, we can call the success callback
                 ConcurrentUtils.invokeAndHandleExceptions(success);

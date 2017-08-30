@@ -249,7 +249,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         log.trace("setMaxImageWidth: {}", maxImageWidth);
         this.maxImageWidth = maxImageWidth;
 
-        double aspectRatio = lowestAspectRatio == null ? 4.0 : lowestAspectRatio;
+        double aspectRatio = lowestAspectRatio == null ? 1.0 : lowestAspectRatio;
 
         int maxImageHeight = (int) Math.round(maxImageWidth / aspectRatio);
         
@@ -261,7 +261,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
                 ConsoleApp.handleException(e);
             }
         }
-
+        
         recalculateGrid();
     }
 
@@ -429,6 +429,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         if (lowestAspectRatio == null || aspectRatio < lowestAspectRatio) {
             this.lowestAspectRatio = aspectRatio;
             log.debug("Aspect ratio has changed to "+lowestAspectRatio);
+            setMaxImageWidth(maxImageWidth);
         }
     }
 
@@ -602,18 +603,22 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
 
         // Should not be needed, but just in case, lets make sure we never divide by zero
         if (maxButtonWidth == 0) {
-            maxButtonWidth = 400;
+            maxButtonWidth = maxImageWidth+16;
         }
 
         int fullWidth = getSize().width - getVerticalScrollBar().getWidth();
-
+        
         int numCols = (int) Math.max(Math.floor(fullWidth / maxButtonWidth), 1);
+
+        log.trace("maxButtonWidth={} --> numCols={}", maxButtonWidth, numCols);
+        
         if (buttonsPanel.getColumns() != numCols) {
             buttonsPanel.setColumns(numCols);
-            buttonsPanel.revalidate();
-            buttonsPanel.repaint();
         }
 
+        revalidate();
+        repaint();
+        
         loadUnloadImages();
     }
 
@@ -659,6 +664,10 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
 
         public ScrollableGridPanel() {
             setLayout(new GridLayout(0, 2));
+            // TODO: get GridLayout2 working
+//            GridLayout2 layout = new GridLayout2(0, 2);
+//            layout.setEqualWidthCols(true);
+//            setLayout(layout);
             setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
             setOpaque(false);
             for (ComponentListener l : getComponentListeners()) {
