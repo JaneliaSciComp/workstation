@@ -6,4 +6,4 @@ Workstation Browser
 * Added warning message when attempting to open purged samples in NA
 
 Large Volume Viewer
-* None
+* Added origin/scaling information to Sample metadata in DB
