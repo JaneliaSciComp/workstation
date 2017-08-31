@@ -153,6 +153,12 @@ implements VolumeImage3d
                 for (int i = 0; i < scaleList.size(); i++) {
                     scale[i] = scaleList.get(i);
                 }
+                
+                // fix scale based off number of imagery levels
+                 double divisor = Math.pow(2.0, sample.getNumImageryLevels().intValue() - 1);
+                 for (int i = 0; i < scale.length; i++) {
+                     scale[i] /= divisor;
+                 }
 
                 // Scale must be converted to micrometers.
                 for (int i = 0; i < scale.length; i++) {
