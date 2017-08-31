@@ -93,7 +93,12 @@ public class TiledMicroscopeDomainMgr {
             
             sample.setOrigin(origin);
             sample.setScaling(scaling);
-            sample.setNumImageryLevels((Long)constants.get("numberLevels"));
+            if (constants.get("numberLevels") instanceof Integer) {
+                sample.setNumImageryLevels(((Integer)constants.get("numberLevels")).longValue());
+            } else {
+                sample.setNumImageryLevels((Long)constants.get("numberLevels"));
+            }
+            
             
             // call out to server to get origin/scaling information
             sample = save(sample);
