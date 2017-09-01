@@ -78,6 +78,8 @@ import com.google.common.eventbus.Subscribe;
 @ServiceProvider(service = AlignmentBoardCtrlPnlSvc.class)
 public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControllable, AlignmentBoardCtrlPnlSvc {
 
+    /* Starting on V2 - Sean Murphy */
+
     private static final String WHITE_BACKGROUND_BTN_NAME = "AlignmentBoard::WhiteBackgroundButton";
     private static final String COLOR_SAVE_BTN_NAME = "AlignmentBoard::ColorSaveButton";
     private static final String SEARCH_SAVE_BTN_NAME = "AlignmentBoard::SearchSaveButton";
