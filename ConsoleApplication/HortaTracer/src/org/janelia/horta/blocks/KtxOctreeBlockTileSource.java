@@ -33,6 +33,7 @@ package org.janelia.horta.blocks;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DecimalFormat;
@@ -45,6 +46,7 @@ import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.ktx.KtxData;
 import org.janelia.horta.ktx.KtxHeader;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.openide.util.Exceptions;
 import org.python.google.common.base.Joiner;
 import org.slf4j.Logger;
@@ -111,7 +113,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
         return new BufferedInputStream(url.openStream());
     }
     
-    public KtxOctreeBlockTileSource(URL rootUrl) throws IOException 
+    public KtxOctreeBlockTileSource(URL rootUrl, TmSample sample) throws IOException 
     {
         this.rootUrl = rootUrl;
         rootKey = new KtxOctreeBlockTileKey(new ArrayList<Integer>(), this);
@@ -161,12 +163,21 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
         // logger.info("" + m.groupCount());
         // logger.info(m.group(1));
         // logger.info(m.group(2));
+        //String[] originStrings = m.group(1).split(", ");
         String[] originStrings = m.group(1).split(", ");
-        String[] outerCornerStrings = m.group(2).split(", ");
-        origin = new Vector3(
-                Float.parseFloat(originStrings[0]),
-                Float.parseFloat(originStrings[1]),
-                Float.parseFloat(originStrings[2]));
+        String[] outerCornerStrings = m.group(2).split(", ");   
+        List<Integer> sampleOrigin = sample.getOrigin();
+        if (sampleOrigin == null) {
+            origin = new Vector3(
+                    Float.parseFloat(originStrings[0]),
+                    Float.parseFloat(originStrings[1]),
+                    Float.parseFloat(originStrings[2]));
+        } else {
+            origin = new Vector3(
+                    new BigDecimal(sampleOrigin.get(0)).movePointLeft(3).floatValue(),
+                    new BigDecimal(sampleOrigin.get(1)).movePointLeft(3).floatValue(),
+                    new BigDecimal(sampleOrigin.get(2)).movePointLeft(3).floatValue());
+        }
         outerCorner = new Vector3(
                 Float.parseFloat(outerCornerStrings[0]),
                 Float.parseFloat(outerCornerStrings[1]),

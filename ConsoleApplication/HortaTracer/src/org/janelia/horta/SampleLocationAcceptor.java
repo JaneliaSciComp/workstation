@@ -51,6 +51,7 @@ import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.scenewindow.SceneWindow;
 import org.netbeans.api.progress.ProgressHandle;
@@ -85,7 +86,6 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             @Override
             public void run()
             {
-                System.out.println ("DFDDFGFDSGFDG");
                 ProgressHandle progress
                         = ProgressHandleFactory.createHandle("Loading View in Horta...");
                 progress.start();
@@ -94,11 +94,12 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     // TODO - ensure that Horta viewer is open
                     // First ensure that this component uses same sample.
                     URL url = sampleLocation.getSampleUrl();
+                    TmSample sample = sampleLocation.getSample();
                     
                     // First check to see if ktx tiles are available
                     BlockTileSource ktxSource = null;
                     if (nttc.isPreferKtx()) {
-                        ktxSource = loadKtxSource(url, progress);
+                        ktxSource = loadKtxSource(sample, url, progress);
                         if (ktxSource != null)
                             nttc.setKtxSource(ktxSource);
                     }
@@ -151,7 +152,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         RequestProcessor.getDefault().post(task);
     }
 
-    private BlockTileSource loadKtxSource(URL renderedOctreeUrl, ProgressHandle progress) 
+    private BlockTileSource loadKtxSource(TmSample sample, URL renderedOctreeUrl, ProgressHandle progress) 
     {
         progress.setDisplayName("Checking for ktx rendered tiles");
         BlockTileSource previousSource = nttc.getKtxSource();
@@ -168,7 +169,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             if (!ktxPathStr.endsWith("/"))
                 ktxPathStr = ktxPathStr + "/";
             URL ktxFolderUrl = new URL(renderedOctreeUrl, ktxPathStr);
-            BlockTileSource ktxSource = new KtxOctreeBlockTileSource(ktxFolderUrl);
+            BlockTileSource ktxSource = new KtxOctreeBlockTileSource(ktxFolderUrl, sample);
             nttc.setKtxSource(ktxSource);
             return ktxSource;
         } catch (MalformedURLException ex) {

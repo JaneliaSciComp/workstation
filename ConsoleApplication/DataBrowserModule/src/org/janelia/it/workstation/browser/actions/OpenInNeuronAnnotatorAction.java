@@ -106,6 +106,12 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
     }
 
     private void openSeparation() {
+        if (separation.getParentRun()!=null && separation.getParentRun().getParent().getParent().isSamplePurged()) {
+            int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), "This sample was previously purged, and may not load correctly in Neuron Annotator. Continue with load?",  "Data missing", JOptionPane.OK_CANCEL_OPTION);
+            if (result==JOptionPane.CANCEL_OPTION) {
+                return;
+            }
+        }
         try {
             ensureNAIsRunning();
             log.debug("Requesting view of separation {} in Neuron Annotator: ", separation.getId());

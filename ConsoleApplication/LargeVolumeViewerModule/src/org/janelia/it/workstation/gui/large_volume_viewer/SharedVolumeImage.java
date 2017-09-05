@@ -6,6 +6,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 
 import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -109,21 +111,82 @@ implements VolumeImage3d
     }
 
 
-	private AbstractTextureLoadAdapter createLoadAdapter(URL folderUrl) {
-		// Sniff which back end we need
-		AbstractTextureLoadAdapter testLoadAdapter = null;
-		URL testUrl;
+    private AbstractTextureLoadAdapter createLoadAdapter(URL folderUrl) {
+        // Sniff which back end we need
+        AbstractTextureLoadAdapter testLoadAdapter = null;
+        URL testUrl;
 
-		try {
-			testUrl = new URL(folderUrl, "default.0.tif");
-			testUrl.openStream();
-			File fileFolder = new File(folderUrl.toURI());
-			testLoadAdapter=new TileStackOctreeLoadAdapter(remoteBasePath, fileFolder);
-		} catch (IOException | URISyntaxException | DataSourceInitializeException ex) {
-			ConsoleApp.handleException(ex);
-		}
+        try {
+            testUrl = new URL(folderUrl, "default.0.tif");
+            testUrl.openStream();
+            File fileFolder = new File(folderUrl.toURI());
+            testLoadAdapter = new TileStackOctreeLoadAdapter(remoteBasePath, fileFolder);
+        } catch (IOException | URISyntaxException | DataSourceInitializeException ex) {
+            ConsoleApp.handleException(ex);
+        }
 
-		return testLoadAdapter;
+        return testLoadAdapter;
+    }
+        
+	public boolean loadSampleURL(URL folderUrl, TmSample sample) {
+		          // Sanity check before overwriting current view
+            if (folderUrl == null) {
+                return false;
+            }
+
+            loadAdapter = createLoadAdapter(folderUrl);
+
+            if (loadAdapter == null) {
+                return false;
+            }
+
+            // replace origin and scale with sample metadata
+            List<Integer> originList = sample.getOrigin();
+            if (originList!=null) {
+                int[] origin = new int[originList.size()];
+                for (int i = 0; i < originList.size(); i++) {
+                    origin[i] = originList.get(i);
+                }
+
+                List<Double> scaleList = sample.getScaling();
+                double[] scale = new double[scaleList.size()];
+                for (int i = 0; i < scaleList.size(); i++) {
+                    scale[i] = scaleList.get(i);
+                }
+                
+                // fix scale based off number of imagery levels
+                 double divisor = Math.pow(2.0, sample.getNumImageryLevels().intValue() - 1);
+                 for (int i = 0; i < scale.length; i++) {
+                     scale[i] /= divisor;
+                 }
+
+                // Scale must be converted to micrometers.
+                for (int i = 0; i < scale.length; i++) {
+                    scale[i] /= 1000; // nanometers to micrometers
+                }
+                // Origin must be divided by 1000, to convert to micrometers.
+                for (int i = 0; i < origin.length; i++) {
+                    origin[i] = (int) (origin[i] / (1000 * scale[i])); // nanometers to voxels
+                }
+
+                loadAdapter.getTileFormat().setVoxelMicrometers(scale);
+                loadAdapter.getTileFormat().setOrigin(origin);
+            }
+		
+            // Update bounding box
+            // Compute bounding box
+            TileFormat tf = getLoadAdapter().getTileFormat();
+            BoundingBox3d newBox = tf.calcBoundingBox();
+
+            //log.info("Bounding box min Vec3="+newBox.getMin().toString());
+            //log.info("Bounding box max Vec3="+newBox.getMax().toString());
+            boundingBox3d.setMin(newBox.getMin());
+            boundingBox3d.setMax(newBox.getMax());
+
+            logger.info("Volume loaded: {}", folderUrl);
+            fireVolumeLoaded(folderUrl);
+
+            return true;
 	}
 
 	@Override

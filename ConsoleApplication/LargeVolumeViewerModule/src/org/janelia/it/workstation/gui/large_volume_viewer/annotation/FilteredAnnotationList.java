@@ -156,7 +156,9 @@ public class FilteredAnnotationList extends JPanel {
                                         SampleLocation sampleLocation = originator.getSampleLocation();
                                         Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
                                         for (Tiled3dSampleLocationProviderAcceptor acceptor: locationAcceptors) {
-                                            acceptor.setSampleLocation(sampleLocation);
+                                            if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
+                                                acceptor.setSampleLocation(sampleLocation);
+                                            }
                                         }
                                     } catch (Exception e) {
                                         ConsoleApp.handleException(e);

@@ -6,6 +6,7 @@ import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,6 +14,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -92,7 +94,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     private LargeVolumeViewerTranslator lvvTranslator;
 
-    private File swcDirectory = new File(System.getProperty("user.home"));
+    private File swcDirectory;
 
 
     // ----- constants
@@ -115,7 +117,52 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public File getSwcDirectory() {
+        if (swcDirectory == null) {
+            swcDirectory = getDefaultSwcDirectory();
+        }
         return swcDirectory;
+    }
+
+    private File getDefaultSwcDirectory() {
+        // swc imports and exports are done to one particular place in the
+        //  file system right now, so default to that location; fall back to
+        //  user's home dir if it's not available
+
+        // do a brute force search, like we do for finding tile path (see QuadViewUi.loadFile());
+        //  fortunately, we're checking fewer locations
+        String osName = System.getProperty("os.name").toLowerCase();
+        List<Path> prefixesToTry = new Vector<>();
+        if (osName.contains("win")) {
+            for (File fileRoot : File.listRoots()) {
+                prefixesToTry.add(fileRoot.toPath());
+            }
+        } else if (osName.contains("os x")) {
+            // for Mac, it's simpler:
+            prefixesToTry.add(new File("/Volumes").toPath());
+        } else if (osName.contains("lin")) {
+            // Linux
+            prefixesToTry.add(new File("/groups/mousebrainmicro").toPath());
+        }
+        boolean found = false;
+        // java and its "may not have been initialized" errors...
+        File testFile = new File(System.getProperty("user.home"));
+        for (Path prefix: prefixesToTry) {
+            // test with and without the first part
+            testFile = prefix.resolve("shared_tracing/Finished_Neurons").toFile();
+            if (testFile.exists()) {
+                found = true;
+                break;
+            }
+            testFile = prefix.resolve("mousebrainmicro/shared_tracing/Finished_Neurons").toFile();
+            if (testFile.exists()) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            testFile = new File(System.getProperty("user.home"));
+        }
+        return testFile;
     }
 
     public void setSwcDirectory(File swcDirectory) {

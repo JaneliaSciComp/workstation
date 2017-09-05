@@ -31,7 +31,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
@@ -75,9 +74,9 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
-import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
@@ -112,10 +111,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     // UI Components
     private final ConfigPanel configPanel;
-    private final ScrollingDropDownButton viewButton;
-    private final ScrollingDropDownButton objectiveButton;
-    private final ScrollingDropDownButton areaButton;
-    private final Map<String,ScrollingDropDownButton> historyButtonMap = new HashMap<>();
+    private final DropDownButton viewButton;
+    private final DropDownButton objectiveButton;
+    private final DropDownButton areaButton;
+    private final Map<String,DropDownButton> historyButtonMap = new HashMap<>();
     private final JPanel mainPanel;
     private final PaginatedResultsPanel lsmPanel;
     private final JScrollPane scrollPane;
@@ -261,10 +260,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         setLayout(new BorderLayout());
         setFocusable(true);
         
-        viewButton = new ScrollingDropDownButton("View: ");
+        viewButton = new DropDownButton("View: ");
         populateViewButton();
-        objectiveButton = new ScrollingDropDownButton("Objective: "+currObjective);
-        areaButton = new ScrollingDropDownButton("Area: "+currArea);
+        objectiveButton = new DropDownButton("Objective: "+currObjective);
+        areaButton = new DropDownButton("Area: "+currArea);
 
         configPanel = new ConfigPanel(true) {
             @Override
@@ -677,8 +676,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 	areaSet.add(area);
                 }
                 
-                ScrollingDropDownButton historyButton = new ScrollingDropDownButton(objective+": "+getLabel(run));
-                populateHistoryButton(historyButton.getPopupMenu(), objectiveSample);
+                DropDownButton historyButton = new DropDownButton(objective+": "+getLabel(run));
+                populateHistoryButton(historyButton, objectiveSample);
                 historyButtonMap.put(objective, historyButton);
                 configPanel.addConfigComponent(historyButton);
             }
@@ -740,9 +739,9 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    private void populateHistoryButton(JPopupMenu popupMenu, final ObjectiveSample objectiveSample) {
+    private void populateHistoryButton(DropDownButton button, final ObjectiveSample objectiveSample) {
     	final String objective = objectiveSample.getObjective();
-    	popupMenu.removeAll();
+    	button.removeAll();
         ButtonGroup group = new ButtonGroup();
         for(final SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
             JMenuItem menuItem = new JRadioButtonMenuItem(getLabel(run), currRunMap.get(objective)==run);
@@ -753,7 +752,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
             });
             group.add(menuItem);
-            popupMenu.add(menuItem);
+            button.addMenuItem(menuItem);
         }
     }
 
@@ -764,8 +763,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 	
     private void populateViewButton() {
         viewButton.setText(currMode);
-        JPopupMenu popupMenu = viewButton.getPopupMenu();
-        popupMenu.removeAll();
+        viewButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String mode : Arrays.asList(MODE_LSMS, MODE_RESULTS)) {
             JMenuItem menuItem = new JMenuItem(mode);
@@ -776,7 +774,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
             });
             group.add(menuItem);
-            popupMenu.add(menuItem);
+            viewButton.addMenuItem(menuItem);
         }
     }
 
@@ -788,8 +786,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     private void populateObjectiveButton(List<String> objectives) {
         objectiveButton.setText("Objective: "+currObjective);
-        JPopupMenu popupMenu = objectiveButton.getPopupMenu();
-        popupMenu.removeAll();
+        objectiveButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String objective : objectives) {
             JMenuItem menuItem = new JRadioButtonMenuItem(objective, StringUtils.areEqual(objective, currObjective));
@@ -799,7 +796,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
             });
             group.add(menuItem);
-            popupMenu.add(menuItem);
+            objectiveButton.addMenuItem(menuItem);
         }
     }
     
@@ -810,8 +807,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     private void populateAreaButton(List<String> areas) {
         areaButton.setText("Area: "+currArea);
-        JPopupMenu popupMenu = areaButton.getPopupMenu();
-        popupMenu.removeAll();
+        areaButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String area : areas) {
             JMenuItem menuItem = new JRadioButtonMenuItem(area, StringUtils.areEqual(area, currArea));
@@ -821,7 +817,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
             });
             group.add(menuItem);
-            popupMenu.add(menuItem);
+            areaButton.addMenuItem(menuItem);
         }
     }
     
@@ -984,7 +980,15 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 errorType = ErrorType.valueOf(error.getClassification());
             }
             
-            String title = run.getParent().getObjective()+" "+errorType.getLabel();
+            String title;
+            String op = error.getOperation();
+            if (StringUtils.isBlank(op)) {
+                title = run.getParent().getObjective()+" "+errorType.getLabel();    
+            }
+            else {
+                title = run.getParent().getObjective()+" "+op+" - "+errorType.getLabel();
+            }
+            
             label.setText(title);
             label.setToolTipText(errorType.getDescription());
             subLabel1.setText(DomainModelViewUtils.getDateString(error.getCreationDate()));

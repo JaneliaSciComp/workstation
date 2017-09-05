@@ -18,6 +18,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePostProcessingResult;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.ResultCategory;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
@@ -33,7 +34,7 @@ import com.google.common.collect.Ordering;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ResultSelectionButton extends ScrollingDropDownButton {
+public class ResultSelectionButton extends DropDownButton {
     
     private static final int MAX_TITLE_LENGTH = 30;
     
@@ -73,7 +74,7 @@ public class ResultSelectionButton extends ScrollingDropDownButton {
 
         // Reset state
         this.group = new ButtonGroup();
-        getPopupMenu().removeAll();
+        removeAll();
         
         List<DomainObject> samplesOnly = domainObjects.stream()
                 .filter((domainObject) -> (domainObject instanceof Sample))
@@ -128,33 +129,33 @@ public class ResultSelectionButton extends ScrollingDropDownButton {
         
         // Add everything to the menu
         for (ArtifactDescriptor descriptor : genericDescriptors) {
-            getPopupMenu().add(createMenuItem(descriptor, 0));
+            addMenuItem(createMenuItem(descriptor, 0));
         }
 
         if (!unalignedDescriptors.isEmpty()) {
-            getPopupMenu().add(createLabelItem(""));
-            getPopupMenu().add(createLabelItem(ResultCategory.PROCESSED.getLabel()));
+            addMenuItem(createLabelItem(""));
+            addMenuItem(createLabelItem(ResultCategory.PROCESSED.getLabel()));
             for (ArtifactDescriptor descriptor : unalignedDescriptors) {
                 int count = countedArtifacts.count(descriptor);
-                getPopupMenu().add(createMenuItem(descriptor, count));
+                addMenuItem(createMenuItem(descriptor, count));
             }
         }
 
         if (!postDescriptors.isEmpty()) {
-            getPopupMenu().add(createLabelItem(""));
-            getPopupMenu().add(createLabelItem(ResultCategory.POST_PROCESSED.getLabel()));
+            addMenuItem(createLabelItem(""));
+            addMenuItem(createLabelItem(ResultCategory.POST_PROCESSED.getLabel()));
             for (ArtifactDescriptor descriptor : postDescriptors) {
                 int count = countedArtifacts.count(descriptor);
-                getPopupMenu().add(createMenuItem(descriptor, count));
+                addMenuItem(createMenuItem(descriptor, count));
             }
         }
         
         if (!alignedDescriptors.isEmpty()) {
-            getPopupMenu().add(createLabelItem(""));
-            getPopupMenu().add(createLabelItem(ResultCategory.ALIGNED.getLabel()));
+            addMenuItem(createLabelItem(""));
+            addMenuItem(createLabelItem(ResultCategory.ALIGNED.getLabel()));
             for (ArtifactDescriptor descriptor : alignedDescriptors) {
                 int count = countedArtifacts.count(descriptor);
-                getPopupMenu().add(createMenuItem(descriptor, count));
+                addMenuItem(createMenuItem(descriptor, count));
             }
         }
         

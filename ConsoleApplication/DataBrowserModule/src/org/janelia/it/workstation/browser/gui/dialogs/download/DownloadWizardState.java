@@ -9,15 +9,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptorList;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Multiset;
-
-import javassist.runtime.Desc;
 
 /**
  * Holds the entire state of the download wizard, including the initial state, 

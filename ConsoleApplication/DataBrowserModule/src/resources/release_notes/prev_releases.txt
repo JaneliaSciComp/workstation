@@ -1,3 +1,29 @@
+// 6.3
+
+Workstation Browser
+* Added option to "Show only items with selected imagery" which will filter out any "question mark" boxes 
+  in the current result set.
+* Added badge indicators which are displayed on top of samples which have been purged or desynchronized
+* Improved icons and info messages when images can't be loaded
+* Allow reprocessing of previously blocked samples
+* Fixed some image sizing issues
+* Fixed issue preventing long popup menus from getting scroll bars
+
+Large Volume Viewer
+* Import/export swc file dialogs default to Mouselight standard directory
+
+// 6.2
+
+Workstation Browser
+* Reorganized the result drop-down button to group results by processing stage
+* Added additional "Post-processed" result category in the Download dialog
+* Renamed alignment results to show their alignment space (template and target resolution)
+* Added Hideo's color depth MIPs for new alignment results
+* Improved error reporting
+
+Large Volume Viewer
+* Import/export swc file dialogs remember their last location
+
 // 6.1
 
 Large Volume Viewer

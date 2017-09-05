@@ -9,12 +9,17 @@ import java.awt.Insets;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * FlowLayout subclass that fully supports wrapping of components.
  * Borrowed from http://tips4java.wordpress.com/2008/11/06/wrap-layout
  */
 public class WrapLayout extends FlowLayout {
 
+    private static final Logger log = LoggerFactory.getLogger(WrapLayout.class);
+    
     private boolean useSiblingWidth;
 
     /**
@@ -115,14 +120,20 @@ public class WrapLayout extends FlowLayout {
                     if (cw > targetWidth) {
                         targetWidth = cw;
                     }
+                    int cw2 = c.getSize().width;
+                    if (cw2 > targetWidth) {
+                        targetWidth = cw2;
+                    }
                 }
             }
-            else {
+            
+            if (targetWidth == 0) {
                 //  Each row must fit with the width allocated to the containter.
                 //  When the container width = 0, the preferred width of the container
                 //  has not yet been calculated so lets ask for the maximum.
                 targetWidth = target.getParent().getSize().width;
                 if (targetWidth == 0) {
+                    log.warn("Warning, using max value for target width");
                     targetWidth = Integer.MAX_VALUE;
                 }
             }

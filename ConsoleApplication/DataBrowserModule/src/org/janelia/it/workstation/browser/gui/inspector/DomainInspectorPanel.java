@@ -387,7 +387,8 @@ public class DomainInspectorPanel extends JPanel {
         addProperty("Filepath", result.getFilepath());
         addProperty("GUID", result.getId());
         addProperty("Name", result.getName());
-
+        addProperty("Purged", result.getPurged());
+        
         if (result instanceof HasAnatomicalArea) {
             HasAnatomicalArea hasAA = (HasAnatomicalArea) result;
             addProperty("Anatomical Area", hasAA.getAnatomicalArea());

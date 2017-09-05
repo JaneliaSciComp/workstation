@@ -36,6 +36,7 @@ import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.perf4j.StopWatch;
@@ -267,6 +268,11 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
         public List<Annotation> getAnnotations(FileGroup imageObject) {
             return Collections.emptyList();
         }
+
+        @Override
+        public List<ImageDecorator> getDecorators(FileGroup imageObject) {
+            return Collections.emptyList();
+        }
     };
 
     private class FileGroupIconGridViewer extends IconGridViewerPanel<FileGroup,String> {
@@ -300,6 +306,15 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
         @Override
         protected void configButtonPressed() {
 
+        }
+
+        @Override
+        protected void setMustHaveImage(boolean mustHaveImage) {
+        }
+
+        @Override
+        protected boolean isMustHaveImage() {
+            return false;
         }
     }
 

@@ -1,14 +1,24 @@
 package org.janelia.it.workstation.browser.gui.support;
 
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
+import java.awt.image.FilteredImageSource;
+import java.awt.image.ImageFilter;
+import java.awt.image.RGBImageFilter;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 import org.janelia.it.workstation.browser.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Retrieve icons in the class path by filename. 
@@ -17,10 +27,12 @@ import org.janelia.it.workstation.browser.util.Utils;
  */
 public class Icons {
 
+    private static final Logger log = LoggerFactory.getLogger(Icons.class);
+    
     private static final Icon missingIcon = new MissingIcon();
 
-    public static final Map<String,ImageIcon> cache = new HashMap<String,ImageIcon>();
-    public static final Map<String,BufferedImage> imageCache = new HashMap<String,BufferedImage>();
+    public static final Map<String,ImageIcon> cache = new HashMap<>();
+    public static final Map<String,BufferedImage> imageCache = new HashMap<>();
 
     /**
      * Returns an animated icon for representing a missing image.
@@ -77,7 +89,23 @@ public class Icons {
 	    	return icon;
     	} 
     	catch (FileNotFoundException e) {
+            log.error("Error loading icon from classpath: "+filename, e);
     		return null;
     	}
+    }
+    
+    public static BufferedImage getImage(String filename) {
+        String imagePath = "/images/" + filename;
+        String key = imagePath;
+        if (imageCache.containsKey(key)) return imageCache.get(key);
+        try {
+            BufferedImage image = ImageIO.read(Icons.class.getResourceAsStream(imagePath));
+            imageCache.put(key, image);
+            return image;
+        }
+        catch (IOException e) {
+            log.error("Error loading image from classpath: "+filename, e);
+            return null;
+        }
     }
 }

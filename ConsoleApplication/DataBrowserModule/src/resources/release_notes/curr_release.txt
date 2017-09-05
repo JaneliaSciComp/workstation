@@ -1,11 +1,9 @@
-// 6.2
+// 6.4
 
 Workstation Browser
-* Reorganized the result drop-down button to group results by processing stage
-* Added additional "Post-processed" result category in the Download dialog
-* Renamed alignment results to show their alignment space (template and target resolution)
-* Added Hideo's color depth MIPs for new alignment results
-* Improved error reporting 
+* Fixed bug with drag and drop that was introduced in the previous release
+* Fixed grid layout for images with many annotations
+* Added warning message when attempting to open purged samples in NA
 
 Large Volume Viewer
-* Import/export swc file dialogs remember their last location
+* Added origin/scaling information to Sample metadata in DB

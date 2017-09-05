@@ -34,6 +34,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 
 /**
  *
@@ -50,6 +51,7 @@ public class BasicSampleLocation implements SampleLocation
     private boolean compressed = false;
     private Long workspaceId = null;  // Optional
     private Long sampleId = null;     // Optional
+    private TmSample sample = null;     // Optional
 
     public BasicSampleLocation()
     {
@@ -170,5 +172,13 @@ public class BasicSampleLocation implements SampleLocation
     
     public void setSampleId(Long sampleId) {
         this.sampleId = sampleId;
+    }
+    
+    public TmSample getSample() {
+        return sample;
+    }
+    
+    public void setSample(TmSample sample) {
+        this.sample = sample;
     }
 }
