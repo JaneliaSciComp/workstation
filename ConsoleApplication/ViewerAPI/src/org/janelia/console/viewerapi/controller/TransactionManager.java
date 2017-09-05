@@ -59,6 +59,18 @@ public class TransactionManager {
         Map<String,Object> arguments = new HashMap<String,Object>();
         arguments.put("observable", observable);
         arguments.put("meta", arg);
-        delayedItems.put(observer, arguments);
+        if (delayedItems.containsKey(observer)) {
+            Object meta = delayedItems.get(observer).get("meta");
+            List argList;
+            if (meta==null || ! (meta instanceof List)) {
+                argList = new ArrayList();
+            } else {
+                argList = (List)meta;
+            }
+            argList.add(arg);
+            delayedItems.get(observer).put("meta", argList);
+        } else {
+            delayedItems.put(observer, arguments);
+        }
     }
 }

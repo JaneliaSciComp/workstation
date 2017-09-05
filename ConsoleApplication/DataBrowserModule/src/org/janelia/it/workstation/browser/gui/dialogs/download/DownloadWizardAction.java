@@ -29,21 +29,13 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
-import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
-import org.janelia.it.jacs.model.domain.sample.SamplePostProcessingResult;
-import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -51,11 +43,10 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
-import org.janelia.it.workstation.browser.gui.dialogs.DownloadDialog;
-import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
-import org.janelia.it.workstation.browser.gui.support.DownloadItem;
 import org.janelia.it.workstation.browser.gui.support.FileDownloadWorker;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.browser.model.search.SolrSearchResults;
@@ -95,7 +86,7 @@ public final class DownloadWizardAction implements ActionListener {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadWizardAction.class);
 
-    private ResultDescriptor defaultResultDescriptor;
+    private ArtifactDescriptor defaultResultDescriptor;
     private List<? extends DomainObject> inputObjects;
     private List<DownloadObject> downloadItems = new ArrayList<>();
     private Map<ArtifactDescriptor,Multiset<FileType>> artifactFileCounts;
@@ -110,23 +101,14 @@ public final class DownloadWizardAction implements ActionListener {
         this.inputObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectedIds);
     }
     
-    public DownloadWizardAction(List<? extends DomainObject> domainObjects, ResultDescriptor defaultResultDescriptor) {
+    public DownloadWizardAction(List<? extends DomainObject> domainObjects, ArtifactDescriptor defaultResultDescriptor) {
         this.inputObjects = domainObjects;
         this.defaultResultDescriptor = defaultResultDescriptor;
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
-
         ActivityLogHelper.logUserAction("DownloadWizardAction.actionPerformed");
-        
-        Boolean legacy = (Boolean)ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.LEGACY_DOWNLOAD_DIALOG);
-        if (legacy!=null && legacy) {
-            DownloadDialog dialog = new DownloadDialog();
-            dialog.showDialog(inputObjects, defaultResultDescriptor);
-            return;
-        }
-        
         findDownloadObjects();
     }
 
@@ -150,7 +132,12 @@ public final class DownloadWizardAction implements ActionListener {
                 log.info("Got {} download items", downloadItems.size());
                 log.info("Collecting descriptors");
                 
-                Multiset<ArtifactDescriptor> artifactCounts = getArtifactCounts();
+                List<DomainObject> domainObjects = new ArrayList<>();
+                for(DownloadObject downloadObject : downloadItems) {
+                    domainObjects.add(downloadObject.getDomainObject());
+                }
+                
+                Multiset<ArtifactDescriptor> artifactCounts = DescriptorUtils.getArtifactCounts(domainObjects);
                 Set<ArtifactDescriptor> elementSet = artifactCounts.elementSet();
 
                 setProgress(2);
@@ -241,95 +228,6 @@ public final class DownloadWizardAction implements ActionListener {
             ConsoleApp.handleException(e);
         }
         return downloadItems;
-    }
-
-    public Multiset<ArtifactDescriptor> getArtifactCounts() {
-
-        Multiset<ArtifactDescriptor> countedArtifacts = LinkedHashMultiset.create();
-            
-        for(DownloadObject downloadObject : downloadItems) {
-            DomainObject domainObject = downloadObject.getDomainObject();
-            log.trace("Inspecting object: {}", domainObject);
-            if (domainObject instanceof LSMImage) {
-                LSMImage image = (LSMImage)domainObject;
-                LSMArtifactDescriptor desc = new LSMArtifactDescriptor(image.getObjective(), image.getAnatomicalArea());
-                countedArtifacts.add(desc);
-                log.trace("  Adding self LSM descriptor for objective: {}", desc);
-            }
-            else if (domainObject instanceof NeuronFragment) {
-                NeuronFragment neuron = (NeuronFragment)domainObject;
-                try {
-                    Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, neuron.getSample().getTargetId());
-                    if (sample!=null) {
-                        List<NeuronSeparation> results = sample.getResultsById(NeuronSeparation.class, neuron.getSeparationId());
-                        if (!results.isEmpty()) {
-                            NeuronSeparation separation = results.get(0);
-                            PipelineResult parentResult = separation.getParentResult();
-                            if (parentResult instanceof HasAnatomicalArea) {
-                                HasAnatomicalArea hasAA = (HasAnatomicalArea)parentResult;
-                                boolean aligned = (parentResult instanceof SampleAlignmentResult);
-                                ObjectiveSample objectiveSample = parentResult.getParentRun().getParent();
-                                NeuronFragmentDescriptor desc = new NeuronFragmentDescriptor(objectiveSample.getObjective(), hasAA.getAnatomicalArea(), aligned);
-                                countedArtifacts.add(desc);
-                                log.trace("  Adding neuron fragment self descriptor: {}", desc);
-                            }
-                        }
-                    }
-                }
-                catch (Exception e) {
-                    FrameworkImplProvider.handleException(e);
-                }
-            }
-            else if (domainObject instanceof HasFiles) {
-                log.trace("  Adding self descriptor");
-                countedArtifacts.add(new SelfArtifactDescriptor());
-            }
-            else if (domainObject instanceof Sample) {
-                Sample sample = (Sample)domainObject;
-                log.trace("  Inspecting sample: {}", sample.getName());
-                
-                for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
-                    log.trace("    Inspecting objective: {}", objectiveSample.getObjective());
-                    
-                    for (SampleTile tile : objectiveSample.getTiles()) {
-                        log.trace("      Inspecting tile: {}", tile.getName());
-                        
-                        for (Reference reference : tile.getLsmReferences()) {
-                            log.trace("         Adding LSM descriptor for objective: {}", objectiveSample.getObjective());
-                            countedArtifacts.add(new LSMArtifactDescriptor(objectiveSample.getObjective(), tile.getAnatomicalArea()));
-                        }
-                    }
-                    SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
-                    if (run==null || run.getResults()==null) {
-                        run = objectiveSample.getLatestRun();
-                    }
-                    if (run!=null) {
-                        for(PipelineResult result : run.getResults()) {
-                            log.trace("  Inspecting pipeline result: {}", result.getName());
-                            if (result instanceof SamplePostProcessingResult) {
-                                // Add a descriptor for every anatomical area in the sample
-                                for (SampleTile sampleTile : objectiveSample.getTiles()) {
-                                    ResultArtifactDescriptor rad = new ResultArtifactDescriptor(objectiveSample.getObjective(), sampleTile.getAnatomicalArea(), result.getName(), false);
-                                    log.trace("    Adding result artifact descriptor: {}", rad);
-                                    countedArtifacts.add(rad);
-                                }
-                            }
-                            else if (result instanceof HasAnatomicalArea){
-                                HasAnatomicalArea aaResult = (HasAnatomicalArea)result;
-                                ResultArtifactDescriptor rad = new ResultArtifactDescriptor(objectiveSample.getObjective(), aaResult.getAnatomicalArea(), result.getName(), result instanceof SampleAlignmentResult);
-                                log.trace("    Adding result artifact descriptor: {}", rad);
-                                countedArtifacts.add(rad);
-                            }
-                            else {
-                                log.trace("Cannot handle result '"+result.getName()+"' of type "+result.getClass().getSimpleName());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        return countedArtifacts;
     }
 
     private Multiset<FileType> getFileTypeCounts(ArtifactDescriptor artifactDescriptor) throws Exception {
@@ -492,7 +390,7 @@ public final class DownloadWizardAction implements ActionListener {
 
     private boolean checkForAlreadyDownloadedFiles(FileDownloadWorker worker, boolean showApplyToAll) {
 
-        final DownloadItem downloadItem = worker.getDownloadItem();
+        final DownloadFileItem downloadItem = worker.getDownloadItem();
         final File targetDir = worker.getTargetDir();
         final String targetExtension = worker.getTargetExtension();
         

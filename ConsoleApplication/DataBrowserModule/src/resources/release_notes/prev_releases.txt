@@ -1,3 +1,56 @@
+// 6.3
+
+Workstation Browser
+* Added option to "Show only items with selected imagery" which will filter out any "question mark" boxes 
+  in the current result set.
+* Added badge indicators which are displayed on top of samples which have been purged or desynchronized
+* Improved icons and info messages when images can't be loaded
+* Allow reprocessing of previously blocked samples
+* Fixed some image sizing issues
+* Fixed issue preventing long popup menus from getting scroll bars
+
+Large Volume Viewer
+* Import/export swc file dialogs default to Mouselight standard directory
+
+// 6.2
+
+Workstation Browser
+* Reorganized the result drop-down button to group results by processing stage
+* Added additional "Post-processed" result category in the Download dialog
+* Renamed alignment results to show their alignment space (template and target resolution)
+* Added Hideo's color depth MIPs for new alignment results
+* Improved error reporting
+
+Large Volume Viewer
+* Import/export swc file dialogs remember their last location
+
+// 6.1
+
+Large Volume Viewer
+* Added "Ignore prefix" filter for neuron list
+
+Horta
+* Added Note shortcut (Ctrl-N) and 'Traced End' shortcut (Ctrl-E)
+* Fixed issues with Undo Merge refresh
+
+// 6.0
+
+In this major release, the Janelia Workstation has been updated to use the latest Java and NetBeans platform
+libraries. As a consequence, it now requires Java 8 and a clean reinstall. In addition, the Look and Feel
+has been completely replaced in order to address rendering issues on MacOS Sierra.
+
+Other improvements:
+
+Workstation Browser
+* Added the "Start Page" for quickly performing searches and viewing data statistics
+* Added a quick search box in the top toolbar, to make searching easier
+* Improved the user interface for the login dialog
+* Improved performance of removal of items from folders
+
+Large Volume Viewer
+* Fixed bug: lines drawn properly after importing multiple swc files
+* Added "set radius for neuron" feature in LVV
+
 // 5.16
 
 Workstation Browser

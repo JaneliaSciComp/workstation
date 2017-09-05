@@ -47,8 +47,9 @@ public interface AnnotatedDomainObjectListViewer {
      * @param select select if true, deselect if false
      * @param clearAll clear the existing selection before selecting?
      * @param isUserDriven is this action driven directly by the user?
+     * @Param notifyModel should we notify the DomainSelectionModel?
      */
-    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven);
+    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel);
 
     public void showLoadingIndicator();
 

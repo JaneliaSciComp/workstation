@@ -50,15 +50,18 @@ public class ImportSWCAction extends AbstractAction {
         //  give enough flexibility compared to doing a custom dialog from the start
         // could specify a dir to open in, but not sure what to choose
         try {
-            JFileChooser chooser = new JFileChooser();
+            JFileChooser chooser = new JFileChooser(annotationManager.getSwcDirectory());
             chooser.setDialogTitle("Choose swc file or directory");
             chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             final FileFilter swcAndDirFilter = new SwcDirAndFileFilter();
             chooser.setFileFilter(swcAndDirFilter);
-            int returnValue = chooser.showOpenDialog(annotationPanel);
+            int returnValue = chooser.showOpenDialog(FrameworkImplProvider.getMainFrame());
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 List<File> swcFiles = getFilesList(chooser.getSelectedFile());
-                annotationManager.importSWCFiles(swcFiles);
+                if (swcFiles.size() > 0) {
+                    annotationManager.importSWCFiles(swcFiles);
+                    annotationManager.setSwcDirectory(swcFiles.get(0).getParentFile());
+                }
             }
         }
         catch (Exception ex) {

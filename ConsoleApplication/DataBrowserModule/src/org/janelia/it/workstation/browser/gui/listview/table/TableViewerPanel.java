@@ -229,9 +229,9 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
     public abstract AnnotatedDomainObjectList getDomainObjectList();
 
-    public void selectObjects(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven) {
+    public void selectObjects(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
 
-        log.debug("selectObjects(objects.size={},select={},clearAll={},isUserDriven={})", objects.size(),select,clearAll,isUserDriven);
+        log.debug("selectObjects(objects.size={},select={},clearAll={},isUserDriven={},notifyModel={})", objects.size(),select,clearAll,isUserDriven,notifyModel);
 
         if (objects.isEmpty()) {
             return;

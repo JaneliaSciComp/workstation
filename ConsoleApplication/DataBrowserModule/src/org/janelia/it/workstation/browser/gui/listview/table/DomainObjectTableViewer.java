@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,6 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -50,6 +50,8 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
+import org.janelia.it.workstation.browser.model.ImageDecorator;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,6 +118,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         public List<Annotation> getAnnotations(DomainObject domainObject) {
             return domainObjectList.getAnnotations(domainObject.getId());
         }
+
+        @Override
+        public List<ImageDecorator> getDecorators(DomainObject imageObject) {
+            return Collections.emptyList();
+        }
     };
 
     public DomainObjectTableViewer() {
@@ -139,8 +146,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
-        super.selectObjects(domainObjects, select, clearAll, isUserDriven);
+    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
+        super.selectObjects(domainObjects, select, clearAll, isUserDriven, notifyModel);
     }
 
     @Override
@@ -192,7 +199,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         try {
             List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
             // TODO: should this use the same result as the icon grid viewer?
-            DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject) selectionModel.getParentObject(), selected, ResultDescriptor.LATEST, null);
+            DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject) selectionModel.getParentObject(), selected, ArtifactDescriptor.LATEST, null);
 
             JTable table = getTable();
             ListSelectionModel lsm = table.getSelectionModel();

@@ -4,6 +4,7 @@ import javax.swing.event.ChangeListener;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
 import org.openide.util.ChangeSupport;

@@ -64,4 +64,6 @@ public interface NeuronSet extends Collection<NeuronModel>
     ObservableInterface getPrimaryAnchorObservable();
     
     NeuronModel getNeuronByGuid(Long guid);
+    void addEditNote(NeuronVertex anchor);
+    void addTraceEndNote(NeuronVertex anchor);
 }

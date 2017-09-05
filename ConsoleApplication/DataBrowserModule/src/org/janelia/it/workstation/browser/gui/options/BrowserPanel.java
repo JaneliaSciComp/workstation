@@ -25,7 +25,6 @@ final class BrowserPanel extends javax.swing.JPanel {
     private final BrowserOptionsPanelController controller;
     private final GroupedKeyValuePanel mainPanel;
     
-    private JCheckBox downloadDialogCheckbox;
     private JCheckBox unloadImagesCheckbox;
     private JCheckBox disableImageDrag;
     private JCheckBox allowDuplicateAnnotations;
@@ -60,25 +59,6 @@ final class BrowserPanel extends javax.swing.JPanel {
         mainPanel.removeAll();
 
         mainPanel.addSeparator("Image Browser");
-
-        // Download Dialog
-
-        downloadDialogCheckbox = new JCheckBox();
-        downloadDialogCheckbox.setText("Use the legacy download dialog instead of the wizard");
-        downloadDialogCheckbox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                controller.changed();
-            }
-        });
-        
-        if (app.getModelProperty(LEGACY_DOWNLOAD_DIALOG) == null) {
-            app.setModelProperty(LEGACY_DOWNLOAD_DIALOG, Boolean.FALSE);
-        }
-        else {
-            downloadDialogCheckbox.setSelected((Boolean) app.getModelProperty(LEGACY_DOWNLOAD_DIALOG));
-        }
-
-        mainPanel.addItem(downloadDialogCheckbox);
 
         // Unload Images
 
@@ -180,11 +160,6 @@ final class BrowserPanel extends javax.swing.JPanel {
 
         ConsoleApp app = ConsoleApp.getConsoleApp();
 
-        if (downloadDialogCheckbox.isSelected() != (Boolean) app.getModelProperty(LEGACY_DOWNLOAD_DIALOG)) {
-            log.info("Saving legacy download dialog setting: "+downloadDialogCheckbox.isSelected());
-            app.setModelProperty(LEGACY_DOWNLOAD_DIALOG, downloadDialogCheckbox.isSelected());
-        }
-        
         if (unloadImagesCheckbox.isSelected() != (Boolean) app.getModelProperty(UNLOAD_IMAGES_PROPERTY)) {
             log.info("Saving unload images setting: "+unloadImagesCheckbox.isSelected());
             app.setModelProperty(UNLOAD_IMAGES_PROPERTY, unloadImagesCheckbox.isSelected());

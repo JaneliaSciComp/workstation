@@ -57,7 +57,7 @@ public class LoadedImagePanel extends JPanel {
         errorLabel = new JLabel();
         errorLabel.setOpaque(false);
         errorLabel.setForeground(Color.red);
-        errorLabel.setIcon(Icons.getMissingIcon());
+        errorLabel.setIcon(Icons.getIcon("file_error.png"));
         errorLabel.setVerticalTextPosition(JLabel.BOTTOM);
         errorLabel.setHorizontalTextPosition(JLabel.CENTER);
         errorLabel.setVerticalAlignment(SwingConstants.CENTER);
@@ -88,7 +88,7 @@ public class LoadedImagePanel extends JPanel {
                 }
                 
                 BufferedImage image = getNewScaledImage();
-                if (getNewScaledImage() == null) {
+                if (image == null) {
                     log.warn("Scaled image is null");
                     return;
                 }

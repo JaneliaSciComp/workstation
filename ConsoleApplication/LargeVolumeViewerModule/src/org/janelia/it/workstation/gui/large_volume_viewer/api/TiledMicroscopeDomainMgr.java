@@ -12,6 +12,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
@@ -73,17 +74,41 @@ public class TiledMicroscopeDomainMgr {
 
     public TmSample createSample(String name, String filepath) throws Exception {
         log.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
-        TmSample sample = new TmSample();
-        sample.setOwnerKey(AccessManager.getSubjectKey());
-        sample.setName(name);
-        sample.setFilepath(filepath);
-        sample = save(sample);
+        Map<String,Object> constants = client.getTmSampleConstants(filepath);
+        if (constants!=null) {
+            TmSample sample = new TmSample();
+            sample.setOwnerKey(AccessManager.getSubjectKey());
+            sample.setName(name);
+            sample.setFilepath(filepath);
+            Map originMap = (Map)constants.get("origin");
+            List<Integer> origin = new ArrayList();
+            origin.add ((Integer)originMap.get("x"));
+            origin.add ((Integer)originMap.get("y"));
+            origin.add ((Integer)originMap.get("z"));            
+            Map scalingMap = (Map)constants.get("scaling");
+            List<Double> scaling = new ArrayList();
+            scaling.add ((Double)scalingMap.get("x"));
+            scaling.add ((Double)scalingMap.get("y"));
+            scaling.add ((Double)scalingMap.get("z"));
+            
+            sample.setOrigin(origin);
+            sample.setScaling(scaling);
+            if (constants.get("numberLevels") instanceof Integer) {
+                sample.setNumImageryLevels(((Integer)constants.get("numberLevels")).longValue());
+            } else {
+                sample.setNumImageryLevels((Long)constants.get("numberLevels"));
+            }
+            
+            
+            // call out to server to get origin/scaling information
+            sample = save(sample);
 
-        // Server should have put the sample in the Samples root folder. Refresh the Samples folder to show it in the explorer.
-        TreeNode folder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_SAMPLE_FOLDER, true);
-        model.invalidate(folder);
-        
-        return sample;
+            // Server should have put the sample in the Samples root folder. Refresh the Samples folder to show it in the explorer.
+            TreeNode folder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_SAMPLE_FOLDER, true);
+            model.invalidate(folder);
+
+            return sample;
+        } else throw new RuntimeException ("problem creating sample; no sample constants available.");
     }
 
     public TmSample save(TmSample sample) throws Exception {

@@ -22,7 +22,7 @@ public class SwcExport {
     /** Somewhat complex interaction with file chooser. */
     public ExportParameters getExportParameters( String seedName ) throws HeadlessException {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        JFileChooser chooser = new JFileChooser();
+        JFileChooser chooser = new JFileChooser(annotationMgr.getSwcDirectory());
         chooser.setDialogTitle("Save SWC file");
         chooser.setSelectedFile(new File(seedName + AnnotationModel.STD_SWC_EXTENSION));
         JPanel layoutPanel = new JPanel();
@@ -60,6 +60,7 @@ public class SwcExport {
                 rtnVal = new ExportParameters();
                 rtnVal.setDownsampleModulo(downsampleModulo);
                 rtnVal.setSelectedFile(chooser.getSelectedFile().getAbsoluteFile());
+                annotationMgr.setSwcDirectory(rtnVal.getSelectedFile().getParentFile());
             }
         } catch (NumberFormatException nfe) {
             annotationMgr.presentError("Failed to parse input text as number: " + textInput, "Invalid Downsample");

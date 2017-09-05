@@ -149,6 +149,7 @@ import org.janelia.horta.volume.BrickInfo;
 import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
 import org.janelia.horta.actions.ResetHortaRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
@@ -156,6 +157,7 @@ import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
@@ -489,6 +491,18 @@ public final class NeuronTracerTopComponent extends TopComponent
     private void setDefaultWorkspace(NeuronSet workspace) {
         activeNeuronSet = workspace;
         tracingInteractor.setDefaultWorkspace(activeNeuronSet);
+    }
+    
+    public void addEditNote() {
+        // get current primary anchor and call out to pop up add/edit note dialog
+        NeuronVertex anchor = activeNeuronSet.getPrimaryAnchor();
+        activeNeuronSet.addEditNote(anchor);
+    }
+      
+    public void addTracedEndNote() {
+        // automatically set the traced end note for this anchor
+        NeuronVertex anchor = activeNeuronSet.getPrimaryAnchor();
+        activeNeuronSet.addTraceEndNote(anchor);
     }
     
     // UNDO
@@ -2050,6 +2064,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         glad.display();
         glad.swapBuffers();
     }
+    
+     public TmSample getCurrentSample() 
+    {
+        if (this.metaWorkspace!=null)
+            return this.metaWorkspace.getSample();
+        else return null;
+    }
         
     public BufferedImage getScreenShot() 
     {
@@ -2122,7 +2143,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
         logger.info("Ktx source folder = " + folderSelection);
         try {
-            return new KtxOctreeBlockTileSource(folder.toURI().toURL());
+            return new KtxOctreeBlockTileSource(folder.toURI().toURL(), this.getCurrentSample());
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
             JOptionPane.showMessageDialog(

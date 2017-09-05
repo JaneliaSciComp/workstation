@@ -34,6 +34,7 @@ import java.awt.Color;
 import java.util.Collection;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronTagMap;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 
 /**
  *
@@ -45,6 +46,8 @@ public interface HortaMetaWorkspace extends ObservableInterface
     Collection<NeuronSet> getNeuronSets();
     TmNeuronTagMap getTagMetadata();
     void setTagMetadata(TmNeuronTagMap tagMeta);
+    TmSample getSample();
+    void setSample(TmSample sample);
     Color getBackgroundColor();
     void setBackgroundColor(Color color);
 }

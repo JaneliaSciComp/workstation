@@ -1,0 +1,34 @@
+package org.janelia.it.workstation.browser.model;
+
+import javax.swing.ImageIcon;
+
+import org.janelia.it.workstation.browser.gui.support.Icons;
+
+/**
+ * Canned decorators on images.  
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
+public enum ImageDecorator {
+
+    PURGED("Purged", Icons.getIcon("decorator_trash.png")),
+    SYNC("SAGE Sync", Icons.getIcon("decorator_connect.png")),
+    DESYNC("SAGE Desync", Icons.getIcon("decorator_disconnect.png"));
+    
+    private final String label;
+    private final ImageIcon icon;
+    
+    private ImageDecorator(String label, ImageIcon icon) {
+        this.label = label;
+        this.icon = icon;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public ImageIcon getIcon() {
+        return icon;
+    }
+    
+}

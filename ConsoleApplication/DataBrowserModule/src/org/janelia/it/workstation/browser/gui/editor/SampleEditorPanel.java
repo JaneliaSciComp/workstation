@@ -31,7 +31,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
@@ -39,6 +38,7 @@ import javax.swing.Scrollable;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
+import org.janelia.it.jacs.model.domain.enums.ErrorType;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
@@ -49,7 +49,6 @@ import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
@@ -77,8 +76,10 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
-import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
@@ -110,10 +111,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     // UI Components
     private final ConfigPanel configPanel;
-    private final ScrollingDropDownButton viewButton;
-    private final ScrollingDropDownButton objectiveButton;
-    private final ScrollingDropDownButton areaButton;
-    private final Map<String,ScrollingDropDownButton> historyButtonMap = new HashMap<>();
+    private final DropDownButton viewButton;
+    private final DropDownButton objectiveButton;
+    private final DropDownButton areaButton;
+    private final Map<String,DropDownButton> historyButtonMap = new HashMap<>();
     private final JPanel mainPanel;
     private final PaginatedResultsPanel lsmPanel;
     private final JScrollPane scrollPane;
@@ -259,10 +260,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         setLayout(new BorderLayout());
         setFocusable(true);
         
-        viewButton = new ScrollingDropDownButton("View: ");
+        viewButton = new DropDownButton("View: ");
         populateViewButton();
-        objectiveButton = new ScrollingDropDownButton("Objective: "+currObjective);
-        areaButton = new ScrollingDropDownButton("Area: "+currArea);
+        objectiveButton = new DropDownButton("Objective: "+currObjective);
+        areaButton = new DropDownButton("Area: "+currArea);
 
         configPanel = new ConfigPanel(true) {
             @Override
@@ -469,7 +470,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         SelectablePanel pipelineResultPanel = resultPanels.get(currResultIndex);
         
         if (pipelineResultPanel instanceof PipelineResultPanel) {
-            ResultDescriptor resultDescriptor = ((PipelineResultPanel)pipelineResultPanel).getResultDescriptor();
+            ArtifactDescriptor resultDescriptor = ((PipelineResultPanel)pipelineResultPanel).getResultDescriptor();
             
             if (toggle) {
                 hud.setObjectAndToggleDialog(sample, resultDescriptor, null);
@@ -675,8 +676,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 	areaSet.add(area);
                 }
                 
-                ScrollingDropDownButton historyButton = new ScrollingDropDownButton(objective+": "+getLabel(run));
-                populateHistoryButton(historyButton.getPopupMenu(), objectiveSample);
+                DropDownButton historyButton = new DropDownButton(objective+": "+getLabel(run));
+                populateHistoryButton(historyButton, objectiveSample);
                 historyButtonMap.put(objective, historyButton);
                 configPanel.addConfigComponent(historyButton);
             }
@@ -738,9 +739,9 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    private void populateHistoryButton(JPopupMenu popupMenu, final ObjectiveSample objectiveSample) {
+    private void populateHistoryButton(DropDownButton button, final ObjectiveSample objectiveSample) {
     	final String objective = objectiveSample.getObjective();
-    	popupMenu.removeAll();
+    	button.removeAll();
         ButtonGroup group = new ButtonGroup();
         for(final SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
             JMenuItem menuItem = new JRadioButtonMenuItem(getLabel(run), currRunMap.get(objective)==run);
@@ -751,7 +752,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
             });
             group.add(menuItem);
-            popupMenu.add(menuItem);
+            button.addMenuItem(menuItem);
         }
     }
 
@@ -762,8 +763,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 	
     private void populateViewButton() {
         viewButton.setText(currMode);
-        JPopupMenu popupMenu = viewButton.getPopupMenu();
-        popupMenu.removeAll();
+        viewButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String mode : Arrays.asList(MODE_LSMS, MODE_RESULTS)) {
             JMenuItem menuItem = new JMenuItem(mode);
@@ -774,7 +774,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
             });
             group.add(menuItem);
-            popupMenu.add(menuItem);
+            viewButton.addMenuItem(menuItem);
         }
     }
 
@@ -786,8 +786,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     private void populateObjectiveButton(List<String> objectives) {
         objectiveButton.setText("Objective: "+currObjective);
-        JPopupMenu popupMenu = objectiveButton.getPopupMenu();
-        popupMenu.removeAll();
+        objectiveButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String objective : objectives) {
             JMenuItem menuItem = new JRadioButtonMenuItem(objective, StringUtils.areEqual(objective, currObjective));
@@ -797,7 +796,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
             });
             group.add(menuItem);
-            popupMenu.add(menuItem);
+            objectiveButton.addMenuItem(menuItem);
         }
     }
     
@@ -808,8 +807,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     private void populateAreaButton(List<String> areas) {
         areaButton.setText("Area: "+currArea);
-        JPopupMenu popupMenu = areaButton.getPopupMenu();
-        popupMenu.removeAll();
+        areaButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String area : areas) {
             JMenuItem menuItem = new JRadioButtonMenuItem(area, StringUtils.areEqual(area, currArea));
@@ -819,7 +817,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
             });
             group.add(menuItem);
-            popupMenu.add(menuItem);
+            areaButton.addMenuItem(menuItem);
         }
     }
     
@@ -885,7 +883,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
     private class PipelineResultPanel extends SelectablePanel {
         
-        private final ResultDescriptor resultDescriptor;
+        private final ArtifactDescriptor resultDescriptor;
         private final PipelineResult result;
         private JLabel label = new JLabel();
         private JLabel subLabel = new JLabel();
@@ -902,7 +900,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             imagePanel.setLayout(new GridLayout(1, 2, 5, 0));
 
             if (result!=null) {
-                this.resultDescriptor = new ResultDescriptor(result);
+                this.resultDescriptor = new ResultArtifactDescriptor(result);
                 label.setText(resultDescriptor.toString());
                 subLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
                 
@@ -939,7 +937,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             return result;
         }
       
-        public ResultDescriptor getResultDescriptor() {
+        public ArtifactDescriptor getResultDescriptor() {
             return resultDescriptor;
         }
     
@@ -964,7 +962,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         
         private SamplePipelineRun run;
         private JLabel label = new JLabel();
-        private JLabel subLabel = new JLabel();
+        private JLabel subLabel1 = new JLabel();
+        private JLabel subLabel2 = new JLabel();
         
         private PipelineErrorPanel(SamplePipelineRun run) {
                         
@@ -976,15 +975,29 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             PipelineError error = run.getError();
             if (error==null) throw new IllegalStateException("Cannot create a PipelineErrorPanel for non-error run");
 
-            String errorClass = error.getClassification()==null?"Unclassified Error":error.getClassification();
-            String title = run.getParent().getObjective()+" "+errorClass;
+            ErrorType errorType = ErrorType.UnclassifiedError;
+            if (error.getClassification()!=null) {
+                errorType = ErrorType.valueOf(error.getClassification());
+            }
+            
+            String title;
+            String op = error.getOperation();
+            if (StringUtils.isBlank(op)) {
+                title = run.getParent().getObjective()+" "+errorType.getLabel();    
+            }
+            else {
+                title = run.getParent().getObjective()+" "+op+" - "+errorType.getLabel();
+            }
+            
             label.setText(title);
-            subLabel.setText(error.getDescription());
-            subLabel.setText(DomainModelViewUtils.getDateString(error.getCreationDate()));
+            label.setToolTipText(errorType.getDescription());
+            subLabel1.setText(DomainModelViewUtils.getDateString(error.getCreationDate()));
+            subLabel2.setText("Error detail: "+error.getDescription());
 
             JPanel titlePanel = new JPanel(new BorderLayout());
             titlePanel.add(label, BorderLayout.PAGE_START);
-            titlePanel.add(subLabel, BorderLayout.PAGE_END);
+            titlePanel.add(subLabel1, BorderLayout.CENTER);
+            titlePanel.add(subLabel2, BorderLayout.PAGE_END);
 
             JPanel imagePanel = new JPanel();
             imagePanel.setLayout(new BorderLayout());

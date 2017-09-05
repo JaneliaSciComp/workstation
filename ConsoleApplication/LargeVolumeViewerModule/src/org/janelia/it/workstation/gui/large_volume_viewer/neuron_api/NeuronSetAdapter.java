@@ -57,9 +57,11 @@ import org.janelia.it.jacs.model.util.MatrixUtilities;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.PredefinedNote;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.Lookup;
@@ -261,6 +263,9 @@ implements NeuronSet// , LookupListener
             getNameChangeObservable().setChanged();
         this.workspace = workspace;
         TmSample sample = annotationModel.getCurrentSample();
+        if (this.metaWorkspace!=null) {
+            this.metaWorkspace.setSample(sample);
+        }
         updateVoxToMicronMatrices(sample);
         NeuronList nl = (NeuronList) neurons;
         nl.wrap(this);
@@ -272,6 +277,9 @@ implements NeuronSet// , LookupListener
         if (this.metaWorkspace == metaWorkspace)
             return;
         this.metaWorkspace = metaWorkspace;
+        this.metaWorkspace.setSample(annotationModel.getCurrentSample());
+        getMetaWorkspace().setChanged();
+        getMetaWorkspace().notifyObservers();  
     }
     
     public HortaMetaWorkspace getMetaWorkspace() {
@@ -492,6 +500,22 @@ implements NeuronSet// , LookupListener
             signal.setChanged();
             signal.notifyObservers(new VertexWithNeuron(movedVertex, neuron));
             repaintHorta();
+        }
+    }
+    
+    @Override
+    public void addEditNote(NeuronVertex anchor) {
+        if (anchor instanceof NeuronVertexAdapter) {
+            TmGeoAnnotation annotation = ((NeuronVertexAdapter)anchor).getTmGeoAnnotation();
+            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().addEditNote(annotation.getNeuronId(), annotation.getId());
+        }
+    }
+        
+    @Override
+    public void addTraceEndNote(NeuronVertex anchor) {
+        if (anchor instanceof NeuronVertexAdapter) {
+            TmGeoAnnotation annotation = ((NeuronVertexAdapter) anchor).getTmGeoAnnotation();
+            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNote(annotation.getNeuronId(), annotation.getId(), PredefinedNote.TRACED_END.getNoteText());
         }
     }
 

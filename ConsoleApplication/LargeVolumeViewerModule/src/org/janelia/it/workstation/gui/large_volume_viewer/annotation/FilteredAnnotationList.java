@@ -21,6 +21,11 @@ import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.console.viewerapi.SynchronizationHelper;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 
 /**
  * this UI element displays a list of annotations according to a
@@ -143,6 +148,22 @@ public class FilteredAnnotationList extends JPanel {
                             if (panListener != null) {
                                 if (ann != null) {
                                     panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                                    // send event to Horta to also center on this item
+                                    
+                                    try {
+                                        SynchronizationHelper helper = new SynchronizationHelper();
+                                        Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                                        SampleLocation sampleLocation = originator.getSampleLocation();
+                                        Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                                        for (Tiled3dSampleLocationProviderAcceptor acceptor: locationAcceptors) {
+                                            if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
+                                                acceptor.setSampleLocation(sampleLocation);
+                                            }
+                                        }
+                                    } catch (Exception e) {
+                                        ConsoleApp.handleException(e);
+                                    }
+                                    
                                 }
                             }
                         }

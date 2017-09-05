@@ -2,9 +2,10 @@ package org.janelia.it.workstation.browser.model;
 
 public enum ResultCategory {
 
-    OriginalLSM("Original LSM images"),
-    PreAligned("Pre-alignment (e.g. merged, stitched)"),
-    PostAligned("Post-alignment (e.g. JBA, ANTS, CMTK)");
+    ORIGINAL("Original LSM images"),
+    PROCESSED("Processed (e.g. merged, stitched)"),
+    POST_PROCESSED("Post-processed (e.g. polarity masking)"),
+    ALIGNED("Aligned (e.g. JBA, ANTS, CMTK)");
     
     private final String label;
     

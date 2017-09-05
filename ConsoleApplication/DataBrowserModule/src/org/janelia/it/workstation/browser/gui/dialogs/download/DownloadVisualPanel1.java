@@ -26,18 +26,21 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
+import org.janelia.it.jacs.model.domain.sample.SamplePostProcessingResult;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.gui.support.ScrollingDropDownButton;
 import org.janelia.it.workstation.browser.gui.support.WrapLayout;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.ImageCategory;
 import org.janelia.it.workstation.browser.model.ResultCategory;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.LSMArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.SelfArtifactDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,15 +59,15 @@ public final class DownloadVisualPanel1 extends JPanel {
     
     // GUI
     private JPanel configPane;
-    private final ScrollingDropDownButton objectiveButton = new ScrollingDropDownButton();
-    private final ScrollingDropDownButton areaButton = new ScrollingDropDownButton();
-    private final ScrollingDropDownButton resultCategoryButton = new ScrollingDropDownButton();
-    private final ScrollingDropDownButton imageCategoryButton = new ScrollingDropDownButton();
+    private final DropDownButton objectiveButton = new DropDownButton();
+    private final DropDownButton areaButton = new DropDownButton();
+    private final DropDownButton resultCategoryButton = new DropDownButton();
+    private final DropDownButton imageCategoryButton = new DropDownButton();
     private final HashMap<ArtifactDescriptor, HashMap<FileType, JCheckBox>> fileTypesCheckboxes = new LinkedHashMap<>();
     private JPanel checkboxPanel;
     
     // Inputs
-    private ResultDescriptor defaultResultDescriptor;
+    private ArtifactDescriptor defaultResultDescriptor;
     private Map<ArtifactDescriptor, Multiset<FileType>> artifactFileCounts;
     private String currObjective;
     private String currArea;
@@ -93,8 +96,7 @@ public final class DownloadVisualPanel1 extends JPanel {
 
     private void populateObjectiveButton(List<String> objectives) {
         objectiveButton.setText("Objective: "+currObjective);
-        JPopupMenu popupMenu = objectiveButton.getPopupMenu();
-        popupMenu.removeAll();
+        objectiveButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String objective : objectives) {
             JMenuItem menuItem = new JRadioButtonMenuItem(objective, StringUtils.areEqual(objective, currObjective));
@@ -105,7 +107,7 @@ public final class DownloadVisualPanel1 extends JPanel {
                 }
             });
             group.add(menuItem);
-            popupMenu.add(menuItem);
+            objectiveButton.addMenuItem(menuItem);
         }
     }
     
@@ -122,8 +124,7 @@ public final class DownloadVisualPanel1 extends JPanel {
 
     private void populateAreaButton(List<String> areas) {
         areaButton.setText("Area: "+currArea);
-        JPopupMenu popupMenu = areaButton.getPopupMenu();
-        popupMenu.removeAll();
+        areaButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String area : areas) {
             JMenuItem menuItem = new JRadioButtonMenuItem(area, StringUtils.areEqual(area, currArea));
@@ -134,7 +135,7 @@ public final class DownloadVisualPanel1 extends JPanel {
                 }
             });
             group.add(menuItem);
-            popupMenu.add(menuItem);
+            areaButton.addMenuItem(menuItem);
         }
     }
     
@@ -151,8 +152,7 @@ public final class DownloadVisualPanel1 extends JPanel {
 
     private void populateResultCategoryButton(List<String> resultCategories) {
         resultCategoryButton.setText("Result Category: "+currResultCategory);
-        JPopupMenu popupMenu = resultCategoryButton.getPopupMenu();
-        popupMenu.removeAll();
+        resultCategoryButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String resultCategory : resultCategories) {
             JMenuItem menuItem = new JRadioButtonMenuItem(resultCategory, StringUtils.areEqual(resultCategory, currResultCategory));
@@ -163,7 +163,7 @@ public final class DownloadVisualPanel1 extends JPanel {
                 }
             });
             group.add(menuItem);
-            popupMenu.add(menuItem);
+            resultCategoryButton.addMenuItem(menuItem);
         }
     }
     
@@ -180,8 +180,7 @@ public final class DownloadVisualPanel1 extends JPanel {
 
     private void populateImageCategoryButton(List<String> imageCategories) {
         imageCategoryButton.setText("Image Category: "+currImageCategory);
-        JPopupMenu popupMenu = imageCategoryButton.getPopupMenu();
-        popupMenu.removeAll();
+        imageCategoryButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String imageCategory : imageCategories) {
             JMenuItem menuItem = new JRadioButtonMenuItem(imageCategory, StringUtils.areEqual(imageCategory, currImageCategory));
@@ -192,7 +191,7 @@ public final class DownloadVisualPanel1 extends JPanel {
                 }
             });
             group.add(menuItem);
-            popupMenu.add(menuItem);
+            imageCategoryButton.addMenuItem(menuItem);
         }
     }
     
@@ -216,7 +215,7 @@ public final class DownloadVisualPanel1 extends JPanel {
         if (artifactDescriptors==null) {
             artifactDescriptors = new ArrayList<>();
             if (defaultResultDescriptor!=null) {
-                artifactDescriptors.add(new ResultArtifactDescriptor(defaultResultDescriptor.getObjective(), null, defaultResultDescriptor.getResultName(), defaultResultDescriptor.isAligned()));
+                artifactDescriptors.add(defaultResultDescriptor);
             }
         }
         
@@ -467,14 +466,40 @@ public final class DownloadVisualPanel1 extends JPanel {
         }
         
         ResultCategory resultCategory = ResultCategory.getByLabel(currResultCategory);
-        if (ResultCategory.OriginalLSM.equals(resultCategory) && !(artifactDescriptor instanceof LSMArtifactDescriptor)) {
-            return false;
+        if (ResultCategory.ORIGINAL.equals(resultCategory)) {
+            if (!(artifactDescriptor instanceof LSMArtifactDescriptor)) {
+                return false;
+            }
         }
-        else if (ResultCategory.PreAligned.equals(resultCategory) && (artifactDescriptor.isAligned() || (artifactDescriptor instanceof LSMArtifactDescriptor))) {
-            return false;
+        else if (ResultCategory.PROCESSED.equals(resultCategory)) {
+            if (artifactDescriptor instanceof LSMArtifactDescriptor) {
+                return false;
+            }
+            else if (artifactDescriptor.isAligned()) {
+                return false;
+            } 
+            else if (artifactDescriptor instanceof ResultArtifactDescriptor) {
+                ResultArtifactDescriptor resultArtifactDescriptor = (ResultArtifactDescriptor)artifactDescriptor;
+                if (resultArtifactDescriptor.getResultClass().equals(SamplePostProcessingResult.class.getName())) {
+                    return false;
+                }
+            }
         }
-        else if (ResultCategory.PostAligned.equals(resultCategory) && !artifactDescriptor.isAligned()) {
-            return false;
+        else if (ResultCategory.POST_PROCESSED.equals(resultCategory)) {
+            if (artifactDescriptor instanceof ResultArtifactDescriptor) {
+                ResultArtifactDescriptor resultArtifactDescriptor = (ResultArtifactDescriptor)artifactDescriptor;
+                if (!resultArtifactDescriptor.getResultClass().equals(SamplePostProcessingResult.class.getName())) {
+                    return false;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+        else if (ResultCategory.ALIGNED.equals(resultCategory)) {
+            if (!artifactDescriptor.isAligned()) {
+                return false;
+            }
         }
         
         return true;
