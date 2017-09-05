@@ -54,9 +54,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Dialog for generating random neurons in the LVV.
+ * Dialog for managing properties on groups of neurons
  * 
- * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ * @author <a href="mailto:schauderd@janelia.hhmi.org">David Schauder</a>
  */
 public class NeuronGroupsDialog extends ModalDialog {
 

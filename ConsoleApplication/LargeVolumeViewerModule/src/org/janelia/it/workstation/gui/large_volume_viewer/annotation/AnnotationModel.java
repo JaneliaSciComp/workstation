@@ -66,6 +66,10 @@ import Jama.Matrix;
 import java.util.Iterator;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
+import org.janelia.it.jacs.model.domain.DomainConstants;
+import org.janelia.it.jacs.model.domain.Preference;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.api.DomainMgr;
 
 /**
  * This class is responsible for handling requests from the AnnotationManager.  those
@@ -295,9 +299,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         log.info("Creating tag map for workspace {}", workspace.getId());
         currentTagMap = new TmNeuronTagMap();
         for(TmNeuronMetadata tmNeuronMetadata : neuronManager.getNeurons()) {
-            for (TmGeoAnnotation wack: tmNeuronMetadata.getGeoAnnotationMap().values()) {
-                 System.out.println ("coordinates:" + wack.getX() + "," + wack.getY() + "," + wack.getZ());
-            }
             for(String tag : tmNeuronMetadata.getTags()) {
                 currentTagMap.addTag(tag, tmNeuronMetadata);
             }
@@ -1750,10 +1751,15 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         return currentTagMap.getAllTags();
     }
     
-    public void saveTagMeta(Map<String,Map<String,Object>> allTagMeta) {
+    public void saveTagMeta(Map<String,Map<String,Object>> allTagMeta) throws Exception {
         currentTagMap.saveTagMeta(allTagMeta);
+        // persist this map as a user preference for now
+        saveUserPreferences();
+        
         // sync up with Horta
-        neuronSetAdapter.getMetaWorkspace().setTagMetadata(currentTagMap);
+        if (neuronSetAdapter.getMetaWorkspace()!=null) {
+            neuronSetAdapter.getMetaWorkspace().setTagMetadata(currentTagMap);
+        }
     }
     
     public void setTagMeta(String tagName, Map<String,Object> meta) {
@@ -1767,6 +1773,19 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public Map<String,Map<String,Object>> getAllTagMeta() {
         return currentTagMap.getAllTagMeta();
     }
+    
+     private void loadUserPreferences() throws Exception {
+        Preference userPreferences = DomainMgr.getDomainMgr().getPreference(DomainConstants.MOUSELIGHT_GROUP_KEY, this.getCurrentSample().getId().toString());
+        if (userPreferences!=null) {
+            currentTagMap.saveTagMeta((Map<String,Map<String,Object>>) userPreferences.getValue());
+        }
+    }
+
+    private void saveUserPreferences() throws Exception {
+        // for now use the tag map as the user preferences... as preferences increase, generalize the structure
+        DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, this.getCurrentSample().getId().toString(), currentTagMap);
+    }
+    
 
     public Set<TmNeuronMetadata> getNeuronsForTag(String tag) {
         return currentTagMap.getNeurons(tag);

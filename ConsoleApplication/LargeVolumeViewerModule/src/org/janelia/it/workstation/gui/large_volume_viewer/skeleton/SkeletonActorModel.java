@@ -690,8 +690,6 @@ public class SkeletonActorModel {
         if (anchor == null || anchor.getNeuronID() == null || !neuronStyles.containsKey(anchor.getNeuronID())) {
             return false;
         } else {
-            System.out.println ("GGGGGG");
-            System.out.println (neuronStyles.get(anchor.getNeuronID()).isReadOnly());
             return neuronStyles.get(anchor.getNeuronID()).isReadOnly();
         }
     }

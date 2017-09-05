@@ -216,8 +216,6 @@ implements MouseMode, KeyListener
 			// test for closest == null because null will come back invisible,
 			//	and we need hover-->null to unhover
 			if ((closest == null || skeletonActorModel.anchorIsVisible(closest)) && !skeletonActorModel.anchorIsReadOnly(closest)) {
-                            
-                                System.out.println ("BBBBB");
 				hoverAnchor = closest;
 				skeletonActor.getModel().setHoverAnchor(hoverAnchor);
 			}
@@ -678,14 +676,11 @@ implements MouseMode, KeyListener
                         
                         // get all neurons in group
                         Set<TmNeuronMetadata> neurons = annModel.getNeuronsForTag(groupName);
-                        
-                                System.out.println ("QQQQQ" + fooMap);
                         // set toggle state
                         String property =(String)fooMap.get("toggleprop");
                         if (property!=null) {
                             try {
                                 Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
-                                System.out.println ("QQQQQ" + property);
                                 if (property.equals("Radius")) {
                                     float radius = toggled ? (float) 0.3 : 1;                                    
                                     while (neuronsIter.hasNext()) {
@@ -698,7 +693,6 @@ implements MouseMode, KeyListener
                                     }
                                    
                                 } else if (property.equals("Read Only")) {
-                                    System.out.println ("READONLY");
                                     while (neuronsIter.hasNext()) {
                                         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronReadOnly(neuronsIter.next(), !toggled);
                                     }

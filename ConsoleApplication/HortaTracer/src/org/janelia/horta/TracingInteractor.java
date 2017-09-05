@@ -717,8 +717,6 @@ public class TracingInteractor extends MouseAdapter
 
             if (defaultWorkspace != null) {
                 try {
-                    
-                                System.out.println ("dddddDDD");
                     double[] loc = new double[]{cursorXyz.getX(), cursorXyz.getY(), cursorXyz.getZ()};
                     final boolean bSearchMultipleAnchors = true;
                     if (bSearchMultipleAnchors) {
