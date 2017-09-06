@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,6 +16,7 @@ import java.util.Set;
 
 import javax.swing.SwingUtilities;
 
+import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -1743,13 +1745,105 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             Color color = new Color(colorArr[0], colorArr[1], colorArr[2]);
             neuron.setColor(color);
         }
-        
+
+
+        // check for corresponding notes file; if present, import notes
+
+        // find file; read and parse it
+        File notesFile = findNotesFile(swcFile);
+        if (notesFile.exists()) {
+            // read and parse
+            Map<Vec3, String> notes = parseNotesFile(notesFile);
+
+            // add notes to neuron
+            if (notes.size() > 0) {
+                for (Vec3 loc: notes.keySet()) {
+
+                    // need to scan annotations to find each x,y,z location, then record ann ID;
+                    //  then you can create TmStructuredTextAnnotation and put into map?
+                    // or do you need to go through annmodel?  might be easier to save neuron,
+                    //  add to manager, then use existing note infrastructure; if we do that,
+                    //  is the spatial index ready for use, which would help us find annotations?
+                    //  because that's looking expensive; maybe I should grab notes first,
+                    //  and then find annotation x, y, z as we load them?  ugh...
+
+
+                }
+
+            }
+
+        } else {
+
+            // complain?  we're deep in AnnModel, no error dialogs here
+
+
+        }
+
+
+
+
         neuronManager.saveNeuronData(neuron);
 
         // add it to the workspace
         neuronManager.addNeuron(neuron);
         
         return neuron;
+    }
+
+    private File findNotesFile(File swcFile) {
+        String notesBase = FilenameUtils.removeExtension(swcFile.getName());
+        Path notePath = swcFile.toPath().getParent().resolve(notesBase + ".json");
+        return notePath.toFile();
+    }
+
+    private Map<Vec3, String> parseNotesFile(File notesFile) {
+        Map<Vec3, String> notes = new HashMap<>();
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode rootNode = null;
+        try {
+            rootNode = mapper.readTree(notesFile);
+        }
+        catch (IOException e) {
+
+            // do something?
+
+
+
+            e.printStackTrace();
+
+
+        }
+        JsonNode offsetNode = rootNode.path("offset");
+        JsonNode neuronsNode = rootNode.path("neurons");
+        if (offsetNode.isMissingNode() || neuronsNode.isMissingNode()) {
+
+            // trouble
+
+            System.out.println("missing offset or neurons node");
+
+        }
+
+        double[] offset = {0.0, 0.0, 0.0};
+        for (int i=0; i<3; i++) {
+            offset[i] = offsetNode.get(i).asDouble();
+        }
+
+        for (JsonNode neuronNode: neuronsNode) {
+            JsonNode notesNode = neuronNode.path("notes");
+            for (JsonNode noteNode: notesNode) {
+
+                // from swc part, above:
+                double[] point = swcDataConverter.internalFromExternal(
+                        new double[]{
+                                noteNode.get(0).asDouble() + offset[0],
+                                noteNode.get(1).asDouble() + offset[1],
+                                noteNode.get(2).asDouble() + offset[2],});
+                Vec3 loc = new Vec3(point[0], point[1], point[2]);
+                notes.put(loc, notesNode.get(3).asText());
+            }
+        }
+        return notes;
     }
 
     // and now we have all the NeuronTagMap methods...in each case, it's a simple
