@@ -74,6 +74,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
@@ -1370,8 +1371,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
      * @throws MalformedURLException
      */
 
-    public boolean loadFile(String canonicalLinuxPath) throws MalformedURLException {
-
+    public boolean loadFile(TmSample sample) throws MalformedURLException {
+        String canonicalLinuxPath = sample.getFilepath();
         log.info("loadFile: {}", canonicalLinuxPath);
         
         // on Linux, this just works, as the input path is the Linux path;
@@ -1489,7 +1490,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
         volumeImage.setRemoteBasePath(canonicalLinuxPath);       
         
-        return loadURL(url);
+        return loadURL(url, sample);
     }
 
     /**
@@ -1502,12 +1503,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         }
 
         // then just go ahead and load the file
-        boolean rtnVal = loadURL(url);
+        boolean rtnVal = loadURL(url, null);
         updateSWCDataConverter();
         return rtnVal;
     }
 
-    public boolean loadURL(URL url) {  
+    public boolean loadURL(URL url, TmSample sample) {  
         log.info("loadURL: {}", url);
         boolean rtnVal = false;
     	// Check if url exists first...
@@ -1515,8 +1516,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             if (url == null) {
                 throw new IllegalArgumentException("Location for re-centering not found.");
             }
-    		url.openStream();            
-        	rtnVal = volumeImage.loadURL(url);
+            url.openStream();
+            if (sample == null) {
+                rtnVal = volumeImage.loadURL(url);
+            } else {
+                rtnVal = volumeImage.loadSampleURL(url, sample);
+            }
             this.setLoadedUrl(url);            
             new AnnotationSkeletonViewLauncher(false).refreshTopComponent();
 
@@ -1589,6 +1594,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         result.setSampleUrl(loadedUrl);
         
         result.setSampleId(getSampleId());
+        result.setSample(this.annotationModel.getCurrentSample());
         result.setWorkspaceId(getWorkspaceId());
         
         // Use the pointer location, not camera focus

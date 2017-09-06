@@ -157,6 +157,7 @@ import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
@@ -2062,6 +2063,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         glad.display();
         glad.swapBuffers();
     }
+    
+     public TmSample getCurrentSample() 
+    {
+        if (this.metaWorkspace!=null)
+            return this.metaWorkspace.getSample();
+        else return null;
+    }
         
     public BufferedImage getScreenShot() 
     {
@@ -2134,7 +2142,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
         logger.info("Ktx source folder = " + folderSelection);
         try {
-            return new KtxOctreeBlockTileSource(folder.toURI().toURL());
+            return new KtxOctreeBlockTileSource(folder.toURI().toURL(), this.getCurrentSample());
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
             JOptionPane.showMessageDialog(

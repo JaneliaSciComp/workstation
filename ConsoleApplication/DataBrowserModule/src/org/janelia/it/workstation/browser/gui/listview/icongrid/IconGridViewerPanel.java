@@ -132,7 +132,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             @Override
             protected void currImageSizeChanged(int imageSize) {
                 imagesPanel.setMaxImageWidth(imageSize);
-                imagesPanel.recalculateGrid();
+                //imagesPanel.recalculateGrid();
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
@@ -548,7 +548,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                    public void run() {
                        imagesPanel.loadUnloadImages();
                    }
-               });
+                });
 
                 // Finally, we're done, we can call the success callback
                 ConcurrentUtils.invokeAndHandleExceptions(success);

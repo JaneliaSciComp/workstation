@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import java.util.Map;
 
 /**
  * A web client providing access to the Tiled Microscope REST Service.
@@ -107,6 +108,17 @@ public class TiledMicroscopeRestClient {
             throw new WebApplicationException(response);
         }
         return response.readEntity(new GenericType<List<TmSample>>() {});
+    }
+        
+    public Map<String,Object> getTmSampleConstants(String samplePath) throws Exception {
+        Response response = getMouselightEndpoint("/sample/constants")
+                .queryParam("samplePath", samplePath)
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response, "getTmSampleConstants")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(new GenericType<Map<String,Object>>() {});
     }
 
     public TmSample create(TmSample tmSample) throws Exception {

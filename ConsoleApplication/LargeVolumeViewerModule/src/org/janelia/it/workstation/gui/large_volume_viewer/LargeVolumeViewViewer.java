@@ -128,7 +128,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     
                     @Override
                     protected void doStuff() throws Exception {
-                        success = viewUI.loadFile(sliceSample.getFilepath());
+                        success = viewUI.loadFile(sliceSample);
                     }
 
                     @Override
