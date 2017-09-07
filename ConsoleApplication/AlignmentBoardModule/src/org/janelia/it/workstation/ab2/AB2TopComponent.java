@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.janelia.it.workstation.gui.alignment_board_viewer.top_component;
+package org.janelia.it.workstation.ab2;
 
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -15,7 +15,7 @@ import org.openide.util.NbBundle.Messages;
  * Top component which displays something.
  */
 @ConvertAsProperties(
-        dtd = "-//org.janelia.it.workstation.gui.alignment_board_viewer.top_component//AB2//EN",
+        dtd = "-//org.janelia.it.workstation.ab2//AB2//EN",
         autostore = false
 )
 @TopComponent.Description(
@@ -24,7 +24,7 @@ import org.openide.util.NbBundle.Messages;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "output", openAtStartup = false)
-@ActionID(category = "Window", id = "org.janelia.it.workstation.gui.alignment_board_viewer.top_component.AB2TopComponent")
+@ActionID(category = "Window", id = "org.janelia.it.workstation.ab2.AB2TopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AB2Action",
@@ -41,7 +41,6 @@ public final class AB2TopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_AB2TopComponent());
         setToolTipText(Bundle.HINT_AB2TopComponent());
-        putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
 
     }
 
@@ -53,30 +52,19 @@ public final class AB2TopComponent extends TopComponent {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jLabel1 = new javax.swing.JLabel();
-
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(AB2TopComponent.class, "AB2TopComponent.jLabel1.text")); // NOI18N
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(385, 385, 385)
-                .addComponent(jLabel1)
-                .addContainerGap(458, Short.MAX_VALUE))
+            .addGap(0, 1000, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(222, 222, 222)
-                .addComponent(jLabel1)
-                .addContainerGap(511, Short.MAX_VALUE))
+            .addGap(0, 750, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel jLabel1;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
