@@ -52,7 +52,7 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
-                    <code-name-base>org.janelia.jogl213</code-name-base>
+                    <code-name-base>org.janelia.jogl224</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
