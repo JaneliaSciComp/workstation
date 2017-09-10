@@ -5,6 +5,7 @@
  */
 package org.janelia.it.workstation.ab2;
 
+import org.janelia.it.workstation.ab2.renderer.AB2Basic3DRenderer;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -45,7 +46,6 @@ public final class AB2TopComponent extends TopComponent {
     private AB2Controller ab2Controller;
     private AB2Data ab2Data;
     private AB2DomainObject ab2DomainObject;
-    private AB2Renderer ab2Renderer;
 
     public AB2TopComponent() {
         logger.info("AB2TopComponent() constructed");
@@ -94,17 +94,15 @@ public final class AB2TopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         // TODO add custom code on component opening
-        if (ab2Renderer==null) {
-            ab2Renderer = new AB2Renderer();
-        }
         if (ab2Controller==null) {
-            ab2Controller=new AB2Controller(ab2Renderer);
+            ab2Controller=new AB2Controller();
         }
         if (ab2Data==null) {
             ab2Data=new AB2Data();
         }
         if (ab2GLPanel==null) {
-            ab2GLPanel=new AB2GLPanel(1000, 750, ab2Renderer, ab2Controller);
+            ab2GLPanel=new AB2GLPanel(1000, 750, ab2Controller);
+            ab2Controller.setGljPanel(ab2GLPanel);
         }
         ab2Controller.start();
     }

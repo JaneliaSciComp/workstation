@@ -22,6 +22,7 @@ import org.janelia.it.workstation.ab2.event.AB2MouseMovedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MousePressedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseReleasedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseWheelEvent;
+import org.janelia.it.workstation.ab2.renderer.AB2Basic3DRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,6 @@ public class AB2GLPanel extends GLJPanel
     protected static GLProfile profile = null;
     protected static GLCapabilities capabilities = null;
 
-    private AB2Renderer renderer;
     private AB2Controller controller;
 
     static {
@@ -46,15 +46,14 @@ public class AB2GLPanel extends GLJPanel
         }
     }
 
-    public AB2GLPanel(int width, int height, AB2Renderer renderer, AB2Controller controller) {
+    public AB2GLPanel(int width, int height, AB2Controller controller) {
         super(capabilities);
-        this.renderer=renderer;
         this.controller=controller;
         addMouseListener(this);
         addMouseMotionListener(this);
         addMouseWheelListener(this);
         setPreferredSize( new Dimension( width, height ) );
-        addGLEventListener(renderer);
+        addGLEventListener(controller);
     }
 
     @Override
