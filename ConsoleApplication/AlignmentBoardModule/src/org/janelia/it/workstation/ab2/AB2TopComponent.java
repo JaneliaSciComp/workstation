@@ -94,11 +94,11 @@ public final class AB2TopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         // TODO add custom code on component opening
-        if (ab2Controller==null) {
-            ab2Controller=new AB2Controller();
-        }
         if (ab2Renderer==null) {
             ab2Renderer = new AB2Renderer();
+        }
+        if (ab2Controller==null) {
+            ab2Controller=new AB2Controller(ab2Renderer);
         }
         if (ab2Data==null) {
             ab2Data=new AB2Data();
