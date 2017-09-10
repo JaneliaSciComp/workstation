@@ -10,6 +10,8 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.
@@ -37,7 +39,16 @@ import org.openide.util.NbBundle.Messages;
 })
 public final class AB2TopComponent extends TopComponent {
 
+    private Logger logger = LoggerFactory.getLogger(AB2TopComponent.class);
+
+    private AB2GLPanel ab2GLPanel;
+    private AB2Controller ab2Controller;
+    private AB2Data ab2Data;
+    private AB2DomainObject ab2DomainObject;
+    private AB2Renderer ab2Renderer;
+
     public AB2TopComponent() {
+        logger.info("AB2TopComponent() constructed");
         initComponents();
         setName(Bundle.CTL_AB2TopComponent());
         setToolTipText(Bundle.HINT_AB2TopComponent());
@@ -52,28 +63,56 @@ public final class AB2TopComponent extends TopComponent {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        glWrapperPanel = new javax.swing.JPanel();
+
+        javax.swing.GroupLayout glWrapperPanelLayout = new javax.swing.GroupLayout(glWrapperPanel);
+        glWrapperPanel.setLayout(glWrapperPanelLayout);
+        glWrapperPanelLayout.setHorizontalGroup(
+            glWrapperPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 1000, Short.MAX_VALUE)
+        );
+        glWrapperPanelLayout.setVerticalGroup(
+            glWrapperPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 750, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1000, Short.MAX_VALUE)
+            .addComponent(glWrapperPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 750, Short.MAX_VALUE)
+            .addComponent(glWrapperPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel glWrapperPanel;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
         // TODO add custom code on component opening
+        if (ab2Controller==null) {
+            ab2Controller=new AB2Controller();
+        }
+        if (ab2Renderer==null) {
+            ab2Renderer = new AB2Renderer();
+        }
+        if (ab2Data==null) {
+            ab2Data=new AB2Data();
+        }
+        if (ab2GLPanel==null) {
+            ab2GLPanel=new AB2GLPanel(1000, 750, ab2Renderer, ab2Controller);
+        }
+        ab2Controller.start();
     }
 
     @Override
     public void componentClosed() {
         // TODO add custom code on component closing
+        ab2Controller.shutdown();
     }
 
     void writeProperties(java.util.Properties p) {
