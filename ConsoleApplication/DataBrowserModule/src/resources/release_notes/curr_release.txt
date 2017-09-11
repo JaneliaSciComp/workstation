@@ -1,6 +1,7 @@
 // 6.5
 
 Workstation Browser
+* Fixed problem with image grid not redrawing when resizing the window
 * Fixed bug with deleting duplicate folder contents
 
 Large Volume Viewer
