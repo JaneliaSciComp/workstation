@@ -212,8 +212,8 @@ public class SkeletonActorModel {
             for (Long neuronID : neuronVertices.keySet()) {
 
                 NeuronStyle neuronStyle=neuronStyles.get(neuronID);
-
-                if (neuronStyle != null && !neuronStyle.isVisible()) {
+                
+                if (neuronStyle != null && (!neuronStyle.isVisible() || !neuronStyle.isUserVisible())) {
                     continue;
                 }
 
@@ -305,7 +305,7 @@ public class SkeletonActorModel {
 
             for (Long neuronID : neuronVertices.keySet()) {
                 NeuronStyle neuronStyle=neuronStyles.get(neuronID);
-                if (neuronStyle != null && !neuronStyle.isVisible()) {
+                if (neuronStyle != null && !neuronStyle.isVisible() && !neuronStyle.isUserVisible()) {
                     continue;
                 }
                 neuronOrderList.add(neuronID);
@@ -682,15 +682,16 @@ public class SkeletonActorModel {
         if (anchor == null || anchor.getNeuronID() == null || !neuronStyles.containsKey(anchor.getNeuronID())) {
             return false;
         } else {
-            return neuronStyles.get(anchor.getNeuronID()).isVisible();
+            NeuronStyle style = neuronStyles.get(anchor.getNeuronID());
+            return style.isVisible() && style.isUserVisible();
         }
     }
     
-    public boolean anchorIsReadOnly(Anchor anchor) {
+    public boolean anchorIsNonInteractable(Anchor anchor) {
         if (anchor == null || anchor.getNeuronID() == null || !neuronStyles.containsKey(anchor.getNeuronID())) {
             return false;
         } else {
-            return neuronStyles.get(anchor.getNeuronID()).isReadOnly();
+            return neuronStyles.get(anchor.getNeuronID()).isNonInteractable();
         }
     }
     

@@ -64,6 +64,7 @@ import com.google.common.base.Stopwatch;
 
 import Jama.Matrix;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -307,6 +308,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // Clear neuron selection
         log.info("Clearing current neuron for workspace {}", workspace.getId());
         setCurrentNeuron(null);   
+        
+        // load user preferences
+        loadUserPreferences();
     }
     
     public void loadComplete() { 
@@ -445,8 +449,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             @Override
             public boolean include(NeuronVertex vertex, TmGeoAnnotation annotation) {
                 boolean notItself = !annotation.getId().equals(excludedAnnotationID);
-                boolean visible = getNeuronStyle(getNeuronFromNeuronID(annotation.getNeuronId())).isVisible();
-                return notItself && visible;
+                NeuronStyle style = getNeuronStyle(getNeuronFromNeuronID(annotation.getNeuronId()));
+                boolean visible = style.isVisible();
+                boolean userVisible = style.isUserVisible();
+                return notItself && visible && userVisible;
             }
         });
         
@@ -1513,13 +1519,15 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * called from multiple threads, and the update is not atomic
      */
     public synchronized void setNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) throws Exception {
-        if (neuron.getVisibility() != style.isVisible() || neuron.getColor() != style.getColor()) {
+      //  if (neuron.getVisibility() != style.isVisible() || neuron.getColor().getRGB() != style.getColor().getRGB()) {
             ModelTranslation.updateNeuronStyle(style, neuron);
             neuronManager.saveNeuronMetadata(neuron);
             // fire change to listeners
             fireNeuronStyleChanged(neuron, style);
             activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
-        }
+     //   } else {
+      //      fireNeuronStyleChanged(neuron, style);
+      //  }
     }
 
     public synchronized void setNeuronColors(List<TmNeuronMetadata> neuronList, Color color) throws Exception {
@@ -1736,6 +1744,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public Set<String> getPredefinedNeuronTags() {
         return currentTagMap.getPredefinedTags();
     }
+    
+    public TmNeuronTagMap getAllTagMeta() {
+        return currentTagMap;
+    }
 
     public Set<String> getAvailableNeuronTags() {
         Set<String> availableTags = new HashSet<>(getAllNeuronTags());
@@ -1752,7 +1764,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public void saveTagMeta(Map<String,Map<String,Object>> allTagMeta) throws Exception {
-        currentTagMap.saveTagMeta(allTagMeta);
+        currentTagMap.saveTagGroupMappings(allTagMeta);
         // persist this map as a user preference for now
         saveUserPreferences();
         
@@ -1763,27 +1775,30 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public void setTagMeta(String tagName, Map<String,Object> meta) {
-        currentTagMap.setTagMeta(tagName, meta);
+        currentTagMap.setTagGroupMapping(tagName, meta);
     }
     
-    public Map<String,Object> getTagMeta(String tagName) {
-        return currentTagMap.getMetaForTag(tagName);
+    public Map<String,Object> getTagGroupMapping(String tagName) {
+        return currentTagMap.geTagGroupMapping(tagName);
     }
     
-    public Map<String,Map<String,Object>> getAllTagMeta() {
-        return currentTagMap.getAllTagMeta();
+    public Map<String,Map<String,Object>> getTagGroupMappings() {
+        return currentTagMap.getAllTagGroupMappings();
     }
     
-     private void loadUserPreferences() throws Exception {
-        Preference userPreferences = DomainMgr.getDomainMgr().getPreference(DomainConstants.MOUSELIGHT_GROUP_KEY, this.getCurrentSample().getId().toString());
+     public void loadUserPreferences() throws Exception {
+        Preference userPreferences = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString());
         if (userPreferences!=null) {
-            currentTagMap.saveTagMeta((Map<String,Map<String,Object>>) userPreferences.getValue());
+            currentTagMap.saveTagGroupMappings((Map<String,Map<String,Object>>)userPreferences.getValue());
+            if (neuronSetAdapter!=null && neuronSetAdapter.getMetaWorkspace()!=null) {
+                neuronSetAdapter.getMetaWorkspace().setTagMetadata(currentTagMap);
+            }
         }
     }
 
-    private void saveUserPreferences() throws Exception {
+    public void saveUserPreferences() throws Exception {
         // for now use the tag map as the user preferences... as preferences increase, generalize the structure
-        DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, this.getCurrentSample().getId().toString(), currentTagMap);
+        DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), currentTagMap.getAllTagGroupMappings());
     }
     
 

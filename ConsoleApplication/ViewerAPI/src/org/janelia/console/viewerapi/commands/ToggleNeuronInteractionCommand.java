@@ -51,13 +51,13 @@ implements UndoableEdit, Command, Notifier
             NeuronModel neuron) 
     {
         this.neuron = neuron;
-        this.wasReadonly = neuron.isReadOnly();
+        this.wasReadonly = neuron.isNonInteractable();
     }
     
     // Command-like semantics execute is almost a synonym for redo()
     @Override
     public boolean execute() {
-        neuron.setReadOnly(! wasReadonly);
+        neuron.setNonInteractable(! wasReadonly);
         if (doesNotify())
             neuron.getVisibilityChangeObservable().notifyObservers();
         return true;
@@ -80,7 +80,7 @@ implements UndoableEdit, Command, Notifier
     @Override
     public void undo() {
         super.undo(); // raises exception if canUndo() is false
-        neuron.setReadOnly(wasReadonly);
+        neuron.setNonInteractable(wasReadonly);
         if (doesNotify())
             neuron.getVisibilityChangeObservable().notifyObservers();
     }

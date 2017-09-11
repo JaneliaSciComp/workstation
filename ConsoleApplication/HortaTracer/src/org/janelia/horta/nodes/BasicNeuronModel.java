@@ -350,12 +350,22 @@ public class BasicNeuronModel implements NeuronModel
     }
 
     @Override
-    public boolean isReadOnly() {
+    public boolean isNonInteractable() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void setReadOnly(boolean readonly) {
+    public void setNonInteractable(boolean nonInteractable) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean isUserVisible() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setUserVisible(boolean userVisible) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     

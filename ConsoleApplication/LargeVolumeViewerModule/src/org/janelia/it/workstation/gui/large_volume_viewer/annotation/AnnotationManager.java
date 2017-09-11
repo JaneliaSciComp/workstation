@@ -1531,7 +1531,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         Color color = askForNeuronColor(getNeuronStyle(neuron));
         if (color != null) {
-            NeuronStyle style = new NeuronStyle(color, neuron.isVisible(), false);
+            NeuronStyle style = new NeuronStyle(color, neuron.isVisible(), false, true);
             setNeuronStyle(neuron, style);
         }
     }
@@ -1646,10 +1646,24 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         setNeuronStyle(neuron, style);
     }
     
-    public void setNeuronReadOnly(TmNeuronMetadata neuron, boolean readonly) {
-        NeuronStyle style = getNeuronStyle(neuron);
-        style.setReadOnly(readonly);
-        setNeuronStyle(neuron, style);
+    public void setNeuronNonInteractable(List<TmNeuronMetadata> neuronList, boolean nonInteractable) {
+        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
+        for (int i=0; i<neuronList.size(); i++) {
+             NeuronStyle style = getNeuronStyle(neuronList.get(i));
+             style.setNonInteractable(nonInteractable);
+             styleUpdater.put(neuronList.get(i), style);
+        }
+        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
+    }
+    
+    public void setNeuronUserVisible(List<TmNeuronMetadata> neuronList, boolean userVisible) {
+        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
+        for (int i=0; i<neuronList.size(); i++) {
+             NeuronStyle style = getNeuronStyle(neuronList.get(i));
+             style.setUserVisible(userVisible);
+             styleUpdater.put(neuronList.get(i), style);
+        }
+        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
     }
 
     public NeuronStyle getNeuronStyle(TmNeuronMetadata neuron) {

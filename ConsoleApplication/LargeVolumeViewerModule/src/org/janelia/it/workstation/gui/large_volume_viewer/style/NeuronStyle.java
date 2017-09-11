@@ -18,13 +18,15 @@ public class NeuronStyle {
 
     private Color color;
     private boolean visible = true;
-    private boolean readOnly = false;
+    private boolean userVisible = true;
+    private boolean nonInteractable = false;
     float[] cachedColorArray=new float[3]; // needed for performance
 
     // constants, because I already used "visible" instead of "visibility" once...
     private static final String COLOR_KEY = "color";
     private static final String VISIBILITY_KEY = "visibility";
-    private static final String READONLY_KEY = "readonly";
+    private static final String NONINTERACTABLE_KEY = "readonly";
+    private static final String USER_VISIBILITY_KEY = "user_visibility";
 
     // default colors; we index into this list with neuron ID;
     //  note that our neuron IDs are all of the form 8*n+4,
@@ -51,11 +53,11 @@ public class NeuronStyle {
      * get a default style for a neuron
      */
     public static NeuronStyle getStyleForNeuron(Long neuronID) {
-        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true, false);
+        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true, false, true);
     }
 
-    public static NeuronStyle getStyleForNeuron(Long neuronID, boolean visible, boolean readonly) {
-        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], visible, readonly);
+    public static NeuronStyle getStyleForNeuron(Long neuronID, boolean visible, boolean noninteractable, boolean userVisible) {
+        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], visible, noninteractable, userVisible);
     }
 
     /**
@@ -81,13 +83,20 @@ public class NeuronStyle {
         }
         boolean visibility = visibilityNode.asBoolean();
         
-        JsonNode readOnlyNode = rootNode.path(READONLY_KEY);
-        if (readOnlyNode.isMissingNode() || !readOnlyNode.isBoolean()) {
-            return null;
+        JsonNode nonInteractableNode = rootNode.path(NONINTERACTABLE_KEY);
+        if (nonInteractableNode.isMissingNode() || !nonInteractableNode.isBoolean()) {
+              return null;
         }
-        boolean readOnly = readOnlyNode.asBoolean();
+        boolean  nonInteractable = nonInteractableNode.asBoolean();
+        
+        JsonNode userVisibilityNode = rootNode.path(USER_VISIBILITY_KEY);
+        if (userVisibilityNode.isMissingNode() || !userVisibilityNode.isBoolean()) {
+             return null;
+        }
+        
+        boolean userVisible =userVisibilityNode.asBoolean();
 
-        return new NeuronStyle(color, visibility, readOnly);
+        return new NeuronStyle(color, visibility, nonInteractable, userVisible);
     }
 
     public NeuronStyle() {
@@ -95,10 +104,11 @@ public class NeuronStyle {
         this.visible = true;
     }
 
-    public NeuronStyle(Color color, boolean visible, boolean readOnly) {
+    public NeuronStyle(Color color, boolean visible, boolean nonInteractable, boolean userVisible) {
         setColor(color);
         this.visible = visible;
-        this.readOnly = readOnly;
+        this.nonInteractable = nonInteractable;
+        this.userVisible = userVisible;
     }
 
     public float getRedAsFloat() {
@@ -152,28 +162,42 @@ public class NeuronStyle {
         rootNode.put(COLOR_KEY, colors);
 
         rootNode.put(VISIBILITY_KEY, isVisible());
-        rootNode.put(READONLY_KEY, isReadOnly());
+        rootNode.put(NONINTERACTABLE_KEY, isNonInteractable());
+        rootNode.put(USER_VISIBILITY_KEY, isUserVisible());
 
         return rootNode;
     }
 
     @Override
     public String toString() {
-        return "NeuronStyle(" + color + ", visibility: " + visible + ")";
+        return "NeuronStyle(" + color + ", visibility: " + visible + ", userVisibility: " + nonInteractable + ", visibility: " + visible + ")";
     }
 
     /**
      * @return the readOnly
      */
-    public boolean isReadOnly() {
-        return readOnly;
+    public boolean isNonInteractable() {
+        return nonInteractable;
     }
 
     /**
-     * @param readOnly the readOnly to set
+     * @param nonInteractable the nonInteractable to set
      */
-    public void setReadOnly(boolean readOnly) {
-        System.out.println ("FFFFFF");
-        this.readOnly = readOnly;
+    public void setNonInteractable(boolean nonInteractable) {
+        this.nonInteractable = nonInteractable;
+    }
+
+    /**
+     * @return the userVisible
+     */
+    public boolean isUserVisible() {
+        return userVisible;
+    }
+
+    /**
+     * @param userVisible the userVisible to set
+     */
+    public void setUserVisible(boolean userVisible) {
+        this.userVisible = userVisible;
     }
 }

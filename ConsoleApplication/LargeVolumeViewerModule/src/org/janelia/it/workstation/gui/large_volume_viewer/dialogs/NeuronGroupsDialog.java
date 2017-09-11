@@ -119,7 +119,7 @@ public class NeuronGroupsDialog extends ModalDialog {
         
         NeuronGroupsTableModel tableModel = new NeuronGroupsTableModel();
         AnnotationModel annModel = annotationMgr.getAnnotationModel();
-        tableModel.loadTable(annModel.getAllNeuronTags(), annModel.getAllTagMeta());
+        tableModel.loadTable(annModel.getAllNeuronTags(), annModel.getTagGroupMappings());
         bindingsTable = new JTable(tableModel);
         
         TableColumn col = bindingsTable.getColumnModel().getColumn(COL_KEYBIND);

@@ -271,7 +271,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
             return false; // we are going to redo everything anyway, so skip the surgical update
         int sv = neuron.getVertexes().size();
         int se = neuron.getEdges().size();
-        boolean bIsVisible = neuron.isVisible();
+        boolean bIsVisible = neuron.isVisible() && neuron.isUserVisible();
         float visFloat = bIsVisible ? 1.0f : 0.0f;
         boolean bChanged = false;
         // log.info("Updating neuron visibility to '{}'", bIsVisible);

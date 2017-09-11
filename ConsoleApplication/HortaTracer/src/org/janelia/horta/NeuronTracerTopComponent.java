@@ -2003,6 +2003,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         // logger.info("Horta closed");
         // saveStartupPreferences(); // not called at application close...
         neuronEditDispatcher.onClosed();
+        // clear out SWCbuffers
+        neuronMPRenderer.clearNeuronReconstructions();
     }
 
     @Override

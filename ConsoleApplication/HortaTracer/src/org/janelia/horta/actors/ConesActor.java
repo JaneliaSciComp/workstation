@@ -86,7 +86,7 @@ public class ConesActor extends BasicGL3Actor
             @Override
             public void update(Observable o, Object arg)
             {
-                setVisible(neuron.isVisible());
+                setVisible(neuron.isVisible() && neuron.isUserVisible());
             }
         });
         neuron.getColorChangeObservable().addObserver(new Observer() {

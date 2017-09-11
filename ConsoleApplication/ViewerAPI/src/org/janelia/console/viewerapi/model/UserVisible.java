@@ -34,8 +34,8 @@ package org.janelia.console.viewerapi.model;
  *
  * @author David Schauder
  */
-public interface NonInteractable
+public interface UserVisible
 {
-    boolean isNonInteractable();
-    void setNonInteractable(boolean readonly);
+    boolean isUserVisible();
+    void setUserVisible(boolean userVisible);
 }

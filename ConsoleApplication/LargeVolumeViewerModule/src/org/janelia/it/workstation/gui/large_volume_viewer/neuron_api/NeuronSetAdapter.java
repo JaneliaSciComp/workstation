@@ -278,6 +278,7 @@ implements NeuronSet// , LookupListener
             return;
         this.metaWorkspace = metaWorkspace;
         this.metaWorkspace.setSample(annotationModel.getCurrentSample());
+        this.metaWorkspace.setTagMetadata(annotationModel.getAllTagMeta());
         getMetaWorkspace().setChanged();
         getMetaWorkspace().notifyObservers();  
     }
@@ -688,6 +689,14 @@ implements NeuronSet// , LookupListener
             if (vis != neuronModel.isVisible()) {
                 neuronModel.setVisible(vis);
                 neuronModel.getVisibilityChangeObservable().notifyObservers();
+                result = true;
+            }
+             boolean userviz = style.isUserVisible();
+            if (userviz != neuronModel.isUserVisible()) {
+                neuronModel.setUserVisible(userviz);
+                neuronModel.getVisibilityChangeObservable().setChanged();
+                neuronModel.getVisibilityChangeObservable().notifyObservers();
+                neuronModel.getColorChangeObservable().notifyObservers();
                 result = true;
             }
             

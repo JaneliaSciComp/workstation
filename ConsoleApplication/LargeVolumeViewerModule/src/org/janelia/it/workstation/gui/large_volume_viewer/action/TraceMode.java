@@ -215,7 +215,7 @@ implements MouseMode, KeyListener
 		if (skeletonActor != null && closest != hoverAnchor) {
 			// test for closest == null because null will come back invisible,
 			//	and we need hover-->null to unhover
-			if ((closest == null || skeletonActorModel.anchorIsVisible(closest)) && !skeletonActorModel.anchorIsReadOnly(closest)) {
+			if ((closest == null || skeletonActorModel.anchorIsVisible(closest)) && !skeletonActorModel.anchorIsNonInteractable(closest)) {
 				hoverAnchor = closest;
 				skeletonActor.getModel().setHoverAnchor(hoverAnchor);
 			}
@@ -238,7 +238,7 @@ implements MouseMode, KeyListener
             // we don't interact with invisible anchors, and since hovering
             //  is the key to all interactions, we can elegantly prevent that
             // interaction here
-            if (!skeletonActorModel.anchorIsVisible(anchor) && !skeletonActorModel.anchorIsReadOnly(anchor)) {
+            if (!skeletonActorModel.anchorIsVisible(anchor) && !skeletonActorModel.anchorIsNonInteractable(anchor)) {
                 continue;
             }
             double dz = Math.abs(2.0 * (xyz.getZ() - anchor.getLocation().getZ()) * camera.getPixelsPerSceneUnit());
@@ -660,7 +660,7 @@ implements MouseMode, KeyListener
                 
                 // if not normal key event, check our group toggle events
                 AnnotationModel annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
-                Map<String, Map<String,Object>> groupMappings = annModel.getAllTagMeta();
+                Map<String, Map<String,Object>> groupMappings = annModel.getTagGroupMappings();
                 Iterator<String> groups = groupMappings.keySet().iterator();
                 while (groups.hasNext()) {
                     String groupName = groups.next();
@@ -676,6 +676,7 @@ implements MouseMode, KeyListener
                         
                         // get all neurons in group
                         Set<TmNeuronMetadata> neurons = annModel.getNeuronsForTag(groupName);
+                        List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
                         // set toggle state
                         String property =(String)fooMap.get("toggleprop");
                         if (property!=null) {
@@ -688,14 +689,10 @@ implements MouseMode, KeyListener
                                     }
 
                                 } else if (property.equals("Visibility")) {
-                                    while (neuronsIter.hasNext()) {
-                                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuronsIter.next(), !toggled);
-                                    }
+                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, !toggled);
                                    
                                 } else if (property.equals("Read Only")) {
-                                    while (neuronsIter.hasNext()) {
-                                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronReadOnly(neuronsIter.next(), !toggled);
-                                    }
+                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, !toggled);                                    
                                 }
                             } catch (Exception error) {
 

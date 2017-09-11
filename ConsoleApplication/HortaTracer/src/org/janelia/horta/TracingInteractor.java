@@ -195,8 +195,8 @@ public class TracingInteractor extends MouseAdapter
     public void keyPressed(KeyEvent e) {
         TmNeuronTagMap tagMeta = metaWorkspace.getTagMetadata();
         
-        Map<String,Map<String,Object>> groupMappings = tagMeta.getAllTagMeta();
-        Iterator<String> groups = tagMeta.getAllTagMeta().keySet().iterator();
+        Map<String,Map<String,Object>> groupMappings = tagMeta.getAllTagGroupMappings();
+        Iterator<String> groups = tagMeta.getAllTagGroupMappings().keySet().iterator();
         while (groups.hasNext()) {
             String groupName = groups.next();
             Map<String,Object> fooMap = groupMappings.get(groupName);
@@ -729,7 +729,7 @@ public class TracingInteractor extends MouseAdapter
                             NeuronModel neuron = defaultWorkspace.getNeuronForAnchor(v);
                             if (neuron == null) 
                                 continue;
-                            if (!neuron.isVisible() || neuron.isReadOnly()) {
+                            if (!neuron.isVisible() || !neuron.isUserVisible() || neuron.isNonInteractable()) {
                                 // log.info("skipping invisible neuron");
                                 continue;
                             }
