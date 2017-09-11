@@ -13,6 +13,7 @@ import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLJPanel;
 
+import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2AwtActionEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseClickedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseDraggedEvent;
@@ -22,7 +23,6 @@ import org.janelia.it.workstation.ab2.event.AB2MouseMovedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MousePressedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseReleasedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseWheelEvent;
-import org.janelia.it.workstation.ab2.renderer.AB2Basic3DRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

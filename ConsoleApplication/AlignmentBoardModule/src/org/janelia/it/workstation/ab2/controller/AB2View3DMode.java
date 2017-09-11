@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.ab2.mode;
+package org.janelia.it.workstation.ab2.controller;
 
 import java.awt.Point;
 import java.awt.event.MouseEvent;
@@ -6,7 +6,6 @@ import java.awt.event.MouseEvent;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.workstation.ab2.AB2Controller;
 import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
 import org.janelia.it.workstation.ab2.renderer.AB2Basic3DRenderer;
 import org.janelia.it.workstation.ab2.event.AB2Event;
@@ -84,7 +83,7 @@ public class AB2View3DMode extends AB2ControllerMode {
             Point p0 = previousMousePos;
             Point dPos = new Point(p1.x-p0.x, p1.y-p0.y);
 
-            InteractionMode mode = InteractionMode.ROTATE; // default drag mode is ROTATE
+            InteractionMode mode = InteractionMode.ROTATE; // default drag controller is ROTATE
             if (mouseEvent.isMetaDown()) // command-drag to zoom
                 mode = InteractionMode.ZOOM;
             if (SwingUtilities.isMiddleMouseButton(mouseEvent)) // middle drag to translate

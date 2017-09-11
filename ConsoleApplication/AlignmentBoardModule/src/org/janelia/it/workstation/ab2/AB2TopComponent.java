@@ -5,7 +5,9 @@
  */
 package org.janelia.it.workstation.ab2;
 
-import org.janelia.it.workstation.ab2.renderer.AB2Basic3DRenderer;
+import org.janelia.it.workstation.ab2.controller.AB2Controller;
+import org.janelia.it.workstation.ab2.model.AB2Data;
+import org.janelia.it.workstation.ab2.model.AB2DomainObject;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;

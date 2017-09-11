@@ -1,11 +1,11 @@
-package org.janelia.it.workstation.ab2;
+package org.janelia.it.workstation.ab2.controller;
 
 /*
 
 This controller is intended to receive a stream of all events in the AB2 system. To make the controller
 thread-safe, events are added to a thread-safe queue, and handled in a separate thread.
 
-The EventHandler class handles certain non-mode specific Events, and then forwards all other Events to the
+The EventHandler class handles certain non-controller specific Events, and then forwards all other Events to the
 current Mode controller.
 
 Events which are not handled by the current Mode controller (and implicitly, also not handled by the EventHandler)
@@ -27,10 +27,9 @@ import javax.media.opengl.awt.GLJPanel;
 
 import org.janelia.it.workstation.ab2.event.AB2ChangeModeEvent;
 import org.janelia.it.workstation.ab2.event.AB2Event;
-import org.janelia.it.workstation.ab2.mode.AB2CompositionMode;
-import org.janelia.it.workstation.ab2.mode.AB2ControllerMode;
-import org.janelia.it.workstation.ab2.mode.AB2View3DMode;
-import org.janelia.it.workstation.ab2.renderer.AB2Basic3DRenderer;
+import org.janelia.it.workstation.ab2.controller.AB2CompositionMode;
+import org.janelia.it.workstation.ab2.controller.AB2ControllerMode;
+import org.janelia.it.workstation.ab2.controller.AB2View3DMode;
 
 public class AB2Controller implements GLEventListener {
     private ConcurrentLinkedQueue<AB2Event> eventQueue;

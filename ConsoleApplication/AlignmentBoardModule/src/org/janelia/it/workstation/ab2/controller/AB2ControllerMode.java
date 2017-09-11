@@ -1,9 +1,7 @@
-package org.janelia.it.workstation.ab2.mode;
+package org.janelia.it.workstation.ab2.controller;
 
 import javax.media.opengl.GLEventListener;
 
-import org.janelia.it.workstation.ab2.AB2Controller;
-import org.janelia.it.workstation.ab2.renderer.AB2Basic3DRenderer;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 
 public abstract class AB2ControllerMode implements GLEventListener {
