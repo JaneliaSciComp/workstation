@@ -14,21 +14,21 @@ import org.openide.util.NbBundle.Messages;
 
 @ActionID(
         category = "Help",
-        id = "WebsiteMenuAction"
+        id = "WebstationMenuAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_WebsiteMenuAction",
+        displayName = "#CTL_WebstationMenuAction",
         lazy = true
 )
-@ActionReference(path = "Menu/Help", position = 130)
-@Messages("CTL_WebsiteMenuAction=Workstation Website")
-public final class WebsiteMenuAction extends AbstractAction {
+@ActionReference(path = "Menu/Help", position = 131)
+@Messages("CTL_WebstationMenuAction=Webstation")
+public final class WebstationMenuAction extends AbstractAction {
 
-    private static final String WORKSTATION_URL = ConsoleProperties.getInstance().getProperty("workstation.url"); 
+    private static final String WEBSTATION_URL = ConsoleProperties.getInstance().getProperty("webstation.url"); 
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        ActivityLogHelper.logUserAction("WebsiteMenuAction.actionPerformed");
-        Utils.openUrlInBrowser(WORKSTATION_URL);
+        ActivityLogHelper.logUserAction("WebstationMenuAction.actionPerformed");
+        Utils.openUrlInBrowser(WEBSTATION_URL);
     }
 }
