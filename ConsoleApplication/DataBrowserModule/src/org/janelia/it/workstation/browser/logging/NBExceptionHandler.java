@@ -213,7 +213,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             String firstLine = getFirstLine(stacktrace);
             log.info("Reporting exception: "+firstLine);
 
-            String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
+            String email = AccessManager.getUserEmail();
             String titleSuffix = " from "+AccessManager.getUsername()+" -- "+firstLine;
             String subject = (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix;
              

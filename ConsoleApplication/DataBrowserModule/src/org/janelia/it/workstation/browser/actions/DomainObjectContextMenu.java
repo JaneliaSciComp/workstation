@@ -374,7 +374,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                                     annotationValue = annotation.getName();
                                 }
                             }
-                            DataReporter reporter = new DataReporter((String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL), ConsoleProperties.getString("console.HelpEmail"));
+                            DataReporter reporter = new DataReporter(AccessManager.getUserEmail(), ConsoleProperties.getString("console.HelpEmail"));
                             reporter.reportData(domainObject, annotationValue);
                         }
 

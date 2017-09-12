@@ -42,7 +42,6 @@ public final class AccessManager {
     private static final int LOG_GRANULARITY = 100;
 
     public static String RUN_AS_USER = "RunAs";
-    public static String USER_EMAIL = "UserEmail";
     public static String USER_NAME = "console.serverLogin";
     public static String USER_PASSWORD = "console.serverPassword";
     public static String REMEMBER_PASSWORD = "console.rememberPassword";
@@ -85,15 +84,7 @@ public final class AccessManager {
             if (null != authenticatedSubject) {
                 isLoggedIn = true;                
                 setSubject(authenticatedSubject);
-                log.info("Authenticated as {}", authenticatedSubject.getKey());
-                
-                String email = ((User)authenticatedSubject).getEmail();
-                if (email==null) {
-                    // Take a guess
-                    email = authenticatedSubject.getName()+"@janelia.hhmi.org";
-                }
-                ConsoleApp.getConsoleApp().setModelProperty(AccessManager.USER_EMAIL, email);
-                
+                log.info("Authenticated as {}", authenticatedSubject.getKey());                
                 Events.getInstance().postOnEventBus(new LoginEvent(authenticatedSubject));
                 beginSession();
             }
@@ -476,7 +467,11 @@ public final class AccessManager {
         }
         if (subject instanceof User) {
             User user = (User)subject;
-            return user.getEmail();
+            String email = user.getEmail();
+            if (StringUtils.isBlank(email)) {
+                email = user.getName()+"@janelia.hhmi.org";
+            }
+            return email;
         }
         return null;
     }
