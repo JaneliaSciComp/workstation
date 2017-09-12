@@ -110,6 +110,21 @@ implements NeuronSet// , LookupListener
         return !annotationModel.editsAllowed();
     }
     
+    @Override
+    public void changeNeuronUserVisible(List<TmNeuronMetadata> neuronList, boolean userVisible) {
+        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, userVisible);
+    }
+    
+    @Override
+    public void changeNeuronNonInteractable(List<TmNeuronMetadata> neuronList, boolean interactable) {
+        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, interactable);
+    }
+    
+    @Override
+    public void changeNeuronUserToggleRadius(List<TmNeuronMetadata> neuronList, boolean userToggleRadius) {
+        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, userToggleRadius);
+    }
+    
     private void updateVoxToMicronMatrices(TmSample sample)
     {
         // If we try to get the matrix too early, it comes back null, so populate just-in-time
@@ -662,6 +677,12 @@ implements NeuronSet// , LookupListener
                 repaintHorta();
             }
         }
+        
+        private boolean notifyVisibilityChange (NeuronModel neuronModel) {
+            neuronModel.getVisibilityChangeObservable().setChanged();
+            neuronModel.getVisibilityChangeObservable().notifyObservers();
+            return true;
+        }
             
         private boolean updateOneNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style)
         {
@@ -694,9 +715,19 @@ implements NeuronSet// , LookupListener
              boolean userviz = style.isUserVisible();
             if (userviz != neuronModel.isUserVisible()) {
                 neuronModel.setUserVisible(userviz);
-                neuronModel.getVisibilityChangeObservable().setChanged();
-                neuronModel.getVisibilityChangeObservable().notifyObservers();
-                neuronModel.getColorChangeObservable().notifyObservers();
+                return notifyVisibilityChange(neuronModel);
+            }             
+            boolean nonInteractable = style.isNonInteractable();
+            if (nonInteractable != neuronModel.isNonInteractable()) {
+                neuronModel.setNonInteractable(nonInteractable);
+                return notifyVisibilityChange(neuronModel);
+            }                        
+            boolean userToggleRadius = style.isUserToggleRadius();
+            if (userToggleRadius != neuronModel.isUserToggleRadius()) {
+                neuronModel.setUserToggleRadius(userToggleRadius);
+                neuronModel.getGeometryChangeObservable().setChanged();
+                neuronModel.getGeometryChangeObservable().notifyObservers();
+                repaintHorta();
                 result = true;
             }
             

@@ -69,6 +69,7 @@ import Jama.Matrix;
  */
 public class NeuronModelAdapter implements NeuronModel
 {
+
     private TmNeuronMetadata neuron;
     private final Long neuronId;
     private final VertexList vertexes;
@@ -89,6 +90,7 @@ public class NeuronModelAdapter implements NeuronModel
     private boolean bIsVisible; // TODO: sync visibility with LVV eventually. For now, we want fast toggle from Horta.
     private boolean nonInteractable; 
     private boolean userVisible;
+    private boolean userToggleRadius; 
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
     // private TmWorkspace workspace;
@@ -573,6 +575,16 @@ public class NeuronModelAdapter implements NeuronModel
     @Override
     public void setNonInteractable(boolean nonInteractable) {
         this.nonInteractable = nonInteractable;
+    }
+    
+    @Override
+    public boolean isUserToggleRadius() {
+        return userToggleRadius;
+    }
+
+    @Override
+    public void setUserToggleRadius(boolean userToggleRadius) {
+        this.userToggleRadius = userToggleRadius;
     }
 
     // TODO: - implement Edges correctly

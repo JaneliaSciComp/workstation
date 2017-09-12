@@ -82,6 +82,7 @@ public class BasicNeuronModel implements NeuronModel
     private final NeuronVertexDeletionObservable membersRemovedObservable;
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private boolean visible = true;
+    private boolean userToggleRadius = false;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final NeuronSet parentSet;
 
@@ -367,6 +368,16 @@ public class BasicNeuronModel implements NeuronModel
     @Override
     public void setUserVisible(boolean userVisible) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean isUserToggleRadius() {
+        return userToggleRadius;
+    }
+
+    @Override
+    public void setUserToggleRadius(boolean toggleRadius) {
+        this.userToggleRadius = toggleRadius;
     }
     
 }

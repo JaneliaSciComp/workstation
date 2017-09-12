@@ -683,14 +683,9 @@ implements MouseMode, KeyListener
                             try {
                                 Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
                                 if (property.equals("Radius")) {
-                                    float radius = toggled ? (float) 0.3 : 1;                                    
-                                    while (neuronsIter.hasNext()) {
-                                        annModel.updateNeuronRadius(neuronsIter.next().getId(), radius);
-                                    }
-
+                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, toggled);
                                 } else if (property.equals("Visibility")) {
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, !toggled);
-                                   
+                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, !toggled);                                   
                                 } else if (property.equals("Read Only")) {
                                     LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, !toggled);                                    
                                 }

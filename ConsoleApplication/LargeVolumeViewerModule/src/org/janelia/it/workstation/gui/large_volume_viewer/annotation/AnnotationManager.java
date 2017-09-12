@@ -1654,6 +1654,16 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
              styleUpdater.put(neuronList.get(i), style);
         }
         this.annotationModel.fireNeuronStylesChanged(styleUpdater);
+    } 
+        
+    public void setNeuronUserToggleRadius(List<TmNeuronMetadata> neuronList, boolean toggleRadius) {
+        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
+        for (int i=0; i<neuronList.size(); i++) {
+             NeuronStyle style = getNeuronStyle(neuronList.get(i));
+             style.setUserToggleRadius(toggleRadius);
+             styleUpdater.put(neuronList.get(i), style);
+        }
+        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
     }
     
     public void setNeuronUserVisible(List<TmNeuronMetadata> neuronList, boolean userVisible) {

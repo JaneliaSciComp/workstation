@@ -68,12 +68,11 @@ import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.commands.MergeNeuriteCommand;
 import org.janelia.console.viewerapi.commands.MoveNeuronAnchorCommand;
 import org.janelia.console.viewerapi.commands.SplitNeuriteCommand;
-import org.janelia.console.viewerapi.commands.ToggleNeuronInteractionCommand;
-import org.janelia.console.viewerapi.commands.ToggleNeuronVisibilityCommand;
 import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
+import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -211,33 +210,28 @@ public class TracingInteractor extends MouseAdapter
                         
                 // get all neurons in group
                 Set<TmNeuronMetadata> neurons = tagMeta.getNeurons(groupName);
-                        
+                List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
+                
                 // set toggle state
                 String property =(String)fooMap.get("toggleprop");
                 if (property!=null) {
                     Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
-                    if (property.equals("Radius")) {
-                        float radius = toggled ? (float) 0.3 : 1;
-                        while (neuronsIter.hasNext()) {
-                            TmNeuronMetadata neuronMeta = neuronsIter.next();
-                            defaultWorkspace.getNeuronByGuid(neuronMeta.getId()).updateNeuronRadius(neuronMeta, radius);
+                    Iterator<NeuronSet> lvvSetIter = metaWorkspace.getNeuronSets().iterator();
+                    NeuronSet lvvSet = null;
+                    while (lvvSetIter.hasNext() ) {
+                        NeuronSet checkSet = lvvSetIter.next();
+                        if (!(checkSet.getClass().getSimpleName().equals("BasicNeuronSet"))) {
+                            lvvSet = checkSet;
+                            break;
                         }
-
-                    } else if (property.equals("Visibility")) {
-                        while (neuronsIter.hasNext()) {
-                            TmNeuronMetadata neuronMeta = neuronsIter.next();
-                            ToggleNeuronVisibilityCommand command = new ToggleNeuronVisibilityCommand(defaultWorkspace.getNeuronByGuid(neuronMeta.getId()));
-                            command.execute();
-                            defaultWorkspace.getNeuronByGuid(neuronMeta.getId()).getVisibilityChangeObservable().setChanged();
-                            defaultWorkspace.getNeuronByGuid(neuronMeta.getId()).getVisibilityChangeObservable().notifyObservers();
-                        }
-                    } else if (property.equals("Read Only")) {
-                        while (neuronsIter.hasNext()) {
-                            TmNeuronMetadata neuronMeta = neuronsIter.next();
-                            ToggleNeuronInteractionCommand command = new ToggleNeuronInteractionCommand(defaultWorkspace.getNeuronByGuid(neuronMeta.getId()));
-                            command.execute();
-                            defaultWorkspace.getNeuronByGuid(neuronMeta.getId()).getVisibilityChangeObservable().setChanged();
-                            defaultWorkspace.getNeuronByGuid(neuronMeta.getId()).getVisibilityChangeObservable().notifyObservers();
+                    }
+                    if (lvvSet!=null) {
+                        if (property.equals("Radius")) {
+                            lvvSet.changeNeuronUserToggleRadius(neuronList, toggled);
+                        } else if (property.equals("Visibility")) {
+                            lvvSet.changeNeuronUserVisible(neuronList, !toggled);
+                        } else if (property.equals("Read Only")) {
+                            lvvSet.changeNeuronNonInteractable(neuronList, !toggled);
                         }
                     }
                 }

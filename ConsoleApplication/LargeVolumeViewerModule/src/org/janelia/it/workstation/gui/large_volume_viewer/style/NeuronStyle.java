@@ -15,11 +15,11 @@ import org.janelia.it.jacs.shared.utils.ColorUtils;
  * things like line width, etc.
  */
 public class NeuronStyle {
-
     private Color color;
     private boolean visible = true;
     private boolean userVisible = true;
     private boolean nonInteractable = false;
+    private boolean userToggleRadius = false;
     float[] cachedColorArray=new float[3]; // needed for performance
 
     // constants, because I already used "visible" instead of "visibility" once...
@@ -199,5 +199,19 @@ public class NeuronStyle {
      */
     public void setUserVisible(boolean userVisible) {
         this.userVisible = userVisible;
+    }
+    
+    /**
+     * @return the userToggleRadius
+     */
+    public boolean isUserToggleRadius() {
+        return userToggleRadius;
+    }
+
+    /**
+     * @param userToggleRadius the userToggleRadius to set
+     */
+    public void setUserToggleRadius(boolean userToggleRadius) {
+        this.userToggleRadius = userToggleRadius;
     }
 }

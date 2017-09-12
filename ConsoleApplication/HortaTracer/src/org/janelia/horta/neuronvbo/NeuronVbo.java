@@ -343,7 +343,11 @@ public class NeuronVbo implements Iterable<NeuronModel>
                 vertexAttributes.add(xyz[0]); // X
                 vertexAttributes.add(xyz[1]); // Y
                 vertexAttributes.add(xyz[2]); // Z
-                vertexAttributes.add(vertex.getRadius()); // radius
+                float radius = vertex.getRadius();
+                if (neuron.isUserToggleRadius()) {
+                    radius = 0.3f;
+                }
+                vertexAttributes.add(radius); // radius
                 vertexAttributes.add(rgb[0]); // red
                 vertexAttributes.add(rgb[1]); // green
                 vertexAttributes.add(rgb[2]); // blue
