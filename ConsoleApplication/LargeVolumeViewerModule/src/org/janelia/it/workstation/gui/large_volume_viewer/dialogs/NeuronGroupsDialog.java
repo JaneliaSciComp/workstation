@@ -27,6 +27,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableColumn;
@@ -121,6 +123,11 @@ public class NeuronGroupsDialog extends ModalDialog {
         AnnotationModel annModel = annotationMgr.getAnnotationModel();
         tableModel.loadTable(annModel.getAllNeuronTags(), annModel.getTagGroupMappings());
         bindingsTable = new JTable(tableModel);
+        tableModel.addTableModelListener(new TableModelListener() {
+            public void tableChanged(TableModelEvent e) {
+               System.out.println ("YACK");
+            }
+        });        
         
         TableColumn col = bindingsTable.getColumnModel().getColumn(COL_KEYBIND);
         col.setCellEditor(new KeymapCellEditor());        
