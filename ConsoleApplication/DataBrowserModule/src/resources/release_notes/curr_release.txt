@@ -6,4 +6,4 @@ Workstation Browser
 * Fixed bug which caused Report A Bug to not work correctly for some users
 
 Large Volume Viewer
-* No changes
+* Notes on annotations can be exported with swc files as a separate json file
