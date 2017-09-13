@@ -60,14 +60,9 @@ public class NoteExporter {
         Path notePath = swcFile.toPath().getParent().resolve(swcBase + ".json");
         File noteFile = notePath.toFile();
 
-        if (noteFile.exists()) {
-            // should do something here...but not clear what
-        }
-
-
-
-        System.out.println("pretending to output notes");
-
+        // if the notes file already exists, overwrite it; the implication is
+        //  that the user has already (most likely) chosen to overwrite the
+        //  corresponding swc file at this point
 
         // create initial json object; add "header" information
         ObjectMapper mapper = new ObjectMapper();

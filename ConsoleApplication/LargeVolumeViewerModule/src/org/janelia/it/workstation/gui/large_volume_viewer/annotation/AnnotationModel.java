@@ -1729,7 +1729,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             
             annotations.put(node.getIndex(), unserializedAnnotation);
             nodeParentLinkage.put(node.getIndex(), node.getParentIndex());
-            
+
             if (progress != null && (node.getIndex() % updateFrequency) == 0) {
                 progress.setProgress(node.getIndex(), totalLength);
             }
@@ -1746,6 +1746,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             neuron.setColor(color);
         }
 
+        // need to save neuron now; notes have to be attached to the final
+        //  annotation IDs, not the placeholders that exist before the save
+        neuronManager.saveNeuronData(neuron);
 
         // check for corresponding notes file; if present, import notes
 
@@ -1755,34 +1758,33 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             // read and parse
             Map<Vec3, String> notes = parseNotesFile(notesFile);
 
-            // add notes to neuron
+            // add notes to neuron; get a fresh copy that has updated ann IDs
+            neuron = neuronManager.getNeuronById(neuron.getId());
             if (notes.size() > 0) {
-                for (Vec3 loc: notes.keySet()) {
+                ObjectMapper mapper = new ObjectMapper();
 
-                    // need to scan annotations to find each x,y,z location, then record ann ID;
-                    //  then you can create TmStructuredTextAnnotation and put into map?
-                    // or do you need to go through annmodel?  might be easier to save neuron,
-                    //  add to manager, then use existing note infrastructure; if we do that,
-                    //  is the spatial index ready for use, which would help us find annotations?
-                    //  because that's looking expensive; maybe I should grab notes first,
-                    //  and then find annotation x, y, z as we load them?  ugh...
-
-
+                // unfortunately, the only way to associate the notes with the nodes
+                //  is through a brute-force search; we need to associate the locations
+                //  with the annotation ID, but those IDs are changed during the save,
+                //  and we can't track the mapping; the spatial index is built later
+                //  and asynchronously, so we don't have access to it now
+                // later testing: added a few random notes to a neuron with 28k nodes;
+                //  import took ~1s with or without notes
+                for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+                    for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
+                        Vec3 loc = new Vec3(ann.getX(), ann.getY(), ann.getZ());
+                        if (notes.containsKey(loc)) {
+                            // fortunately, we only need the simplest case seen in setNotes():
+                            ObjectNode node = mapper.createObjectNode();
+                            node.put("note", notes.get(loc));
+                            neuronManager.addStructuredTextAnnotation(neuron, ann.getId(), mapper.writeValueAsString(node));
+                        }
+                    }
                 }
-
+            // now save again, with the note data
+            neuronManager.saveNeuronData(neuron);
             }
-
-        } else {
-
-            // complain?  we're deep in AnnModel, no error dialogs here
-
-
         }
-
-
-
-
-        neuronManager.saveNeuronData(neuron);
 
         // add it to the workspace
         neuronManager.addNeuron(neuron);
@@ -1805,23 +1807,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             rootNode = mapper.readTree(notesFile);
         }
         catch (IOException e) {
-
-            // do something?
-
-
-
             e.printStackTrace();
-
-
         }
         JsonNode offsetNode = rootNode.path("offset");
         JsonNode neuronsNode = rootNode.path("neurons");
         if (offsetNode.isMissingNode() || neuronsNode.isMissingNode()) {
-
-            // trouble
-
-            System.out.println("missing offset or neurons node");
-
+            // trouble; bail out
+            return notes;
         }
 
         double[] offset = {0.0, 0.0, 0.0};
@@ -1831,6 +1823,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         for (JsonNode neuronNode: neuronsNode) {
             JsonNode notesNode = neuronNode.path("notes");
+            if (notesNode.isMissingNode()) {
+                // trouble; skip this node
+                continue;
+            }
             for (JsonNode noteNode: notesNode) {
 
                 // from swc part, above:
@@ -1840,7 +1836,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                                 noteNode.get(1).asDouble() + offset[1],
                                 noteNode.get(2).asDouble() + offset[2],});
                 Vec3 loc = new Vec3(point[0], point[1], point[2]);
-                notes.put(loc, notesNode.get(3).asText());
+                notes.put(loc, noteNode.get(3).asText());
             }
         }
         return notes;
