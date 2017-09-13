@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_alignmentboardmodule" default="compile.module.alignmentboardmodule">
+  <dirname property="module.alignmentboardmodule.basedir" file="${ant.file.module_alignmentboardmodule}"/>
+  
+  <property name="module.jdk.home.alignmentboardmodule" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.alignmentboardmodule" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.alignmentboardmodule" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.alignmentboardmodule" value="-encoding UTF-8 -source 8 ${compiler.args}"/>
+  
+  <property name="alignmentboardmodule.output.dir" value="${module.alignmentboardmodule.basedir}/../../buildprocess/intellij-make/production/AlignmentBoardModule"/>
+  <property name="alignmentboardmodule.testoutput.dir" value="${module.alignmentboardmodule.basedir}/../../buildprocess/intellij-make/test/AlignmentBoardModule"/>
+  
+  <path id="alignmentboardmodule.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="alignmentboardmodule.module.production.classpath">
+    <path refid="${module.jdk.classpath.alignmentboardmodule}"/>
+    <pathelement location="${integrationapis.output.dir}"/>
+    <pathelement location="${model.output.dir}"/>
+    <pathelement location="${shared.output.dir}"/>
+    <pathelement location="${viewer3d.output.dir}"/>
+    <pathelement location="${databrowsermodule.output.dir}"/>
+    <path refid="library.jogl213.classpath"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.core.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+  </path>
+  
+  <path id="alignmentboardmodule.runtime.production.module.classpath">
+    <pathelement location="${alignmentboardmodule.output.dir}"/>
+    <path refid="integrationapis.runtime.production.module.classpath"/>
+    <path refid="model.runtime.production.module.classpath"/>
+    <path refid="shared.runtime.production.module.classpath"/>
+    <path refid="viewer3d.runtime.production.module.classpath"/>
+    <path refid="databrowsermodule.runtime.production.module.classpath"/>
+    <path refid="library.jogl213.classpath"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.core.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+  </path>
+  
+  <path id="alignmentboardmodule.module.classpath">
+    <path refid="${module.jdk.classpath.alignmentboardmodule}"/>
+    <pathelement location="${alignmentboardmodule.output.dir}"/>
+    <pathelement location="${integrationapis.testoutput.dir}"/>
+    <pathelement location="${integrationapis.output.dir}"/>
+    <pathelement location="${model.testoutput.dir}"/>
+    <pathelement location="${model.output.dir}"/>
+    <pathelement location="${shared.testoutput.dir}"/>
+    <pathelement location="${shared.output.dir}"/>
+    <pathelement location="${viewer3d.testoutput.dir}"/>
+    <pathelement location="${viewer3d.output.dir}"/>
+    <pathelement location="${databrowsermodule.testoutput.dir}"/>
+    <pathelement location="${databrowsermodule.output.dir}"/>
+    <path refid="library.jogl213.classpath"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.core.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+  </path>
+  
+  <path id="alignmentboardmodule.runtime.module.classpath">
+    <pathelement location="${alignmentboardmodule.testoutput.dir}"/>
+    <pathelement location="${alignmentboardmodule.output.dir}"/>
+    <path refid="integrationapis.runtime.module.classpath"/>
+    <path refid="model.runtime.module.classpath"/>
+    <path refid="shared.runtime.module.classpath"/>
+    <path refid="viewer3d.runtime.module.classpath"/>
+    <path refid="databrowsermodule.runtime.module.classpath"/>
+    <path refid="library.jogl213.classpath"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.core.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.alignmentboardmodule">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.alignmentboardmodule">
+    <patternset refid="compiler.excluded"/>
+    <patternset refid="excluded.from.module.alignmentboardmodule"/>
+  </patternset>
+  
+  <path id="alignmentboardmodule.module.sourcepath">
+    <dirset dir="${module.alignmentboardmodule.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.alignmentboardmodule" depends="compile.module.alignmentboardmodule.production,compile.module.alignmentboardmodule.tests" description="Compile module AlignmentBoardModule"/>
+  
+  <target name="compile.module.alignmentboardmodule.production" depends="register.custom.compilers,compile.module.integrationapis,compile.module.model,compile.module.shared,compile.module.viewer3d,compile.module.databrowsermodule" description="Compile module AlignmentBoardModule; production classes">
+    <mkdir dir="${alignmentboardmodule.output.dir}"/>
+    <javac2 destdir="${alignmentboardmodule.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.alignmentboardmodule}/javac">
+      <compilerarg line="${compiler.args.alignmentboardmodule}"/>
+      <bootclasspath refid="alignmentboardmodule.module.bootclasspath"/>
+      <classpath refid="alignmentboardmodule.module.production.classpath"/>
+      <src refid="alignmentboardmodule.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.alignmentboardmodule"/>
+    </javac2>
+    
+    <copy todir="${alignmentboardmodule.output.dir}">
+      <fileset dir="${module.alignmentboardmodule.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+        <patternset refid="excluded.from.compilation.alignmentboardmodule"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.alignmentboardmodule.tests" depends="register.custom.compilers,compile.module.alignmentboardmodule.production" description="compile module AlignmentBoardModule; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.alignmentboardmodule" description="cleanup module">
+    <delete dir="${alignmentboardmodule.output.dir}"/>
+    <delete dir="${alignmentboardmodule.testoutput.dir}"/>
+  </target>
+</project>

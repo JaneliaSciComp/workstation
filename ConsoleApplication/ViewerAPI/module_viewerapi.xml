@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_viewerapi" default="compile.module.viewerapi">
+  <dirname property="module.viewerapi.basedir" file="${ant.file.module_viewerapi}"/>
+  
+  <property name="module.jdk.home.viewerapi" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.viewerapi" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.viewerapi" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.viewerapi" value="-encoding UTF-8 -source 8 ${compiler.args}"/>
+  
+  <property name="viewerapi.output.dir" value="${module.viewerapi.basedir}/../../buildprocess/intellij-make/production/ViewerAPI"/>
+  <property name="viewerapi.testoutput.dir" value="${module.viewerapi.basedir}/../../buildprocess/intellij-make/test/ViewerAPI"/>
+  
+  <path id="viewerapi.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="viewerapi.module.production.classpath">
+    <path refid="${module.jdk.classpath.viewerapi}"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.core.classpath"/>
+  </path>
+  
+  <path id="viewerapi.runtime.production.module.classpath">
+    <pathelement location="${viewerapi.output.dir}"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.core.classpath"/>
+  </path>
+  
+  <path id="viewerapi.module.classpath">
+    <path refid="${module.jdk.classpath.viewerapi}"/>
+    <pathelement location="${viewerapi.output.dir}"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.core.classpath"/>
+  </path>
+  
+  <path id="viewerapi.runtime.module.classpath">
+    <pathelement location="${viewerapi.testoutput.dir}"/>
+    <pathelement location="${viewerapi.output.dir}"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.core.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.viewerapi">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.viewerapi">
+    <patternset refid="compiler.excluded"/>
+    <patternset refid="excluded.from.module.viewerapi"/>
+  </patternset>
+  
+  <path id="viewerapi.module.sourcepath">
+    <dirset dir="${module.viewerapi.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.viewerapi" depends="compile.module.viewerapi.production,compile.module.viewerapi.tests" description="Compile module ViewerAPI"/>
+  
+  <target name="compile.module.viewerapi.production" depends="register.custom.compilers" description="Compile module ViewerAPI; production classes">
+    <mkdir dir="${viewerapi.output.dir}"/>
+    <javac2 destdir="${viewerapi.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.viewerapi}/javac">
+      <compilerarg line="${compiler.args.viewerapi}"/>
+      <bootclasspath refid="viewerapi.module.bootclasspath"/>
+      <classpath refid="viewerapi.module.production.classpath"/>
+      <src refid="viewerapi.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.viewerapi"/>
+    </javac2>
+    
+    <copy todir="${viewerapi.output.dir}">
+      <fileset dir="${module.viewerapi.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+        <patternset refid="excluded.from.compilation.viewerapi"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.viewerapi.tests" depends="register.custom.compilers,compile.module.viewerapi.production" description="compile module ViewerAPI; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.viewerapi" description="cleanup module">
+    <delete dir="${viewerapi.output.dir}"/>
+    <delete dir="${viewerapi.testoutput.dir}"/>
+  </target>
+</project>
