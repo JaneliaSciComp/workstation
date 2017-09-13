@@ -515,7 +515,7 @@ implements MouseMode, KeyListener
                     editNeuronTagsAction.setEnabled(controller.editsAllowed());
                     result.add(new JMenuItem(editNeuronTagsAction));
                     
-                    AbstractAction setNeuronGroupsAction = new AbstractAction("Edit neuron group visibility...") {
+                    AbstractAction setNeuronGroupsAction = new AbstractAction("Edit neuron group properties...") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().editNeuronGroups();

@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +34,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 
@@ -122,12 +125,7 @@ public class NeuronGroupsDialog extends ModalDialog {
         NeuronGroupsTableModel tableModel = new NeuronGroupsTableModel();
         AnnotationModel annModel = annotationMgr.getAnnotationModel();
         tableModel.loadTable(annModel.getAllNeuronTags(), annModel.getTagGroupMappings());
-        bindingsTable = new JTable(tableModel);
-        tableModel.addTableModelListener(new TableModelListener() {
-            public void tableChanged(TableModelEvent e) {
-               System.out.println ("YACK");
-            }
-        });        
+        bindingsTable = new JTable(tableModel);   
         
         TableColumn col = bindingsTable.getColumnModel().getColumn(COL_KEYBIND);
         col.setCellEditor(new KeymapCellEditor());        
@@ -259,6 +257,7 @@ public class NeuronGroupsDialog extends ModalDialog {
                 case COL_PROPTOGGLE:
                     String[] propertyStrings = { PROPERTY_RADIUS, PROPERTY_VISIBILITY, PROPERTY_READONLY };
                     component = new JComboBox(propertyStrings);
+                    ((JComboBox)component).addItemListener(new ItemChangeListener(table.getModel(), rowIndex, vColIndex));
                     if (value==PROPERTY_VISIBILITY) {
                         ((JComboBox)component).setSelectedIndex(0);
                     } else if (value==PROPERTY_RADIUS) {
@@ -282,5 +281,24 @@ public class NeuronGroupsDialog extends ModalDialog {
             }
             return null;
         }
+    }
+    
+    // extra for cases where the save button is pressed without clicking on another table cell first
+    class ItemChangeListener implements ItemListener {
+        TableModel model;
+        int row;
+        int col;
+        
+        public ItemChangeListener(TableModel model, int row, int col) {
+            this.model = model;
+            this.row = row;
+            this.col = col;
+        }
+
+        @Override
+        public void itemStateChanged(ItemEvent event) {
+           Object item = event.getItem();
+           model.setValueAt(item, row, col);
+        }     
     }
 }
