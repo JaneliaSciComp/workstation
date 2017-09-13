@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_glviewertools" default="compile.module.glviewertools">
+  <dirname property="module.glviewertools.basedir" file="${ant.file.module_glviewertools}"/>
+  
+  <property name="module.jdk.home.glviewertools" value=""/>
+  <property name="module.jdk.bin.glviewertools" value=""/>
+  <property name="module.jdk.classpath.glviewertools" value=""/>
+  
+  <property name="compiler.args.glviewertools" value="-encoding UTF-8 -source 8 ${compiler.args}"/>
+  
+  <property name="glviewertools.output.dir" value="${module.glviewertools.basedir}/../../buildprocess/intellij-make/production/GLViewerTools"/>
+  <property name="glviewertools.testoutput.dir" value="${module.glviewertools.basedir}/../../buildprocess/intellij-make/test/GLViewerTools"/>
+  
+  <path id="glviewertools.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="glviewertools.module.production.classpath">
+    <pathelement location="${viewerapi.output.dir}"/>
+    <pathelement location="${geometry3d.output.dir}"/>
+    <pathelement location="${shared.output.dir}"/>
+    <pathelement location="${integrationapis.output.dir}"/>
+    <path refid="library.jogl224lib.classpath"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.core.classpath"/>
+  </path>
+  
+  <path id="glviewertools.runtime.production.module.classpath">
+    <pathelement location="${glviewertools.output.dir}"/>
+    <path refid="viewerapi.runtime.production.module.classpath"/>
+    <path refid="geometry3d.runtime.production.module.classpath"/>
+    <path refid="shared.runtime.production.module.classpath"/>
+    <path refid="integrationapis.runtime.production.module.classpath"/>
+    <path refid="library.jogl224lib.classpath"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.core.classpath"/>
+  </path>
+  
+  <path id="glviewertools.module.classpath">
+    <pathelement location="${glviewertools.output.dir}"/>
+    <pathelement location="${viewerapi.testoutput.dir}"/>
+    <pathelement location="${viewerapi.output.dir}"/>
+    <pathelement location="${geometry3d.testoutput.dir}"/>
+    <pathelement location="${geometry3d.output.dir}"/>
+    <pathelement location="${shared.testoutput.dir}"/>
+    <pathelement location="${shared.output.dir}"/>
+    <pathelement location="${integrationapis.testoutput.dir}"/>
+    <pathelement location="${integrationapis.output.dir}"/>
+    <path refid="library.jogl224lib.classpath"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.core.classpath"/>
+  </path>
+  
+  <path id="glviewertools.runtime.module.classpath">
+    <pathelement location="${glviewertools.testoutput.dir}"/>
+    <pathelement location="${glviewertools.output.dir}"/>
+    <path refid="viewerapi.runtime.module.classpath"/>
+    <path refid="geometry3d.runtime.module.classpath"/>
+    <path refid="shared.runtime.module.classpath"/>
+    <path refid="integrationapis.runtime.module.classpath"/>
+    <path refid="library.jogl224lib.classpath"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.core.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.glviewertools">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.glviewertools">
+    <patternset refid="compiler.excluded"/>
+    <patternset refid="excluded.from.module.glviewertools"/>
+  </patternset>
+  
+  <path id="glviewertools.module.sourcepath">
+    <dirset dir="${module.glviewertools.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.glviewertools" depends="compile.module.glviewertools.production,compile.module.glviewertools.tests" description="Compile module GLViewerTools"/>
+  
+  <target name="compile.module.glviewertools.production" depends="register.custom.compilers,compile.module.viewerapi,compile.module.geometry3d,compile.module.shared,compile.module.integrationapis" description="Compile module GLViewerTools; production classes">
+    <mkdir dir="${glviewertools.output.dir}"/>
+    <javac2 destdir="${glviewertools.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.glviewertools}/javac">
+      <compilerarg line="${compiler.args.glviewertools}"/>
+      <bootclasspath refid="glviewertools.module.bootclasspath"/>
+      <classpath refid="glviewertools.module.production.classpath"/>
+      <src refid="glviewertools.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.glviewertools"/>
+    </javac2>
+    
+    <copy todir="${glviewertools.output.dir}">
+      <fileset dir="${module.glviewertools.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+        <patternset refid="excluded.from.compilation.glviewertools"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.glviewertools.tests" depends="register.custom.compilers,compile.module.glviewertools.production" description="compile module GLViewerTools; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.glviewertools" description="cleanup module">
+    <delete dir="${glviewertools.output.dir}"/>
+    <delete dir="${glviewertools.testoutput.dir}"/>
+  </target>
+</project>

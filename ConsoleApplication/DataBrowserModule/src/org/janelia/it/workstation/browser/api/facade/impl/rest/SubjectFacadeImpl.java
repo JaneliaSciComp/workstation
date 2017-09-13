@@ -13,6 +13,7 @@ import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
+import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,9 +70,10 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
 
     @Override
     public List<Preference> getPreferences() throws Exception {
+        String subjectKey = ApplicationOptions.getInstance().isUseRunAsUserPreferences() ? AccessManager.getSubjectKey() : AccessManager.getAccessManager().getAuthenticatedSubject().getKey();
         Response response = manager.getUserEndpoint()
                 .path("preferences")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .queryParam("subjectKey", subjectKey)
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getPreferences to server")) {
@@ -82,8 +84,9 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
 
     @Override
     public Preference savePreference(Preference preference) throws Exception {
+        String subjectKey = ApplicationOptions.getInstance().isUseRunAsUserPreferences() ? AccessManager.getSubjectKey() : AccessManager.getAccessManager().getAuthenticatedSubject().getKey();
         DomainQuery query = new DomainQuery();
-        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setSubjectKey(subjectKey);
         query.setPreference(preference);
         Response response = manager.getUserEndpoint()
                 .path("preferences")

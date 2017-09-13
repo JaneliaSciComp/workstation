@@ -27,6 +27,7 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,7 +123,7 @@ public class ReleaseNotesDialog extends ModalDialog {
     }
     
     public void showIfFirstRunSinceUpdate() {
-        if (!isShowReleaseNotes()) return;
+        if (!ApplicationOptions.getInstance().isShowReleaseNotes()) return;
         String appVersion = ConsoleApp.getConsoleApp().getApplicationVersion();
         if ("DEV".equals(appVersion)) return; // Never show release notes in normal development
         if (!appVersion.equals(getLastShownReleaseNotes())) {
@@ -132,7 +133,7 @@ public class ReleaseNotesDialog extends ModalDialog {
     }
     
     public void showCurrentReleaseNotes() {
-        showAfterUpdate.setSelected(isShowReleaseNotes());
+        showAfterUpdate.setSelected(ApplicationOptions.getInstance().isShowReleaseNotes());
         
         boolean firstRun = releaseNotesList==null;
         
@@ -235,19 +236,10 @@ public class ReleaseNotesDialog extends ModalDialog {
     }
     
     private void saveAndClose() {
-        setShowReleaseNotes(showAfterUpdate.isSelected());
+        ApplicationOptions.getInstance().setShowReleaseNotes(showAfterUpdate.isSelected());
         setVisible(false);
     }
     
-    public static boolean isShowReleaseNotes() {
-        Boolean value = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(SHOW_RELEASE_NOTES);
-        return value==null || value;
-    }
-    
-    public static void setShowReleaseNotes(boolean value) {
-        ConsoleApp.getConsoleApp().setModelProperty(SHOW_RELEASE_NOTES, value);  
-    }
-
     public static String getLastShownReleaseNotes() {
         return (String) ConsoleApp.getConsoleApp().getModelProperty(LAST_SHOWN_RELEASE_NOTES);
     }

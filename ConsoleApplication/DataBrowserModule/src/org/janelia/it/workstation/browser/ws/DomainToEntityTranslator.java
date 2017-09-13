@@ -82,7 +82,9 @@ public class DomainToEntityTranslator {
     public Entity getSeparationEntity(NeuronSeparation separation) {
 
         PipelineResult result = separation.getParentResult();
+        String llFilepath = DomainUtils.getFilepath(result, FileType.LosslessStack);
         String vllFilepath = DomainUtils.getFilepath(result, FileType.VisuallyLosslessStack);
+        
         String opticalRes = getOpticalResolution(result);
         String chanSpec = getChannelSpec(result);
         
@@ -92,7 +94,12 @@ public class DomainToEntityTranslator {
         separationEntity.setName(separation.getName());
         separationEntity.setEntityTypeName(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
         setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_FILE_PATH, separation.getFilepath());
-        setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_VISUALLY_LOSSLESS_IMAGE, vllFilepath);
+        if (llFilepath!=null) {
+            setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_LOSSLESS_IMAGE, llFilepath);
+        }
+        if (vllFilepath!=null) {
+            setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_VISUALLY_LOSSLESS_IMAGE, vllFilepath);
+        }
         setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_CHANNEL_SPECIFICATION, chanSpec);
         setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION, opticalRes);
         

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_dashboard" default="compile.module.dashboard">
+  <dirname property="module.dashboard.basedir" file="${ant.file.module_dashboard}"/>
+  
+  <property name="module.jdk.home.dashboard" value=""/>
+  <property name="module.jdk.bin.dashboard" value=""/>
+  <property name="module.jdk.classpath.dashboard" value=""/>
+  
+  <property name="compiler.args.dashboard" value="-encoding UTF-8 -source 8 ${compiler.args}"/>
+  
+  <property name="dashboard.output.dir" value="${module.dashboard.basedir}/../buildprocess/intellij-make/production/dashboard"/>
+  <property name="dashboard.testoutput.dir" value="${module.dashboard.basedir}/../buildprocess/intellij-make/test/dashboard"/>
+  
+  <path id="dashboard.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="dashboard.module.production.classpath"/>
+  
+  <path id="dashboard.runtime.production.module.classpath">
+    <pathelement location="${dashboard.output.dir}"/>
+  </path>
+  
+  <path id="dashboard.module.classpath">
+    <pathelement location="${dashboard.output.dir}"/>
+  </path>
+  
+  <path id="dashboard.runtime.module.classpath">
+    <pathelement location="${dashboard.testoutput.dir}"/>
+    <pathelement location="${dashboard.output.dir}"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.dashboard">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.dashboard">
+    <patternset refid="compiler.excluded"/>
+    <patternset refid="excluded.from.module.dashboard"/>
+  </patternset>
+  
+  
+  <target name="compile.module.dashboard" depends="compile.module.dashboard.production,compile.module.dashboard.tests" description="Compile module dashboard"/>
+  
+  <target name="compile.module.dashboard.production" depends="register.custom.compilers" description="Compile module dashboard; production classes"/>
+  
+  <target name="compile.module.dashboard.tests" depends="register.custom.compilers,compile.module.dashboard.production" description="compile module dashboard; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.dashboard" description="cleanup module">
+    <delete dir="${dashboard.output.dir}"/>
+    <delete dir="${dashboard.testoutput.dir}"/>
+  </target>
+</project>

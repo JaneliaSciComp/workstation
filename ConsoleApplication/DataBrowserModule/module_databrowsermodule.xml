@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_databrowsermodule" default="compile.module.databrowsermodule">
+  <dirname property="module.databrowsermodule.basedir" file="${ant.file.module_databrowsermodule}"/>
+  
+  <property name="module.jdk.home.databrowsermodule" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.databrowsermodule" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.databrowsermodule" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.databrowsermodule" value="-encoding UTF-8 -source 8 ${compiler.args}"/>
+  
+  <property name="databrowsermodule.output.dir" value="${module.databrowsermodule.basedir}/../../buildprocess/intellij-make/production/DataBrowserModule"/>
+  <property name="databrowsermodule.testoutput.dir" value="${module.databrowsermodule.basedir}/../../buildprocess/intellij-make/test/DataBrowserModule"/>
+  
+  <path id="databrowsermodule.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="databrowsermodule.module.production.classpath">
+    <path refid="${module.jdk.classpath.databrowsermodule}"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.core.classpath"/>
+    <pathelement location="${compute.output.dir}"/>
+    <pathelement location="${integrationapis.output.dir}"/>
+    <pathelement location="${model.output.dir}"/>
+    <pathelement location="${shared.output.dir}"/>
+    <pathelement location="${viewer3d.output.dir}"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.jogl213.classpath"/>
+  </path>
+  
+  <path id="databrowsermodule.runtime.production.module.classpath">
+    <pathelement location="${databrowsermodule.output.dir}"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.core.classpath"/>
+    <path refid="compute.runtime.production.module.classpath"/>
+    <path refid="integrationapis.runtime.production.module.classpath"/>
+    <path refid="model.runtime.production.module.classpath"/>
+    <path refid="shared.runtime.production.module.classpath"/>
+    <path refid="viewer3d.runtime.production.module.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.jogl213.classpath"/>
+  </path>
+  
+  <path id="databrowsermodule.module.classpath">
+    <path refid="${module.jdk.classpath.databrowsermodule}"/>
+    <pathelement location="${databrowsermodule.output.dir}"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.core.classpath"/>
+    <pathelement location="${compute.testoutput.dir}"/>
+    <pathelement location="${compute.output.dir}"/>
+    <pathelement location="${integrationapis.testoutput.dir}"/>
+    <pathelement location="${integrationapis.output.dir}"/>
+    <pathelement location="${model.testoutput.dir}"/>
+    <pathelement location="${model.output.dir}"/>
+    <pathelement location="${shared.testoutput.dir}"/>
+    <pathelement location="${shared.output.dir}"/>
+    <pathelement location="${viewer3d.testoutput.dir}"/>
+    <pathelement location="${viewer3d.output.dir}"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.jogl213.classpath"/>
+  </path>
+  
+  <path id="databrowsermodule.runtime.module.classpath">
+    <pathelement location="${databrowsermodule.testoutput.dir}"/>
+    <pathelement location="${databrowsermodule.output.dir}"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.core.classpath"/>
+    <path refid="compute.runtime.module.classpath"/>
+    <path refid="integrationapis.runtime.module.classpath"/>
+    <path refid="model.runtime.module.classpath"/>
+    <path refid="shared.runtime.module.classpath"/>
+    <path refid="viewer3d.runtime.module.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.jogl213.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.databrowsermodule">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.databrowsermodule">
+    <patternset refid="compiler.excluded"/>
+    <patternset refid="excluded.from.module.databrowsermodule"/>
+  </patternset>
+  
+  <path id="databrowsermodule.module.sourcepath">
+    <dirset dir="${module.databrowsermodule.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.databrowsermodule" depends="compile.module.databrowsermodule.production,compile.module.databrowsermodule.tests" description="Compile module DataBrowserModule"/>
+  
+  <target name="compile.module.databrowsermodule.production" depends="register.custom.compilers,compile.module.compute,compile.module.integrationapis,compile.module.model,compile.module.shared,compile.module.viewer3d" description="Compile module DataBrowserModule; production classes">
+    <mkdir dir="${databrowsermodule.output.dir}"/>
+    <javac2 destdir="${databrowsermodule.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.databrowsermodule}/javac">
+      <compilerarg line="${compiler.args.databrowsermodule}"/>
+      <bootclasspath refid="databrowsermodule.module.bootclasspath"/>
+      <classpath refid="databrowsermodule.module.production.classpath"/>
+      <src refid="databrowsermodule.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.databrowsermodule"/>
+    </javac2>
+    
+    <copy todir="${databrowsermodule.output.dir}">
+      <fileset dir="${module.databrowsermodule.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+        <patternset refid="excluded.from.compilation.databrowsermodule"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.databrowsermodule.tests" depends="register.custom.compilers,compile.module.databrowsermodule.production" description="compile module DataBrowserModule; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.databrowsermodule" description="cleanup module">
+    <delete dir="${databrowsermodule.output.dir}"/>
+    <delete dir="${databrowsermodule.testoutput.dir}"/>
+  </target>
+</project>

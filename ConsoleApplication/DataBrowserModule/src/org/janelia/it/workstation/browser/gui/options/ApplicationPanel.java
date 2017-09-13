@@ -27,9 +27,8 @@ import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.text.DefaultFormatter;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.FileMgr;
-import org.janelia.it.workstation.browser.gui.dialogs.ReleaseNotesDialog;
-import org.janelia.it.workstation.browser.gui.editor.StartPage;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.panels.MemorySettingPanel;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -47,6 +46,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
     
     private JCheckBox showReleaseNotesOnStartup;
     private JCheckBox showStartPageOnStartup;
+    private JCheckBox useRunAsUserPreferences;
     private JRadioButton fileCacheEnabledRadioButton;
     private JRadioButton fileCacheDisabledRadioButton;
     private JSpinner fileCacheSpinner;
@@ -86,12 +86,18 @@ final class ApplicationPanel extends javax.swing.JPanel {
         mainPanel.addSeparator("General");
         
         showReleaseNotesOnStartup = new JCheckBox("Show release notes after update");
-        showReleaseNotesOnStartup.setSelected(ReleaseNotesDialog.isShowReleaseNotes());
+        showReleaseNotesOnStartup.setSelected(ApplicationOptions.getInstance().isShowReleaseNotes());
         mainPanel.addItem(showReleaseNotesOnStartup);
 
         showStartPageOnStartup = new JCheckBox("Show start page on startup");
         showStartPageOnStartup.setSelected(ApplicationOptions.getInstance().isShowStartPageOnStartup());
         mainPanel.addItem(showStartPageOnStartup);
+        
+        useRunAsUserPreferences = new JCheckBox("Use preferences from Run As user");
+        useRunAsUserPreferences.setSelected(ApplicationOptions.getInstance().isUseRunAsUserPreferences());
+        if (AccessManager.getAccessManager().isAdmin()) {
+            mainPanel.addItem(useRunAsUserPreferences);
+        }
         
         // Memory
 
@@ -283,8 +289,9 @@ final class ApplicationPanel extends javax.swing.JPanel {
         
         // General
 
-        ReleaseNotesDialog.setShowReleaseNotes(showReleaseNotesOnStartup.isSelected());
+        ApplicationOptions.getInstance().setShowReleaseNotes(showReleaseNotesOnStartup.isSelected());
         ApplicationOptions.getInstance().setShowStartPageOnStartup(showStartPageOnStartup.isSelected());
+        ApplicationOptions.getInstance().setUseRunAsUserPreferences(useRunAsUserPreferences.isSelected());
         
         // Memory
         

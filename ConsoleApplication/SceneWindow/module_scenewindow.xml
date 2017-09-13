@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_scenewindow" default="compile.module.scenewindow">
+  <dirname property="module.scenewindow.basedir" file="${ant.file.module_scenewindow}"/>
+  
+  <property name="module.jdk.home.scenewindow" value=""/>
+  <property name="module.jdk.bin.scenewindow" value=""/>
+  <property name="module.jdk.classpath.scenewindow" value=""/>
+  
+  <property name="compiler.args.scenewindow" value="-encoding UTF-8 -source 8 ${compiler.args}"/>
+  
+  <property name="scenewindow.output.dir" value="${module.scenewindow.basedir}/../../buildprocess/intellij-make/production/SceneWindow"/>
+  <property name="scenewindow.testoutput.dir" value="${module.scenewindow.basedir}/../../buildprocess/intellij-make/test/SceneWindow"/>
+  
+  <path id="scenewindow.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="scenewindow.module.production.classpath">
+    <pathelement location="${glviewertools.output.dir}"/>
+    <pathelement location="${geometry3d.output.dir}"/>
+    <pathelement location="${viewerapi.output.dir}"/>
+    <path refid="library.jogl224lib.classpath"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.core.classpath"/>
+  </path>
+  
+  <path id="scenewindow.runtime.production.module.classpath">
+    <pathelement location="${scenewindow.output.dir}"/>
+    <path refid="glviewertools.runtime.production.module.classpath"/>
+    <path refid="geometry3d.runtime.production.module.classpath"/>
+    <path refid="viewerapi.runtime.production.module.classpath"/>
+    <path refid="library.jogl224lib.classpath"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.core.classpath"/>
+  </path>
+  
+  <path id="scenewindow.module.classpath">
+    <pathelement location="${scenewindow.output.dir}"/>
+    <pathelement location="${glviewertools.testoutput.dir}"/>
+    <pathelement location="${glviewertools.output.dir}"/>
+    <pathelement location="${geometry3d.testoutput.dir}"/>
+    <pathelement location="${geometry3d.output.dir}"/>
+    <pathelement location="${viewerapi.testoutput.dir}"/>
+    <pathelement location="${viewerapi.output.dir}"/>
+    <path refid="library.jogl224lib.classpath"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.core.classpath"/>
+  </path>
+  
+  <path id="scenewindow.runtime.module.classpath">
+    <pathelement location="${scenewindow.testoutput.dir}"/>
+    <pathelement location="${scenewindow.output.dir}"/>
+    <path refid="glviewertools.runtime.module.classpath"/>
+    <path refid="geometry3d.runtime.module.classpath"/>
+    <path refid="viewerapi.runtime.module.classpath"/>
+    <path refid="library.jogl224lib.classpath"/>
+    <path refid="library.apache_commons.classpath"/>
+    <path refid="library.common_external_libraries.classpath"/>
+    <path refid="library.core.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.scenewindow">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.scenewindow">
+    <patternset refid="compiler.excluded"/>
+    <patternset refid="excluded.from.module.scenewindow"/>
+  </patternset>
+  
+  <path id="scenewindow.module.sourcepath">
+    <dirset dir="${module.scenewindow.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.scenewindow" depends="compile.module.scenewindow.production,compile.module.scenewindow.tests" description="Compile module SceneWindow"/>
+  
+  <target name="compile.module.scenewindow.production" depends="register.custom.compilers,compile.module.glviewertools,compile.module.geometry3d,compile.module.viewerapi" description="Compile module SceneWindow; production classes">
+    <mkdir dir="${scenewindow.output.dir}"/>
+    <javac2 destdir="${scenewindow.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.scenewindow}/javac">
+      <compilerarg line="${compiler.args.scenewindow}"/>
+      <bootclasspath refid="scenewindow.module.bootclasspath"/>
+      <classpath refid="scenewindow.module.production.classpath"/>
+      <src refid="scenewindow.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.scenewindow"/>
+    </javac2>
+    
+    <copy todir="${scenewindow.output.dir}">
+      <fileset dir="${module.scenewindow.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+        <patternset refid="excluded.from.compilation.scenewindow"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.scenewindow.tests" depends="register.custom.compilers,compile.module.scenewindow.production" description="compile module SceneWindow; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.scenewindow" description="cleanup module">
+    <delete dir="${scenewindow.output.dir}"/>
+    <delete dir="${scenewindow.testoutput.dir}"/>
+  </target>
+</project>

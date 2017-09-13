@@ -51,6 +51,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceLi
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
+import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
@@ -211,6 +212,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (anchor != null) {
             setNeuronRadius(anchor.getNeuronID());
         }
+    }
+    
+    public void editNeuronGroups() {
+        NeuronGroupsDialog ngDialog = new NeuronGroupsDialog();
+        ngDialog.showDialog();
     }
 
     public void anchorAdded(AnchorSeed seed) {
@@ -1525,7 +1531,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         Color color = askForNeuronColor(getNeuronStyle(neuron));
         if (color != null) {
-            NeuronStyle style = new NeuronStyle(color, neuron.isVisible());
+            NeuronStyle style = new NeuronStyle(color, neuron.isVisible(), false, true);
             setNeuronStyle(neuron, style);
         }
     }
@@ -1638,6 +1644,36 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         NeuronStyle style = getNeuronStyle(neuron);
         style.setVisible(visibility);
         setNeuronStyle(neuron, style);
+    }
+    
+    public void setNeuronNonInteractable(List<TmNeuronMetadata> neuronList, boolean nonInteractable) {
+        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
+        for (int i=0; i<neuronList.size(); i++) {
+             NeuronStyle style = getNeuronStyle(neuronList.get(i));
+             style.setNonInteractable(nonInteractable);
+             styleUpdater.put(neuronList.get(i), style);
+        }
+        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
+    } 
+        
+    public void setNeuronUserToggleRadius(List<TmNeuronMetadata> neuronList, boolean toggleRadius) {
+        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
+        for (int i=0; i<neuronList.size(); i++) {
+             NeuronStyle style = getNeuronStyle(neuronList.get(i));
+             style.setUserToggleRadius(toggleRadius);
+             styleUpdater.put(neuronList.get(i), style);
+        }
+        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
+    }
+    
+    public void setNeuronUserVisible(List<TmNeuronMetadata> neuronList, boolean userVisible) {
+        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
+        for (int i=0; i<neuronList.size(); i++) {
+             NeuronStyle style = getNeuronStyle(neuronList.get(i));
+             style.setUserVisible(userVisible);
+             styleUpdater.put(neuronList.get(i), style);
+        }
+        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
     }
 
     public NeuronStyle getNeuronStyle(TmNeuronMetadata neuron) {
