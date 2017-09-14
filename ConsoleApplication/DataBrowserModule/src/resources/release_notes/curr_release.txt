@@ -7,3 +7,7 @@ Workstation Browser
 
 Large Volume Viewer
 * Notes on annotations can be exported with swc files as a separate json file
+
+Horta/Large Volume Viewer
+* Added neuron groups properties dialog for users to select which properties
+  to toggle for groups of neurons with a specific tag
