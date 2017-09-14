@@ -11,9 +11,7 @@ as a tool for developing visualization code.
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
-import org.janelia.geometry3d.Rotation;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
 
