@@ -33,6 +33,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.MenuItemGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.MouseModalWidget;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
+import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
@@ -682,12 +683,15 @@ implements MouseMode, KeyListener
                         if (property!=null) {
                             try {
                                 Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
-                                if (property.equals("Radius")) {
+                                if (property.equals(NeuronGroupsDialog.PROPERTY_RADIUS)) {
                                     LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, toggled);
-                                } else if (property.equals("Visibility")) {
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, !toggled);                                   
-                                } else if (property.equals("Read Only")) {
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, !toggled);                                    
+                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
+                                } else if (property.equals(NeuronGroupsDialog.PROPERTY_VISIBILITY)) {
+                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, !toggled);                                        
+                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
+                                } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
+                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, toggled);
+                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();                                    
                                 }
                             } catch (Exception error) {
 

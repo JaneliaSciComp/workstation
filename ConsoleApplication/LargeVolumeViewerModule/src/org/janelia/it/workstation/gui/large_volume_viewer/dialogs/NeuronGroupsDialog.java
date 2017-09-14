@@ -75,9 +75,9 @@ public class NeuronGroupsDialog extends ModalDialog {
     private final int COL_KEYBIND = 2;
     private final int COL_PROPTOGGLE = 3;
     
-    private final String PROPERTY_VISIBILITY = "Visibility";
-    private final String PROPERTY_RADIUS = "Radius";
-    private final String PROPERTY_READONLY = "Read Only";
+    public static final String PROPERTY_VISIBILITY = "Visibility";
+    public static final String PROPERTY_RADIUS = "Radius";
+    public static final String PROPERTY_READONLY = "Background";
     
     private final AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
        
@@ -125,7 +125,8 @@ public class NeuronGroupsDialog extends ModalDialog {
         NeuronGroupsTableModel tableModel = new NeuronGroupsTableModel();
         AnnotationModel annModel = annotationMgr.getAnnotationModel();
         tableModel.loadTable(annModel.getAllNeuronTags(), annModel.getTagGroupMappings());
-        bindingsTable = new JTable(tableModel);   
+        bindingsTable = new JTable(tableModel); 
+        bindingsTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         
         TableColumn col = bindingsTable.getColumnModel().getColumn(COL_KEYBIND);
         col.setCellEditor(new KeymapCellEditor());        

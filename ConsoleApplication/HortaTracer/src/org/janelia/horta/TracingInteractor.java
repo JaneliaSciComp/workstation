@@ -230,8 +230,8 @@ public class TracingInteractor extends MouseAdapter
                             lvvSet.changeNeuronUserToggleRadius(neuronList, toggled);
                         } else if (property.equals("Visibility")) {
                             lvvSet.changeNeuronUserVisible(neuronList, !toggled);
-                        } else if (property.equals("Read Only")) {
-                            lvvSet.changeNeuronNonInteractable(neuronList, !toggled);
+                        } else if (property.equals("Background")) {
+                            lvvSet.changeNeuronNonInteractable(neuronList, toggled);
                         }
                     }
                 }

@@ -569,6 +569,13 @@ implements NeuronSet// , LookupListener
                         progress.finish();
                         // Let LVV know that index is done  
                         annotationModel.fireSpatialIndexReady(workspace);
+                                // load user preferences
+                        try {
+                            annotationModel.loadUserPreferences();
+                            repaintHorta();
+                        } catch (Exception error) {
+                            ConsoleApp.handleException(error);
+                        }
                     }
 
                     @Override

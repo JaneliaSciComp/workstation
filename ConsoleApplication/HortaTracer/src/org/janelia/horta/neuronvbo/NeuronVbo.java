@@ -331,7 +331,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
             neuronOffsets.put(neuron, vertexCount);
             neuronVertexCounts.put(neuron, neuron.getVertexes().size());
             neuronEdgeCounts.put(neuron, neuron.getEdges().size());
-            float visibility = neuron.isVisible() ? 1 : 0;
+            float visibility = (neuron.isVisible() && neuron.isUserVisible()) ? 1 : 0;
             Color color = neuron.getColor();
             color.getColorComponents(rgb);
             Map<NeuronVertex, Integer> vertexIndices = new HashMap<>();

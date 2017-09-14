@@ -56,7 +56,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAd
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.SpatialFilter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +72,10 @@ import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 
 /**
  * This class is responsible for handling requests from the AnnotationManager.  those
@@ -311,9 +313,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // Clear neuron selection
         log.info("Clearing current neuron for workspace {}", workspace.getId());
         setCurrentNeuron(null);   
-        
-        // load user preferences
-        loadUserPreferences();
     }
     
     public void loadComplete() { 
@@ -321,10 +320,17 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // Update TC, in case the load bypassed it
         LargeVolumeViewerTopComponent.getInstance().setCurrent(workspace==null ? getCurrentSample() : workspace);    
         fireWorkspaceLoaded(workspace);
+                // load user preferences
+        try {
+            loadUserPreferences();
+        } catch (Exception error) {
+            ConsoleApp.handleException(error);
+        }
         fireNeuronSelected(null);
         if (workspace!=null) {
             activityLog.logLoadWorkspace(workspace.getId());
         }
+
     }
 
     public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
@@ -1903,12 +1909,40 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         return currentTagMap.getAllTagGroupMappings();
     }
     
+    public Boolean getToggleUserGroupState () {
+        return currentTagMap.isSaveUserGroupState();
+    }
+    
+    public void setToggleUserGroupState(boolean saveState) {
+        currentTagMap.setSaveUserGroupState(saveState);
+    }
+    
      public void loadUserPreferences() throws Exception {
         Preference userPreferences = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString());
         if (userPreferences!=null) {
-            currentTagMap.saveTagGroupMappings((Map<String,Map<String,Object>>)userPreferences.getValue());
+            Map<String,Map<String,Object>> tagGroupMappings = (Map<String,Map<String,Object>>)userPreferences.getValue();
+            currentTagMap.saveTagGroupMappings(tagGroupMappings);
             if (neuronSetAdapter!=null && neuronSetAdapter.getMetaWorkspace()!=null) {
                 neuronSetAdapter.getMetaWorkspace().setTagMetadata(currentTagMap);
+            }
+            
+            // set toggled group properties on load-up
+            Iterator<String> groupTags = tagGroupMappings.keySet().iterator();
+            while (groupTags.hasNext()) {
+                String groupKey = groupTags.next();
+                Set<TmNeuronMetadata> neurons = getNeuronsForTag(groupKey);
+                List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
+                Map<String,Object> groupMapping = currentTagMap.geTagGroupMapping(groupKey);
+                if (groupMapping!=null && groupMapping.get("toggled")!=null && ((Boolean)groupMapping.get("toggled"))) {
+                    String property = (String)groupMapping.get("toggleprop");                
+                    if (property.equals(NeuronGroupsDialog.PROPERTY_RADIUS)) {
+                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, true);                               
+                    } else if (property.equals(NeuronGroupsDialog.PROPERTY_VISIBILITY)) {
+                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, false);                                        
+                    } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
+                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, true);                                 
+                    }
+                }
             }
         }
     }
