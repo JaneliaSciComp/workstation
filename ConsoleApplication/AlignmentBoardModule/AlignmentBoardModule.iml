@@ -16,5 +16,6 @@
     <orderEntry type="library" name="Apache Commons" level="project" />
     <orderEntry type="library" name="core" level="project" />
     <orderEntry type="library" name="Common External Libraries" level="project" />
+    <orderEntry type="module" module-name="Geometry3d" />
   </component>
 </module>
