@@ -1393,6 +1393,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     "/tier2/mousebrainmicro/mousebrainmicro/",
                     "/nrs/mouselight",
                     "/nrs/mltest/",
+                    "/groups/jacs",
                     "/groups/dickson/dicksonlab",
             };
             Path linuxPrefix = null;
