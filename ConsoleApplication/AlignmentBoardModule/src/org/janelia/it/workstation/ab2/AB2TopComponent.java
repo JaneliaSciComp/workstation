@@ -5,6 +5,8 @@
  */
 package org.janelia.it.workstation.ab2;
 
+import javax.swing.BoxLayout;
+
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.model.AB2Data;
 import org.janelia.it.workstation.ab2.model.AB2DomainObject;
@@ -38,7 +40,7 @@ import org.slf4j.LoggerFactory;
 @Messages({
     "CTL_AB2Action=AB2",
     "CTL_AB2TopComponent=AB2 Window",
-    "HINT_AB2TopComponent=This is a AB2 window"
+    "HINT_AB2TopComponent=AB2 window"
 })
 public final class AB2TopComponent extends TopComponent {
 
@@ -105,6 +107,11 @@ public final class AB2TopComponent extends TopComponent {
         if (ab2GLPanel==null) {
             ab2GLPanel=new AB2GLPanel(1000, 750, ab2Controller);
             ab2Controller.setGljPanel(ab2GLPanel);
+            glWrapperPanel.setLayout(new BoxLayout(glWrapperPanel, BoxLayout.Y_AXIS));
+            glWrapperPanel.add(ab2GLPanel);
+            ab2GLPanel.setVisible(true);
+            glWrapperPanel.setVisible(true);
+            ab2GLPanel.repaint();
         }
         ab2Controller.start();
     }
