@@ -85,7 +85,7 @@ public class AB2SimulatedNeuronSkeletonGenerator {
     private Vector3 getSphericalVectorFromCartesianVector(Vector3 c) {
         float r = c.length();
         float theta=new Float(Math.acos(c.getZ()/r));
-        float phi=new Float(Math.atan(c.getY()/c.getX()));
+        float phi=new Float(Math.atan2(c.getY(), c.getX()));
         return new Vector3(r, theta, phi);
     }
 
