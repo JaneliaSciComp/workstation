@@ -56,9 +56,10 @@ public class AB2SimulatedNeuronSkeletonGenerator {
             Double thetaDelta=random.nextDouble()*stepAngleLimitRadians - stepAngleLimitRadians/2.0;
             Double phiDelta=random.nextDouble()*stepAngleLimitRadians - stepAngleLimitRadians/2.0;
             Vector3 childDirectionSpherical=getSphericalVectorFromCartesianVector(childDirection);
-            Vector3 modifiedChildDirectionSpherical=new Vector3(childDirectionSpherical.getX(),
-                    new Float(childDirectionSpherical.getY()+thetaDelta),
-                    new Float(childDirectionSpherical.getZ()+phiDelta));
+            Vector3 modifiedChildDirectionSpherical=new Vector3(
+                    (float)(childDirectionSpherical.getX()),
+                    (float)(childDirectionSpherical.getY()+thetaDelta),
+                    (float)(childDirectionSpherical.getZ()+phiDelta));
             Vector3 nextVector=getCartesianVectorFromSpherical(modifiedChildDirectionSpherical);
             double boundary=stepLength*5;
             if (nextVector.getX()<(boundingBox[0]+boundary) || nextVector.getX()>(boundingBox[3]-boundary)
@@ -78,21 +79,24 @@ public class AB2SimulatedNeuronSkeletonGenerator {
     }
 
     private Vector3 getVectorFromNodes(AB2NeuronSkeleton.Node fromNode, AB2NeuronSkeleton.Node toNode) {
-        Vector3 dV=new Vector3(new Float(toNode.x()-fromNode.x()), new Float(toNode.y()-fromNode.y()), new Float(toNode.z()-fromNode.z()));
+        Vector3 dV=new Vector3(
+                (float)(toNode.x()-fromNode.x()),
+                (float)(toNode.y()-fromNode.y()),
+                (float)(toNode.z()-fromNode.z()));
         return dV;
     }
 
     private Vector3 getSphericalVectorFromCartesianVector(Vector3 c) {
         float r = c.length();
-        float theta=new Float(Math.acos(c.getZ()/r));
-        float phi=new Float(Math.atan2(c.getY(), c.getX()));
+        float theta=(float)(Math.acos(c.getZ()/r));
+        float phi=(float)(Math.atan2(c.getY(), c.getX()));
         return new Vector3(r, theta, phi);
     }
 
     private Vector3 getCartesianVectorFromSpherical(Vector3 s) {
-        float x=new Float(s.getX()*Math.sin(s.getY())*Math.cos(s.getZ()));
-        float y=new Float(s.getX()*Math.sin(s.getY())*Math.sin(s.getZ()));
-        float z=new Float(s.getX()*Math.cos(s.getY()));
+        float x=(float)(s.getX()*Math.sin(s.getY())*Math.cos(s.getZ()));
+        float y=(float)(s.getX()*Math.sin(s.getY())*Math.sin(s.getZ()));
+        float z=(float)(s.getX()*Math.cos(s.getY()));
         return new Vector3(x, y, z);
     }
 
@@ -107,8 +111,8 @@ public class AB2SimulatedNeuronSkeletonGenerator {
         // Next, get the inverse vector
         Vector3 rVi=rV.negate();
         // Scale to proper increment
-        rV=rV.multiplyScalar(new Float(stepLength));
-        rVi=rVi.multiplyScalar(new Float(stepLength));
+        rV=rV.multiplyScalar((float)stepLength);
+        rVi=rVi.multiplyScalar((float)stepLength);
         // Add the two child nodes
         skeleton.addNode(parentNode.x()+rV.getX(), parentNode.y()+rV.getY(), parentNode.z()+rV.getZ(), parentNode);
         skeleton.addNode(parentNode.x()+rVi.getX(), parentNode.y()+rVi.getY(), parentNode.z()+rVi.getZ(), parentNode);
@@ -121,9 +125,10 @@ public class AB2SimulatedNeuronSkeletonGenerator {
         double bbYlength=boundingBox[4]-boundingBox[1];
         double bbZstart=boundingBox[2];
         double bbZlength=boundingBox[5]-boundingBox[2];
-        Vector3 scaledVector=new Vector3(new Float(x/bbXlength+bbXstart),
-                new Float(y/bbYlength+bbYlength),
-                new Float(z/bbZlength+bbZlength));
+        Vector3 scaledVector=new Vector3(
+                (float)(x/bbXlength+bbXstart),
+                (float)(y/bbYlength+bbYlength),
+                (float)(z/bbZlength+bbZlength));
         return scaledVector;
     }
 
