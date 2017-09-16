@@ -57,7 +57,7 @@ public class AB2View3DMode extends AB2ControllerMode {
 
     @Override
     public void display(GLAutoDrawable glAutoDrawable) {
-        renderer.dispose(glAutoDrawable);
+        renderer.display(glAutoDrawable);
     }
 
     @Override

@@ -1,30 +1,29 @@
 package org.janelia.it.workstation.ab2.renderer;
 
 import java.awt.Point;
-import java.util.Deque;
 
 import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 
-import org.janelia.geometry3d.BasicObject3D;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.PerspectiveCamera;
+import org.janelia.geometry3d.Rotation;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
-import org.janelia.geometry3d.Vector4;
 
 import org.janelia.geometry3d.Viewport;
-import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.jacs.shared.geom.UnitVec3;
-import org.janelia.it.jacs.shared.geom.Vec3;
 
 import org.janelia.it.workstation.ab2.gl.GLDisplayUpdateCallback;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
-import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class AB2Basic3DRenderer extends AB23DRenderer {
+
+    private final Logger logger = LoggerFactory.getLogger(AB2Basic3DRenderer.class);
+
 
     protected PerspectiveCamera camera;
     protected Vantage vantage;
@@ -32,24 +31,27 @@ public class AB2Basic3DRenderer extends AB23DRenderer {
 
     public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 2.0;
 
-    Vector4 backgroundColor=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+    private static long gl_display_count=0L;
+
+    //Vector4 backgroundColor=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
 
     //int blend_method=0; // 0=transparency, 1=mip
 
     //public static final int BLEND_METHOD_MIX=0;
     //public static final int BLEND_METHOD_MIP=1;
 
-    //public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2000;
-    //private static final double MAX_CAMERA_FOCUS_DISTANCE = 1000000.0;
-    //private static final double MIN_CAMERA_FOCUS_DISTANCE = 0.001;
+    public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2500;
+    private static final double MAX_CAMERA_FOCUS_DISTANCE = 1000000.0;
+    private static final double MIN_CAMERA_FOCUS_DISTANCE = 0.001;
+
     //private static final Vector3 UP_IN_CAMERA = new Vector3(0,1,0);
 
     //private static double FOV_Y_DEGREES = 45.0f;
     //private float FOV_TERM = new Float(Math.tan( (Math.PI/180.0) * (FOV_Y_DEGREES/2.0) ) );
 
     // camera parameters
-    private boolean resetFirstRedraw;
-    private boolean hasBeenReset = false;
+    //private boolean resetFirstRedraw;
+    //private boolean hasBeenReset = false;
 
     Matrix4 mvp;
 
@@ -89,7 +91,9 @@ public class AB2Basic3DRenderer extends AB23DRenderer {
             shader.setUpdateCallback(new GLDisplayUpdateCallback() {
                 @Override
                 public void update(GL4 gl) {
+                    logger.info("update() callback for AB2Basic3DShader");
                     shader.setMVP(gl, mvp);
+                    gl.glDrawArrays(gl.GL_POINTS, 0, 1);
                 }
             });
             shaderActionSequence.setShader(shader);
@@ -121,6 +125,7 @@ public class AB2Basic3DRenderer extends AB23DRenderer {
 
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
         gl.glEnable(GL4.GL_DEPTH_TEST);
+        gl.glPointSize(10.0f);
 
         Matrix4 projectionMatrix=camera.getProjectionMatrix();
         Matrix4 viewMatrix=camera.getViewMatrix();
@@ -130,12 +135,15 @@ public class AB2Basic3DRenderer extends AB23DRenderer {
         shader.setMVP(gl, mvp);
 
         shaderActionSequence.display(gl);
+
+        logger.info("gl_display_count="+gl_display_count);
+        gl_display_count++;
     }
 
-//    public double glUnitsPerPixel() {
-//        return Math.abs( model.getCameraFocusDistance() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
-//    }
-//
+    public double glUnitsPerPixel() {
+        return Math.abs( camera.getCameraFocusDistance() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
+    }
+
 //    public void resetView() {
 //        camera.resetRotation();
 //        camera.setFocus(0.0, 0.0, 0.5);
@@ -151,31 +159,35 @@ public class AB2Basic3DRenderer extends AB23DRenderer {
 
 
     public void rotatePixels(double dx, double dy, double dz) {
+
         // Rotate like a trackball
         double dragDistance = Math.sqrt(dy * dy + dx * dx + dz * dz);
         if (dragDistance <= 0.0)
             return;
-        UnitVec3 rotationAxis = new UnitVec3(dy, dx, dz);
-        double windowSize = Math.sqrt(
-                widthInPixels * widthInPixels
-                        + heightInPixels * heightInPixels);
+
+        Vector3 rotationAxis=new Vector3( (float)dy, (float)dx, (float)dz);
+        rotationAxis=rotationAxis.normalize();
+
+        double wD=viewport.getWidthPixels() * 1.0;
+        double hD=viewport.getHeightPixels() * 1.0;
+
+        double windowSize = Math.sqrt(wD*wD + hD*hD);
+
         // Drag across the entire window to rotate all the way around
         double rotationAngle = 2.0 * Math.PI * dragDistance/windowSize;
-        // System.out.println(rotationAxis.toString() + rotationAngle);
-        Rotation3d rotation = new Rotation3d().setFromAngleAboutUnitVector(
-                rotationAngle, rotationAxis);
-        // System.out.println(rotation);
-        camera.setRotation(camera.getRotation().times(rotation.transpose()));
-        // System.out.println(R_ground_camera);
+
+        Rotation rotation = new Rotation().setFromAxisAngle(rotationAxis, (float)rotationAngle);
+
+        vantage.getRotationInGround().multiply(rotation.transpose());
     }
 
     public void translatePixels(double dx, double dy, double dz) {
         // trackball translate
-        Vec3 t = new Vec3(-dx, dy, -dz);
-        t.multEquals(glUnitsPerPixel());
-        model.getCamera3d().getFocus().plusEquals(
-                camera.getRotation().times(t)
-        );
+        Vector3 translation=new Vector3((float)-dx, (float)dy, (float)-dz);
+        translation=translation.multiplyScalar((float)glUnitsPerPixel());
+        Rotation copyOfRotation = new Rotation(vantage.getRotationInGround());
+        translation=copyOfRotation.multiply(translation);
+        vantage.getFocusPosition().add(translation);
     }
 
 //    public void updateProjection(GL4 gl) {
@@ -216,7 +228,7 @@ public class AB2Basic3DRenderer extends AB23DRenderer {
             return;
         }
 
-        double cameraFocusDistance = model.getCameraFocusDistance();
+        double cameraFocusDistance = (double)camera.getCameraFocusDistance();
         cameraFocusDistance /= zoomRatio;
         if ( cameraFocusDistance > MAX_CAMERA_FOCUS_DISTANCE ) {
             return;
@@ -224,20 +236,26 @@ public class AB2Basic3DRenderer extends AB23DRenderer {
         if ( cameraFocusDistance < MIN_CAMERA_FOCUS_DISTANCE ) {
             return;
         }
-        model.setCameraPixelsPerSceneUnit(DISTANCE_TO_SCREEN_IN_PIXELS, cameraFocusDistance);
 
-        model.setCameraDepth(new Vec3(0.0, 0.0, cameraFocusDistance));
+// From PerspectiveCamera():
+//        public float getCameraFocusDistance() {
+//            return 0.5f * vantage.getSceneUnitsPerViewportHeight()
+//                    / (float) Math.tan( 0.5 * fovYRadians );
+//        }
 
-//        logger.info("ZOOM  glUnitsPerPixel=" + glUnitsPerPixel() + " cameraFocusDistance=" + cameraFocusDistance);
+        double sceneUnitsPerViewportHeight=cameraFocusDistance*Math.tan(0.5*camera.getFovRadians())*2.0;
 
+        vantage.setSceneUnitsPerViewportHeight((float)sceneUnitsPerViewportHeight);
     }
 
     public void zoomPixels(Point newPoint, Point oldPoint) {
         // Are we dragging away from the center, or toward the center?
-        double[] p0 = {oldPoint.x - widthInPixels/2.0,
-                oldPoint.y - heightInPixels/2.0};
-        double[] p1 = {newPoint.x - widthInPixels/2.0,
-                newPoint.y - heightInPixels/2.0};
+        double wD=viewport.getWidthPixels()*1.0;
+        double hD=viewport.getHeightPixels()*1.0;
+        double[] p0 = {oldPoint.x - wD/2.0,
+                oldPoint.y - hD/2.0};
+        double[] p1 = {newPoint.x - wD/2.0,
+                newPoint.y - hD/2.0};
         double dC0 = Math.sqrt(p0[0] * p0[0] + p0[1] * p0[1]);
         double dC1 = Math.sqrt(p1[0]*p1[0]+p1[1]*p1[1]);
         double dC = dC1 - dC0; // positive means away

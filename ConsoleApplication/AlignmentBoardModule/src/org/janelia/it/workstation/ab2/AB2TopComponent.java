@@ -111,7 +111,7 @@ public final class AB2TopComponent extends TopComponent {
             glWrapperPanel.add(ab2GLPanel);
             ab2GLPanel.setVisible(true);
             glWrapperPanel.setVisible(true);
-            ab2GLPanel.repaint();
+            //ab2GLPanel.repaint();
         }
         ab2Controller.start();
     }
