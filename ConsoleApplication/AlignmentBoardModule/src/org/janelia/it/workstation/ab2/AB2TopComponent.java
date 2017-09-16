@@ -96,6 +96,7 @@ public final class AB2TopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
+        logger.info("AB2TopComponent opened()");
         // TODO add custom code on component opening
         if (ab2Controller==null) {
             ab2Controller=new AB2Controller();
@@ -117,6 +118,7 @@ public final class AB2TopComponent extends TopComponent {
 
     @Override
     public void componentClosed() {
+        logger.info("AB2TopComponent closed()");
         // TODO add custom code on component closing
         ab2Controller.shutdown();
     }
