@@ -11,6 +11,7 @@ import org.janelia.it.workstation.ab2.renderer.AB2Basic3DRenderer;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2MouseDraggedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseReleasedEvent;
+import org.janelia.it.workstation.ab2.renderer.AB2SimpleCubeRenderer;
 
 public class AB2View3DMode extends AB2ControllerMode {
 
@@ -27,7 +28,7 @@ public class AB2View3DMode extends AB2ControllerMode {
 
     public AB2View3DMode(AB2Controller controller) {
         super(controller);
-        renderer=new AB2Basic3DRenderer();
+        renderer=new AB2SimpleCubeRenderer();
     }
 
     @Override

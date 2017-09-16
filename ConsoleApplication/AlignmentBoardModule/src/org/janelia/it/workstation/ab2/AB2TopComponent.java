@@ -56,7 +56,6 @@ public final class AB2TopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_AB2TopComponent());
         setToolTipText(Bundle.HINT_AB2TopComponent());
-
     }
 
     /**
