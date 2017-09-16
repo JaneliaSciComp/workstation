@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.ab2.renderer;
 
 import java.awt.Point;
+import java.nio.FloatBuffer;
 
 import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
@@ -10,7 +11,7 @@ import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Rotation;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
-
+import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Viewport;
 
 import org.janelia.it.workstation.ab2.gl.GLDisplayUpdateCallback;
@@ -33,7 +34,9 @@ public class AB2Basic3DRenderer extends AB23DRenderer {
 
     private static long gl_display_count=0L;
 
-    //Vector4 backgroundColor=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+    FloatBuffer backgroundColorBuffer=FloatBuffer.allocate(4);
+
+    Vector4 backgroundColor=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
 
     //int blend_method=0; // 0=transparency, 1=mip
 
@@ -59,6 +62,10 @@ public class AB2Basic3DRenderer extends AB23DRenderer {
     final AB2Basic3DShader shader;
 
     public AB2Basic3DRenderer() {
+        backgroundColorBuffer.put(0,backgroundColor.get(0));
+        backgroundColorBuffer.put(1,backgroundColor.get(1));
+        backgroundColorBuffer.put(2,backgroundColor.get(2));
+        backgroundColorBuffer.put(3,backgroundColor.get(3));
         shader=new AB2Basic3DShader();
         vantage=new Vantage(null);
         viewport=new Viewport();
@@ -126,13 +133,12 @@ public class AB2Basic3DRenderer extends AB23DRenderer {
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
         gl.glEnable(GL4.GL_DEPTH_TEST);
         gl.glPointSize(10.0f);
+        gl.glClearBufferfv(gl.GL_COLOR, 0, backgroundColorBuffer);
 
         Matrix4 projectionMatrix=camera.getProjectionMatrix();
         Matrix4 viewMatrix=camera.getViewMatrix();
 
-        mvp=projectionMatrix.multiply(viewMatrix);
-
-        shader.setMVP(gl, mvp);
+        mvp=viewMatrix.multiply(projectionMatrix);
 
         shaderActionSequence.display(gl);
 
