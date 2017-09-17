@@ -64,6 +64,10 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
+        initSync(glAutoDrawable);
+    }
+
+    protected synchronized void initSync(GLAutoDrawable glAutoDrawable) {
         final GL4 gl = glAutoDrawable.getGL().getGL4();
         try {
             shader.setUpdateCallback(getDisplayUpdateCallback());
@@ -85,6 +89,10 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 
     @Override
     public void display(GLAutoDrawable glAutoDrawable) {
+        displaySync(glAutoDrawable);
+    }
+
+    protected synchronized void displaySync(GLAutoDrawable glAutoDrawable) {
         final GL4 gl = glAutoDrawable.getGL().getGL4();
 
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);

@@ -10,8 +10,13 @@ import org.janelia.it.workstation.ab2.gl.GLDisplayUpdateCallback;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
 import org.janelia.it.workstation.ab2.shader.AB2SimpleCubeShader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
+
+    Logger logger= LoggerFactory.getLogger(AB2SimpleCubeRenderer.class);
+
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
     FloatBuffer cubeFb;
@@ -42,6 +47,8 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
         super.init(glAutoDrawable);
         final GL4 gl = glAutoDrawable.getGL().getGL4();
 
+        logger.info("init() called");
+
         gl.glGenVertexArrays(1, vertexArrayId);
         checkGlError(gl, "i1 glGenVertexArrays error");
 
@@ -63,6 +70,9 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
         return new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {
+
+                //logger.info("update() start");
+
                 AB2SimpleCubeShader cubeShader=(AB2SimpleCubeShader)shader;
                 cubeShader.setMVP(gl, mvp);
                 gl.glPointSize(3.0f);
@@ -87,6 +97,8 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
 
                 gl.glDrawArrays(GL4.GL_POINTS, 0, 8);
                 checkGlError(gl, "d7 ArraySortShader glDrawArrays() error");
+
+                //logger.info("update() finish");
             }
         };
     }
