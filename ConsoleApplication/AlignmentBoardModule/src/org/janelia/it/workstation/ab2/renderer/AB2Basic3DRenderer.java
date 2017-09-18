@@ -62,13 +62,11 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
         vantage.setFocus(0.0f,0.0f,(float)DEFAULT_CAMERA_FOCUS_DISTANCE);
     }
 
-    @Override
-    public void init(GLAutoDrawable glAutoDrawable) {
-        initSync(glAutoDrawable);
+    public void init(GL4 gl) {
+        initSync(gl);
     }
 
-    protected synchronized void initSync(GLAutoDrawable glAutoDrawable) {
-        final GL4 gl = glAutoDrawable.getGL().getGL4();
+    protected synchronized void initSync(GL4 gl) {
         try {
             shader.setUpdateCallback(getDisplayUpdateCallback());
             shaderActionSequence.setShader(shader);
@@ -81,20 +79,15 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 
     protected abstract GLDisplayUpdateCallback getDisplayUpdateCallback();
 
-    @Override
-    public void dispose(GLAutoDrawable glAutoDrawable) {
-        final GL4 gl = glAutoDrawable.getGL().getGL4();
+    public void dispose(GL4 gl) {
         shaderActionSequence.dispose(gl);
     }
 
-    @Override
-    public void display(GLAutoDrawable glAutoDrawable) {
-        displaySync(glAutoDrawable);
+    public void display(GL4 gl) {
+        displaySync(gl);
     }
 
-    protected synchronized void displaySync(GLAutoDrawable glAutoDrawable) {
-        final GL4 gl = glAutoDrawable.getGL().getGL4();
-
+    protected synchronized void displaySync(GL4 gl) {
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
         gl.glEnable(GL4.GL_DEPTH_TEST);
         gl.glClearBufferfv(gl.GL_COLOR, 0, backgroundColorBuffer);
@@ -114,11 +107,10 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
         return Math.abs( camera.getCameraFocusDistance() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
     }
 
-    @Override
-    public void reshape(GLAutoDrawable glDrawable, int x, int y, int width, int height) {
+    public void reshape(GL4 gl, int x, int y, int width, int height) {
         viewport.setWidthPixels(width);
         viewport.setHeightPixels(height);
-        display(glDrawable);
+        display(gl);
     }
 
     public void rotatePixels(double dx, double dy, double dz) {

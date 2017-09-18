@@ -3,6 +3,7 @@ package org.janelia.it.workstation.ab2.controller;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 
+import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.SwingUtilities;
 
@@ -48,22 +49,26 @@ public class AB2View3DMode extends AB2ControllerMode {
 
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
-        renderer.init(glAutoDrawable);
+        final GL4 gl=glAutoDrawable.getGL().getGL4();
+        renderer.init(gl);
     }
 
     @Override
     public void dispose(GLAutoDrawable glAutoDrawable) {
-        renderer.dispose(glAutoDrawable);
+        final GL4 gl=glAutoDrawable.getGL().getGL4();
+        renderer.dispose(gl);
     }
 
     @Override
     public void display(GLAutoDrawable glAutoDrawable) {
-        renderer.display(glAutoDrawable);
+        final GL4 gl=glAutoDrawable.getGL().getGL4();
+        renderer.display(gl);
     }
 
     @Override
     public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3) {
-        renderer.reshape(glAutoDrawable, i, i1, i2, i3);
+        final GL4 gl=glAutoDrawable.getGL().getGL4();
+        renderer.reshape(gl, i, i1, i2, i3);
     }
 
     @Override

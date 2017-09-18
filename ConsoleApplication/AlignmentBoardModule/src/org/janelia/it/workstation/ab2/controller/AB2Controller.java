@@ -21,6 +21,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.GLJPanel;
@@ -68,7 +69,7 @@ public class AB2Controller implements GLEventListener {
         } else {
             currentMode=modeMap.get(AB2View3DMode.class);
             currentMode.start();
-            controllerHandle=controllerExecutor.scheduleWithFixedDelay(eventHandler, 1, 1, TimeUnit.MILLISECONDS);
+            controllerHandle=controllerExecutor.scheduleWithFixedDelay(eventHandler, 500, 500, TimeUnit.MICROSECONDS);
         }
     }
 

@@ -5,7 +5,12 @@ import java.util.List;
 
 import javax.media.opengl.GL4;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class GLShaderActionSequence {
+
+    Logger logger= LoggerFactory.getLogger(GLShaderActionSequence.class);
 
     String name;
     private GLShaderProgram shader;
@@ -63,10 +68,13 @@ public class GLShaderActionSequence {
     }
 
     public void display(GL4 gl) {
+        //logger.info("display() start - loading shader");
         shader.load(gl);
-
+        //logger.info("display() - done loading shader");
 
         shader.display(gl);
+
+        //logger.info("display() - done with shader.display()");
 
 //        gl.glEnable(GL4.GL_DEPTH_TEST);
 ////        gl.glShadeModel(GL4.GL_SMOOTH);
@@ -90,6 +98,7 @@ public class GLShaderActionSequence {
             gl.glMemoryBarrier(GL4.GL_ALL_BARRIER_BITS);
         }
 
+        //logger.info("display() - unloading shader");
         shader.unload(gl);
     }
 
