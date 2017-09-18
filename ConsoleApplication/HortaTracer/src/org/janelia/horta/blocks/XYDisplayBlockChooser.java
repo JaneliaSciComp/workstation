@@ -54,16 +54,10 @@ implements BlockChooser
         ConstVector3 blockSize = ((KtxOctreeBlockTileSource)source).getBlockSize(resolution);
 
         // this gives you a (2nx + 1) by (2ny + 1) square
+        int nx = 3;
+        int ny = 4;
         
-        int nx = 1;
-        int ny = 1;
-        
-        // float [] dxa = {0f, -blockSize.getX(), +blockSize.getX()};
-        // float [] dya = {0f, -blockSize.getY(), +blockSize.getY()};
-        
-        
-        
-        // this isn't working...
+      
         float [] xarray = new float[2 * nx + 1];
         float [] yarray = new float[2 * ny + 1];
         
@@ -71,7 +65,7 @@ implements BlockChooser
             xarray[i] = (i - nx) * blockSize.getX();
         }
         for (int j=0; j<2 * ny + 1; j++) {
-            xarray[j] = (j - ny) * blockSize.getY();
+            yarray[j] = (j - ny) * blockSize.getY();
         }
         
 
