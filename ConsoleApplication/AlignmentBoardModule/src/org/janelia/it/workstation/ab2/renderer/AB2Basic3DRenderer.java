@@ -187,9 +187,9 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
         double denom = Math.max(20.0, dC1);
         double zoomRatio = 1.0 + dC/denom;
 
-        double cameraFocusDistance=(double)camera.getCameraFocusDistance();
+        //double cameraFocusDistance=(double)camera.getCameraFocusDistance();
 
-        logger.info("cfd="+cameraFocusDistance+" setting zoom to="+zoomRatio);
+        //logger.info("cfd="+cameraFocusDistance+" setting zoom to="+zoomRatio);
 
         zoom(zoomRatio);
     }
