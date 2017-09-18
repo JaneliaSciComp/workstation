@@ -42,15 +42,15 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
                              -0.25f,   0.25f,   0.25f,
                               0.25f,   0.25f,   0.25f,
                               0.25f,  -0.25f,   0.25f,
-                             -0.05f,  -0.25f,   0.75f,
-                             -0.05f,   0.25f,   0.75f,
-                              0.45f,   0.25f,   0.75f,
-                              0.45f,  -0.25f,   0.75f };
+                             -0.25f,  -0.25f,   0.75f,
+                             -0.25f,   0.25f,   0.75f,
+                              0.25f,   0.25f,   0.75f,
+                              0.25f,  -0.25f,   0.75f };
 
-        float[] colorData = {  1.0f,   0f,   0f,
-                               1.0f,   0f,   0f,
-                               1.0f,   0f,   0f,
-                               1.0f,   0f,   0f,
+        float[] colorData = {  1.0f,   0f,     0f,
+                               1.0f,   0f,     0f,
+                               1.0f,   0f,     0f,
+                               1.0f,   0f,     0f,
                                0f,     1.0f,   0f,
                                0f,     1.0f,   0f,
                                0f,     1.0f,   0f,

@@ -7,6 +7,7 @@ import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.workstation.ab2.event.AB2MouseWheelEvent;
 import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
 import org.janelia.it.workstation.ab2.renderer.AB2Basic3DRenderer;
 import org.janelia.it.workstation.ab2.event.AB2Event;
@@ -111,6 +112,11 @@ public class AB2View3DMode extends AB2ControllerMode {
             }
 
             previousMousePos = p1;
+        } else if (event instanceof AB2MouseWheelEvent) {
+            int notches = ((AB2MouseWheelEvent) event).getMouseWheelEvent().getWheelRotation();
+            double zoomRatio = Math.pow(2.0, notches/50.0);
+            renderer.zoom(zoomRatio);
+            controller.repaint();
         }
     }
 }

@@ -1,15 +1,15 @@
 package org.janelia.it.workstation.ab2.event;
 
-import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 
 public class AB2MouseWheelEvent extends AB2Event {
-    private MouseEvent mouseEvent;
+    private MouseWheelEvent mouseWheelEvent;
 
-    public AB2MouseWheelEvent(MouseEvent e) {
-        this.mouseEvent=e;
+    public AB2MouseWheelEvent(MouseWheelEvent e) {
+        this.mouseWheelEvent=e;
     }
 
-    public MouseEvent getMouseEvent() {
-        return mouseEvent;
+    public MouseWheelEvent getMouseWheelEvent() {
+        return mouseWheelEvent;
     }
 }

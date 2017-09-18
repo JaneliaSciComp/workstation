@@ -10,6 +10,8 @@ public interface AB2Renderer3DControls {
 
     public void zoomPixels(Point newPoint, Point oldPoint);
 
+    public void zoom(double zoomRatio);
+
 }
 
 
