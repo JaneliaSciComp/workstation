@@ -20,7 +20,10 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
 
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
+    IntBuffer colorBufferId=IntBuffer.allocate(1);
+
     FloatBuffer cubeFb;
+    FloatBuffer colorFb;
 
 
     public AB2SimpleCubeRenderer() {
@@ -33,42 +36,28 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
 
         logger.info("init() called");
 
-        //cubeFb = FloatBuffer.allocateDirect(1 * 4); // location and color
-
         //                   X        Y        Z        R        G        B
 
-        float[] cubeData = { -0.25f,  -0.25f,   0.25f,   1.0f,    0.0f,   0.0f,
-                             -0.25f,   0.25f,   0.25f,   1.0f,    0.0f,   0.0f,
-                              0.25f,   0.25f,   0.25f,   1.0f,    0.0f,   0.0f,
-                              0.25f,  -0.25f,   0.25f,   1.0f,    0.0f,   0.0f,
-                             -0.25f,  -0.25f,   0.75f,   1.0f,    0.0f,   0.0f,
-                             -0.25f,   0.25f,   0.75f,   1.0f,    0.0f,   0.0f,
-                              0.25f,   0.25f,   0.75f,   1.0f,    0.0f,   0.0f,
-                              0.25f,  -0.25f,   0.75f,   1.0f,    0.0f,   0.0f  };
+        float[] cubeData = { -0.25f,  -0.25f,   0.25f,
+                             -0.25f,   0.25f,   0.25f,
+                              0.25f,   0.25f,   0.25f,
+                              0.25f,  -0.25f,   0.25f,
+                             -0.05f,  -0.25f,   0.75f,
+                             -0.05f,   0.25f,   0.75f,
+                              0.45f,   0.25f,   0.75f,
+                              0.45f,  -0.25f,   0.75f };
 
-//        float[] cubeData = { -0.25f,  -0.25f,   0f,
-//                             -0.25f,   0.25f,   0f,
-//                              0.25f,   0.25f,   0f,
-//                              0.25f,  -0.25f,   0f,
-//                             -0.25f,  -0.25f,   0f,
-//                              0.25f,   0.25f,   0f,
-//                              0.25f,  -0.25f,   0f,  };
-
-//        float[] cubeData = { -0.50f,  0.50f,   0f, 1.0f };
+        float[] colorData = {  1.0f,   0f,   0f,
+                               1.0f,   0f,   0f,
+                               1.0f,   0f,   0f,
+                               1.0f,   0f,   0f,
+                               0f,     1.0f,   0f,
+                               0f,     1.0f,   0f,
+                               0f,     1.0f,   0f,
+                               0f,     1.0f,   0f };
 
         cubeFb=createGLFloatBuffer(cubeData);
-
-        //cubeFb.put(cubeData);
-
-        //for (int i=0;i<4;i++) {
-//            cubeFb.put(i, cubeData[i]);
-//        }
-
-        //cubeFb.wrap(cubeData);
-
-//        long cubeFbBufferSize=cubeFb.capacity() * 4;
-
-  //      logger.info("cubeFbBufferSize="+cubeFbBufferSize);
+        colorFb=createGLFloatBuffer(colorData);
 
         gl.glGenVertexArrays(1, vertexArrayId);
         checkGlError(gl, "i1 glGenVertexArrays error");
@@ -79,14 +68,22 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
         gl.glGenBuffers(1, vertexBufferId);
         checkGlError(gl, "i3 glGenBuffers() error");
 
+        gl.glGenBuffers(1, colorBufferId);
+        checkGlError(gl, "i3 glGenBuffers() error");
+
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
         checkGlError(gl, "i4 glBindBuffer error");
 
         gl.glBufferData(GL4.GL_ARRAY_BUFFER, cubeFb.capacity()*4, cubeFb, GL4.GL_STATIC_DRAW);
         checkGlError(gl, "i5 glBufferData error");
 
-        gl.glBindVertexArray(0);
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, colorBufferId.get(0));
+        checkGlError(gl, "i4 glBindBuffer error");
+
+        gl.glBufferData(GL4.GL_ARRAY_BUFFER, colorFb.capacity()*4, colorFb, GL4.GL_STATIC_DRAW);
+        checkGlError(gl, "i5 glBufferData error");
 
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
@@ -100,11 +97,11 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
             @Override
             public void update(GL4 gl) {
 
-                logger.info("update() start");
+                //logger.info("update() start");
 
                 AB2SimpleCubeShader cubeShader=(AB2SimpleCubeShader)shader;
                 cubeShader.setMVP(gl, mvp);
-                gl.glPointSize(10.0f);
+                gl.glPointSize(3.0f);
 
                 gl.glBindVertexArray(vertexArrayId.get(0));
                 checkGlError(gl, "d1 ArraySortShader glBindVertexArray() error");
@@ -118,11 +115,14 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
                 gl.glEnableVertexAttribArray(0);
                 checkGlError(gl, "d4 ArraySortShader glEnableVertexAttribArray 0 () error");
 
-                gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 0, 12);
-                checkGlError(gl, "d5 ArraySortShader glVertexAttribPointer 1 () error");
+                gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, colorBufferId.get(0));
+                checkGlError(gl, "d2 ArraySortShader glBindBuffer error");
+
+                gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 0, 0);
+                checkGlError(gl, "d3 ArraySortShader glVertexAttribPointer 0 () error");
 
                 gl.glEnableVertexAttribArray(1);
-                checkGlError(gl, "d6 ArraySortShader glEnableVertexAttribArray 1 () error");
+                checkGlError(gl, "d4 ArraySortShader glEnableVertexAttribArray 0 () error");
 
                 gl.glDrawArrays(GL4.GL_POINTS, 0, 8);
                 checkGlError(gl, "d7 ArraySortShader glDrawArrays() error");
@@ -132,7 +132,7 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
 
                 gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-                logger.info("update() finish");
+                //logger.info("update() finish");
             }
         };
     }

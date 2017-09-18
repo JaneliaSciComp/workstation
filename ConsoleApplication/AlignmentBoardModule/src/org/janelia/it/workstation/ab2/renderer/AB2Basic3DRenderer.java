@@ -186,6 +186,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
         double dC = dC1 - dC0; // positive means away
         double denom = Math.max(20.0, dC1);
         double zoomRatio = 1.0 + dC/denom;
+
         zoom(zoomRatio);
     }
 
