@@ -58,6 +58,9 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * An IconGridViewer implementation for viewing domain objects. 
  *
@@ -614,26 +617,5 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         );
     }
 
-    private class IconGridViewerState extends ListViewerState {
-
-        private int maxImageWidth;
-
-        public IconGridViewerState(int maxImageWidth) {
-            super(ListViewerType.IconViewer);
-            this.maxImageWidth = maxImageWidth;
-        }
-
-        public int getMaxImageWidth() {
-            return maxImageWidth;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder builder = new StringBuilder();
-            builder.append("IconGridViewerState[maxImageWidth=");
-            builder.append(maxImageWidth);
-            builder.append("]");
-            return builder.toString();
-        }
-    }
+    
 }

@@ -2,3 +2,4 @@
 
 Workstation Browser
 * Fixed issue with LSM naming in download wizard
+* After restarting, viewer state is now restored even if a filter was not named
