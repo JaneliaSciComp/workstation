@@ -31,6 +31,8 @@ import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.controller.AB2CompositionMode;
 import org.janelia.it.workstation.ab2.controller.AB2ControllerMode;
 import org.janelia.it.workstation.ab2.controller.AB2View3DMode;
+import org.janelia.it.workstation.ab2.renderer.AB2SimpleCubeRenderer;
+import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
 
 public class AB2Controller implements GLEventListener {
     private ConcurrentLinkedQueue<AB2Event> eventQueue;
@@ -59,15 +61,16 @@ public class AB2Controller implements GLEventListener {
     }
 
     private void populateModeMap() {
-        modeMap.put(AB2View3DMode.class, new AB2View3DMode(this));
+        modeMap.put(AB2View3DMode.class, new AB2View3DMode(this, new AB2SimpleCubeRenderer()));
         modeMap.put(AB2CompositionMode.class, new AB2CompositionMode(this));
+        modeMap.put(AB2SkeletonMode.class, new AB2SkeletonMode(this, new AB2SkeletonRenderer()));
     }
 
     public void start() {
         if (controllerHandle!=null) {
             return;
         } else {
-            currentMode=modeMap.get(AB2View3DMode.class);
+            currentMode=modeMap.get(AB2SkeletonMode.class);
             currentMode.start();
             controllerHandle=controllerExecutor.scheduleWithFixedDelay(eventHandler, 500, 500, TimeUnit.MICROSECONDS);
         }

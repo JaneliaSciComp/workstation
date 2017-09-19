@@ -28,9 +28,9 @@ public class AB2View3DMode extends AB2ControllerMode {
     protected boolean bMouseIsDragging = false;
 
 
-    public AB2View3DMode(AB2Controller controller) {
+    public AB2View3DMode(AB2Controller controller, AB2Basic3DRenderer renderer) {
         super(controller);
-        renderer=new AB2SimpleCubeRenderer();
+        this.renderer=renderer;
     }
 
     @Override
