@@ -164,7 +164,7 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
                     gl.glDrawArrays(GL4.GL_POINTS, 0, 8);
                     checkGlError(gl, "d7 ArraySortShader glDrawArrays() error");
 
-                    //gl.glDrawArrays(GL4.GL_LINES, 0, 4);
+                    //gl.glDrawArrays(GL4.GL_LINES, 0, 8);
                     //checkGlError(gl, "d8 ArraySortShader glDrawArrays() error");
 
                     gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
