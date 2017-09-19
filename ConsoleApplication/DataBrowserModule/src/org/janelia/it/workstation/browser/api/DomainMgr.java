@@ -168,6 +168,7 @@ public class DomainMgr {
         if (preferenceMap==null) {
             preferenceMap = new HashMap<>();
             for (Preference preference : subjectFacade.getPreferences()) {
+                log.info("Loaded preference: {}",preference);
                 preferenceMap.put(getPreferenceMapKey(preference), preference);
             }
             log.info("Loaded {} user preferences", preferenceMap.size());
@@ -215,6 +216,10 @@ public class DomainMgr {
         log.info("Saved preference in category {} with {}={}",preference.getCategory(),preference.getKey(),preference.getValue());
     }
 
+    public static String getPreferenceSubject() {
+        return ApplicationOptions.getInstance().isUseRunAsUserPreferences() ? AccessManager.getSubjectKey() : AccessManager.getAccessManager().getAuthenticatedSubject().getKey();
+    }
+    
     /**
      * Set the given preference value, creating the preference if necessary.
      * @param category
@@ -225,7 +230,7 @@ public class DomainMgr {
     public void setPreference(String category, String key, Object value) throws Exception {
         Preference preference = DomainMgr.getDomainMgr().getPreference(category, key);
         if (preference==null) {
-            preference = new Preference(AccessManager.getSubjectKey(), category, key, value);
+            preference = new Preference(getPreferenceSubject(), category, key, value);
         }
         else {
             preference.setValue(value);
@@ -248,7 +253,7 @@ public class DomainMgr {
             if (value!=null) {
                 Preference preference = DomainMgr.getDomainMgr().getPreference(category, key);
                 if (preference==null) {
-                    preference = new Preference(AccessManager.getSubjectKey(), category, key, value);
+                    preference = new Preference(getPreferenceSubject(), category, key, value);
                     DomainMgr.getDomainMgr().savePreference(preference);
                 }
                 else if (!StringUtils.areEqual(preference.getValue(), value)) {

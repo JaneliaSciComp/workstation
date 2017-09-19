@@ -328,7 +328,7 @@ public class StateMgr {
             String value = bind.getOntologyTermId().toString();
             if (pref==null) {
                 // Create
-                pref = new Preference(AccessManager.getSubjectKey(), category, bind.getKey(), value);
+                pref = new Preference(DomainMgr.getPreferenceSubject(), category, bind.getKey(), value);
                 log.debug("Creating new preference: {}", pref);
                 DomainMgr.getDomainMgr().savePreference(pref);
                 changed = true;
