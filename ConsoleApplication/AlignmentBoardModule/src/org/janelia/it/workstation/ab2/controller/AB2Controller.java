@@ -28,6 +28,7 @@ import javax.media.opengl.awt.GLJPanel;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.ab2.event.AB2ChangeModeEvent;
+import org.janelia.it.workstation.ab2.event.AB2DomainObjectUpdateEvent;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.controller.AB2CompositionMode;
 import org.janelia.it.workstation.ab2.controller.AB2ControllerMode;
@@ -57,6 +58,7 @@ public class AB2Controller implements GLEventListener {
 
     public void setDomainObject(AB2DomainObject domainObject) {
         this.domainObject=domainObject;
+        addEvent(new AB2DomainObjectUpdateEvent());
     }
 
     public AB2DomainObject getDomainObject() {

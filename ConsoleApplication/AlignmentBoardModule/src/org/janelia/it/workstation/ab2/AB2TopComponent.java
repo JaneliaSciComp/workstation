@@ -105,24 +105,34 @@ public final class AB2TopComponent extends TopComponent {
         if (ab2Data==null) {
             ab2Data=new AB2Data();
         }
+        logger.info("Check1");
         if (ab2GLPanel==null) {
+            logger.info("Check2");
             ab2GLPanel=new AB2GLPanel(1000, 750, ab2Controller);
             ab2Controller.setGljPanel(ab2GLPanel);
             glWrapperPanel.setLayout(new BoxLayout(glWrapperPanel, BoxLayout.Y_AXIS));
             glWrapperPanel.add(ab2GLPanel);
-            ab2GLPanel.setVisible(true);
-            glWrapperPanel.setVisible(true);
+            logger.info("Check3");
             AB2SkeletonDomainObject skeletonDomainObject=new AB2SkeletonDomainObject();
+            logger.info("Check4");
             try {
                 skeletonDomainObject.createSkeleton();
                 logger.info("Created skeleton domain object");
             } catch (Exception ex) {
+                logger.info("Check5 - ex="+ex.getMessage());
+                ex.printStackTrace();
                 logger.error(ex.getMessage());
                 return;
             }
+            logger.info("Check6");
             ab2Controller.setDomainObject(skeletonDomainObject);
+            logger.info("Check7");
         }
+        logger.info("Check8");
         ab2Controller.start();
+        logger.info("Check9");
+        ab2GLPanel.setVisible(true);
+        glWrapperPanel.setVisible(true);
     }
 
     @Override

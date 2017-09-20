@@ -95,7 +95,7 @@ public class AB2NeuronSkeleton {
     public List<Node> getLeafNodes() {
         List<Node> leafNodes=new ArrayList<>();
         for (Node node : nodes) {
-            if (node.children.size()==0) {
+            if (node.getParent()!=null && node.children.size()==0) {
                 leafNodes.add(node);
             }
         }

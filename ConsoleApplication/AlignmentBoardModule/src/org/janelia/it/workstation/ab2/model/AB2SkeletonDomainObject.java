@@ -4,8 +4,13 @@ import java.util.Date;
 import java.util.Set;
 
 import org.janelia.it.workstation.ab2.test.AB2SimulatedNeuronSkeletonGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AB2SkeletonDomainObject extends AB2DomainObject {
+
+    Logger logger= LoggerFactory.getLogger(AB2SkeletonDomainObject.class);
+
 
     ////////////////////////////////////////////////////////////////////////////////////
     /// From DomainObject
@@ -64,8 +69,11 @@ public class AB2SkeletonDomainObject extends AB2DomainObject {
     }
 
     public void createSkeleton(long randomSeed) throws Exception {
+        logger.info("Check1");
         AB2SimulatedNeuronSkeletonGenerator skeletonGenerator=new AB2SimulatedNeuronSkeletonGenerator(randomSeed);
+        logger.info("Check2");
         skeleton=skeletonGenerator.generateSkeleton();
+        logger.info("Check3");
     }
 
     public AB2NeuronSkeleton getSkeleton() { return skeleton; }

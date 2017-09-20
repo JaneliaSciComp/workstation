@@ -42,7 +42,9 @@ public class AB2SimulatedNeuronSkeletonGenerator {
         skeleton.addNode(rootX, rootY, rootZ, null);
         AB2NeuronSkeleton.Node rootNode=skeleton.getRootNode();
         if (random.nextDouble()<initialBranchProbability) {
-            addBranchNodes(rootNode);
+            addBranchNodes(rootNode, true);
+        } else {
+            addBranchNodes(rootNode, false);
         }
         // Enter main loop - obviously this is not performance optimized
         while(skeleton.getSize()<nodeCount) {
@@ -71,7 +73,7 @@ public class AB2SimulatedNeuronSkeletonGenerator {
                     nodeToExtend.y()+nextVector.getY(), nodeToExtend.z()+nextVector.getZ(), nodeToExtend);
             if (skeleton.getSize()<(nodeCount-1)) {
                 if (random.nextDouble()<branchProbability) {
-                    addBranchNodes(newNode);
+                    addBranchNodes(newNode, true);
                 }
             }
         }
@@ -100,7 +102,7 @@ public class AB2SimulatedNeuronSkeletonGenerator {
         return new Vector3(x, y, z);
     }
 
-    private void addBranchNodes(AB2NeuronSkeleton.Node parentNode) throws Exception {
+    private void addBranchNodes(AB2NeuronSkeleton.Node parentNode, boolean addSecondBranch) throws Exception {
         // We need two initial children
         // First, generate a random unit vector to pick a direction
         double rdX=random.nextDouble();
@@ -115,7 +117,9 @@ public class AB2SimulatedNeuronSkeletonGenerator {
         rVi=rVi.multiplyScalar((float)stepLength);
         // Add the two child nodes
         skeleton.addNode(parentNode.x()+rV.getX(), parentNode.y()+rV.getY(), parentNode.z()+rV.getZ(), parentNode);
-        skeleton.addNode(parentNode.x()+rVi.getX(), parentNode.y()+rVi.getY(), parentNode.z()+rVi.getZ(), parentNode);
+        if (addSecondBranch) {
+            skeleton.addNode(parentNode.x() + rVi.getX(), parentNode.y() + rVi.getY(), parentNode.z() + rVi.getZ(), parentNode);
+        }
     }
 
     public Vector3 getScaledVectorFromNorms(double x, double y, double z) {

@@ -2,7 +2,6 @@ package org.janelia.it.workstation.ab2.renderer;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -11,7 +10,6 @@ import javax.media.opengl.GL4;
 
 import org.janelia.it.workstation.ab2.gl.GLDisplayUpdateCallback;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
-import org.janelia.it.workstation.ab2.shader.AB2SimpleCubeShader;
 import org.janelia.it.workstation.ab2.shader.AB2SkeletonShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,12 +37,13 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     }
 
     private void updateSkeleton() {
+        logger.info("updateSkeleton() called");
         if (skeleton==null) {
             return;
         }
     }
 
-    void addNodeInfo(AB2NeuronSkeleton.Node node, float[] nodeXYZRGB, int i, Random random) {
+    int addNodeInfo(AB2NeuronSkeleton.Node node, float[] nodeXYZRGB, Integer i, Random random) {
         nodeXYZRGB[i++]=(float)node.x();
         nodeXYZRGB[i++]=(float)node.y();
         nodeXYZRGB[i++]=(float)node.z();
@@ -57,6 +56,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 addNodeInfo(child, nodeXYZRGB, i, random);
             }
         }
+        return i;
     }
 
     @Override
@@ -69,7 +69,8 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         float[] nodeXYZRGB = new float[nodeCount*6];
         Random random=new Random(new Date().getTime());
         AB2NeuronSkeleton.Node rootNode=skeleton.getRootNode();
-        addNodeInfo(rootNode, nodeXYZRGB, 0, random);
+        int nodesAdded=addNodeInfo(rootNode, nodeXYZRGB, 0, random);
+        logger.info("Added "+nodesAdded+" skeleton nodes");
 
         interleavedFb=createGLFloatBuffer(nodeXYZRGB);
 
@@ -102,8 +103,8 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
                 //logger.info("update() start");
 
-                AB2SimpleCubeShader cubeShader = (AB2SimpleCubeShader) shader;
-                cubeShader.setMVP(gl, mvp);
+                AB2SkeletonShader skeletonShader = (AB2SkeletonShader) shader;
+                skeletonShader.setMVP(gl, mvp);
                 gl.glPointSize(3.0f);
 
                 gl.glBindVertexArray(vertexArrayId.get(0));
