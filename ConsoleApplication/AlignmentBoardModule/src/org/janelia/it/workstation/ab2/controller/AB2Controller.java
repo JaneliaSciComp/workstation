@@ -26,11 +26,13 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.GLJPanel;
 
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.ab2.event.AB2ChangeModeEvent;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.controller.AB2CompositionMode;
 import org.janelia.it.workstation.ab2.controller.AB2ControllerMode;
 import org.janelia.it.workstation.ab2.controller.AB2View3DMode;
+import org.janelia.it.workstation.ab2.model.AB2DomainObject;
 import org.janelia.it.workstation.ab2.renderer.AB2SimpleCubeRenderer;
 import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
 
@@ -43,6 +45,7 @@ public class AB2Controller implements GLEventListener {
     private Map<Class, AB2ControllerMode> modeMap=new HashMap<>();
     private AB2ControllerMode currentMode;
     private GLJPanel gljPanel;
+    private AB2DomainObject domainObject;
 
     public AB2Controller() {
         eventQueue=new ConcurrentLinkedQueue<>();
@@ -50,6 +53,14 @@ public class AB2Controller implements GLEventListener {
         controllerExecutor=Executors.newSingleThreadScheduledExecutor();
         eventHandler=new EventHandler();
         populateModeMap();
+    }
+
+    public void setDomainObject(AB2DomainObject domainObject) {
+        this.domainObject=domainObject;
+    }
+
+    public AB2DomainObject getDomainObject() {
+         return domainObject;
     }
 
     public void setGljPanel(GLJPanel gljPanel) {

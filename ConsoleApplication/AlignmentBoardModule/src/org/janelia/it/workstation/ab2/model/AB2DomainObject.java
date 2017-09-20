@@ -1,4 +1,8 @@
 package org.janelia.it.workstation.ab2.model;
 
-public class AB2DomainObject {
+import org.janelia.it.jacs.model.domain.DomainObject;
+
+public abstract class AB2DomainObject implements DomainObject
+{
+
 }

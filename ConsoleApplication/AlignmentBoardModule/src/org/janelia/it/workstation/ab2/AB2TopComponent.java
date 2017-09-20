@@ -10,6 +10,7 @@ import javax.swing.BoxLayout;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.model.AB2Data;
 import org.janelia.it.workstation.ab2.model.AB2DomainObject;
+import org.janelia.it.workstation.ab2.model.AB2SkeletonDomainObject;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -111,7 +112,15 @@ public final class AB2TopComponent extends TopComponent {
             glWrapperPanel.add(ab2GLPanel);
             ab2GLPanel.setVisible(true);
             glWrapperPanel.setVisible(true);
-            //ab2GLPanel.repaint();
+            AB2SkeletonDomainObject skeletonDomainObject=new AB2SkeletonDomainObject();
+            try {
+                skeletonDomainObject.createSkeleton();
+                logger.info("Created skeleton domain object");
+            } catch (Exception ex) {
+                logger.error(ex.getMessage());
+                return;
+            }
+            ab2Controller.setDomainObject(skeletonDomainObject);
         }
         ab2Controller.start();
     }
