@@ -14,16 +14,21 @@ import java.util.Random;
 
 import org.janelia.geometry3d.Vector3;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AB2SimulatedNeuronSkeletonGenerator {
+
+    Logger logger= LoggerFactory.getLogger(AB2SimulatedNeuronSkeletonGenerator.class);
+
     private Random random;
 
     private double branchProbability=0.05;
     private double initialBranchProbability=0.5;
-    private double stepLength=0.003;
+    private double stepLength=0.01;
     private double[] boundingBox={ 0.0, 0.0, 0.0, 1.0, 1.0, 1.0 };
     private double stepAngleLimitRadians=Math.PI/8.0;
-    private int nodeCount=1000;
+    private int nodeCount=10;
     private AB2NeuronSkeleton skeleton;
 
     public AB2SimulatedNeuronSkeletonGenerator() {
@@ -47,35 +52,62 @@ public class AB2SimulatedNeuronSkeletonGenerator {
             addBranchNodes(rootNode, false);
         }
         // Enter main loop - obviously this is not performance optimized
+
+        int DEBUG_COUNT=0;
+
         while(skeleton.getSize()<nodeCount) {
             List<AB2NeuronSkeleton.Node> leafNodes=skeleton.getLeafNodes();
             int leafIndex=random.nextInt(leafNodes.size());
             AB2NeuronSkeleton.Node nodeToExtend=leafNodes.get(leafIndex);
             AB2NeuronSkeleton.Node parentNode=nodeToExtend.getParent();
+            //logger.info("parent x="+parentNode.x()+" y="+parentNode.y()+" z="+parentNode.z());
+            //logger.info("exNode x="+nodeToExtend.x()+" y="+nodeToExtend.y()+" z="+nodeToExtend.z());
+            //logger.info("Check8");
             Vector3 childDirection=getVectorFromNodes(parentNode, nodeToExtend);
+            //logger.info("Check9");
+            //logger.info("child x="+childDirection.getX()+" y="+childDirection.getY()+" z="+childDirection.getZ());
             // Because we don't need to change the length of the vector and just perturb its
             // position, we can use 2-parameter polar coordinates
             Double thetaDelta=random.nextDouble()*stepAngleLimitRadians - stepAngleLimitRadians/2.0;
             Double phiDelta=random.nextDouble()*stepAngleLimitRadians - stepAngleLimitRadians/2.0;
+            //logger.info("thetaDelta="+thetaDelta+" phiDelta="+phiDelta);
             Vector3 childDirectionSpherical=getSphericalVectorFromCartesianVector(childDirection);
+            //logger.info("child spherical x="+childDirectionSpherical.getX()+" y="+childDirectionSpherical.getY()+" z="+
+            //                    childDirectionSpherical.getZ());
+            //logger.info("Check10");
             Vector3 modifiedChildDirectionSpherical=new Vector3(
                     (float)(childDirectionSpherical.getX()),
                     (float)(childDirectionSpherical.getY()+thetaDelta),
                     (float)(childDirectionSpherical.getZ()+phiDelta));
             Vector3 nextVector=getCartesianVectorFromSpherical(modifiedChildDirectionSpherical);
+            //logger.info("modifiedChildDirectionSpherical x="+modifiedChildDirectionSpherical.getX()+" y="+
+            //        modifiedChildDirectionSpherical.getY()+" z="+modifiedChildDirectionSpherical.getZ());
+            //logger.info("nextVector x="+nextVector.getX()+" y="+
+            //        nextVector.getY()+" z="+nextVector.getZ());
+            //logger.info("Check11");
+            //DEBUG_COUNT++;
+            //if (DEBUG_COUNT==5) {
+            //    return null;
+            //}
             double boundary=stepLength*5;
-            if (nextVector.getX()<(boundingBox[0]+boundary) || nextVector.getX()>(boundingBox[3]-boundary)
-                || nextVector.getY()<(boundingBox[1]+boundary) || nextVector.getY()>(boundingBox[4]-boundary)
-                    || nextVector.getZ()<(boundingBox[2]+boundary) || nextVector.getZ()>(boundingBox[5]-boundary)) {
+            Vector3 nodeToExtendPosition=new Vector3((float)nodeToExtend.x(), (float)nodeToExtend.y(), (float)nodeToExtend.z());
+            nodeToExtendPosition.add(nextVector);
+            if (nodeToExtendPosition.getX()<(boundingBox[0]+boundary) || nodeToExtendPosition.getX()>(boundingBox[3]-boundary)
+                || nodeToExtendPosition.getY()<(boundingBox[1]+boundary) || nodeToExtendPosition.getY()>(boundingBox[4]-boundary)
+                    || nodeToExtendPosition.getZ()<(boundingBox[2]+boundary) || nodeToExtendPosition.getZ()>(boundingBox[5]-boundary)) {
                 continue; // out of bounds, discard
             }
-            AB2NeuronSkeleton.Node newNode = skeleton.addNode(nodeToExtend.x()+nextVector.getX(),
-                    nodeToExtend.y()+nextVector.getY(), nodeToExtend.z()+nextVector.getZ(), nodeToExtend);
+            //logger.info("Check12");
+            AB2NeuronSkeleton.Node newNode = skeleton.addNode(nodeToExtendPosition.getX(),
+                    nodeToExtendPosition.getY(), nodeToExtendPosition.getZ(), nodeToExtend);
+            //logger.info("Check13");
             if (skeleton.getSize()<(nodeCount-1)) {
                 if (random.nextDouble()<branchProbability) {
+                    //logger.info("Check14");
                     addBranchNodes(newNode, true);
                 }
             }
+            //logger.info("Check15 - skeleton.getSize()="+skeleton.getSize());
         }
         return skeleton;
     }
@@ -108,10 +140,11 @@ public class AB2SimulatedNeuronSkeletonGenerator {
         double rdX=random.nextDouble();
         double rdY=random.nextDouble();
         double rdZ=random.nextDouble();
-        Vector3 rV=getScaledVectorFromNorms(rdX, rdY, rdZ);
-        rV=rV.normalize();
+        Vector3 rV=new Vector3((float)rdX, (float)rdY, (float)rdZ);
+        rV.normalize();
         // Next, get the inverse vector
-        Vector3 rVi=rV.negate();
+        Vector3 rVi=new Vector3(rV);
+        rVi.negate();
         // Scale to proper increment
         rV=rV.multiplyScalar((float)stepLength);
         rVi=rVi.multiplyScalar((float)stepLength);
@@ -121,20 +154,5 @@ public class AB2SimulatedNeuronSkeletonGenerator {
             skeleton.addNode(parentNode.x() + rVi.getX(), parentNode.y() + rVi.getY(), parentNode.z() + rVi.getZ(), parentNode);
         }
     }
-
-    public Vector3 getScaledVectorFromNorms(double x, double y, double z) {
-        double bbXstart=boundingBox[0];
-        double bbXlength=boundingBox[3]-boundingBox[0];
-        double bbYstart=boundingBox[1];
-        double bbYlength=boundingBox[4]-boundingBox[1];
-        double bbZstart=boundingBox[2];
-        double bbZlength=boundingBox[5]-boundingBox[2];
-        Vector3 scaledVector=new Vector3(
-                (float)(x/bbXlength+bbXstart),
-                (float)(y/bbYlength+bbYlength),
-                (float)(z/bbZlength+bbZlength));
-        return scaledVector;
-    }
-
 
 }

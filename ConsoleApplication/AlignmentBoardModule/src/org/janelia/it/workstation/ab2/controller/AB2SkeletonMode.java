@@ -19,7 +19,7 @@ public class AB2SkeletonMode extends AB2View3DMode {
 
     @Override
     public void processEvent(AB2Event event) {
-        logger.info("processEvent()");
+        //logger.info("processEvent()");
         super.processEvent(event);
         if  (event instanceof AB2DomainObjectUpdateEvent) {
             ((AB2SkeletonRenderer)renderer).setSkeleton(((AB2SkeletonDomainObject)controller.getDomainObject()).getSkeleton());
