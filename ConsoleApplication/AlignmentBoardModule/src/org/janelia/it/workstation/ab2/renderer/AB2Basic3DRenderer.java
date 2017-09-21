@@ -116,8 +116,8 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
     }
 
     public void reshape(GL4 gl, int x, int y, int width, int height) {
-        viewport.setWidthPixels(width);
         viewport.setHeightPixels(height);
+        viewport.setWidthPixels(width);
         display(gl);
     }
 

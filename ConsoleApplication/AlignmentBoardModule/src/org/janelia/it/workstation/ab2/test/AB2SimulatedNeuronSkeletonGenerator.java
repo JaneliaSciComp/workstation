@@ -23,11 +23,11 @@ public class AB2SimulatedNeuronSkeletonGenerator {
 
     private Random random;
 
-    private double branchProbability=0.05;
+    private double branchProbability=0.10;
     private double initialBranchProbability=0.5;
-    private double stepLength=0.01;
+    private double stepLength=0.005;
     private double[] boundingBox={ 0.0, 0.0, 0.0, 1.0, 1.0, 1.0 };
-    private double stepAngleLimitRadians=Math.PI/8.0;
+    private double stepAngleLimitRadians=Math.PI/4.0;
     private int nodeCount=1000;
     private AB2NeuronSkeleton skeleton;
 
@@ -40,6 +40,7 @@ public class AB2SimulatedNeuronSkeletonGenerator {
     }
 
     public AB2NeuronSkeleton generateSkeleton() throws Exception {
+        logger.info("generateSkeleton() start");
         skeleton=new AB2NeuronSkeleton();
         double rootX=random.nextDouble()*0.8+0.1; // so we aren't starting at the edge
         double rootY=random.nextDouble()*0.8+0.1;
@@ -114,6 +115,7 @@ public class AB2SimulatedNeuronSkeletonGenerator {
             }
             //logger.info("Check15 - skeleton.getSize()="+skeleton.getSize());
         }
+        logger.info("generateSkeleton() end - nodeCount="+skeleton.getSize());
         return skeleton;
     }
 

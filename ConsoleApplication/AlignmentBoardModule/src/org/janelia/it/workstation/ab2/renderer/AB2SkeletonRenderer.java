@@ -21,18 +21,19 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
     IntBuffer skeletonVertexArrayId=IntBuffer.allocate(1);
     IntBuffer skeletonVertexBufferId=IntBuffer.allocate(1);
-    IntBuffer skeletonInterleavedBufferId=IntBuffer.allocate(1);
+
+    IntBuffer skeletonEdgeArrayId=IntBuffer.allocate(1);
+    IntBuffer skeletonEdgeBufferId=IntBuffer.allocate(1);
 
     IntBuffer boundaryVertexArrayId=IntBuffer.allocate(1);
     IntBuffer boundaryVertexBufferId=IntBuffer.allocate(1);
-    IntBuffer boundaryInterleavedBufferId=IntBuffer.allocate(1);
 
 
-    FloatBuffer skeletonInterleavedFb;
-    FloatBuffer boundaryInterleavedFb;
+    FloatBuffer skeletonVertexFb;
+    FloatBuffer skeletonEdgeFb;
+    FloatBuffer boundaryVertexFb;
 
     private Matrix4 modelMatrix;
-
 
     public AB2SkeletonRenderer() {
         super(new AB2SkeletonShader());
@@ -91,6 +92,38 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         return i;
     }
 
+    int addEdgeInfo(AB2NeuronSkeleton.Node node, float[] edgeXYZRGB, int i, Random random) {
+        float nodeX=(float)node.x();
+        float nodeY=(float)node.y();
+        float nodeZ=(float)node.z();
+        float nodeR=random.nextFloat();
+        float nodeG=random.nextFloat();
+        float nodeB=random.nextFloat();
+        List<AB2NeuronSkeleton.Node> children=node.getChildren();
+        if (children!=null && children.size()>0) {
+            for (AB2NeuronSkeleton.Node child : children) {
+
+                edgeXYZRGB[i++]=nodeX;
+                edgeXYZRGB[i++]=nodeY;
+                edgeXYZRGB[i++]=nodeZ;
+                edgeXYZRGB[i++]=nodeR;
+                edgeXYZRGB[i++]=nodeG;
+                edgeXYZRGB[i++]=nodeB;
+
+                edgeXYZRGB[i++]=(float)child.x();
+                edgeXYZRGB[i++]=(float)child.y();
+                edgeXYZRGB[i++]=(float)child.z();
+                edgeXYZRGB[i++]=nodeR;
+                edgeXYZRGB[i++]=nodeG;
+                edgeXYZRGB[i++]=nodeB;
+
+                i=addEdgeInfo(child, edgeXYZRGB, i, random);
+            }
+        }
+        return i;
+    }
+
+
     @Override
     public void init(GL4 gl) {
         super.init(gl);
@@ -103,12 +136,19 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
         int nodeCount=skeleton.getSize();
         float[] nodeXYZRGB = new float[nodeCount*6];
+        float[] edgeXYZRGB = new float[(nodeCount-1)*2*6];
         Random random=new Random(new Date().getTime());
         AB2NeuronSkeleton.Node rootNode=skeleton.getRootNode();
-        int nodesAdded=(addNodeInfo(rootNode, nodeXYZRGB, 0, random))/6;
-        logger.info("Added "+nodesAdded+" skeleton nodes, nodeCount="+nodeCount);
 
-        skeletonInterleavedFb=createGLFloatBuffer(nodeXYZRGB);
+        int nodeVerticesAdded=(addNodeInfo(rootNode, nodeXYZRGB, 0, random))/6;
+        logger.info("Added "+nodeVerticesAdded+" skeleton node vertices, nodeCount="+nodeCount);
+
+        int edgeVerticesAdded=(addEdgeInfo(rootNode, edgeXYZRGB, 0, random))/6;
+        logger.info("Added "+edgeVerticesAdded+" skeleton edge vertices, nodeCount="+nodeCount);
+
+        /// VERTICES
+
+        skeletonVertexFb=createGLFloatBuffer(nodeXYZRGB);
 
         gl.glGenVertexArrays(1, skeletonVertexArrayId);
         checkGlError(gl, "i1 glGenVertexArrays error");
@@ -116,16 +156,38 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         gl.glBindVertexArray(skeletonVertexArrayId.get(0));
         checkGlError(gl, "i2 glBindVertexArray error");
 
-        gl.glGenBuffers(1, skeletonInterleavedBufferId);
+        gl.glGenBuffers(1, skeletonVertexBufferId);
         checkGlError(gl, "i3 glGenBuffers() error");
 
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, skeletonInterleavedBufferId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, skeletonVertexBufferId.get(0));
         checkGlError(gl, "i4 glBindBuffer error");
 
-        gl.glBufferData(GL4.GL_ARRAY_BUFFER, skeletonInterleavedFb.capacity() * 4, skeletonInterleavedFb, GL4.GL_STATIC_DRAW);
+        gl.glBufferData(GL4.GL_ARRAY_BUFFER, skeletonVertexFb.capacity() * 4, skeletonVertexFb, GL4.GL_STATIC_DRAW);
         checkGlError(gl, "i5 glBufferData error");
 
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+
+        /// EDGES
+
+        skeletonEdgeFb=createGLFloatBuffer(edgeXYZRGB);
+
+        gl.glGenVertexArrays(1, skeletonEdgeArrayId);
+        checkGlError(gl, "i1 glGenVertexArrays error");
+
+        gl.glBindVertexArray(skeletonEdgeArrayId.get(0));
+        checkGlError(gl, "i2 glBindVertexArray error");
+
+        gl.glGenBuffers(1, skeletonEdgeBufferId);
+        checkGlError(gl, "i3 glGenBuffers() error");
+
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, skeletonEdgeBufferId.get(0));
+        checkGlError(gl, "i4 glBindBuffer error");
+
+        gl.glBufferData(GL4.GL_ARRAY_BUFFER, skeletonEdgeFb.capacity() * 4, skeletonEdgeFb, GL4.GL_STATIC_DRAW);
+        checkGlError(gl, "i5 glBufferData error");
+
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+
 
         //////////////////////////////////////////////////////////////////////////////////////////
         // Boundary
@@ -169,7 +231,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 1.0f, 0.0f, 1.0f,  1.0f, 1.0f, 1.0f
         };
 
-        boundaryInterleavedFb=createGLFloatBuffer(boundaryData);
+        boundaryVertexFb=createGLFloatBuffer(boundaryData);
 
         gl.glGenVertexArrays(1, boundaryVertexArrayId);
         checkGlError(gl, "i6 glGenVertexArrays error");
@@ -177,13 +239,13 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         gl.glBindVertexArray(boundaryVertexArrayId.get(0));
         checkGlError(gl, "i7 glBindVertexArray error");
 
-        gl.glGenBuffers(1, boundaryInterleavedBufferId);
+        gl.glGenBuffers(1, boundaryVertexBufferId);
         checkGlError(gl, "i8 glGenBuffers() error");
 
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, boundaryInterleavedBufferId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, boundaryVertexBufferId.get(0));
         checkGlError(gl, "i9 glBindBuffer error");
 
-        gl.glBufferData(GL4.GL_ARRAY_BUFFER, boundaryInterleavedFb.capacity() * 4, boundaryInterleavedFb, GL4.GL_STATIC_DRAW);
+        gl.glBufferData(GL4.GL_ARRAY_BUFFER, boundaryVertexFb.capacity() * 4, boundaryVertexFb, GL4.GL_STATIC_DRAW);
         checkGlError(gl, "i10 glBufferData error");
 
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
@@ -206,13 +268,13 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 gl.glPointSize(3.0f);
 
                 /////////////////////////////////////////////////////////////////////////////////////////
-                // Skeleton
+                // Skeleton Vertices
                 /////////////////////////////////////////////////////////////////////////////////////////
 
                 gl.glBindVertexArray(skeletonVertexArrayId.get(0));
                 checkGlError(gl, "d1 glBindVertexArray() error");
 
-                gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, skeletonInterleavedBufferId.get(0));
+                gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, skeletonVertexBufferId.get(0));
                 checkGlError(gl, "d2 glBindBuffer error");
 
                 gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 24, 0);
@@ -236,13 +298,43 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
                 /////////////////////////////////////////////////////////////////////////////////////////
+                // Skeleton Edges
+                /////////////////////////////////////////////////////////////////////////////////////////
+
+                gl.glBindVertexArray(skeletonEdgeArrayId.get(0));
+                checkGlError(gl, "d1 glBindVertexArray() error");
+
+                gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, skeletonEdgeBufferId.get(0));
+                checkGlError(gl, "d2 glBindBuffer error");
+
+                gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 24, 0);
+                checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
+
+                gl.glEnableVertexAttribArray(0);
+                checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
+
+                gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 24, 12);
+                checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
+
+                gl.glEnableVertexAttribArray(1);
+                checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
+
+                gl.glDrawArrays(GL4.GL_LINES, 0, (skeleton.getSize()-1)*2);
+                checkGlError(gl, "d7 glDrawArrays() error");
+
+                //gl.glDrawArrays(GL4.GL_LINES, 0, 8);
+                //checkGlError(gl, "d8 glDrawArrays() error");
+
+                gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+
+                /////////////////////////////////////////////////////////////////////////////////////////
                 // Boundary
                 /////////////////////////////////////////////////////////////////////////////////////////
 
                 gl.glBindVertexArray(boundaryVertexArrayId.get(0));
                 checkGlError(gl, "d1 glBindVertexArray() error");
 
-                gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, boundaryInterleavedBufferId.get(0));
+                gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, boundaryVertexBufferId.get(0));
                 checkGlError(gl, "d2 glBindBuffer error");
 
                 gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 24, 0);
