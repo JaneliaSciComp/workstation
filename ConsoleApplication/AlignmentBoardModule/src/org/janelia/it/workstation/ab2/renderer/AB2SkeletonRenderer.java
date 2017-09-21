@@ -31,7 +31,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     FloatBuffer skeletonInterleavedFb;
     FloatBuffer boundaryInterleavedFb;
 
-    Matrix4 modelMatrix;
+    private Matrix4 modelMatrix;
 
 
     public AB2SkeletonRenderer() {
@@ -53,14 +53,16 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     }
 
     @Override
-    public Matrix4 getModelMatrix() {
+    protected Matrix4 getModelMatrix() {
+        logger.info("getModelMatrix()");
         if (modelMatrix==null) {
+            logger.info("computing new Model matrix");
             Matrix4 translationMatrix = new Matrix4();
             translationMatrix.set(
-                    1.0f, 0.0f, 0.0f, -0.5f,
-                    0.0f, 1.0f, 0.0f, -0.5f,
+                    1.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f, 0.0f,
                     0.0f, 0.0f, 1.0f, 0.0f,
-                    0.0f, 0.0f, 0.0f, 1.0f);
+                    -0.5f, -0.5f, 0.0f, 1.0f);
             Matrix4 scaleMatrix = new Matrix4();
             scaleMatrix.set(
                     2.0f, 0.0f, 0.0f, 0.0f,
@@ -69,6 +71,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                     0.0f, 0.0f, 0.0f, 1.0f);
             modelMatrix=translationMatrix.multiply(scaleMatrix);
         }
+        logger.info("returning modelMatrix="+modelMatrix.toString());
         return modelMatrix;
     }
 
@@ -129,41 +132,42 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         //////////////////////////////////////////////////////////////////////////////////////////
 
         float[] boundaryData = new float[] {
-                0.0f, 0.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
+                0.0f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
+                0.0f, 1.0f, 0.0f,  1.0f, 1.0f, 1.0f,
 
-                0.0f, 1.0f, 0.0f,
-                1.0f, 1.0f, 0.0f,
+                0.0f, 1.0f, 0.0f,  1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 0.0f,  1.0f, 1.0f, 1.0f,
 
-                1.0f, 1.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
+                1.0f, 1.0f, 0.0f,  1.0f, 1.0f, 1.0f,
+                1.0f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
 
-                1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
 
-                0.0f, 0.0f, 1.0f,
-                0.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 1.0f,  1.0f, 1.0f, 1.0f,
+                0.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f,
 
-                0.0f, 1.0f, 1.0f,
-                1.0f, 1.0f, 1.0f,
+                0.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f,
 
-                1.0f, 1.0f, 1.0f,
-                1.0f, 0.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f,
+                1.0f, 0.0f, 1.0f,  1.0f, 1.0f, 1.0f,
 
-                1.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
+                1.0f, 0.0f, 1.0f,  1.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 1.0f,  1.0f, 1.0f, 1.0f,
 
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 1.0f,
+                0.0f, 1.0f, 0.0f,  1.0f, 1.0f, 1.0f,
+                0.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f,
 
-                0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f,
+                0.0f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 1.0f,  1.0f, 1.0f, 1.0f,
 
-                1.0f, 1.0f, 0.0f,
-                1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 0.0f,  1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f,
 
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 1.0f };
+                1.0f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
+                1.0f, 0.0f, 1.0f,  1.0f, 1.0f, 1.0f
+        };
 
         boundaryInterleavedFb=createGLFloatBuffer(boundaryData);
 
@@ -241,10 +245,16 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, boundaryInterleavedBufferId.get(0));
                 checkGlError(gl, "d2 glBindBuffer error");
 
-                gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
+                gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 24, 0);
                 checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
 
                 gl.glEnableVertexAttribArray(0);
+                checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
+
+                gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 24, 12);
+                checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
+
+                gl.glEnableVertexAttribArray(1);
                 checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
 
                 gl.glDrawArrays(GL4.GL_LINES, 0, 24);

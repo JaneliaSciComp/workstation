@@ -87,7 +87,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
         displaySync(gl);
     }
 
-    public Matrix4 getModelMatrix() {
+    protected Matrix4 getModelMatrix() {
         Matrix4 modelMatrix=new Matrix4(); // default constructor is identity
         return modelMatrix;
     }
@@ -97,10 +97,12 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
         gl.glEnable(GL4.GL_DEPTH_TEST);
         gl.glClearBufferfv(gl.GL_COLOR, 0, backgroundColorBuffer);
 
-        Matrix4 projectionMatrix=camera.getProjectionMatrix();
-        Matrix4 viewMatrix=camera.getViewMatrix();
-        Matrix4 modelMatrix=getModelMatrix();
+        Matrix4 projectionMatrix=new Matrix4(camera.getProjectionMatrix());
+        Matrix4 viewMatrix=new Matrix4(camera.getViewMatrix());
+        Matrix4 modelMatrix=new Matrix4(getModelMatrix());
+        //Matrix4 modelMatrix=new Matrix4();
 
+        //mvp=projectionMatrix.multiply(viewMatrix.multiply(modelMatrix));
         mvp=modelMatrix.multiply(viewMatrix.multiply(projectionMatrix));
 
         shaderActionSequence.display(gl);
