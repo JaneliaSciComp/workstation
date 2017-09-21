@@ -28,7 +28,7 @@ public class AB2SimulatedNeuronSkeletonGenerator {
     private double stepLength=0.01;
     private double[] boundingBox={ 0.0, 0.0, 0.0, 1.0, 1.0, 1.0 };
     private double stepAngleLimitRadians=Math.PI/8.0;
-    private int nodeCount=10;
+    private int nodeCount=500;
     private AB2NeuronSkeleton skeleton;
 
     public AB2SimulatedNeuronSkeletonGenerator() {
@@ -106,6 +106,11 @@ public class AB2SimulatedNeuronSkeletonGenerator {
                     //logger.info("Check14");
                     addBranchNodes(newNode, true);
                 }
+            }
+            DEBUG_COUNT++;
+            if (DEBUG_COUNT>nodeCount*2) {
+                logger.error("Failed DEBUG_COUNT max of "+nodeCount*2);
+                return null;
             }
             //logger.info("Check15 - skeleton.getSize()="+skeleton.getSize());
         }
