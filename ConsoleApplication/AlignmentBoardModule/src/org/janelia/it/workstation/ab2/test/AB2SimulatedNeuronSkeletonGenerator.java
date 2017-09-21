@@ -28,7 +28,7 @@ public class AB2SimulatedNeuronSkeletonGenerator {
     private double stepLength=0.01;
     private double[] boundingBox={ 0.0, 0.0, 0.0, 1.0, 1.0, 1.0 };
     private double stepAngleLimitRadians=Math.PI/8.0;
-    private int nodeCount=500;
+    private int nodeCount=1000;
     private AB2NeuronSkeleton skeleton;
 
     public AB2SimulatedNeuronSkeletonGenerator() {

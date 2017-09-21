@@ -54,7 +54,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
     @Override
     protected Matrix4 getModelMatrix() {
-        logger.info("getModelMatrix()");
+        //logger.info("getModelMatrix()");
         if (modelMatrix==null) {
             logger.info("computing new Model matrix");
             Matrix4 translationMatrix = new Matrix4();
@@ -71,11 +71,11 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                     0.0f, 0.0f, 0.0f, 1.0f);
             modelMatrix=translationMatrix.multiply(scaleMatrix);
         }
-        logger.info("returning modelMatrix="+modelMatrix.toString());
+        //logger.info("returning modelMatrix="+modelMatrix.toString());
         return modelMatrix;
     }
 
-    int addNodeInfo(AB2NeuronSkeleton.Node node, float[] nodeXYZRGB, Integer i, Random random) {
+    int addNodeInfo(AB2NeuronSkeleton.Node node, float[] nodeXYZRGB, int i, Random random) {
         nodeXYZRGB[i++]=(float)node.x();
         nodeXYZRGB[i++]=(float)node.y();
         nodeXYZRGB[i++]=(float)node.z();
@@ -85,7 +85,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         List<AB2NeuronSkeleton.Node> children=node.getChildren();
         if (children!=null && children.size()>0) {
             for (AB2NeuronSkeleton.Node child : children) {
-                addNodeInfo(child, nodeXYZRGB, i, random);
+                i=addNodeInfo(child, nodeXYZRGB, i, random);
             }
         }
         return i;
@@ -105,8 +105,8 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         float[] nodeXYZRGB = new float[nodeCount*6];
         Random random=new Random(new Date().getTime());
         AB2NeuronSkeleton.Node rootNode=skeleton.getRootNode();
-        int nodesAdded=addNodeInfo(rootNode, nodeXYZRGB, 0, random);
-        logger.info("Added "+nodesAdded+" skeleton nodes");
+        int nodesAdded=(addNodeInfo(rootNode, nodeXYZRGB, 0, random))/6;
+        logger.info("Added "+nodesAdded+" skeleton nodes, nodeCount="+nodeCount);
 
         skeletonInterleavedFb=createGLFloatBuffer(nodeXYZRGB);
 
