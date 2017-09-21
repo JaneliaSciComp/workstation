@@ -58,6 +58,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
         this.shader=shader;
         vantage=new Vantage(null);
         viewport=new Viewport();
+        viewport.setzNearRelative(0.1f);
         camera = new PerspectiveCamera(vantage, viewport);
         vantage.setFocus(0.0f,0.0f,(float)DEFAULT_CAMERA_FOCUS_DISTANCE);
     }
