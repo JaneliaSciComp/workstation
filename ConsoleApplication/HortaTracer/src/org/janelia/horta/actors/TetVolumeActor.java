@@ -114,9 +114,10 @@ implements DepthSlabClipper
     private final KtxTileCache dynamicTiles = new KtxTileCache(null);
     private final BlockChooser chooser1 = new OneFineDisplayBlockChooser(); // for proof-of-concept and debugging
     private final BlockChooser chooser8 = new Finest8DisplayBlockChooser();
-    private final BlockChooser chooserxy = new XYDisplayBlockChooser();
-    // private final BlockDisplayUpdater blockDisplayUpdater = new BlockDisplayUpdater(chooser8);
-    private final BlockDisplayUpdater blockDisplayUpdater = new BlockDisplayUpdater(chooserxy);
+    private final BlockDisplayUpdater blockDisplayUpdater = new BlockDisplayUpdater(chooser8);
+    // this is a test alternate block chooser (a wide xy array of blocks); not currently used
+    // private final BlockChooser chooserxy = new XYDisplayBlockChooser();
+    // private final BlockDisplayUpdater blockDisplayUpdater = new BlockDisplayUpdater(chooserxy);
     
     private final Collection<GL3Resource> obsoleteActors = new ArrayList<>();
 
