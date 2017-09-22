@@ -49,7 +49,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         super(new AB2ActorShader());
         styleIdMap.put(BOUNDING_BOX_ID, new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         styleIdMap.put(POINT_SET_ID, new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-        styleIdMap.put(LINE_SET_ID, new Vector4(0.0f, 0.0f, 1.0f, 0.0f));
+        styleIdMap.put(LINE_SET_ID, new Vector4(0.0f, 0.0f, 1.0f, 1.0f));
         shaderActionSequence.setShaderUpdateCallback(getShaderUpdateCallback());
         shaderActionSequence.setActorUpdateCallback(getActorSequenceUpdateCallback());
     }
