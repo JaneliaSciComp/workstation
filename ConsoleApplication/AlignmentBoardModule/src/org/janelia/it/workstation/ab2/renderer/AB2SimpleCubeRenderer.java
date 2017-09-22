@@ -128,7 +128,7 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
     }
 
     @Override
-    protected GLActorUpdateCallback getActorUpdateCallback() {
+    protected GLActorUpdateCallback getActorSequenceUpdateCallback() {
         return new GLActorUpdateCallback() {
             @Override
             public void update(GL4 gl, Object o) {

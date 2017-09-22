@@ -79,7 +79,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 
     protected abstract GLShaderUpdateCallback getShaderUpdateCallback();
 
-    protected abstract GLActorUpdateCallback getActorUpdateCallback();
+    protected abstract GLActorUpdateCallback getActorSequenceUpdateCallback();
 
     public void dispose(GL4 gl) {
         shaderActionSequence.dispose(gl);

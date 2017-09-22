@@ -46,7 +46,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     static final int LINE_SET_ID=3;
 
     public AB2SkeletonRenderer() {
-        super(new AB2SkeletonShader());
+        super(new AB2ActorShader());
         styleIdMap.put(BOUNDING_BOX_ID, new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         styleIdMap.put(POINT_SET_ID, new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
         styleIdMap.put(LINE_SET_ID, new Vector4(0.0f, 0.0f, 1.0f, 0.0f));
@@ -156,7 +156,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     }
 
     @Override
-    protected GLActorUpdateCallback getActorUpdateCallback() {
+    protected GLActorUpdateCallback getActorSequenceUpdateCallback() {
         return new GLActorUpdateCallback() {
             @Override
             public void update(GL4 gl, Object o) {
