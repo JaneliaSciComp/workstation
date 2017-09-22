@@ -1906,7 +1906,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public Map<String,Map<String,Object>> getTagGroupMappings() {
-        return currentTagMap.getAllTagGroupMappings();
+        // if load is interrupted, currentTagMap could be null:
+        if (currentTagMap != null) {
+            return currentTagMap.getAllTagGroupMappings();
+        } else {
+            return new HashMap<>();
+        }
     }
     
     public Boolean getToggleUserGroupState () {
