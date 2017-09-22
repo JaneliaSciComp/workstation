@@ -24,7 +24,7 @@ public class AB2ActorShader extends GLShaderProgram {
     }
 
     public void setStyleIdColor(GL4 gl, Vector4 styleIdColor) {
-        setUniformMatrix4fv(gl, "mvp", false, styleIdColor.toArray());
+        setUniform4v(gl, "styleIdColor", 1, styleIdColor.toArray());
         checkGlError(gl, "AB2ActorShader setStyleIdColor() error");
     }
 

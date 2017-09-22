@@ -1,9 +1,8 @@
 #version 410
 
-uniform vec4 styleIdColor;
-
+in vec4 vColor;
 out vec4 color;
 
 void main() {
-    color = styleIdColor;
+    color = vColor;
 }

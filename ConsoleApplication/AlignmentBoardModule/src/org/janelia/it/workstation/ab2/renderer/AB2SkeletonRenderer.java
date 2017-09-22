@@ -50,6 +50,8 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         styleIdMap.put(BOUNDING_BOX_ID, new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         styleIdMap.put(POINT_SET_ID, new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
         styleIdMap.put(LINE_SET_ID, new Vector4(0.0f, 0.0f, 1.0f, 0.0f));
+        shaderActionSequence.setShaderUpdateCallback(getShaderUpdateCallback());
+        shaderActionSequence.setActorUpdateCallback(getActorSequenceUpdateCallback());
     }
 
     private AB2NeuronSkeleton skeleton;
@@ -147,8 +149,8 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             @Override
             public void update(GL4 gl, Object o) {
 
-                AB2SkeletonShader skeletonShader = (AB2SkeletonShader) shader;
-                skeletonShader.setMVP(gl, mvp);
+                AB2ActorShader actorShader = (AB2ActorShader) shader;
+                actorShader.setMVP(gl, mvp);
                 gl.glPointSize(3.0f);
 
             }
@@ -167,6 +169,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 if (actorColor!=null) {
                     AB2ActorShader actorShader = (AB2ActorShader) shader;
                     actorShader.setStyleIdColor(gl, actorColor);
+                    //logger.info("Set color id="+actorId+" to="+actorColor.toString());
                 }
             }
         };

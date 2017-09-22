@@ -88,6 +88,8 @@ public class BoundingBoxActor extends GLAbstractActor
 
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
+        //logger.info("BoundingBoxActor init() finished");
+
     }
 
     @Override
@@ -109,6 +111,9 @@ public class BoundingBoxActor extends GLAbstractActor
         checkGlError(gl, "d7 glDrawArrays() error");
 
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+
+        //logger.info("BoundingBoxActor display() finished");
+
     }
 
     @Override
