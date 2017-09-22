@@ -35,32 +35,4 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 
     public abstract void reshape(GL4 gl, int x, int y, int width, int height);
 
-    public static IntBuffer createGLIntBuffer(int capacity) {
-        int intBytes=Integer.SIZE/Byte.SIZE;
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(capacity*intBytes);
-        return byteBuffer.order(ByteOrder.nativeOrder()).asIntBuffer();
-    }
-
-    public static FloatBuffer createGLFloatBuffer(int capacity) {
-        int floatBytes=Float.SIZE/Byte.SIZE;
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(capacity*floatBytes);
-        return byteBuffer.order(ByteOrder.nativeOrder()).asFloatBuffer();
-    }
-
-    public static IntBuffer createGLIntBuffer(int[] intArray) {
-        IntBuffer intBuffer=createGLIntBuffer(intArray.length);
-        for (int i=0;i<intArray.length;i++) {
-            intBuffer.put(i, intArray[i]);
-        }
-        return intBuffer;
-    }
-
-    public static FloatBuffer createGLFloatBuffer(float[] floatArray) {
-        FloatBuffer floatBuffer=createGLFloatBuffer(floatArray.length);
-        for (int i=0;i<floatArray.length;i++) {
-            floatBuffer.put(i, floatArray[i]);
-        }
-        return floatBuffer;
-    }
-
 }

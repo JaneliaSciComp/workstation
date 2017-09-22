@@ -7,6 +7,7 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 
+import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLDisplayUpdateCallback;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
@@ -70,9 +71,9 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
                                0f,     1.0f,   0f,
                                0f,     1.0f,   0f };
 
-        cubeFb=createGLFloatBuffer(cubeData);
-        colorFb=createGLFloatBuffer(colorData);
-        interleavedFb=createGLFloatBuffer(interleavedData);
+        cubeFb= GLAbstractActor.createGLFloatBuffer(cubeData);
+        colorFb=GLAbstractActor.createGLFloatBuffer(colorData);
+        interleavedFb=GLAbstractActor.createGLFloatBuffer(interleavedData);
 
         if (useInterleaved) {
 

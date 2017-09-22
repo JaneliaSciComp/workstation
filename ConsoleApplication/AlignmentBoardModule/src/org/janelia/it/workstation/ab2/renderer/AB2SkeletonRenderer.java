@@ -9,6 +9,8 @@ import java.util.Random;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.it.workstation.ab2.actor.BoundingBoxActor;
+import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLDisplayUpdateCallback;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
 import org.janelia.it.workstation.ab2.shader.AB2SkeletonShader;
@@ -19,24 +21,17 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
     Logger logger= LoggerFactory.getLogger(AB2SkeletonRenderer.class);
 
-    IntBuffer skeletonVertexArrayId=IntBuffer.allocate(1);
-    IntBuffer skeletonVertexBufferId=IntBuffer.allocate(1);
-
     IntBuffer skeletonEdgeArrayId=IntBuffer.allocate(1);
     IntBuffer skeletonEdgeBufferId=IntBuffer.allocate(1);
 
-    IntBuffer boundaryVertexArrayId=IntBuffer.allocate(1);
-    IntBuffer boundaryVertexBufferId=IntBuffer.allocate(1);
-
-
-    FloatBuffer skeletonVertexFb;
     FloatBuffer skeletonEdgeFb;
-    FloatBuffer boundaryVertexFb;
 
     private Matrix4 modelMatrix;
 
     public AB2SkeletonRenderer() {
         super(new AB2SkeletonShader());
+        BoundingBoxActor boundingBoxActor=new BoundingBoxActor();
+        shaderActionSequence.getActorSequence().add(boundingBoxActor);
     }
 
     private AB2NeuronSkeleton skeleton;
@@ -130,6 +125,8 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
         logger.info("init() called");
 
+
+
         //////////////////////////////////////////////////////////////////////////////////////////
         // Skeleton
         //////////////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +145,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
         /// VERTICES
 
-        skeletonVertexFb=createGLFloatBuffer(nodeXYZRGB);
+        skeletonVertexFb= GLAbstractActor.createGLFloatBuffer(nodeXYZRGB);
 
         gl.glGenVertexArrays(1, skeletonVertexArrayId);
         checkGlError(gl, "i1 glGenVertexArrays error");
@@ -169,7 +166,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
         /// EDGES
 
-        skeletonEdgeFb=createGLFloatBuffer(edgeXYZRGB);
+        skeletonEdgeFb=GLAbstractActor.createGLFloatBuffer(edgeXYZRGB);
 
         gl.glGenVertexArrays(1, skeletonEdgeArrayId);
         checkGlError(gl, "i1 glGenVertexArrays error");
@@ -189,66 +186,6 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
 
-        //////////////////////////////////////////////////////////////////////////////////////////
-        // Boundary
-        //////////////////////////////////////////////////////////////////////////////////////////
-
-        float[] boundaryData = new float[] {
-                0.0f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-                0.0f, 1.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-
-                0.0f, 1.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-                1.0f, 1.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-
-                1.0f, 1.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-                1.0f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-
-                1.0f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-                0.0f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-
-                0.0f, 0.0f, 1.0f,  1.0f, 1.0f, 1.0f,
-                0.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f,
-
-                0.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f,
-                1.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f,
-
-                1.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f,
-                1.0f, 0.0f, 1.0f,  1.0f, 1.0f, 1.0f,
-
-                1.0f, 0.0f, 1.0f,  1.0f, 1.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,  1.0f, 1.0f, 1.0f,
-
-                0.0f, 1.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-                0.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f,
-
-                0.0f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,  1.0f, 1.0f, 1.0f,
-
-                1.0f, 1.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-                1.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f,
-
-                1.0f, 0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-                1.0f, 0.0f, 1.0f,  1.0f, 1.0f, 1.0f
-        };
-
-        boundaryVertexFb=createGLFloatBuffer(boundaryData);
-
-        gl.glGenVertexArrays(1, boundaryVertexArrayId);
-        checkGlError(gl, "i6 glGenVertexArrays error");
-
-        gl.glBindVertexArray(boundaryVertexArrayId.get(0));
-        checkGlError(gl, "i7 glBindVertexArray error");
-
-        gl.glGenBuffers(1, boundaryVertexBufferId);
-        checkGlError(gl, "i8 glGenBuffers() error");
-
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, boundaryVertexBufferId.get(0));
-        checkGlError(gl, "i9 glBindBuffer error");
-
-        gl.glBufferData(GL4.GL_ARRAY_BUFFER, boundaryVertexFb.capacity() * 4, boundaryVertexFb, GL4.GL_STATIC_DRAW);
-        checkGlError(gl, "i10 glBufferData error");
-
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
 
         logger.info("init() finished");
@@ -327,32 +264,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
                 gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-                /////////////////////////////////////////////////////////////////////////////////////////
-                // Boundary
-                /////////////////////////////////////////////////////////////////////////////////////////
 
-                gl.glBindVertexArray(boundaryVertexArrayId.get(0));
-                checkGlError(gl, "d1 glBindVertexArray() error");
-
-                gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, boundaryVertexBufferId.get(0));
-                checkGlError(gl, "d2 glBindBuffer error");
-
-                gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 24, 0);
-                checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
-
-                gl.glEnableVertexAttribArray(0);
-                checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
-
-                gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 24, 12);
-                checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
-
-                gl.glEnableVertexAttribArray(1);
-                checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
-
-                gl.glDrawArrays(GL4.GL_LINES, 0, 24);
-                checkGlError(gl, "d7 glDrawArrays() error");
-
-                gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
                 //logger.info("update() finish");
             }

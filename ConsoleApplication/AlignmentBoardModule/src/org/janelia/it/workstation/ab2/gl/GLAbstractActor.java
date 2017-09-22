@@ -1,5 +1,10 @@
 package org.janelia.it.workstation.ab2.gl;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+
 import javax.media.opengl.GL4;
 import javax.media.opengl.glu.GLU;
 
@@ -14,6 +19,8 @@ public abstract class GLAbstractActor {
 
     private static int mvpPrecomputeGroupCount=0;
 
+    public static boolean checkGlErrorActive=false;
+
     public static synchronized int getNextMvpPrecomputeGroup() {
         mvpPrecomputeGroupCount++;
         return mvpPrecomputeGroupCount;
@@ -25,7 +32,7 @@ public abstract class GLAbstractActor {
 
     protected Matrix4 model=new Matrix4();
 
-    protected boolean isVisible=true;
+    //protected boolean isVisible=true;
 
     protected int actorId=0;
 
@@ -59,20 +66,23 @@ public abstract class GLAbstractActor {
     }
 
     protected void checkGlError(GL4 gl, String message) {
-        int errorNumber = gl.glGetError();
-        if (errorNumber <= 0)
-            return;
-        String errorStr = glu.gluErrorString(errorNumber);
-        logger.error( "OpenGL Error " + errorNumber + ": " + errorStr + ": " + message );
+        if (checkGlErrorActive) {
+            int errorNumber = gl.glGetError();
+            if (errorNumber <= 0)
+                return;
+            String errorStr = glu.gluErrorString(errorNumber);
+            String className=this.getClass().getName();
+            logger.error("OpenGL error in "+className+" number=" + errorNumber + ": " + errorStr + ": " + message);
+        }
     }
 
-    public boolean isVisible() {
-        return isVisible;
-    }
-
-    public void setIsVisible(boolean isVisible) {
-        this.isVisible = isVisible;
-    }
+//    public boolean isVisible() {
+//        return isVisible;
+//    }
+//
+//    public void setIsVisible(boolean isVisible) {
+//        this.isVisible = isVisible;
+//    }
 
     public int getMvpPrecomputeGroup() {
         return mvpPrecomputeGroup;
@@ -80,5 +90,33 @@ public abstract class GLAbstractActor {
 
     public void setMvpPrecomputeGroup(int mvpPrecomputeGroup) {
         this.mvpPrecomputeGroup = mvpPrecomputeGroup;
+    }
+
+    public static IntBuffer createGLIntBuffer(int capacity) {
+        int intBytes=Integer.SIZE/Byte.SIZE;
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(capacity*intBytes);
+        return byteBuffer.order(ByteOrder.nativeOrder()).asIntBuffer();
+    }
+
+    public static FloatBuffer createGLFloatBuffer(int capacity) {
+        int floatBytes=Float.SIZE/Byte.SIZE;
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(capacity*floatBytes);
+        return byteBuffer.order(ByteOrder.nativeOrder()).asFloatBuffer();
+    }
+
+    public static IntBuffer createGLIntBuffer(int[] intArray) {
+        IntBuffer intBuffer=createGLIntBuffer(intArray.length);
+        for (int i=0;i<intArray.length;i++) {
+            intBuffer.put(i, intArray[i]);
+        }
+        return intBuffer;
+    }
+
+    public static FloatBuffer createGLFloatBuffer(float[] floatArray) {
+        FloatBuffer floatBuffer=createGLFloatBuffer(floatArray.length);
+        for (int i=0;i<floatArray.length;i++) {
+            floatBuffer.put(i, floatArray[i]);
+        }
+        return floatBuffer;
     }
 }
