@@ -10,6 +10,8 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.janelia.geometry3d.Vector3;
+
 public class AB2NeuronSkeleton {
     private ArrayDeque<Node> nodes=new ArrayDeque<>();
 
@@ -101,4 +103,40 @@ public class AB2NeuronSkeleton {
         }
         return leafNodes;
     }
+
+    public List<Vector3> getSkeletonPointSet() {
+        List<Vector3> pointList=new ArrayList<>();
+        getSkeletonPointInfo(getRootNode(), pointList);
+        return pointList;
+    }
+
+    private void getSkeletonPointInfo(AB2NeuronSkeleton.Node node, List<Vector3> pointList) {
+        if (node==null) return;
+        pointList.add(new Vector3((float)node.x(), (float)node.y(), (float)node.z()));
+        List<AB2NeuronSkeleton.Node> children=node.getChildren();
+        if (children!=null && children.size()>0) {
+            for (AB2NeuronSkeleton.Node child : children) {
+                getSkeletonPointInfo(child, pointList);
+            }
+        }
+    }
+
+    public List<Vector3> getSkeletonLineSet() {
+        List<Vector3> lineList=new ArrayList<>();
+        getSkeletonLineInfo(getRootNode(), lineList);
+        return lineList;
+    }
+
+    private void getSkeletonLineInfo(AB2NeuronSkeleton.Node node, List<Vector3> lineList) {
+        if (node==null) return;
+        List<AB2NeuronSkeleton.Node> children=node.getChildren();
+        if (children!=null && children.size()>0) {
+            for (AB2NeuronSkeleton.Node child : children) {
+                lineList.add(new Vector3((float)node.x(), (float)node.y(), (float)node.z()));
+                lineList.add(new Vector3((float)child.x(), (float)child.y(), (float)child.z()));
+                getSkeletonLineInfo(child, lineList);
+            }
+        }
+    }
+
 }

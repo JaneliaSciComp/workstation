@@ -66,8 +66,8 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         if (skeleton==null) {
             return;
         }
-        List<Vector3> skeletonPoints=getSkeletonPointSet(skeleton);
-        List<Vector3> skeletonLines=getSkeletonLineSet(skeleton);
+        List<Vector3> skeletonPoints=skeleton.getSkeletonPointSet();
+        List<Vector3> skeletonLines=skeleton.getSkeletonLineSet();
 
         // Bounding Box
         boundingBoxActor=new BoundingBoxActor(BOUNDING_BOX_ID, new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
@@ -101,41 +101,6 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         }
         //logger.info("returning modelMatrix="+modelMatrix.toString());
         return modelMatrix;
-    }
-
-    protected List<Vector3> getSkeletonPointSet(AB2NeuronSkeleton skeleton) {
-        List<Vector3> pointList=new ArrayList<>();
-        getSkeletonPointInfo(skeleton.getRootNode(), pointList);
-        return pointList;
-    }
-
-    void getSkeletonPointInfo(AB2NeuronSkeleton.Node node, List<Vector3> pointList) {
-        if (node==null) return;
-        pointList.add(new Vector3((float)node.x(), (float)node.y(), (float)node.z()));
-        List<AB2NeuronSkeleton.Node> children=node.getChildren();
-        if (children!=null && children.size()>0) {
-            for (AB2NeuronSkeleton.Node child : children) {
-                getSkeletonPointInfo(child, pointList);
-            }
-        }
-    }
-
-    protected List<Vector3> getSkeletonLineSet(AB2NeuronSkeleton skeleton) {
-        List<Vector3> lineList=new ArrayList<>();
-        getSkeletonLineInfo(skeleton.getRootNode(), lineList);
-        return lineList;
-    }
-
-    void getSkeletonLineInfo(AB2NeuronSkeleton.Node node, List<Vector3> lineList) {
-        if (node==null) return;
-        List<AB2NeuronSkeleton.Node> children=node.getChildren();
-        if (children!=null && children.size()>0) {
-            for (AB2NeuronSkeleton.Node child : children) {
-                lineList.add(new Vector3((float)node.x(), (float)node.y(), (float)node.z()));
-                lineList.add(new Vector3((float)child.x(), (float)child.y(), (float)child.z()));
-                getSkeletonLineInfo(child, lineList);
-            }
-        }
     }
 
     @Override
