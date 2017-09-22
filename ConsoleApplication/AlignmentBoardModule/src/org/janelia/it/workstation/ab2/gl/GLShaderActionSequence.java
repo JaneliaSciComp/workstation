@@ -16,6 +16,8 @@ public class GLShaderActionSequence {
     private GLShaderProgram shader;
     boolean applyMemoryBarrier=false;
     List<GLAbstractActor> actorSequence=new ArrayList<>();
+    private GLShaderUpdateCallback shaderCallback;
+    private GLActorUpdateCallback actorCallback;
 
     public GLShaderActionSequence(String name) {
         this.name=name;
@@ -40,6 +42,10 @@ public class GLShaderActionSequence {
     public void setActorSequence(List<GLAbstractActor> actorSequence) {
         this.actorSequence = actorSequence;
     }
+
+    public void setShaderUpdateCallback(GLShaderUpdateCallback shaderCallback) { this.shaderCallback=shaderCallback; }
+
+    public void setActorUpdateCallback(GLActorUpdateCallback actorCallback) { this.actorCallback=actorCallback; }
 
     public void dispose(GL4 gl) {
         for (GLAbstractActor actor : actorSequence) {
@@ -72,6 +78,10 @@ public class GLShaderActionSequence {
         shader.load(gl);
         //logger.info("display() - done loading shader");
 
+        if (shaderCallback!=null) {
+            shaderCallback.update(gl, null);
+        }
+
         shader.display(gl);
 
         //logger.info("display() - done with shader.display()");
@@ -86,9 +96,13 @@ public class GLShaderActionSequence {
 //        gl.glDepthFunc(GL4.GL_LEQUAL);
 
         for (GLAbstractActor actor: actorSequence) {
-            if (actor.isVisible()) {
-                actor.display(gl);
+
+            if (actorCallback!=null) {
+                actorCallback.update(gl, actor);
             }
+            //if (actor.isVisible()) {
+                actor.display(gl);
+            //}
         }
 
 //        //gl.glEnable(GL4.GL_DEPTH_TEST);

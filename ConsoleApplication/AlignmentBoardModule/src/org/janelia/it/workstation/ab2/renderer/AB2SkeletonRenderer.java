@@ -2,17 +2,24 @@ package org.janelia.it.workstation.ab2.renderer;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
+import java.util.Map;
 
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.actor.BoundingBoxActor;
+import org.janelia.it.workstation.ab2.actor.LineSetActor;
+import org.janelia.it.workstation.ab2.actor.PointSetActor;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
-import org.janelia.it.workstation.ab2.gl.GLDisplayUpdateCallback;
+import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
+import org.janelia.it.workstation.ab2.gl.GLShaderUpdateCallback;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
+import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.janelia.it.workstation.ab2.shader.AB2SkeletonShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +35,21 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
     private Matrix4 modelMatrix;
 
+    private BoundingBoxActor boundingBoxActor;
+    private PointSetActor pointSetActor;
+    private LineSetActor lineSetActor;
+
+    Map<Integer, Vector4> styleIdMap=new HashMap<>();
+
+    static final int BOUNDING_BOX_ID=1;
+    static final int POINT_SET_ID=2;
+    static final int LINE_SET_ID=3;
+
     public AB2SkeletonRenderer() {
         super(new AB2SkeletonShader());
-        BoundingBoxActor boundingBoxActor=new BoundingBoxActor();
-        shaderActionSequence.getActorSequence().add(boundingBoxActor);
+        styleIdMap.put(BOUNDING_BOX_ID, new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+        styleIdMap.put(POINT_SET_ID, new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+        styleIdMap.put(LINE_SET_ID, new Vector4(0.0f, 0.0f, 1.0f, 0.0f));
     }
 
     private AB2NeuronSkeleton skeleton;
@@ -46,6 +64,18 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         if (skeleton==null) {
             return;
         }
+        List<Vector3> skeletonPoints=getSkeletonPointSet(skeleton);
+        List<Vector3> skeletonLines=getSkeletonLineSet(skeleton);
+
+        // Bounding Box
+        boundingBoxActor=new BoundingBoxActor(BOUNDING_BOX_ID, new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
+        shaderActionSequence.getActorSequence().add(boundingBoxActor);
+
+        pointSetActor=new PointSetActor(POINT_SET_ID, skeletonPoints);
+        shaderActionSequence.getActorSequence().add(pointSetActor);
+
+        lineSetActor=new LineSetActor(LINE_SET_ID, skeletonLines);
+        shaderActionSequence.getActorSequence().add(lineSetActor);
     }
 
     @Override
@@ -71,205 +101,75 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         return modelMatrix;
     }
 
-    int addNodeInfo(AB2NeuronSkeleton.Node node, float[] nodeXYZRGB, int i, Random random) {
-        nodeXYZRGB[i++]=(float)node.x();
-        nodeXYZRGB[i++]=(float)node.y();
-        nodeXYZRGB[i++]=(float)node.z();
-        nodeXYZRGB[i++]=random.nextFloat();
-        nodeXYZRGB[i++]=random.nextFloat();
-        nodeXYZRGB[i++]=random.nextFloat();
+    protected List<Vector3> getSkeletonPointSet(AB2NeuronSkeleton skeleton) {
+        List<Vector3> pointList=new ArrayList<>();
+        getSkeletonPointInfo(skeleton.getRootNode(), pointList);
+        return pointList;
+    }
+
+    void getSkeletonPointInfo(AB2NeuronSkeleton.Node node, List<Vector3> pointList) {
+        if (node==null) return;
+        pointList.add(new Vector3((float)node.x(), (float)node.y(), (float)node.z()));
         List<AB2NeuronSkeleton.Node> children=node.getChildren();
         if (children!=null && children.size()>0) {
             for (AB2NeuronSkeleton.Node child : children) {
-                i=addNodeInfo(child, nodeXYZRGB, i, random);
+                getSkeletonPointInfo(child, pointList);
             }
         }
-        return i;
     }
 
-    int addEdgeInfo(AB2NeuronSkeleton.Node node, float[] edgeXYZRGB, int i, Random random) {
-        float nodeX=(float)node.x();
-        float nodeY=(float)node.y();
-        float nodeZ=(float)node.z();
-        float nodeR=random.nextFloat();
-        float nodeG=random.nextFloat();
-        float nodeB=random.nextFloat();
+    protected List<Vector3> getSkeletonLineSet(AB2NeuronSkeleton skeleton) {
+        List<Vector3> lineList=new ArrayList<>();
+        getSkeletonLineInfo(skeleton.getRootNode(), lineList);
+        return lineList;
+    }
+
+    void getSkeletonLineInfo(AB2NeuronSkeleton.Node node, List<Vector3> lineList) {
+        if (node==null) return;
         List<AB2NeuronSkeleton.Node> children=node.getChildren();
         if (children!=null && children.size()>0) {
             for (AB2NeuronSkeleton.Node child : children) {
-
-                edgeXYZRGB[i++]=nodeX;
-                edgeXYZRGB[i++]=nodeY;
-                edgeXYZRGB[i++]=nodeZ;
-                edgeXYZRGB[i++]=nodeR;
-                edgeXYZRGB[i++]=nodeG;
-                edgeXYZRGB[i++]=nodeB;
-
-                edgeXYZRGB[i++]=(float)child.x();
-                edgeXYZRGB[i++]=(float)child.y();
-                edgeXYZRGB[i++]=(float)child.z();
-                edgeXYZRGB[i++]=nodeR;
-                edgeXYZRGB[i++]=nodeG;
-                edgeXYZRGB[i++]=nodeB;
-
-                i=addEdgeInfo(child, edgeXYZRGB, i, random);
+                lineList.add(new Vector3((float)node.x(), (float)node.y(), (float)node.z()));
+                lineList.add(new Vector3((float)child.x(), (float)child.y(), (float)child.z()));
+                getSkeletonLineInfo(child, lineList);
             }
         }
-        return i;
     }
-
 
     @Override
     public void init(GL4 gl) {
         super.init(gl);
-
-        logger.info("init() called");
-
-
-
-        //////////////////////////////////////////////////////////////////////////////////////////
-        // Skeleton
-        //////////////////////////////////////////////////////////////////////////////////////////
-
-        int nodeCount=skeleton.getSize();
-        float[] nodeXYZRGB = new float[nodeCount*6];
-        float[] edgeXYZRGB = new float[(nodeCount-1)*2*6];
-        Random random=new Random(new Date().getTime());
-        AB2NeuronSkeleton.Node rootNode=skeleton.getRootNode();
-
-        int nodeVerticesAdded=(addNodeInfo(rootNode, nodeXYZRGB, 0, random))/6;
-        logger.info("Added "+nodeVerticesAdded+" skeleton node vertices, nodeCount="+nodeCount);
-
-        int edgeVerticesAdded=(addEdgeInfo(rootNode, edgeXYZRGB, 0, random))/6;
-        logger.info("Added "+edgeVerticesAdded+" skeleton edge vertices, nodeCount="+nodeCount);
-
-        /// VERTICES
-
-        skeletonVertexFb= GLAbstractActor.createGLFloatBuffer(nodeXYZRGB);
-
-        gl.glGenVertexArrays(1, skeletonVertexArrayId);
-        checkGlError(gl, "i1 glGenVertexArrays error");
-
-        gl.glBindVertexArray(skeletonVertexArrayId.get(0));
-        checkGlError(gl, "i2 glBindVertexArray error");
-
-        gl.glGenBuffers(1, skeletonVertexBufferId);
-        checkGlError(gl, "i3 glGenBuffers() error");
-
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, skeletonVertexBufferId.get(0));
-        checkGlError(gl, "i4 glBindBuffer error");
-
-        gl.glBufferData(GL4.GL_ARRAY_BUFFER, skeletonVertexFb.capacity() * 4, skeletonVertexFb, GL4.GL_STATIC_DRAW);
-        checkGlError(gl, "i5 glBufferData error");
-
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
-
-        /// EDGES
-
-        skeletonEdgeFb=GLAbstractActor.createGLFloatBuffer(edgeXYZRGB);
-
-        gl.glGenVertexArrays(1, skeletonEdgeArrayId);
-        checkGlError(gl, "i1 glGenVertexArrays error");
-
-        gl.glBindVertexArray(skeletonEdgeArrayId.get(0));
-        checkGlError(gl, "i2 glBindVertexArray error");
-
-        gl.glGenBuffers(1, skeletonEdgeBufferId);
-        checkGlError(gl, "i3 glGenBuffers() error");
-
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, skeletonEdgeBufferId.get(0));
-        checkGlError(gl, "i4 glBindBuffer error");
-
-        gl.glBufferData(GL4.GL_ARRAY_BUFFER, skeletonEdgeFb.capacity() * 4, skeletonEdgeFb, GL4.GL_STATIC_DRAW);
-        checkGlError(gl, "i5 glBufferData error");
-
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
-
-
-
-
-        logger.info("init() finished");
-
     }
 
     @Override
-    protected GLDisplayUpdateCallback getDisplayUpdateCallback() {
-        return new GLDisplayUpdateCallback() {
+    protected GLShaderUpdateCallback getShaderUpdateCallback() {
+        return new GLShaderUpdateCallback() {
             @Override
-            public void update(GL4 gl) {
-
-                //logger.info("update() start");
+            public void update(GL4 gl, Object o) {
 
                 AB2SkeletonShader skeletonShader = (AB2SkeletonShader) shader;
                 skeletonShader.setMVP(gl, mvp);
                 gl.glPointSize(3.0f);
 
-                /////////////////////////////////////////////////////////////////////////////////////////
-                // Skeleton Vertices
-                /////////////////////////////////////////////////////////////////////////////////////////
-
-                gl.glBindVertexArray(skeletonVertexArrayId.get(0));
-                checkGlError(gl, "d1 glBindVertexArray() error");
-
-                gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, skeletonVertexBufferId.get(0));
-                checkGlError(gl, "d2 glBindBuffer error");
-
-                gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 24, 0);
-                checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
-
-                gl.glEnableVertexAttribArray(0);
-                checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
-
-                gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 24, 12);
-                checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
-
-                gl.glEnableVertexAttribArray(1);
-                checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
-
-                gl.glDrawArrays(GL4.GL_POINTS, 0, skeleton.getSize());
-                checkGlError(gl, "d7 glDrawArrays() error");
-
-                //gl.glDrawArrays(GL4.GL_LINES, 0, 8);
-                //checkGlError(gl, "d8 glDrawArrays() error");
-
-                gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
-
-                /////////////////////////////////////////////////////////////////////////////////////////
-                // Skeleton Edges
-                /////////////////////////////////////////////////////////////////////////////////////////
-
-                gl.glBindVertexArray(skeletonEdgeArrayId.get(0));
-                checkGlError(gl, "d1 glBindVertexArray() error");
-
-                gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, skeletonEdgeBufferId.get(0));
-                checkGlError(gl, "d2 glBindBuffer error");
-
-                gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 24, 0);
-                checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
-
-                gl.glEnableVertexAttribArray(0);
-                checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
-
-                gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 24, 12);
-                checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
-
-                gl.glEnableVertexAttribArray(1);
-                checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
-
-                gl.glDrawArrays(GL4.GL_LINES, 0, (skeleton.getSize()-1)*2);
-                checkGlError(gl, "d7 glDrawArrays() error");
-
-                //gl.glDrawArrays(GL4.GL_LINES, 0, 8);
-                //checkGlError(gl, "d8 glDrawArrays() error");
-
-                gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
-
-
-
-                //logger.info("update() finish");
             }
         };
     }
 
+    @Override
+    protected GLActorUpdateCallback getActorUpdateCallback() {
+        return new GLActorUpdateCallback() {
+            @Override
+            public void update(GL4 gl, Object o) {
+
+                GLAbstractActor actor = (GLAbstractActor)o;
+                int actorId=actor.getActorId();
+                Vector4 actorColor=styleIdMap.get(actorId);
+                if (actorColor!=null) {
+                    AB2ActorShader actorShader = (AB2ActorShader) shader;
+                    actorShader.setStyleIdColor(gl, actorColor);
+                }
+            }
+        };
+    }
 
 }

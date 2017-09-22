@@ -4,7 +4,6 @@ import java.awt.Point;
 import java.nio.FloatBuffer;
 
 import javax.media.opengl.GL4;
-import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -14,7 +13,8 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Viewport;
 
-import org.janelia.it.workstation.ab2.gl.GLDisplayUpdateCallback;
+import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
+import org.janelia.it.workstation.ab2.gl.GLShaderUpdateCallback;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.slf4j.Logger;
@@ -69,7 +69,6 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 
     protected synchronized void initSync(GL4 gl) {
         try {
-            shader.setUpdateCallback(getDisplayUpdateCallback());
             shaderActionSequence.setShader(shader);
             shaderActionSequence.setApplyMemoryBarrier(false);
             shaderActionSequence.init(gl);
@@ -78,19 +77,21 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
         }
     }
 
-    protected abstract GLDisplayUpdateCallback getDisplayUpdateCallback();
+    protected abstract GLShaderUpdateCallback getShaderUpdateCallback();
+
+    protected abstract GLActorUpdateCallback getActorUpdateCallback();
 
     public void dispose(GL4 gl) {
         shaderActionSequence.dispose(gl);
     }
 
-    public void display(GL4 gl) {
-        displaySync(gl);
-    }
-
     protected Matrix4 getModelMatrix() {
         Matrix4 modelMatrix=new Matrix4(); // default constructor is identity
         return modelMatrix;
+    }
+
+    public void display(GL4 gl) {
+        displaySync(gl);
     }
 
     protected synchronized void displaySync(GL4 gl) {

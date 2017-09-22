@@ -28,7 +28,7 @@ public abstract class GLAbstractActor {
 
     int mvpPrecomputeGroup=0;
 
-    protected GLDisplayUpdateCallback updateCallback;
+    protected GLShaderUpdateCallback updateCallback;
 
     protected Matrix4 model=new Matrix4();
 
@@ -61,7 +61,7 @@ public abstract class GLAbstractActor {
 
     public void setModel(Matrix4 model) { this.model=model; }
 
-    public void setUpdateCallback(GLDisplayUpdateCallback updateCallback) {
+    public void setUpdateCallback(GLShaderUpdateCallback updateCallback) {
         this.updateCallback=updateCallback;
     }
 

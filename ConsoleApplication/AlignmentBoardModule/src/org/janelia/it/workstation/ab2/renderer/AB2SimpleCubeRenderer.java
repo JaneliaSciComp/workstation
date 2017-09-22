@@ -3,14 +3,11 @@ package org.janelia.it.workstation.ab2.renderer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-import javax.media.opengl.GL2;
 import javax.media.opengl.GL4;
-import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
-import org.janelia.it.workstation.ab2.gl.GLDisplayUpdateCallback;
-import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
-import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
+import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
+import org.janelia.it.workstation.ab2.gl.GLShaderUpdateCallback;
 import org.janelia.it.workstation.ab2.shader.AB2SimpleCubeShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,10 +128,20 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
     }
 
     @Override
-    protected GLDisplayUpdateCallback getDisplayUpdateCallback() {
-        return new GLDisplayUpdateCallback() {
+    protected GLActorUpdateCallback getActorUpdateCallback() {
+        return new GLActorUpdateCallback() {
             @Override
-            public void update(GL4 gl) {
+            public void update(GL4 gl, Object o) {
+                // do nothing
+            }
+        };
+    }
+
+    @Override
+    protected GLShaderUpdateCallback getShaderUpdateCallback() {
+        return new GLShaderUpdateCallback() {
+            @Override
+            public void update(GL4 gl, Object o) {
 
                 //logger.info("update() start");
 

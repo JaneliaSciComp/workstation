@@ -1,16 +1,8 @@
 package org.janelia.it.workstation.ab2.renderer;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-
 import javax.media.opengl.GL4;
-import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
 
-import org.janelia.geometry3d.Matrix4;
-import org.janelia.it.workstation.ab2.gl.GLDisplayUpdateCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -26,8 +26,6 @@ public abstract class GLShaderProgram {
 
     private static final String LINE_ENDING = System.getProperty( "line.separator" );
 
-    protected GLDisplayUpdateCallback updateCallback;
-
     /**  All abstract methods.  Implement these for the specifics. */
     public abstract String getVertexShaderResourceName();
     public String getGeometryShaderResourceName() { return null; }
@@ -50,10 +48,6 @@ public abstract class GLShaderProgram {
     public void dispose(GL4 gl) {
         gl.glDeleteProgram(shaderProgram);
         shaderProgram = 0;
-    }
-
-    public void setUpdateCallback(GLDisplayUpdateCallback updateCallback) {
-        this.updateCallback=updateCallback;
     }
 
     public void init(GL4 gl) throws ShaderCreationException {
@@ -129,9 +123,6 @@ public abstract class GLShaderProgram {
     }
 
     public void display(GL4 gl) {
-        if (updateCallback!=null) {
-            updateCallback.update(gl);
-        }
     }
 
     public void load(GL4 gl) {
