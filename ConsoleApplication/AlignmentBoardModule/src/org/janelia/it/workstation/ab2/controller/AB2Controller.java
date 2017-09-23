@@ -38,6 +38,7 @@ import org.janelia.it.workstation.ab2.renderer.AB2SimpleCubeRenderer;
 import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
 
 public class AB2Controller implements GLEventListener {
+    private static AB2Controller instance;
     private ConcurrentLinkedQueue<AB2Event> eventQueue;
     private ConcurrentLinkedQueue<AB2Event> waitQueue;
     private ScheduledExecutorService controllerExecutor;
@@ -48,7 +49,14 @@ public class AB2Controller implements GLEventListener {
     private GLJPanel gljPanel;
     private AB2DomainObject domainObject;
 
-    public AB2Controller() {
+    public static AB2Controller getController() {
+        if (instance==null) {
+            instance=new AB2Controller();
+        }
+        return instance;
+    }
+
+    private AB2Controller() {
         eventQueue=new ConcurrentLinkedQueue<>();
         waitQueue=new ConcurrentLinkedQueue<>();
         controllerExecutor=Executors.newSingleThreadScheduledExecutor();

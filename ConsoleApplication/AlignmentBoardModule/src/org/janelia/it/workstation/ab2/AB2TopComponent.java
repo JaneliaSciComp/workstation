@@ -100,7 +100,7 @@ public final class AB2TopComponent extends TopComponent {
         logger.info("AB2TopComponent opened()");
         // TODO add custom code on component opening
         if (ab2Controller==null) {
-            ab2Controller=new AB2Controller();
+            ab2Controller=AB2Controller.getController();
         }
         if (ab2Data==null) {
             ab2Data=new AB2Data();
