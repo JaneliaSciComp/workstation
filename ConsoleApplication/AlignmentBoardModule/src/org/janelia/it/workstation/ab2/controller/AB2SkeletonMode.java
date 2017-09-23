@@ -22,7 +22,7 @@ public class AB2SkeletonMode extends AB2View3DMode {
         //logger.info("processEvent()");
         super.processEvent(event);
         if  (event instanceof AB2DomainObjectUpdateEvent) {
-            ((AB2SkeletonRenderer)renderer).setSkeleton(((AB2SkeletonDomainObject)controller.getDomainObject()).getSkeleton());
+            ((AB2SkeletonRenderer)renderer).setSkeletons(((AB2SkeletonDomainObject)controller.getDomainObject()).getSkeletons());
             controller.repaint();
         }
     }

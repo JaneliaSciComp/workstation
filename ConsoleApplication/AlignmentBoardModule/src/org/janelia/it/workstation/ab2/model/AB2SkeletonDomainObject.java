@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.ab2.model;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import org.janelia.it.workstation.ab2.test.AB2SimulatedNeuronSkeletonGenerator;
@@ -60,22 +62,23 @@ public class AB2SkeletonDomainObject extends AB2DomainObject {
     /// For Skeleton
     ////////////////////////////////////////////////////////////////////////////////////
 
-    private AB2NeuronSkeleton skeleton;
+    private List<AB2NeuronSkeleton> skeletons=new ArrayList<>();
 
     public AB2SkeletonDomainObject() {}
 
-    public void createSkeleton() throws Exception {
-        createSkeleton(new Date().getTime());
+    public void createSkeletons(int number) throws Exception {
+        createSkeletons(number, new Date().getTime());
     }
 
-    public void createSkeleton(long randomSeed) throws Exception {
-        logger.info("Check1");
+    public void createSkeletons(int number, long randomSeed) throws Exception {
         AB2SimulatedNeuronSkeletonGenerator skeletonGenerator=new AB2SimulatedNeuronSkeletonGenerator(randomSeed);
-        logger.info("Check2");
-        skeleton=skeletonGenerator.generateSkeleton();
-        logger.info("Check3");
+        for (int i=0;i<number;i++) {
+            logger.info("Generating skeleton "+i+" of "+number);
+            AB2NeuronSkeleton skeleton = skeletonGenerator.generateSkeleton();
+            skeletons.add(skeleton);
+        }
     }
 
-    public AB2NeuronSkeleton getSkeleton() { return skeleton; }
+    public List<AB2NeuronSkeleton> getSkeletons() { return skeletons; }
 
 }
