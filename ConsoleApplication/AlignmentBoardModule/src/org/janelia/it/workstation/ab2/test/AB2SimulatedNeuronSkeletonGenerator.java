@@ -144,9 +144,9 @@ public class AB2SimulatedNeuronSkeletonGenerator {
     private void addBranchNodes(AB2NeuronSkeleton.Node parentNode, boolean addSecondBranch) throws Exception {
         // We need two initial children
         // First, generate a random unit vector to pick a direction
-        double rdX=random.nextDouble();
-        double rdY=random.nextDouble();
-        double rdZ=random.nextDouble();
+        double rdX=random.nextDouble()-0.5;
+        double rdY=random.nextDouble()-0.5;
+        double rdZ=random.nextDouble()-0.5;
         Vector3 rV=new Vector3((float)rdX, (float)rdY, (float)rdZ);
         rV.normalize();
         // Next, get the inverse vector
