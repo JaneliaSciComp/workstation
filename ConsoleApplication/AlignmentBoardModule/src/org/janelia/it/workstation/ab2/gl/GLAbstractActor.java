@@ -12,14 +12,18 @@ import org.janelia.geometry3d.Matrix4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.janelia.it.workstation.ab2.gl.GLAbstractActor.Mode.DRAW;
+
 public abstract class GLAbstractActor {
 
     protected static GLU glu = new GLU();
     private static Logger logger = LoggerFactory.getLogger(GLAbstractActor.class);
 
-    private static int mvpPrecomputeGroupCount=0;
+    public enum Mode { DRAW, PICK };
 
+    private static int mvpPrecomputeGroupCount=0;
     public static boolean checkGlErrorActive=false;
+    protected Mode mode=DRAW;
 
     public static synchronized int getNextMvpPrecomputeGroup() {
         mvpPrecomputeGroupCount++;
@@ -35,6 +39,10 @@ public abstract class GLAbstractActor {
     //protected boolean isVisible=true;
 
     protected int actorId=0;
+
+    public Mode getMode() { return mode; }
+
+    public void setMode(Mode mode) { this.mode=mode; }
 
     // Callable within a non-GL setup thread before init()
     public void setup() {}

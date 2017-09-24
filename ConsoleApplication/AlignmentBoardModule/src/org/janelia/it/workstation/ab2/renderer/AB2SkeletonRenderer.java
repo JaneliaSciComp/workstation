@@ -12,10 +12,12 @@ import java.util.Random;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Vector2;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.actor.BoundingBoxActor;
 import org.janelia.it.workstation.ab2.actor.LineSetActor;
+import org.janelia.it.workstation.ab2.actor.PickSquareActor;
 import org.janelia.it.workstation.ab2.actor.PointSetActor;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
@@ -37,6 +39,8 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     private List<PointSetActor> pointSetActors=new ArrayList<>();
     private List<LineSetActor> lineSetActors=new ArrayList<>();
 
+    private PickSquareActor pickSquareActor;
+
     Map<Integer, Vector4> styleIdMap=new HashMap<>();
 
     //IntBuffer pickFramebufferId=IntBuffer.allocate(1);
@@ -44,17 +48,27 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     IntBuffer pickColorTextureId;
     IntBuffer pickDepthTextureId;
 
-    static final int BOUNDING_BOX_ID=1;
+    //static final int BOUNDING_BOX_ID=1;
+
+    int actorCount=0;
+
+    private int getNextActorIndex() { actorCount++; return actorCount; }
 
     public AB2SkeletonRenderer() {
         super(new AB2ActorShader());
-        styleIdMap.put(BOUNDING_BOX_ID, new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+        styleIdMap.put(getNextActorIndex(), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         shaderActionSequence.setShaderUpdateCallback(getShaderUpdateCallback());
         shaderActionSequence.setActorUpdateCallback(getActorSequenceUpdateCallback());
 
         // Bounding Box
-        boundingBoxActor=new BoundingBoxActor(BOUNDING_BOX_ID, new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
+        boundingBoxActor=new BoundingBoxActor(actorCount, new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
         shaderActionSequence.getActorSequence().add(boundingBoxActor);
+
+        // Pick Square
+        pickSquareActor=new PickSquareActor(getNextActorIndex(), new Vector2(0.4f, 0.4f), new Vector2(0.5f, 0.5f),
+                new Vector4(1f, 0f, 0f, 1f), new Vector4(0f, 1f, 0f, 1f));
+        styleIdMap.put(pickSquareActor.getActorId(), pickSquareActor.getColor0());
+        shaderActionSequence.getActorSequence().add(pickSquareActor);
     }
 
 
@@ -73,11 +87,11 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             List<Vector3> skeletonPoints = skeletons.get(i).getSkeletonPointSet();
             List<Vector3> skeletonLines = skeletons.get(i).getSkeletonLineSet();
 
-            PointSetActor pointSetActor = new PointSetActor((i*2)+2, skeletonPoints);
+            PointSetActor pointSetActor = new PointSetActor(getNextActorIndex(), skeletonPoints);
             shaderActionSequence.getActorSequence().add(pointSetActor);
             styleIdMap.put(pointSetActor.getActorId(), new Vector4(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0f));
 
-            LineSetActor lineSetActor = new LineSetActor((i*2)+3, skeletonLines);
+            LineSetActor lineSetActor = new LineSetActor(getNextActorIndex(), skeletonLines);
             shaderActionSequence.getActorSequence().add(lineSetActor);
             styleIdMap.put(lineSetActor.getActorId(), new Vector4(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0f));
         }
@@ -193,6 +207,11 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 if (actorColor!=null) {
                     AB2ActorShader actorShader = (AB2ActorShader) shader;
                     actorShader.setStyleIdColor(gl, actorColor);
+                    if (actor instanceof PickSquareActor) {
+                        actorShader.setTwoDimensional(gl, true);
+                    } else {
+                        actorShader.setTwoDimensional(gl, false);
+                    }
                     //logger.info("Set color id="+actorId+" to="+actorColor.toString());
                 }
             }

@@ -28,4 +28,14 @@ public class AB2ActorShader extends GLShaderProgram {
         checkGlError(gl, "AB2ActorShader setStyleIdColor() error");
     }
 
+    public void setTwoDimensional(GL4 gl, boolean twoDimensional) {
+        if (twoDimensional) {
+            setUniform(gl, "twoDimensional", 1);
+        } else {
+            setUniform(gl, "twoDimensional", 0);
+        }
+        checkGlError(gl, "AB2ActorShader setTwoDimensional() error");
+    }
+
+
 }

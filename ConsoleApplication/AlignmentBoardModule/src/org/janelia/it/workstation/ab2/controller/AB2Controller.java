@@ -39,6 +39,7 @@ import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
 
 public class AB2Controller implements GLEventListener {
     private static AB2Controller instance;
+    private static final int MAX_PICK_IDS=10000;
     private ConcurrentLinkedQueue<AB2Event> eventQueue;
     private ConcurrentLinkedQueue<AB2Event> waitQueue;
     private ScheduledExecutorService controllerExecutor;
@@ -48,6 +49,8 @@ public class AB2Controller implements GLEventListener {
     private AB2ControllerMode currentMode;
     private GLJPanel gljPanel;
     private AB2DomainObject domainObject;
+    private AB2Event[] pickEventLookup=new AB2Event[MAX_PICK_IDS];
+    private int pickCounter=-1;
 
     public static AB2Controller getController() {
         if (instance==null) {
@@ -62,6 +65,18 @@ public class AB2Controller implements GLEventListener {
         controllerExecutor=Executors.newSingleThreadScheduledExecutor();
         eventHandler=new EventHandler();
         populateModeMap();
+    }
+
+    public synchronized int getNextPickIndex() {
+        if (pickCounter>=MAX_PICK_IDS) {
+            return -1;
+        }
+        pickCounter++;
+        return pickCounter;
+    }
+
+    public void setPickEvent(int index, AB2Event pickEvent) {
+        pickEventLookup[index]=pickEvent;
     }
 
     public void setDomainObject(AB2DomainObject domainObject) {
