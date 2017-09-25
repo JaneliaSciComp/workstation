@@ -23,6 +23,7 @@ import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
 import org.janelia.it.workstation.ab2.gl.GLShaderUpdateCallback;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
+import org.janelia.it.workstation.ab2.shader.AB2ActorPickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.janelia.it.workstation.ab2.shader.AB2SkeletonShader;
 import org.slf4j.Logger;
@@ -43,11 +44,6 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
     Map<Integer, Vector4> styleIdMap=new HashMap<>();
 
-    //IntBuffer pickFramebufferId=IntBuffer.allocate(1);
-    IntBuffer pickFramebufferId;
-    IntBuffer pickColorTextureId;
-    IntBuffer pickDepthTextureId;
-
     //static final int BOUNDING_BOX_ID=1;
 
     int actorCount=0;
@@ -55,20 +51,20 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     private int getNextActorIndex() { actorCount++; return actorCount; }
 
     public AB2SkeletonRenderer() {
-        super(new AB2ActorShader());
+        super(new AB2ActorShader(), new AB2ActorPickShader());
         styleIdMap.put(getNextActorIndex(), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-        shaderActionSequence.setShaderUpdateCallback(getShaderUpdateCallback());
-        shaderActionSequence.setActorUpdateCallback(getActorSequenceUpdateCallback());
+        drawActionSequence.setShaderUpdateCallback(getDrawShaderUpdateCallback());
+        drawActionSequence.setActorUpdateCallback(getActorSequenceDrawUpdateCallback());
 
         // Bounding Box
         boundingBoxActor=new BoundingBoxActor(actorCount, new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
-        shaderActionSequence.getActorSequence().add(boundingBoxActor);
+        drawActionSequence.getActorSequence().add(boundingBoxActor);
 
         // Pick Square
         pickSquareActor=new PickSquareActor(getNextActorIndex(), new Vector2(0.4f, 0.4f), new Vector2(0.5f, 0.5f),
                 new Vector4(1f, 0f, 0f, 1f), new Vector4(0f, 1f, 0f, 1f));
         styleIdMap.put(pickSquareActor.getActorId(), pickSquareActor.getColor0());
-        shaderActionSequence.getActorSequence().add(pickSquareActor);
+        drawActionSequence.getActorSequence().add(pickSquareActor);
     }
 
 
@@ -88,11 +84,11 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             List<Vector3> skeletonLines = skeletons.get(i).getSkeletonLineSet();
 
             PointSetActor pointSetActor = new PointSetActor(getNextActorIndex(), skeletonPoints);
-            shaderActionSequence.getActorSequence().add(pointSetActor);
+            drawActionSequence.getActorSequence().add(pointSetActor);
             styleIdMap.put(pointSetActor.getActorId(), new Vector4(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0f));
 
             LineSetActor lineSetActor = new LineSetActor(getNextActorIndex(), skeletonLines);
-            shaderActionSequence.getActorSequence().add(lineSetActor);
+            drawActionSequence.getActorSequence().add(lineSetActor);
             styleIdMap.put(lineSetActor.getActorId(), new Vector4(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0f));
         }
     }
@@ -121,58 +117,8 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     }
 
     public void reshape(GL4 gl, int x, int y, int width, int height) {
-        resetPickFramebuffer(gl, width, height);
-        super.reshape(gl, x, y, width, height);
         logger.info("reshape() x="+x+" y="+y+" width="+width+" height="+height);
-    }
-
-    protected void resetPickFramebuffer(GL4 gl, int width, int height) {
-        disposePickFramebuffer(gl);
-
-        pickFramebufferId=IntBuffer.allocate(1);
-        gl.glGenFramebuffers(1, pickFramebufferId);
-        gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, pickFramebufferId.get(0));
-
-        pickColorTextureId=IntBuffer.allocate(1);
-        gl.glGenTextures(1, pickColorTextureId);
-        gl.glBindTexture(gl.GL_TEXTURE_2D, pickColorTextureId.get(0));
-        gl.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_NEAREST);
-        gl.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST);
-        gl.glTexImage2D(GL4.GL_TEXTURE_2D, 0, GL4.GL_RGBA8, width, height, 0, GL4.GL_BGRA, GL4.GL_UNSIGNED_BYTE, null);
-
-        pickDepthTextureId=IntBuffer.allocate(1);
-        gl.glGenTextures(1, pickDepthTextureId);
-        gl.glBindTexture(gl.GL_TEXTURE_2D, pickDepthTextureId.get(0));
-        gl.glTexImage2D(GL4.GL_TEXTURE_2D, 0, GL4.GL_DEPTH_COMPONENT, width, height, 0, GL4.GL_DEPTH_COMPONENT, GL4.GL_FLOAT, null);
-
-        gl.glFramebufferTexture(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, pickColorTextureId.get(0), 0);
-        gl.glFramebufferTexture(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, pickDepthTextureId.get(0), 0);
-
-        gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0);
-        gl.glBindTexture(gl.GL_TEXTURE_2D, 0);
-
-        int status = gl.glCheckFramebufferStatus(GL4.GL_FRAMEBUFFER);
-        if (status != GL4.GL_FRAMEBUFFER_COMPLETE) {
-            logger.error("Failed to establish framebuffer: {}", decodeFramebufferStatus(status));
-        }
-        else {
-            logger.info("Picking Framebuffer complete.");
-        }
-    }
-
-    protected void disposePickFramebuffer(GL4 gl) {
-        if (pickDepthTextureId!=null) {
-            gl.glDeleteTextures(1, pickDepthTextureId);
-            pickDepthTextureId=null;
-        }
-        if (pickColorTextureId!=null) {
-            gl.glDeleteTextures(1, pickColorTextureId);
-            pickColorTextureId=null;
-        }
-        if (pickFramebufferId!=null) {
-            gl.glDeleteFramebuffers(1, pickFramebufferId);
-            pickFramebufferId=null;
-        }
+        super.reshape(gl, x, y, width, height);
     }
 
     @Override
@@ -182,12 +128,12 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     }
 
     @Override
-    protected GLShaderUpdateCallback getShaderUpdateCallback() {
+    protected GLShaderUpdateCallback getDrawShaderUpdateCallback() {
         return new GLShaderUpdateCallback() {
             @Override
             public void update(GL4 gl, Object o) {
 
-                AB2ActorShader actorShader = (AB2ActorShader) shader;
+                AB2ActorShader actorShader = (AB2ActorShader) drawShader;
                 actorShader.setMVP(gl, mvp);
                 gl.glPointSize(3.0f);
 
@@ -196,7 +142,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     }
 
     @Override
-    protected GLActorUpdateCallback getActorSequenceUpdateCallback() {
+    protected GLActorUpdateCallback getActorSequenceDrawUpdateCallback() {
         return new GLActorUpdateCallback() {
             @Override
             public void update(GL4 gl, Object o) {
@@ -205,7 +151,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 int actorId=actor.getActorId();
                 Vector4 actorColor=styleIdMap.get(actorId);
                 if (actorColor!=null) {
-                    AB2ActorShader actorShader = (AB2ActorShader) shader;
+                    AB2ActorShader actorShader = (AB2ActorShader) drawShader;
                     actorShader.setStyleIdColor(gl, actorColor);
                     if (actor instanceof PickSquareActor) {
                         actorShader.setTwoDimensional(gl, true);
@@ -218,47 +164,25 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         };
     }
 
-    private String decodeFramebufferStatus( int status ) {
-        String rtnVal = null;
-        switch (status) {
-            case GL4.GL_FRAMEBUFFER_UNDEFINED:
-                rtnVal = "GL_FRAMEBUFFER_UNDEFINED means target is the default framebuffer, but the default framebuffer does not exist.";
-                break;
-            case GL4.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT :
-                rtnVal = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT is returned if any of the framebuffer attachment points are framebuffer incomplete.";
-                break;
-            case GL4.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-                rtnVal = "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT is returned if the framebuffer does not have at least one image attached to it.";
-                break;
-            case GL4.GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-                rtnVal = "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER is returned if the value of GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE\n" +
-                        "		 is GL_NONE for any color attachment point(s) named by GL_DRAW_BUFFERi.";
-                break;
-            case GL4.GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-                rtnVal = "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER is returned if GL_READ_BUFFER is not GL_NONE\n" +
-                        "		 and the value of GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is GL_NONE for the color attachment point named\n" +
-                        "		 by GL_READ_BUFFER.";
-                break;
-            case GL4.GL_FRAMEBUFFER_UNSUPPORTED:
-                rtnVal = "GL_FRAMEBUFFER_UNSUPPORTED is returned if the combination of internal formats of the attached images violates\n" +
-                        "		 an implementation-dependent set of restrictions.";
-                break;
-            case GL4.GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
-                rtnVal = "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE is returned if the value of GL_RENDERBUFFER_SAMPLES is not the same\n" +
-                        "		 for all attached renderbuffers; if the value of GL_TEXTURE_SAMPLES is the not same for all attached textures; or, if the attached\n" +
-                        "		 images are a mix of renderbuffers and textures, the value of GL_RENDERBUFFER_SAMPLES does not match the value of\n" +
-                        "		 GL_TEXTURE_SAMPLES.  GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE  also returned if the value of GL_TEXTURE_FIXED_SAMPLE_LOCATIONS is\n" +
-                        "		 not the same for all attached textures; or, if the attached images are a mix of renderbuffers and textures, the value of GL_TEXTURE_FIXED_SAMPLE_LOCATIONS\n" +
-                        "		 is not GL_TRUE for all attached textures.";
-                break;
-            case GL4.GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
-                rtnVal = " is returned if any framebuffer attachment is layered, and any populated attachment is not layered,\n" +
-                        "		 or if all populated color attachments are not from textures of the same target.";
-                break;
-            default:
-                rtnVal = "--Message not decoded: " + status;
-        }
-        return rtnVal;
+    @Override
+    protected GLShaderUpdateCallback getPickShaderUpdateCallback() {
+        return new GLShaderUpdateCallback() {
+            @Override
+            public void update(GL4 gl, Object o) {
+            }
+        };
+    }
+
+    @Override
+    protected GLActorUpdateCallback getActorSequencePickUpdateCallback() {
+        return new GLActorUpdateCallback() {
+            @Override
+            public void update(GL4 gl, Object o) {
+
+                GLAbstractActor actor = (GLAbstractActor)o;
+                int actorId=actor.getActorId();
+            }
+        };
     }
 
 }
