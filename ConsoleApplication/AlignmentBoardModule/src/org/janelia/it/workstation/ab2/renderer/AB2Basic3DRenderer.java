@@ -127,21 +127,40 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 
         drawActionSequence.display(gl);
 
-        gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, pickFramebufferId.get(0));
-        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        gl.glClearDepth(1.0f);
-        gl.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT);
+        if (pickActionSequence.getActorSequence().size()>0) {
 
-        int[] drawBuffersTargets = new int[]{
-                GL4.GL_COLOR_ATTACHMENT0
-        };
-        IntBuffer drawBuffer = IntBuffer.allocate(1);
-        drawBuffer.put(0, drawBuffersTargets[0]);
-        gl.glDrawBuffers(drawBuffersTargets.length, drawBuffer);
+            // From: https://www.opengl.org/discussion_boards/showthread.php/198703-Framebuffer-Integer-Texture-Attachment
+            //
+            // NOTE: this needs to be tested on different OSes
+            //
+            // To encode integer values:
+            //
+            //    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, width, height, 0, GL_RED_INTEGER, GL_INT, 0);
+            //
+            // To read:
+            //
+            //    int pixel = 0;
+            //    glReadBuffer(GL_COLOR_ATTACHMENT1); // whereever the texture is attached to ...
+            //    glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel);
+            //
+            //
 
-        pickActionSequence.display(gl);
+            gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, pickFramebufferId.get(0));
+            gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            gl.glClearDepth(1.0f);
+            gl.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT);
 
-        gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
+            int[] drawBuffersTargets = new int[]{
+                    GL4.GL_COLOR_ATTACHMENT0
+            };
+            IntBuffer drawBuffer = IntBuffer.allocate(1);
+            drawBuffer.put(0, drawBuffersTargets[0]);
+            gl.glDrawBuffers(drawBuffersTargets.length, drawBuffer);
+
+            pickActionSequence.display(gl);
+
+            gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
+        }
 
         gl_display_count++;
     }
