@@ -53,8 +53,13 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     public AB2SkeletonRenderer() {
         super(new AB2ActorShader(), new AB2ActorPickShader());
         styleIdMap.put(getNextActorIndex(), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+
         drawActionSequence.setShaderUpdateCallback(getDrawShaderUpdateCallback());
         drawActionSequence.setActorUpdateCallback(getActorSequenceDrawUpdateCallback());
+
+        pickActionSequence.setShaderUpdateCallback(getPickShaderUpdateCallback());
+        pickActionSequence.setActorUpdateCallback(getActorSequencePickUpdateCallback());
+
 
         // Bounding Box
         boundingBoxActor=new BoundingBoxActor(actorCount, new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
@@ -135,7 +140,9 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             public void update(GL4 gl, Object o) {
 
                 AB2ActorShader actorShader = (AB2ActorShader) drawShader;
+                logger.info("Check1");
                 actorShader.setMVP(gl, mvp);
+                logger.info("Check1.1");
                 gl.glPointSize(3.0f);
 
             }
@@ -172,7 +179,9 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             public void update(GL4 gl, Object o) {
 
                 AB2ActorPickShader actorShader = (AB2ActorPickShader) pickShader;
+                logger.info("Check2");
                 actorShader.setMVP(gl, mvp);
+                logger.info("Check2.1");
                 gl.glPointSize(3.0f);
 
             }

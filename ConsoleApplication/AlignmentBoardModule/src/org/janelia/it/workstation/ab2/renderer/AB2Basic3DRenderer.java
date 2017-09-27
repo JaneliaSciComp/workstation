@@ -74,7 +74,9 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
         Matrix4 modelMatrix=new Matrix4(getModelMatrix());
         mvp=modelMatrix.multiply(viewMatrix.multiply(projectionMatrix));
 
+        logger.info("Check1.0");
         drawActionSequence.display(gl);
+        logger.info("Check1.1");
 
         if (mouseClickEvents.size()>0 && pickActionSequence.getActorSequence().size()>0) {
 

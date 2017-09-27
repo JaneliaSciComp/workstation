@@ -80,7 +80,7 @@ public class PickSquareActor extends GLAbstractActor {
 
     @Override
     public void display(GL4 gl) {
-        if (this.mode==Mode.DRAW) {
+        if (this.mode==Mode.DRAW || this.mode==Mode.PICK) {
 
             gl.glBindVertexArray(vertexArrayId.get(0));
             checkGlError(gl, "d1 glBindVertexArray() error");
@@ -99,20 +99,15 @@ public class PickSquareActor extends GLAbstractActor {
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-        } else if (this.mode==Mode.PICK) {
-
         }
     }
 
     @Override
     public void dispose(GL4 gl) {
-        if (this.mode==Mode.DRAW) {
+        if (mode==Mode.DRAW) {
             gl.glDeleteVertexArrays(1, vertexArrayId);
             gl.glDeleteBuffers(1, vertexBufferId);
-        } else if (this.mode==Mode.PICK) {
-
         }
-
     }
 
     public Vector4 getColor0() { return color0; }
