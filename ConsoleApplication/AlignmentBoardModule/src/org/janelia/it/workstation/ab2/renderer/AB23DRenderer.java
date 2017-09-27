@@ -116,7 +116,7 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         byte[] rawBuffer = new byte[bufferSize];
         ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
         gl.glReadBuffer(attachment);
-        gl.glReadPixels(startX, startY, width, height, GL4.GL_R32I, GL4.GL_RED_INTEGER, buffer);
+        gl.glReadPixels(startX, startY, width, height, GL4.GL_RED, GL4.GL_INT, buffer);
         return rawBuffer;
     }
 

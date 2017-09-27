@@ -1,9 +1,10 @@
 #version 410
 
-in int fragmentPickId;
+flat in int fragmentPickId3;
+
 out int fragmentPickId2;
 
 void main() {
-    fragmentPickId2=fragmentPickId;
+    fragmentPickId2=fragmentPickId3;
 }
 

@@ -170,6 +170,11 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         return new GLShaderUpdateCallback() {
             @Override
             public void update(GL4 gl, Object o) {
+
+                AB2ActorPickShader actorShader = (AB2ActorPickShader) pickShader;
+                actorShader.setMVP(gl, mvp);
+                gl.glPointSize(3.0f);
+
             }
         };
     }

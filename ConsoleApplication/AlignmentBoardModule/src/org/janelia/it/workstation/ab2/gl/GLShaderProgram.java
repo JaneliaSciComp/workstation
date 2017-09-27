@@ -84,9 +84,10 @@ public abstract class GLShaderProgram {
             gl.glAttachShader(shaderProgram, fragmentShader);
             logger.info("Linking program");
             gl.glLinkProgram(shaderProgram);
-            logger.info("Validating program");
-            gl.glValidateProgram(shaderProgram);
-            logger.info("Post-validation");
+            // NOTE: validation here will erase the error log from linking - not helpful!
+//            logger.info("Validating program");
+//            gl.glValidateProgram(shaderProgram);
+//            logger.info("Post-validation");
             IntBuffer intBuffer = IntBuffer.allocate(1);
             logger.info("Retrieving link status");
             gl.glGetProgramiv(shaderProgram, GL4.GL_LINK_STATUS, intBuffer);
@@ -95,6 +96,7 @@ public abstract class GLShaderProgram {
                 logger.info("Found problem - retrieving error log");
                 gl.glGetProgramiv(shaderProgram, GL4.GL_INFO_LOG_LENGTH, intBuffer);
                 int size = intBuffer.get(0);
+                logger.info("link info log size="+size);
                 StringBuilder errBuilder = new StringBuilder();
                 errBuilder.append("Problem with fragment shader ")
                         .append(fragmentShader)
