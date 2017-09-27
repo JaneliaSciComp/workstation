@@ -10,6 +10,7 @@ import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2PickSquareColorChangeEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
+import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
 
 public class PickSquareActor extends GLAbstractActor {
     Vector2 v0;
@@ -30,6 +31,8 @@ public class PickSquareActor extends GLAbstractActor {
         this.color0=color0;
         this.color1=color1;
     }
+
+    public int getPickIndex() { return pickIndex; }
 
     @Override
     public void init(GL4 gl) {

@@ -205,7 +205,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
         gl.glBindTexture(gl.GL_TEXTURE_2D, pickColorTextureId.get(0));
         gl.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_NEAREST);
         gl.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST);
-        gl.glTexImage2D(GL4.GL_TEXTURE_2D, 0, GL4.GL_RGBA8, width, height, 0, GL4.GL_BGRA, GL4.GL_UNSIGNED_BYTE, null);
+        gl.glTexImage2D(GL4.GL_TEXTURE_2D, 0, GL4.GL_R32I, width, height, 0, GL4.GL_RED_INTEGER, GL4.GL_INT, null);
 
         pickDepthTextureId=IntBuffer.allocate(1);
         gl.glGenTextures(1, pickDepthTextureId);

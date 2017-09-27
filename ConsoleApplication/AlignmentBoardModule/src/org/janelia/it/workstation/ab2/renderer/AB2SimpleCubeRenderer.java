@@ -29,7 +29,7 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
 
 
     public AB2SimpleCubeRenderer() {
-        super(new AB2SimpleCubeShader());
+        super(new AB2SimpleCubeShader(), null);
     }
 
     @Override
@@ -128,7 +128,7 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
     }
 
     @Override
-    protected GLActorUpdateCallback getActorSequenceUpdateCallback() {
+    protected GLActorUpdateCallback getActorSequenceDrawUpdateCallback() {
         return new GLActorUpdateCallback() {
             @Override
             public void update(GL4 gl, Object o) {
@@ -138,7 +138,22 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
     }
 
     @Override
-    protected GLShaderUpdateCallback getShaderUpdateCallback() {
+    protected GLActorUpdateCallback getActorSequencePickUpdateCallback() {
+        return new GLActorUpdateCallback() {
+            @Override
+            public void update(GL4 gl, Object o) {
+                // do nothing
+            }
+        };
+    }
+
+    @Override
+    protected GLShaderUpdateCallback getPickShaderUpdateCallback() {
+        return null;
+    }
+
+    @Override
+    protected GLShaderUpdateCallback getDrawShaderUpdateCallback() {
         return new GLShaderUpdateCallback() {
             @Override
             public void update(GL4 gl, Object o) {
@@ -147,7 +162,7 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
 
                 if (useInterleaved) {
 
-                    AB2SimpleCubeShader cubeShader = (AB2SimpleCubeShader) shader;
+                    AB2SimpleCubeShader cubeShader = (AB2SimpleCubeShader) drawShader;
                     cubeShader.setMVP(gl, mvp);
                     gl.glPointSize(3.0f);
 
@@ -179,7 +194,7 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
 
                 } else {
 
-                    AB2SimpleCubeShader cubeShader = (AB2SimpleCubeShader) shader;
+                    AB2SimpleCubeShader cubeShader = (AB2SimpleCubeShader) drawShader;
                     cubeShader.setMVP(gl, mvp);
                     gl.glPointSize(3.0f);
 

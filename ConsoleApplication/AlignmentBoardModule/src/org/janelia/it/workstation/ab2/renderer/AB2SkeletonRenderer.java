@@ -65,6 +65,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 new Vector4(1f, 0f, 0f, 1f), new Vector4(0f, 1f, 0f, 1f));
         styleIdMap.put(pickSquareActor.getActorId(), pickSquareActor.getColor0());
         drawActionSequence.getActorSequence().add(pickSquareActor);
+        pickActionSequence.getActorSequence().add(pickSquareActor);
     }
 
 
@@ -180,7 +181,10 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             public void update(GL4 gl, Object o) {
 
                 GLAbstractActor actor = (GLAbstractActor)o;
-                int actorId=actor.getActorId();
+                if (actor instanceof PickSquareActor) {
+                    AB2ActorPickShader actorPickShader=(AB2ActorPickShader) pickShader;
+                    actorPickShader.setPickId(gl, ((PickSquareActor) actor).getPickIndex());
+                }
             }
         };
     }
