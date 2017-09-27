@@ -1,10 +1,14 @@
 package org.janelia.it.workstation.ab2.renderer;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import javax.media.opengl.GL4;
 import javax.media.opengl.glu.GLU;
 
+import org.janelia.geometry3d.Viewport;
 import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
@@ -16,6 +20,8 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     Logger logger = LoggerFactory.getLogger(AB23DRenderer.class);
     protected static GLU glu = new GLU();
 
+    protected Viewport viewport;
+
     protected IntBuffer pickFramebufferId;
     protected IntBuffer pickColorTextureId;
     protected IntBuffer pickDepthTextureId;
@@ -25,6 +31,18 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 
     protected final GLShaderProgram drawShader;
     protected final GLShaderProgram pickShader;
+
+    protected ConcurrentLinkedDeque<MouseClickEvent> mouseClickEvents=new ConcurrentLinkedDeque<>();
+
+    protected class MouseClickEvent {
+        public int x=0;
+        public int y=0;
+        public MouseClickEvent(int x, int y) { this.x=x; this.y=y; }
+    }
+
+    public void addMouseClickEvent(int x, int y) {
+        mouseClickEvents.add(new MouseClickEvent(x,y));
+    }
 
     public AB23DRenderer(GLShaderProgram drawShader, GLShaderProgram pickShader) {
         this.drawShader=drawShader;
@@ -76,19 +94,40 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 
     public abstract void reshape(GL4 gl, int x, int y, int width, int height);
 
-//    public int getPickBufferAtXY(int x, int y, boolean invertY) {
-//        int fX=x;
-//        int fY=y;
-//        if (invertY) {
-//            fY=viewport.getHeightPixels()-y-1;
-//            if (fY<0) { fY=0; }
-//        }
-//        gl.glBindFramebuffer(GL4.GL_READ_FRAMEBUFFER, frameBufId);
-//        int yPos = viewportHeight - y;
-//        byte[] pixels = readPixels(gl, colorTextureId_1, GL4.GL_COLOR_ATTACHMENT1, x, yPos, 1, 1);
-//        int id = getId(pixels);
-//        gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, 0);
-//    }
+    protected int getPickIdAtXY(GL4 gl, int x, int y, boolean invertY) {
+        logger.info("getPickIdAtXY x="+x+" y="+y+" invert="+invertY);
+        int fX=x;
+        int fY=y;
+        if (invertY) {
+            fY=viewport.getHeightPixels()-y-1;
+            if (fY<0) { fY=0; }
+        }
+        gl.glBindFramebuffer(GL4.GL_READ_FRAMEBUFFER, pickFramebufferId.get(0));
+        byte[] pixels = readPixels(gl, pickColorTextureId.get(0), GL4.GL_COLOR_ATTACHMENT0, fX, fY, 1, 1);
+        int id = getId(pixels);
+        gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
+        return id;
+    }
+
+    private byte[] readPixels(GL4 gl, int textureId, int attachment, int startX, int startY, int width, int height) {
+        gl.glBindTexture(GL4.GL_TEXTURE_2D, textureId);
+        int pixelSize = Integer.SIZE/Byte.SIZE;
+        int bufferSize = width * height * pixelSize;
+        byte[] rawBuffer = new byte[bufferSize];
+        ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
+        gl.glReadBuffer(attachment);
+        gl.glReadPixels(startX, startY, width, height, GL4.GL_R32I, GL4.GL_RED_INTEGER, buffer);
+        return rawBuffer;
+    }
+
+    private int getId(byte[] rawBuffer) {
+        ByteBuffer bb = ByteBuffer.wrap(rawBuffer);
+
+        if(ByteOrder.nativeOrder()==ByteOrder.LITTLE_ENDIAN)
+            bb.order(ByteOrder.LITTLE_ENDIAN);
+
+        return bb.getInt();
+    }
 
     protected void disposePickFramebuffer(GL4 gl) {
         if (pickDepthTextureId!=null) {

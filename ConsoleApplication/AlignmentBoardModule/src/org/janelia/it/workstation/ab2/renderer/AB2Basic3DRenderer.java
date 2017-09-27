@@ -14,9 +14,6 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Viewport;
 
-import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
-import org.janelia.it.workstation.ab2.gl.GLShaderUpdateCallback;
-import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +25,6 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 
     protected PerspectiveCamera camera;
     protected Vantage vantage;
-    protected Viewport viewport;
 
     public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 2.0;
 
@@ -80,7 +76,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 
         drawActionSequence.display(gl);
 
-        if (pickActionSequence.getActorSequence().size()>0) {
+        if (mouseClickEvents.size()>0 && pickActionSequence.getActorSequence().size()>0) {
 
             // From: https://www.opengl.org/discussion_boards/showthread.php/198703-Framebuffer-Integer-Texture-Attachment
             //
@@ -111,6 +107,16 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
             gl.glDrawBuffers(drawBuffersTargets.length, drawBuffer);
 
             pickActionSequence.display(gl);
+
+            while (mouseClickEvents.size()>0) {
+                logger.info("displaySync() processing mouse click");
+                MouseClickEvent mouseClickEvent=mouseClickEvents.poll();
+                if (mouseClickEvent!=null) {
+                    logger.info("Pick at x="+mouseClickEvent.x+" y="+mouseClickEvent.y);
+                    int pickId=getPickIdAtXY(gl,mouseClickEvent.x, mouseClickEvent.y, true);
+                    logger.info("Pick id at x="+mouseClickEvent.x+" y="+mouseClickEvent.y+" is="+pickId);
+                }
+            }
 
             gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
         }

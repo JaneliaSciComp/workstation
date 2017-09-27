@@ -32,10 +32,9 @@ public class AB2SkeletonMode extends AB2View3DMode {
             MouseEvent mouseEvent=((AB2MouseClickedEvent) event).getMouseEvent();
             int x = mouseEvent.getX();
             int y = mouseEvent.getY(); // y is inverted - 0 is at the top
-            // Check the pick buffer
-            AB2SkeletonRenderer skeletonRenderer = (AB2SkeletonRenderer)renderer;
-            //int pickId=skeletonRenderer.getPickBufferAtXY(x, y, true);
-            //logger.info("MouseClick PickId="+pickId);
+            renderer.addMouseClickEvent(x, y);
+            logger.info("processEvent() calling renderer.addMouseClick() x="+x+" y="+y);
+            controller.repaint();
         }
     }
 
