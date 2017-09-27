@@ -140,9 +140,9 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             public void update(GL4 gl, Object o) {
 
                 AB2ActorShader actorShader = (AB2ActorShader) drawShader;
-                logger.info("Check1");
+                //logger.info("Check1");
                 actorShader.setMVP(gl, mvp);
-                logger.info("Check1.1");
+                //logger.info("Check1.1");
                 gl.glPointSize(3.0f);
 
             }
@@ -179,9 +179,9 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             public void update(GL4 gl, Object o) {
 
                 AB2ActorPickShader actorShader = (AB2ActorPickShader) pickShader;
-                logger.info("Check2");
+                //logger.info("Check2");
                 actorShader.setMVP(gl, mvp);
-                logger.info("Check2.1");
+                //logger.info("Check2.1");
                 gl.glPointSize(3.0f);
 
             }

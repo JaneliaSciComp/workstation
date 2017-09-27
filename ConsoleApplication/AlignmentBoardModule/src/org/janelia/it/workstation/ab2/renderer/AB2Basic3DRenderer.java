@@ -36,6 +36,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
     private static final double MIN_CAMERA_FOCUS_DISTANCE = 0.001;
 
     Matrix4 mvp;
+    //Matrix4 mvpPick;
 
     private void setBackgroundColorBuffer() {
         backgroundColorBuffer.put(0,backgroundColor.get(0));
@@ -73,10 +74,11 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
         Matrix4 viewMatrix=new Matrix4(camera.getViewMatrix());
         Matrix4 modelMatrix=new Matrix4(getModelMatrix());
         mvp=modelMatrix.multiply(viewMatrix.multiply(projectionMatrix));
+        //mvpPick=new Matrix4(mvp);
 
-        logger.info("Check1.0");
+        //logger.info("Check1.0");
         drawActionSequence.display(gl);
-        logger.info("Check1.1");
+        //logger.info("Check1.1");
 
         if (mouseClickEvents.size()>0 && pickActionSequence.getActorSequence().size()>0) {
 
@@ -101,21 +103,22 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
             gl.glClearDepth(1.0f);
             gl.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT);
 
-            int[] drawBuffersTargets = new int[]{
-                    GL4.GL_COLOR_ATTACHMENT0
-            };
-            IntBuffer drawBuffer = IntBuffer.allocate(1);
-            drawBuffer.put(0, drawBuffersTargets[0]);
-            gl.glDrawBuffers(drawBuffersTargets.length, drawBuffer);
+//            int[] drawBuffersTargets = new int[]{
+//                    GL4.GL_COLOR_ATTACHMENT0
+//            };
+              IntBuffer drawBuffer = IntBuffer.allocate(1);
+//            drawBuffer.put(0, drawBuffersTargets[0]);
+              drawBuffer.put(GL4.GL_COLOR_ATTACHMENT0);
+              gl.glDrawBuffers(1, drawBuffer);
 
-            pickActionSequence.display(gl);
-
+              pickActionSequence.display(gl);
+//
             while (mouseClickEvents.size()>0) {
                 logger.info("displaySync() processing mouse click");
                 MouseClickEvent mouseClickEvent=mouseClickEvents.poll();
                 if (mouseClickEvent!=null) {
-                    logger.info("Pick at x="+mouseClickEvent.x+" y="+mouseClickEvent.y);
-                    int pickId=getPickIdAtXY(gl,mouseClickEvent.x, mouseClickEvent.y, true);
+                    //logger.info("Pick at x="+mouseClickEvent.x+" y="+mouseClickEvent.y);
+                    int pickId=getPickIdAtXY(gl,mouseClickEvent.x, mouseClickEvent.y, true, false);
                     logger.info("Pick id at x="+mouseClickEvent.x+" y="+mouseClickEvent.y+" is="+pickId);
                 }
             }

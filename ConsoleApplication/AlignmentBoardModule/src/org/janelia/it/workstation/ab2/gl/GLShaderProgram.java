@@ -31,7 +31,7 @@ public abstract class GLShaderProgram {
     public String getGeometryShaderResourceName() { return null; }
     public abstract String getFragmentShaderResourceName();
 
-    private Logger logger = LoggerFactory.getLogger( GLShaderProgram.class );
+    private static Logger logger = LoggerFactory.getLogger( GLShaderProgram.class );
 
     private GLShaderProperties properties;
 
@@ -263,7 +263,7 @@ public abstract class GLShaderProgram {
         }
     }
 
-    protected void checkGlError(GL4 gl, String message) {
+    public static void checkGlError(GL4 gl, String message) {
         int errorNumber = gl.glGetError();
         if (errorNumber <= 0)
             return;

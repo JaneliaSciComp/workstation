@@ -94,7 +94,7 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 
     public abstract void reshape(GL4 gl, int x, int y, int width, int height);
 
-    protected int getPickIdAtXY(GL4 gl, int x, int y, boolean invertY) {
+    protected int getPickIdAtXY(GL4 gl, int x, int y, boolean invertY, boolean bindFramebuffer) {
         logger.info("getPickIdAtXY x="+x+" y="+y+" invert="+invertY);
         int fX=x;
         int fY=y;
@@ -102,10 +102,10 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
             fY=viewport.getHeightPixels()-y-1;
             if (fY<0) { fY=0; }
         }
-        gl.glBindFramebuffer(GL4.GL_READ_FRAMEBUFFER, pickFramebufferId.get(0));
+        if (bindFramebuffer) { gl.glBindFramebuffer(GL4.GL_READ_FRAMEBUFFER, pickFramebufferId.get(0)); }
         byte[] pixels = readPixels(gl, pickColorTextureId.get(0), GL4.GL_COLOR_ATTACHMENT0, fX, fY, 1, 1);
         int id = getId(pixels);
-        gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
+        if (bindFramebuffer) { gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0); }
         return id;
     }
 
@@ -116,7 +116,9 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         byte[] rawBuffer = new byte[bufferSize];
         ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
         gl.glReadBuffer(attachment);
-        gl.glReadPixels(startX, startY, width, height, GL4.GL_RED, GL4.GL_INT, buffer);
+        gl.glReadPixels(startX, startY, width, height, GL4.GL_RED_INTEGER, GL4.GL_INT, buffer);
+        checkGlError(gl, "AB23DRenderer readPixels(), after glReadPixels()");
+        gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
         return rawBuffer;
     }
 
