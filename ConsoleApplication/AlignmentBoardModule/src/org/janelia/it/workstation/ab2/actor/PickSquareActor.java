@@ -70,8 +70,9 @@ public class PickSquareActor extends GLAbstractActor {
 
         } else if (this.mode == Mode.PICK) {
             if (pickIndex<0) {
-                pickIndex = AB2Controller.getController().getNextPickIndex();
-                AB2Controller.getController().setPickEvent(pickIndex, new AB2PickSquareColorChangeEvent());
+//                pickIndex = AB2Controller.getController().getNextPickIndex();
+//                AB2Controller.getController().setPickEvent(pickIndex, new AB2PickSquareColorChangeEvent());
+                pickIndex=8; // debug
             }
         }
 
