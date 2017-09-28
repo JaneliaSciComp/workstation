@@ -114,7 +114,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
               pickActionSequence.display(gl);
 //
             while (mouseClickEvents.size()>0) {
-                logger.info("displaySync() processing mouse click");
+                //logger.info("displaySync() processing mouse click");
                 MouseClickEvent mouseClickEvent=mouseClickEvents.poll();
                 if (mouseClickEvent!=null) {
                     //logger.info("Pick at x="+mouseClickEvent.x+" y="+mouseClickEvent.y);

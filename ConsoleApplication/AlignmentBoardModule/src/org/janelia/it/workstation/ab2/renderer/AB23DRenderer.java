@@ -95,7 +95,7 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     public abstract void reshape(GL4 gl, int x, int y, int width, int height);
 
     protected int getPickIdAtXY(GL4 gl, int x, int y, boolean invertY, boolean bindFramebuffer) {
-        logger.info("getPickIdAtXY x="+x+" y="+y+" invert="+invertY);
+        //logger.info("getPickIdAtXY x="+x+" y="+y+" invert="+invertY);
         int fX=x;
         int fY=y;
         if (invertY) {
@@ -116,6 +116,7 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         byte[] rawBuffer = new byte[bufferSize];
         ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
         gl.glReadBuffer(attachment);
+        logger.info("glReadPixels() startX="+startX+" startY="+startY+" width="+width+" height="+height);
         gl.glReadPixels(startX, startY, width, height, GL4.GL_RED_INTEGER, GL4.GL_INT, buffer);
         checkGlError(gl, "AB23DRenderer readPixels(), after glReadPixels()");
         gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
@@ -123,6 +124,9 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     }
 
     private int getId(byte[] rawBuffer) {
+        for (int i=0;i<rawBuffer.length;i++) {
+            logger.info("getId byte "+i+" = "+rawBuffer[i]);
+        }
         ByteBuffer bb = ByteBuffer.wrap(rawBuffer);
 
         if(ByteOrder.nativeOrder()==ByteOrder.LITTLE_ENDIAN)

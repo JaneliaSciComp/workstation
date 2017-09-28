@@ -32,6 +32,7 @@ public class AB2SkeletonMode extends AB2View3DMode {
             MouseEvent mouseEvent=((AB2MouseClickedEvent) event).getMouseEvent();
             int x = mouseEvent.getX();
             int y = mouseEvent.getY(); // y is inverted - 0 is at the top
+            //logger.info("renderer.addMouseClickEvent() x="+x+" y="+y);
             renderer.addMouseClickEvent(x, y);
             //logger.info("processEvent() calling renderer.addMouseClick() x="+x+" y="+y);
             controller.repaint();

@@ -197,7 +197,9 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 GLAbstractActor actor = (GLAbstractActor)o;
                 if (actor instanceof PickSquareActor) {
                     AB2ActorPickShader actorPickShader=(AB2ActorPickShader) pickShader;
-                    actorPickShader.setPickId(gl, ((PickSquareActor) actor).getPickIndex());
+                    int pickIndex=((PickSquareActor)actor).getPickIndex();
+                    logger.info("getActorSequencePickUpdateCallback() - setting pickIndex="+pickIndex);
+                    actorPickShader.setPickId(gl, pickIndex);
                 }
             }
         };

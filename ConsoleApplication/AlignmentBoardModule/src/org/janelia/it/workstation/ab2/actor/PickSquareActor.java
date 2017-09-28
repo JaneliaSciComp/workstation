@@ -17,7 +17,7 @@ public class PickSquareActor extends GLAbstractActor {
     Vector2 v1;
     Vector4 color0;
     Vector4 color1;
-    int pickIndex=-1;
+    int pickIndex=8; //debug
 
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
