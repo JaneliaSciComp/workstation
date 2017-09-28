@@ -11,8 +11,13 @@ import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2PickSquareColorChangeEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PickSquareActor extends GLAbstractActor {
+
+    private final Logger logger = LoggerFactory.getLogger(PickSquareActor.class);
+
     Vector2 v0;
     Vector2 v1;
     Vector4 color0;
@@ -93,6 +98,8 @@ public class PickSquareActor extends GLAbstractActor {
 
             gl.glEnableVertexAttribArray(0);
             checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
+
+            logger.info("display() glDrawArrays() vertexFb size="+vertexFb.capacity());
 
             gl.glDrawArrays(GL4.GL_TRIANGLES, 0, vertexFb.capacity()/3);
             checkGlError(gl, "d7 glDrawArrays() error");

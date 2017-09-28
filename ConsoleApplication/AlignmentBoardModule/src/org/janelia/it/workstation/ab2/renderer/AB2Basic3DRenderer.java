@@ -111,7 +111,12 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
               drawBuffer.put(GL4.GL_COLOR_ATTACHMENT0);
               gl.glDrawBuffers(1, drawBuffer);
 
+              logger.info("pickActionSequence.display() start");
+
               pickActionSequence.display(gl);
+
+              logger.info("pickActionSequence.display() end");
+
 //
             while (mouseClickEvents.size()>0) {
                 //logger.info("displaySync() processing mouse click");

@@ -193,13 +193,16 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         return new GLActorUpdateCallback() {
             @Override
             public void update(GL4 gl, Object o) {
-
                 GLAbstractActor actor = (GLAbstractActor)o;
+                AB2ActorPickShader actorPickShader=(AB2ActorPickShader) pickShader;
                 if (actor instanceof PickSquareActor) {
-                    AB2ActorPickShader actorPickShader=(AB2ActorPickShader) pickShader;
                     int pickIndex=((PickSquareActor)actor).getPickIndex();
                     logger.info("getActorSequencePickUpdateCallback() - setting pickIndex="+pickIndex);
                     actorPickShader.setPickId(gl, pickIndex);
+                    logger.info("getActorSequencePickUpdateCallback() - setting twoDimensional=true");
+                    actorPickShader.setTwoDimensional(gl, true);
+                } else {
+                    actorPickShader.setTwoDimensional(gl, false);
                 }
             }
         };
