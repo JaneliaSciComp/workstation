@@ -5,6 +5,7 @@ flat in int fragmentPickId;
 layout (location=0) out int fragmentPickId2;
 
 void main() {
-    fragmentPickId2=fragmentPickId;
+    //fragmentPickId2=fragmentPickId;
+    fragmentPickId2=7;
 }
 

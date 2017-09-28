@@ -103,10 +103,28 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
             if (fY<0) { fY=0; }
         }
         if (bindFramebuffer) { gl.glBindFramebuffer(GL4.GL_READ_FRAMEBUFFER, pickFramebufferId.get(0)); }
-        byte[] pixels = readPixels(gl, pickColorTextureId.get(0), GL4.GL_COLOR_ATTACHMENT0, fX, fY, 1, 1);
-        int id = getId(pixels);
+//        byte[] pixels = readPixels(gl, pickColorTextureId.get(0), GL4.GL_COLOR_ATTACHMENT0, fX, fY, 1, 1);
+//        int id = getId(pixels);
+
+
+        byte[] pixels = readPixels(gl, pickColorTextureId.get(0), GL4.GL_COLOR_ATTACHMENT1, 0, 0,
+                viewport.getWidthPixels(), viewport.getHeightPixels());
+
+        logger.info("readPixels() returned "+pixels.length+" pixels");
+
+        int positiveCount=0;
+        int negativeCount=0;
+        for (int i=0;i<pixels.length;i++) {
+            if (pixels[i]>0) {
+                positiveCount++;
+            } else if (pixels[i]<0) {
+                negativeCount++;
+            }
+        }
+        logger.info("positiveCount="+positiveCount+" negativeCount="+negativeCount);
+
         if (bindFramebuffer) { gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0); }
-        return id;
+        return 0; // debug
     }
 
     private byte[] readPixels(GL4 gl, int textureId, int attachment, int startX, int startY, int width, int height) {
@@ -169,7 +187,7 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         gl.glBindTexture(gl.GL_TEXTURE_2D, pickDepthTextureId.get(0));
         gl.glTexImage2D(GL4.GL_TEXTURE_2D, 0, GL4.GL_DEPTH_COMPONENT, width, height, 0, GL4.GL_DEPTH_COMPONENT, GL4.GL_FLOAT, null);
 
-        gl.glFramebufferTexture(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, pickColorTextureId.get(0), 0);
+        gl.glFramebufferTexture(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT1, pickColorTextureId.get(0), 0);
         gl.glFramebufferTexture(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, pickDepthTextureId.get(0), 0);
 
         gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0);
