@@ -2,7 +2,7 @@
 
 flat in int fragmentPickId;
 
-layout (location=0) out int fragmentPickId2;
+layout (location=1) out int fragmentPickId2;
 
 void main() {
     //fragmentPickId2=fragmentPickId;
