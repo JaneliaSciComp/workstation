@@ -103,12 +103,14 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
             gl.glClearDepth(1.0f);
             gl.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT);
 
-//            int[] drawBuffersTargets = new int[]{
-//                    GL4.GL_COLOR_ATTACHMENT0
-//            };
+            // NOTE: it is necessary to use array here rather than just insert
+            // to buffer, in order to get native byte order correct
+            int[] drawBuffersTargets = new int[]{
+                    GL4.GL_COLOR_ATTACHMENT0
+            };
               IntBuffer drawBuffer = IntBuffer.allocate(1);
-//            drawBuffer.put(0, drawBuffersTargets[0]);
-              drawBuffer.put(GL4.GL_COLOR_ATTACHMENT0);
+            drawBuffer.put(0, drawBuffersTargets[0]);
+              //drawBuffer.put(GL4.GL_COLOR_ATTACHMENT0);
               gl.glDrawBuffers(1, drawBuffer);
 
               logger.info("pickActionSequence.display() start");

@@ -194,9 +194,6 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         gl.glFramebufferTexture(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, pickColorTextureId.get(0), 0);
         gl.glFramebufferTexture(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, pickDepthTextureId.get(0), 0);
 
-        gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0);
-        gl.glBindTexture(gl.GL_TEXTURE_2D, 0);
-
         int status = gl.glCheckFramebufferStatus(GL4.GL_FRAMEBUFFER);
         if (status != GL4.GL_FRAMEBUFFER_COMPLETE) {
             logger.error("Failed to establish framebuffer: {}", decodeFramebufferStatus(status));
@@ -204,6 +201,10 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         else {
             logger.info("Picking Framebuffer complete.");
         }
+
+        gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0);
+        gl.glBindTexture(gl.GL_TEXTURE_2D, 0);
+
     }
 
     private String decodeFramebufferStatus( int status ) {
