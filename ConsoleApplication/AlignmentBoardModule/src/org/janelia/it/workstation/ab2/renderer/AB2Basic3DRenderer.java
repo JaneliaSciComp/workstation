@@ -14,6 +14,8 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Viewport;
 
+import org.janelia.it.workstation.ab2.controller.AB2Controller;
+import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,11 +115,11 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
               //drawBuffer.put(GL4.GL_COLOR_ATTACHMENT0);
               gl.glDrawBuffers(1, drawBuffer);
 
-              logger.info("pickActionSequence.display() start");
+              //logger.info("pickActionSequence.display() start");
 
               pickActionSequence.display(gl);
 
-              logger.info("pickActionSequence.display() end");
+              //logger.info("pickActionSequence.display() end");
 
 //
             while (mouseClickEvents.size()>0) {
@@ -126,7 +128,14 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
                 if (mouseClickEvent!=null) {
                     //logger.info("Pick at x="+mouseClickEvent.x+" y="+mouseClickEvent.y);
                     int pickId=getPickIdAtXY(gl,mouseClickEvent.x, mouseClickEvent.y, true, false);
-                    logger.info("Pick id at x="+mouseClickEvent.x+" y="+mouseClickEvent.y+" is="+pickId);
+                    //logger.info("Pick id at x="+mouseClickEvent.x+" y="+mouseClickEvent.y+" is="+pickId);
+                    // Lookup event
+                    if (pickId>0) {
+                        AB2Event pickEvent = AB2Controller.getController().getPickEvent(pickId);
+                        if (pickEvent!=null) {
+                            AB2Controller.getController().addEvent(pickEvent);
+                        }
+                    }
                 }
             }
 

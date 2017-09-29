@@ -106,10 +106,10 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
             if (fY<0) { fY=0; }
         }
         if (bindFramebuffer) { gl.glBindFramebuffer(GL4.GL_READ_FRAMEBUFFER, pickFramebufferId.get(0)); }
-//        byte[] pixels = readPixels(gl, pickColorTextureId.get(0), GL4.GL_COLOR_ATTACHMENT0, fX, fY, 1, 1);
-//        int id = getId(pixels);
+        byte[] pixels = readPixels(gl, pickColorTextureId.get(0), GL4.GL_COLOR_ATTACHMENT0, fX, fY, 1, 1);
+        int id = getId(pixels);
 
-
+        /*
         byte[] pixels = readPixels(gl, pickColorTextureId.get(0), GL4.GL_COLOR_ATTACHMENT0, 0, 0,
                 viewport.getWidthPixels(), viewport.getHeightPixels());
 
@@ -125,30 +125,30 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
             }
         }
         logger.info("positiveCount="+positiveCount+" negativeCount="+negativeCount);
+        */
 
         if (bindFramebuffer) { gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0); }
-        return 0; // debug
+        return id; // debug
     }
 
     private byte[] readPixels(GL4 gl, int textureId, int attachment, int startX, int startY, int width, int height) {
         gl.glBindTexture(GL4.GL_TEXTURE_2D, textureId);
-        //int pixelSize = Integer.SIZE/Byte.SIZE;
-        int pixelSize = (Float.SIZE / Byte.SIZE) * 4;
+        int pixelSize = Integer.SIZE/Byte.SIZE;
         int bufferSize = width * height * pixelSize;
         byte[] rawBuffer = new byte[bufferSize];
         ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
         gl.glReadBuffer(attachment);
-        logger.info("glReadPixels() startX="+startX+" startY="+startY+" width="+width+" height="+height);
-        gl.glReadPixels(startX, startY, width, height, GL4.GL_RGBA, GL4.GL_FLOAT, buffer);
+        //logger.info("glReadPixels() startX="+startX+" startY="+startY+" width="+width+" height="+height);
+        gl.glReadPixels(startX, startY, width, height, GL4.GL_RED_INTEGER, GL4.GL_INT, buffer);
         checkGlError(gl, "AB23DRenderer readPixels(), after glReadPixels()");
         gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
         return rawBuffer;
     }
 
     private int getId(byte[] rawBuffer) {
-        for (int i=0;i<rawBuffer.length;i++) {
-            logger.info("getId byte "+i+" = "+rawBuffer[i]);
-        }
+//        for (int i=0;i<rawBuffer.length;i++) {
+//            logger.info("getId byte "+i+" = "+rawBuffer[i]);
+//        }
         ByteBuffer bb = ByteBuffer.wrap(rawBuffer);
 
         if(ByteOrder.nativeOrder()==ByteOrder.LITTLE_ENDIAN)
@@ -184,7 +184,7 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         gl.glBindTexture(gl.GL_TEXTURE_2D, pickColorTextureId.get(0));
         gl.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_NEAREST);
         gl.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST);
-        gl.glTexImage2D(GL4.GL_TEXTURE_2D, 0, GL4.GL_RGBA, width, height, 0, GL4.GL_RGBA, GL4.GL_FLOAT, null);
+        gl.glTexImage2D(GL4.GL_TEXTURE_2D, 0, GL4.GL_R32I, width, height, 0, GL4.GL_RED_INTEGER, GL4.GL_INT, null);
 
         pickDepthTextureId=IntBuffer.allocate(1);
         gl.glGenTextures(1, pickDepthTextureId);
@@ -199,7 +199,7 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
             logger.error("Failed to establish framebuffer: {}", decodeFramebufferStatus(status));
         }
         else {
-            logger.info("Picking Framebuffer complete.");
+            // logger.info("Picking Framebuffer complete.");
         }
 
         gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0);

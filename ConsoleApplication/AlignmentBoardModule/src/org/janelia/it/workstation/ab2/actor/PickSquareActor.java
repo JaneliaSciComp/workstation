@@ -22,7 +22,7 @@ public class PickSquareActor extends GLAbstractActor {
     Vector2 v1;
     Vector4 color0;
     Vector4 color1;
-    int pickIndex=8; //debug
+    int pickIndex=-1;
 
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
@@ -75,9 +75,9 @@ public class PickSquareActor extends GLAbstractActor {
 
         } else if (this.mode == Mode.PICK) {
             if (pickIndex<0) {
-//                pickIndex = AB2Controller.getController().getNextPickIndex();
-//                AB2Controller.getController().setPickEvent(pickIndex, new AB2PickSquareColorChangeEvent());
-                pickIndex=8; // debug
+                pickIndex = AB2Controller.getController().getNextPickIndex();
+                AB2Controller.getController().setPickEvent(pickIndex, new AB2PickSquareColorChangeEvent(this));
+                logger.info("Setting pickIndex="+pickIndex);
             }
         }
 
@@ -87,7 +87,7 @@ public class PickSquareActor extends GLAbstractActor {
     public void display(GL4 gl) {
         if (this.mode==Mode.DRAW || this.mode==Mode.PICK) {
 
-            logger.info("display() start - mode="+mode);
+//            logger.info("display() start - mode="+mode);
 
             gl.glBindVertexArray(vertexArrayId.get(0));
             checkGlError(gl, "d1 glBindVertexArray() error");
@@ -101,14 +101,14 @@ public class PickSquareActor extends GLAbstractActor {
             gl.glEnableVertexAttribArray(0);
             checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
 
-            logger.info("display() glDrawArrays() vertexFb size="+vertexFb.capacity());
+//            logger.info("display() glDrawArrays() vertexFb size="+vertexFb.capacity());
 
             gl.glDrawArrays(GL4.GL_TRIANGLES, 0, vertexFb.capacity()/3);
             checkGlError(gl, "d7 glDrawArrays() error");
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-            logger.info("display() start - mode="+mode);
+//            logger.info("display() start - mode="+mode);
 
         }
     }
@@ -124,7 +124,5 @@ public class PickSquareActor extends GLAbstractActor {
     public Vector4 getColor0() { return color0; }
 
     public Vector4 getColor1() { return color1; }
-
-
 
 }

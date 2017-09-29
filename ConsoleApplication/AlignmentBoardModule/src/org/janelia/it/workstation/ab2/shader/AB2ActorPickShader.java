@@ -22,7 +22,6 @@ public class AB2ActorPickShader extends GLShaderProgram {
     }
 
     public void setMVP(GL4 gl, Matrix4 mvp) {
-        logger.info("setMVP() called");
         setUniformMatrix4fv(gl, "mvp", false, mvp.asArray());
         checkGlError(gl, "AB2ActorPickShader setMVP() error");
     }

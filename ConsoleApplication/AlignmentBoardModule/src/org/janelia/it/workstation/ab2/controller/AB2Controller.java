@@ -50,7 +50,7 @@ public class AB2Controller implements GLEventListener {
     private GLJPanel gljPanel;
     private AB2DomainObject domainObject;
     private AB2Event[] pickEventLookup=new AB2Event[MAX_PICK_IDS];
-    private int pickCounter=-1;
+    private int pickCounter=0;
 
     public static AB2Controller getController() {
         if (instance==null) {
@@ -79,6 +79,9 @@ public class AB2Controller implements GLEventListener {
         pickEventLookup[index]=pickEvent;
     }
 
+    public AB2Event getPickEvent(int index) {
+        return pickEventLookup[index];
+    }
     public void setDomainObject(AB2DomainObject domainObject) {
         this.domainObject=domainObject;
         addEvent(new AB2DomainObjectUpdateEvent());

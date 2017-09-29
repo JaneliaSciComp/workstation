@@ -73,6 +73,14 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         pickActionSequence.getActorSequence().add(pickSquareActor);
     }
 
+    public void setStyleIdColor(int styleId, Vector4 color) {
+        styleIdMap.put(styleId, color);
+    }
+
+    public Vector4 getStyleIdColor(int styleId) {
+        return styleIdMap.get(styleId);
+    }
+
 
     public synchronized void setSkeletons(List<AB2NeuronSkeleton> skeletons) {
         this.skeletons=skeletons;
@@ -123,7 +131,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     }
 
     public void reshape(GL4 gl, int x, int y, int width, int height) {
-        logger.info("reshape() x="+x+" y="+y+" width="+width+" height="+height);
+        //logger.info("reshape() x="+x+" y="+y+" width="+width+" height="+height);
         super.reshape(gl, x, y, width, height);
     }
 
@@ -197,9 +205,9 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 AB2ActorPickShader actorPickShader=(AB2ActorPickShader) pickShader;
                 if (actor instanceof PickSquareActor) {
                     int pickIndex=((PickSquareActor)actor).getPickIndex();
-                    logger.info("getActorSequencePickUpdateCallback() - setting pickIndex="+pickIndex);
+                    //logger.info("getActorSequencePickUpdateCallback() - setting pickIndex="+pickIndex);
                     actorPickShader.setPickId(gl, pickIndex);
-                    logger.info("getActorSequencePickUpdateCallback() - setting twoDimensional=true");
+                    //logger.info("getActorSequencePickUpdateCallback() - setting twoDimensional=true");
                     actorPickShader.setTwoDimensional(gl, true);
                 } else {
                     actorPickShader.setTwoDimensional(gl, false);
