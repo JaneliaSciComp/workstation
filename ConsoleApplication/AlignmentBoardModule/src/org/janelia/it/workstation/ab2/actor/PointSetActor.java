@@ -66,6 +66,8 @@ public class PointSetActor extends GLAbstractActor {
     @Override
     public void display(GL4 gl) {
 
+        //logger.info("display() start");
+
         gl.glBindVertexArray(vertexArrayId.get(0));
         checkGlError(gl, "d1 glBindVertexArray() error");
 
@@ -82,6 +84,8 @@ public class PointSetActor extends GLAbstractActor {
         checkGlError(gl, "d7 glDrawArrays() error");
 
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+
+        //logger.info("display() end");
 
     }
 

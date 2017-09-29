@@ -87,6 +87,8 @@ public class PickSquareActor extends GLAbstractActor {
     public void display(GL4 gl) {
         if (this.mode==Mode.DRAW || this.mode==Mode.PICK) {
 
+            logger.info("display() start - mode="+mode);
+
             gl.glBindVertexArray(vertexArrayId.get(0));
             checkGlError(gl, "d1 glBindVertexArray() error");
 
@@ -105,6 +107,8 @@ public class PickSquareActor extends GLAbstractActor {
             checkGlError(gl, "d7 glDrawArrays() error");
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+
+            logger.info("display() start - mode="+mode);
 
         }
     }

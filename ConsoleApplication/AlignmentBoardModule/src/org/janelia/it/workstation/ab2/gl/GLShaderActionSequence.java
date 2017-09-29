@@ -18,6 +18,7 @@ public class GLShaderActionSequence {
     List<GLAbstractActor> actorSequence=new ArrayList<>();
     private GLShaderUpdateCallback shaderCallback;
     private GLActorUpdateCallback actorCallback;
+    private GLAbstractActor.Mode actorMode;
 
     public GLShaderActionSequence(String name) {
         this.name=name;
@@ -47,6 +48,15 @@ public class GLShaderActionSequence {
 
     public void setActorUpdateCallback(GLActorUpdateCallback actorCallback) { this.actorCallback=actorCallback; }
 
+    public void setActorMode(GLAbstractActor.Mode actorMode) {
+        this.actorMode=actorMode;
+    }
+
+    public GLAbstractActor.Mode getActorMode() {
+        return actorMode;
+    }
+
+
     public void dispose(GL4 gl) {
         for (GLAbstractActor actor : actorSequence) {
             actor.dispose(gl);
@@ -69,6 +79,7 @@ public class GLShaderActionSequence {
     public void init(GL4 gl) throws Exception {
         shader.init(gl);
         for (GLAbstractActor actor : actorSequence) {
+            actor.setMode(actorMode);
             actor.init(gl);
         }
     }
@@ -96,6 +107,8 @@ public class GLShaderActionSequence {
 //        gl.glDepthFunc(GL4.GL_LEQUAL);
 
         for (GLAbstractActor actor: actorSequence) {
+
+            actor.setMode(actorMode);
 
             if (actorCallback!=null) {
                 actorCallback.update(gl, actor);

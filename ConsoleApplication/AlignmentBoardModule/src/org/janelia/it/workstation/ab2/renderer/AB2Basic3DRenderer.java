@@ -108,7 +108,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 //            };
               IntBuffer drawBuffer = IntBuffer.allocate(1);
 //            drawBuffer.put(0, drawBuffersTargets[0]);
-              drawBuffer.put(GL4.GL_COLOR_ATTACHMENT1);
+              drawBuffer.put(GL4.GL_COLOR_ATTACHMENT0);
               gl.glDrawBuffers(1, drawBuffer);
 
               logger.info("pickActionSequence.display() start");

@@ -6,7 +6,7 @@ uniform mat4 mvp;
 uniform int pickId;
 uniform int twoDimensional;
 
-flat out int fragmentPickId;
+//flat out int fragmentPickId;
 
 void main()
 {
@@ -16,5 +16,5 @@ void main()
   } else {
      gl_Position = mvp * vp;
   }
-  fragmentPickId=pickId;
+  //fragmentPickId=pickId;
 }
