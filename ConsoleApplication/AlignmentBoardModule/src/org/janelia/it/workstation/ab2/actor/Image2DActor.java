@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+import javax.media.opengl.GL2;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector2;
@@ -111,21 +112,30 @@ public class Image2DActor extends GLAbstractActor {
     @Override
     public void display(GL4 gl) {
         if (this.mode==Mode.DRAW) {
-            gl.glActiveTexture(0);
-            checkGlError(gl, "d1 glActiveTexture(0)");
+            gl.glActiveTexture(GL4.GL_TEXTURE0);
+            checkGlError(gl, "d1 glActiveTexture");
+//            gl.glEnable(GL4.GL_TEXTURE_2D);
+//            checkGlError(gl, "d1.1 glEnable()");
             gl.glBindTexture(GL4.GL_TEXTURE_2D, imageTextureId.get(0));
             checkGlError(gl, "d2 glBindTexture()");
         }
         if (this.mode==Mode.DRAW || this.mode==Mode.PICK) {
             gl.glBindVertexArray(vertexArrayId.get(0));
+            checkGlError(gl, "d3 glBindVertexArray()");
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+            checkGlError(gl, "d4 glBindBuffer()");
             gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
+            checkGlError(gl, "d5 glVertexAttribPointer()");
             gl.glEnableVertexAttribArray(0);
+            checkGlError(gl, "d6 glEnableVertexAttribArray()");
             gl.glDrawArrays(GL4.GL_TRIANGLES, 0, vertexFb.capacity()/3);
+            checkGlError(gl, "d7 glDrawArrays()");
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+            checkGlError(gl, "d8 glBindBuffer()");
         }
         if (this.mode==Mode.DRAW) {
             gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
+            checkGlError(gl, "d9 glBindTexture()");
         }
     }
 

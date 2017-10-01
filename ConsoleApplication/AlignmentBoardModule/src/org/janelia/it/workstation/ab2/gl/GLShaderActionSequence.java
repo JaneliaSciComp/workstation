@@ -108,6 +108,8 @@ public class GLShaderActionSequence {
 
         for (GLAbstractActor actor: actorSequence) {
 
+            logger.info("starting actor="+actor.getClass().getName()+" actorId="+actor.getActorId());
+
             actor.setMode(actorMode);
 
             if (actorCallback!=null) {
@@ -116,6 +118,9 @@ public class GLShaderActionSequence {
             //if (actor.isVisible()) {
                 actor.display(gl);
             //}
+
+            logger.info("finishing actor="+actor.getClass().getName()+" actorId="+actor.getActorId());
+
         }
 
 //        //gl.glEnable(GL4.GL_DEPTH_TEST);

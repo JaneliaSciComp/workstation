@@ -73,6 +73,8 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         styleIdMap.put(boundingBoxActor.getActorId(), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         drawActionSequence.getActorSequence().add(boundingBoxActor);
 
+        updateSkeletons();
+
         // Pick Square
         pickSquareActor=new PickSquareActor(getNextActorIndex(), new Vector2(0.4f, 0.4f), new Vector2(0.5f, 0.5f),
                 new Vector4(1f, 0f, 0f, 1f), new Vector4(0f, 1f, 0f, 1f));
@@ -137,7 +139,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
     public synchronized void setSkeletons(List<AB2NeuronSkeleton> skeletons) {
         this.skeletons=skeletons;
-        updateSkeletons();
+        if (initialized) updateSkeletons();
     }
 
     private void updateSkeletons() {
