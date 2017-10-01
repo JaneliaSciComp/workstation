@@ -154,7 +154,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
         viewport.setWidthPixels(width);
         viewport.getChangeObservable().notifyObservers();
         resetPickFramebuffer(gl, width, height);
-        display(gl);
+        if (initialized) display(gl);
     }
 
 

@@ -110,6 +110,12 @@ public class Image2DActor extends GLAbstractActor {
 
     @Override
     public void display(GL4 gl) {
+        if (this.mode==Mode.DRAW) {
+            gl.glActiveTexture(0);
+            checkGlError(gl, "d1 glActiveTexture(0)");
+            gl.glBindTexture(GL4.GL_TEXTURE_2D, imageTextureId.get(0));
+            checkGlError(gl, "d2 glBindTexture()");
+        }
         if (this.mode==Mode.DRAW || this.mode==Mode.PICK) {
             gl.glBindVertexArray(vertexArrayId.get(0));
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
@@ -117,6 +123,9 @@ public class Image2DActor extends GLAbstractActor {
             gl.glEnableVertexAttribArray(0);
             gl.glDrawArrays(GL4.GL_TRIANGLES, 0, vertexFb.capacity()/3);
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+        }
+        if (this.mode==Mode.DRAW) {
+            gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
         }
     }
 

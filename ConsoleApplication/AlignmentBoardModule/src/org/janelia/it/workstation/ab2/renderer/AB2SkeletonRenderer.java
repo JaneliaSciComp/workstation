@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.ab2.renderer;
 
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -10,22 +12,24 @@ import java.util.Map;
 import java.util.Random;
 
 import javax.media.opengl.GL4;
+import javax.swing.ImageIcon;
 
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector2;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.actor.BoundingBoxActor;
+import org.janelia.it.workstation.ab2.actor.Image2DActor;
 import org.janelia.it.workstation.ab2.actor.LineSetActor;
 import org.janelia.it.workstation.ab2.actor.PickSquareActor;
 import org.janelia.it.workstation.ab2.actor.PointSetActor;
+import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
 import org.janelia.it.workstation.ab2.gl.GLShaderUpdateCallback;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
 import org.janelia.it.workstation.ab2.shader.AB2ActorPickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
-import org.janelia.it.workstation.ab2.shader.AB2SkeletonShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +45,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     private List<LineSetActor> lineSetActors=new ArrayList<>();
 
     private PickSquareActor pickSquareActor;
+    private Image2DActor image2DActor;
 
     Map<Integer, Vector4> styleIdMap=new HashMap<>();
 
@@ -52,17 +57,20 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
     public AB2SkeletonRenderer() {
         super(new AB2ActorShader(), new AB2ActorPickShader());
-        styleIdMap.put(getNextActorIndex(), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 
         drawActionSequence.setShaderUpdateCallback(getDrawShaderUpdateCallback());
         drawActionSequence.setActorUpdateCallback(getActorSequenceDrawUpdateCallback());
 
         pickActionSequence.setShaderUpdateCallback(getPickShaderUpdateCallback());
         pickActionSequence.setActorUpdateCallback(getActorSequencePickUpdateCallback());
+    }
 
+    @Override
+    public void init(GL4 gl) {
 
         // Bounding Box
-        boundingBoxActor=new BoundingBoxActor(actorCount, new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
+        boundingBoxActor=new BoundingBoxActor(getNextActorIndex(), new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
+        styleIdMap.put(boundingBoxActor.getActorId(), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         drawActionSequence.getActorSequence().add(boundingBoxActor);
 
         // Pick Square
@@ -71,6 +79,51 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         styleIdMap.put(pickSquareActor.getActorId(), pickSquareActor.getColor0());
         drawActionSequence.getActorSequence().add(pickSquareActor);
         pickActionSequence.getActorSequence().add(pickSquareActor);
+
+        // Image2DActor
+        BufferedImage bufferedImage=getImageByFilename("UbuntuFont.png");
+        int screenWidth=viewport.getWidthPixels();
+        int screenHeight=viewport.getHeightPixels();
+
+        if (screenWidth==0) {
+            screenWidth=AB2Controller.getController().getGljPanel().getSurfaceWidth();
+        }
+        if (screenHeight==0) {
+            screenHeight=AB2Controller.getController().getGljPanel().getSurfaceHeight();
+        }
+
+        float imageNormalWidth=(float)((bufferedImage.getWidth()*1.0)/screenWidth);
+        float imageNormalHeight=(float)((bufferedImage.getHeight()*1.0)/screenHeight);
+        logger.info("imageNormalWidth="+imageNormalWidth);
+        logger.info("imageNormalHeight="+imageNormalHeight);
+        Vector2 v0=new Vector2(0f, 0f);
+        Vector2 v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
+        image2DActor=new Image2DActor(getNextActorIndex(), v0, v1, bufferedImage, 1.0f);
+        styleIdMap.put(image2DActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
+        drawActionSequence.getActorSequence().add(image2DActor);
+
+        super.init(gl);
+
+        initialized=true;
+    }
+
+
+    public BufferedImage getImageByFilename(String filename) {
+
+        URL picURL = AB2SkeletonRenderer.class.getResource("/org/janelia/it/workstation/ab2/images/" + filename);
+        if (picURL==null) {
+            logger.error("Could not find image="+filename);
+            return null;
+        }
+        ImageIcon imageIcon = new ImageIcon(picURL);
+        Image source = imageIcon.getImage();
+        int w = source.getWidth(null);
+        int h = source.getHeight(null);
+        BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = (Graphics2D)image.getGraphics();
+        g2d.drawImage(source, 0, 0, null);
+        g2d.dispose();
+        return image;
     }
 
     public void setStyleIdColor(int styleId, Vector4 color) {
@@ -146,13 +199,11 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         return new GLShaderUpdateCallback() {
             @Override
             public void update(GL4 gl, Object o) {
-
                 AB2ActorShader actorShader = (AB2ActorShader) drawShader;
                 //logger.info("Check1");
                 actorShader.setMVP(gl, mvp);
                 //logger.info("Check1.1");
                 gl.glPointSize(3.0f);
-
             }
         };
     }
@@ -165,17 +216,25 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
                 GLAbstractActor actor = (GLAbstractActor)o;
                 int actorId=actor.getActorId();
+                AB2ActorShader actorShader = (AB2ActorShader) drawShader;
                 Vector4 actorColor=styleIdMap.get(actorId);
+                logger.info("Check1 actorColor for actor type "+actor.getClass().getName()+" = "+actorColor);
                 if (actorColor!=null) {
-                    AB2ActorShader actorShader = (AB2ActorShader) drawShader;
                     actorShader.setStyleIdColor(gl, actorColor);
-                    if (actor instanceof PickSquareActor) {
-                        actorShader.setTwoDimensional(gl, true);
-                    } else {
-                        actorShader.setTwoDimensional(gl, false);
-                    }
-                    //logger.info("Set color id="+actorId+" to="+actorColor.toString());
                 }
+                logger.info("Check2");
+                if (actor instanceof PickSquareActor || actor instanceof Image2DActor) {
+                    actorShader.setTwoDimensional(gl, true);
+                } else {
+                    actorShader.setTwoDimensional(gl, false);
+                }
+                logger.info("Check3");
+                if (actor instanceof Image2DActor) {
+                    actorShader.setApplyImageTexture(gl,true);
+                } else {
+                    actorShader.setApplyImageTexture(gl,false);
+                }
+                logger.info("Check4");
             }
         };
     }

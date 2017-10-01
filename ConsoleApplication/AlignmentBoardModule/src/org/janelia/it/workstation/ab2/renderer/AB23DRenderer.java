@@ -33,6 +33,8 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     protected final GLShaderProgram drawShader;
     protected final GLShaderProgram pickShader;
 
+    protected boolean initialized=false;
+
     protected ConcurrentLinkedDeque<MouseClickEvent> mouseClickEvents=new ConcurrentLinkedDeque<>();
 
     protected class MouseClickEvent {

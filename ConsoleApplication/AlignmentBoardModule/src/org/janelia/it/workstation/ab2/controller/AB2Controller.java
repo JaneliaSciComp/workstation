@@ -95,6 +95,10 @@ public class AB2Controller implements GLEventListener {
         this.gljPanel=gljPanel;
     }
 
+    public GLJPanel getGljPanel() {
+        return gljPanel;
+    }
+
     public void repaint() {
         gljPanel.repaint();
     }

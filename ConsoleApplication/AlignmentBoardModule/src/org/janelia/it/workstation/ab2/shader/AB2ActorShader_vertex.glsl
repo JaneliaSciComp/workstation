@@ -5,8 +5,10 @@ layout (location=0) in vec3 iv;
 uniform mat4 mvp;
 uniform vec4 styleIdColor;
 uniform int twoDimensional;
+uniform int applyImageTexture;
 
 out vec4 vColor;
+flat out int ait;
 
 void main()
 {
@@ -17,5 +19,6 @@ void main()
      gl_Position = mvp * vp;
   }
   vColor=styleIdColor;
+  ait=applyImageTexture;
 }
 

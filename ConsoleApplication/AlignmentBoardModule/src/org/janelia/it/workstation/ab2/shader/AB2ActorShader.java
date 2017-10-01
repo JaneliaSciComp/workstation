@@ -37,5 +37,13 @@ public class AB2ActorShader extends GLShaderProgram {
         checkGlError(gl, "AB2ActorShader setTwoDimensional() error");
     }
 
+    public void setApplyImageTexture(GL4 gl, boolean applyImageTexture) {
+        if (applyImageTexture) {
+            setUniform(gl, "applyImageTexture", 1);
+        } else {
+            setUniform(gl, "applyImageTexture", 0);
+        }
+        checkGlError(gl, "AB2ActorShader setApplyImageTexture() error");
+    }
 
 }
