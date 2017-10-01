@@ -46,15 +46,16 @@ public class Image2DActor extends GLAbstractActor {
     public void init(GL4 gl) {
         if (this.mode == Mode.DRAW) {
 
+            // This combines positional vertices interleaved with 2D texture coordinates
             float[] vertexData = {
 
-                    v0.get(0), v0.get(1), 0f,
-                    v1.get(0), v0.get(1), 0f,
-                    v0.get(0), v1.get(1), 0f,
+                    v0.get(0), v0.get(1), 0f,    0f, 0f, // lower left
+                    v1.get(0), v0.get(1), 0f,    1f, 0f, // lower right
+                    v0.get(0), v1.get(1), 0f,    0f, 1f, // upper left
 
-                    v1.get(0), v0.get(1), 0f,
-                    v1.get(0), v1.get(1), 0f,
-                    v0.get(0), v1.get(1), 0f
+                    v1.get(0), v0.get(1), 0f,    1f, 0f, // lower right
+                    v1.get(0), v1.get(1), 0f,    1f, 1f, // upper right
+                    v0.get(0), v1.get(1), 0f,    0f, 1f  // upper left
             };
 
             vertexFb=createGLFloatBuffer(vertexData);
@@ -69,34 +70,55 @@ public class Image2DActor extends GLAbstractActor {
             // Produce image pixels
             int w=bufferedImage.getWidth();
             int h=bufferedImage.getHeight();
+            logger.info("image w="+w+" h="+h);
             byte pixels[] = new byte[w*h*4];
+            int iCount=0;
             for (int y = 0; y < h; ++y) {
                 for (int x = 0; x < w; ++x) {
-                    int pixelInt=bufferedImage.getRGB(x,y);
+                    int pixelInt=bufferedImage.getRGB(x,h-y-1); // flip y
                     int byteOffset=(y*w+x)*4;
                     // Convert to RGBA from ARGB
                     byte a=(byte)(pixelInt >>> 24); // ignore this byte
                     byte r=(byte)(pixelInt >>> 16);
                     byte g=(byte)(pixelInt >>> 8);
                     byte b=(byte)(pixelInt);
-                    pixels[byteOffset]  =r;
-                    pixels[byteOffset+1]=g;
-                    pixels[byteOffset+2]=b;
-                    pixels[byteOffset + 3] = (byte)(255f*alpha);
+
+                    int ai=(int)(255f*alpha);
+                    if (ai>127) {
+                        ai=ai-256;
+                    }
+
+                    pixels[byteOffset]   = r;
+                    pixels[byteOffset+1] = g;
+                    pixels[byteOffset+2] = b;
+                    pixels[byteOffset+3] = (byte)ai;
+
+//                    pixels[byteOffset]   =53;     // r - validated
+//                    pixels[byteOffset+1] =53;     // g - validated
+//                    pixels[byteOffset+2] =53;     // b - validated
+//                    pixels[byteOffset+3] =53;    // a
+
+                    iCount++;
                 }
             }
+            logger.info("pixel count="+iCount);
 
             // Create texture
             gl.glGenTextures(1, imageTextureId);
             gl.glBindTexture(GL4.GL_TEXTURE_2D, imageTextureId.get(0));
 
-            ByteBuffer byteBuffer = ByteBuffer.allocateDirect(pixels.length);
-            byteBuffer.wrap(pixels);
+            //ByteBuffer byteBuffer = ByteBuffer.allocateDirect(pixels.length);
+            //byteBuffer.wrap(pixels);
+
+            ByteBuffer byteBuffer=ByteBuffer.allocate(pixels.length);
+            for (int i=0;i<pixels.length;i++) {
+                byteBuffer.put(i, pixels[i]);
+            }
 
             gl.glTexImage2D(GL4.GL_TEXTURE_2D,0, GL4.GL_RGBA, w, h,0, GL4.GL_RGBA, GL4.GL_UNSIGNED_BYTE, byteBuffer);
             checkGlError(gl, "Uploading texture");
-            gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_LINEAR );
-            gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_LINEAR );
+            gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_NEAREST );
+            gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST );
             gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
 
         } else if (this.mode == Mode.PICK) {
@@ -114,8 +136,6 @@ public class Image2DActor extends GLAbstractActor {
         if (this.mode==Mode.DRAW) {
             gl.glActiveTexture(GL4.GL_TEXTURE0);
             checkGlError(gl, "d1 glActiveTexture");
-//            gl.glEnable(GL4.GL_TEXTURE_2D);
-//            checkGlError(gl, "d1.1 glEnable()");
             gl.glBindTexture(GL4.GL_TEXTURE_2D, imageTextureId.get(0));
             checkGlError(gl, "d2 glBindTexture()");
         }
@@ -124,18 +144,22 @@ public class Image2DActor extends GLAbstractActor {
             checkGlError(gl, "d3 glBindVertexArray()");
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
             checkGlError(gl, "d4 glBindBuffer()");
-            gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
+            gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 20, 0);
             checkGlError(gl, "d5 glVertexAttribPointer()");
             gl.glEnableVertexAttribArray(0);
             checkGlError(gl, "d6 glEnableVertexAttribArray()");
+            gl.glVertexAttribPointer(1, 2, GL4.GL_FLOAT, false, 20, 12);
+            checkGlError(gl, "d7 glVertexAttribPointer()");
+            gl.glEnableVertexAttribArray(1);
+            checkGlError(gl, "d8 glEnableVertexAttribArray()");
             gl.glDrawArrays(GL4.GL_TRIANGLES, 0, vertexFb.capacity()/3);
-            checkGlError(gl, "d7 glDrawArrays()");
+            checkGlError(gl, "d9 glDrawArrays()");
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
-            checkGlError(gl, "d8 glBindBuffer()");
+            checkGlError(gl, "d10 glBindBuffer()");
         }
         if (this.mode==Mode.DRAW) {
             gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
-            checkGlError(gl, "d9 glBindTexture()");
+            checkGlError(gl, "d11 glBindTexture()");
         }
     }
 

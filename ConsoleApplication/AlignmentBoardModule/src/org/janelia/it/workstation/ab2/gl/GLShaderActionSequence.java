@@ -108,7 +108,7 @@ public class GLShaderActionSequence {
 
         for (GLAbstractActor actor: actorSequence) {
 
-            logger.info("starting actor="+actor.getClass().getName()+" actorId="+actor.getActorId());
+            //logger.info("starting actor="+actor.getClass().getName()+" actorId="+actor.getActorId());
 
             actor.setMode(actorMode);
 
@@ -119,7 +119,7 @@ public class GLShaderActionSequence {
                 actor.display(gl);
             //}
 
-            logger.info("finishing actor="+actor.getClass().getName()+" actorId="+actor.getActorId());
+            //logger.info("finishing actor="+actor.getClass().getName()+" actorId="+actor.getActorId());
 
         }
 

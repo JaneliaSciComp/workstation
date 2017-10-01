@@ -94,11 +94,11 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             screenHeight=AB2Controller.getController().getGljPanel().getSurfaceHeight();
         }
 
-        float imageNormalWidth=(float)((bufferedImage.getWidth()*1.0)/screenWidth);
-        float imageNormalHeight=(float)((bufferedImage.getHeight()*1.0)/screenHeight);
+        float imageNormalWidth=(float)((bufferedImage.getWidth()*1.0)/screenWidth)*2.0f;
+        float imageNormalHeight=(float)((bufferedImage.getHeight()*1.0)/screenHeight)*2.0f;
         logger.info("imageNormalWidth="+imageNormalWidth);
         logger.info("imageNormalHeight="+imageNormalHeight);
-        Vector2 v0=new Vector2(0f, 0f);
+        Vector2 v0=new Vector2(-0.2f, -0.2f);
         Vector2 v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
         image2DActor=new Image2DActor(getNextActorIndex(), v0, v1, bufferedImage, 1.0f);
         styleIdMap.put(image2DActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
@@ -220,23 +220,23 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 int actorId=actor.getActorId();
                 AB2ActorShader actorShader = (AB2ActorShader) drawShader;
                 Vector4 actorColor=styleIdMap.get(actorId);
-                logger.info("Check1 actorColor for actor type "+actor.getClass().getName()+" = "+actorColor);
+                //logger.info("Check1 actorColor for actor type "+actor.getClass().getName()+" = "+actorColor);
                 if (actorColor!=null) {
                     actorShader.setStyleIdColor(gl, actorColor);
                 }
-                logger.info("Check2");
+                //logger.info("Check2");
                 if (actor instanceof PickSquareActor || actor instanceof Image2DActor) {
                     actorShader.setTwoDimensional(gl, true);
                 } else {
                     actorShader.setTwoDimensional(gl, false);
                 }
-                logger.info("Check3");
+                //logger.info("Check3");
                 if (actor instanceof Image2DActor) {
                     actorShader.setApplyImageTexture(gl,true);
                 } else {
                     actorShader.setApplyImageTexture(gl,false);
                 }
-                logger.info("Check4");
+                //logger.info("Check4");
             }
         };
     }

@@ -70,6 +70,8 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
         gl.glEnable(GL4.GL_DEPTH_TEST);
+        gl.glEnable(GL4.GL_BLEND);
+        gl.glBlendFunc(GL4.GL_SRC_ALPHA, GL4.GL_ONE_MINUS_SRC_ALPHA);
         gl.glClearBufferfv(gl.GL_COLOR, 0, backgroundColorBuffer);
 
         Matrix4 projectionMatrix=new Matrix4(camera.getProjectionMatrix());
