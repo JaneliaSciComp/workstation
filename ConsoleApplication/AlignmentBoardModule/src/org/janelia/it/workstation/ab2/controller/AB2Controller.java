@@ -36,8 +36,13 @@ import org.janelia.it.workstation.ab2.controller.AB2View3DMode;
 import org.janelia.it.workstation.ab2.model.AB2DomainObject;
 import org.janelia.it.workstation.ab2.renderer.AB2SimpleCubeRenderer;
 import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AB2Controller implements GLEventListener {
+
+    Logger logger= LoggerFactory.getLogger(AB2Controller.class);
+
     private static AB2Controller instance;
     private static final int MAX_PICK_IDS=10000;
     private ConcurrentLinkedQueue<AB2Event> eventQueue;
@@ -76,12 +81,16 @@ public class AB2Controller implements GLEventListener {
     }
 
     public void setPickEvent(int index, AB2Event pickEvent) {
+        logger.info("Setting pickIndex="+index+" to AB2Event type="+pickEvent.getClass().getName());
         pickEventLookup[index]=pickEvent;
     }
 
     public AB2Event getPickEvent(int index) {
-        return pickEventLookup[index];
+        AB2Event pickEvent=pickEventLookup[index];
+        logger.info("Returning pickEvent for pickIndex="+index+" type="+pickEvent.getClass().getName());
+        return pickEvent;
     }
+
     public void setDomainObject(AB2DomainObject domainObject) {
         this.domainObject=domainObject;
         addEvent(new AB2DomainObjectUpdateEvent());

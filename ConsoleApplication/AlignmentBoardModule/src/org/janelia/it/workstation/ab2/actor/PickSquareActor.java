@@ -22,7 +22,6 @@ public class PickSquareActor extends GLAbstractActor {
     Vector2 v1;
     Vector4 color0;
     Vector4 color1;
-    int pickIndex=-1;
 
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
@@ -37,7 +36,8 @@ public class PickSquareActor extends GLAbstractActor {
         this.color1=color1;
     }
 
-    public int getPickIndex() { return pickIndex; }
+    @Override
+    public boolean isTwoDimensional() { return true; }
 
     @Override
     public void init(GL4 gl) {

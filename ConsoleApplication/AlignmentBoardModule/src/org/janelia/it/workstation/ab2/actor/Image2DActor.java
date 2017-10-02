@@ -22,7 +22,6 @@ public class Image2DActor extends GLAbstractActor {
 
     Vector2 v0;
     Vector2 v1;
-    int pickIndex=-1;
 
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
@@ -40,7 +39,8 @@ public class Image2DActor extends GLAbstractActor {
         this.alpha=alpha;
     }
 
-    public int getPickIndex() { return pickIndex; }
+    @Override
+    public boolean isTwoDimensional() { return true; }
 
     @Override
     public void init(GL4 gl) {

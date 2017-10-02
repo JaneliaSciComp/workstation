@@ -93,7 +93,6 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         if (screenHeight==0) {
             screenHeight=AB2Controller.getController().getGljPanel().getSurfaceHeight();
         }
-
         float imageNormalWidth=(float)((bufferedImage.getWidth()*1.0)/screenWidth)*2.0f;
         float imageNormalHeight=(float)((bufferedImage.getHeight()*1.0)/screenHeight)*2.0f;
         logger.info("imageNormalWidth="+imageNormalWidth);
@@ -103,6 +102,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         image2DActor=new Image2DActor(getNextActorIndex(), v0, v1, bufferedImage, 1.0f);
         styleIdMap.put(image2DActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
         drawActionSequence.getActorSequence().add(image2DActor);
+        pickActionSequence.getActorSequence().add(image2DActor);
 
         super.init(gl);
 
@@ -202,9 +202,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             @Override
             public void update(GL4 gl, Object o) {
                 AB2ActorShader actorShader = (AB2ActorShader) drawShader;
-                //logger.info("Check1");
                 actorShader.setMVP(gl, mvp);
-                //logger.info("Check1.1");
                 gl.glPointSize(3.0f);
             }
         };
@@ -220,23 +218,19 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 int actorId=actor.getActorId();
                 AB2ActorShader actorShader = (AB2ActorShader) drawShader;
                 Vector4 actorColor=styleIdMap.get(actorId);
-                //logger.info("Check1 actorColor for actor type "+actor.getClass().getName()+" = "+actorColor);
                 if (actorColor!=null) {
                     actorShader.setStyleIdColor(gl, actorColor);
                 }
-                //logger.info("Check2");
-                if (actor instanceof PickSquareActor || actor instanceof Image2DActor) {
+                if (actor.isTwoDimensional()) {
                     actorShader.setTwoDimensional(gl, true);
                 } else {
                     actorShader.setTwoDimensional(gl, false);
                 }
-                //logger.info("Check3");
                 if (actor instanceof Image2DActor) {
                     actorShader.setApplyImageTexture(gl,true);
                 } else {
                     actorShader.setApplyImageTexture(gl,false);
                 }
-                //logger.info("Check4");
             }
         };
     }
@@ -248,9 +242,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             public void update(GL4 gl, Object o) {
 
                 AB2ActorPickShader actorShader = (AB2ActorPickShader) pickShader;
-                //logger.info("Check2");
                 actorShader.setMVP(gl, mvp);
-                //logger.info("Check2.1");
                 gl.glPointSize(3.0f);
 
             }
@@ -264,11 +256,9 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             public void update(GL4 gl, Object o) {
                 GLAbstractActor actor = (GLAbstractActor)o;
                 AB2ActorPickShader actorPickShader=(AB2ActorPickShader) pickShader;
-                if (actor instanceof PickSquareActor) {
-                    int pickIndex=((PickSquareActor)actor).getPickIndex();
-                    //logger.info("getActorSequencePickUpdateCallback() - setting pickIndex="+pickIndex);
-                    actorPickShader.setPickId(gl, pickIndex);
-                    //logger.info("getActorSequencePickUpdateCallback() - setting twoDimensional=true");
+                int pickIndex = actor.getPickIndex();
+                actorPickShader.setPickId(gl, pickIndex);
+                if (actor.isTwoDimensional()) {
                     actorPickShader.setTwoDimensional(gl, true);
                 } else {
                     actorPickShader.setTwoDimensional(gl, false);

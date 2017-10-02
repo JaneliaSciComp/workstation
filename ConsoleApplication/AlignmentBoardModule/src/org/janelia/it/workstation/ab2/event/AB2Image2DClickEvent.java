@@ -9,6 +9,6 @@ public class AB2Image2DClickEvent extends AB2Event {
         this.image2DActor=image2DActor;
     }
 
-    public Image2DActor getPickSquareActor() { return image2DActor; }
+    public Image2DActor getImage2DActor() { return image2DActor; }
 }
 

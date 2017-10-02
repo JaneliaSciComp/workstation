@@ -4,9 +4,11 @@ import java.awt.Point;
 import java.awt.event.MouseEvent;
 
 import org.janelia.geometry3d.Vector4;
+import org.janelia.it.workstation.ab2.actor.Image2DActor;
 import org.janelia.it.workstation.ab2.actor.PickSquareActor;
 import org.janelia.it.workstation.ab2.event.AB2DomainObjectUpdateEvent;
 import org.janelia.it.workstation.ab2.event.AB2Event;
+import org.janelia.it.workstation.ab2.event.AB2Image2DClickEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseClickedEvent;
 import org.janelia.it.workstation.ab2.event.AB2PickSquareColorChangeEvent;
 import org.janelia.it.workstation.ab2.model.AB2SkeletonDomainObject;
@@ -42,6 +44,7 @@ public class AB2SkeletonMode extends AB2View3DMode {
         } else if (event instanceof AB2PickSquareColorChangeEvent) {
             PickSquareActor pickSquareActor=((AB2PickSquareColorChangeEvent)event).getPickSquareActor();
             int actorId=pickSquareActor.getActorId();
+            logger.info("Handling AB2PickSquareColorChangeEvent actorId="+actorId+" pickIndex="+pickSquareActor.getPickIndex());
             AB2SkeletonRenderer skeletonRenderer=(AB2SkeletonRenderer)renderer;
             Vector4 currentColor=skeletonRenderer.getStyleIdColor(actorId);
             Vector4 color0=pickSquareActor.getColor0();
@@ -51,6 +54,9 @@ public class AB2SkeletonMode extends AB2View3DMode {
                 skeletonRenderer.setStyleIdColor(actorId, pickSquareActor.getColor0());
             }
             controller.repaint();
+        } else if (event instanceof AB2Image2DClickEvent) {
+            Image2DActor image2DActor=((AB2Image2DClickEvent)event).getImage2DActor();
+            logger.info("Handling AB2Image2DClickEvent - actorId="+image2DActor.getActorId()+" pickIndex="+image2DActor.getPickIndex());
         }
     }
 

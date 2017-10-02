@@ -32,6 +32,12 @@ public abstract class GLAbstractActor {
 
     int mvpPrecomputeGroup=0;
 
+    protected int pickIndex=-1;
+
+    public void setPickIndex(int pickIndex) { this.pickIndex=pickIndex; }
+
+    public int getPickIndex() { return pickIndex; }
+
     protected GLActorUpdateCallback actorCallback;
 
     protected Matrix4 model=new Matrix4();
@@ -126,5 +132,9 @@ public abstract class GLAbstractActor {
             floatBuffer.put(i, floatArray[i]);
         }
         return floatBuffer;
+    }
+
+    public boolean isTwoDimensional() {
+        return false;
     }
 }
