@@ -1,5 +1,9 @@
 package org.janelia.it.workstation.ab2.gl;
 
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -7,8 +11,10 @@ import java.nio.IntBuffer;
 
 import javax.media.opengl.GL4;
 import javax.media.opengl.glu.GLU;
+import javax.swing.ImageIcon;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,4 +143,23 @@ public abstract class GLAbstractActor {
     public boolean isTwoDimensional() {
         return false;
     }
+
+    public static BufferedImage getImageByFilename(String filename) {
+        URL picURL = AB2SkeletonRenderer.class.getResource("/org/janelia/it/workstation/ab2/images/" + filename);
+        if (picURL==null) {
+            logger.error("Could not find image="+filename);
+            return null;
+        }
+        ImageIcon imageIcon = new ImageIcon(picURL);
+        Image source = imageIcon.getImage();
+        int w = source.getWidth(null);
+        int h = source.getHeight(null);
+        BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = (Graphics2D)image.getGraphics();
+        g2d.drawImage(source, 0, 0, null);
+        g2d.dispose();
+        return image;
+    }
+
+
 }

@@ -23,6 +23,7 @@ import org.janelia.it.workstation.ab2.actor.Image2DActor;
 import org.janelia.it.workstation.ab2.actor.LineSetActor;
 import org.janelia.it.workstation.ab2.actor.PickSquareActor;
 import org.janelia.it.workstation.ab2.actor.PointSetActor;
+import org.janelia.it.workstation.ab2.actor.TextLabelActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
@@ -46,6 +47,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
     private PickSquareActor pickSquareActor;
     private Image2DActor image2DActor;
+    private TextLabelActor textLabelActor;
 
     Map<Integer, Vector4> styleIdMap=new HashMap<>();
 
@@ -83,7 +85,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         pickActionSequence.getActorSequence().add(pickSquareActor);
 
         // Image2DActor
-        BufferedImage bufferedImage=getImageByFilename("UbuntuFont.png");
+        BufferedImage bufferedImage=GLAbstractActor.getImageByFilename("UbuntuFont.png");
         int screenWidth=viewport.getWidthPixels();
         int screenHeight=viewport.getHeightPixels();
 
@@ -104,28 +106,16 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         drawActionSequence.getActorSequence().add(image2DActor);
         pickActionSequence.getActorSequence().add(image2DActor);
 
+        // TextLabelActor
+        Vector2 t0=new Vector2(-0.2f, -0.7f);
+        textLabelActor=new TextLabelActor(getNextActorIndex(), "Hi Mom this is a test", t0,
+                new Vector4(0f, 0f, 1f, 1f), new Vector4(0.4f, 0.1f, 0.1f, 1f));
+        drawActionSequence.getActorSequence().add(textLabelActor);
+        pickActionSequence.getActorSequence().add(textLabelActor);
+
         super.init(gl);
 
         initialized=true;
-    }
-
-
-    public BufferedImage getImageByFilename(String filename) {
-
-        URL picURL = AB2SkeletonRenderer.class.getResource("/org/janelia/it/workstation/ab2/images/" + filename);
-        if (picURL==null) {
-            logger.error("Could not find image="+filename);
-            return null;
-        }
-        ImageIcon imageIcon = new ImageIcon(picURL);
-        Image source = imageIcon.getImage();
-        int w = source.getWidth(null);
-        int h = source.getHeight(null);
-        BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = (Graphics2D)image.getGraphics();
-        g2d.drawImage(source, 0, 0, null);
-        g2d.dispose();
-        return image;
     }
 
     public void setStyleIdColor(int styleId, Vector4 color) {

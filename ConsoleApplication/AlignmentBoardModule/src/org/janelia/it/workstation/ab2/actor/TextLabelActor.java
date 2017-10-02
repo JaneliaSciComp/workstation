@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.ab2.actor;
 
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -32,6 +33,30 @@ public class TextLabelActor extends GLAbstractActor {
     IntBuffer imageTextureId=IntBuffer.allocate(1);
     BufferedImage bufferedImage;
 
+    static BufferedImage textResourceImage;
+
+    int labelImageWidth;
+    int labelImageHeight;
+
+    // Load the resource image once
+    static {
+        try {
+            textResourceImage=GLAbstractActor.getImageByFilename("UbuntuFont.png");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            textResourceImage=null;
+        }
+    }
+
+    static final int UBUNTU_FONT_LEADING_OFFSET=10;
+    static final int UBUNTU_FONT_BOTTOM_OFFSET=10;
+    static final int UBUNTU_FONT_UNIT_WIDTH=9;
+    static final int UBUNTU_FONT_UNIT_HEIGHT=16;
+    static final int UBUNTU_FONT_THRESHOLD=130;
+
+    static final String UBUNTU_FONT_STRING="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)!@#$%^&*(-_+=[]{};:\'\""+
+            ","+".<>"+"/?"+"\\"+"|"+"`~";
+
     public TextLabelActor(int actorId,
                           String text,
                           Vector2 v0,
@@ -44,6 +69,16 @@ public class TextLabelActor extends GLAbstractActor {
         this.backgroundColor=backgroundColor;
     }
 
+    public Vector4 getTextColor() { return textColor; }
+
+    public Vector4 getBackgroundColor() { return backgroundColor; }
+
+    public void setTextColor(Vector4 textColor) { this.textColor=textColor; }
+
+    public void setBackgroundColor(Vector4 backgroundColor) { this.backgroundColor=backgroundColor; }
+
+    public void setPosition(Vector2 position) { this.v0 = position; }
+
     @Override
     public boolean isTwoDimensional() { return true; }
 
@@ -51,7 +86,7 @@ public class TextLabelActor extends GLAbstractActor {
     public void init(GL4 gl) {
         if (this.mode == Mode.DRAW) {
 
-            createTextImage();
+            byte[] labelPixels=createTextImage();
 
             // This combines positional vertices interleaved with 2D texture coordinates
             float[] vertexData = {
@@ -74,36 +109,7 @@ public class TextLabelActor extends GLAbstractActor {
             gl.glBufferData(GL4.GL_ARRAY_BUFFER, vertexFb.capacity() * 4, vertexFb, GL4.GL_STATIC_DRAW);
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-            // Produce image pixels
-            int w=bufferedImage.getWidth();
-            int h=bufferedImage.getHeight();
-            logger.info("image w="+w+" h="+h);
-            byte pixels[] = new byte[w*h*4];
-            int iCount=0;
-            for (int y = 0; y < h; ++y) {
-                for (int x = 0; x < w; ++x) {
-                    int pixelInt=bufferedImage.getRGB(x,h-y-1); // flip y
-                    int byteOffset=(y*w+x)*4;
-                    // Convert to RGBA from ARGB
-                    byte a=(byte)(pixelInt >>> 24); // ignore this byte
-                    byte r=(byte)(pixelInt >>> 16);
-                    byte g=(byte)(pixelInt >>> 8);
-                    byte b=(byte)(pixelInt);
-
-                    pixels[byteOffset]   = r;
-                    pixels[byteOffset+1] = g;
-                    pixels[byteOffset+2] = b;
-                    pixels[byteOffset+3] = a;
-
-//                    pixels[byteOffset]   =53;     // r - validated
-//                    pixels[byteOffset+1] =53;     // g - validated
-//                    pixels[byteOffset+2] =53;     // b - validated
-//                    pixels[byteOffset+3] =53;    // a
-
-                    iCount++;
-                }
-            }
-            logger.info("pixel count="+iCount);
+            logger.info("pixel count="+labelPixels.length);
 
             // Create texture
             gl.glGenTextures(1, imageTextureId);
@@ -112,12 +118,13 @@ public class TextLabelActor extends GLAbstractActor {
             //ByteBuffer byteBuffer = ByteBuffer.allocateDirect(pixels.length);
             //byteBuffer.wrap(pixels);
 
-            ByteBuffer byteBuffer=ByteBuffer.allocate(pixels.length);
-            for (int i=0;i<pixels.length;i++) {
-                byteBuffer.put(i, pixels[i]);
+            ByteBuffer byteBuffer=ByteBuffer.allocate(labelPixels.length);
+            for (int i=0;i<labelPixels.length;i++) {
+                byteBuffer.put(i, labelPixels[i]);
             }
 
-            gl.glTexImage2D(GL4.GL_TEXTURE_2D,0, GL4.GL_RGBA, w, h,0, GL4.GL_RGBA, GL4.GL_UNSIGNED_BYTE, byteBuffer);
+            gl.glTexImage2D(GL4.GL_TEXTURE_2D,0, GL4.GL_RGBA, labelImageWidth, labelImageHeight,0,
+                    GL4.GL_RGBA, GL4.GL_UNSIGNED_BYTE, byteBuffer);
             checkGlError(gl, "Uploading texture");
             gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_NEAREST );
             gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST );
@@ -133,8 +140,58 @@ public class TextLabelActor extends GLAbstractActor {
 
     }
 
-    protected void createTextImage() {
-
+    protected byte[] createTextImage() {
+        // Step 1: get contents
+        int labelLength=text.length();
+        byte zeroByte=0;
+        byte oneByte=1;
+        int characterPositions[] = new int[labelLength];
+        for (int i=0;i<labelLength;i++) {
+            char c=text.charAt(i);
+            int j=0;
+            for (;j<UBUNTU_FONT_STRING.length();j++) {
+                if (c==UBUNTU_FONT_STRING.charAt(j)) {
+                    break;
+                }
+            }
+            if (j==UBUNTU_FONT_STRING.length()) {
+                characterPositions[i]=-1; // unknown - space by convention
+            } else {
+                characterPositions[i]=j;
+            }
+        }
+        // Step 2: allocate new image
+        int wPad=UBUNTU_FONT_UNIT_WIDTH/2;
+        int hPad=UBUNTU_FONT_UNIT_HEIGHT/4;
+        int w=labelLength*UBUNTU_FONT_UNIT_WIDTH + wPad*2;
+        int h=UBUNTU_FONT_UNIT_HEIGHT + hPad*2;
+        byte labelPixels[]=new byte[w*h];
+        int sourceHeight=textResourceImage.getHeight();
+        int sourceHeightOffset=sourceHeight-(UBUNTU_FONT_UNIT_HEIGHT+UBUNTU_FONT_BOTTOM_OFFSET);
+        for (int i=0;i<labelLength;i++) {
+            int cp=characterPositions[i];
+            if (cp>-1) {
+                for (int y = 0; y < UBUNTU_FONT_UNIT_HEIGHT; y++) {
+                    for (int x = 0; x < UBUNTU_FONT_UNIT_WIDTH; x++) {
+                        int sX = UBUNTU_FONT_LEADING_OFFSET + cp * UBUNTU_FONT_UNIT_WIDTH + x;
+                        int sY = sourceHeight - (sourceHeightOffset + y + 1);
+                        int tX = wPad + UBUNTU_FONT_UNIT_WIDTH * i + x;
+                        int tY = hPad + y;
+                        int resourceRGB = textResourceImage.getRGB(sX, sY);
+                        byte a = (byte) (resourceRGB >>> 24); // ignore this byte
+                        byte r = (byte) (resourceRGB >>> 16);
+                        byte g = (byte) (resourceRGB >>> 8);
+                        byte b = (byte) (resourceRGB);
+                        if (r > UBUNTU_FONT_THRESHOLD || g > UBUNTU_FONT_THRESHOLD || b > UBUNTU_FONT_THRESHOLD) {
+                            labelPixels[tY * w + tX] = oneByte;
+                        }
+                    }
+                }
+            }
+        }
+        this.labelImageHeight=h;
+        this.labelImageWidth=w;
+        return labelPixels;
     }
 
     @Override
