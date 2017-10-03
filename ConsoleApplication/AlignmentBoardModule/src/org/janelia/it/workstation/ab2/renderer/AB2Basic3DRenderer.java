@@ -25,20 +25,9 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 
     private final Logger logger = LoggerFactory.getLogger(AB2Basic3DRenderer.class);
 
-    protected PerspectiveCamera camera;
-    protected Vantage vantage;
-
-    public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 2.0;
-
     FloatBuffer backgroundColorBuffer=FloatBuffer.allocate(4);
     Vector4 backgroundColor=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
 
-    public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2500;
-    private static final double MAX_CAMERA_FOCUS_DISTANCE = 1000000.0;
-    private static final double MIN_CAMERA_FOCUS_DISTANCE = 0.001;
-
-    Matrix4 mvp;
-    //Matrix4 mvpPick;
 
     private void setBackgroundColorBuffer() {
         backgroundColorBuffer.put(0,backgroundColor.get(0));
@@ -50,11 +39,6 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
     public AB2Basic3DRenderer(GLShaderProgram drawShader, GLShaderProgram pickShader) {
         super(drawShader, pickShader);
         setBackgroundColorBuffer();
-        vantage=new Vantage(null);
-        viewport=new Viewport();
-        viewport.setzNearRelative(0.1f);
-        camera = new PerspectiveCamera(vantage, viewport);
-        vantage.setFocus(0.0f,0.0f,(float)DEFAULT_CAMERA_FOCUS_DISTANCE);
     }
 
     protected Matrix4 getModelMatrix() {
@@ -74,11 +58,16 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
         gl.glBlendFunc(GL4.GL_SRC_ALPHA, GL4.GL_ONE_MINUS_SRC_ALPHA);
         gl.glClearBufferfv(gl.GL_COLOR, 0, backgroundColorBuffer);
 
-        Matrix4 projectionMatrix=new Matrix4(camera.getProjectionMatrix());
-        Matrix4 viewMatrix=new Matrix4(camera.getViewMatrix());
-        Matrix4 modelMatrix=new Matrix4(getModelMatrix());
-        mvp=modelMatrix.multiply(viewMatrix.multiply(projectionMatrix));
-        //mvpPick=new Matrix4(mvp);
+        Matrix4 modelMatrix3d=new Matrix4(getModelMatrix());
+        Matrix4 modelMatrix2d=new Matrix4(getModelMatrix());
+
+        Matrix4 projectionMatrix3d=new Matrix4(camera3d.getProjectionMatrix());
+        Matrix4 viewMatrix3d=new Matrix4(camera3d.getViewMatrix());
+        mvp3d=modelMatrix3d.multiply(viewMatrix3d.multiply(projectionMatrix3d));
+
+        Matrix4 projectionMatrix2d=new Matrix4(camera2d.getProjectionMatrix());
+        Matrix4 viewMatrix2d=new Matrix4(camera2d.getViewMatrix());
+        mvp2d=modelMatrix2d.multiply(viewMatrix2d.multiply(projectionMatrix2d));
 
         //logger.info("Check1.0");
         drawActionSequence.display(gl);
@@ -147,7 +136,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
     }
 
     public double glUnitsPerPixel() {
-        return Math.abs( camera.getCameraFocusDistance() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
+        return Math.abs( camera3d.getCameraFocusDistance() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
     }
 
     public void reshape(GL4 gl, int x, int y, int width, int height) {
@@ -200,7 +189,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
             return;
         }
 
-        double cameraFocusDistance = (double)camera.getCameraFocusDistance();
+        double cameraFocusDistance = (double)camera3d.getCameraFocusDistance();
         cameraFocusDistance /= zoomRatio;
         if ( cameraFocusDistance > MAX_CAMERA_FOCUS_DISTANCE ) {
             return;
@@ -215,7 +204,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 //                    / (float) Math.tan( 0.5 * fovYRadians );
 //        }
 
-        double sceneUnitsPerViewportHeight=cameraFocusDistance*Math.tan(0.5*camera.getFovRadians())*2.0;
+        double sceneUnitsPerViewportHeight=cameraFocusDistance*Math.tan(0.5*camera3d.getFovRadians())*2.0;
 
         vantage.setSceneUnitsPerViewportHeight((float)sceneUnitsPerViewportHeight);
     }

@@ -3,7 +3,8 @@
 layout (location=0) in vec3 iv;
 layout (location=1) in vec2 tc;
 
-uniform mat4 mvp;
+uniform mat4 mvp3d;
+uniform mat4 mvp2d;
 uniform vec4 color0;
 uniform vec4 color1;
 uniform int twoDimensional;
@@ -20,9 +21,11 @@ void main()
 {
   vec4 vp = vec4(iv.x, iv.y, iv.z, 1.0);
   if (twoDimensional==1) {
-     gl_Position=vec4(iv.x, iv.y, 0.0, 1.0);
+     //gl_Position=vec4(iv.x, iv.y, 0.0, 1.0);
+     vp.z=0.0;
+     gl_Position = mvp2d * vp;
   } else {
-     gl_Position = mvp * vp;
+     gl_Position = mvp3d * vp;
   }
   vColor0=color0;
   vColor1=color1;

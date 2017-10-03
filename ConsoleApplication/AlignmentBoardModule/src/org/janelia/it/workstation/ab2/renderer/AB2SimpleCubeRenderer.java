@@ -163,7 +163,7 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
                 if (useInterleaved) {
 
                     AB2SimpleCubeShader cubeShader = (AB2SimpleCubeShader) drawShader;
-                    cubeShader.setMVP(gl, mvp);
+                    cubeShader.setMVP(gl, mvp3d);
                     gl.glPointSize(3.0f);
 
                     gl.glBindVertexArray(vertexArrayId.get(0));
@@ -195,7 +195,7 @@ public class AB2SimpleCubeRenderer extends AB2Basic3DRenderer {
                 } else {
 
                     AB2SimpleCubeShader cubeShader = (AB2SimpleCubeShader) drawShader;
-                    cubeShader.setMVP(gl, mvp);
+                    cubeShader.setMVP(gl, mvp3d);
                     gl.glPointSize(3.0f);
 
                     gl.glBindVertexArray(vertexArrayId.get(0));

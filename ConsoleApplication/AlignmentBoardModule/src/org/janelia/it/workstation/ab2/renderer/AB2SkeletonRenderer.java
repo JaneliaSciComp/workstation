@@ -193,7 +193,8 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             @Override
             public void update(GL4 gl, Object o) {
                 AB2ActorShader actorShader = (AB2ActorShader) drawShader;
-                actorShader.setMVP(gl, mvp);
+                actorShader.setMVP3d(gl, mvp3d);
+                actorShader.setMVP2d(gl, mvp2d);
                 gl.glPointSize(3.0f);
             }
         };
@@ -241,7 +242,8 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             public void update(GL4 gl, Object o) {
 
                 AB2ActorPickShader actorShader = (AB2ActorPickShader) pickShader;
-                actorShader.setMVP(gl, mvp);
+                actorShader.setMVP3d(gl, mvp3d);
+                actorShader.setMVP2d(gl, mvp2d);
                 gl.glPointSize(3.0f);
 
             }

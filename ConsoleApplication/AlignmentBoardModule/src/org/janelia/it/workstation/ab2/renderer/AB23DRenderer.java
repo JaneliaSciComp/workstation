@@ -8,6 +8,10 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import javax.media.opengl.GL4;
 import javax.media.opengl.glu.GLU;
 
+import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.OrthographicCamera;
+import org.janelia.geometry3d.PerspectiveCamera;
+import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
@@ -21,7 +25,18 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     Logger logger = LoggerFactory.getLogger(AB23DRenderer.class);
     protected static GLU glu = new GLU();
 
+    public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2500;
+    protected static final double MAX_CAMERA_FOCUS_DISTANCE = 1000000.0;
+    protected static final double MIN_CAMERA_FOCUS_DISTANCE = 0.001;
+    public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 2.0;
+
     protected Viewport viewport;
+    protected PerspectiveCamera camera3d;
+    protected OrthographicCamera camera2d;
+    protected Vantage vantage;
+
+    Matrix4 mvp3d;
+    Matrix4 mvp2d;
 
     protected IntBuffer pickFramebufferId;
     protected IntBuffer pickColorTextureId;
@@ -48,6 +63,13 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     }
 
     public AB23DRenderer(GLShaderProgram drawShader, GLShaderProgram pickShader) {
+        vantage=new Vantage(null);
+        viewport=new Viewport();
+        viewport.setzNearRelative(0.1f);
+        camera3d = new PerspectiveCamera(vantage, viewport);
+        camera2d = new OrthographicCamera(vantage, viewport);
+        vantage.setFocus(0.0f,0.0f,(float)DEFAULT_CAMERA_FOCUS_DISTANCE);
+
         this.drawShader=drawShader;
         this.pickShader=pickShader;
         drawActionSequence.setActorMode(GLAbstractActor.Mode.DRAW);
