@@ -33,7 +33,8 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     protected Viewport viewport;
     protected PerspectiveCamera camera3d;
     protected OrthographicCamera camera2d;
-    protected Vantage vantage;
+    protected Vantage vantage3d;
+    protected Vantage vantage2d;
 
     Matrix4 mvp3d;
     Matrix4 mvp2d;
@@ -63,12 +64,14 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     }
 
     public AB23DRenderer(GLShaderProgram drawShader, GLShaderProgram pickShader) {
-        vantage=new Vantage(null);
+        vantage3d=new Vantage(null);
+        vantage2d=new Vantage(null);
         viewport=new Viewport();
         viewport.setzNearRelative(0.1f);
-        camera3d = new PerspectiveCamera(vantage, viewport);
-        camera2d = new OrthographicCamera(vantage, viewport);
-        vantage.setFocus(0.0f,0.0f,(float)DEFAULT_CAMERA_FOCUS_DISTANCE);
+        camera3d = new PerspectiveCamera(vantage3d, viewport);
+        camera2d = new OrthographicCamera(vantage2d, viewport);
+        vantage3d.setFocus(0.0f,0.0f,(float)DEFAULT_CAMERA_FOCUS_DISTANCE);
+        vantage2d.setFocus(0.0f,0.0f,(float)DEFAULT_CAMERA_FOCUS_DISTANCE);
 
         this.drawShader=drawShader;
         this.pickShader=pickShader;

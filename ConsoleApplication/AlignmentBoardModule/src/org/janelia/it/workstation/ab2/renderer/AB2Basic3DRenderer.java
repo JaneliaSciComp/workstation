@@ -169,16 +169,16 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 
         Rotation rotation = new Rotation().setFromAxisAngle(rotationAxis, (float)rotationAngle);
 
-        vantage.getRotationInGround().multiply(rotation.transpose());
+        vantage3d.getRotationInGround().multiply(rotation.transpose());
     }
 
     public void translatePixels(double dx, double dy, double dz) {
         // trackball translate
         Vector3 translation=new Vector3((float)-dx, (float)dy, (float)-dz);
         translation=translation.multiplyScalar((float)glUnitsPerPixel());
-        Rotation copyOfRotation = new Rotation(vantage.getRotationInGround());
+        Rotation copyOfRotation = new Rotation(vantage3d.getRotationInGround());
         translation=copyOfRotation.multiply(translation);
-        vantage.getFocusPosition().add(translation);
+        vantage3d.getFocusPosition().add(translation);
     }
 
     public void zoom(double zoomRatio) {
@@ -206,7 +206,7 @@ public abstract class AB2Basic3DRenderer extends AB23DRenderer {
 
         double sceneUnitsPerViewportHeight=cameraFocusDistance*Math.tan(0.5*camera3d.getFovRadians())*2.0;
 
-        vantage.setSceneUnitsPerViewportHeight((float)sceneUnitsPerViewportHeight);
+        vantage3d.setSceneUnitsPerViewportHeight((float)sceneUnitsPerViewportHeight);
     }
 
     public void zoomPixels(Point newPoint, Point oldPoint) {
