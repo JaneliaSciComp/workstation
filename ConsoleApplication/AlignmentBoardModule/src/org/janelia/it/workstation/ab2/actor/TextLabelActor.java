@@ -48,13 +48,13 @@ public class TextLabelActor extends GLAbstractActor {
         }
     }
 
-    static final int UBUNTU_FONT_LEADING_OFFSET=10;
-    static final int UBUNTU_FONT_BOTTOM_OFFSET=10;
+    static final int UBUNTU_FONT_LEADING_OFFSET=4;
+    static final int UBUNTU_FONT_BOTTOM_OFFSET=3;
     static final int UBUNTU_FONT_UNIT_WIDTH=9;
     static final int UBUNTU_FONT_UNIT_HEIGHT=16;
-    static final int UBUNTU_FONT_THRESHOLD=230;
+    static final int UBUNTU_FONT_THRESHOLD=190;
 
-    static final String UBUNTU_FONT_STRING="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)!@#$%^&*(-_+=[]{};:\'\""+
+    static final public String UBUNTU_FONT_STRING="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)!@#$%^&*(-_+=[]{};:\'\""+
             ","+".<>"+"/?"+"\\"+"|"+"`~";
 
     public TextLabelActor(int actorId,
@@ -156,7 +156,7 @@ public class TextLabelActor extends GLAbstractActor {
         // Step 1: get contents
         int labelLength=text.length();
         byte zeroByte=0;
-        byte oneByte=1;
+        byte oneByte=100;
         int characterPositions[] = new int[labelLength];
         for (int i=0;i<labelLength;i++) {
             char c=text.charAt(i);
@@ -203,12 +203,12 @@ public class TextLabelActor extends GLAbstractActor {
                             int byteOffset=(tY*w+tX)*4;
                             if (UBUNTU_FONT_THRESHOLD>127) {
                                 int t=UBUNTU_FONT_THRESHOLD-256;
-                                if (r > t || g > t || b > t) {
+                                if (r<0 && r>t) {
                                     labelPixels[byteOffset] = oneByte;
                                     textPixelCount++;
                                 }
                             } else {
-                                if (r > UBUNTU_FONT_THRESHOLD || g > UBUNTU_FONT_THRESHOLD || b > UBUNTU_FONT_THRESHOLD) {
+                                if (r<0 || r>UBUNTU_FONT_THRESHOLD) {
                                     labelPixels[byteOffset] = oneByte;
                                     textPixelCount++;
                                 }
