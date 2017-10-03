@@ -5,7 +5,6 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.MailDialogueBox;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
@@ -30,7 +29,7 @@ public final class ReportABugMenuAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         
         JFrame parentFrame = WindowLocator.getMainFrame();
-        String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
+        String email = AccessManager.getUserEmail();
         
         MailDialogueBox popup = MailDialogueBox.newDialog(parentFrame, email)
                 .withTitle("Create A Ticket")

@@ -85,10 +85,13 @@ import org.slf4j.LoggerFactory;
 public class DomainObjectContextMenu extends PopupContextMenu {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
-    public static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
-    public static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
-    public static final String NEURON_SEP_REMOVAL_MSG = "Remove/preclude Neuron Separation(s)";
-
+    
+    private static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
+    private static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
+    private static final String NEURON_SEP_REMOVAL_MSG = "Remove/preclude Neuron Separation(s)";
+    private static final String WEBSTATION_URL = ConsoleProperties.getInstance().getProperty("webstation.url"); 
+    private static final String HELP_EMAIL = ConsoleProperties.getString("console.HelpEmail");
+    
     // Current selection
     protected DomainObject contextObject;
     protected List<DomainObject> domainObjectList;
@@ -374,7 +377,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                                     annotationValue = annotation.getName();
                                 }
                             }
-                            DataReporter reporter = new DataReporter((String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL), ConsoleProperties.getString("console.HelpEmail"));
+                            
+                            DataReporter reporter = new DataReporter(AccessManager.getUserEmail(), HELP_EMAIL, WEBSTATION_URL);
                             reporter.reportData(domainObject, annotationValue);
                         }
 

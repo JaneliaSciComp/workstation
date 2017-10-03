@@ -74,7 +74,7 @@ public class BasicSwcVertex implements SwcVertex
     @Override
     public float getRadius()
     {
-        return radius;
+        return 1.0f;
     }
 
     @Override

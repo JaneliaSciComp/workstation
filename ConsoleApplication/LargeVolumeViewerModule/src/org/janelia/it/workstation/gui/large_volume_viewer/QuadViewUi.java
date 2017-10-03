@@ -1393,6 +1393,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     "/tier2/mousebrainmicro/mousebrainmicro/",
                     "/nrs/mouselight",
                     "/nrs/mltest/",
+                    "/groups/jacs",
                     "/groups/dickson/dicksonlab",
             };
             Path linuxPrefix = null;
@@ -1454,7 +1455,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         // by now, if we ain't got the path, we ain't got the path
         if (!testFile.exists()) {
             JOptionPane.showMessageDialog(this.getParent(),
-                    "Error opening folder " + testFile.getPath() +
+                    "Error opening Linux sample path " + canonicalLinuxPath +
                     " \nIs the file share mounted?",
                     "Folder does not exist.",
                     JOptionPane.ERROR_MESSAGE);
@@ -1467,7 +1468,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             System.getProperty("os.name").contains("Windows")) {
             if (!testFile.isDirectory()) {
                 JOptionPane.showMessageDialog(this.getParent(),
-                        "Error opening path " + testFile.getPath() +
+                        "Error opening Linux sample path " + canonicalLinuxPath +
                                 " \nAre you sure this is a directory?",
                         "Not a directory?",
                         JOptionPane.ERROR_MESSAGE);

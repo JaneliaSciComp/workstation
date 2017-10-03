@@ -15,14 +15,18 @@ import org.janelia.it.jacs.shared.utils.ColorUtils;
  * things like line width, etc.
  */
 public class NeuronStyle {
-
     private Color color;
     private boolean visible = true;
+    private boolean userVisible = true;
+    private boolean nonInteractable = false;
+    private boolean userToggleRadius = false;
     float[] cachedColorArray=new float[3]; // needed for performance
 
     // constants, because I already used "visible" instead of "visibility" once...
     private static final String COLOR_KEY = "color";
     private static final String VISIBILITY_KEY = "visibility";
+    private static final String NONINTERACTABLE_KEY = "readonly";
+    private static final String USER_VISIBILITY_KEY = "user_visibility";
 
     // default colors; we index into this list with neuron ID;
     //  note that our neuron IDs are all of the form 8*n+4,
@@ -49,11 +53,11 @@ public class NeuronStyle {
      * get a default style for a neuron
      */
     public static NeuronStyle getStyleForNeuron(Long neuronID) {
-        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true);
+        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true, false, true);
     }
 
-    public static NeuronStyle getStyleForNeuron(Long neuronID, boolean visible) {
-        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], visible);
+    public static NeuronStyle getStyleForNeuron(Long neuronID, boolean visible, boolean noninteractable, boolean userVisible) {
+        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], visible, noninteractable, userVisible);
     }
 
     /**
@@ -78,8 +82,21 @@ public class NeuronStyle {
             return null;
         }
         boolean visibility = visibilityNode.asBoolean();
+        
+        JsonNode nonInteractableNode = rootNode.path(NONINTERACTABLE_KEY);
+        if (nonInteractableNode.isMissingNode() || !nonInteractableNode.isBoolean()) {
+              return null;
+        }
+        boolean  nonInteractable = nonInteractableNode.asBoolean();
+        
+        JsonNode userVisibilityNode = rootNode.path(USER_VISIBILITY_KEY);
+        if (userVisibilityNode.isMissingNode() || !userVisibilityNode.isBoolean()) {
+             return null;
+        }
+        
+        boolean userVisible =userVisibilityNode.asBoolean();
 
-        return new NeuronStyle(color, visibility);
+        return new NeuronStyle(color, visibility, nonInteractable, userVisible);
     }
 
     public NeuronStyle() {
@@ -87,9 +104,11 @@ public class NeuronStyle {
         this.visible = true;
     }
 
-    public NeuronStyle(Color color, boolean visible) {
+    public NeuronStyle(Color color, boolean visible, boolean nonInteractable, boolean userVisible) {
         setColor(color);
         this.visible = visible;
+        this.nonInteractable = nonInteractable;
+        this.userVisible = userVisible;
     }
 
     public float getRedAsFloat() {
@@ -126,6 +145,7 @@ public class NeuronStyle {
     public void setVisible(boolean visible) {
         this.visible = visible;
     }
+    
 
     /**
      * returns a json node object, to be used in persisting styles; the
@@ -142,12 +162,56 @@ public class NeuronStyle {
         rootNode.put(COLOR_KEY, colors);
 
         rootNode.put(VISIBILITY_KEY, isVisible());
+        rootNode.put(NONINTERACTABLE_KEY, isNonInteractable());
+        rootNode.put(USER_VISIBILITY_KEY, isUserVisible());
 
         return rootNode;
     }
 
     @Override
     public String toString() {
-        return "NeuronStyle(" + color + ", visibility: " + visible + ")";
+        return "NeuronStyle(" + color + ", visibility: " + visible + ", userVisibility: " + nonInteractable + ", visibility: " + visible + ")";
+    }
+
+    /**
+     * @return the readOnly
+     */
+    public boolean isNonInteractable() {
+        return nonInteractable;
+    }
+
+    /**
+     * @param nonInteractable the nonInteractable to set
+     */
+    public void setNonInteractable(boolean nonInteractable) {
+        this.nonInteractable = nonInteractable;
+    }
+
+    /**
+     * @return the userVisible
+     */
+    public boolean isUserVisible() {
+        return userVisible;
+    }
+
+    /**
+     * @param userVisible the userVisible to set
+     */
+    public void setUserVisible(boolean userVisible) {
+        this.userVisible = userVisible;
+    }
+    
+    /**
+     * @return the userToggleRadius
+     */
+    public boolean isUserToggleRadius() {
+        return userToggleRadius;
+    }
+
+    /**
+     * @param userToggleRadius the userToggleRadius to set
+     */
+    public void setUserToggleRadius(boolean userToggleRadius) {
+        this.userToggleRadius = userToggleRadius;
     }
 }

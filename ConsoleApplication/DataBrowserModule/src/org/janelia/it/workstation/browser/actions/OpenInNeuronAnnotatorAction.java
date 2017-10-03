@@ -123,6 +123,12 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
     }
 
     private void openStack() {
+
+        int option = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), "This result is not neuron separated. Continue load?",  "Unseparated data", JOptionPane.OK_CANCEL_OPTION);
+        if (option==JOptionPane.CANCEL_OPTION) {
+            return;
+        }
+        
         try {
             ensureNAIsRunning();
             

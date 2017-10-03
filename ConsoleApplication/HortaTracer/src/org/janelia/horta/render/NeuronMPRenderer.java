@@ -363,6 +363,12 @@ extends MultipassRenderer
         neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
     }
     
+    public void clearNeuronReconstructions() {
+        for (NeuronModel neuron : allSwcActor) {
+            removeNeuronReconstruction(neuron);
+        }
+    }
+    
     private void removeNeuronReconstruction(NeuronModel neuron) {
         allSwcActor.removeNeuron(neuron);
         neuron.getVisibilityChangeObservable().deleteObserver(volumeLayerExpirer);

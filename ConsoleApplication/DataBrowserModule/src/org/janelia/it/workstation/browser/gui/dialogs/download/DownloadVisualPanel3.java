@@ -167,6 +167,8 @@ public final class DownloadVisualPanel3 extends JPanel {
         
         SimpleWorker worker = new SimpleWorker() {
 
+            private List<DownloadFileItem> downloadFileItems = new ArrayList<>();
+            
             @Override
             protected void doStuff() throws Exception {
 
@@ -183,7 +185,7 @@ public final class DownloadVisualPanel3 extends JPanel {
                                 log.debug("      Adding item for file type '{}'", fileType);
                                 DownloadFileItem downloadItem = new DownloadFileItem(downloadObject.getFolderPath(), domainObject);
                                 downloadItem.init(artifactDescriptor, hasFiles, fileType, outputExtensions, splitChannels, flattenStructure, filenamePattern);
-                                downloadItems.add(downloadItem);
+                                downloadFileItems.add(downloadItem);
                             }
                         }
                     }
@@ -196,7 +198,7 @@ public final class DownloadVisualPanel3 extends JPanel {
                 int count = 0;
                 DefaultListModel<DownloadFileItem> dlm = (DefaultListModel<DownloadFileItem>) downloadItemList.getModel();
                 dlm.removeAllElements();
-                for (DownloadFileItem downloadItem : downloadItems) {
+                for (DownloadFileItem downloadItem : downloadFileItems) {
                     count += downloadItem.getSourceFile()!=null ? 1 : 0;
                     dlm.addElement(downloadItem);
                     log.debug("Adding item "+downloadItem);
@@ -205,6 +207,8 @@ public final class DownloadVisualPanel3 extends JPanel {
                 // Update GUI
                 downloadItemCountLabel.setText(count+" files");
 
+                downloadItems = downloadFileItems;
+                
                 mainPane.removeAll();
                 mainPane.add(downloadItemList);
                 mainPane.updateUI();

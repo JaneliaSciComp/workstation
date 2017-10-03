@@ -667,6 +667,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         // Delegate tracing interaction to customized class
         tracingInteractor = new TracingInteractor(this, getUndoRedoManager());
+        tracingInteractor.setMetaWorkspace(metaWorkspace);
         
         // push listening into HortaMouseEventDispatcher
         final boolean bDispatchMouseEvents = true;
@@ -2002,6 +2003,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         // logger.info("Horta closed");
         // saveStartupPreferences(); // not called at application close...
         neuronEditDispatcher.onClosed();
+        // clear out SWCbuffers
+        neuronMPRenderer.clearNeuronReconstructions();
     }
 
     @Override
