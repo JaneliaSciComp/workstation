@@ -79,7 +79,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         updateSkeletons();
 
         // Pick Square
-        pickSquareActor=new PickSquareActor(getNextActorIndex(), new Vector2(0.4f, 0.4f), new Vector2(0.5f, 0.5f),
+        pickSquareActor=new PickSquareActor(getNextActorIndex(), new Vector2(0.95f, 0.95f), new Vector2(1.0f, 1.0f),
                 new Vector4(1f, 0f, 0f, 1f), new Vector4(0f, 1f, 0f, 1f));
         styleIdMap.put(pickSquareActor.getActorId(), pickSquareActor.getColor0());
         drawActionSequence.getActorSequence().add(pickSquareActor);
@@ -96,11 +96,12 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         if (screenHeight==0) {
             screenHeight=AB2Controller.getController().getGljPanel().getSurfaceHeight();
         }
-        float imageNormalWidth=(float)((bufferedImage.getWidth()*1.0)/screenWidth)*2.0f;
-        float imageNormalHeight=(float)((bufferedImage.getHeight()*1.0)/screenHeight)*2.0f;
+        float imageNormalHeight=(float)((bufferedImage.getHeight()*1.0)/screenHeight);
+        float imageAspectRatio=(float)((bufferedImage.getWidth()*1.0)/(bufferedImage.getHeight()*1.0));
+        float imageNormalWidth=imageNormalHeight*imageAspectRatio;
         logger.info("imageNormalWidth="+imageNormalWidth);
         logger.info("imageNormalHeight="+imageNormalHeight);
-        Vector2 v0=new Vector2(-0.2f, -0.2f);
+        Vector2 v0=new Vector2(0.1f, 0.6f);
         Vector2 v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
         image2DActor=new Image2DActor(getNextActorIndex(), v0, v1, bufferedImage, 1.0f);
         styleIdMap.put(image2DActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
@@ -108,7 +109,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         pickActionSequence.getActorSequence().add(image2DActor);
 
         // TextLabelActor
-        Vector2 t0=new Vector2(-0.2f, -0.7f);
+        Vector2 t0=new Vector2(0.1f, 0.2f);
         textLabelActor=new TextLabelActor(getNextActorIndex(), TextLabelActor.UBUNTU_FONT_STRING, t0,
                 new Vector4(1f, 1f, 1f, 1f), new Vector4(0.4f, 0.1f, 0.1f, 1f));
         drawActionSequence.getActorSequence().add(textLabelActor);

@@ -53,6 +53,8 @@ public class TextLabelActor extends GLAbstractActor {
     static final int UBUNTU_FONT_UNIT_WIDTH=9;
     static final int UBUNTU_FONT_UNIT_HEIGHT=16;
     static final int UBUNTU_FONT_THRESHOLD=190;
+    static final int UBUNTU_LOW_VAL=118;
+    static final int UBUNTU_HIGH_VAL=219;
 
     static final public String UBUNTU_FONT_STRING="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)!@#$%^&*(-_+=[]{};:\'\""+
             ","+".<>"+"/?"+"\\"+"|"+"`~";
@@ -90,8 +92,9 @@ public class TextLabelActor extends GLAbstractActor {
 
             int screenWidth=AB2Controller.getController().getGljPanel().getSurfaceWidth();
             int screenHeight=AB2Controller.getController().getGljPanel().getSurfaceHeight();
-            float imageNormalWidth=(float)((labelImageWidth*1.0)/screenWidth)*2.0f;
-            float imageNormalHeight=(float)((labelImageHeight*1.0)/screenHeight)*2.0f;
+            float imageNormalHeight=(float)((labelImageHeight*1.0)/screenHeight);
+            float imageAspectRatio=(float)((labelImageWidth*1.0)/(labelImageHeight*1.0));
+            float imageNormalWidth=imageAspectRatio*imageNormalHeight;
             logger.info("imageNormalWidth="+imageNormalWidth);
             logger.info("imageNormalHeight="+imageNormalHeight);
             v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
@@ -199,20 +202,28 @@ public class TextLabelActor extends GLAbstractActor {
                             byte r = (byte) (resourceRGB >>> 16);
                             byte g = (byte) (resourceRGB >>> 8);
                             byte b = (byte) (resourceRGB);
-                            //logger.info("a="+a+" r="+r+" g="+g+" b="+b);
+                            int R=r;
+                            if (R<0) { R=256+R; }
+                            double scaledValue=((R-UBUNTU_LOW_VAL)*1.0)/((UBUNTU_HIGH_VAL-UBUNTU_LOW_VAL)*1.0);
+                            int iVal=(int)(255.0*scaledValue);
+                            byte tVal=(byte)iVal;
                             int byteOffset=(tY*w+tX)*4;
-                            if (UBUNTU_FONT_THRESHOLD>127) {
-                                int t=UBUNTU_FONT_THRESHOLD-256;
-                                if (r<0 && r>t) {
-                                    labelPixels[byteOffset] = oneByte;
-                                    textPixelCount++;
-                                }
-                            } else {
-                                if (r<0 || r>UBUNTU_FONT_THRESHOLD) {
-                                    labelPixels[byteOffset] = oneByte;
-                                    textPixelCount++;
-                                }
-                            }
+
+                            labelPixels[byteOffset]=tVal;
+
+//                            if (UBUNTU_FONT_THRESHOLD>127) {
+//                                int t=UBUNTU_FONT_THRESHOLD-256;
+//                                if (r<0 && r>t) {
+//                                    labelPixels[byteOffset] = tVal;
+//                                    textPixelCount++;
+//                                }
+//                            } else {
+//                                if (r<0 || r>UBUNTU_FONT_THRESHOLD) {
+//                                    labelPixels[byteOffset] = tVal;
+//                                    textPixelCount++;
+//                                }
+//                            }
+
                         }
                     }
                 }

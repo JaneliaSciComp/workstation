@@ -19,11 +19,7 @@ void main() {
     ivec2 imageSize=textureSize(image_texture, 0);
     ivec2 tcIv=ivec2(imageSize.x*tc_out.x, imageSize.y*tc_out.y);
     vec4 colorRgba=texelFetch(image_texture, tcIv, 0);
-    if (colorRgba.r>0.0) {
-      color=vColor0;
-    } else {
-      color=vColor1;
-    }
+    color=mix(vColor1, vColor0, colorRgba.r);
   } else {
     color = vec4(0f, 0f, 1f, 1f);
   }
