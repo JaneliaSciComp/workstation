@@ -18,6 +18,7 @@ import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector2;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
+import org.janelia.it.jacs.model.ontology.types.Text;
 import org.janelia.it.workstation.ab2.actor.BoundingBoxActor;
 import org.janelia.it.workstation.ab2.actor.Image2DActor;
 import org.janelia.it.workstation.ab2.actor.LineSetActor;
@@ -109,7 +110,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         // TextLabelActor
         Vector2 t0=new Vector2(-0.2f, -0.7f);
         textLabelActor=new TextLabelActor(getNextActorIndex(), "Hi Mom this is a test", t0,
-                new Vector4(0f, 0f, 1f, 1f), new Vector4(0.4f, 0.1f, 0.1f, 1f));
+                new Vector4(1f, 1f, 1f, 1f), new Vector4(0.4f, 0.1f, 0.1f, 1f));
         drawActionSequence.getActorSequence().add(textLabelActor);
         pickActionSequence.getActorSequence().add(textLabelActor);
 
@@ -209,7 +210,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                 AB2ActorShader actorShader = (AB2ActorShader) drawShader;
                 Vector4 actorColor=styleIdMap.get(actorId);
                 if (actorColor!=null) {
-                    actorShader.setStyleIdColor(gl, actorColor);
+                    actorShader.setColor0(gl, actorColor);
                 }
                 if (actor.isTwoDimensional()) {
                     actorShader.setTwoDimensional(gl, true);
@@ -217,9 +218,17 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                     actorShader.setTwoDimensional(gl, false);
                 }
                 if (actor instanceof Image2DActor) {
-                    actorShader.setApplyImageTexture(gl,true);
+                    actorShader.setApplyImageRGBATexture(gl,true);
                 } else {
-                    actorShader.setApplyImageTexture(gl,false);
+                    actorShader.setApplyImageRGBATexture(gl,false);
+                }
+                if (actor instanceof TextLabelActor) {
+                    TextLabelActor textLabelActor=(TextLabelActor)actor;
+                    actorShader.setApplyImageR8Texture(gl,true);
+                    actorShader.setColor0(gl, textLabelActor.getTextColor());
+                    actorShader.setColor1(gl, textLabelActor.getBackgroundColor());
+                } else {
+                    actorShader.setApplyImageR8Texture(gl,false);
                 }
             }
         };

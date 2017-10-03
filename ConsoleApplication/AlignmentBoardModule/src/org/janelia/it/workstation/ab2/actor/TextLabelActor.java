@@ -52,7 +52,7 @@ public class TextLabelActor extends GLAbstractActor {
     static final int UBUNTU_FONT_BOTTOM_OFFSET=10;
     static final int UBUNTU_FONT_UNIT_WIDTH=9;
     static final int UBUNTU_FONT_UNIT_HEIGHT=16;
-    static final int UBUNTU_FONT_THRESHOLD=130;
+    static final int UBUNTU_FONT_THRESHOLD=230;
 
     static final String UBUNTU_FONT_STRING="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)!@#$%^&*(-_+=[]{};:\'\""+
             ","+".<>"+"/?"+"\\"+"|"+"`~";
@@ -87,6 +87,14 @@ public class TextLabelActor extends GLAbstractActor {
         if (this.mode == Mode.DRAW) {
 
             byte[] labelPixels=createTextImage();
+
+            int screenWidth=AB2Controller.getController().getGljPanel().getSurfaceWidth();
+            int screenHeight=AB2Controller.getController().getGljPanel().getSurfaceHeight();
+            float imageNormalWidth=(float)((labelImageWidth*1.0)/screenWidth)*2.0f;
+            float imageNormalHeight=(float)((labelImageHeight*1.0)/screenHeight)*2.0f;
+            logger.info("imageNormalWidth="+imageNormalWidth);
+            logger.info("imageNormalHeight="+imageNormalHeight);
+            v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
 
             // This combines positional vertices interleaved with 2D texture coordinates
             float[] vertexData = {
@@ -123,6 +131,10 @@ public class TextLabelActor extends GLAbstractActor {
                 byteBuffer.put(i, labelPixels[i]);
             }
 
+            int sizeCheck=labelImageWidth*labelImageHeight;
+            logger.info("labelPixels.length="+labelPixels.length+" labelImageWidth="+labelImageWidth+" labelImageHeight="+labelImageHeight+" sizeCheck="+sizeCheck);
+
+            byteBuffer.rewind();
             gl.glTexImage2D(GL4.GL_TEXTURE_2D,0, GL4.GL_RGBA, labelImageWidth, labelImageHeight,0,
                     GL4.GL_RGBA, GL4.GL_UNSIGNED_BYTE, byteBuffer);
             checkGlError(gl, "Uploading texture");
@@ -165,9 +177,12 @@ public class TextLabelActor extends GLAbstractActor {
         int hPad=UBUNTU_FONT_UNIT_HEIGHT/4;
         int w=labelLength*UBUNTU_FONT_UNIT_WIDTH + wPad*2;
         int h=UBUNTU_FONT_UNIT_HEIGHT + hPad*2;
-        byte labelPixels[]=new byte[w*h];
+        byte labelPixels[]=new byte[w*h*4];
         int sourceHeight=textResourceImage.getHeight();
+        int sourceWidth=textResourceImage.getWidth();
         int sourceHeightOffset=sourceHeight-(UBUNTU_FONT_UNIT_HEIGHT+UBUNTU_FONT_BOTTOM_OFFSET);
+        logger.info("sourceWidth="+sourceWidth+" sourceHeight="+sourceHeight+" sourceHeightOffset="+sourceHeightOffset);
+        int textPixelCount=0;
         for (int i=0;i<labelLength;i++) {
             int cp=characterPositions[i];
             if (cp>-1) {
@@ -177,18 +192,33 @@ public class TextLabelActor extends GLAbstractActor {
                         int sY = sourceHeight - (sourceHeightOffset + y + 1);
                         int tX = wPad + UBUNTU_FONT_UNIT_WIDTH * i + x;
                         int tY = hPad + y;
-                        int resourceRGB = textResourceImage.getRGB(sX, sY);
-                        byte a = (byte) (resourceRGB >>> 24); // ignore this byte
-                        byte r = (byte) (resourceRGB >>> 16);
-                        byte g = (byte) (resourceRGB >>> 8);
-                        byte b = (byte) (resourceRGB);
-                        if (r > UBUNTU_FONT_THRESHOLD || g > UBUNTU_FONT_THRESHOLD || b > UBUNTU_FONT_THRESHOLD) {
-                            labelPixels[tY * w + tX] = oneByte;
+                        if (sX<sourceWidth && sY<sourceHeight) {
+                            int resourceRGB = textResourceImage.getRGB(sX, sY);
+                            //logger.info("resourceRGB="+resourceRGB+" sX="+sX+" sY="+sY);
+                            byte a = (byte) (resourceRGB >>> 24); // ignore this byte
+                            byte r = (byte) (resourceRGB >>> 16);
+                            byte g = (byte) (resourceRGB >>> 8);
+                            byte b = (byte) (resourceRGB);
+                            //logger.info("a="+a+" r="+r+" g="+g+" b="+b);
+                            int byteOffset=(tY*w+tX)*4;
+                            if (UBUNTU_FONT_THRESHOLD>127) {
+                                int t=UBUNTU_FONT_THRESHOLD-256;
+                                if (r > t || g > t || b > t) {
+                                    labelPixels[byteOffset] = oneByte;
+                                    textPixelCount++;
+                                }
+                            } else {
+                                if (r > UBUNTU_FONT_THRESHOLD || g > UBUNTU_FONT_THRESHOLD || b > UBUNTU_FONT_THRESHOLD) {
+                                    labelPixels[byteOffset] = oneByte;
+                                    textPixelCount++;
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+        logger.info("textPixelCount="+textPixelCount);
         this.labelImageHeight=h;
         this.labelImageWidth=w;
         return labelPixels;

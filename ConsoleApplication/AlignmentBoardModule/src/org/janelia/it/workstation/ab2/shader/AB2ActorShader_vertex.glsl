@@ -4,13 +4,17 @@ layout (location=0) in vec3 iv;
 layout (location=1) in vec2 tc;
 
 uniform mat4 mvp;
-uniform vec4 styleIdColor;
+uniform vec4 color0;
+uniform vec4 color1;
 uniform int twoDimensional;
-uniform int applyImageTexture;
+uniform int applyImageRGBATexture;
+uniform int applyImageR8Texture;
 
-out vec4 vColor;
+out vec4 vColor0;
+out vec4 vColor1;
 out vec2 tc_out;
-flat out int ait;
+flat out int aRGBAt;
+flat out int aR8t;
 
 void main()
 {
@@ -20,8 +24,10 @@ void main()
   } else {
      gl_Position = mvp * vp;
   }
-  vColor=styleIdColor;
-  ait=applyImageTexture;
+  vColor0=color0;
+  vColor1=color1;
+  aRGBAt=applyImageRGBATexture;
+  aR8t=applyImageR8Texture;
   tc_out=tc;
 }
 

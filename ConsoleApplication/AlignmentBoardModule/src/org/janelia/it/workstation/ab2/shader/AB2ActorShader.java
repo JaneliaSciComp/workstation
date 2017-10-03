@@ -23,9 +23,14 @@ public class AB2ActorShader extends GLShaderProgram {
         checkGlError(gl, "AB2ActorShader setMVP() error");
     }
 
-    public void setStyleIdColor(GL4 gl, Vector4 styleIdColor) {
-        setUniform4v(gl, "styleIdColor", 1, styleIdColor.toArray());
-        checkGlError(gl, "AB2ActorShader setStyleIdColor() error");
+    public void setColor0(GL4 gl, Vector4 color0) {
+        setUniform4v(gl, "color0", 1, color0.toArray());
+        checkGlError(gl, "AB2ActorShader setColor0() error");
+    }
+
+    public void setColor1(GL4 gl, Vector4 color1) {
+        setUniform4v(gl, "color1", 1, color1.toArray());
+        checkGlError(gl, "AB2ActorShader setColor1() error");
     }
 
     public void setTwoDimensional(GL4 gl, boolean twoDimensional) {
@@ -37,13 +42,23 @@ public class AB2ActorShader extends GLShaderProgram {
         checkGlError(gl, "AB2ActorShader setTwoDimensional() error");
     }
 
-    public void setApplyImageTexture(GL4 gl, boolean applyImageTexture) {
+    public void setApplyImageRGBATexture(GL4 gl, boolean applyImageTexture) {
         if (applyImageTexture) {
-            setUniform(gl, "applyImageTexture", 1);
+            setUniform(gl, "applyImageRGBATexture", 1);
         } else {
-            setUniform(gl, "applyImageTexture", 0);
+            setUniform(gl, "applyImageRGBATexture", 0);
         }
-        checkGlError(gl, "AB2ActorShader setApplyImageTexture() error");
+        checkGlError(gl, "AB2ActorShader setApplyImageRGBTexture() error");
     }
+
+    public void setApplyImageR8Texture(GL4 gl, boolean applyImageTexture) {
+        if (applyImageTexture) {
+            setUniform(gl, "applyImageR8Texture", 1);
+        } else {
+            setUniform(gl, "applyImageR8Texture", 0);
+        }
+        checkGlError(gl, "AB2ActorShader setApplyImageR8Texture() error");
+    }
+
 
 }
