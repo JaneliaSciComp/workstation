@@ -21,7 +21,6 @@ void main()
 {
   vec4 vp = vec4(iv.x, iv.y, iv.z, 1.0);
   if (twoDimensional==1) {
-     //gl_Position=vec4(iv.x, iv.y, 0.0, 1.0);
      vp.z=0.0;
      gl_Position = mvp2d * vp;
   } else {

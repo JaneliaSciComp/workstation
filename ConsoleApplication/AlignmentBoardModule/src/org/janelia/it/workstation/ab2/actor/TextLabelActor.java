@@ -48,6 +48,7 @@ public class TextLabelActor extends GLAbstractActor {
         }
     }
 
+    // These values are all hand-tuned from the UbuntuFont.png file
     static final int UBUNTU_FONT_LEADING_OFFSET=4;
     static final int UBUNTU_FONT_BOTTOM_OFFSET=3;
     static final int UBUNTU_FONT_UNIT_WIDTH=9;
@@ -90,13 +91,10 @@ public class TextLabelActor extends GLAbstractActor {
 
             byte[] labelPixels=createTextImage();
 
-            int screenWidth=AB2Controller.getController().getGljPanel().getSurfaceWidth();
             int screenHeight=AB2Controller.getController().getGljPanel().getSurfaceHeight();
             float imageNormalHeight=(float)((labelImageHeight*1.0)/screenHeight);
             float imageAspectRatio=(float)((labelImageWidth*1.0)/(labelImageHeight*1.0));
             float imageNormalWidth=imageAspectRatio*imageNormalHeight;
-            logger.info("imageNormalWidth="+imageNormalWidth);
-            logger.info("imageNormalHeight="+imageNormalHeight);
             v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
 
             // This combines positional vertices interleaved with 2D texture coordinates
@@ -125,9 +123,6 @@ public class TextLabelActor extends GLAbstractActor {
             // Create texture
             gl.glGenTextures(1, imageTextureId);
             gl.glBindTexture(GL4.GL_TEXTURE_2D, imageTextureId.get(0));
-
-            //ByteBuffer byteBuffer = ByteBuffer.allocateDirect(pixels.length);
-            //byteBuffer.wrap(pixels);
 
             ByteBuffer byteBuffer=ByteBuffer.allocate(labelPixels.length);
             for (int i=0;i<labelPixels.length;i++) {
@@ -158,8 +153,6 @@ public class TextLabelActor extends GLAbstractActor {
     protected byte[] createTextImage() {
         // Step 1: get contents
         int labelLength=text.length();
-        byte zeroByte=0;
-        byte oneByte=100;
         int characterPositions[] = new int[labelLength];
         for (int i=0;i<labelLength;i++) {
             char c=text.charAt(i);
@@ -184,8 +177,6 @@ public class TextLabelActor extends GLAbstractActor {
         int sourceHeight=textResourceImage.getHeight();
         int sourceWidth=textResourceImage.getWidth();
         int sourceHeightOffset=sourceHeight-(UBUNTU_FONT_UNIT_HEIGHT+UBUNTU_FONT_BOTTOM_OFFSET);
-        logger.info("sourceWidth="+sourceWidth+" sourceHeight="+sourceHeight+" sourceHeightOffset="+sourceHeightOffset);
-        int textPixelCount=0;
         for (int i=0;i<labelLength;i++) {
             int cp=characterPositions[i];
             if (cp>-1) {
@@ -197,9 +188,8 @@ public class TextLabelActor extends GLAbstractActor {
                         int tY = hPad + y;
                         if (sX<sourceWidth && sY<sourceHeight) {
                             int resourceRGB = textResourceImage.getRGB(sX, sY);
-                            //logger.info("resourceRGB="+resourceRGB+" sX="+sX+" sY="+sY);
-                            byte a = (byte) (resourceRGB >>> 24); // ignore this byte
-                            byte r = (byte) (resourceRGB >>> 16);
+                            byte a = (byte) (resourceRGB >>> 24);
+                            byte r = (byte) (resourceRGB >>> 16); // ONLY using r
                             byte g = (byte) (resourceRGB >>> 8);
                             byte b = (byte) (resourceRGB);
                             int R=r;
@@ -208,28 +198,12 @@ public class TextLabelActor extends GLAbstractActor {
                             int iVal=(int)(255.0*scaledValue);
                             byte tVal=(byte)iVal;
                             int byteOffset=(tY*w+tX)*4;
-
                             labelPixels[byteOffset]=tVal;
-
-//                            if (UBUNTU_FONT_THRESHOLD>127) {
-//                                int t=UBUNTU_FONT_THRESHOLD-256;
-//                                if (r<0 && r>t) {
-//                                    labelPixels[byteOffset] = tVal;
-//                                    textPixelCount++;
-//                                }
-//                            } else {
-//                                if (r<0 || r>UBUNTU_FONT_THRESHOLD) {
-//                                    labelPixels[byteOffset] = tVal;
-//                                    textPixelCount++;
-//                                }
-//                            }
-
                         }
                     }
                 }
             }
         }
-        logger.info("textPixelCount="+textPixelCount);
         this.labelImageHeight=h;
         this.labelImageWidth=w;
         return labelPixels;

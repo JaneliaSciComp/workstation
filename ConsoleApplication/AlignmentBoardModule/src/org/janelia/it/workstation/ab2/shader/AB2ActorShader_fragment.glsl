@@ -21,6 +21,6 @@ void main() {
     vec4 colorRgba=texelFetch(image_texture, tcIv, 0);
     color=mix(vColor1, vColor0, colorRgba.r);
   } else {
-    color = vec4(0f, 0f, 1f, 1f);
+    color = vColor0;
   }
 }
