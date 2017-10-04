@@ -111,7 +111,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         // TextLabelActor
         Vector2 t0=new Vector2(0.1f, 0.2f);
         textLabelActor=new TextLabelActor(getNextActorIndex(), TextLabelActor.UBUNTU_FONT_STRING, t0,
-                new Vector4(1f, 1f, 1f, 1f), new Vector4(0.4f, 0.1f, 0.1f, 1f));
+                new Vector4(1f, 1f, 1f, 1f), new Vector4(0.4f, 0.1f, 0.1f, 0.5f));
         drawActionSequence.getActorSequence().add(textLabelActor);
         pickActionSequence.getActorSequence().add(textLabelActor);
 
