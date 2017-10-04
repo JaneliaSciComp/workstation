@@ -9,11 +9,15 @@ public class AB2Image3D_RGBA8UI {
 
     public AB2Image3D_RGBA8UI() {}
 
-    public AB2Image3D_RGBA8UI(int xDim, int yDim, int zDim) {
+    public void allocate(int xDim, int yDim, int zDim) {
         this.xDim=xDim;
         this.yDim=yDim;
         this.zDim=zDim;
         allocate();
+    }
+
+    public AB2Image3D_RGBA8UI(int xDim, int yDim, int zDim) {
+        allocate(xDim, yDim, zDim);
     }
 
     public byte[] getData() { return data; }
@@ -29,7 +33,7 @@ public class AB2Image3D_RGBA8UI {
         data=new byte[dataLength*4];
     }
 
-    void getVoxel(int x, int y, int z, byte[] voxel) {
+    public void getVoxel(int x, int y, int z, byte[] voxel) {
         int xy=xDim*yDim;
         int offset=(z*xy+y*xDim+x)*4;
         voxel[0]=data[offset++];
@@ -38,7 +42,7 @@ public class AB2Image3D_RGBA8UI {
         voxel[3]=data[offset++];
     }
 
-    void setVoxel(int x, int y, int z, byte[] voxel) {
+    public void setVoxel(int x, int y, int z, byte[] voxel) {
         int xy=xDim*yDim;
         int offset=(z*xy+y*xDim+x)*4;
         data[offset++]=voxel[0];
@@ -47,7 +51,7 @@ public class AB2Image3D_RGBA8UI {
         data[offset++]=voxel[3];
     }
 
-    void getImageZSlice(int z, byte[] slice) {
+    public void getImageZSlice(int z, byte[] slice) {
         int xy=xDim*yDim;
         int offset=z*xy*4;
         int s=0;

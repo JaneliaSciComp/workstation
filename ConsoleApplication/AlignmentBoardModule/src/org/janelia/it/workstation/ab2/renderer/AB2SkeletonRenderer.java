@@ -66,6 +66,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
         pickActionSequence.setShaderUpdateCallback(getPickShaderUpdateCallback());
         pickActionSequence.setActorUpdateCallback(getActorSequencePickUpdateCallback());
+
     }
 
     @Override
