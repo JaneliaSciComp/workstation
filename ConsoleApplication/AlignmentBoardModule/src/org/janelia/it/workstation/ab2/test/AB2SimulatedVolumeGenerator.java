@@ -44,7 +44,7 @@ public class AB2SimulatedVolumeGenerator {
         Vector3 rc3=new Vector3(random.nextFloat(), random.nextFloat(), random.nextFloat());
         rc3.normalize();
         Vector4 rc4=new Vector4(rc3.getX(), rc3.getY(), rc3.getZ(), 1.0f);
-        addSkeleton(skeleton, rc4);
+        return addSkeleton(skeleton, rc4);
     }
 
     public int addSkeleton(AB2NeuronSkeleton skeleton, final Vector4 color) {
@@ -80,6 +80,7 @@ public class AB2SimulatedVolumeGenerator {
             }
 
         });
+        return labelCount;
     }
 
 
