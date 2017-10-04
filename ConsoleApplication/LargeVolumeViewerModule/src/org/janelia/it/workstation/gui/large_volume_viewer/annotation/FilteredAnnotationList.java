@@ -148,12 +148,14 @@ public class FilteredAnnotationList extends JPanel {
                             if (panListener != null) {
                                 if (ann != null) {
                                     panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                                   Vec3 location = annotationMgr.getTileFormat().micronVec3ForVoxelVec3Centered(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
                                     // send event to Horta to also center on this item
                                     
                                     try {
                                         SynchronizationHelper helper = new SynchronizationHelper();
                                         Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
                                         SampleLocation sampleLocation = originator.getSampleLocation();
+                                        sampleLocation.setFocusUm(location.getX(), location.getY(), location.getZ());
                                         Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
                                         for (Tiled3dSampleLocationProviderAcceptor acceptor: locationAcceptors) {
                                             if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
