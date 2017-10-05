@@ -262,17 +262,18 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
                     actorShader.setTwoDimensional(gl, false);
                 }
                 if (actor instanceof Image2DActor) {
-                    actorShader.setApplyImageRGBATexture(gl,true);
-                } else {
-                    actorShader.setApplyImageRGBATexture(gl,false);
+                    actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_2D_RGBA);
                 }
-                if (actor instanceof TextLabelActor) {
+                else if (actor instanceof TextLabelActor) {
                     TextLabelActor textLabelActor=(TextLabelActor)actor;
-                    actorShader.setApplyImageR8Texture(gl,true);
+                    actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_2D_R8);
                     actorShader.setColor0(gl, textLabelActor.getTextColor());
                     actorShader.setColor1(gl, textLabelActor.getBackgroundColor());
+                }
+                else if (actor instanceof Image3DActor) {
+                    actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_3D_RGBA);
                 } else {
-                    actorShader.setApplyImageR8Texture(gl,false);
+                    actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_NONE);
                 }
             }
         };

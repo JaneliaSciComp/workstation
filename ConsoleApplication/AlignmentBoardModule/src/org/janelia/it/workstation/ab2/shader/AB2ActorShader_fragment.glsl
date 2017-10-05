@@ -6,26 +6,43 @@ in vec3 tc_out;
 flat in int textureTypeOut;
 out vec4 color;
 
-//  TEXTURE_TYPE_NONE=0;
-//  TEXTURE_TYPE_2D_RGBA=1;
-//  TEXTURE_TYPE_2D_R8=2;
-//  TEXTURE_TYPE_3D_RGBA=3;
+//  TEXTURE_TYPE_NONE    =0;
+//  TEXTURE_TYPE_2D_RGBA =1;
+//  TEXTURE_TYPE_2D_R8   =2;
+//  TEXTURE_TYPE_3D_RGBA =3;
 
 uniform sampler2D image_texture;
 uniform sampler3D image_texture3d;
 
 void main() {
-  if (aRGBAt==1) {
-    ivec2 imageSize=textureSize(image_texture, 0);
-    ivec2 tcIv=ivec2(imageSize.x*tc_out.x, imageSize.y*tc_out.y);
-    vec4 colorRgba=texelFetch(image_texture, tcIv, 0);
-    color=colorRgba;
-  } else if (aR8t==1) {
-    ivec2 imageSize=textureSize(image_texture, 0);
-    ivec2 tcIv=ivec2(imageSize.x*tc_out.x, imageSize.y*tc_out.y);
-    vec4 colorRgba=texelFetch(image_texture, tcIv, 0);
-    color=mix(vColor1, vColor0, colorRgba.r);
-  } else {
-    color = vColor0;
+
+  ivec2 imageSize2d;
+  ivec3 imageSize3d;
+  vec4 colorRgba;
+  ivec2 tci2;
+  ivec3 tci3;
+
+  switch(textureTypeOut) {
+    case 0:
+      color=vColor0;
+      break;
+    case 1:
+      imageSize2d=textureSize(image_texture, 0);
+      tci2=ivec2(imageSize2d.x*tc_out.x, imageSize2d.y*tc_out.y);
+      color=texelFetch(image_texture, tci2, 0);
+      break;
+    case 2:
+      ivec2 imageSize2d=textureSize(image_texture, 0);
+      tci2=ivec2(imageSize2d.x*tc_out.x, imageSize2d.y*tc_out.y);
+      colorRgba=texelFetch(image_texture, tci2, 0);
+      color=mix(vColor1, vColor0, colorRgba.r);
+      break;
+    case 3:
+      ivec3 imageSize3d=textureSize(image_texture3d, 0);
+      tci3=ivec3(imageSize3d.x*tc_out.x, imageSize3d.y*tc_out.y, imageSize3d.z*tc_out.z);
+      color=texelFetch(image_texture3d, tci3, 0);
+      break;
+    default:
+      color=vColor0;
   }
 }

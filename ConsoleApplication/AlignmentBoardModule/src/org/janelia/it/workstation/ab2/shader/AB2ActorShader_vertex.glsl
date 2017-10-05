@@ -18,10 +18,12 @@ flat out int textureTypeOut;
 void main()
 {
   vec4 vp = vec4(iv.x, iv.y, iv.z, 1.0);
-  if (twoDimensional==1) {
+  switch(twoDimensional) {
+  case 1:
      vp.z=0.0;
      gl_Position = mvp2d * vp;
-  } else {
+     break;
+  default:
      gl_Position = mvp3d * vp;
   }
   vColor0=color0;
