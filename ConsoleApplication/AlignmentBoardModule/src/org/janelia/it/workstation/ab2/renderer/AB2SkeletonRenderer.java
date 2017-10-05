@@ -32,6 +32,7 @@ import org.janelia.it.workstation.ab2.gl.GLShaderUpdateCallback;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
 import org.janelia.it.workstation.ab2.shader.AB2ActorPickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
+import org.janelia.it.workstation.ab2.test.AB2SimulatedVolumeGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,20 +73,33 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     @Override
     public void init(GL4 gl) {
 
+        addBoundingBox();
+        updateSkeletons();
+        addPickSquareActor();
+        addImage2DActor();
+        addTextLabelActor();
+
+        super.init(gl);
+        initialized=true;
+    }
+
+    private void addBoundingBox() {
         // Bounding Box
         boundingBoxActor=new BoundingBoxActor(getNextActorIndex(), new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
         styleIdMap.put(boundingBoxActor.getActorId(), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         drawActionSequence.getActorSequence().add(boundingBoxActor);
+    }
 
-        updateSkeletons();
-
+    private void addPickSquareActor() {
         // Pick Square
         pickSquareActor=new PickSquareActor(getNextActorIndex(), new Vector2(0.95f, 0.95f), new Vector2(1.0f, 1.0f),
                 new Vector4(1f, 0f, 0f, 1f), new Vector4(0f, 1f, 0f, 1f));
         styleIdMap.put(pickSquareActor.getActorId(), pickSquareActor.getColor0());
         drawActionSequence.getActorSequence().add(pickSquareActor);
         pickActionSequence.getActorSequence().add(pickSquareActor);
+    }
 
+    private void addImage2DActor() {
         // Image2DActor
         BufferedImage bufferedImage=GLAbstractActor.getImageByFilename("UbuntuFont.png");
         int screenWidth=viewport.getWidthPixels();
@@ -108,17 +122,15 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         styleIdMap.put(image2DActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
         drawActionSequence.getActorSequence().add(image2DActor);
         pickActionSequence.getActorSequence().add(image2DActor);
+    }
 
+    private void addTextLabelActor() {
         // TextLabelActor
         Vector2 t0=new Vector2(0.1f, 0.2f);
         textLabelActor=new TextLabelActor(getNextActorIndex(), TextLabelActor.UBUNTU_FONT_STRING, t0,
                 new Vector4(1f, 1f, 1f, 1f), new Vector4(0.4f, 0.1f, 0.1f, 0.5f));
         drawActionSequence.getActorSequence().add(textLabelActor);
         pickActionSequence.getActorSequence().add(textLabelActor);
-
-        super.init(gl);
-
-        initialized=true;
     }
 
     public void setStyleIdColor(int styleId, Vector4 color) {
@@ -141,6 +153,9 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             return;
         }
         Random random=new Random(new Date().getTime());
+
+        logger.info("updateSkeletons() creating PointSet and LineSet Actors...");
+
         for (int i=0;i<skeletons.size();i++) {
             List<Vector3> skeletonPoints = skeletons.get(i).getSkeletonPointSet();
             List<Vector3> skeletonLines = skeletons.get(i).getSkeletonLineSet();
@@ -153,6 +168,18 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
             drawActionSequence.getActorSequence().add(lineSetActor);
             styleIdMap.put(lineSetActor.getActorId(), new Vector4(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0f));
         }
+
+        logger.info("updateSkeletons() generating Simulated Volume...");
+
+        AB2SimulatedVolumeGenerator volumeGenerator=new AB2SimulatedVolumeGenerator(256, 256, 256);
+
+        for (int i=0;i<skeletons.size();i++) {
+            logger.info("Skeleton "+i);
+            volumeGenerator.addSkeleton(skeletons.get(i));
+        }
+
+        logger.info("Added all skeletons to Simulated Volume");
+
     }
 
     @Override

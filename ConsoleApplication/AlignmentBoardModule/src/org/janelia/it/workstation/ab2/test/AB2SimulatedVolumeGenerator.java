@@ -54,7 +54,7 @@ public class AB2SimulatedVolumeGenerator {
         double dimUnit = 1.0 / (1.0 * maxDim);
         double sampleResolution = dimUnit / 5.0;
         AB2SkeletonWalker skeletonWalker = new AB2SkeletonWalker(skeleton, sampleResolution);
-        byte rgba[]=new byte[4];
+        final byte rgba[]=new byte[4];
         getRgbaFromVector4(color, rgba);
 
         skeletonWalker.walkSkeleton(new AB2SkeletonWalkerCallback() {
