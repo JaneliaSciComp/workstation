@@ -77,15 +77,37 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     @Override
     public void init(GL4 gl) {
 
-        updateSkeletons();
 
         addBoundingBox();
-        addPickSquareActor();
-        addImage2DActor();
-        addTextLabelActor();
+//        addSkeletonActors();
+        addImage3DActor();
+
+//        addPickSquareActor();
+//        addImage2DActor();
+//        addTextLabelActor();
 
         super.init(gl);
         initialized=true;
+    }
+
+    private void addSkeletonActors() {
+        if (skeletons==null) {
+            return;
+        }
+
+        for (int i=0;i<skeletons.size();i++) {
+            List<Vector3> skeletonPoints = skeletons.get(i).getSkeletonPointSet();
+            List<Vector3> skeletonLines = skeletons.get(i).getSkeletonLineSet();
+            Vector4 color=volumeGenerator.getColorByLabelIndex(i);
+
+            PointSetActor pointSetActor = new PointSetActor(getNextActorIndex(), skeletonPoints);
+            drawActionSequence.getActorSequence().add(pointSetActor);
+            styleIdMap.put(pointSetActor.getActorId(), color);
+
+            LineSetActor lineSetActor = new LineSetActor(getNextActorIndex(), skeletonLines);
+            drawActionSequence.getActorSequence().add(lineSetActor);
+            styleIdMap.put(lineSetActor.getActorId(), color);
+        }
     }
 
     private void addImage3DActor() {
@@ -158,33 +180,6 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
     public synchronized void setSkeletons(List<AB2NeuronSkeleton> skeletons) {
         this.skeletons=skeletons;
-        if (initialized) updateSkeletons();
-    }
-
-    private void updateSkeletons() {
-        logger.info("updateSkeletons() called");
-        if (skeletons==null) {
-            return;
-        }
-        Random random=new Random(new Date().getTime());
-
-        logger.info("updateSkeletons() creating PointSet and LineSet Actors...");
-
-        for (int i=0;i<skeletons.size();i++) {
-            List<Vector3> skeletonPoints = skeletons.get(i).getSkeletonPointSet();
-            List<Vector3> skeletonLines = skeletons.get(i).getSkeletonLineSet();
-
-            PointSetActor pointSetActor = new PointSetActor(getNextActorIndex(), skeletonPoints);
-            drawActionSequence.getActorSequence().add(pointSetActor);
-            styleIdMap.put(pointSetActor.getActorId(), new Vector4(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0f));
-
-            LineSetActor lineSetActor = new LineSetActor(getNextActorIndex(), skeletonLines);
-            drawActionSequence.getActorSequence().add(lineSetActor);
-            styleIdMap.put(lineSetActor.getActorId(), new Vector4(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0f));
-        }
-
-        logger.info("updateSkeletons() generating Simulated Volume...");
-
         volumeGenerator=new AB2SimulatedVolumeGenerator(256, 256, 256);
 
         for (int i=0;i<skeletons.size();i++) {
@@ -193,7 +188,6 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
         }
 
         logger.info("Added all skeletons to Simulated Volume");
-
     }
 
     @Override

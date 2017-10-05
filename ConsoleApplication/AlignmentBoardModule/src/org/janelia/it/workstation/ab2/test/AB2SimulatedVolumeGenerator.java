@@ -47,8 +47,11 @@ public class AB2SimulatedVolumeGenerator {
         return addSkeleton(skeleton, rc4);
     }
 
+    public Vector4 getColorByLabelIndex(int labelIndex) {
+        return colorMap.get(labelIndex);
+    }
+
     public int addSkeleton(AB2NeuronSkeleton skeleton, final Vector4 color) {
-        labelCount++;
         colorMap.put(labelCount, color);
         int maxDim = getMaxDim();
         double dimUnit = 1.0 / (1.0 * maxDim);
@@ -80,7 +83,8 @@ public class AB2SimulatedVolumeGenerator {
             }
 
         });
-        return labelCount;
+        labelCount++;
+        return labelCount-1;
     }
 
 
