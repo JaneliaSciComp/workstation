@@ -193,50 +193,52 @@ public class TracingInteractor extends MouseAdapter
     @Override
     public void keyPressed(KeyEvent e) {
         TmNeuronTagMap tagMeta = metaWorkspace.getTagMetadata();
-        
-        Map<String,Map<String,Object>> groupMappings = tagMeta.getAllTagGroupMappings();
-        Iterator<String> groups = tagMeta.getAllTagGroupMappings().keySet().iterator();
-        while (groups.hasNext()) {
-            String groupName = groups.next();
-            Map<String,Object> fooMap = groupMappings.get(groupName);
-            String keyMap = (String)fooMap.get("keymap");
-            if (keyMap!=null && keyMap.equals(KeymapUtil.getTextByKeyStroke(KeyStroke.getKeyStrokeForEvent(e)))) {
-                // toggle property
-                Boolean toggled = (Boolean)fooMap.get("toggled");
-                if (toggled==null) 
-                    toggled = Boolean.FALSE;
-                toggled = !toggled;
-                fooMap.put("toggled", toggled);
-                        
-                // get all neurons in group
-                Set<TmNeuronMetadata> neurons = tagMeta.getNeurons(groupName);
-                List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
-                
-                // set toggle state
-                String property =(String)fooMap.get("toggleprop");
-                if (property!=null) {
-                    Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
-                    Iterator<NeuronSet> lvvSetIter = metaWorkspace.getNeuronSets().iterator();
-                    NeuronSet lvvSet = null;
-                    while (lvvSetIter.hasNext() ) {
-                        NeuronSet checkSet = lvvSetIter.next();
-                        if (!(checkSet.getClass().getSimpleName().equals("BasicNeuronSet"))) {
-                            lvvSet = checkSet;
-                            break;
-                        }
+        if (tagMeta != null) {
+            Map<String, Map<String, Object>> groupMappings = tagMeta.getAllTagGroupMappings();
+            Iterator<String> groups = tagMeta.getAllTagGroupMappings().keySet().iterator();
+            while (groups.hasNext()) {
+                String groupName = groups.next();
+                Map<String, Object> fooMap = groupMappings.get(groupName);
+                String keyMap = (String) fooMap.get("keymap");
+                if (keyMap != null && keyMap.equals(KeymapUtil.getTextByKeyStroke(KeyStroke.getKeyStrokeForEvent(e)))) {
+                    // toggle property
+                    Boolean toggled = (Boolean) fooMap.get("toggled");
+                    if (toggled == null) {
+                        toggled = Boolean.FALSE;
                     }
-                    if (lvvSet!=null) {
-                        if (property.equals("Radius")) {
-                            lvvSet.changeNeuronUserToggleRadius(neuronList, toggled);
-                        } else if (property.equals("Visibility")) {
-                            lvvSet.changeNeuronUserVisible(neuronList, !toggled);
-                        } else if (property.equals("Background")) {
-                            lvvSet.changeNeuronNonInteractable(neuronList, toggled);
-                        } else if (property.equals("Crosscheck")) {
-                            List<String> properties =  new ArrayList<String>();
-                            properties.add("Background");
-                            properties.add("Radius");
-                            lvvSet.changeNeuronUserProperties(neuronList, properties, toggled);
+                    toggled = !toggled;
+                    fooMap.put("toggled", toggled);
+
+                    // get all neurons in group
+                    Set<TmNeuronMetadata> neurons = tagMeta.getNeurons(groupName);
+                    List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
+
+                    // set toggle state
+                    String property = (String) fooMap.get("toggleprop");
+                    if (property != null) {
+                        Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
+                        Iterator<NeuronSet> lvvSetIter = metaWorkspace.getNeuronSets().iterator();
+                        NeuronSet lvvSet = null;
+                        while (lvvSetIter.hasNext()) {
+                            NeuronSet checkSet = lvvSetIter.next();
+                            if (!(checkSet.getClass().getSimpleName().equals("BasicNeuronSet"))) {
+                                lvvSet = checkSet;
+                                break;
+                            }
+                        }
+                        if (lvvSet != null) {
+                            if (property.equals("Radius")) {
+                                lvvSet.changeNeuronUserToggleRadius(neuronList, toggled);
+                            } else if (property.equals("Visibility")) {
+                                lvvSet.changeNeuronUserVisible(neuronList, !toggled);
+                            } else if (property.equals("Background")) {
+                                lvvSet.changeNeuronNonInteractable(neuronList, toggled);
+                            } else if (property.equals("Crosscheck")) {
+                                List<String> properties = new ArrayList<String>();
+                                properties.add("Background");
+                                properties.add("Radius");
+                                lvvSet.changeNeuronUserProperties(neuronList, properties, toggled);
+                            }
                         }
                     }
                 }
