@@ -125,6 +125,11 @@ implements NeuronSet// , LookupListener
         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, userToggleRadius);
     }
     
+    @Override
+    public void changeNeuronUserProperties (List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle) {
+        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggle);
+    }
+    
     private void updateVoxToMicronMatrices(TmSample sample)
     {
         // If we try to get the matrix too early, it comes back null, so populate just-in-time
@@ -727,7 +732,8 @@ implements NeuronSet// , LookupListener
             boolean nonInteractable = style.isNonInteractable();
             if (nonInteractable != neuronModel.isNonInteractable()) {
                 neuronModel.setNonInteractable(nonInteractable);
-                return notifyVisibilityChange(neuronModel);
+                notifyVisibilityChange(neuronModel);
+                result=true;
             }                        
             boolean userToggleRadius = style.isUserToggleRadius();
             if (userToggleRadius != neuronModel.isUserToggleRadius()) {

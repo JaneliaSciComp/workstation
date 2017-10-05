@@ -692,6 +692,12 @@ implements MouseMode, KeyListener
                                 } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
                                     LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, toggled);
                                     LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();                                    
+                                } else if (property.equals(NeuronGroupsDialog.PROPERTY_CROSSCHECK)) {
+                                    List<String> properties =  new ArrayList<String>();
+                                    properties.add("Radius");
+                                    properties.add("Background");
+                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggled);
+                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();                                    
                                 }
                             } catch (Exception error) {
 

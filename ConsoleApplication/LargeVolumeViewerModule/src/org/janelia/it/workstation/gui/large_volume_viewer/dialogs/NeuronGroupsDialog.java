@@ -78,6 +78,7 @@ public class NeuronGroupsDialog extends ModalDialog {
     public static final String PROPERTY_VISIBILITY = "Visibility";
     public static final String PROPERTY_RADIUS = "Radius";
     public static final String PROPERTY_READONLY = "Background";
+    public static final String PROPERTY_CROSSCHECK = "Crosscheck";
     
     private final AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
        
@@ -256,7 +257,7 @@ public class NeuronGroupsDialog extends ModalDialog {
                     ((ShortcutTextField) component).setText((String) value);
                      return ((ShortcutTextField)component);
                 case COL_PROPTOGGLE:
-                    String[] propertyStrings = { PROPERTY_RADIUS, PROPERTY_VISIBILITY, PROPERTY_READONLY };
+                    String[] propertyStrings = { PROPERTY_RADIUS, PROPERTY_VISIBILITY, PROPERTY_READONLY, PROPERTY_CROSSCHECK };
                     component = new JComboBox(propertyStrings);
                     ((JComboBox)component).addItemListener(new ItemChangeListener(table.getModel(), rowIndex, vColIndex));
                     if (value==PROPERTY_VISIBILITY) {
@@ -265,6 +266,8 @@ public class NeuronGroupsDialog extends ModalDialog {
                         ((JComboBox)component).setSelectedIndex(1);
                     } else if (value==PROPERTY_READONLY) {
                         ((JComboBox)component).setSelectedIndex(2);
+                    }  else if (value==PROPERTY_CROSSCHECK) {
+                        ((JComboBox)component).setSelectedIndex(3);
                     } 
                     return ((JComboBox)component);
             }

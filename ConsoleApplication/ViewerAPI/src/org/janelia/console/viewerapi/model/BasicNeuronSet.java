@@ -263,4 +263,9 @@ implements NeuronSet
     public void changeNeuronUserToggleRadius(List<TmNeuronMetadata> neuronList, boolean userToggleRadius) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public void changeNeuronUserProperties(List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

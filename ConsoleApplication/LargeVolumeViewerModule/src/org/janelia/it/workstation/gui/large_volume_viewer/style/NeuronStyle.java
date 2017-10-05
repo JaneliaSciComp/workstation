@@ -214,4 +214,18 @@ public class NeuronStyle {
     public void setUserToggleRadius(boolean userToggleRadius) {
         this.userToggleRadius = userToggleRadius;
     }
+    
+    public void setProperty(String property, boolean toggle) {
+        switch (property) {
+            case "Radius": 
+                this.userToggleRadius = toggle;
+                break;
+            case "Background":
+                this.nonInteractable = toggle;
+                break;
+            case "Visibility":
+                this.userVisible = toggle;
+                break;
+        }
+    }
 }

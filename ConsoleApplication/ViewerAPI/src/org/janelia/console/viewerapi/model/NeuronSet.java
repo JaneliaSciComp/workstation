@@ -70,4 +70,5 @@ public interface NeuronSet extends Collection<NeuronModel>
     void changeNeuronUserVisible (List<TmNeuronMetadata> neuron, boolean userVisible);
     void changeNeuronNonInteractable (List<TmNeuronMetadata> neuron, boolean interactable);
     void changeNeuronUserToggleRadius (List<TmNeuronMetadata> neuronList, boolean userToggleRadius);
+    void changeNeuronUserProperties (List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle);
 }
