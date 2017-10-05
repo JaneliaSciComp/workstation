@@ -2,12 +2,17 @@
 
 in vec4 vColor0;
 in vec4 vColor1;
-in vec2 tc_out;
-flat in int aRGBAt;
-flat in int aR8t;
+in vec3 tc_out;
+flat in int textureTypeOut;
 out vec4 color;
 
+//  TEXTURE_TYPE_NONE=0;
+//  TEXTURE_TYPE_2D_RGBA=1;
+//  TEXTURE_TYPE_2D_R8=2;
+//  TEXTURE_TYPE_3D_RGBA=3;
+
 uniform sampler2D image_texture;
+uniform sampler3D image_texture3d;
 
 void main() {
   if (aRGBAt==1) {

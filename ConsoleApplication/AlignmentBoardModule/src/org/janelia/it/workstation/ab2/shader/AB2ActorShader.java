@@ -8,6 +8,11 @@ import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 
 public class AB2ActorShader extends GLShaderProgram {
 
+    public final int TEXTURE_TYPE_NONE=0;
+    public final int TEXTURE_TYPE_2D_RGBA=1;
+    public final int TEXTURE_TYPE_2D_R8=2;
+    public final int TEXTURE_TYPE_3D_RGBA=3;
+
     @Override
     public String getVertexShaderResourceName() {
         return "AB2ActorShader_vertex.glsl";
@@ -47,23 +52,9 @@ public class AB2ActorShader extends GLShaderProgram {
         checkGlError(gl, "AB2ActorShader setTwoDimensional() error");
     }
 
-    public void setApplyImageRGBATexture(GL4 gl, boolean applyImageTexture) {
-        if (applyImageTexture) {
-            setUniform(gl, "applyImageRGBATexture", 1);
-        } else {
-            setUniform(gl, "applyImageRGBATexture", 0);
-        }
-        checkGlError(gl, "AB2ActorShader setApplyImageRGBTexture() error");
+    public void setTextureType(GL4 gl, int textureType) {
+        setUniform(gl, "textureType", textureType);
+        checkGlError(gl, "AB2ActorShader setTextureType() error");
     }
-
-    public void setApplyImageR8Texture(GL4 gl, boolean applyImageTexture) {
-        if (applyImageTexture) {
-            setUniform(gl, "applyImageR8Texture", 1);
-        } else {
-            setUniform(gl, "applyImageR8Texture", 0);
-        }
-        checkGlError(gl, "AB2ActorShader setApplyImageR8Texture() error");
-    }
-
 
 }

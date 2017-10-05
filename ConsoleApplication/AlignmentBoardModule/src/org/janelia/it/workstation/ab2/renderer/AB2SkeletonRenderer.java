@@ -21,6 +21,7 @@ import org.janelia.geometry3d.Vector4;
 import org.janelia.it.jacs.model.ontology.types.Text;
 import org.janelia.it.workstation.ab2.actor.BoundingBoxActor;
 import org.janelia.it.workstation.ab2.actor.Image2DActor;
+import org.janelia.it.workstation.ab2.actor.Image3DActor;
 import org.janelia.it.workstation.ab2.actor.LineSetActor;
 import org.janelia.it.workstation.ab2.actor.PickSquareActor;
 import org.janelia.it.workstation.ab2.actor.PointSetActor;
@@ -29,6 +30,7 @@ import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
 import org.janelia.it.workstation.ab2.gl.GLShaderUpdateCallback;
+import org.janelia.it.workstation.ab2.model.AB2Image3D_RGBA8UI;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
 import org.janelia.it.workstation.ab2.shader.AB2ActorPickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
@@ -49,9 +51,11 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
     private PickSquareActor pickSquareActor;
     private Image2DActor image2DActor;
+    private Image3DActor image3DActor;
     private TextLabelActor textLabelActor;
 
     Map<Integer, Vector4> styleIdMap=new HashMap<>();
+    AB2SimulatedVolumeGenerator volumeGenerator;
 
     //static final int BOUNDING_BOX_ID=1;
 
@@ -73,14 +77,24 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
     @Override
     public void init(GL4 gl) {
 
-        addBoundingBox();
         updateSkeletons();
+
+        addBoundingBox();
         addPickSquareActor();
         addImage2DActor();
         addTextLabelActor();
 
         super.init(gl);
         initialized=true;
+    }
+
+    private void addImage3DActor() {
+        AB2Image3D_RGBA8UI rawImage=volumeGenerator.getRawImage();
+
+        Vector3 v0=new Vector3(0f, 0f, 0f);
+        Vector3 v1=new Vector3(1f, 1f, 1f);
+        image3DActor=new Image3DActor(getNextActorIndex(), v0, v1, rawImage.getXDim(), rawImage.getYDim(), rawImage.getZDim(), rawImage.getData());
+        drawActionSequence.getActorSequence().add(image3DActor);
     }
 
     private void addBoundingBox() {
@@ -171,7 +185,7 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
         logger.info("updateSkeletons() generating Simulated Volume...");
 
-        AB2SimulatedVolumeGenerator volumeGenerator=new AB2SimulatedVolumeGenerator(256, 256, 256);
+        volumeGenerator=new AB2SimulatedVolumeGenerator(256, 256, 256);
 
         for (int i=0;i<skeletons.size();i++) {
             logger.info("Skeleton "+i);

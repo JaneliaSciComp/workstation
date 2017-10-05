@@ -100,13 +100,13 @@ public class TextLabelActor extends GLAbstractActor {
             // This combines positional vertices interleaved with 2D texture coordinates
             float[] vertexData = {
 
-                    v0.get(0), v0.get(1), 0f,    0f, 0f, // lower left
-                    v1.get(0), v0.get(1), 0f,    1f, 0f, // lower right
-                    v0.get(0), v1.get(1), 0f,    0f, 1f, // upper left
+                    v0.get(0), v0.get(1), 0f,    0f, 0f, 0f, // lower left
+                    v1.get(0), v0.get(1), 0f,    1f, 0f, 0f, // lower right
+                    v0.get(0), v1.get(1), 0f,    0f, 1f, 0f, // upper left
 
-                    v1.get(0), v0.get(1), 0f,    1f, 0f, // lower right
-                    v1.get(0), v1.get(1), 0f,    1f, 1f, // upper right
-                    v0.get(0), v1.get(1), 0f,    0f, 1f  // upper left
+                    v1.get(0), v0.get(1), 0f,    1f, 0f, 0f, // lower right
+                    v1.get(0), v1.get(1), 0f,    1f, 1f, 0f, // upper right
+                    v0.get(0), v1.get(1), 0f,    0f, 1f, 0f// upper left
             };
 
             vertexFb=createGLFloatBuffer(vertexData);
@@ -222,11 +222,11 @@ public class TextLabelActor extends GLAbstractActor {
             checkGlError(gl, "d3 glBindVertexArray()");
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
             checkGlError(gl, "d4 glBindBuffer()");
-            gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 20, 0);
+            gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 24, 0);
             checkGlError(gl, "d5 glVertexAttribPointer()");
             gl.glEnableVertexAttribArray(0);
             checkGlError(gl, "d6 glEnableVertexAttribArray()");
-            gl.glVertexAttribPointer(1, 2, GL4.GL_FLOAT, false, 20, 12);
+            gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 24, 12);
             checkGlError(gl, "d7 glVertexAttribPointer()");
             gl.glEnableVertexAttribArray(1);
             checkGlError(gl, "d8 glEnableVertexAttribArray()");

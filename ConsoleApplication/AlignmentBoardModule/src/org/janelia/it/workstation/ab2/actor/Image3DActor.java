@@ -81,8 +81,6 @@ public class Image3DActor extends GLAbstractActor {
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
             // Create texture
-            gl.glGenTextures(1, imageTextureId);
-            gl.glBindTexture(GL4.GL_TEXTURE_3D, imageTextureId.get(0));
 
             ByteBuffer byteBuffer=ByteBuffer.allocate(data3d.length);
             for (int i=0;i<data3d.length;i++) {
@@ -90,18 +88,23 @@ public class Image3DActor extends GLAbstractActor {
             }
 
 //            glBindTexture( GL_TEXTURE_3D, mu3DTex );
-//            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+//            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE); -- deprecated, texture mixing intended to be handled in shaders
 //            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 //            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 //            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 //            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 //            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
+            gl.glGenTextures(1, imageTextureId);
+            gl.glBindTexture(GL4.GL_TEXTURE_3D, imageTextureId.get(0));
             gl.glTexImage3D(GL4.GL_TEXTURE_3D,0, GL4.GL_RGBA, dimX, dimY, dimZ,0, GL4.GL_RGBA, GL4.GL_UNSIGNED_BYTE, byteBuffer);
             checkGlError(gl, "Uploading texture");
-            gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_NEAREST );
-            gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST );
-            gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
+            gl.glTexParameteri(GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_WRAP_S, GL4.GL_CLAMP_TO_BORDER);
+            gl.glTexParameteri(GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_WRAP_T, GL4.GL_CLAMP_TO_BORDER);
+            gl.glTexParameteri(GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_WRAP_R, GL4.GL_CLAMP_TO_BORDER);
+            gl.glTexParameteri( GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_NEAREST );
+            gl.glTexParameteri( GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST );
+            gl.glBindTexture(GL4.GL_TEXTURE_3D, 0);
 
         }
 
@@ -110,19 +113,19 @@ public class Image3DActor extends GLAbstractActor {
     @Override
     public void display(GL4 gl) {
         if (this.mode==Mode.DRAW) {
-            gl.glActiveTexture(GL4.GL_TEXTURE0);
+            gl.glActiveTexture(GL4.GL_TEXTURE1);
             checkGlError(gl, "d1 glActiveTexture");
-            gl.glBindTexture(GL4.GL_TEXTURE_2D, imageTextureId.get(0));
+            gl.glBindTexture(GL4.GL_TEXTURE_3D, imageTextureId.get(0));
             checkGlError(gl, "d2 glBindTexture()");
             gl.glBindVertexArray(vertexArrayId.get(0));
             checkGlError(gl, "d3 glBindVertexArray()");
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
             checkGlError(gl, "d4 glBindBuffer()");
-            gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 20, 0);
+            gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 24, 0);
             checkGlError(gl, "d5 glVertexAttribPointer()");
             gl.glEnableVertexAttribArray(0);
             checkGlError(gl, "d6 glEnableVertexAttribArray()");
-            gl.glVertexAttribPointer(1, 2, GL4.GL_FLOAT, false, 20, 12);
+            gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 24, 12);
             checkGlError(gl, "d7 glVertexAttribPointer()");
             gl.glEnableVertexAttribArray(1);
             checkGlError(gl, "d8 glEnableVertexAttribArray()");
@@ -130,7 +133,7 @@ public class Image3DActor extends GLAbstractActor {
             checkGlError(gl, "d9 glDrawArrays()");
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
             checkGlError(gl, "d10 glBindBuffer()");
-            gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
+            gl.glBindTexture(GL4.GL_TEXTURE_3D, 0);
             checkGlError(gl, "d11 glBindTexture()");
         }
     }

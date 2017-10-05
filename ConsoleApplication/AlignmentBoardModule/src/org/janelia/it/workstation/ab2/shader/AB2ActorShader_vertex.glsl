@@ -1,21 +1,19 @@
 #version 410
 
 layout (location=0) in vec3 iv;
-layout (location=1) in vec2 tc;
+layout (location=1) in vec3 tc;
 
 uniform mat4 mvp3d;
 uniform mat4 mvp2d;
 uniform vec4 color0;
 uniform vec4 color1;
 uniform int twoDimensional;
-uniform int applyImageRGBATexture;
-uniform int applyImageR8Texture;
+uniform int textureType;
 
 out vec4 vColor0;
 out vec4 vColor1;
-out vec2 tc_out;
-flat out int aRGBAt;
-flat out int aR8t;
+out vec3 tc_out;
+flat out int textureTypeOut;
 
 void main()
 {
@@ -28,8 +26,7 @@ void main()
   }
   vColor0=color0;
   vColor1=color1;
-  aRGBAt=applyImageRGBATexture;
-  aR8t=applyImageR8Texture;
+  textureTypeOut=textureType;
   tc_out=tc;
 }
 
