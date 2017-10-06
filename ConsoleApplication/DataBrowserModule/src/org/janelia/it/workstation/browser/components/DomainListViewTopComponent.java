@@ -23,7 +23,6 @@ import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -35,8 +34,6 @@ import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Top component which displays lists of domain objects.
@@ -145,7 +142,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     }
 
     void writeProperties(java.util.Properties p) {
-        
+        if (p==null) return;
         try {
             DomainObjectEditorState<?> state = editor.saveState();
             String serializedState = DomainObjectEditorState.serialize(state);
@@ -160,7 +157,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     }
 
     void readProperties(java.util.Properties p) {
-
+        if (p==null) return;
         String version = p.getProperty("version");
         if (TC_VERSION.equals(version)) {
             // Current version saved the entire editor state
