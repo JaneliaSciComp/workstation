@@ -79,12 +79,12 @@ public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
 
 
         addBoundingBox();
-//        addSkeletonActors();
-        addImage3DActor();
+        addSkeletonActors();
+//        addImage3DActor();
 
-//        addPickSquareActor();
-//        addImage2DActor();
-//        addTextLabelActor();
+        addPickSquareActor();
+        addImage2DActor();
+        addTextLabelActor();
 
         super.init(gl);
         initialized=true;

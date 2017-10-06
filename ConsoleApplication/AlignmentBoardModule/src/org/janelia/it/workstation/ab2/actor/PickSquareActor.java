@@ -103,7 +103,7 @@ public class PickSquareActor extends GLAbstractActor {
 
 //            logger.info("display() glDrawArrays() vertexFb size="+vertexFb.capacity());
 
-            gl.glDrawArrays(GL4.GL_TRIANGLES, 0, vertexFb.capacity()/3);
+            gl.glDrawArrays(GL4.GL_TRIANGLES, 0, vertexFb.capacity()/2);
             checkGlError(gl, "d7 glDrawArrays() error");
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
