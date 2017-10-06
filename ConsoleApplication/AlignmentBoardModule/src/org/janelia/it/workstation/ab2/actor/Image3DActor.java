@@ -95,6 +95,7 @@ public class Image3DActor extends GLAbstractActor {
 //            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 //            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
+            gl.glActiveTexture(GL4.GL_TEXTURE0);
             gl.glGenTextures(1, imageTextureId);
             gl.glBindTexture(GL4.GL_TEXTURE_3D, imageTextureId.get(0));
             gl.glTexImage3D(GL4.GL_TEXTURE_3D,0, GL4.GL_RGBA, dimX, dimY, dimZ,0, GL4.GL_RGBA, GL4.GL_UNSIGNED_BYTE, byteBuffer);
@@ -113,7 +114,7 @@ public class Image3DActor extends GLAbstractActor {
     @Override
     public void display(GL4 gl) {
         if (this.mode==Mode.DRAW) {
-            gl.glActiveTexture(GL4.GL_TEXTURE1);
+            gl.glActiveTexture(GL4.GL_TEXTURE0);
             checkGlError(gl, "d1 glActiveTexture");
             gl.glBindTexture(GL4.GL_TEXTURE_3D, imageTextureId.get(0));
             checkGlError(gl, "d2 glBindTexture()");
