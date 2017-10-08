@@ -53,7 +53,7 @@ public abstract class GLAbstractActor {
 
 //    protected GLActorUpdateCallback actorCallback;
 
-    protected Matrix4 modelMatrix=new Matrix4();
+    private Matrix4 modelMatrix;
 
     //protected boolean isVisible=true;
 
