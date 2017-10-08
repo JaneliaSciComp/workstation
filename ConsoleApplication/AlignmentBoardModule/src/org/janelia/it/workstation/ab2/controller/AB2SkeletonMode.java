@@ -46,12 +46,12 @@ public class AB2SkeletonMode extends AB2View3DMode {
             int actorId=pickSquareActor.getActorId();
             logger.info("Handling AB2PickSquareColorChangeEvent actorId="+actorId+" pickIndex="+pickSquareActor.getPickIndex());
             AB2SkeletonRenderer skeletonRenderer=(AB2SkeletonRenderer)renderer;
-            Vector4 currentColor=skeletonRenderer.getStyleIdColor(actorId);
+            Vector4 currentColor=skeletonRenderer.getColorId(actorId);
             Vector4 color0=pickSquareActor.getColor0();
             if (currentColor.equals(color0)) {
-                skeletonRenderer.setStyleIdColor(actorId, pickSquareActor.getColor1());
+                skeletonRenderer.setColorId(actorId, pickSquareActor.getColor1());
             } else {
-                skeletonRenderer.setStyleIdColor(actorId, pickSquareActor.getColor0());
+                skeletonRenderer.setColorId(actorId, pickSquareActor.getColor0());
             }
             controller.repaint();
         } else if (event instanceof AB2Image2DClickEvent) {
