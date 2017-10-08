@@ -158,7 +158,7 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
         logger.info("imageNormalHeight="+imageNormalHeight);
         Vector2 v0=new Vector2(0.1f, 0.6f);
         Vector2 v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
-        image2DActor=new Image2DActor(getNextActorIndex(), v0, v1, bufferedImage, 1.0f);
+        image2DActor=new Image2DActor(this, getNextActorIndex(), v0, v1, bufferedImage, 1.0f);
         colorIdMap.put(image2DActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
         drawShaderSequence.getActorSequence().add(image2DActor);
         pickShaderSequence.getActorSequence().add(image2DActor);
@@ -192,29 +192,6 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
         }
 
         logger.info("Added all skeletons to Simulated Volume");
-    }
-
-    @Override
-    protected Matrix4 getModelMatrix() {
-        //logger.info("getModelMatrix()");
-        if (modelMatrix==null) {
-            logger.info("computing new Model matrix");
-            Matrix4 translationMatrix = new Matrix4();
-            translationMatrix.set(
-                    1.0f, 0.0f, 0.0f, 0.0f,
-                    0.0f, 1.0f, 0.0f, 0.0f,
-                    0.0f, 0.0f, 1.0f, 0.0f,
-                    -0.5f, -0.5f, 0.0f, 1.0f);
-            Matrix4 scaleMatrix = new Matrix4();
-            scaleMatrix.set(
-                    2.0f, 0.0f, 0.0f, 0.0f,
-                    0.0f, 2.0f, 0.0f, 0.0f,
-                    0.0f, 0.0f, 2.0f, 0.0f,
-                    0.0f, 0.0f, 0.0f, 1.0f);
-            modelMatrix=translationMatrix.multiply(scaleMatrix);
-        }
-        //logger.info("returning modelMatrix="+modelMatrix.toString());
-        return modelMatrix;
     }
 
     public void reshape(GL4 gl, int x, int y, int width, int height) {

@@ -109,8 +109,8 @@ public class BoundingBoxActor extends GLAbstractActor
             actorShader.setColor0(gl, actorColor);
         }
 
-        actorShader.setMVP2d(gl, renderer.getVp2d());
-        actorShader.setMVP3d(gl, renderer.getVp3d());
+        actorShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
+        actorShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
         actorShader.setTwoDimensional(gl, false);
         actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_NONE);
 

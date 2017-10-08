@@ -75,8 +75,8 @@ public class PointSetActor extends GLAbstractActor {
 
         if (shader instanceof AB2ActorShader) {
             AB2ActorShader actorShader=(AB2ActorShader)shader;
-            actorShader.setMVP3d(gl, renderer.getVp3d());
-            actorShader.setMVP2d(gl, renderer.getVp2d());
+            actorShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
+            actorShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
             actorShader.setTwoDimensional(gl, false);
             actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_NONE);
 

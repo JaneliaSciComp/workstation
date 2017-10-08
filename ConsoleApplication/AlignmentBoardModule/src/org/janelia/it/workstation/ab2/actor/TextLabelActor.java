@@ -219,8 +219,8 @@ public class TextLabelActor extends GLAbstractActor {
     public void display(GL4 gl, GLShaderProgram shader) {
         if (shader instanceof AB2ActorShader) {
             AB2ActorShader actorShader=(AB2ActorShader)shader;
-            actorShader.setMVP2d(gl, renderer.getVp2d());
-            actorShader.setMVP3d(gl, renderer.getVp3d());
+            actorShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
+            actorShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
             actorShader.setTwoDimensional(gl, true);
 
             actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_2D_R8);
