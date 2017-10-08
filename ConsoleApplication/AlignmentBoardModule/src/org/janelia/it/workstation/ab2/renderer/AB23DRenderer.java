@@ -5,6 +5,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 import javax.media.opengl.GL4;
@@ -46,18 +50,34 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     protected Vantage vantage3d;
     protected Vantage vantage2d;
 
-    Matrix4 mvp3d;
-    Matrix4 mvp2d;
+    Matrix4 vp3d;
+    Matrix4 vp2d;
 
     protected IntBuffer pickFramebufferId;
     protected IntBuffer pickColorTextureId;
     protected IntBuffer pickDepthTextureId;
 
-    protected GLShaderActionSequence drawActionSequence=new GLShaderActionSequence(AB23DRenderer.class.getName()+"_DRAW");
-    protected GLShaderActionSequence pickActionSequence=new GLShaderActionSequence( AB23DRenderer.class.getName()+"_PICK");
+    protected List<GLShaderActionSequence> drawShaderList=new ArrayList<>();
+    protected List<GLShaderActionSequence> pickShaderList=new ArrayList<>();
 
-    protected final GLShaderProgram drawShader;
-    protected final GLShaderProgram pickShader;
+    public void addDrawShaderActionSequence(GLShaderActionSequence shaderActionSequence) {
+        drawShaderList.add(shaderActionSequence);
+    }
+
+    public void addPickShaderActionSequence(GLShaderActionSequence shaderActionSequence) {
+        pickShaderList.add(shaderActionSequence);
+    }
+
+    public GLShaderActionSequence getDrawShaderActionSequenceByIndex(int i) { return drawShaderList.get(i); }
+
+    public GLShaderActionSequence getPickShaderActionSequenceByIndex(int i) { return pickShaderList.get(i); }
+
+    Map<Integer, Vector4> colorIdMap=new HashMap<>();
+
+    public Map<Integer, Vector4> getColorIdMap() { return colorIdMap; }
+
+//    protected final GLShaderProgram drawShader;
+//    protected final GLShaderProgram pickShader;
 
     protected boolean initialized=false;
 
@@ -80,7 +100,7 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         backgroundColorBuffer.put(3,backgroundColor.get(3));
     }
 
-    public AB23DRenderer(GLShaderProgram drawShader, GLShaderProgram pickShader) {
+    public AB23DRenderer() {
         setBackgroundColorBuffer();
         vantage3d=new Vantage(null);
         vantage2d=new Vantage(null);
@@ -91,10 +111,10 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         vantage3d.setFocus(0.0f,0.0f,(float)DEFAULT_CAMERA_FOCUS_DISTANCE);
         vantage2d.setFocus(0.0f,0.0f,(float)DEFAULT_CAMERA_FOCUS_DISTANCE);
 
-        this.drawShader=drawShader;
-        this.pickShader=pickShader;
-        drawActionSequence.setActorMode(GLAbstractActor.Mode.DRAW);
-        pickActionSequence.setActorMode(GLAbstractActor.Mode.PICK);
+//        this.drawShader=drawShader;
+//        this.pickShader=pickShader;
+//        drawActionSequence.setActorMode(GLAbstractActor.Mode.DRAW);
+//        pickActionSequence.setActorMode(GLAbstractActor.Mode.PICK);
 
     }
 
@@ -113,36 +133,57 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     protected synchronized void initSync(GL4 gl) {
         try {
 
-            drawActionSequence.setShader(drawShader);
-            drawActionSequence.setApplyMemoryBarrier(false);
-            drawActionSequence.init(gl);
+            for (GLShaderActionSequence shaderActionSequence : drawShaderList) {
+                shaderActionSequence.init(gl);
+            }
 
-            pickActionSequence.setShader(pickShader);
-            pickActionSequence.setApplyMemoryBarrier(false);
-            pickActionSequence.init(gl);
+            for (GLShaderActionSequence shaderActionSequence : pickShaderList) {
+                shaderActionSequence.init(gl);
+            }
+
+//            drawActionSequence.setShader(drawShader);
+//            drawActionSequence.setApplyMemoryBarrier(false);
+//            drawActionSequence.init(gl);
+
+//            pickActionSequence.setShader(pickShader);
+//            pickActionSequence.setApplyMemoryBarrier(false);
+//            pickActionSequence.init(gl);
 
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    protected abstract GLShaderUpdateCallback getDrawShaderUpdateCallback();
+//    protected abstract GLShaderUpdateCallback getDrawShaderUpdateCallback();
 
-    protected abstract GLActorUpdateCallback getActorSequenceDrawUpdateCallback();
+//    protected abstract GLActorUpdateCallback getActorSequenceDrawUpdateCallback();
 
-    protected abstract GLShaderUpdateCallback getPickShaderUpdateCallback();
+//    protected abstract GLShaderUpdateCallback getPickShaderUpdateCallback();
 
-    protected abstract GLActorUpdateCallback getActorSequencePickUpdateCallback();
+//    protected abstract GLActorUpdateCallback getActorSequencePickUpdateCallback();
 
     public void dispose(GL4 gl) {
-        drawActionSequence.dispose(gl);
-        pickActionSequence.dispose(gl);
+
+        for (GLShaderActionSequence shaderActionSequence : drawShaderList) {
+            shaderActionSequence.dispose(gl);
+        }
+
+        for (GLShaderActionSequence shaderActionSequence : pickShaderList) {
+            shaderActionSequence.dispose(gl);
+        }
+
+//        drawActionSequence.dispose(gl);
+//        pickActionSequence.dispose(gl);
     }
 
-    protected Matrix4 getModelMatrix() {
-        Matrix4 modelMatrix=new Matrix4(); // default constructor is identity
-        return modelMatrix;
-    }
+//    protected Matrix4 getModelMatrix() {
+//        Matrix4 modelMatrix=new Matrix4(); // default constructor is identity
+//        return modelMatrix;
+//    }
+
+    public Matrix4 getVp3d() { return new Matrix4(vp3d); }
+
+    public Matrix4 getVp2d() { return new Matrix4(vp2d); }
 
     public void display(GL4 gl) {
         displaySync(gl);
@@ -156,22 +197,26 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         gl.glBlendFunc(GL4.GL_SRC_ALPHA, GL4.GL_ONE_MINUS_SRC_ALPHA);
         gl.glClearBufferfv(gl.GL_COLOR, 0, backgroundColorBuffer);
 
-        Matrix4 modelMatrix3d=new Matrix4(getModelMatrix());
-        Matrix4 modelMatrix2d=new Matrix4(getModelMatrix());
+//      Matrix4 modelMatrix3d=new Matrix4(getModelMatrix());
+//      Matrix4 modelMatrix2d=new Matrix4(getModelMatrix());
 
         Matrix4 projectionMatrix3d=new Matrix4(camera3d.getProjectionMatrix());
         Matrix4 viewMatrix3d=new Matrix4(camera3d.getViewMatrix());
-        mvp3d=modelMatrix3d.multiply(viewMatrix3d.multiply(projectionMatrix3d));
+        vp3d=viewMatrix3d.multiply(projectionMatrix3d);
+//        mvp3d=modelMatrix3d.multiply(viewMatrix3d.multiply(projectionMatrix3d));
 
         Matrix4 projectionMatrix2d=new Matrix4(camera2d.getProjectionMatrix());
         Matrix4 viewMatrix2d=new Matrix4(camera2d.getViewMatrix());
-        mvp2d=modelMatrix2d.multiply(viewMatrix2d.multiply(projectionMatrix2d));
+        vp2d=viewMatrix2d.multiply(projectionMatrix2d);
+//        mvp2d=modelMatrix2d.multiply(viewMatrix2d.multiply(projectionMatrix2d));
 
         //logger.info("Check1.0");
-        drawActionSequence.display(gl);
+        for (GLShaderActionSequence shaderActionSequence : drawShaderList) {
+            shaderActionSequence.display(gl);
+        }
         //logger.info("Check1.1");
 
-        if (mouseClickEvents.size()>0 && pickActionSequence.getActorSequence().size()>0) {
+        if (mouseClickEvents.size()>0 && pickShaderList.size()>0) {
 
             // From: https://www.opengl.org/discussion_boards/showthread.php/198703-Framebuffer-Integer-Texture-Attachment
             //
@@ -206,7 +251,9 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 
             //logger.info("pickActionSequence.display() start");
 
-            pickActionSequence.display(gl);
+            for (GLShaderActionSequence shaderActionSequence : pickShaderList) {
+                shaderActionSequence.display(gl);
+            }
 
             //logger.info("pickActionSequence.display() end");
 

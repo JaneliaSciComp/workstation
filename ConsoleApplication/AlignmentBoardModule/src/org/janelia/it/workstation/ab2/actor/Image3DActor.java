@@ -9,9 +9,13 @@ import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector2;
 import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2Image2DClickEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
+import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
+import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
+import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +38,8 @@ public class Image3DActor extends GLAbstractActor {
     int dimZ;
     byte data3d[];
 
-    public Image3DActor(int actorId, Vector3 v0, Vector3 v1, int dimX, int dimY, int dimZ, byte[] data3d) {
+    public Image3DActor(AB23DRenderer renderer, int actorId, Vector3 v0, Vector3 v1, int dimX, int dimY, int dimZ, byte[] data3d) {
+        super(renderer);
         this.actorId=actorId;
         this.v0=v0;
         this.v1=v1;
@@ -45,8 +50,8 @@ public class Image3DActor extends GLAbstractActor {
     }
 
     @Override
-    public void init(GL4 gl) {
-        if (this.mode == Mode.DRAW) {
+    public void init(GL4 gl, GLShaderProgram shader) {
+        if (shader instanceof AB2ActorShader) {
 
             // We need to provide a sequence of quads, which we will create using two triangles each.
             // These quads will populate the volume bounded by v0 and v1.
@@ -112,8 +117,19 @@ public class Image3DActor extends GLAbstractActor {
     }
 
     @Override
-    public void display(GL4 gl) {
-        if (this.mode==Mode.DRAW) {
+    public void display(GL4 gl, GLShaderProgram shader) {
+        if (shader instanceof AB2ActorShader) {
+            AB2ActorShader actorShader=(AB2ActorShader)shader;
+            actorShader.setMVP2d(gl, renderer.getVp2d());
+            actorShader.setMVP3d(gl, renderer.getVp3d());
+            actorShader.setTwoDimensional(gl, false);
+            actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_3D_RGBA);
+
+            Vector4 actorColor=renderer.getColorIdMap().get(actorId);
+            if (actorColor!=null) {
+                actorShader.setColor0(gl, actorColor);
+            }
+
             gl.glActiveTexture(GL4.GL_TEXTURE0);
             checkGlError(gl, "d1 glActiveTexture");
             gl.glBindTexture(GL4.GL_TEXTURE_3D, imageTextureId.get(0));
@@ -140,8 +156,8 @@ public class Image3DActor extends GLAbstractActor {
     }
 
     @Override
-    public void dispose(GL4 gl) {
-        if (mode==Mode.DRAW) {
+    public void dispose(GL4 gl, GLShaderProgram shader) {
+        if (shader instanceof AB2ActorShader) {
             gl.glDeleteVertexArrays(1, vertexArrayId);
             gl.glDeleteBuffers(1, vertexBufferId);
             gl.glDeleteTextures(1, imageTextureId);

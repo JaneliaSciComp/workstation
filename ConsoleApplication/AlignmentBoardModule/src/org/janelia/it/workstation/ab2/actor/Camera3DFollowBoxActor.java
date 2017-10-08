@@ -6,7 +6,11 @@ import java.nio.IntBuffer;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
+import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
+import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
+import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,14 +26,15 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
 
     FloatBuffer boundaryVertexFb;
 
-    public Camera3DFollowBoxActor(int actorId, Vector3 v0, Vector3 v1) {
+    public Camera3DFollowBoxActor(AB23DRenderer renderer, int actorId, Vector3 v0, Vector3 v1) {
+        super(renderer);
         this.actorId=actorId;
         this.v0=v0;
         this.v1=v1;
     }
 
     @Override
-    public void init(GL4 gl) {
+    public void init(GL4 gl, GLShaderProgram shader) {
 
         float[] boundaryData = new float[] {
                 v0.getX(), v0.getY(), v0.getZ(),
@@ -93,7 +98,18 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
     }
 
     @Override
-    public void display(GL4 gl) {
+    public void display(GL4 gl, GLShaderProgram shader) {
+
+        AB2ActorShader actorShader=(AB2ActorShader)shader;
+        actorShader.setMVP3d(gl, renderer.getVp3d());
+        actorShader.setMVP2d(gl, renderer.getVp2d());
+        actorShader.setTwoDimensional(gl, false);
+        actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_NONE);
+
+        Vector4 actorColor=renderer.getColorIdMap().get(actorId);
+        if (actorColor!=null) {
+            actorShader.setColor0(gl, actorColor);
+        }
 
         gl.glBindVertexArray(boundaryVertexArrayId.get(0));
         checkGlError(gl, "d1 glBindVertexArray() error");
@@ -117,7 +133,7 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
     }
 
     @Override
-    public void dispose(GL4 gl) {
+    public void dispose(GL4 gl, GLShaderProgram shader) {
         gl.glDeleteVertexArrays(1, boundaryVertexArrayId);
         gl.glDeleteBuffers(1, boundaryVertexBufferId);
     }

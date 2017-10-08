@@ -29,6 +29,7 @@ import org.janelia.it.workstation.ab2.actor.TextLabelActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
+import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderUpdateCallback;
 import org.janelia.it.workstation.ab2.model.AB2Image3D_RGBA8UI;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
@@ -54,8 +55,10 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
     private Image3DActor image3DActor;
     private TextLabelActor textLabelActor;
 
-    Map<Integer, Vector4> styleIdMap=new HashMap<>();
     AB2SimulatedVolumeGenerator volumeGenerator;
+
+    GLShaderActionSequence drawShaderSequence;
+    GLShaderActionSequence pickShaderSequence;
 
     //static final int BOUNDING_BOX_ID=1;
 
@@ -64,19 +67,20 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
     private int getNextActorIndex() { actorCount++; return actorCount; }
 
     public AB2SkeletonRenderer() {
-        super(new AB2ActorShader(), new AB2ActorPickShader());
+        super();
 
-        drawActionSequence.setShaderUpdateCallback(getDrawShaderUpdateCallback());
-        drawActionSequence.setActorUpdateCallback(getActorSequenceDrawUpdateCallback());
+        drawShaderSequence=new GLShaderActionSequence("DrawSequence");
+        pickShaderSequence=new GLShaderActionSequence("PickSequence");
 
-        pickActionSequence.setShaderUpdateCallback(getPickShaderUpdateCallback());
-        pickActionSequence.setActorUpdateCallback(getActorSequencePickUpdateCallback());
+        drawShaderSequence.setShader(new AB2ActorShader());
+        pickShaderSequence.setShader(new AB2ActorPickShader());
 
+        addDrawShaderActionSequence(drawShaderSequence);
+        addPickShaderActionSequence(pickShaderSequence);
     }
 
     @Override
     public void init(GL4 gl) {
-
 
         addBoundingBox();
         addSkeletonActors();
@@ -100,13 +104,13 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
             List<Vector3> skeletonLines = skeletons.get(i).getSkeletonLineSet();
             Vector4 color=volumeGenerator.getColorByLabelIndex(i);
 
-            PointSetActor pointSetActor = new PointSetActor(getNextActorIndex(), skeletonPoints);
-            drawActionSequence.getActorSequence().add(pointSetActor);
-            styleIdMap.put(pointSetActor.getActorId(), color);
+            PointSetActor pointSetActor = new PointSetActor(this, getNextActorIndex(), skeletonPoints);
+            drawShaderSequence.getActorSequence().add(pointSetActor);
+            colorIdMap.put(pointSetActor.getActorId(), color);
 
-            LineSetActor lineSetActor = new LineSetActor(getNextActorIndex(), skeletonLines);
-            drawActionSequence.getActorSequence().add(lineSetActor);
-            styleIdMap.put(lineSetActor.getActorId(), color);
+            LineSetActor lineSetActor = new LineSetActor(this, getNextActorIndex(), skeletonLines);
+            drawShaderSequence.getActorSequence().add(lineSetActor);
+            colorIdMap.put(lineSetActor.getActorId(), color);
         }
     }
 
@@ -115,24 +119,24 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
 
         Vector3 v0=new Vector3(0f, 0f, 0f);
         Vector3 v1=new Vector3(1f, 1f, 1f);
-        image3DActor=new Image3DActor(getNextActorIndex(), v0, v1, rawImage.getXDim(), rawImage.getYDim(), rawImage.getZDim(), rawImage.getData());
-        drawActionSequence.getActorSequence().add(image3DActor);
+        image3DActor=new Image3DActor(this, getNextActorIndex(), v0, v1, rawImage.getXDim(), rawImage.getYDim(), rawImage.getZDim(), rawImage.getData());
+        drawShaderSequence.getActorSequence().add(image3DActor);
     }
 
     private void addBoundingBox() {
         // Bounding Box
-        boundingBoxActor=new BoundingBoxActor(getNextActorIndex(), new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
-        styleIdMap.put(boundingBoxActor.getActorId(), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-        drawActionSequence.getActorSequence().add(boundingBoxActor);
+        boundingBoxActor=new BoundingBoxActor(this, getNextActorIndex(), new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
+        colorIdMap.put(boundingBoxActor.getActorId(), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+        drawShaderSequence.getActorSequence().add(boundingBoxActor);
     }
 
     private void addPickSquareActor() {
         // Pick Square
-        pickSquareActor=new PickSquareActor(getNextActorIndex(), new Vector2(0.95f, 0.95f), new Vector2(1.0f, 1.0f),
+        pickSquareActor=new PickSquareActor(this, getNextActorIndex(), new Vector2(0.95f, 0.95f), new Vector2(1.0f, 1.0f),
                 new Vector4(1f, 0f, 0f, 1f), new Vector4(0f, 1f, 0f, 1f));
-        styleIdMap.put(pickSquareActor.getActorId(), pickSquareActor.getColor0());
-        drawActionSequence.getActorSequence().add(pickSquareActor);
-        pickActionSequence.getActorSequence().add(pickSquareActor);
+        colorIdMap.put(pickSquareActor.getActorId(), pickSquareActor.getColor0());
+        drawShaderSequence.getActorSequence().add(pickSquareActor);
+        pickShaderSequence.getActorSequence().add(pickSquareActor);
     }
 
     private void addImage2DActor() {
@@ -155,26 +159,26 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
         Vector2 v0=new Vector2(0.1f, 0.6f);
         Vector2 v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
         image2DActor=new Image2DActor(getNextActorIndex(), v0, v1, bufferedImage, 1.0f);
-        styleIdMap.put(image2DActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
-        drawActionSequence.getActorSequence().add(image2DActor);
-        pickActionSequence.getActorSequence().add(image2DActor);
+        colorIdMap.put(image2DActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
+        drawShaderSequence.getActorSequence().add(image2DActor);
+        pickShaderSequence.getActorSequence().add(image2DActor);
     }
 
     private void addTextLabelActor() {
         // TextLabelActor
         Vector2 t0=new Vector2(0.1f, 0.2f);
-        textLabelActor=new TextLabelActor(getNextActorIndex(), TextLabelActor.UBUNTU_FONT_STRING, t0,
+        textLabelActor=new TextLabelActor(this, getNextActorIndex(), TextLabelActor.UBUNTU_FONT_STRING, t0,
                 new Vector4(1f, 1f, 1f, 1f), new Vector4(0.4f, 0.1f, 0.1f, 0.5f));
-        drawActionSequence.getActorSequence().add(textLabelActor);
-        pickActionSequence.getActorSequence().add(textLabelActor);
+        drawShaderSequence.getActorSequence().add(textLabelActor);
+        pickShaderSequence.getActorSequence().add(textLabelActor);
     }
 
-    public void setStyleIdColor(int styleId, Vector4 color) {
-        styleIdMap.put(styleId, color);
+    public void setColorId(int styleId, Vector4 color) {
+        colorIdMap.put(styleId, color);
     }
 
-    public Vector4 getStyleIdColor(int styleId) {
-        return styleIdMap.get(styleId);
+    public Vector4 getColorId(int styleId) {
+        return colorIdMap.get(styleId);
     }
 
 
@@ -224,86 +228,4 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
         disposePickFramebuffer(gl);
     }
 
-    @Override
-    protected GLShaderUpdateCallback getDrawShaderUpdateCallback() {
-        return new GLShaderUpdateCallback() {
-            @Override
-            public void update(GL4 gl, Object o) {
-                AB2ActorShader actorShader = (AB2ActorShader) drawShader;
-                actorShader.setMVP3d(gl, mvp3d);
-                actorShader.setMVP2d(gl, mvp2d);
-                gl.glPointSize(3.0f);
-            }
-        };
-    }
-
-    @Override
-    protected GLActorUpdateCallback getActorSequenceDrawUpdateCallback() {
-        return new GLActorUpdateCallback() {
-            @Override
-            public void update(GL4 gl, Object o) {
-
-                GLAbstractActor actor = (GLAbstractActor)o;
-                int actorId=actor.getActorId();
-                AB2ActorShader actorShader = (AB2ActorShader) drawShader;
-                Vector4 actorColor=styleIdMap.get(actorId);
-                if (actorColor!=null) {
-                    actorShader.setColor0(gl, actorColor);
-                }
-                if (actor.isTwoDimensional()) {
-                    actorShader.setTwoDimensional(gl, true);
-                } else {
-                    actorShader.setTwoDimensional(gl, false);
-                }
-                if (actor instanceof Image2DActor) {
-                    actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_2D_RGBA);
-                }
-                else if (actor instanceof TextLabelActor) {
-                    TextLabelActor textLabelActor=(TextLabelActor)actor;
-                    actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_2D_R8);
-                    actorShader.setColor0(gl, textLabelActor.getTextColor());
-                    actorShader.setColor1(gl, textLabelActor.getBackgroundColor());
-                }
-                else if (actor instanceof Image3DActor) {
-                    actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_3D_RGBA);
-                } else {
-                    actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_NONE);
-                }
-            }
-        };
-    }
-
-    @Override
-    protected GLShaderUpdateCallback getPickShaderUpdateCallback() {
-        return new GLShaderUpdateCallback() {
-            @Override
-            public void update(GL4 gl, Object o) {
-
-                AB2ActorPickShader actorShader = (AB2ActorPickShader) pickShader;
-                actorShader.setMVP3d(gl, mvp3d);
-                actorShader.setMVP2d(gl, mvp2d);
-                gl.glPointSize(3.0f);
-
-            }
-        };
-    }
-
-    @Override
-    protected GLActorUpdateCallback getActorSequencePickUpdateCallback() {
-        return new GLActorUpdateCallback() {
-            @Override
-            public void update(GL4 gl, Object o) {
-                GLAbstractActor actor = (GLAbstractActor)o;
-                AB2ActorPickShader actorPickShader=(AB2ActorPickShader) pickShader;
-                int pickIndex = actor.getPickIndex();
-                actorPickShader.setPickId(gl, pickIndex);
-                if (actor.isTwoDimensional()) {
-                    actorPickShader.setTwoDimensional(gl, true);
-                } else {
-                    actorPickShader.setTwoDimensional(gl, false);
-                }
-            }
-        };
-    }
-
-}
+ }

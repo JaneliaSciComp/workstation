@@ -18,7 +18,7 @@ public class GLShaderActionSequence {
     List<GLAbstractActor> actorSequence=new ArrayList<>();
     private GLShaderUpdateCallback shaderCallback;
     private GLActorUpdateCallback actorCallback;
-    private GLAbstractActor.Mode actorMode;
+    //private GLAbstractActor.Mode actorMode;
 
     public GLShaderActionSequence(String name) {
         this.name=name;
@@ -48,25 +48,25 @@ public class GLShaderActionSequence {
 
     public void setActorUpdateCallback(GLActorUpdateCallback actorCallback) { this.actorCallback=actorCallback; }
 
-    public void setActorMode(GLAbstractActor.Mode actorMode) {
-        this.actorMode=actorMode;
-    }
+    //public void setActorMode(GLAbstractActor.Mode actorMode) {
+    //    this.actorMode=actorMode;
+    //}
 
-    public GLAbstractActor.Mode getActorMode() {
-        return actorMode;
-    }
+    //public GLAbstractActor.Mode getActorMode() {
+    //    return actorMode;
+    //}
 
 
     public void dispose(GL4 gl) {
         for (GLAbstractActor actor : actorSequence) {
-            actor.dispose(gl);
+            actor.dispose(gl, shader);
         }
         shader.dispose(gl);
     }
 
     public void disposeAndClearActorsOnly(GL4 gl) {
         for (GLAbstractActor actor : actorSequence) {
-            actor.dispose(gl);
+            actor.dispose(gl, shader);
         }
         actorSequence.clear();
     }
@@ -79,8 +79,8 @@ public class GLShaderActionSequence {
     public void init(GL4 gl) throws Exception {
         shader.init(gl);
         for (GLAbstractActor actor : actorSequence) {
-            actor.setMode(actorMode);
-            actor.init(gl);
+//            actor.setMode(actorMode);
+            actor.init(gl, shader);
         }
     }
 
@@ -110,13 +110,13 @@ public class GLShaderActionSequence {
 
             //logger.info("starting actor="+actor.getClass().getName()+" actorId="+actor.getActorId());
 
-            actor.setMode(actorMode);
+//            actor.setMode(actorMode);
 
             if (actorCallback!=null) {
                 actorCallback.update(gl, actor);
             }
             //if (actor.isVisible()) {
-                actor.display(gl);
+                actor.display(gl, shader);
             //}
 
             //logger.info("finishing actor="+actor.getClass().getName()+" actorId="+actor.getActorId());

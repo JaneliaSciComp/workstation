@@ -13,6 +13,10 @@ import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2Image2DClickEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
+import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
+import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
+import org.janelia.it.workstation.ab2.shader.AB2ActorPickShader;
+import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +35,8 @@ public class Image2DActor extends GLAbstractActor {
     BufferedImage bufferedImage;
     float alpha;
 
-    public Image2DActor(int actorId, Vector2 v0, Vector2 v1, BufferedImage bufferedImage, float alpha) {
+    public Image2DActor(AB23DRenderer renderer, int actorId, Vector2 v0, Vector2 v1, BufferedImage bufferedImage, float alpha) {
+        super(renderer);
         this.actorId=actorId;
         this.v0=v0;
         this.v1=v1;
@@ -43,8 +48,8 @@ public class Image2DActor extends GLAbstractActor {
     public boolean isTwoDimensional() { return true; }
 
     @Override
-    public void init(GL4 gl) {
-        if (this.mode == Mode.DRAW) {
+    public void init(GL4 gl, GLShaderProgram shader) {
+        if (shader instanceof AB2ActorShader) {
 
             // This combines positional vertices interleaved with 2D texture coordinates. Note: z not used
             // but necessary for shader compatibility.
@@ -122,7 +127,7 @@ public class Image2DActor extends GLAbstractActor {
             gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST );
             gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
 
-        } else if (this.mode == Mode.PICK) {
+        } else if (shader instanceof AB2ActorPickShader) {
             if (pickIndex<0) {
                 pickIndex = AB2Controller.getController().getNextPickIndex();
                 AB2Controller.getController().setPickEvent(pickIndex, new AB2Image2DClickEvent(this));
@@ -133,40 +138,58 @@ public class Image2DActor extends GLAbstractActor {
     }
 
     @Override
-    public void display(GL4 gl) {
-        if (this.mode==Mode.DRAW) {
+    public void display(GL4 gl, GLShaderProgram shader) {
+        if (shader instanceof AB2ActorShader) {
+            AB2ActorShader actorShader=(AB2ActorShader)shader;
+            actorShader.setMVP3d(gl, renderer.getVp3d());
+            actorShader.setMVP2d(gl, renderer.getVp2d());
+            actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_2D_RGBA);
+
+            Vector4 actorColor=renderer.getColorIdMap().get(actorId);
+            if (actorColor!=null) {
+                actorShader.setColor0(gl, actorColor);
+            }
+
+            actorShader.setTwoDimensional(gl, true);
+
             gl.glActiveTexture(GL4.GL_TEXTURE0);
             checkGlError(gl, "d1 glActiveTexture");
             gl.glBindTexture(GL4.GL_TEXTURE_2D, imageTextureId.get(0));
             checkGlError(gl, "d2 glBindTexture()");
+        } else if (shader instanceof AB2ActorPickShader) {
+            AB2ActorPickShader pickShader=(AB2ActorPickShader)shader;
+            pickShader.setMVP2d(gl, renderer.getVp2d());
+            pickShader.setMVP3d(gl, renderer.getVp3d());
+            pickShader.setTwoDimensional(gl, true);
+            pickShader.setPickId(gl, getPickIndex());
         }
-        if (this.mode==Mode.DRAW || this.mode==Mode.PICK) {
-            gl.glBindVertexArray(vertexArrayId.get(0));
-            checkGlError(gl, "d3 glBindVertexArray()");
-            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
-            checkGlError(gl, "d4 glBindBuffer()");
-            gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 24, 0);
-            checkGlError(gl, "d5 glVertexAttribPointer()");
-            gl.glEnableVertexAttribArray(0);
-            checkGlError(gl, "d6 glEnableVertexAttribArray()");
-            gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 24, 12);
-            checkGlError(gl, "d7 glVertexAttribPointer()");
-            gl.glEnableVertexAttribArray(1);
-            checkGlError(gl, "d8 glEnableVertexAttribArray()");
-            gl.glDrawArrays(GL4.GL_TRIANGLES, 0, vertexFb.capacity()/2);
-            checkGlError(gl, "d9 glDrawArrays()");
-            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
-            checkGlError(gl, "d10 glBindBuffer()");
-        }
-        if (this.mode==Mode.DRAW) {
+
+        gl.glBindVertexArray(vertexArrayId.get(0));
+        checkGlError(gl, "d3 glBindVertexArray()");
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+        checkGlError(gl, "d4 glBindBuffer()");
+        gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 24, 0);
+        checkGlError(gl, "d5 glVertexAttribPointer()");
+        gl.glEnableVertexAttribArray(0);
+        checkGlError(gl, "d6 glEnableVertexAttribArray()");
+        gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 24, 12);
+        checkGlError(gl, "d7 glVertexAttribPointer()");
+        gl.glEnableVertexAttribArray(1);
+        checkGlError(gl, "d8 glEnableVertexAttribArray()");
+        gl.glDrawArrays(GL4.GL_TRIANGLES, 0, vertexFb.capacity()/2);
+        checkGlError(gl, "d9 glDrawArrays()");
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+        checkGlError(gl, "d10 glBindBuffer()");
+
+        if (shader instanceof AB2ActorShader) {
             gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
             checkGlError(gl, "d11 glBindTexture()");
         }
     }
 
     @Override
-    public void dispose(GL4 gl) {
-        if (mode==Mode.DRAW) {
+    public void dispose(GL4 gl, GLShaderProgram shader) {
+        if (shader instanceof AB2ActorShader) {
             gl.glDeleteVertexArrays(1, vertexArrayId);
             gl.glDeleteBuffers(1, vertexBufferId);
             gl.glDeleteTextures(1, imageTextureId);
