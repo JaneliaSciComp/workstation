@@ -38,7 +38,7 @@ import org.janelia.it.workstation.ab2.test.AB2SimulatedVolumeGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AB2SkeletonRenderer extends AB2Basic3DRenderer {
+public class AB2SkeletonRenderer extends AB23DRenderer {
 
     Logger logger= LoggerFactory.getLogger(AB2SkeletonRenderer.class);
 

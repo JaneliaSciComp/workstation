@@ -9,11 +9,9 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.it.workstation.ab2.event.AB2MouseWheelEvent;
 import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
-import org.janelia.it.workstation.ab2.renderer.AB2Basic3DRenderer;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2MouseDraggedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseReleasedEvent;
-import org.janelia.it.workstation.ab2.renderer.AB2SimpleCubeRenderer;
 
 public class AB2View3DMode extends AB2ControllerMode {
 
@@ -28,7 +26,7 @@ public class AB2View3DMode extends AB2ControllerMode {
     protected boolean bMouseIsDragging = false;
 
 
-    public AB2View3DMode(AB2Controller controller, AB2Basic3DRenderer renderer) {
+    public AB2View3DMode(AB2Controller controller, AB23DRenderer renderer) {
         super(controller);
         this.renderer=renderer;
     }
