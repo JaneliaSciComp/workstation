@@ -1,3 +1,14 @@
+// 6.6
+
+Workstation Browser
+* Fixed issue with LSM naming in download wizard
+* After restarting, viewer state is now restored even if a filter was not named
+
+Horta/Large Volume Viewer
+* Added Crosscheck Neuron group property combining Radius & Background
+* Fixed AnnotationFilter to navigate to correct location in Horta
+* Fixed issues associated with empty Neuron Tags
+
 // 6.5
 
 Workstation Browser
