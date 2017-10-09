@@ -19,7 +19,6 @@ import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//import static org.janelia.it.workstation.ab2.gl.GLAbstractActor.Mode.DRAW;
 
 public abstract class GLAbstractActor {
 
@@ -31,19 +30,7 @@ public abstract class GLAbstractActor {
         this.renderer=renderer;
     }
 
-//    public enum Mode { DRAW, PICK };
-
-    //private static int mvpPrecomputeGroupCount=0;
     public static boolean checkGlErrorActive=false;
-
-//    protected Mode mode=DRAW;
-
-//    public static synchronized int getNextMvpPrecomputeGroup() {
-//        mvpPrecomputeGroupCount++;
-//        return mvpPrecomputeGroupCount;
-//    }
-
-    int mvpPrecomputeGroup=0;
 
     protected int pickIndex=-1;
 
@@ -51,19 +38,10 @@ public abstract class GLAbstractActor {
 
     public int getPickIndex() { return pickIndex; }
 
-//    protected GLActorUpdateCallback actorCallback;
-
     private Matrix4 modelMatrix;
-
-    //protected boolean isVisible=true;
 
     protected int actorId=0;
 
-//    public Mode getMode() { return mode; }
-
-//    public void setMode(Mode mode) { this.mode=mode; }
-
-    // Callable within a non-GL setup thread before init()
     public void setup() {}
 
     public abstract void dispose(GL4 gl, GLShaderProgram shader);
@@ -71,12 +49,6 @@ public abstract class GLAbstractActor {
     public abstract void init(GL4 gl, GLShaderProgram shader);
 
     public abstract void display(GL4 gl, GLShaderProgram shader);
-
-//    public void display(GL4 gl) {
-//        if (actorCallback!=null) {
-//            actorCallback.update(gl, this);
-//        }
-//    }
 
     public void setId(int id) {
         actorId=id;
@@ -107,10 +79,6 @@ public abstract class GLAbstractActor {
 
     public void setModelMatrix(Matrix4 modelMatrix) { this.modelMatrix=modelMatrix; }
 
-//    public void setUpdateCallback(GLActorUpdateCallback updateCallback) {
-//        this.actorCallback=updateCallback;
-//    }
-
     protected void checkGlError(GL4 gl, String message) {
         if (checkGlErrorActive) {
             int errorNumber = gl.glGetError();
@@ -121,22 +89,6 @@ public abstract class GLAbstractActor {
             logger.error("OpenGL error in "+className+" number=" + errorNumber + ": " + errorStr + ": " + message);
         }
     }
-
-//    public boolean isVisible() {
-//        return isVisible;
-//    }
-//
-//    public void setIsVisible(boolean isVisible) {
-//        this.isVisible = isVisible;
-//    }
-
-//    public int getMvpPrecomputeGroup() {
-//        return mvpPrecomputeGroup;
-//    }
-
-//    public void setMvpPrecomputeGroup(int mvpPrecomputeGroup) {
-//        this.mvpPrecomputeGroup = mvpPrecomputeGroup;
-//    }
 
     public static IntBuffer createGLIntBuffer(int capacity) {
         int intBytes=Integer.SIZE/Byte.SIZE;
