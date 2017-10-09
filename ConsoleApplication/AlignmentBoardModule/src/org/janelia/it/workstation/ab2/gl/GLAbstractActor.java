@@ -38,7 +38,7 @@ public abstract class GLAbstractActor {
 
     public int getPickIndex() { return pickIndex; }
 
-    private Matrix4 modelMatrix;
+    protected Matrix4 modelMatrix;
 
     protected int actorId=0;
 
@@ -65,7 +65,7 @@ public abstract class GLAbstractActor {
                     1.0f, 0.0f, 0.0f, 0.0f,
                     0.0f, 1.0f, 0.0f, 0.0f,
                     0.0f, 0.0f, 1.0f, 0.0f,
-                    -0.5f, -0.5f, 0.0f, 1.0f);
+                    -0.5f, -0.5f, -0.5f, 1.0f);
             Matrix4 scaleMatrix = new Matrix4();
             scaleMatrix.set(
                     2.0f, 0.0f, 0.0f, 0.0f,

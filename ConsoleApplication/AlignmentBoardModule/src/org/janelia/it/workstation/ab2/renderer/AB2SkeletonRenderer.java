@@ -20,6 +20,7 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.jacs.model.ontology.types.Text;
 import org.janelia.it.workstation.ab2.actor.BoundingBoxActor;
+import org.janelia.it.workstation.ab2.actor.Camera3DFollowBoxActor;
 import org.janelia.it.workstation.ab2.actor.Image2DActor;
 import org.janelia.it.workstation.ab2.actor.Image3DActor;
 import org.janelia.it.workstation.ab2.actor.LineSetActor;
@@ -45,6 +46,7 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
 
     private Matrix4 modelMatrix;
     private BoundingBoxActor boundingBoxActor;
+    private Camera3DFollowBoxActor cameraFollowBoxActor;
 
     private List<AB2NeuronSkeleton> skeletons;
     private List<PointSetActor> pointSetActors=new ArrayList<>();
@@ -90,8 +92,16 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
         addImage2DActor();
         addTextLabelActor();
 
+        addCameraFollowBoxActor();
+
         super.init(gl);
         initialized=true;
+    }
+
+    private void addCameraFollowBoxActor() {
+        cameraFollowBoxActor=new Camera3DFollowBoxActor(this, getNextActorIndex(), new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
+        colorIdMap.put(cameraFollowBoxActor.getActorId(), new Vector4(0.7f, 0.0f, 0.0f, 1.0f));
+        drawShaderSequence.getActorSequence().add(cameraFollowBoxActor);
     }
 
     private void addSkeletonActors() {

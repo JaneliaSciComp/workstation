@@ -5,6 +5,7 @@ import java.nio.IntBuffer;
 
 import javax.media.opengl.GL4;
 
+import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
@@ -136,6 +137,25 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
     public void dispose(GL4 gl, GLShaderProgram shader) {
         gl.glDeleteVertexArrays(1, boundaryVertexArrayId);
         gl.glDeleteBuffers(1, boundaryVertexBufferId);
+    }
+
+    public Matrix4 getModelMatrix() {
+        if (modelMatrix==null) {
+            Matrix4 translationMatrix = new Matrix4();
+            translationMatrix.set(
+                    1.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 1.0f, 0.0f,
+                    -0.5f, -0.5f, -0.5f, 1.0f);
+            Matrix4 scaleMatrix = new Matrix4();
+            scaleMatrix.set(
+                    2.5f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 2.5f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 2.5f, 0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f);
+            modelMatrix=translationMatrix.multiply(scaleMatrix);
+        }
+        return new Matrix4(modelMatrix);
     }
 
 }

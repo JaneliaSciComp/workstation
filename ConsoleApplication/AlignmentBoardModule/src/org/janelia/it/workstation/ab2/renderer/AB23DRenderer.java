@@ -35,7 +35,7 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2500;
     protected static final double MAX_CAMERA_FOCUS_DISTANCE = 1000000.0;
     protected static final double MIN_CAMERA_FOCUS_DISTANCE = 0.001;
-    public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 2.0;
+    public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 0.0;
 
     FloatBuffer backgroundColorBuffer=FloatBuffer.allocate(4);
     Vector4 backgroundColor=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
