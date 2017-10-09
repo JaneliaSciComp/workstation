@@ -85,17 +85,27 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
     public void init(GL4 gl) {
 
         addBoundingBox();
-        addSkeletonActors();
+        addOriginPointActor();
+//        addSkeletonActors();
 //        addImage3DActor();
 
-        addPickSquareActor();
-        addImage2DActor();
-        addTextLabelActor();
+//        addPickSquareActor();
+//        addImage2DActor();
+//        addTextLabelActor();
 
         addCameraFollowBoxActor();
 
         super.init(gl);
         initialized=true;
+    }
+
+    private void addOriginPointActor() {
+        List<Vector3> originPointList=new ArrayList<>();
+        originPointList.add(new Vector3(0.5f, 0.5f, 0.5f));
+        originPointList.add(new Vector3(0.5f, 0.5f, 0.5f));
+        PointSetActor pointSetActor = new PointSetActor(this, getNextActorIndex(), originPointList);
+        colorIdMap.put(pointSetActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
+        drawShaderSequence.getActorSequence().add(pointSetActor);
     }
 
     private void addCameraFollowBoxActor() {

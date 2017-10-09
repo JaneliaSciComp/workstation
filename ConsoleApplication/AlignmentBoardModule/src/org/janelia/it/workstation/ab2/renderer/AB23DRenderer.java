@@ -22,6 +22,7 @@ import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Viewport;
+import org.janelia.geometry3d.camera.ConstRotation;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
@@ -91,6 +92,10 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         backgroundColorBuffer.put(1,backgroundColor.get(1));
         backgroundColorBuffer.put(2,backgroundColor.get(2));
         backgroundColorBuffer.put(3,backgroundColor.get(3));
+    }
+
+    public ConstRotation getRotation() {
+        return vantage3d.getRotation();
     }
 
     public AB23DRenderer() {

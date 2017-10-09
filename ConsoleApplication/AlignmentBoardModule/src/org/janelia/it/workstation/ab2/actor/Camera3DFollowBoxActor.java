@@ -6,6 +6,7 @@ import java.nio.IntBuffer;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Rotation;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
@@ -155,7 +156,10 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
                     0.0f, 0.0f, 0.0f, 1.0f);
             modelMatrix=translationMatrix.multiply(scaleMatrix);
         }
-        return new Matrix4(modelMatrix);
+        Rotation r=new Rotation();
+        r.copy(renderer.getRotation());
+        r.transpose();
+        return new Matrix4(modelMatrix).multiply(r.asTransform());
     }
 
 }
