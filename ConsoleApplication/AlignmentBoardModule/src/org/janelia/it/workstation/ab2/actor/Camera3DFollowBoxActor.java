@@ -6,6 +6,7 @@ import java.nio.IntBuffer;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Quaternion;
 import org.janelia.geometry3d.Rotation;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
@@ -176,13 +177,38 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
         Vector3 rX=new Vector3(1f, 0f, 0f);
         Vector3 rY=new Vector3(0f, 1f, 0f);
 
+        // TODO: debug Quaternion version to match Rotation version
+
+        //Quaternion qR=r.convertRotationToQuaternion();
+        //Quaternion qY=new Quaternion().setFromAxisAngle(rX, xAngle);
+        //Quaternion qX=new Quaternion().setFromAxisAngle(rY, yAngle);
 
         Rotation yRotation=new Rotation();
         yRotation.setFromAxisAngle(rX, xAngle);
         Rotation xRotation=new Rotation();
         xRotation.setFromAxisAngle(rY, yAngle);
 
-        return new Matrix4(modelMatrix).multiply(yRotation.asTransform()).multiply(xRotation.asTransform()).multiply(r.asTransform());
+        //Quaternion xr=multiplyQuaternions(qX, qR);
+        //Quaternion yr=multiplyQuaternions(qY, xr);
+        //Rotation yR=new Rotation().setFromQuaternion(yr);
+
+      return new Matrix4(modelMatrix).multiply(yRotation.asTransform()).multiply(xRotation.asTransform()).multiply(r.asTransform());
+
+        //return new Matrix4(modelMatrix).multiply(yR.asTransform());
+    }
+
+    protected Quaternion multiplyQuaternions(Quaternion qQ, Quaternion rQ) {
+        Quaternion tQ=new Quaternion();
+        float[] t=tQ.asArray();
+        float[] q=qQ.asArray();
+        float[] r=rQ.asArray();
+
+        t[0]=r[0]*q[0]-r[1]*q[1]-r[2]*q[2]-r[3]*q[3];
+        t[1]=r[0]*q[1]+r[1]*q[0]-r[2]*q[3]+r[3]*q[2];
+        t[2]=r[0]*q[2]+r[1]*q[3]+r[2]*q[0]-r[3]*q[1];
+        t[3]=r[0]*q[3]-r[1]*q[2]+r[2]*q[1]+r[3]*q[0];
+
+        return tQ;
     }
 
 }
