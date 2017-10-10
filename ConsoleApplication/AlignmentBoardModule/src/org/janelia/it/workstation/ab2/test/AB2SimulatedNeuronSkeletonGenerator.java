@@ -42,9 +42,9 @@ public class AB2SimulatedNeuronSkeletonGenerator {
     public AB2NeuronSkeleton generateSkeleton() throws Exception {
         logger.info("generateSkeleton() start");
         skeleton=new AB2NeuronSkeleton();
-        double rootX=random.nextDouble()*0.8+0.1; // so we aren't starting at the edge
-        double rootY=random.nextDouble()*0.8+0.1;
-        double rootZ=random.nextDouble()*0.8+0.1;
+        double rootX=random.nextDouble()*0.7+0.15; // so we aren't starting at the edge
+        double rootY=random.nextDouble()*0.7+0.15;
+        double rootZ=random.nextDouble()*0.7+0.15;
         skeleton.addNode(rootX, rootY, rootZ, null);
         AB2NeuronSkeleton.Node rootNode=skeleton.getRootNode();
         if (random.nextDouble()<initialBranchProbability) {
@@ -96,6 +96,7 @@ public class AB2SimulatedNeuronSkeletonGenerator {
             if (nodeToExtendPosition.getX()<(boundingBox[0]+boundary) || nodeToExtendPosition.getX()>(boundingBox[3]-boundary)
                 || nodeToExtendPosition.getY()<(boundingBox[1]+boundary) || nodeToExtendPosition.getY()>(boundingBox[4]-boundary)
                     || nodeToExtendPosition.getZ()<(boundingBox[2]+boundary) || nodeToExtendPosition.getZ()>(boundingBox[5]-boundary)) {
+                logger.info("Discarding position="+nodeToExtendPosition.getX()+" "+nodeToExtendPosition.getY()+" "+nodeToExtendPosition.getZ());
                 continue; // out of bounds, discard
             }
             //logger.info("Check12");
@@ -112,6 +113,10 @@ public class AB2SimulatedNeuronSkeletonGenerator {
             if (DEBUG_COUNT>nodeCount*2) {
                 logger.error("Failed DEBUG_COUNT max of "+nodeCount*2);
                 return null;
+            } else {
+                if (DEBUG_COUNT%100==0) {
+                    logger.info("Computed "+DEBUG_COUNT+" cycles");
+                }
             }
             //logger.info("Check15 - skeleton.getSize()="+skeleton.getSize());
         }

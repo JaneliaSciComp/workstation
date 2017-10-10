@@ -159,7 +159,24 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
         Rotation r=new Rotation();
         r.copy(renderer.getRotation());
         r.transpose();
-        return new Matrix4(modelMatrix).multiply(r.asTransform());
+        Vector3 v=r.multiply(new Vector3(renderer.getFocusPosition3d()));
+        float d=renderer.getFocusDistance3d();
+        float xh=(float)Math.sqrt((double)(v.getX()*v.getX()+d*d));
+        float yh=(float)Math.sqrt((double)(v.getY()*v.getY()+d*d));
+        //logger.info("v="+v.toString()+" d="+d);
+        float yAngle=-1f*(float)Math.asin((double)(v.getX()/xh));
+        float xAngle=(float)Math.asin((double)(v.getY()/yh));
+
+        // The axes about which to rotate by these angles depends on the Y and X axes
+        // being first rotated into the current reference frame, using
+        // Rotation.setFromAxisAngle(axis, angle).
+
+        Rotation yRotation=new Rotation();
+        yRotation.setRotationFromAngleAboutY(yAngle);
+        Rotation xRotation=new Rotation();
+        xRotation.setRotationFromAngleAboutX(xAngle);
+
+        return new Matrix4(modelMatrix).multiply(r.asTransform()).multiply(yRotation.asTransform()).multiply(xRotation.asTransform());
     }
 
 }

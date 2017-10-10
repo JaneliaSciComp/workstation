@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import javax.media.opengl.GL4;
 import javax.media.opengl.glu.GLU;
 
+import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.OrthographicCamera;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -96,6 +97,14 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 
     public ConstRotation getRotation() {
         return vantage3d.getRotation();
+    }
+
+    public float getFocusDistance3d() {
+        return camera3d.getCameraFocusDistance();
+    }
+
+    public ConstVector3 getFocusPosition3d() {
+        return vantage3d.getFocusPosition();
     }
 
     public AB23DRenderer() {
