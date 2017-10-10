@@ -170,11 +170,13 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
         // The axes about which to rotate by these angles depends on the Y and X axes
         // being first rotated into the current reference frame, using
         // Rotation.setFromAxisAngle(axis, angle).
+        Vector3 rX=r.multiply(new Vector3(1f, 0f, 0f));
+        Vector3 rY=r.multiply(new Vector3(0f, 1f, 0f));
 
         Rotation yRotation=new Rotation();
-        yRotation.setRotationFromAngleAboutY(yAngle);
+        yRotation.setFromAxisAngle(rX, xAngle);
         Rotation xRotation=new Rotation();
-        xRotation.setRotationFromAngleAboutX(xAngle);
+        xRotation.setFromAxisAngle(rY, yAngle);
 
         return new Matrix4(modelMatrix).multiply(r.asTransform()).multiply(yRotation.asTransform()).multiply(xRotation.asTransform());
     }

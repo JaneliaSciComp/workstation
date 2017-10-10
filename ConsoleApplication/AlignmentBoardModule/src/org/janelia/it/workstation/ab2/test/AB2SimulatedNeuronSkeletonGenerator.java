@@ -45,6 +45,7 @@ public class AB2SimulatedNeuronSkeletonGenerator {
         double rootX=random.nextDouble()*0.7+0.15; // so we aren't starting at the edge
         double rootY=random.nextDouble()*0.7+0.15;
         double rootZ=random.nextDouble()*0.7+0.15;
+        logger.info("Root x="+rootX+" y="+rootY+" z="+rootZ);
         skeleton.addNode(rootX, rootY, rootZ, null);
         AB2NeuronSkeleton.Node rootNode=skeleton.getRootNode();
         if (random.nextDouble()<initialBranchProbability) {
@@ -92,11 +93,18 @@ public class AB2SimulatedNeuronSkeletonGenerator {
             //}
             double boundary=stepLength*5;
             Vector3 nodeToExtendPosition=new Vector3((float)nodeToExtend.x(), (float)nodeToExtend.y(), (float)nodeToExtend.z());
+            logger.info("Node x="+nodeToExtendPosition.getX()+" y="+nodeToExtendPosition.getY()+" z="+nodeToExtendPosition.getZ());
+            logger.info("nextVector x="+nextVector.getX()+" y="+nextVector.getY()+" z="+nextVector.getZ());
             nodeToExtendPosition.add(nextVector);
             if (nodeToExtendPosition.getX()<(boundingBox[0]+boundary) || nodeToExtendPosition.getX()>(boundingBox[3]-boundary)
                 || nodeToExtendPosition.getY()<(boundingBox[1]+boundary) || nodeToExtendPosition.getY()>(boundingBox[4]-boundary)
                     || nodeToExtendPosition.getZ()<(boundingBox[2]+boundary) || nodeToExtendPosition.getZ()>(boundingBox[5]-boundary)) {
                 logger.info("Discarding position="+nodeToExtendPosition.getX()+" "+nodeToExtendPosition.getY()+" "+nodeToExtendPosition.getZ());
+                DEBUG_COUNT++;
+                if (DEBUG_COUNT>nodeCount*2) {
+                    logger.error("Maxed out tries");
+                    return null;
+                }
                 continue; // out of bounds, discard
             }
             //logger.info("Check12");
