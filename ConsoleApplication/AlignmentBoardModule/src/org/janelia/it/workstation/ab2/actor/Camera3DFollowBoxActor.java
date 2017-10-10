@@ -141,7 +141,7 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
     }
 
     public Matrix4 getModelMatrix() {
-        if (modelMatrix==null) {
+        //if (modelMatrix==null) {
             Matrix4 translationMatrix = new Matrix4();
             translationMatrix.set(
                     1.0f, 0.0f, 0.0f, 0.0f,
@@ -150,12 +150,12 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
                     -0.5f, -0.5f, -0.5f, 1.0f);
             Matrix4 scaleMatrix = new Matrix4();
             scaleMatrix.set(
-                    2.5f, 0.0f, 0.0f, 0.0f,
-                    0.0f, 2.5f, 0.0f, 0.0f,
-                    0.0f, 0.0f, 2.5f, 0.0f,
+                    3.5f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 3.5f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 3.5f, 0.0f,
                     0.0f, 0.0f, 0.0f, 1.0f);
             modelMatrix=translationMatrix.multiply(scaleMatrix);
-        }
+        //}
         Rotation r=new Rotation();
         r.copy(renderer.getRotation());
         r.transpose();
@@ -170,15 +170,19 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
         // The axes about which to rotate by these angles depends on the Y and X axes
         // being first rotated into the current reference frame, using
         // Rotation.setFromAxisAngle(axis, angle).
-        Vector3 rX=r.multiply(new Vector3(1f, 0f, 0f));
-        Vector3 rY=r.multiply(new Vector3(0f, 1f, 0f));
+        //Vector3 rX=r.multiply(new Vector3(1f, 0f, 0f));
+        //Vector3 rY=r.multiply(new Vector3(0f, 1f, 0f));
+
+        Vector3 rX=new Vector3(1f, 0f, 0f);
+        Vector3 rY=new Vector3(0f, 1f, 0f);
+
 
         Rotation yRotation=new Rotation();
         yRotation.setFromAxisAngle(rX, xAngle);
         Rotation xRotation=new Rotation();
         xRotation.setFromAxisAngle(rY, yAngle);
 
-        return new Matrix4(modelMatrix).multiply(r.asTransform()).multiply(yRotation.asTransform()).multiply(xRotation.asTransform());
+        return new Matrix4(modelMatrix).multiply(yRotation.asTransform()).multiply(xRotation.asTransform()).multiply(r.asTransform());
     }
 
 }

@@ -25,10 +25,10 @@ public class AB2SimulatedNeuronSkeletonGenerator {
 
     private double branchProbability=0.05;
     private double initialBranchProbability=0.5;
-    private double stepLength=0.005;
+    private double stepLength=0.003;
     private double[] boundingBox={ 0.0, 0.0, 0.0, 1.0, 1.0, 1.0 };
     private double stepAngleLimitRadians=Math.PI/4.0;
-    private int nodeCount=1000;
+    private int nodeCount=500;
     private AB2NeuronSkeleton skeleton;
 
     public AB2SimulatedNeuronSkeletonGenerator() {
@@ -93,15 +93,15 @@ public class AB2SimulatedNeuronSkeletonGenerator {
             //}
             double boundary=stepLength*5;
             Vector3 nodeToExtendPosition=new Vector3((float)nodeToExtend.x(), (float)nodeToExtend.y(), (float)nodeToExtend.z());
-            logger.info("Node x="+nodeToExtendPosition.getX()+" y="+nodeToExtendPosition.getY()+" z="+nodeToExtendPosition.getZ());
-            logger.info("nextVector x="+nextVector.getX()+" y="+nextVector.getY()+" z="+nextVector.getZ());
+            //logger.info("Node x="+nodeToExtendPosition.getX()+" y="+nodeToExtendPosition.getY()+" z="+nodeToExtendPosition.getZ());
+            //logger.info("nextVector x="+nextVector.getX()+" y="+nextVector.getY()+" z="+nextVector.getZ());
             nodeToExtendPosition.add(nextVector);
             if (nodeToExtendPosition.getX()<(boundingBox[0]+boundary) || nodeToExtendPosition.getX()>(boundingBox[3]-boundary)
                 || nodeToExtendPosition.getY()<(boundingBox[1]+boundary) || nodeToExtendPosition.getY()>(boundingBox[4]-boundary)
                     || nodeToExtendPosition.getZ()<(boundingBox[2]+boundary) || nodeToExtendPosition.getZ()>(boundingBox[5]-boundary)) {
-                logger.info("Discarding position="+nodeToExtendPosition.getX()+" "+nodeToExtendPosition.getY()+" "+nodeToExtendPosition.getZ());
+                //logger.info("Discarding position="+nodeToExtendPosition.getX()+" "+nodeToExtendPosition.getY()+" "+nodeToExtendPosition.getZ());
                 DEBUG_COUNT++;
-                if (DEBUG_COUNT>nodeCount*2) {
+                if (DEBUG_COUNT>nodeCount) {
                     logger.error("Maxed out tries");
                     return null;
                 }
@@ -117,15 +117,15 @@ public class AB2SimulatedNeuronSkeletonGenerator {
                     addBranchNodes(newNode, true);
                 }
             }
-            DEBUG_COUNT++;
-            if (DEBUG_COUNT>nodeCount*2) {
-                logger.error("Failed DEBUG_COUNT max of "+nodeCount*2);
-                return null;
-            } else {
-                if (DEBUG_COUNT%100==0) {
-                    logger.info("Computed "+DEBUG_COUNT+" cycles");
-                }
-            }
+            //DEBUG_COUNT++;
+//            if (DEBUG_COUNT>nodeCount*2) {
+//                logger.error("Failed DEBUG_COUNT max of "+nodeCount*2);
+//                return null;
+//            } else {
+//                if (DEBUG_COUNT%100==0) {
+//                    logger.info("Computed "+DEBUG_COUNT+" cycles");
+//                }
+//            }
             //logger.info("Check15 - skeleton.getSize()="+skeleton.getSize());
         }
         logger.info("generateSkeleton() end - nodeCount="+skeleton.getSize());
