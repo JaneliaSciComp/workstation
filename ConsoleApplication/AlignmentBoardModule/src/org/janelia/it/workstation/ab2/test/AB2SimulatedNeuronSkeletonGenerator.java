@@ -23,12 +23,12 @@ public class AB2SimulatedNeuronSkeletonGenerator {
 
     private Random random;
 
-    private double branchProbability=0.05;
+    private double branchProbability=0.10;
     private double initialBranchProbability=0.5;
-    private double stepLength=0.003;
+    private double stepLength=0.005;
     private double[] boundingBox={ 0.0, 0.0, 0.0, 1.0, 1.0, 1.0 };
     private double stepAngleLimitRadians=Math.PI/4.0;
-    private int nodeCount=500;
+    private int nodeCount=1000;
     private AB2NeuronSkeleton skeleton;
 
     public AB2SimulatedNeuronSkeletonGenerator() {

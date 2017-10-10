@@ -87,11 +87,11 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
         addBoundingBox();
         addOriginPointActor();
 //        addSkeletonActors();
-//        addImage3DActor();
+        addImage3DActor();
 
-//        addPickSquareActor();
-//        addImage2DActor();
-//        addTextLabelActor();
+        addPickSquareActor();
+        addImage2DActor();
+        addTextLabelActor();
 
         addCameraFollowBoxActor();
 

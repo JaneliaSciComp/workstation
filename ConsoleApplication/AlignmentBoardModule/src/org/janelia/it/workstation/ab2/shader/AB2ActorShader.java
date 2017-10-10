@@ -28,6 +28,11 @@ public class AB2ActorShader extends GLShaderProgram {
         checkGlError(gl, "AB2ActorShader setMVP3d() error");
     }
 
+    public void setTextureMVP3d(GL4 gl, Matrix4 mvp) {
+        setUniformMatrix4fv(gl, "textureMvp3d", false, mvp.asArray());
+        checkGlError(gl, "AB2ActorShader setTextureMVP3d() error");
+    }
+
     public void setMVP2d(GL4 gl, Matrix4 mvp) {
         setUniformMatrix4fv(gl, "mvp2d", false, mvp.asArray());
         checkGlError(gl, "AB2ActorShader setMVP2d() error");

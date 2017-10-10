@@ -7,6 +7,8 @@ import java.nio.IntBuffer;
 
 import javax.media.opengl.GL4;
 
+import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Rotation;
 import org.janelia.geometry3d.Vector2;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
@@ -19,12 +21,9 @@ import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Image3DActor extends GLAbstractActor {
+public class Image3DActor extends Camera3DFollowBoxActor {
 
     private final Logger logger = LoggerFactory.getLogger(Image3DActor.class);
-
-    Vector3 v0;
-    Vector3 v1;
 
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
@@ -33,16 +32,15 @@ public class Image3DActor extends GLAbstractActor {
     IntBuffer imageTextureId=IntBuffer.allocate(1);
     BufferedImage bufferedImage;
 
+    Matrix4 textureModelMatrix;
+
     int dimX;
     int dimY;
     int dimZ;
     byte data3d[];
 
     public Image3DActor(AB23DRenderer renderer, int actorId, Vector3 v0, Vector3 v1, int dimX, int dimY, int dimZ, byte[] data3d) {
-        super(renderer);
-        this.actorId=actorId;
-        this.v0=v0;
-        this.v1=v1;
+        super(renderer, actorId, v0, v1);
         this.dimX=dimX;
         this.dimY=dimY;
         this.dimZ=dimZ;
@@ -51,6 +49,7 @@ public class Image3DActor extends GLAbstractActor {
 
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
+//        super.init(gl, shader);
         if (shader instanceof AB2ActorShader) {
 
             // We need to provide a sequence of quads, which we will create using two triangles each.
@@ -122,6 +121,8 @@ public class Image3DActor extends GLAbstractActor {
             AB2ActorShader actorShader=(AB2ActorShader)shader;
             actorShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
             actorShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
+            //actorShader.setTextureMVP3d(gl, getTextureModelMatrix().multiply(renderer.getVp3d()));
+            actorShader.setTextureMVP3d(gl, getTextureModelMatrix().multiply(renderer.getRotationAsTransform()));
             actorShader.setTwoDimensional(gl, false);
             actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_3D_RGBA);
 
@@ -155,8 +156,29 @@ public class Image3DActor extends GLAbstractActor {
         }
     }
 
+    protected Matrix4 getTextureModelMatrix() {
+        //if (textureModelMatrix==null) {
+            Matrix4 translationMatrix = new Matrix4();
+            float scale=1.0f;
+            translationMatrix.set(
+                    1.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 1.0f, 0.0f,
+                    -0.5f, -0.5f, -0.5f, 1.0f);
+            Matrix4 scaleMatrix = new Matrix4();
+            scaleMatrix.set(
+                    scale, 0.0f, 0.0f, 0.0f,
+                    0.0f, scale, 0.0f, 0.0f,
+                    0.0f, 0.0f, scale, 0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f);
+            textureModelMatrix=translationMatrix.multiply(scaleMatrix);
+        //}
+        return textureModelMatrix;
+    }
+
     @Override
     public void dispose(GL4 gl, GLShaderProgram shader) {
+//        super.dispose(gl, shader);
         if (shader instanceof AB2ActorShader) {
             gl.glDeleteVertexArrays(1, vertexArrayId);
             gl.glDeleteBuffers(1, vertexBufferId);

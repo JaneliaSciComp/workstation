@@ -41,6 +41,7 @@ void main() {
       ivec3 imageSize3d=textureSize(image_texture3d, 0);
       tci3=ivec3(imageSize3d.x*tc_out.x, imageSize3d.y*tc_out.y, imageSize3d.z*tc_out.z);
       color=texelFetch(image_texture3d, tci3, 0);
+      //color=vec4(0f, 1f, 0f, 1f);
       // DEBUG
       //if (c.r>0.05 || c.g>0.05 || c.b>0.05) {
       //  color=vec4(0f, 1f, 0f, 1f);

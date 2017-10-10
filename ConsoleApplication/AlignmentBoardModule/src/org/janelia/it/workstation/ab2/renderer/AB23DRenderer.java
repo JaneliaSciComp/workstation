@@ -99,6 +99,10 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         return vantage3d.getRotation();
     }
 
+    public Matrix4 getRotationAsTransform() {
+        return new Matrix4(vantage3d.getRotationInGround().asTransform());
+    }
+
     public float getFocusDistance3d() {
         return camera3d.getCameraFocusDistance();
     }
