@@ -126,12 +126,7 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             actorShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
             actorShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
 
-
-            //actorShader.setTextureMVP3d(gl, getTextureModelMatrix().multiply(renderer.getVp3d()));
             actorShader.setTextureMVP3d(gl, getPreTextureModelMatrix().multiply(renderer.getRotationAsTransform().transpose()).multiply(getPostTextureModelMatrix()));
-            //actorShader.setTextureMVP3d(gl, renderer.getRotationAsTransform().multiply(getTextureModelMatrix()));
-            //actorShader.setTextureMVP3d(gl, renderer.getVp3d().multiply(getTextureModelMatrix()));
-
 
             actorShader.setTwoDimensional(gl, false);
             actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_3D_RGBA);

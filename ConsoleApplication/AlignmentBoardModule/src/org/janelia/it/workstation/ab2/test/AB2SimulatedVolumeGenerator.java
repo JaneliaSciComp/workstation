@@ -103,6 +103,94 @@ public class AB2SimulatedVolumeGenerator {
 
     public void performDilation(double sensitivity, double noise) {
 
+        AB2Image3D_RGBA8UI newRawImage=new AB2Image3D_RGBA8UI(xDim, yDim, zDim);
+
+        byte[] voxel=new byte[4];
+        int[] rgba=new int[4];
+
+        byte[] voxel2=new byte[4];
+        int[] rgba2=new int[4];
+
+        double[] avg=new double[3];
+        double[] gap=new double[3];
+
+        for (int iz=1;iz<zDim-1;iz++) {
+            for (int iy=1;iy<yDim-1;iy++) {
+                for (int ix=1;ix<xDim-1;ix++) {
+
+                    rgba[0]=0;
+                    rgba[1]=0;
+                    rgba[2]=0;
+                    rgba[3]=0;
+
+                    accumVoxelIntFromBytes(ix, iy, iz, voxel, rgba);
+
+                    if (rgba[0]>253 || rgba[1]>253 || rgba[2]>253) {
+                        newRawImage.setVoxel(ix, iy, iz, voxel);
+                        continue; // this voxel is already maxed out
+                    }
+
+                    rgba2[0]=0;
+                    rgba2[1]=0;
+                    rgba2[2]=0;
+
+                    for (int jz=iz-1;jz<iz+1;jz++) {
+                        for (int jy=iy-1;jy<iy+1;jy++) {
+                            for (int jx=ix-1;jx<ix+1;jx++) {
+
+                                if (jz==iz && jy==iy && jx==ix) {
+                                    continue; // don't include self
+                                }
+
+                                accumVoxelIntFromBytes(jx, jy, jz, voxel2, rgba2);
+                            }
+                        }
+                    }
+
+                    for (int a=0;a<3;a++) {
+                        avg[a] = (255.0 * rgba2[a])/8.0;
+                        gap[a] = avg[a] - (double)rgba[a];
+                        if (gap[a]>0.0) {
+                            int v=(int)(gap[a]*(sensitivity+random.nextDouble()*noise))+rgba[a];
+                            if (v<256) {
+                                rgba[a]=v;
+                            }
+                        }
+                    }
+
+                    int maxRGB=rgba[0];
+                    if (rgba[1]>maxRGB) {
+                        maxRGB=rgba[1];
+                    }
+                    if (rgba[2]>maxRGB) {
+                        maxRGB=rgba[2];
+                    }
+
+                    rgba[3]=maxRGB; // set alpha to max intensity
+
+                    voxel[0]=(byte)rgba[0];
+                    voxel[1]=(byte)rgba[1];
+                    voxel[2]=(byte)rgba[2];
+                    voxel[3]=(byte)rgba[3];
+
+                    newRawImage.setVoxel(ix, iy, iz, voxel);
+
+                }
+            }
+        }
+        rawImage=newRawImage;
+    }
+
+    public void accumVoxelIntFromBytes(int x, int y, int z, byte[] voxel, int[] rgba) {
+        rawImage.getVoxel(x,y,z,voxel);
+        for (int c=0;c<4;c++) {
+            if (voxel[c] > -1) {
+                rgba[c] += voxel[c];
+            }
+            else {
+                rgba[c] += (voxel[c] + 256);
+            }
+        }
     }
 
     public int getMaxDim() {

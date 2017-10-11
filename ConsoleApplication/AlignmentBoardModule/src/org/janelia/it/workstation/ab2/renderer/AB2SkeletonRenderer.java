@@ -211,6 +211,13 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
         }
 
         logger.info("Added all skeletons to Simulated Volume");
+
+        logger.info("Starting dilation");
+
+        volumeGenerator.performDilation(2.0f, 0.0f);
+
+        logger.info("Dilation finished");
+
     }
 
     public void reshape(GL4 gl, int x, int y, int width, int height) {
