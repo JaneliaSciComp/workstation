@@ -56,14 +56,16 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             // We need to provide a sequence of quads, which we will create using two triangles each.
             // These quads will populate the volume bounded by v0 and v1.
 
-            float[] vd = new float[dimZ*6*6];
+            int zSlices=2*dimZ; // anti-alias @ 2x dimZ
 
-            float zvStep=(v1.getZ()-v0.getZ())/(1f*dimZ);
+            float[] vd = new float[zSlices*6*6];
+
+            float zvStep=(v1.getZ()-v0.getZ())/(1f*zSlices);
             float zvStart=v0.getZ()+zvStep/2f;
-            float zStep=1f/(1f*dimZ);
+            float zStep=1f/(1f*zSlices);
             float zStart=zStep/2f;
 
-            for (int zi=0;zi<dimZ;zi++) {
+            for (int zi=0;zi<zSlices;zi++) {
                 float zv=zvStart+(zi*1f)*zvStep;
                 float z=zStart+(zi*1f)*zStep;
                 int o=zi*36;
@@ -108,8 +110,8 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             gl.glTexParameteri(GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_WRAP_S, GL4.GL_CLAMP_TO_BORDER);
             gl.glTexParameteri(GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_WRAP_T, GL4.GL_CLAMP_TO_BORDER);
             gl.glTexParameteri(GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_WRAP_R, GL4.GL_CLAMP_TO_BORDER);
-            gl.glTexParameteri( GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_NEAREST );
-            gl.glTexParameteri( GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST );
+            gl.glTexParameteri( GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_LINEAR );
+            gl.glTexParameteri( GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_LINEAR );
             gl.glBindTexture(GL4.GL_TEXTURE_3D, 0);
 
         }
