@@ -46,6 +46,7 @@ public class Image3DActor extends Camera3DFollowBoxActor {
         this.dimY=dimY;
         this.dimZ=dimZ;
         this.data3d=data3d;
+        logger.info("Image3DActor() constructor finished");
     }
 
     @Override

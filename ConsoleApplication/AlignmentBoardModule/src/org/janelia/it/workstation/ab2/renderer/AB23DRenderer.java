@@ -172,6 +172,8 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 
     protected synchronized void displaySync(GL4 gl) {
 
+        if (!initialized) return;
+
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
         gl.glEnable(GL4.GL_DEPTH_TEST);
         gl.glEnable(GL4.GL_BLEND);

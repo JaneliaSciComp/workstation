@@ -136,7 +136,6 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
 
     private void addImage3DActor() {
         AB2Image3D_RGBA8UI rawImage=volumeGenerator.getRawImage();
-
         Vector3 v0=new Vector3(0f, 0f, 0f);
         Vector3 v1=new Vector3(1f, 1f, 1f);
         image3DActor=new Image3DActor(this, getNextActorIndex(), v0, v1, rawImage.getXDim(), rawImage.getYDim(), rawImage.getZDim(), rawImage.getData());
@@ -204,7 +203,7 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
 
     public synchronized void setSkeletons(List<AB2NeuronSkeleton> skeletons) {
         this.skeletons=skeletons;
-        volumeGenerator=new AB2SimulatedVolumeGenerator(512, 512, 512); // 750 X 3 max for 3D texture w/ Titan X, using 2D Array
+        volumeGenerator=new AB2SimulatedVolumeGenerator(512, 512, 512); // 800 X 3, close to limit for byte array length
 
         for (int i=0;i<skeletons.size();i++) {
             logger.info("Skeleton "+i);
