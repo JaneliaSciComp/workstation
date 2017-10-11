@@ -67,7 +67,8 @@ public class AB2SkeletonDomainObject extends AB2DomainObject {
     public AB2SkeletonDomainObject() {}
 
     public void createSkeletons(int number) throws Exception {
-        createSkeletons(number, new Date().getTime());
+//        createSkeletons(number, new Date().getTime()); DEBUG
+        createSkeletons(number, 1);
     }
 
     public void createSkeletons(int number, long randomSeed) throws Exception {

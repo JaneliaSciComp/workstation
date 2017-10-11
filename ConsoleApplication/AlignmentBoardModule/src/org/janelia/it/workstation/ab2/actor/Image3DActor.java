@@ -32,7 +32,8 @@ public class Image3DActor extends Camera3DFollowBoxActor {
     IntBuffer imageTextureId=IntBuffer.allocate(1);
     BufferedImage bufferedImage;
 
-    Matrix4 textureModelMatrix;
+    Matrix4 preTextureModelMatrix;
+    Matrix4 postTextureModelMatrix;
 
     int dimX;
     int dimY;
@@ -121,8 +122,14 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             AB2ActorShader actorShader=(AB2ActorShader)shader;
             actorShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
             actorShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
+
+
             //actorShader.setTextureMVP3d(gl, getTextureModelMatrix().multiply(renderer.getVp3d()));
-            actorShader.setTextureMVP3d(gl, getTextureModelMatrix().multiply(renderer.getRotationAsTransform()));
+            actorShader.setTextureMVP3d(gl, getPreTextureModelMatrix().multiply(renderer.getRotationAsTransform().transpose()).multiply(getPostTextureModelMatrix()));
+            //actorShader.setTextureMVP3d(gl, renderer.getRotationAsTransform().multiply(getTextureModelMatrix()));
+            //actorShader.setTextureMVP3d(gl, renderer.getVp3d().multiply(getTextureModelMatrix()));
+
+
             actorShader.setTwoDimensional(gl, false);
             actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_3D_RGBA);
 
@@ -156,10 +163,10 @@ public class Image3DActor extends Camera3DFollowBoxActor {
         }
     }
 
-    protected Matrix4 getTextureModelMatrix() {
-        //if (textureModelMatrix==null) {
+    protected Matrix4 getPreTextureModelMatrix() {
+        if (preTextureModelMatrix == null) {
             Matrix4 translationMatrix = new Matrix4();
-            float scale=1.0f;
+            float scale = 2f;
             translationMatrix.set(
                     1.0f, 0.0f, 0.0f, 0.0f,
                     0.0f, 1.0f, 0.0f, 0.0f,
@@ -171,9 +178,29 @@ public class Image3DActor extends Camera3DFollowBoxActor {
                     0.0f, scale, 0.0f, 0.0f,
                     0.0f, 0.0f, scale, 0.0f,
                     0.0f, 0.0f, 0.0f, 1.0f);
-            textureModelMatrix=translationMatrix.multiply(scaleMatrix);
-        //}
-        return textureModelMatrix;
+            preTextureModelMatrix = translationMatrix.multiply(scaleMatrix);
+        }
+        return new Matrix4(preTextureModelMatrix);
+    }
+
+    protected Matrix4 getPostTextureModelMatrix() {
+        if (postTextureModelMatrix == null) {
+            Matrix4 translationMatrix = new Matrix4();
+            float scale = 1f;
+            translationMatrix.set(
+                    1.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 1.0f, 0.0f,
+                    0.5f, 0.5f, 0.5f, 1.0f);
+            Matrix4 scaleMatrix = new Matrix4();
+            scaleMatrix.set(
+                    scale, 0.0f, 0.0f, 0.0f,
+                    0.0f, scale, 0.0f, 0.0f,
+                    0.0f, 0.0f, scale, 0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f);
+            postTextureModelMatrix = translationMatrix.multiply(scaleMatrix);
+        }
+        return new Matrix4(postTextureModelMatrix);
     }
 
     @Override

@@ -17,7 +17,8 @@ public class AB2SimulatedVolumeGenerator {
 
     AB2Image3D_RGBA8UI rawImage;
     AB2Image3D_R32I indexImage;
-    Random random=new Random(new Date().getTime());
+    //Random random=new Random(new Date().getTime()); DEBUG
+    Random random=new Random(1);
 
     int xDim;
     int yDim;
