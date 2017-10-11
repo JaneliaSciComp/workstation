@@ -12,7 +12,7 @@ out vec4 color;
 //  TEXTURE_TYPE_3D_RGBA =3;
 
 uniform sampler2D image_texture;
-uniform sampler3D image_texture3d;
+uniform sampler2DArray image_texture3d;
 
 void main() {
 

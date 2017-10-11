@@ -104,15 +104,15 @@ public class Image3DActor extends Camera3DFollowBoxActor {
 
             gl.glActiveTexture(GL4.GL_TEXTURE0);
             gl.glGenTextures(1, imageTextureId);
-            gl.glBindTexture(GL4.GL_TEXTURE_3D, imageTextureId.get(0));
-            gl.glTexImage3D(GL4.GL_TEXTURE_3D,0, GL4.GL_RGBA, dimX, dimY, dimZ,0, GL4.GL_RGBA, GL4.GL_UNSIGNED_BYTE, byteBuffer);
+            gl.glBindTexture(GL4.GL_TEXTURE_2D_ARRAY, imageTextureId.get(0));
+            gl.glTexImage3D(GL4.GL_TEXTURE_2D_ARRAY,0, GL4.GL_RGBA, dimX, dimY, dimZ,0, GL4.GL_RGBA, GL4.GL_UNSIGNED_BYTE, byteBuffer);
             checkGlError(gl, "Uploading texture");
-            gl.glTexParameteri(GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_WRAP_S, GL4.GL_CLAMP_TO_BORDER);
-            gl.glTexParameteri(GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_WRAP_T, GL4.GL_CLAMP_TO_BORDER);
-            gl.glTexParameteri(GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_WRAP_R, GL4.GL_CLAMP_TO_BORDER);
-            gl.glTexParameteri( GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_LINEAR );
-            gl.glTexParameteri( GL4.GL_TEXTURE_3D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_LINEAR );
-            gl.glBindTexture(GL4.GL_TEXTURE_3D, 0);
+            gl.glTexParameteri(GL4.GL_TEXTURE_2D_ARRAY, GL4.GL_TEXTURE_WRAP_S, GL4.GL_CLAMP_TO_BORDER);
+            gl.glTexParameteri(GL4.GL_TEXTURE_2D_ARRAY, GL4.GL_TEXTURE_WRAP_T, GL4.GL_CLAMP_TO_BORDER);
+            gl.glTexParameteri(GL4.GL_TEXTURE_2D_ARRAY, GL4.GL_TEXTURE_WRAP_R, GL4.GL_CLAMP_TO_BORDER);
+            gl.glTexParameteri( GL4.GL_TEXTURE_2D_ARRAY, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_LINEAR );
+            gl.glTexParameteri( GL4.GL_TEXTURE_2D_ARRAY, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_LINEAR );
+            gl.glBindTexture(GL4.GL_TEXTURE_2D_ARRAY, 0);
 
         }
 
@@ -142,7 +142,7 @@ public class Image3DActor extends Camera3DFollowBoxActor {
 
             gl.glActiveTexture(GL4.GL_TEXTURE0);
             checkGlError(gl, "d1 glActiveTexture");
-            gl.glBindTexture(GL4.GL_TEXTURE_3D, imageTextureId.get(0));
+            gl.glBindTexture(GL4.GL_TEXTURE_2D_ARRAY, imageTextureId.get(0));
             checkGlError(gl, "d2 glBindTexture()");
             gl.glBindVertexArray(vertexArrayId.get(0));
             checkGlError(gl, "d3 glBindVertexArray()");
@@ -160,7 +160,7 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             checkGlError(gl, "d9 glDrawArrays()");
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
             checkGlError(gl, "d10 glBindBuffer()");
-            gl.glBindTexture(GL4.GL_TEXTURE_3D, 0);
+            gl.glBindTexture(GL4.GL_TEXTURE_2D_ARRAY, 0);
             checkGlError(gl, "d11 glBindTexture()");
         }
     }

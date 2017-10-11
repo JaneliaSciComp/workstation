@@ -204,7 +204,7 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
 
     public synchronized void setSkeletons(List<AB2NeuronSkeleton> skeletons) {
         this.skeletons=skeletons;
-        volumeGenerator=new AB2SimulatedVolumeGenerator(512, 512, 512); // 680 X 3 max for 3D texture w/ Titan X
+        volumeGenerator=new AB2SimulatedVolumeGenerator(512, 512, 512); // 750 X 3 max for 3D texture w/ Titan X, using 2D Array
 
         for (int i=0;i<skeletons.size();i++) {
             logger.info("Skeleton "+i);
