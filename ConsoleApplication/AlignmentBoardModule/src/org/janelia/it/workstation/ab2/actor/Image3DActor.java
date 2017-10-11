@@ -56,7 +56,7 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             // We need to provide a sequence of quads, which we will create using two triangles each.
             // These quads will populate the volume bounded by v0 and v1.
 
-            int zSlices=2*dimZ; // anti-alias @ 2x dimZ
+            int zSlices=2*getMaxDim(); // anti-alias @ 2x maxDim
 
             float[] vd = new float[zSlices*6*6];
 
@@ -213,6 +213,17 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             gl.glDeleteBuffers(1, vertexBufferId);
             gl.glDeleteTextures(1, imageTextureId);
         }
+    }
+
+    public int getMaxDim() {
+        int maxDim=dimX;
+        if (dimY>maxDim) {
+            maxDim=dimY;
+        }
+        if (dimZ>maxDim) {
+            maxDim=dimZ;
+        }
+        return maxDim;
     }
 
 }
