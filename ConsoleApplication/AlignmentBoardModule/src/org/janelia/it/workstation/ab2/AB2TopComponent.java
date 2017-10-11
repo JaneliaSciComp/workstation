@@ -115,7 +115,7 @@ public final class AB2TopComponent extends TopComponent {
             AB2SkeletonDomainObject skeletonDomainObject=new AB2SkeletonDomainObject();
             try {
                 logger.info("Check3");
-                skeletonDomainObject.createSkeletons(10);
+                skeletonDomainObject.createSkeletonsAndVolume(10);
                 logger.info("Created skeleton domain object");
             } catch (Exception ex) {
                 ex.printStackTrace();

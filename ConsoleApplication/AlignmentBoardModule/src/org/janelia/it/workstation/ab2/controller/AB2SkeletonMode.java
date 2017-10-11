@@ -31,7 +31,8 @@ public class AB2SkeletonMode extends AB2View3DMode {
         //logger.info("processEvent()");
         super.processEvent(event);
         if  (event instanceof AB2DomainObjectUpdateEvent) {
-            ((AB2SkeletonRenderer)renderer).setSkeletons(((AB2SkeletonDomainObject)controller.getDomainObject()).getSkeletons());
+            ((AB2SkeletonRenderer)renderer).setSkeletonsAndVolume(((AB2SkeletonDomainObject)controller.getDomainObject()).getSkeletons(),
+                    ((AB2SkeletonDomainObject)controller.getDomainObject()).getVolumeGenerator());
             controller.repaint();
         } else if (event instanceof AB2MouseClickedEvent) {
             MouseEvent mouseEvent=((AB2MouseClickedEvent) event).getMouseEvent();

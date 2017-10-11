@@ -201,23 +201,9 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
     }
 
 
-    public synchronized void setSkeletons(List<AB2NeuronSkeleton> skeletons) {
+    public synchronized void setSkeletonsAndVolume(List<AB2NeuronSkeleton> skeletons, AB2SimulatedVolumeGenerator volumeGenerator) {
         this.skeletons=skeletons;
-        volumeGenerator=new AB2SimulatedVolumeGenerator(512, 512, 512); // 800 X 3, close to limit for byte array length
-
-        for (int i=0;i<skeletons.size();i++) {
-            logger.info("Skeleton "+i);
-            volumeGenerator.addSkeleton(skeletons.get(i));
-        }
-
-        logger.info("Added all skeletons to Simulated Volume");
-
-        logger.info("Starting dilation");
-
-        volumeGenerator.performDilation(2.0f, 0.0f);
-
-        logger.info("Dilation finished");
-
+        this.volumeGenerator=volumeGenerator;
     }
 
     public void reshape(GL4 gl, int x, int y, int width, int height) {

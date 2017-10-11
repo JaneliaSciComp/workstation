@@ -134,21 +134,18 @@ public class AB2SimulatedVolumeGenerator {
                     rgba2[1]=0;
                     rgba2[2]=0;
 
-                    for (int jz=iz-1;jz<iz+1;jz++) {
-                        for (int jy=iy-1;jy<iy+1;jy++) {
-                            for (int jx=ix-1;jx<ix+1;jx++) {
-
-                                if (jz==iz && jy==iy && jx==ix) {
-                                    continue; // don't include self
+                    for (int jz=iz-1;jz<iz+2;jz++) {
+                        for (int jy=iy-1;jy<iy+2;jy++) {
+                            for (int jx=ix-1;jx<ix+2;jx++) {
+                                if (jz!=iz || jy!=iy || jx!=ix) {
+                                    accumVoxelIntFromBytes(jx, jy, jz, voxel2, rgba2);
                                 }
-
-                                accumVoxelIntFromBytes(jx, jy, jz, voxel2, rgba2);
                             }
                         }
                     }
 
                     for (int a=0;a<3;a++) {
-                        avg[a] = (255.0 * rgba2[a])/8.0;
+                        avg[a] = (255.0 * rgba2[a])/26.0;
                         gap[a] = avg[a] - (double)rgba[a];
                         if (gap[a]>0.0) {
                             int v=(int)(gap[a]*(sensitivity+random.nextDouble()*noise))+rgba[a];
@@ -168,7 +165,8 @@ public class AB2SimulatedVolumeGenerator {
 
                     rgba[3]=maxRGB; // set alpha to max intensity
 
-                    voxel[0]=(byte)rgba[0];
+                    //voxel[0]=(byte)rgba[0];
+                    voxel[0]=127;
                     voxel[1]=(byte)rgba[1];
                     voxel[2]=(byte)rgba[2];
                     voxel[3]=(byte)rgba[3];
