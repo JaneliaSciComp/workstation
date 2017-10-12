@@ -16,5 +16,6 @@
     <orderEntry type="module" module-name="Viewer3D" />
     <orderEntry type="library" name="Common External Libraries" level="project" />
     <orderEntry type="library" name="Jogl213" level="project" />
+    <orderEntry type="module" module-name="AlignmentBoardModule" />
   </component>
 </module>
