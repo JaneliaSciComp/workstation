@@ -89,11 +89,18 @@ public class AB2SkeletonDomainObject extends AB2DomainObject {
 
         logger.info("Added all skeletons to Simulated Volume");
 
-        logger.info("Starting dilation");
+        logger.info("Starting dilation 1");
 
-        volumeGenerator.performDilation(2.0f, 0.0f);
+        volumeGenerator.performDilation(3.0f, 0.0f);
 
-        logger.info("Dilation finished");
+        logger.info("Dilation finished 1");
+
+        logger.info("Starting dilation 2");
+
+        volumeGenerator.performDilation(3.0f, 0.0f);
+
+        logger.info("Dilation finished 2");
+
     }
 
     public List<AB2NeuronSkeleton> getSkeletons() { return skeletons; }

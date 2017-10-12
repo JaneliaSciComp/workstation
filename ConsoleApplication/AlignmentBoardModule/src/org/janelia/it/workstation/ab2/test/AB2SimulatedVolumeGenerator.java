@@ -12,8 +12,12 @@ import org.janelia.it.workstation.ab2.compute.AB2SkeletonWalkerCallback;
 import org.janelia.it.workstation.ab2.model.AB2Image3D_R32I;
 import org.janelia.it.workstation.ab2.model.AB2Image3D_RGBA8UI;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AB2SimulatedVolumeGenerator {
+
+    Logger logger= LoggerFactory.getLogger(AB2SimulatedVolumeGenerator.class);
 
     AB2Image3D_RGBA8UI rawImage;
     AB2Image3D_R32I indexImage;
@@ -60,6 +64,13 @@ public class AB2SimulatedVolumeGenerator {
         AB2SkeletonWalker skeletonWalker = new AB2SkeletonWalker(skeleton, sampleResolution);
         final byte rgba[]=new byte[4];
         getRgbaFromVector4(color, rgba);
+
+        int r=rgba[0];
+        int g=rgba[1];
+        int b=rgba[2];
+        int a=rgba[3];
+
+        logger.info("Skeleton color r="+r+" g="+g+" b="+b+" a="+a);
 
         skeletonWalker.walkSkeleton(new AB2SkeletonWalkerCallback() {
 
@@ -114,6 +125,10 @@ public class AB2SimulatedVolumeGenerator {
         double[] avg=new double[3];
         double[] gap=new double[3];
 
+        int noChangeCount=0;
+        int changeCount=0;
+        int updateCount=0;
+
         for (int iz=1;iz<zDim-1;iz++) {
             for (int iy=1;iy<yDim-1;iy++) {
                 for (int ix=1;ix<xDim-1;ix++) {
@@ -125,8 +140,11 @@ public class AB2SimulatedVolumeGenerator {
 
                     accumVoxelIntFromBytes(ix, iy, iz, voxel, rgba);
 
-                    if (rgba[0]>253 || rgba[1]>253 || rgba[2]>253) {
+                    double mag=Math.sqrt(rgba[0]*rgba[0]+rgba[1]*rgba[1]+rgba[2]*rgba[2]);
+
+                    if (mag > 250) {
                         newRawImage.setVoxel(ix, iy, iz, voxel);
+                        noChangeCount++;
                         continue; // this voxel is already maxed out
                     }
 
@@ -145,11 +163,12 @@ public class AB2SimulatedVolumeGenerator {
                     }
 
                     for (int a=0;a<3;a++) {
-                        avg[a] = (255.0 * rgba2[a])/26.0;
+                        avg[a] = (1.0 * rgba2[a])/26.0;
                         gap[a] = avg[a] - (double)rgba[a];
                         if (gap[a]>0.0) {
                             int v=(int)(gap[a]*(sensitivity+random.nextDouble()*noise))+rgba[a];
                             if (v<256) {
+                                changeCount++;
                                 rgba[a]=v;
                             }
                         }
@@ -165,28 +184,32 @@ public class AB2SimulatedVolumeGenerator {
 
                     rgba[3]=maxRGB; // set alpha to max intensity
 
-                    //voxel[0]=(byte)rgba[0];
-                    voxel[0]=127;
+                    voxel[0]=(byte)rgba[0];
                     voxel[1]=(byte)rgba[1];
                     voxel[2]=(byte)rgba[2];
                     voxel[3]=(byte)rgba[3];
 
                     newRawImage.setVoxel(ix, iy, iz, voxel);
 
+                    updateCount++;
+
                 }
             }
         }
         rawImage=newRawImage;
+
+        logger.info("No-Change count="+noChangeCount+" Change count="+changeCount+" Update count="+updateCount);
     }
 
     public void accumVoxelIntFromBytes(int x, int y, int z, byte[] voxel, int[] rgba) {
         rawImage.getVoxel(x,y,z,voxel);
         for (int c=0;c<4;c++) {
-            if (voxel[c] > -1) {
-                rgba[c] += voxel[c];
+            int v=voxel[c];
+            if (v > -1) {
+                rgba[c] += v;
             }
             else {
-                rgba[c] += (voxel[c] + 256);
+                rgba[c] += (v + 256);
             }
         }
     }
