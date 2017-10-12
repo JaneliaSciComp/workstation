@@ -74,8 +74,6 @@ import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
-import org.janelia.it.workstation.ab2.AB2TopComponent;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -174,7 +172,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
-        add(getOpenInAB2());
 
         if (domainObject!=null) {
             for (JComponent item : this.getOpenObjectItems()) {
@@ -223,31 +220,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
                     viewer.requestActive();
                     viewer.loadDomainObject(objectToLoad, true);
-                }
-            });
-            return openItem;
-        }
-        catch (Exception e) {
-            log.error("Error creating 'Open In New Viewer' menu item",e);
-            return null;
-        }
-    }
-
-    protected JMenuItem getOpenInAB2() {
-        if (multiple) return null;
-        if (!DomainViewerTopComponent.isSupported(domainObject)) return null;
-
-        try {
-            final DomainObject objectToLoad = DomainViewerManager.getObjectToLoad(domainObject);
-            if (objectToLoad==null) return null;
-            JMenuItem openItem = new JMenuItem("  Open " + objectToLoad.getType() + " In AB2");
-            openItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    ActivityLogHelper.logUserAction("DomainObjectContentMenu.openInAB2", domainObject);
-                    AB2TopComponent ab2 = AB2TopComponent.findComp();
-                    ab2.requestActive();
-                    ab2.loadDomainObject(objectToLoad, true);
                 }
             });
             return openItem;
