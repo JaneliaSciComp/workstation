@@ -165,7 +165,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     }
                 };
                 
-                SimpleListenableFuture future1 = volumeLoader.executeWithFuture();
+                SimpleListenableFuture<Void> future1 = volumeLoader.executeWithFuture();
 
                 final ProgressHandle progress2 = ProgressHandleFactory.createHandle("Loading metadata...");
                 progress2.start();
@@ -200,12 +200,12 @@ public class LargeVolumeViewViewer extends JPanel {
                     }
                 };
                 
-                SimpleListenableFuture future2 = workspaceLoader.executeWithFuture();
+                SimpleListenableFuture<Void> future2 = workspaceLoader.executeWithFuture();
                 
                 // Join the two futures
-                ListenableFuture<List<Boolean>> combinedFuture = Futures.allAsList(Arrays.asList(future1, future2));
-                Futures.addCallback(combinedFuture, new FutureCallback<List<Boolean>>() {
-                    public void onSuccess(List<Boolean> result) {
+                ListenableFuture<List<Void>> combinedFuture = Futures.allAsList(Arrays.asList(future1, future2));
+                Futures.addCallback(combinedFuture, new FutureCallback<List<Void>>() {
+                    public void onSuccess(List<Void> result) {
                         // If both loads succeeded
                         logger.info("Loading completed");
                         annotationModel.loadComplete();

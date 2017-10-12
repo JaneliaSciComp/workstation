@@ -15,6 +15,7 @@ import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
+import org.janelia.it.jacs.model.domain.ontology.Accumulation;
 import org.janelia.it.jacs.model.domain.ontology.Category;
 import org.janelia.it.jacs.model.domain.ontology.Custom;
 import org.janelia.it.jacs.model.domain.ontology.EnumItem;
@@ -190,6 +191,9 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         }
         else if (term instanceof Text) {
             return Icons.getIcon("page_white_text.png").getImage();
+        }
+        else if (term instanceof Accumulation) {
+            return Icons.getIcon("page_white_edit.png").getImage();
         }
         else if (term instanceof Custom) {
             return Icons.getIcon("page_white_text.png").getImage();

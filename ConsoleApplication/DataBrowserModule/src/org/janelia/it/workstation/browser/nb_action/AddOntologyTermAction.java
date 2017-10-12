@@ -9,6 +9,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.model.domain.ontology.Accumulation;
 import org.janelia.it.jacs.model.domain.ontology.Category;
 import org.janelia.it.jacs.model.domain.ontology.Custom;
 import org.janelia.it.jacs.model.domain.ontology.EnumItem;
@@ -85,7 +86,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
         }
         else if (term.allowsChildren() || term instanceof Tag) {
 
-            Class[] nodeTypes = {Category.class, Tag.class, org.janelia.it.jacs.model.domain.ontology.Enum.class, EnumText.class, Interval.class, Text.class, Custom.class};
+            Class[] nodeTypes = {Category.class, Tag.class, org.janelia.it.jacs.model.domain.ontology.Enum.class, EnumText.class, Interval.class, Text.class, Accumulation.class, Custom.class};
             for (final Class<? extends OntologyTerm> nodeType : nodeTypes) {
                 try {
                     JMenuItem smi = new JMenuItem(nodeType.newInstance().getTypeName());

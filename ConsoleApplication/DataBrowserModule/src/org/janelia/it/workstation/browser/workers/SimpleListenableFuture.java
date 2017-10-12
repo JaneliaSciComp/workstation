@@ -10,26 +10,22 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.util.concurrent.AbstractFuture;
 
 /**
- * Simple listenable future implementation which does not return a value, but allows
- * clients to register a listener to wait for the completion of a SimpleWorker.
+ * Simple listenable future implementation which allows clients to register a listener to 
+ * wait for the completion of a ResultWorker.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SimpleListenableFuture extends AbstractFuture<Boolean> {
+public class SimpleListenableFuture<T> extends AbstractFuture<T> {
 
-    public static SimpleListenableFuture create() {
-        return new SimpleListenableFuture();
+    public boolean setComplete(T result) {
+        return super.set(result);
     }
 
-    private SimpleListenableFuture() {
-    }
-
-    public boolean setComplete() {
-        return super.set(true);
-    }
-
+    /**
+     * We have to override this to allow it to be called from this package.
+     */
     @Override
-    public boolean setException(Throwable throwable) {
+    protected boolean setException(Throwable throwable) {
         return super.setException(throwable);
     }
 

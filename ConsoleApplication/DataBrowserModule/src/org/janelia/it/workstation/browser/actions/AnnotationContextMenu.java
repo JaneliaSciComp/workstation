@@ -8,6 +8,7 @@ import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.ontology.Accumulation;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.EnumText;
 import org.janelia.it.jacs.model.domain.ontology.Interval;
@@ -107,7 +108,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
 
     protected JMenuItem getEditAnnotationItem(OntologyTerm keyTerm) {
         if (keyTerm==null) return null;
-        if (keyTerm instanceof EnumText || keyTerm instanceof Text || keyTerm instanceof Interval) {
+        if (keyTerm instanceof EnumText || keyTerm instanceof Text || keyTerm instanceof Accumulation || keyTerm instanceof Interval) {
             final BulkEditAnnotationKeyValueAction bulkEditAction = new BulkEditAnnotationKeyValueAction(domainObjectList, annotation);
             return getNamedActionItem(bulkEditAction);
         }
