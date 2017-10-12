@@ -309,7 +309,9 @@ public final class AccessManager {
     public boolean setRunAsUser(String runAsUser) {
         
         if (!isAdmin() && !StringUtils.isEmpty(runAsUser)) {
-            throw new IllegalStateException("Non-admin user cannot run as another user");
+            log.error("Non-admin user cannot run as another user");
+            setSubject(authenticatedSubject);
+            return false;
         }
         
         try {
@@ -335,12 +337,11 @@ public final class AccessManager {
 
             Events.getInstance().postOnEventBus(new RunAsEvent(authenticatedSubject));
             log.info("Running as {}", getSubject().getKey());
-                
             return true;
         }
         catch (Exception e) {
-            setSubject(authenticatedSubject);
             ConsoleApp.handleException(e);
+            setSubject(authenticatedSubject);
             return false;
         }
     }
