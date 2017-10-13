@@ -44,7 +44,6 @@ import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.LSMSummaryResult;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineError;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
@@ -883,7 +882,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         private final ArtifactDescriptor resultDescriptor;
         private final PipelineResult result;
         private JLabel label = new JLabel();
-        private JLabel subLabel = new JLabel();
+        private JLabel subLabel1 = new JLabel();
+        private JLabel subLabel2 = new JLabel();
         
         private PipelineResultPanel(PipelineResult result) {
             
@@ -899,7 +899,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             if (result!=null) {
                 this.resultDescriptor = new ResultArtifactDescriptor(result);
                 label.setText(resultDescriptor.toString());
-                subLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
+                subLabel1.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
+                if (!StringUtils.isBlank(result.getMessage())) {
+                    subLabel2.setText(result.getMessage());
+                }
                 
                 HasFiles files = result;
                 // This is technically correct, but the resulting UI is less usable because the montages are not very useful. 
@@ -922,7 +925,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
                 JPanel titlePanel = new JPanel(new BorderLayout());
                 titlePanel.add(label, BorderLayout.PAGE_START);
-                titlePanel.add(subLabel, BorderLayout.PAGE_END);
+                titlePanel.add(subLabel1, BorderLayout.CENTER);
+                titlePanel.add(subLabel2, BorderLayout.PAGE_END);
                 
                 add(titlePanel, BorderLayout.NORTH);
                 add(imagePanel, BorderLayout.CENTER);
