@@ -142,7 +142,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     }
 
     void writeProperties(java.util.Properties p) {
-        if (p==null) return;
+        if (p==null || editor==null) return;
         try {
             DomainObjectEditorState<?> state = editor.saveState();
             String serializedState = DomainObjectEditorState.serialize(state);
