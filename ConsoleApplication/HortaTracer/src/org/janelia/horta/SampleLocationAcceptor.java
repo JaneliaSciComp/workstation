@@ -100,8 +100,9 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     BlockTileSource ktxSource = null;
                     if (nttc.isPreferKtx()) {
                         ktxSource = loadKtxSource(sample, url, progress);
-                        if (ktxSource != null)
+                        if (ktxSource != null) {
                             nttc.setKtxSource(ktxSource);
+                        }
                     }
                     else {
                         nttc.setKtxSource(null);
@@ -159,11 +160,13 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         if (previousSource != null) {
             String urlStr = renderedOctreeUrl.toString();
             String previousUrlStr = previousSource.getRootUrl().toString();
+            logger.trace("previousUrlStr: {}", previousUrlStr);
             if (urlStr.equals(previousUrlStr))
                 return previousSource; // Source did not change
         }
         try {
             URL ktxFolderPathFileUrl = new URL(renderedOctreeUrl, "secondary_folder.txt");
+            logger.info("Trying to find KTX path via {}", ktxFolderPathFileUrl);
             InputStream pathStream = ktxFolderPathFileUrl.openStream();
             String ktxPathStr = IOUtils.toString(pathStream).trim();
             if (!ktxPathStr.endsWith("/"))
@@ -172,10 +175,12 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             BlockTileSource ktxSource = new KtxOctreeBlockTileSource(ktxFolderUrl, sample);
             nttc.setKtxSource(ktxSource);
             return ktxSource;
-        } catch (MalformedURLException ex) {
-            // Exceptions.printStackTrace(ex);
-        } catch (IOException ex) {
-            // Exceptions.printStackTrace(ex);
+        } 
+        catch (MalformedURLException ex) {
+            logger.info("Cannot load secondary_folder.txt",ex);
+        } 
+        catch (IOException ex) {
+            logger.info("Cannot load secondary_folder.txt: {}",ex.getMessage());
         }
         return null;
     }
