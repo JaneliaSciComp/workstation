@@ -5,6 +5,7 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filtering;
@@ -64,7 +65,8 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     private static final Logger log = LoggerFactory.getLogger(DomainListViewTopComponent.class);
 
     public static final String TC_NAME = "DomainListViewTopComponent";
-    public static final String TC_VERSION = "1.0";
+    public static final String TC_VERSION_IDONLY = "1.0";
+    public static final String TC_VERSION = "1.1";
     
     /* Instance variables */
     
@@ -140,45 +142,91 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     }
 
     void writeProperties(java.util.Properties p) {
-        p.setProperty("version", TC_VERSION);
-        DomainObject current = getCurrent();
-        if (current!=null && current.getId()!=null) {
-            String objectRef = Reference.createFor(current).toString();
-            log.info("Writing state: {}",objectRef);
-            p.setProperty("objectRef", objectRef);
+        if (p==null || editor==null) return;
+        try {
+            DomainObjectEditorState<?> state = editor.saveState();
+            String serializedState = DomainObjectEditorState.serialize(state);
+            log.info("Writing state: {}",serializedState);
+            p.setProperty("version", TC_VERSION);
+            p.setProperty("editorState", serializedState);
         }
-        else {
-            p.remove("objectRef");
+        catch (Exception e) {
+            FrameworkImplProvider.handleExceptionQuietly("Could not serialize editor state", e);
+            p.remove("editorState");
         }
     }
 
     void readProperties(java.util.Properties p) {
+        if (p==null) return;
         String version = p.getProperty("version");
-        final String objectStrRef = p.getProperty("objectRef");
-        log.info("Reading state: {}",objectStrRef);
-        if (TC_VERSION.equals(version) && !StringUtils.isEmpty(objectStrRef)) {
+        if (TC_VERSION.equals(version)) {
+            // Current version saved the entire editor state
+            final String editorState = p.getProperty("editorState");
+            log.info("Reading state: {}",editorState);
 
-            SimpleWorker worker = new SimpleWorker() {
-                DomainObject domainObject;
-                
-                @Override
-                protected void doStuff() throws Exception {
-                    domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
-                }
+            if (editorState != null) {
 
-                @Override
-                protected void hadSuccess() {
-                    if (domainObject!=null) {
-                        loadDomainObject(domainObject, false);
+                SimpleWorker worker = new SimpleWorker() {
+                    DomainObjectEditorState<?> state;
+                    DomainObject domainObject;
+                    
+                    @Override
+                    protected void doStuff() throws Exception {
+                        state = DomainObjectEditorState.deserialize(editorState);
+                        if (state.getDomainObject().getId()!=null) {
+                            // Refresh the object, if it's coming from the database
+                            domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(state.getDomainObject());
+                            if (domainObject!=null) {
+                                state.setDomainObject(domainObject);
+                            }
+                        }
                     }
-                }
 
-                @Override
-                protected void hadError(Throwable error) {
-                    ConsoleApp.handleException(error);
-                }
-            };
-            worker.execute();
+                    @Override
+                    protected void hadSuccess() {
+                        loadState(state);
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        FrameworkImplProvider.handleExceptionQuietly("Could not load serialized editor state",error);
+                    }
+                };
+                worker.execute();
+            }
+        }
+        else if (TC_VERSION_IDONLY.equals(version)) {
+            // An older version only saved the object id 
+            final String objectStrRef = p.getProperty("objectRef");
+
+            if (!StringUtils.isEmpty(objectStrRef)) {
+                log.info("Reading state: {}",objectStrRef);
+                
+                SimpleWorker worker = new SimpleWorker() {
+                    DomainObject domainObject;
+                    
+                    @Override
+                    protected void doStuff() throws Exception {
+                        domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        if (domainObject!=null) {
+                            loadDomainObject(domainObject, false);
+                        }
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        FrameworkImplProvider.handleExceptionQuietly("Could not load serialized editor state",error);
+                    }
+                };
+                worker.execute();
+            }
+        }
+        else {
+            log.warn("Unrecognized TC version: {}",version);
         }
     }
     

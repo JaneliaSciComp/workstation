@@ -61,6 +61,7 @@ import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +82,7 @@ public class BasicNeuronModel implements NeuronModel
     private final NeuronVertexDeletionObservable membersRemovedObservable;
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private boolean visible = true;
+    private boolean userToggleRadius = false;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final NeuronSet parentSet;
 
@@ -329,6 +331,11 @@ public class BasicNeuronModel implements NeuronModel
     }
     
     @Override
+    public boolean updateNeuronRadius(TmNeuronMetadata neuron, float radius) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    @Override
     public NeuronVertex getVertexByGuid(Long guid) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -341,6 +348,36 @@ public class BasicNeuronModel implements NeuronModel
     @Override
     public boolean transferNeurite(NeuronVertex anchor) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean isNonInteractable() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setNonInteractable(boolean nonInteractable) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean isUserVisible() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setUserVisible(boolean userVisible) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean isUserToggleRadius() {
+        return userToggleRadius;
+    }
+
+    @Override
+    public void setUserToggleRadius(boolean toggleRadius) {
+        this.userToggleRadius = toggleRadius;
     }
     
 }

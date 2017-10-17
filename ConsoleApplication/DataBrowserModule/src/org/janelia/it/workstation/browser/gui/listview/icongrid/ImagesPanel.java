@@ -614,11 +614,10 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         
         if (buttonsPanel.getColumns() != numCols) {
             buttonsPanel.setColumns(numCols);
+            buttonsPanel.revalidate();
+            buttonsPanel.repaint();
         }
 
-        revalidate();
-        repaint();
-        
         loadUnloadImages();
     }
 

@@ -97,7 +97,8 @@ public final class DownloadVisualPanel2 extends JPanel {
         formatMap.put("tif", FORMAT_EXTENSIONS_TIF);
         
     }
-    
+
+    private DownloadWizardPanel2 wizardPanel;
     private final Debouncer debouncer = new Debouncer();
     
     // GUI
@@ -111,6 +112,7 @@ public final class DownloadVisualPanel2 extends JPanel {
     private List<ArtifactDescriptor> artifactDescriptors;
     
     // Outputs
+    private boolean loaded = false;
     private Map<String,String> selectedOutputExtensions;
     private boolean splitChannels;
     
@@ -122,7 +124,8 @@ public final class DownloadVisualPanel2 extends JPanel {
     /**
      * Creates new form DownloadVisualPanel4
      */
-    public DownloadVisualPanel2() {
+    public DownloadVisualPanel2(DownloadWizardPanel2 wizardPanel) {
+        this.wizardPanel = wizardPanel;
         setLayout(new BorderLayout());        
     }
 
@@ -229,6 +232,9 @@ public final class DownloadVisualPanel2 extends JPanel {
                     formatCombos.put(extension, formatCombo);
                 }
                 
+                loaded = true;
+                wizardPanel.fireChangeEvent();
+                
                 splitChannelCheckbox = new JCheckBox();
                 splitChannelCheckbox.setSelected(splitChannels);
                 attrPanel.addItem("Split channels in 3d stacks into individual files", splitChannelCheckbox);
@@ -250,8 +256,12 @@ public final class DownloadVisualPanel2 extends JPanel {
         worker.execute();
     }
     
+    public boolean isLoaded() {
+        return loaded;
+    }
+    
     public boolean isSplitChannels() {
-        return splitChannelCheckbox.isSelected();
+        return splitChannelCheckbox!=null && splitChannelCheckbox.isSelected();
     }
 
     public Map<String,String> getOutputExtensions() {

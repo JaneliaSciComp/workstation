@@ -88,13 +88,15 @@ public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JP
         // Prepare to restore the page
         getResultsPanel().setCurrPage(state.getPage());
 
+        getResultsPanel().getViewer().restoreState(state.getListViewerState());
+        
         // Prepare to restore viewer state, after the reload
         Callable<Void> success = new Callable<Void>() {
             @Override
             public Void call() throws Exception {
                 if (state.getListViewerState()!=null) {
                     log.info("State load completed, restoring viewer state {}", state.getListViewerState());
-                    getResultsPanel().getViewer().restoreState(state.getListViewerState());
+//                    getResultsPanel().getViewer().restoreState(state.getListViewerState());
                 }
                 return null;
             }

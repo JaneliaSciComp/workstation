@@ -314,6 +314,10 @@ public class LocalFileCache {
      *         whether it has already been cached.
      */
     public URL getEffectiveUrl(URL remoteFileUrl) {
+        return getEffectiveUrl(remoteFileUrl, true);
+    }
+    
+    public URL getEffectiveUrl(URL remoteFileUrl, boolean cacheAsync) {
 
         URL effectiveUrl = remoteFileUrl;
 
@@ -322,20 +326,22 @@ public class LocalFileCache {
         File localFile = getVerifiedLocalFile(cachedFile);
 
         if (localFile == null) {
-
-            final URL asyncRetrievalUrl = remoteFileUrl;
-            asyncLoadService.submit(new Callable<File>() {
-                @Override
-                public File call() throws Exception {
-                    try {
-                        return getFile(asyncRetrievalUrl);
+            
+            if (cacheAsync) {
+                final URL asyncRetrievalUrl = remoteFileUrl;
+                asyncLoadService.submit(new Callable<File>() {
+                    @Override
+                    public File call() throws Exception {
+                        try {
+                            return getFile(asyncRetrievalUrl);
+                        }
+                        catch (FileNotCacheableException e) {
+                            LOG.warn("Problem encountered caching file asynchronously",e);
+                            throw e;
+                        }
                     }
-                    catch (FileNotCacheableException e) {
-                        LOG.warn("Problem encountered caching file asynchronously",e);
-                        throw e;
-                    }
-                }
-            });
+                });
+            }
 
         }
         else  {

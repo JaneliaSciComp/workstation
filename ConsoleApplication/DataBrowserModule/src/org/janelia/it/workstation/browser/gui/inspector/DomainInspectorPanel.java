@@ -403,6 +403,7 @@ public class DomainInspectorPanel extends JPanel {
             addProperty("Image Size", alignment.getImageSize());
             addProperty("Objective", alignment.getObjective());
             addProperty("Optical Resolution", alignment.getOpticalResolution());
+            addProperty("Message", alignment.getMessage());
             for (AlignmentScoreType scoretype : alignment.getScores().keySet()) {
                 String score = alignment.getScores().get(scoretype);
                 addProperty(scoretype.getLabel(), score);

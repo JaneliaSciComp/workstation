@@ -37,10 +37,14 @@ public class WorkstationFile {
     }
     
     public void get() throws Exception {
-        get(false);
+        get(false, true);
+    }
+
+    public void get(boolean headOnly) throws Exception {
+        get(headOnly, true);
     }
     
-    public void get(boolean headOnly) throws Exception {
+    public void get(boolean headOnly, boolean cache) throws Exception {
         
         File standardFile = new File(standardPath);
         if (!FileMgr.getFileMgr().isFileCacheAvailable() && standardFile.canRead()) {
@@ -50,7 +54,7 @@ public class WorkstationFile {
             return;
         }
         
-        this.effectiveURL = FileMgr.getURL(standardPath);
+        this.effectiveURL = FileMgr.getURL(standardPath, cache);
         if (effectiveURL.getProtocol().equals("file")) {
             getFile(new File(effectiveURL.getPath()));
         }

@@ -110,6 +110,26 @@ implements NeuronSet// , LookupListener
         return !annotationModel.editsAllowed();
     }
     
+    @Override
+    public void changeNeuronUserVisible(List<TmNeuronMetadata> neuronList, boolean userVisible) {
+        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, userVisible);
+    }
+    
+    @Override
+    public void changeNeuronNonInteractable(List<TmNeuronMetadata> neuronList, boolean interactable) {
+        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, interactable);
+    }
+    
+    @Override
+    public void changeNeuronUserToggleRadius(List<TmNeuronMetadata> neuronList, boolean userToggleRadius) {
+        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, userToggleRadius);
+    }
+    
+    @Override
+    public void changeNeuronUserProperties (List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle) {
+        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggle);
+    }
+    
     private void updateVoxToMicronMatrices(TmSample sample)
     {
         // If we try to get the matrix too early, it comes back null, so populate just-in-time
@@ -278,11 +298,12 @@ implements NeuronSet// , LookupListener
             return;
         this.metaWorkspace = metaWorkspace;
         this.metaWorkspace.setSample(annotationModel.getCurrentSample());
+        this.metaWorkspace.setTagMetadata(annotationModel.getAllTagMeta());
         getMetaWorkspace().setChanged();
         getMetaWorkspace().notifyObservers();  
     }
     
-    private HortaMetaWorkspace getMetaWorkspace() {
+    public HortaMetaWorkspace getMetaWorkspace() {
         return metaWorkspace;
     }
     
@@ -553,6 +574,13 @@ implements NeuronSet// , LookupListener
                         progress.finish();
                         // Let LVV know that index is done  
                         annotationModel.fireSpatialIndexReady(workspace);
+                                // load user preferences
+                        try {
+                            annotationModel.loadUserPreferences();
+                            repaintHorta();
+                        } catch (Exception error) {
+                            ConsoleApp.handleException(error);
+                        }
                     }
 
                     @Override
@@ -661,6 +689,12 @@ implements NeuronSet// , LookupListener
                 repaintHorta();
             }
         }
+        
+        private boolean notifyVisibilityChange (NeuronModel neuronModel) {
+            neuronModel.getVisibilityChangeObservable().setChanged();
+            neuronModel.getVisibilityChangeObservable().notifyObservers();
+            return true;
+        }
             
         private boolean updateOneNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style)
         {
@@ -690,6 +724,25 @@ implements NeuronSet// , LookupListener
                 neuronModel.getVisibilityChangeObservable().notifyObservers();
                 result = true;
             }
+             boolean userviz = style.isUserVisible();
+            if (userviz != neuronModel.isUserVisible()) {
+                neuronModel.setUserVisible(userviz);
+                return notifyVisibilityChange(neuronModel);
+            }             
+            boolean nonInteractable = style.isNonInteractable();
+            if (nonInteractable != neuronModel.isNonInteractable()) {
+                neuronModel.setNonInteractable(nonInteractable);
+                notifyVisibilityChange(neuronModel);
+                result=true;
+            }                        
+            boolean userToggleRadius = style.isUserToggleRadius();
+            if (userToggleRadius != neuronModel.isUserToggleRadius()) {
+                neuronModel.setUserToggleRadius(userToggleRadius);
+                neuronModel.getGeometryChangeObservable().setChanged();
+                neuronModel.getGeometryChangeObservable().notifyObservers();
+                repaintHorta();
+                result = true;
+            }
             
             return result;
         }
@@ -716,7 +769,9 @@ implements NeuronSet// , LookupListener
 
         @Override
         public void neuronTagsChanged(List<TmNeuronMetadata> neuronList)
-        {}
+        {
+            repaintHorta();
+        }
         
     }
     

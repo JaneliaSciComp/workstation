@@ -229,19 +229,25 @@ public class FileMgr {
     }
 
     /**
-     * Get the URL for a standard path. It may be a local URL, if the file has been cached, or a remote
-     * URL on the WebDAV server. It might even be a mounted location, if WebDAV is disabled.
+     * Get the URL for a standard path. It may be a local URL, if the file has
+     * been cached, or a remote URL on the WebDAV server. It might even be a
+     * mounted location, if WebDAV is disabled.
      *
-     * @param standardPath a standard system path
+     * @param standardPath
+     *            a standard system path
      * @return an accessible URL for the specified path
      */
     public static URL getURL(String standardPath) {
+        return getURL(standardPath, true);
+    }
+
+    public static URL getURL(String standardPath, boolean cacheAsync) {
         try {
             FileMgr mgr = getFileMgr();
             WebDavClient client = mgr.getWebDavClient();
             URL remoteFileUrl = client.getWebDavUrl(standardPath);
             LocalFileCache cache = mgr.getFileCache();
-            return mgr.isFileCacheAvailable() ? cache.getEffectiveUrl(remoteFileUrl) : remoteFileUrl;
+            return mgr.isFileCacheAvailable() ? cache.getEffectiveUrl(remoteFileUrl, cacheAsync) : remoteFileUrl;
         }
         catch (MalformedURLException e) {
             ConsoleApp.handleException(e);

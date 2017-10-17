@@ -64,19 +64,21 @@ public class DescriptorUtils {
             else if (domainObject instanceof NeuronFragment) {
                 NeuronFragment neuron = (NeuronFragment)domainObject;
                 try {
-                    Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, neuron.getSample().getTargetId());
-                    if (sample!=null) {
-                        List<NeuronSeparation> results = sample.getResultsById(NeuronSeparation.class, neuron.getSeparationId());
-                        if (!results.isEmpty()) {
-                            NeuronSeparation separation = results.get(0);
-                            PipelineResult parentResult = separation.getParentResult();
-                            if (parentResult instanceof HasAnatomicalArea) {
-                                HasAnatomicalArea hasAA = (HasAnatomicalArea)parentResult;
-                                boolean aligned = (parentResult instanceof SampleAlignmentResult);
-                                ObjectiveSample objectiveSample = parentResult.getParentRun().getParent();
-                                NeuronFragmentDescriptor desc = new NeuronFragmentDescriptor(objectiveSample.getObjective(), hasAA.getAnatomicalArea(), aligned);
-                                sampleArtifacts.add(desc);
-                                log.trace("  Adding neuron fragment self descriptor: {}", desc);
+                    if (neuron.getSample()!=null) {
+                        Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, neuron.getSample().getTargetId());
+                        if (sample!=null) {
+                            List<NeuronSeparation> results = sample.getResultsById(NeuronSeparation.class, neuron.getSeparationId());
+                            if (!results.isEmpty()) {
+                                NeuronSeparation separation = results.get(0);
+                                PipelineResult parentResult = separation.getParentResult();
+                                if (parentResult instanceof HasAnatomicalArea) {
+                                    HasAnatomicalArea hasAA = (HasAnatomicalArea)parentResult;
+                                    boolean aligned = (parentResult instanceof SampleAlignmentResult);
+                                    ObjectiveSample objectiveSample = parentResult.getParentRun().getParent();
+                                    NeuronFragmentDescriptor desc = new NeuronFragmentDescriptor(objectiveSample.getObjective(), hasAA.getAnatomicalArea(), aligned);
+                                    sampleArtifacts.add(desc);
+                                    log.trace("  Adding neuron fragment self descriptor: {}", desc);
+                                }
                             }
                         }
                     }

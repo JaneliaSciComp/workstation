@@ -113,6 +113,7 @@ public final class DomainViewerTopComponent extends TopComponent {
     }
 
     void writeProperties(java.util.Properties p) {
+        if (p==null) return;
         p.setProperty("version", TC_VERSION);
         DomainObject current = getCurrent();
         if (current!=null) {
@@ -126,6 +127,7 @@ public final class DomainViewerTopComponent extends TopComponent {
     }
 
     void readProperties(java.util.Properties p) {
+        if (p==null) return;
         String version = p.getProperty("version");
         final String objectStrRef = p.getProperty("objectRef");
         log.info("Reading state: {}",objectStrRef);

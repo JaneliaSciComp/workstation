@@ -278,6 +278,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     void writeProperties(java.util.Properties p) {
+        if (p==null) return;
         p.setProperty("version", TC_VERSION);
         
         List<Long[]> expandedPaths = beanTreeView.getExpandedPaths();
@@ -293,6 +294,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
     
     void readProperties(java.util.Properties p) {
+        if (p==null) return;
         String version = p.getProperty("version");
         final String expandedPathStr = p.getProperty("expandedPaths");
         if (TC_VERSION.equals(version) && expandedPathStr!=null) {

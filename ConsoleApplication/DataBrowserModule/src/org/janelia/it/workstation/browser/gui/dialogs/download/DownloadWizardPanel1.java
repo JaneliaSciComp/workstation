@@ -9,15 +9,10 @@ import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
 import org.openide.util.ChangeSupport;
 import org.openide.util.HelpCtx;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DownloadWizardPanel1 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
 
-    private static final Logger log = LoggerFactory.getLogger(DownloadWizardPanel1.class);
-    
-    private final ChangeSupport changeSupport = new ChangeSupport(this);
-    
+    private final ChangeSupport changeSupport = new ChangeSupport(this);    
     private WizardDescriptor wiz;
     
     /**

@@ -69,6 +69,7 @@ import Jama.Matrix;
  */
 public class NeuronModelAdapter implements NeuronModel
 {
+
     private TmNeuronMetadata neuron;
     private final Long neuronId;
     private final VertexList vertexes;
@@ -87,6 +88,9 @@ public class NeuronModelAdapter implements NeuronModel
     // TODO: Stop using locally cached color and visibility, in favor of proper syncing with underlying Style
     // private AnnotationModel annotationModel;
     private boolean bIsVisible; // TODO: sync visibility with LVV eventually. For now, we want fast toggle from Horta.
+    private boolean nonInteractable; 
+    private boolean userVisible;
+    private boolean userToggleRadius; 
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
     // private TmWorkspace workspace;
@@ -102,6 +106,8 @@ public class NeuronModelAdapter implements NeuronModel
         this.neuronSet = workspace;
         // this.annotationModel = annotationModel;
         bIsVisible = true; // TODO: 
+        nonInteractable = false; // TODO: 
+        userVisible = true;
         vertexes = new VertexList(neuron.getGeoAnnotationMap(), neuronSet);
         edges = new EdgeList(vertexes);
         // this.workspace = workspace;
@@ -248,6 +254,19 @@ public class NeuronModelAdapter implements NeuronModel
         }
         return true;
     }
+    
+    @Override
+    public boolean updateNeuronRadius(TmNeuronMetadata neuron, float radius) {
+        try {
+            neuronSet.annotationModel.updateNeuronRadius(neuron.getId(), radius);
+            return true;
+        }
+        catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+            return false;
+        }
+    }
+
     
     @Override
     public boolean updateVertexRadius(NeuronVertex vertex, float micronRadius) {
@@ -407,7 +426,7 @@ public class NeuronModelAdapter implements NeuronModel
         Color deepColor = null;
         NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
         if (style != null) {
-            vis = style.isVisible();
+            vis = style.isVisible() ;
             deepColor = style.getColor();
         }
         else {
@@ -417,7 +436,7 @@ public class NeuronModelAdapter implements NeuronModel
         // Avoid multiple style setting calls
         if (! color.equals(deepColor)) {
             try {
-                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, vis));
+                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, vis, isNonInteractable(), isUserVisible()));
             } catch (Exception ex) {
                 logger.error("Error setting neuron style", ex);
             }
@@ -504,7 +523,7 @@ public class NeuronModelAdapter implements NeuronModel
         // Don't keep updating visibility, if it's already set correctly
         if (visible != deepVisibility) {
             try {
-                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, visible));
+                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, visible, isNonInteractable(), isUserVisible()));
             } catch (Exception ex) {
                 logger.error("Error setting neuron style", ex);
             }
@@ -546,6 +565,26 @@ public class NeuronModelAdapter implements NeuronModel
     @Override
     public NeuronVertexUpdateObservable getVertexUpdatedObservable() {
         return vertexUpdatedObservable;
+    }
+
+    @Override
+    public boolean isNonInteractable() {
+        return nonInteractable;
+    }
+
+    @Override
+    public void setNonInteractable(boolean nonInteractable) {
+        this.nonInteractable = nonInteractable;
+    }
+    
+    @Override
+    public boolean isUserToggleRadius() {
+        return userToggleRadius;
+    }
+
+    @Override
+    public void setUserToggleRadius(boolean userToggleRadius) {
+        this.userToggleRadius = userToggleRadius;
     }
 
     // TODO: - implement Edges correctly
@@ -673,6 +712,20 @@ public class NeuronModelAdapter implements NeuronModel
             cachedEdges.clear();
         }
 
+    }
+    
+        /**
+     * @return the userVisible
+     */
+    public boolean isUserVisible() {
+        return userVisible;
+    }
+
+    /**
+     * @param userVisible the userVisible to set
+     */
+    public void setUserVisible(boolean userVisible) {
+        this.userVisible = userVisible;
     }
 
 

@@ -158,15 +158,17 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
      * Filter exceptions which should never be reported to JIRA. These are exceptions for
      * which we can not do anything. They are not caused by bugs in our software, but issues with 
      * the environment or an acceptable user action which happens to generate an exception. 
+     * In cases where this method reports false positives and ignores actual problems, the user
+     * can still report them manually. 
      */
     private boolean isIgnoredForAutoSend(Throwable throwable, String stacktrace) {
         
-        // Ignore all space issues, these do not represent bugs
+        // Ignore all disk space issues, these do not represent bugs.
         if (stacktrace.contains("java.io.IOException: No space left on device")) {
             return true;
         }
         
-        // Ignore all broken pipes, because these are usually caused by user initiated cancellation or network issues
+        // Ignore all broken pipes, because these are usually caused by user initiated cancellation or network issues.
         if (stacktrace.contains("Caused by: java.io.IOException: Broken pipe")) {
             return true;
         }
@@ -174,6 +176,11 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         // Ignore network and data issues. If it's in fact a data problem on our end, the user will let us know. 
         if (stacktrace.contains("java.io.IOException: unexpected end of stream") 
                 || stacktrace.contains("Caused by: java.net.ConnectException: Connection refused")) {
+            return true;
+        }
+        
+        // Ignore older ArtifactDescriptor deserialization issues. These older ArtifactDescriptors are no longer usable, but the user can overwrite them with new preferences.
+        if (stacktrace.contains("com.fasterxml.jackson.databind.JsonMappingException: Unexpected token") && stacktrace.contains("ArtifactDescriptor")) {
             return true;
         }
         
@@ -213,7 +220,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             String firstLine = getFirstLine(stacktrace);
             log.info("Reporting exception: "+firstLine);
 
-            String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
+            String email = AccessManager.getUserEmail();
             String titleSuffix = " from "+AccessManager.getUsername()+" -- "+firstLine;
             String subject = (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix;
              

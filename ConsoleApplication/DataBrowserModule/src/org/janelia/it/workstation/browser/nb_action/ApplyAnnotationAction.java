@@ -28,7 +28,8 @@ import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.ontology.AnnotationEditor;
 import org.janelia.it.workstation.browser.nodes.OntologyTermNode;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.it.workstation.browser.workers.ResultWorker;
+import org.janelia.it.workstation.browser.workers.SimpleListenableFuture;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
@@ -100,20 +101,15 @@ public class ApplyAnnotationAction extends NodeAction {
             performAction(node.getOntologyTerm());
         }
     }
-    
+
     public void performAction(final OntologyTerm ontologyTerm) {
+
+        if (ontologyTerm instanceof Category || ontologyTerm instanceof org.janelia.it.jacs.model.domain.ontology.Enum) {
+            // Cannot annotate with a category or enum
+            return;
+        }
+
         try {
-            Ontology ontology = ontologyTerm.getOntology();
-            String keyTermValue = ontologyTerm.getName();
-            Long keyTermId = ontologyTerm.getId();
-
-            if (ontologyTerm instanceof Category || ontologyTerm instanceof org.janelia.it.jacs.model.domain.ontology.Enum) {
-                // Cannot annotate with a category or enum
-                return;
-            }
-
-            log.info("Will annotate all selected objects with: {} ({})",keyTermValue,keyTermId);
-
             final List<Reference> selectedIds = GlobalDomainObjectSelectionModel.getInstance().getSelectedIds();
 
             if (selectedIds.isEmpty()) {
@@ -122,23 +118,42 @@ public class ApplyAnnotationAction extends NodeAction {
                 return;
             }
 
+            String keyTermValue = ontologyTerm.getName();
+            Long keyTermId = ontologyTerm.getId();
+            log.info("Will annotate all selected objects with: {} ({})",keyTermValue,keyTermId);
+
             for(Reference id : selectedIds) {
                 log.debug("Selected: "+id);
             }
-
+            
+            annotateReferences(ontologyTerm, selectedIds);
+        }
+        catch (Exception e) {
+            ConsoleApp.handleException(e);
+        }
+    }
+    
+    
+    public SimpleListenableFuture<List<Annotation>> annotateReferences(final OntologyTerm ontologyTerm, final List<Reference> references) {
+            Ontology ontology = ontologyTerm.getOntology();
 
             AnnotationEditor editor = new AnnotationEditor(ontology, ontologyTerm);
-            final String value = editor.showEditor();
-
-            if (AnnotationEditor.CANCEL_VALUE.equals(value)) return;
-
-            SimpleWorker worker = new SimpleWorker() {
+            
+            String value = null;
+            if (editor.needsEditor()) {
+                value = editor.showEditor();
+                if (value==null) return null;    
+            }
+            
+            final String finalValue = value;
+            ResultWorker<List<Annotation>> worker = new ResultWorker<List<Annotation>>() {
 
                 @Override
-                protected void doStuff() throws Exception {
-                    setReferenceAnnotations(selectedIds, ontologyTerm, value, this);
+                protected List<Annotation> createResult() throws Exception {
+                    List<Annotation> annotations = setReferenceAnnotations(references, ontologyTerm, finalValue, this);
+                    return annotations;
                 }
-
+                
                 @Override
                 protected void hadSuccess() {
                     // UI will be updated by events
@@ -152,31 +167,26 @@ public class ApplyAnnotationAction extends NodeAction {
             };
 
             worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Adding annotations", "", 0, 100));
-            worker.execute();
-        }
-        catch (Exception e) {
-            ConsoleApp.handleException(e);
-        }
+            return worker.executeWithFuture();
     }
 
-    public void setReferenceAnnotations(List<Reference> targetIds, OntologyTerm ontologyTerm, Object value) throws Exception {
-        setReferenceAnnotations(targetIds, ontologyTerm, value, null);
+    public List<Annotation> setReferenceAnnotations(List<Reference> targetIds, OntologyTerm ontologyTerm, Object value) throws Exception {
+        return setReferenceAnnotations(targetIds, ontologyTerm, value, null);
     }
     
-    public void setReferenceAnnotations(List<Reference> targetIds, OntologyTerm ontologyTerm, Object value, Progress progress) throws Exception {
+    public List<Annotation> setReferenceAnnotations(List<Reference> targetIds, OntologyTerm ontologyTerm, Object value, Progress progress) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         List<DomainObject> domainObjects = model.getDomainObjects(targetIds);
-        setObjectAnnotations(domainObjects, ontologyTerm, value, progress);
+        return setObjectAnnotations(domainObjects, ontologyTerm, value, progress);
     }
     
-    public void setObjectAnnotations(List<? extends DomainObject> domainObjects, OntologyTerm ontologyTerm, Object value, Progress progress) throws Exception {
+    public List<Annotation> setObjectAnnotations(List<? extends DomainObject> domainObjects, OntologyTerm ontologyTerm, Object value, Progress progress) throws Exception {
 
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-
         List<Reference> refs = DomainUtils.getReferences(domainObjects);
         Multimap<Long,Annotation> annotationMap = DomainUtils.getAnnotationsByDomainObjectId(model.getAnnotations(refs));
         
-        
+        List<Annotation> createdAnnotations = new ArrayList<>();
         int i = 1;
         for (DomainObject domainObject : domainObjects) {
             
@@ -206,14 +216,16 @@ public class ApplyAnnotationAction extends NodeAction {
                 log.info("Found existing annotation to update: "+existingAnnotation);
             }
             
-            doAnnotation(domainObject, existingAnnotation, ontologyTerm, value);
+            createdAnnotations.add(doAnnotation(domainObject, existingAnnotation, ontologyTerm, value));
             
             // Update progress
             if (progress!=null) {
-                if (progress.isCancelled()) return;
+                if (progress.isCancelled()) return createdAnnotations;
                 progress.setProgress(i++, domainObjects.size());
             }
         }
+        
+        return createdAnnotations;
     }
 
     public Annotation addAnnotation(DomainObject target, OntologyTerm ontologyTerm, Object value) throws Exception {

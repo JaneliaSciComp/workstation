@@ -56,6 +56,9 @@ import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * A table viewer for domain objects.
  *
@@ -581,34 +584,4 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         );
     }
 
-    private class TableViewerState extends ListViewerState {
-
-        private final int horizontalScrollValue;
-        private final int verticalScrollValue;
-
-        public TableViewerState(int horizontalScrollValue, int verticalScrollValue) {
-            super(ListViewerType.TableViewer);
-            this.horizontalScrollValue = horizontalScrollValue;
-            this.verticalScrollValue = verticalScrollValue;
-        }
-
-        public int getHorizontalScrollValue() {
-            return horizontalScrollValue;
-        }
-
-        public int getVerticalScrollValue() {
-            return verticalScrollValue;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder builder = new StringBuilder();
-            builder.append("TableViewerState [horizontalScrollValue=");
-            builder.append(horizontalScrollValue);
-            builder.append(", verticalScrollValue=");
-            builder.append(verticalScrollValue);
-            builder.append("]");
-            return builder.toString();
-        }
-    }
 }

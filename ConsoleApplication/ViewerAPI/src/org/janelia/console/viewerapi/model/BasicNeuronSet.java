@@ -36,6 +36,7 @@ import java.util.List;
 
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.openide.awt.UndoRedo;
 
 /**
@@ -246,5 +247,25 @@ implements NeuronSet
     @Override
     public void addTraceEndNote(NeuronVertex anchor) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void changeNeuronUserVisible(List<TmNeuronMetadata> neuron, boolean userVisible) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void changeNeuronNonInteractable(List<TmNeuronMetadata> neuron, boolean interactable) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void changeNeuronUserToggleRadius(List<TmNeuronMetadata> neuronList, boolean userToggleRadius) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void changeNeuronUserProperties(List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

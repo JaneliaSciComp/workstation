@@ -41,6 +41,7 @@ import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.enums.ErrorType;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
+import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
@@ -693,10 +694,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
                 
                 String objective = objectiveSample.getObjective();
-                boolean diplayObjective = true;
-                
                 if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !StringUtils.areEqual(currObjective, objective)) {
-                    diplayObjective = false;
+                    continue;
                 }
     
                 SamplePipelineRun run = currRunMap.get(objective);
@@ -713,16 +712,13 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                         area = "Unknown";
                     }
                     
-                    boolean display = diplayObjective;
                     if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
-                        display = false;
+                        continue;
                     }
                     
-                    if (display) {
-                        PipelineResultPanel resultPanel = new PipelineResultPanel(result);
-                        resultPanels.add(resultPanel);
-                        dataPanel.add(resultPanel);
-                    }
+                    PipelineResultPanel resultPanel = new PipelineResultPanel(result);
+                    resultPanels.add(resultPanel);
+                    dataPanel.add(resultPanel);
                 }
                 
                 if (run.hasError()) {
@@ -886,7 +882,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         private final ArtifactDescriptor resultDescriptor;
         private final PipelineResult result;
         private JLabel label = new JLabel();
-        private JLabel subLabel = new JLabel();
+        private JLabel subLabel1 = new JLabel();
+        private JLabel subLabel2 = new JLabel();
         
         private PipelineResultPanel(PipelineResult result) {
             
@@ -902,24 +899,34 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             if (result!=null) {
                 this.resultDescriptor = new ResultArtifactDescriptor(result);
                 label.setText(resultDescriptor.toString());
-                subLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
-                
-                String signalMip = DomainUtils.getFilepath(result, FileType.SignalMip);
-                if (signalMip==null) {
-                    signalMip = DomainUtils.getFilepath(result, FileType.AllMip);
-                }
-                if (signalMip==null) {
-                    signalMip = DomainUtils.getFilepath(result, FileType.Signal1Mip);
+                subLabel1.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
+                if (!StringUtils.isBlank(result.getMessage())) {
+                    subLabel2.setText(result.getMessage());
                 }
                 
-                String refMip = DomainUtils.getFilepath(result, FileType.ReferenceMip);
+                HasFiles files = result;
+                // This is technically correct, but the resulting UI is less usable because the montages are not very useful. 
+//                if (result instanceof LSMSummaryResult) {
+//                    files = ((LSMSummaryResult) result).getGroup("montage");
+//                }
+                
+                String signalMip = DomainUtils.getFilepath(files, FileType.SignalMip);
+                if (signalMip==null) {
+                    signalMip = DomainUtils.getFilepath(files, FileType.AllMip);
+                }
+                if (signalMip==null) {
+                    signalMip = DomainUtils.getFilepath(files, FileType.Signal1Mip);
+                }
+                
+                String refMip = DomainUtils.getFilepath(files, FileType.ReferenceMip);
                 
                 imagePanel.add(getImagePanel(signalMip));
                 imagePanel.add(getImagePanel(refMip));
     
                 JPanel titlePanel = new JPanel(new BorderLayout());
                 titlePanel.add(label, BorderLayout.PAGE_START);
-                titlePanel.add(subLabel, BorderLayout.PAGE_END);
+                titlePanel.add(subLabel1, BorderLayout.CENTER);
+                titlePanel.add(subLabel2, BorderLayout.PAGE_END);
                 
                 add(titlePanel, BorderLayout.NORTH);
                 add(imagePanel, BorderLayout.CENTER);

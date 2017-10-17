@@ -56,10 +56,8 @@ public class TableViewerConfiguration {
     public static TableViewerConfiguration loadConfig() {
         try {
             TableViewerConfiguration config;
-            Preference columnsPreference = DomainMgr.getDomainMgr().getPreference(
-                    DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS,
-                    DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS);
-
+            Preference columnsPreference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS);
+            
             if (columnsPreference==null) {
                 config = new TableViewerConfiguration();
             }
@@ -81,11 +79,7 @@ public class TableViewerConfiguration {
     }
 
     public void save() throws Exception {
-        Preference columnsPreference = new Preference(AccessManager.getSubjectKey(),
-                DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS,
-                DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, "");
         String value = TableViewerConfiguration.serialize(this);
-        columnsPreference.setValue(value);
-        DomainMgr.getDomainMgr().savePreference(columnsPreference);
+        DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, value);
     }
 }
