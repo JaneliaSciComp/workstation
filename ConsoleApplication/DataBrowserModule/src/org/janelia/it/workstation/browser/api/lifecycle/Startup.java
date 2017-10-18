@@ -51,7 +51,7 @@ public class Startup implements Runnable {
          *       ALL
          */
         System.setProperty("org.janelia.it.workstation.browser.level", "INFO");
-//        System.setProperty("org.janelia.it.workstation.browser.gui.dialogs.download.level", "FINEST");
+        System.setProperty("org.janelia.it.workstation.browser.gui.dialogs.download.level", "FINEST");
         
         try {
             // Re-read the configuration to parse the system properties we just defined

@@ -59,6 +59,7 @@ public class DownloadFileItem {
     private File targetFile;
     private String sourceExtension;
     private String targetExtension;
+
     
     public DownloadFileItem(List<String> itemPath, DomainObject domainObject) {
         this.itemPath = itemPath;
@@ -77,6 +78,10 @@ public class DownloadFileItem {
         this.errorMessage = null;
         this.resultName = null;
         this.targetFile = null;
+        
+        if (!fileType.is3dImage() && splitChannels) {
+            throw new IllegalStateException("Cannot split channels for non-3d image");
+        }
         
         String sourceFilePath = DomainUtils.getFilepath(fileProvider, fileType);
         if (sourceFilePath==null) {
