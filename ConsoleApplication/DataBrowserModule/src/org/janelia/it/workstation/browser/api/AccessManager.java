@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.enums.SubjectRole;
@@ -117,12 +118,17 @@ public final class AccessManager {
 
     private void beginSession() {
         String userName = getSubject()==null?null:getSubject().getName();
-        UserToolEvent loginEvent = EJBFactory.getRemoteComputeBean().beginSession(
-                userName,
-                ConsoleProperties.getString("console.Title"),
-                ConsoleProperties.getString("console.versionNumber"));
-        if (null!=loginEvent && null!=loginEvent.getSessionId()) {
-            this.currentSessionId = loginEvent.getSessionId();
+        try {
+            UserToolEvent loginEvent = EJBFactory.getRemoteComputeBean().beginSession(
+                    userName,
+                    ConsoleProperties.getString("console.Title"),
+                    ConsoleProperties.getString("console.versionNumber"));
+            if (null!=loginEvent && null!=loginEvent.getSessionId()) {
+                this.currentSessionId = loginEvent.getSessionId();
+            }
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
         }
         ActivityLogHelper.logSessionBegin();
         ActivityLogHelper.logUserInfo(authenticatedSubject);
@@ -130,12 +136,19 @@ public final class AccessManager {
 
     private void endSession() {
         String userName = getSubject()==null?null:getSubject().getName();
-        EJBFactory.getRemoteComputeBean().endSession(
-                userName,
-            ConsoleProperties.getString("console.Title"),
-            currentSessionId);
-        this.currentSessionId = null;
-        ActivityLogHelper.logSessionEnd();
+        try {
+            if (currentSessionId!=null) {
+                EJBFactory.getRemoteComputeBean().endSession(
+                        userName,
+                    ConsoleProperties.getString("console.Title"),
+                    currentSessionId);
+                this.currentSessionId = null;
+            }
+            ActivityLogHelper.logSessionEnd();
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
+        }
     }
     
     private void addEventToSession(UserToolEvent event) {
