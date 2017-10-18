@@ -95,6 +95,14 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     // First ensure that this component uses same sample.
                     URL url = sampleLocation.getSampleUrl();
                     TmSample sample = sampleLocation.getSample();
+
+                    // trying to run down a bug:
+                    if (sample == null) {
+                        logger.info("found null sample for sample url " + url + " at coordinates "
+                            + sampleLocation.getFocusXUm() + ", "
+                            + sampleLocation.getFocusYUm() + ", "
+                            + sampleLocation.getFocusZUm());
+                    }
                     
                     // First check to see if ktx tiles are available
                     BlockTileSource ktxSource = null;
