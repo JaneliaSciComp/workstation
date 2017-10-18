@@ -43,7 +43,6 @@ import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
-import org.janelia.it.workstation.browser.gui.listview.ListViewerType;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.ResultSelectionButton;
@@ -57,9 +56,6 @@ import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * An IconGridViewer implementation for viewing domain objects. 
@@ -175,7 +171,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             protected void resultChanged(ArtifactDescriptor resultDescriptor) {
                 log.info("Setting result preference: "+resultDescriptor.toString());
                 try {
-                    setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, DescriptorUtils.serialize(resultDescriptor));
+                    setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, DescriptorUtils.serialize(resultDescriptor));
                 }
                 catch (Exception e) {
                     log.error("Error serializing sample result preference: "+resultDescriptor,e);
@@ -186,7 +182,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             @Override
             protected void imageTypeChanged(FileType fileType) {
                 log.info("Setting image type preference: "+fileType);
-                setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, fileType.name());
+                setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, fileType.name());
             }
         };
                 
@@ -194,7 +190,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         getToolbar().addCustomComponent(typeButton);
     }
     
-    private void setPreference(final String name, final Object value) {
+    private void setPreferenceAsync(final String category, final Object value) {
 
         Utils.setMainFrameCursorWaitStatus(true);
 
@@ -202,10 +198,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
             @Override
             protected void doStuff() throws Exception {
-                final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
-                if (parentObject.getId()!=null) {
-                    DomainMgr.getDomainMgr().setPreference(name, parentObject.getId().toString(), value);
-                }
+                setPreference(category, value);
             }
 
             @Override
@@ -231,6 +224,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         catch (Exception e) {
             log.error("Error getting preference", e);
             return null;
+        }
+    }
+    
+    private void setPreference(final String category, final Object value) throws Exception {
+        final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
+        if (parentObject.getId()!=null) {
+            DomainMgr.getDomainMgr().setPreference(category, parentObject.getId().toString(), value);
         }
     }
     
@@ -330,7 +330,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                             resultButton.setResultDescriptor(resultDescriptor);
                         }
                         catch (Exception e) {
-                            log.error("Error deserializing preference "+preference.getId(),e);
+                            FrameworkImplProvider.handleExceptionQuietly(e);
+                            log.error("Error deserializing preference {}. Clearing it.", preference.getId(), e);
+                            setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, null);
                         }
                     }
                     else {
