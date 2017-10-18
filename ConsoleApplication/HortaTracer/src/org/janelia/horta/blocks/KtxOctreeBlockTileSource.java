@@ -96,13 +96,9 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     private URL blockUrlForKey(KtxOctreeBlockTileKey key, String compressionString) throws IOException {
         URL folder = folderForKey(key);
 
-        // TODO: Main defect of URL vs. File is searchability of actual file name.
-        // block_2016-07-18b_8_xy_.ktx
-        String[] pathParts = rootUrl.getPath().split("/");
-        String specimenName = pathParts[pathParts.length - 1];
         String subfolderStr = subfolderForKey(key);
         subfolderStr = subfolderStr.replaceAll("/", "");
-        String fileName = "block_" + specimenName + compressionString + subfolderStr + ".ktx";
+        String fileName = "block" + compressionString + subfolderStr + ".ktx";
         
         URL blockUrl = new URL(folder, fileName);
         return blockUrl;
@@ -118,22 +114,34 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
         this.rootUrl = rootUrl;
         rootKey = new KtxOctreeBlockTileKey(new ArrayList<Integer>(), this);
 
-        // Figure out which compression strategy is used in this data set
+        String[] pathParts = rootUrl.getPath().split("/");
+        String specimenName = pathParts[pathParts.length - 1];
+        
+        // Figure out what the file names should be for this data set.
+        // Try the redundant specimen name scheme first, since it's currently used by most MouseLight data. 
+        // TODO: Once we move away from it, we can flip these two options.
+        String[] namingSchemesToTry = new String[]{"_"+specimenName, ""};
+        // Try different compression schemes.
         String[] compressionStringsToTry = new String[]{"_8_xy_", "_"};
         InputStream stream = null;
         IOException exception = null;
         String chosenCompressionString = null;
-        for (String cs : compressionStringsToTry) {
-            URL url = blockUrlForKey(rootKey, cs);
-            try {
-                stream = new BufferedInputStream(url.openStream());
+        OUTER: for (String nameScheme : namingSchemesToTry) {
+            for (String cs : compressionStringsToTry) {
+                String scheme = nameScheme+cs;
+                URL url = blockUrlForKey(rootKey, scheme);
+                try {
+                    stream = new BufferedInputStream(url.openStream());
+                }
+                catch (IOException exc) {
+                    logger.info("Tried looking for KTX tiles at {}",exc.getMessage());
+                    exception = exc;
+                    continue;
+                }
+                logger.info("Found KTX tiles at {}",url);
+                chosenCompressionString = scheme;
+                break OUTER;
             }
-            catch (IOException exc) {
-                exception = exc;
-                continue;
-            }
-            chosenCompressionString = cs;
-            break;
         }
         if (stream == null)
             throw exception;
