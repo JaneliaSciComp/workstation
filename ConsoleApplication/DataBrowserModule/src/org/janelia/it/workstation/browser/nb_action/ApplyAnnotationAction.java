@@ -9,7 +9,6 @@ import java.util.List;
 import javax.swing.ProgressMonitor;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -30,6 +29,7 @@ import org.janelia.model.domain.ontology.EnumItem;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.ontology.OntologyTermReference;
+import org.janelia.model.security.util.PermissionTemplate;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;

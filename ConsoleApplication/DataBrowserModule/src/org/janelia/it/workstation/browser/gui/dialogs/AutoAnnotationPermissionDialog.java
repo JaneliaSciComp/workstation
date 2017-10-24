@@ -20,13 +20,13 @@ import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
 
-import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
 import org.janelia.model.security.Subject;
+import org.janelia.model.security.util.PermissionTemplate;
 
 /**
  * A dialog for selecting permissions to auto-add for any annotations

@@ -2,7 +2,6 @@ package org.janelia.it.workstation.browser.ws;
 
 import org.hibernate.HibernateException;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -24,6 +23,7 @@ import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleAlignmentResult;
 import org.janelia.model.domain.sample.SampleProcessingResult;
+import org.janelia.model.util.TimebasedIdentifierGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -27,7 +27,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
-import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
@@ -68,6 +67,7 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.security.Subject;
+import org.janelia.model.security.util.PermissionTemplate;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
