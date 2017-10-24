@@ -28,11 +28,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
@@ -45,6 +40,11 @@ import org.janelia.it.workstation.browser.util.ImageCache;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.support.DomainUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

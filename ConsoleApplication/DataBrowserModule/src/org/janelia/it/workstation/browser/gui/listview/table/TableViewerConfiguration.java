@@ -4,11 +4,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.jacs.model.domain.Preference;
+
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.Preference;
 
 /**
  * UI configuration for a TableViewerPanel. 

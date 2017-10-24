@@ -6,7 +6,6 @@ import java.util.List;
 
 import javax.swing.Action;
 
-import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.gui.support.Icons;
@@ -16,6 +15,7 @@ import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.browser.nb_action.RenameAction;
 import org.janelia.it.workstation.browser.nb_action.SearchHereAction;
+import org.janelia.model.domain.gui.search.Filtering;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 

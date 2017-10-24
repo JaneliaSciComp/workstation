@@ -22,7 +22,6 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
-import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -37,6 +36,7 @@ import org.janelia.it.workstation.browser.model.DomainModelViewConstants;
 import org.janelia.it.workstation.browser.util.Utils;
 import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.sample.DataSet;
 
 /**
  * Dialog for viewing and editing Data Sets. 

@@ -10,10 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-
-import org.janelia.it.jacs.model.domain.Subject;
-import org.janelia.it.jacs.model.domain.enums.SubjectRole;
-import org.janelia.it.jacs.model.domain.subjects.User;
 import org.janelia.it.jacs.model.user_data.UserToolEvent;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
@@ -30,6 +26,9 @@ import org.janelia.it.workstation.browser.events.lifecycle.RunAsEvent;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.PropertyConfigurator;
 import org.janelia.it.workstation.browser.util.SingleThreadedTaskQueue;
+import org.janelia.model.domain.Subject;
+import org.janelia.model.domain.enums.SubjectRole;
+import org.janelia.model.domain.subjects.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

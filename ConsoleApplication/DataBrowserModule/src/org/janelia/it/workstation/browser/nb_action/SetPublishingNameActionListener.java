@@ -22,11 +22,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -36,6 +31,11 @@ import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.support.DomainUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

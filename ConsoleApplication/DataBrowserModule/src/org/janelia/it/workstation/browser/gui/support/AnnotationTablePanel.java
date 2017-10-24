@@ -21,7 +21,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.table.TableCellEditor;
 
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -36,6 +35,7 @@ import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.ontology.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

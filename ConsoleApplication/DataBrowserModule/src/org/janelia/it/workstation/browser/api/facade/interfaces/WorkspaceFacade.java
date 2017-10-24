@@ -3,13 +3,13 @@ package org.janelia.it.workstation.browser.api.facade.interfaces;
 import java.util.Collection;
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
 import org.janelia.it.jacs.shared.solr.SolrParams;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.search.Filter;
+import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Workspace;
 
 /**
  * Implementations provide access to workspaces and related container objects. 

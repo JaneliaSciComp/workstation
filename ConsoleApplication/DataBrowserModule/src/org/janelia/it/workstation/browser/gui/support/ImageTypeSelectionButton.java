@@ -12,18 +12,18 @@ import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasFileGroups;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.NeuronSeparation;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.support.DomainUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

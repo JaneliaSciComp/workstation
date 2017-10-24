@@ -5,16 +5,16 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.interfaces.HasAnatomicalArea;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.NeuronSeparation;
+import org.janelia.model.domain.sample.ObjectiveSample;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SampleAlignmentResult;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

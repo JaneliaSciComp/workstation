@@ -5,10 +5,6 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
-import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
-import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.Events;
@@ -19,6 +15,10 @@ import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.model.domain.interfaces.HasFileGroups;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.SampleAlignmentResult;
+import org.janelia.model.domain.sample.SampleProcessingResult;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.util.NbBundle.Messages;

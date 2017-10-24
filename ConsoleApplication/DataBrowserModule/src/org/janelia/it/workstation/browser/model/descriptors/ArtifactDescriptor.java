@@ -3,9 +3,9 @@ package org.janelia.it.workstation.browser.model.descriptors;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasFiles;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 

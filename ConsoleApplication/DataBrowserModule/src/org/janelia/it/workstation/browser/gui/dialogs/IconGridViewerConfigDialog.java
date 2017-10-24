@@ -24,9 +24,6 @@ import javax.swing.JRadioButtonMenuItem;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
 import org.fife.ui.autocomplete.ShorthandCompletion;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerConfiguration;
@@ -34,6 +31,9 @@ import org.janelia.it.workstation.browser.gui.support.TemplateEditorTextbox;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.support.DomainObjectAttribute;
+import org.janelia.model.domain.support.DomainUtils;
 
 import net.miginfocom.swing.MigLayout;
 

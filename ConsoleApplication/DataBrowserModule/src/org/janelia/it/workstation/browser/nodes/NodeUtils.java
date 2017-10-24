@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
-import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
+
+import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.openide.nodes.Node;
 import org.openide.util.Enumerations;
 import org.slf4j.Logger;

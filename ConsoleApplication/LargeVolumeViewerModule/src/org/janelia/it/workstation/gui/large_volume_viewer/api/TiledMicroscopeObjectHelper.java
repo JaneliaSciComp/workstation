@@ -1,11 +1,11 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.api;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.large_volume_viewer.nodes.TmSampleNode;
 import org.janelia.it.workstation.gui.large_volume_viewer.nodes.TmWorkspaceNode;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;

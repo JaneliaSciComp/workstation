@@ -14,9 +14,6 @@ import java.util.concurrent.Executors;
 
 import javax.swing.Action;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -33,6 +30,9 @@ import org.janelia.it.workstation.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.browser.nb_action.RenameAction;
 import org.janelia.it.workstation.browser.nb_action.SearchHereAction;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;

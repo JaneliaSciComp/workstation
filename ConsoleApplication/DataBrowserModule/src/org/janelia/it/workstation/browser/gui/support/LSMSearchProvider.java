@@ -1,12 +1,12 @@
 package org.janelia.it.workstation.browser.gui.support;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.workstation.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.nb_action.NewFilterActionListener;
+import org.janelia.model.domain.gui.search.Filter;
+import org.janelia.model.domain.sample.LSMImage;
 import org.netbeans.spi.quicksearch.SearchProvider;
 import org.netbeans.spi.quicksearch.SearchRequest;
 import org.netbeans.spi.quicksearch.SearchResponse;

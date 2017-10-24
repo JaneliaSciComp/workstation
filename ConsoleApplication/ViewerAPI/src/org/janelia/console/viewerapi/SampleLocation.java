@@ -31,7 +31,8 @@
 package org.janelia.console.viewerapi;
 
 import java.net.URL;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 
 /**
  *

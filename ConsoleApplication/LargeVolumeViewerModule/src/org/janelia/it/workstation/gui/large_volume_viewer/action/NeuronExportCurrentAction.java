@@ -5,12 +5,12 @@ import java.util.Arrays;
 
 import javax.swing.AbstractAction;
 
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.SwcExport;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.SwcExport.ExportParameters;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;

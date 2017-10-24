@@ -9,11 +9,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.Sample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

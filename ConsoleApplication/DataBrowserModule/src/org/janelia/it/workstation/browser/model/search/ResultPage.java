@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.support.DomainUtils;
 
 import com.google.common.collect.ListMultimap;
 

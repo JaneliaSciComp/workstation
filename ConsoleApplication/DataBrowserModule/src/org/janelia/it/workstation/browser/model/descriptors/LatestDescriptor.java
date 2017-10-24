@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.SampleUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.support.SampleUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

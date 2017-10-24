@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
+import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
 
 /**
  * Implement this to hear about changes to anchored paths at the model level.

@@ -27,13 +27,14 @@ import javax.swing.JScrollPane;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
-import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
+
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.table.TableViewerConfiguration;
 import org.janelia.it.workstation.browser.gui.support.panels.ScrollablePanel;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.support.DomainObjectAttribute;
 
 /**
  * A dialog for configuring a TableViewerPanel.

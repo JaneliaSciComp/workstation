@@ -7,11 +7,6 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.enums.PipelineStatus;
-import org.janelia.it.jacs.model.domain.enums.SubjectRole;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
@@ -19,6 +14,11 @@ import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.enums.PipelineStatus;
+import org.janelia.model.domain.enums.SubjectRole;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.support.DomainUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

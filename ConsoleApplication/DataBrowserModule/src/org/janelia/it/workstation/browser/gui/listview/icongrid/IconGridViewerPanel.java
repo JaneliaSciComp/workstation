@@ -21,7 +21,6 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.KeyBindings;
@@ -35,6 +34,7 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.model.domain.ontology.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

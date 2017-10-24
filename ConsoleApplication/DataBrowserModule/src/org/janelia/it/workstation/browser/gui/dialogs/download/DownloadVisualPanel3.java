@@ -19,9 +19,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
@@ -29,6 +26,9 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

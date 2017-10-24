@@ -16,8 +16,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.tiledMicroscope.SwcImportTask;
@@ -31,6 +29,8 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

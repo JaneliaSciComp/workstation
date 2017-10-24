@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.alignment_board.util;
 
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
+import org.janelia.model.domain.sample.NeuronSeparation;
 
 public class ABReferenceChannel extends ABItem {
 

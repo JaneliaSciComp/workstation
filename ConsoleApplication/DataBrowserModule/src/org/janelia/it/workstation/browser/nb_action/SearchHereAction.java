@@ -1,10 +1,5 @@
 package org.janelia.it.workstation.browser.nb_action;
 
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.TreeNodeCriteria;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
@@ -13,6 +8,11 @@ import org.janelia.it.workstation.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.FilterNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.search.Filter;
+import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
+import org.janelia.model.domain.support.DomainUtils;
+import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;

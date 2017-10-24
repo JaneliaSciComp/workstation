@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.alignment_board.util;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObject;
 
 public abstract class ABItem {
 

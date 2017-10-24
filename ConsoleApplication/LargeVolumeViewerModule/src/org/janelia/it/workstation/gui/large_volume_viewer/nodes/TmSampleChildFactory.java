@@ -3,9 +3,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer.nodes;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;

@@ -2,14 +2,16 @@ package org.janelia.it.workstation.gui.large_volume_viewer.components;
 
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.util.Map;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 
 /**
  * Panel to show contents of a TmNeuronMetadata, by data only.  There are far better

@@ -6,11 +6,11 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-import org.janelia.it.jacs.model.domain.report.QuotaUsage;
-import org.janelia.it.jacs.model.domain.support.SubjectUtils;
 import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientImpl;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.model.domain.report.QuotaUsage;
+import org.janelia.model.domain.support.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

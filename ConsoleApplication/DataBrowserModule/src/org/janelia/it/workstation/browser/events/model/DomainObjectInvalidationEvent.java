@@ -3,7 +3,7 @@ package org.janelia.it.workstation.browser.events.model;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObject;
 
 /**
  * One or more domain objects have been invalidated. The client receiving this 

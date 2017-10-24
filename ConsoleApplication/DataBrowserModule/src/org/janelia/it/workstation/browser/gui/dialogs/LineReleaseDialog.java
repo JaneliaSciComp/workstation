@@ -29,10 +29,6 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import org.janelia.it.jacs.model.domain.Subject;
-import org.janelia.it.jacs.model.domain.sample.DataSet;
-import org.janelia.it.jacs.model.domain.sample.LineRelease;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -50,6 +46,10 @@ import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
+import org.janelia.model.domain.Subject;
+import org.janelia.model.domain.sample.DataSet;
+import org.janelia.model.domain.sample.LineRelease;
+import org.janelia.model.domain.support.DomainUtils;
 import org.jdesktop.swingx.JXDatePicker;
 
 import net.miginfocom.swing.MigLayout;

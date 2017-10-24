@@ -28,13 +28,6 @@ import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.jacs.model.domain.report.DatabaseSummary;
-import org.janelia.it.jacs.model.domain.report.DiskUsageSummary;
-import org.janelia.it.jacs.model.domain.report.QuotaUsage;
-import org.janelia.it.jacs.model.domain.sample.DataSet;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.gui.listview.ViewerToolbar;
@@ -43,6 +36,13 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.browser.nb_action.NewFilterActionListener;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.report.DatabaseSummary;
+import org.janelia.model.domain.report.DiskUsageSummary;
+import org.janelia.model.domain.report.QuotaUsage;
+import org.janelia.model.domain.sample.DataSet;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

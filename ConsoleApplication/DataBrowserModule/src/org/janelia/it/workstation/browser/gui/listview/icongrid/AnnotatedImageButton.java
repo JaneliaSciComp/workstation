@@ -26,9 +26,6 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.TransferHandler;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
@@ -38,6 +35,9 @@ import org.janelia.it.workstation.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.browser.gui.support.AnnotationView;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ontology.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

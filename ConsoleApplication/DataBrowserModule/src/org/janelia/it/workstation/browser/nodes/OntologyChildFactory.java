@@ -2,10 +2,10 @@ package org.janelia.it.workstation.browser.nodes;
 
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.ontology.OntologyTerm;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;

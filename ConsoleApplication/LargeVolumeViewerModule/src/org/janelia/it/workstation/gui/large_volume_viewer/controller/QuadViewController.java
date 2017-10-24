@@ -13,7 +13,6 @@ import java.util.Collection;
 import javax.swing.JComponent;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
@@ -31,6 +30,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomMouseModeAc
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomScrollModeAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
+import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 
 /**
  * External controller of the Quad View UI.  Distances it from incoming

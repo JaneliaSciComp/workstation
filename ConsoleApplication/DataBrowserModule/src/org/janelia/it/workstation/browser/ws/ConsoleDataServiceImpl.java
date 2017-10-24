@@ -10,12 +10,6 @@ import java.util.Map;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -26,6 +20,12 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBindings;
 import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.ontology.OntologyTermReference;
+import org.janelia.model.domain.sample.NeuronFragment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

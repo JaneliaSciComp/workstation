@@ -8,13 +8,13 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.util.Base64;
-import org.janelia.it.jacs.model.domain.Preference;
-import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
+import org.janelia.model.domain.Preference;
+import org.janelia.model.domain.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

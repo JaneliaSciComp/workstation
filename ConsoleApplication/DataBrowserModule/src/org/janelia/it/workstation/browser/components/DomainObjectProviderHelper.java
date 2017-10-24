@@ -14,7 +14,7 @@ import javax.swing.JPopupMenu;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObject;
 
 /**
  * Helps link up Domain Objects with services from providers.

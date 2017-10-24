@@ -14,7 +14,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.browser.actions.Action;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.events.Events;
@@ -27,6 +26,7 @@ import org.janelia.it.workstation.gui.alignment_board.swing.AlignmentBoardItemDe
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

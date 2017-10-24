@@ -24,7 +24,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronColorAction;
@@ -36,6 +35,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.WorkspaceInform
 import org.janelia.it.workstation.gui.large_volume_viewer.action.WorkspaceSaveAsAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
 /**
  * this is the main class for large volume viewer annotation GUI; it instantiates and contains

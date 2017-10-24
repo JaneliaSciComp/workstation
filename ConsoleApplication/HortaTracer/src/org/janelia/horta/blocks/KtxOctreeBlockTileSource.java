@@ -46,7 +46,7 @@ import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.ktx.KtxData;
 import org.janelia.horta.ktx.KtxHeader;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.openide.util.Exceptions;
 import org.python.google.common.base.Joiner;
 import org.slf4j.Logger;

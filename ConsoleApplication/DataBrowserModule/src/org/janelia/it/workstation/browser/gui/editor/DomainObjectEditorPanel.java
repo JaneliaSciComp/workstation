@@ -5,11 +5,11 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -6,16 +6,16 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.ProgressMonitor;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.ontology.AnnotationEditor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.support.DomainUtils;
 
 import com.google.common.collect.ListMultimap;
 

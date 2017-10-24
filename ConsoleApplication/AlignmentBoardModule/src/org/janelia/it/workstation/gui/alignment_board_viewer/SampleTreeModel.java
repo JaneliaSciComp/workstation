@@ -9,10 +9,10 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.model.viewer.AlignedItem.InclusionStatus;
+import org.janelia.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

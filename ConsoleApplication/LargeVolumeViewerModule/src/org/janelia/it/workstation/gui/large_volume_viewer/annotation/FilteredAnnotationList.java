@@ -1,8 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
@@ -26,6 +23,9 @@ import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
 /**
  * this UI element displays a list of annotations according to a

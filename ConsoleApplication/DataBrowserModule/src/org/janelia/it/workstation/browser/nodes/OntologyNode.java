@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentMap;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OntologyElementAction;
@@ -29,6 +28,7 @@ import org.janelia.it.workstation.browser.nb_action.OntologyImportAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RenameAction;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.ontology.Ontology;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

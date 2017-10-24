@@ -2,19 +2,19 @@ package org.janelia.it.workstation.browser.gui.ontology;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.model.domain.ontology.Accumulation;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.ontology.EnumText;
-import org.janelia.it.jacs.model.domain.ontology.Interval;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
-import org.janelia.it.jacs.model.domain.ontology.Text;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.dialogs.AnnotationBuilderDialog;
+import org.janelia.model.domain.ontology.Accumulation;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.ontology.EnumText;
+import org.janelia.model.domain.ontology.Interval;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.ontology.OntologyTermReference;
+import org.janelia.model.domain.ontology.Text;
 
 /**
  * Editor for annotation values.

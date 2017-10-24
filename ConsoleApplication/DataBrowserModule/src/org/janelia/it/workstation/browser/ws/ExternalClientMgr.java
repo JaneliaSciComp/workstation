@@ -5,16 +5,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.sample.NeuronSeparation;
+import org.janelia.model.domain.sample.PipelineResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

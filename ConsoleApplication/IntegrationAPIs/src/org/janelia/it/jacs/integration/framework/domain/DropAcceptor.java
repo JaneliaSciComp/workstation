@@ -2,7 +2,8 @@ package org.janelia.it.jacs.integration.framework.domain;
 
 import java.util.List;
 import javax.swing.JComponent;
-import org.janelia.it.jacs.model.domain.DomainObject;
+
+import org.janelia.model.domain.DomainObject;
 
 /**
  * Implement this from another module to claim your class can accept drops

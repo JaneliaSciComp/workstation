@@ -9,14 +9,14 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.dto.SampleDispatchRequest;
-import org.janelia.it.jacs.model.domain.sample.DataSet;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.LineRelease;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SampleFacade;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.dto.SampleDispatchRequest;
+import org.janelia.model.domain.sample.DataSet;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.LineRelease;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

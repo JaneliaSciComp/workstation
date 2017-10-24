@@ -2,8 +2,8 @@ package org.janelia.it.workstation.browser.model;
 
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.ontology.Annotation;
 
 /**
  * An ordered list of domain objects with associated annotations.

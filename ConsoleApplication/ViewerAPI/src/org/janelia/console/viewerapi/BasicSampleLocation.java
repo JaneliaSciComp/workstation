@@ -34,7 +34,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 
 /**
  *

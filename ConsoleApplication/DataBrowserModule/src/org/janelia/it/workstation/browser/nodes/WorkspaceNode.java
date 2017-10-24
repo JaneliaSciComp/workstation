@@ -6,13 +6,13 @@ import java.util.List;
 
 import javax.swing.Action;
 
-import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.SearchHereAction;
+import org.janelia.model.domain.workspace.Workspace;
 
 /**
  * A top-level Workspace node in the data graph. Functions as a tree node 

@@ -36,7 +36,7 @@ import java.util.List;
 
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.openide.awt.UndoRedo;
 
 /**

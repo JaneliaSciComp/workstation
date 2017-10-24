@@ -6,13 +6,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.model.DomainObjectComparator;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.workspace.Workspace;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;

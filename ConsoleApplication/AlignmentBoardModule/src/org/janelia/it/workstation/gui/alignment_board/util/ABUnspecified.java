@@ -1,7 +1,8 @@
 package org.janelia.it.workstation.gui.alignment_board.util;
 
 import java.awt.Color;
-import org.janelia.it.jacs.model.domain.DomainObject;
+
+import org.janelia.model.domain.DomainObject;
 
 public class ABUnspecified extends ABItem {
     public static final String UNSPECIFIED_NAME_TYPE = "Unspecified";

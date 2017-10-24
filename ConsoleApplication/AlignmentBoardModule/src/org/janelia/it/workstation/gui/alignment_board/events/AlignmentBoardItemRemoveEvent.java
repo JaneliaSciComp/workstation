@@ -1,8 +1,8 @@
 package org.janelia.it.workstation.gui.alignment_board.events;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.gui.alignment_board.AlignmentBoardItem;
 
 /**
  * An item on an open alignment board has changed in some way.
