@@ -57,11 +57,11 @@ public class FileMgr {
                 ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100));
         
         setFileCacheGigabyteCapacity((Integer) 
-                ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
+                FrameworkImplProvider.getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
         setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(
-                ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));        
+                FrameworkImplProvider.getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));        
         
-        Integer tmpCache = (Integer) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
+        Integer tmpCache = (Integer) FrameworkImplProvider.getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
         if (null != tmpCache) {
             PropertyConfigurator.getProperties().setProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, tmpCache.toString());
         }
@@ -90,7 +90,7 @@ public class FileMgr {
      */
     public final void setFileCacheDisabled(boolean isDisabled) {
 
-        ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
+        FrameworkImplProvider.setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
 
         if (isDisabled) {
             log.warn("disabling local cache");
@@ -126,7 +126,7 @@ public class FileMgr {
      * @return the maximum number of gigabytes to store in the local file cache.
      */
     public int getFileCacheGigabyteCapacity() {
-        return (Integer) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
+        return (Integer) FrameworkImplProvider.getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
     }
 
     /**
@@ -146,7 +146,7 @@ public class FileMgr {
             gigabyteCapacity = MAX_FILE_CACHE_GIGABYTE_CAPACITY;
         }
 
-        ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
+        FrameworkImplProvider.setModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
                 gigabyteCapacity);
 
         if (isFileCacheAvailable()) {

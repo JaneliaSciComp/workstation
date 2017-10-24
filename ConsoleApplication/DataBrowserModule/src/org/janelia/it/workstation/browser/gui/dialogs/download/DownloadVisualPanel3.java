@@ -19,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
@@ -111,7 +112,7 @@ public final class DownloadVisualPanel3 extends JPanel {
         filePatternCombo.setEditable(true);
         filePatternCombo.setToolTipText("Select a standard file naming pattern, or enter your own.");
         DefaultComboBoxModel<String> fpmodel = (DefaultComboBoxModel<String>) filePatternCombo.getModel();
-        String userFilePattern = (String)ConsoleApp.getConsoleApp().getModelProperty(FILE_PATTERN_PROP_NAME);
+        String userFilePattern = (String)FrameworkImplProvider.getModelProperty(FILE_PATTERN_PROP_NAME);
         if (userFilePattern!=null) {
             fpmodel.addElement(userFilePattern);
         }

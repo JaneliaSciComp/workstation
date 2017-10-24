@@ -26,8 +26,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.TransferHandler;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
@@ -120,7 +120,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         this.selectionModel = selectionModel;
         this.imagesPanel = imagesPanel;
         
-        Boolean disableImageDrag = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY);
+        Boolean disableImageDrag = (Boolean) FrameworkImplProvider.getModelProperty(OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY);
         if (disableImageDrag == null || disableImageDrag == false) {
             if (selectionModel instanceof DomainObjectSelectionModel) {
                 dragEnabled = true;

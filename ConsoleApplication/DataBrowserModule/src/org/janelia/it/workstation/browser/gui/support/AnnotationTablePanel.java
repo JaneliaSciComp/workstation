@@ -21,6 +21,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.table.TableCellEditor;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -30,7 +31,6 @@ import org.janelia.it.workstation.browser.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImagesPanel;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
-import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.browser.util.Utils;
@@ -111,7 +111,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
         summaryLabel.addMouseListener(new MouseHandler() {
             @Override
             protected void doubleLeftClicked(MouseEvent e) {
-                ConsoleApp.getConsoleApp().setModelProperty(
+                FrameworkImplProvider.setModelProperty(
                         OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
                 e.consume();
             }

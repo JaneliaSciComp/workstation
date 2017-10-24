@@ -21,7 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.KeyBindings;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionEvent;
@@ -521,7 +521,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         imagesPanel.setImageObjects(objects);
 
         // Update preferences for each button
-        Boolean tagTable = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(
+        Boolean tagTable = (Boolean) FrameworkImplProvider.getModelProperty(
                 OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY);
         if (tagTable == null) {
             tagTable = false;

@@ -2,8 +2,7 @@ package org.janelia.it.workstation.browser.api;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.openide.LifecycleManager;
 
@@ -18,9 +17,9 @@ public class WorkstationEnvironment {
         ConsoleProperties.load();
 
         // Assuming that the user has entered the login/password information, now validate
-        String username = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_NAME);
-        String password = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_PASSWORD);
-        String runAsUser = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.RUN_AS_USER);
+        String username = (String) FrameworkImplProvider.getModelProperty(AccessManager.USER_NAME);
+        String password = (String) FrameworkImplProvider.getModelProperty(AccessManager.USER_PASSWORD);
+        String runAsUser = (String) FrameworkImplProvider.getModelProperty(AccessManager.RUN_AS_USER);
 
         if (username==null) {
             Object[] options = {"Enter Login", "Exit Program"};

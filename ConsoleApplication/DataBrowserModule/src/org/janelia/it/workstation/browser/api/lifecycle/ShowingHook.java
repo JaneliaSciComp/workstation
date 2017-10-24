@@ -127,7 +127,7 @@ public class ShowingHook implements Runnable {
 //            }
 //            else if (selectedOption==1) {                
 //                
-//                String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
+//                String email = (String) FrameworkImplProvider.getModelProperty(AccessManager.USER_EMAIL);
 //                
 //                MailDialogueBox popup = MailDialogueBox.newDialog(WindowLocator.getMainFrame(), email)
 //                        .withTitle("Create A Ticket")

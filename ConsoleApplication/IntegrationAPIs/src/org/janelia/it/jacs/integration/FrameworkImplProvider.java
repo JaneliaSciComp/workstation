@@ -24,37 +24,45 @@ import org.openide.util.lookup.Lookups;
 public class FrameworkImplProvider {
 
     public static ParentFrame getAppHandler() {
-        return get(ParentFrame.LOOKUP_PATH, ParentFrame.class);
+        return getProvider(ParentFrame.LOOKUP_PATH, ParentFrame.class);
     }
 
     public static ErrorHandler getErrorHandler() {
-        return get(ErrorHandler.LOOKUP_PATH, ErrorHandler.class);
+        return getProvider(ErrorHandler.LOOKUP_PATH, ErrorHandler.class);
     }
 
     public static SettingsModel getSettingsModel() {
-        return get(SettingsModel.LOOKUP_PATH, SettingsModel.class);
+        return getProvider(SettingsModel.LOOKUP_PATH, SettingsModel.class);
     }
     
     public static PreferenceHandler getPreferenceHandler() {
-        return get(PreferenceHandler.LOOKUP_PATH, PreferenceHandler.class);
+        return getProvider(PreferenceHandler.LOOKUP_PATH, PreferenceHandler.class);
     }
 
     public static FileAccess getFileAccess() {
-        return get(FileAccess.LOOKUP_PATH, FileAccess.class);
+        return getProvider(FileAccess.LOOKUP_PATH, FileAccess.class);
     }
     
     public static CompressedFileResolverI getCompressedFileResolver() {
-        return get(CompressedFileResolverI.LOOKUP_PATH, CompressedFileResolverI.class);
+        return getProvider(CompressedFileResolverI.LOOKUP_PATH, CompressedFileResolverI.class);
     }
     
     public static ActivityLogging getSessionSupport() {
-        return get(ActivityLogging.LOOKUP_PATH, ActivityLogging.class);
+        return getProvider(ActivityLogging.LOOKUP_PATH, ActivityLogging.class);
     }
     
     public static ParentFrame getParentFrameProvider() {
-        return get(ParentFrame.LOOKUP_PATH, ParentFrame.class);
+        return getProvider(ParentFrame.LOOKUP_PATH, ParentFrame.class);
     }
 
+    private static <T> T getProvider(String path, Class<T> clazz) {
+        Collection<? extends T> candidates = Lookups.forPath(path).lookupAll(clazz);
+        for(T handler : candidates) {
+            return handler;
+        }
+        throw new UnprovidedServiceException("No service provider found for "+path);
+    }
+    
     // Convenience methods
 
     public static JFrame getMainFrame() {
@@ -170,13 +178,5 @@ public class FrameworkImplProvider {
     
     public static void setLocalPreferenceValue(Class<?> moduleClass, String key, double value) {
         NbPreferences.forModule(moduleClass).putDouble(key, value);
-    }
-    
-    private static <T> T get(String path, Class<T> clazz) {
-        Collection<? extends T> candidates = Lookups.forPath(path).lookupAll(clazz);
-        for(T handler : candidates) {
-            return handler;
-        }
-        throw new UnprovidedServiceException("No service provider found for "+path);
     }
 }

@@ -21,6 +21,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -615,20 +616,20 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
     
     public static boolean isNavigateOnClick() {
-        Boolean navigate = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(NAVIGATE_ON_CLICK);
+        Boolean navigate = (Boolean) FrameworkImplProvider.getModelProperty(NAVIGATE_ON_CLICK);
         return navigate==null || navigate;
     }
     
     private static void setNavigateOnClick(boolean value) {
-        ConsoleApp.getConsoleApp().setModelProperty(NAVIGATE_ON_CLICK, value);  
+        FrameworkImplProvider.setModelProperty(NAVIGATE_ON_CLICK, value);  
     }
 
     public static boolean isShowRecentMenuItems() {
-        Boolean navigate = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(SHOW_RECENTLY_OPENED_ITEMS);
+        Boolean navigate = (Boolean) FrameworkImplProvider.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS);
         return navigate==null || navigate;
     }
     
     private static void setShowRecentMenuItems(boolean value) {
-        ConsoleApp.getConsoleApp().setModelProperty(SHOW_RECENTLY_OPENED_ITEMS, value);  
+        FrameworkImplProvider.setModelProperty(SHOW_RECENTLY_OPENED_ITEMS, value);  
     }
 }

@@ -27,6 +27,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
@@ -99,7 +100,7 @@ public class ImportDialog extends ModalDialog {
         pathTextField = new JTextField(40);
 
         final String importSourceFolderName = (String)
-                ConsoleApp.getConsoleApp().getModelProperty(IMPORT_SOURCE_FOLDER);
+                FrameworkImplProvider.getModelProperty(IMPORT_SOURCE_FOLDER);
         if (! isEmpty(importSourceFolderName)) {
             final File importSourceFolder = new File(importSourceFolderName.trim());
             if (importSourceFolder.exists()) {
@@ -230,7 +231,7 @@ public class ImportDialog extends ModalDialog {
         }
 
         // save the user preferences for later
-        ConsoleApp.getConsoleApp().setModelProperty(IMPORT_TARGET_FOLDER, folderName);
+        FrameworkImplProvider.setModelProperty(IMPORT_TARGET_FOLDER, folderName);
 
         int fileCount = 1;
         double transferMegabytes = 0;
@@ -240,7 +241,7 @@ public class ImportDialog extends ModalDialog {
         if (selectedFile.exists()) {
 
             // save the user preferences for later
-            ConsoleApp.getConsoleApp().setModelProperty(IMPORT_SOURCE_FOLDER, selectedFile.getAbsolutePath());
+            FrameworkImplProvider.setModelProperty(IMPORT_SOURCE_FOLDER, selectedFile.getAbsolutePath());
 
             if (selectedFile.isDirectory()) {
 

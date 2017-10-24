@@ -34,7 +34,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -46,6 +45,7 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.IOUtils;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
@@ -126,7 +126,7 @@ public class Utils {
      */
     public static BufferedImage readImage(String path) throws Exception {
         try {
-            String selectedRenderer = (String) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D);
+            String selectedRenderer = (String) FrameworkImplProvider.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D);
 
             RendererType2D renderer = selectedRenderer == null ? RendererType2D.LOCI : RendererType2D.valueOf(selectedRenderer);
             BufferedImage image = null;

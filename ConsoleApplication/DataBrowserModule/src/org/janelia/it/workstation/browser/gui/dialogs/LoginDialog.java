@@ -16,9 +16,9 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -170,10 +170,9 @@ public class LoginDialog extends ModalDialog {
             String username = usernameField.getText().trim();
             String password = new String(passwordField.getPassword());
             
-            final ConsoleApp app = ConsoleApp.getConsoleApp();
-            app.setModelProperty(AccessManager.USER_NAME, username);
-            app.setModelProperty(AccessManager.USER_PASSWORD, rememberCheckbox.isSelected()?password:null);
-            app.setModelProperty(AccessManager.REMEMBER_PASSWORD, rememberCheckbox.isSelected());
+            FrameworkImplProvider.setModelProperty(AccessManager.USER_NAME, username);
+            FrameworkImplProvider.setModelProperty(AccessManager.USER_PASSWORD, rememberCheckbox.isSelected()?password:null);
+            FrameworkImplProvider.setModelProperty(AccessManager.REMEMBER_PASSWORD, rememberCheckbox.isSelected());
             
             if (!AccessManager.getAccessManager().loginSubject(username, password)) {
                 errorLabel.setText(getErrorMessage(ErrorType.AuthError));
@@ -188,7 +187,7 @@ public class LoginDialog extends ModalDialog {
                     }
                 }
                 catch (Exception e) {
-                    app.setModelProperty(AccessManager.RUN_AS_USER, "");
+                    FrameworkImplProvider.setModelProperty(AccessManager.RUN_AS_USER, "");
                     ConsoleApp.handleException(e);
                 }
                 
@@ -205,7 +204,7 @@ public class LoginDialog extends ModalDialog {
     }
     
     private Object getModelProperty(String key, Object defaultValue) {
-        Object value = ConsoleApp.getConsoleApp().getModelProperty(key);
+        Object value = FrameworkImplProvider.getModelProperty(key);
         if (value == null) {
             value = defaultValue;
         }

@@ -11,6 +11,7 @@ import java.util.Set;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
@@ -82,17 +83,17 @@ public class StateMgr {
     private StateMgr() {     
         log.info("Initializing State Manager");
         try {
-            this.autoShareTemplate = (PermissionTemplate)ConsoleApp.getConsoleApp().getModelProperty(AUTO_SHARE_TEMPLATE);
+            this.autoShareTemplate = (PermissionTemplate)FrameworkImplProvider.getModelProperty(AUTO_SHARE_TEMPLATE);
             
-            if (ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY) == null) {
-                ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY, false);
+            if (FrameworkImplProvider.getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY) == null) {
+                FrameworkImplProvider.setModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY, false);
             }
     
-            if (ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D) == null) {
-                ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
+            if (FrameworkImplProvider.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D) == null) {
+                FrameworkImplProvider.setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
             }
             
-            log.debug("Using 2d renderer: {}", ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D));
+            log.debug("Using 2d renderer: {}", FrameworkImplProvider.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D));
         }
         catch (Throwable e) {
             // Catch all exceptions, because anything failing to init here cannot be allowed to prevent the Workstation from starting
@@ -147,7 +148,7 @@ public class StateMgr {
 //        UIManager.installLookAndFeel("Synthetica WhiteVision Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaWhiteVisionLookAndFeel");
 //        LookAndFeelInfo[] installedInfos = UIManager.getInstalledLookAndFeels();
 //
-//        String lafName = (String) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
+//        String lafName = (String) FrameworkImplProvider.getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
 //        LookAndFeel currentLaf = UIManager.getLookAndFeel();
 //        LookAndFeelInfo currentLafInfo = null;
 //        if (lafName==null) lafName = "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel";
@@ -166,7 +167,7 @@ public class StateMgr {
 //            }
 //            else if (currentLafInfo != null) {
 //                setLookAndFeel(currentLafInfo.getName());
-//                ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
+//                FrameworkImplProvider.setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
 //            }
 //            else {
 //                log.error("Could not set Look and Feel: {}",lafName);
@@ -205,7 +206,7 @@ public class StateMgr {
 //                UIManager.setLookAndFeel(lookAndFeelClassName);
 //            }
 //
-//            ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
+//            FrameworkImplProvider.setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
 //            log.info("Configured Look and Feel: {}", lookAndFeelClassName);
 //        }
 //        catch (Exception ex) {
@@ -221,7 +222,7 @@ public class StateMgr {
     @Subscribe
     public void cleanup(ApplicationClosing e) {
         log.info("Saving auto-share template");
-        ConsoleApp.getConsoleApp().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
+        FrameworkImplProvider.setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
     }
 
     public NavigationHistory getNavigationHistory(DomainListViewTopComponent topComponent) {
@@ -254,7 +255,7 @@ public class StateMgr {
     }
     
     public Long getCurrentOntologyId() {
-        String lastSelectedOntology = (String) ConsoleApp.getConsoleApp().getModelProperty("lastSelectedOntology");
+        String lastSelectedOntology = (String) FrameworkImplProvider.getModelProperty("lastSelectedOntology");
         if (StringUtils.isEmpty(lastSelectedOntology)) {
             return null;
         }
@@ -265,7 +266,7 @@ public class StateMgr {
     public void setCurrentOntologyId(Long ontologyId) {
         log.info("Setting current ontology to {}", ontologyId);
         String idStr = ontologyId==null?null:ontologyId.toString();
-        ConsoleApp.getConsoleApp().setModelProperty("lastSelectedOntology", idStr);
+        FrameworkImplProvider.setModelProperty("lastSelectedOntology", idStr);
         Events.getInstance().postOnEventBus(new OntologySelectionEvent(ontologyId));
     }
 
@@ -359,7 +360,7 @@ public class StateMgr {
 
     public void setAutoShareTemplate(PermissionTemplate autoShareTemplate) {
         this.autoShareTemplate = autoShareTemplate;
-        ConsoleApp.getConsoleApp().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
+        FrameworkImplProvider.setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
     }
     
     public List<String> getRecentlyOpenedHistory() {
@@ -380,7 +381,7 @@ public class StateMgr {
     
     private List<String> getHistoryProperty(String prop) {
         @SuppressWarnings("unchecked")
-        List<String> history = (List<String>)ConsoleApp.getConsoleApp().getModelProperty(prop);
+        List<String> history = (List<String>)FrameworkImplProvider.getModelProperty(prop);
         if (history == null) return new ArrayList<>();
         // Must make a copy of the list so that we don't use the same reference that's in the cache.
         log.debug("History property {} contains {}",prop,history);
@@ -400,7 +401,7 @@ public class StateMgr {
         log.debug("Adding {} to recently opened history",value);
         // Must make a copy of the list so that our reference doesn't go into the cache.
         List<String> copy = new ArrayList<>(history);
-        ConsoleApp.getConsoleApp().setModelProperty(prop, copy); 
+        FrameworkImplProvider.setModelProperty(prop, copy); 
     }
     
     public Task getTaskById(Long taskId) throws Exception {

@@ -280,14 +280,6 @@ public class ConsoleApp {
         return LocalPreferenceMgr.getInstance().getApplicationOutputDirectory();
     }
     
-    public Object setModelProperty(Object key, Object value) {
-        return LocalPreferenceMgr.getInstance().setModelProperty(key, value);
-    }
-
-    public Object getModelProperty(Object key) {
-        return LocalPreferenceMgr.getInstance().getModelProperty(key);
-    }
-
     public ImageCache getImageCache() {
         return imageCache;
     }
