@@ -3,7 +3,7 @@ package org.janelia.it.workstation.browser.api.facade.interfaces;
 import java.util.List;
 
 import org.janelia.model.domain.Preference;
-import org.janelia.model.domain.Subject;
+import org.janelia.model.security.Subject;
 
 /**
  * Implementations provide access to subjects and their preferences. 

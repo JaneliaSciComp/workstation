@@ -48,7 +48,6 @@ import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.Subject;
 import org.janelia.model.domain.enums.AlignmentScoreType;
 import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
@@ -64,6 +63,7 @@ import org.janelia.model.domain.support.DomainObjectAttribute;
 import org.janelia.model.domain.support.DomainUtils;
 import org.janelia.model.domain.support.DynamicDomainObjectProxy;
 import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.security.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -14,7 +14,7 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.janelia.model.domain.Preference;
-import org.janelia.model.domain.Subject;
+import org.janelia.model.security.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -10,7 +10,7 @@ import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientImpl;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.model.domain.report.QuotaUsage;
-import org.janelia.model.domain.support.SubjectUtils;
+import org.janelia.model.security.util.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

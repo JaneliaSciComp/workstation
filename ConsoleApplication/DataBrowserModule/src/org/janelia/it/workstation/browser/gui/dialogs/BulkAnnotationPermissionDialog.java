@@ -33,8 +33,8 @@ import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.Subject;
 import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.security.Subject;
 
 import net.miginfocom.swing.MigLayout;
 

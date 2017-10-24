@@ -26,7 +26,7 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
-import org.janelia.model.domain.Subject;
+import org.janelia.model.security.Subject;
 
 /**
  * A dialog for selecting permissions to auto-add for any annotations

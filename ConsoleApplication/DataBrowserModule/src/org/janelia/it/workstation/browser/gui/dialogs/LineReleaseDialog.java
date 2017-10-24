@@ -46,10 +46,10 @@ import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
-import org.janelia.model.domain.Subject;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.model.domain.support.DomainUtils;
+import org.janelia.model.security.Subject;
 import org.jdesktop.swingx.JXDatePicker;
 
 import net.miginfocom.swing.MigLayout;

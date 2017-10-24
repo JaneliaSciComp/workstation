@@ -26,9 +26,9 @@ import org.janelia.it.workstation.browser.events.lifecycle.RunAsEvent;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.PropertyConfigurator;
 import org.janelia.it.workstation.browser.util.SingleThreadedTaskQueue;
-import org.janelia.model.domain.Subject;
 import org.janelia.model.domain.enums.SubjectRole;
-import org.janelia.model.domain.subjects.User;
+import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
