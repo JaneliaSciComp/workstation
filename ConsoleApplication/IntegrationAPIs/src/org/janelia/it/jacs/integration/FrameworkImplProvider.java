@@ -123,7 +123,7 @@ public class FrameworkImplProvider {
         }
     }
 
-    public static Object getRemotePreferenceValue(String category, String key, String defaultValue) throws Exception {
+    public static <T> T getRemotePreferenceValue(String category, String key, T defaultValue) throws Exception {
         PreferenceHandler model = getPreferenceHandler();
         if (model == null) {
             throw new RuntimeException("Failed to find preference handler.  Cannot fetch " + key);

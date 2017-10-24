@@ -14,6 +14,7 @@ import javax.swing.JPopupMenu;
 
 import com.google.common.eventbus.Subscribe;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -127,10 +128,10 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
             DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
 
-            Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
+            String preference2 = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString(), null);
             log.info("Got image type preference: "+preference2);
             if (preference2!=null) {
-                typeButton.setImageTypeName((String)preference2.getValue());
+                typeButton.setImageTypeName(preference2);
             }
             typeButton.populate(hasFileGroups.getGroups());
 
@@ -329,7 +330,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             protected void doStuff() throws Exception {
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject.getId()!=null) {
-                    DomainMgr.getDomainMgr().setPreference(name, parentObject.getId().toString(), value);
+                    FrameworkImplProvider.setRemotePreferenceValue(name, parentObject.getId().toString(), value);
                 }
             }
 

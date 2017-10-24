@@ -19,6 +19,7 @@ import javax.swing.SwingUtilities;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.ParametrizedLine;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.SWCData;
@@ -1923,9 +1924,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
      public void loadUserPreferences() throws Exception {
-        Preference userPreferences = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString());
-        if (userPreferences!=null && currentTagMap!=null) {
-            Map<String,Map<String,Object>> tagGroupMappings = (Map<String,Map<String,Object>>)userPreferences.getValue();
+         Map<String,Map<String,Object>> tagGroupMappings = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), null);
+        if (tagGroupMappings!=null && currentTagMap!=null) {
             currentTagMap.saveTagGroupMappings(tagGroupMappings);
             if (neuronSetAdapter!=null && neuronSetAdapter.getMetaWorkspace()!=null) {
                 neuronSetAdapter.getMetaWorkspace().setTagMetadata(currentTagMap);
@@ -1954,7 +1954,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     public void saveUserPreferences() throws Exception {
         // for now use the tag map as the user preferences... as preferences increase, generalize the structure
-        DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), currentTagMap.getAllTagGroupMappings());
+        FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), currentTagMap.getAllTagGroupMappings());
     }
     
 

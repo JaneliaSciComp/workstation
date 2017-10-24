@@ -35,6 +35,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
@@ -417,13 +418,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private void loadPreferences() {
         if (sample.getId()==null) return;
         try {
-            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY);
-            if (sortCriteriaPref!=null) {
-                sortCriteria = (String) sortCriteriaPref.getValue();
-            }
-            else {
-                sortCriteria = null;
-            }
+            sortCriteria = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, null);
         }
         catch (Exception e) {
             log.error("Could not load sort criteria",e);
@@ -433,7 +428,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private void savePreferences() {
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
-            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
+            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
         }
         catch (Exception e) {
             log.error("Could not save sort criteria",e);

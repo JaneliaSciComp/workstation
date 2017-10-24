@@ -31,6 +31,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -866,11 +867,11 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private void loadPreferences() {
         if (filter.getId()==null) return;
         try {
-            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString());
+            String sortCriteriaPref = FrameworkImplProvider.getRemotePreferenceValue(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), null);
             if (sortCriteriaPref!=null) {
-                log.debug("Loaded sort criteria preference: {}",sortCriteriaPref.getValue());
-                searchConfig.setSortCriteria((String) sortCriteriaPref.getValue());
+                log.debug("Loaded sort criteria preference: {}",sortCriteriaPref);
+                searchConfig.setSortCriteria((String) sortCriteriaPref);
             }
             else {
                 searchConfig.setSortCriteria(null);
@@ -884,7 +885,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private void savePreferences() {
         if (filter.getId()==null || StringUtils.isEmpty(searchConfig.getSortCriteria())) return;
         try {
-            DomainMgr.getDomainMgr().setPreference(
+            FrameworkImplProvider.setRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), searchConfig.getSortCriteria());
             log.debug("Saved sort criteria preference: {}",searchConfig.getSortCriteria());
         }

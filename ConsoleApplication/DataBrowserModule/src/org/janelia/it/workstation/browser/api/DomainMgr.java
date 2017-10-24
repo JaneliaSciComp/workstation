@@ -181,19 +181,19 @@ public class DomainMgr {
      * @param key
      * @return
      */
-    public Preference getPreference(String category, String key) throws Exception {
+    Preference getPreference(String category, String key) throws Exception {
         loadPreferences();
         String mapKey = category+":"+key;
         return preferenceMap.get(mapKey);
     }
 
-    public Object getPreferenceValue(String category, String key, Object defaultValue) throws Exception {
+    <T> T getPreferenceValue(String category, String key, T defaultValue) throws Exception {
         Preference preference = getPreference(category, key);
         if (preference==null) return defaultValue;
-        return preference.getValue();
+        return (T)preference.getValue();
     }
 
-    public List<Preference> getPreferences(String category) throws Exception {
+    List<Preference> getPreferences(String category) throws Exception {
         loadPreferences();
         List<Preference> categoryPreferences = new ArrayList<>();
         for(Preference preference : preferenceMap.values()) {
@@ -209,7 +209,7 @@ public class DomainMgr {
      * @param preference
      * @throws Exception
      */
-    public void savePreference(Preference preference) throws Exception {
+    void savePreference(Preference preference) throws Exception {
         Preference updated = subjectFacade.savePreference(preference);
         preferenceMap.put(getPreferenceMapKey(preference), updated);
         notifyPreferenceChanged(updated);
@@ -227,7 +227,7 @@ public class DomainMgr {
      * @param value
      * @throws Exception
      */
-    public void setPreference(String category, String key, Object value) throws Exception {
+    void setPreference(String category, String key, Object value) throws Exception {
         Preference preference = DomainMgr.getDomainMgr().getPreference(category, key);
         if (preference==null) {
             preference = new Preference(getPreferenceSubject(), category, key, value);
