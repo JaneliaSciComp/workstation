@@ -27,7 +27,7 @@ import org.glassfish.jersey.media.multipart.MultiPartMediaTypes;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.model.domain.support.DomainUtils;
+import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;

@@ -9,8 +9,8 @@ import javax.swing.JPopupMenu;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.StateMgr;
+import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.support.DomainUtils;
 
 /**
  * A tag cloud of Entity-based annotations which support context menu operations such as deletion.

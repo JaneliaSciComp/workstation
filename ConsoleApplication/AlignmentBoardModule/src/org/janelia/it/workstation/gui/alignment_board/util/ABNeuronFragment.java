@@ -1,8 +1,8 @@
 package org.janelia.it.workstation.gui.alignment_board.util;
 
+import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.sample.NeuronFragment;
-import org.janelia.model.domain.support.DomainUtils;
 
 public class ABNeuronFragment extends ABItem {
 

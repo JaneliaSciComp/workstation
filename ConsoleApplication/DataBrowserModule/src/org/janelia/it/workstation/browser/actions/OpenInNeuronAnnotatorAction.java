@@ -14,13 +14,13 @@ import org.janelia.it.workstation.browser.tools.ToolMgr;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.ws.ExternalClient;
 import org.janelia.it.workstation.browser.ws.ExternalClientMgr;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.NeuronSeparation;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.support.DomainUtils;
-import org.janelia.model.domain.support.SampleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

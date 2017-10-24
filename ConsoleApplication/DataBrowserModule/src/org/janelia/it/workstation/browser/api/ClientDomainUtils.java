@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.browser.api;
 
+import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.support.DomainUtils;
 
 /**
  * Miscellaneous utility methods for dealing with the Domain model on the client side. Generic utility methods for the domain model 

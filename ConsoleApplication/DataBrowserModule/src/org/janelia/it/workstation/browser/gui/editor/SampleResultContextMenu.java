@@ -23,14 +23,14 @@ import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFileGroups;
 import org.janelia.model.domain.sample.NeuronSeparation;
 import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.support.DomainUtils;
-import org.janelia.model.domain.support.SampleUtils;
 
 /**
  * Right-click context menu for sample results presented in the Sample Editor. 

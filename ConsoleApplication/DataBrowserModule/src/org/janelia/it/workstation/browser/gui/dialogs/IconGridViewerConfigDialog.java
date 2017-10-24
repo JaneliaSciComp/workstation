@@ -31,9 +31,9 @@ import org.janelia.it.workstation.browser.gui.support.TemplateEditorTextbox;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.DomainObjectAttribute;
+import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.support.DomainObjectAttribute;
-import org.janelia.model.domain.support.DomainUtils;
 
 import net.miginfocom.swing.MigLayout;
 
