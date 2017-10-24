@@ -23,7 +23,7 @@ import org.janelia.model.domain.sample.NeuronSeparation;
 import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.support.MapUnion;
+import org.janelia.model.util.MapUnion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
