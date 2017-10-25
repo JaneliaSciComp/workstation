@@ -78,8 +78,12 @@ public class AB2SampleRenderer extends AB23DRenderer {
     }
 
     private void clearImage3DActor() {
-        actorDisposalQueue.add(new ImmutablePair<>(image3DActor, drawShaderSequence.getShader()));
-        image3DActor=null;
+        // For some reason, the cast to GLAbstractActor is necessary for compatibility with the apache commons Pair implementation
+        if (image3DActor!=null) {
+            ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) image3DActor, drawShaderSequence.getShader());
+            actorDisposalQueue.add(actorPair);
+            image3DActor = null;
+        }
     }
 
     static public AB2Image3D_RGBA8UI createImage3dFromBytes(byte[] data) {
@@ -119,6 +123,8 @@ public class AB2SampleRenderer extends AB23DRenderer {
         Vector3 v1=new Vector3(1f, 1f, 1f);
         image3DActor=new Image3DActor(this, getNextActorIndex(), v0, v1, image3d.getXDim(), image3d.getYDim(), image3d.getZDim(), image3d.getData());
         drawShaderSequence.getActorSequence().add(image3DActor);
+        ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) image3DActor, drawShaderSequence.getShader());
+        actorInitQueue.add(actorPair);
     }
 
     private void addBoundingBox() {

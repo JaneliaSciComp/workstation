@@ -81,7 +81,9 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     protected boolean initialized=false;
 
     protected ConcurrentLinkedDeque<MouseClickEvent> mouseClickEvents=new ConcurrentLinkedDeque<>();
-    protected ConcurrentLinkedDeque<Pair<GLAbstractActor, GLShaderProgram>> actorDisposalQueue=new ConcurrentLinkedDeque<>();
+
+    protected ConcurrentLinkedDeque<ImmutablePair<GLAbstractActor, GLShaderProgram>> actorDisposalQueue=new ConcurrentLinkedDeque<>();
+    protected ConcurrentLinkedDeque<ImmutablePair<GLAbstractActor, GLShaderProgram>> actorInitQueue=new ConcurrentLinkedDeque<>();
 
     protected class MouseClickEvent {
         public int x=0;
@@ -196,6 +198,15 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
             }
         }
         actorDisposalQueue.clear();
+
+        if (actorInitQueue.size()>0) {
+            for (Pair<GLAbstractActor, GLShaderProgram> pair : actorInitQueue) {
+                GLAbstractActor actor=pair.getLeft();
+                GLShaderProgram shader=pair.getRight();
+                actor.init(gl, shader);
+            }
+        }
+        actorInitQueue.clear();
 
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
         gl.glEnable(GL4.GL_DEPTH_TEST);
