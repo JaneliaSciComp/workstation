@@ -11,6 +11,8 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.ab2.api.AB2RestClient;
+import org.janelia.it.workstation.ab2.controller.AB2Controller;
+import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.model.AB2DomainObject;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
@@ -29,44 +31,6 @@ public class AB2DomainObjectAcceptor implements DomainObjectAcceptor  {
     @Override
     public void acceptDomainObject(DomainObject dObj) {
         logger.info("acceptDomainObject() dObj type="+dObj.getClass().getName());
-        if (dObj instanceof Sample) {
-            Sample sample=(Sample)dObj;
-            logger.info("Sample id="+sample.getId());
-            List<ObjectiveSample> objectiveSamples=sample.getObjectiveSamples();
-            if (objectiveSamples==null || objectiveSamples.size()==0) {
-                logger.info("No ObjectSamples found");
-            } else {
-                for (ObjectiveSample objectiveSample : objectiveSamples) {
-                    SamplePipelineRun samplePipelineRun=objectiveSample.getLatestRun();
-                    if (samplePipelineRun==null) {
-                        logger.info("No SamplePipelineRuns found");
-                    } else {
-                        PipelineResult pipelineResult = samplePipelineRun.getLatestResult();
-                        if (pipelineResult == null) {
-                            logger.info("No PipelineResults found");
-                        }
-                        else {
-                            String filepath = DomainUtils.getDefault3dImageFilePath(pipelineResult);
-                            if (filepath == null) {
-                                logger.info("Filepath for 3dImage is null");
-                            }
-                            else {
-                                logger.info("3D filepath=" + filepath);
-                            }
-                        }
-                    }
-                }
-            }
-            logger.info("Starting AB2RestClient");
-            AB2RestClient ab2RestClient=new AB2RestClient();
-            try {
-                byte[] data = ab2RestClient.getSampleDefault3DImageXYZRGBA8(sample.getId());
-            } catch (Exception ex) {
-                logger.error("Exception calling ab2RestClient.getSampleDefault3DImageXYZRGBA8 with sampleId="+sample.getId()+" ex="+ex.getMessage());
-                ex.printStackTrace();
-            }
-            logger.info("Finished AB2RestClient");
-        }
         AB2TopComponent ab2TopComponent=AB2TopComponent.findComp();
         if (ab2TopComponent!=null) {
             if (!ab2TopComponent.isOpened()) {

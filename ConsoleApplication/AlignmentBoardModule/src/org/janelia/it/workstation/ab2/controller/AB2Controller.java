@@ -33,6 +33,7 @@ import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.controller.AB2CompositionMode;
 import org.janelia.it.workstation.ab2.controller.AB2ControllerMode;
 import org.janelia.it.workstation.ab2.controller.AB2View3DMode;
+import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.model.AB2DomainObject;
 import org.janelia.it.workstation.ab2.renderer.AB2SimpleCubeRenderer;
 import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
@@ -193,6 +194,14 @@ public class AB2Controller implements GLEventListener {
                             drainWaitQueueToEventQueue();
                             currentMode=targetMode;
                             currentMode.start();
+                        }
+                    } else if (event instanceof AB2SampleAddedEvent) {
+                        Class targetModeClass=AB2SampleMode.class;
+                        if (currentMode.getClass().equals(targetModeClass)) {
+                            currentMode.processEvent(event);
+                        } else {
+                            addEvent(new AB2ChangeModeEvent(AB2SampleMode.class));
+                            addEvent(event); // put this back in queue, to be processed after mode change
                         }
                     } else {
                         currentMode.processEvent(event);

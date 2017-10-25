@@ -8,7 +8,9 @@ package org.janelia.it.workstation.ab2;
 import javax.swing.BoxLayout;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
+import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.model.AB2Data;
 import org.janelia.it.workstation.ab2.model.AB2DomainObject;
 import org.janelia.it.workstation.ab2.model.AB2SkeletonDomainObject;
@@ -85,7 +87,10 @@ public final class AB2TopComponent extends TopComponent {
     }
 
     public void loadDomainObject(DomainObject domainObject, boolean isUserDriven) {
-
+        if (domainObject instanceof Sample) {
+            Sample sample=(Sample)domainObject;
+            AB2Controller.getController().addEvent(new AB2SampleAddedEvent(sample));
+        }
     }
 
         /**
