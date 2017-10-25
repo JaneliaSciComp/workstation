@@ -35,6 +35,7 @@ import org.janelia.it.workstation.ab2.controller.AB2ControllerMode;
 import org.janelia.it.workstation.ab2.controller.AB2View3DMode;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.model.AB2DomainObject;
+import org.janelia.it.workstation.ab2.renderer.AB2SampleRenderer;
 import org.janelia.it.workstation.ab2.renderer.AB2SimpleCubeRenderer;
 import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
 import org.slf4j.Logger;
@@ -117,6 +118,7 @@ public class AB2Controller implements GLEventListener {
         modeMap.put(AB2View3DMode.class, new AB2View3DMode(this, new AB2SimpleCubeRenderer()));
         modeMap.put(AB2CompositionMode.class, new AB2CompositionMode(this));
         modeMap.put(AB2SkeletonMode.class, new AB2SkeletonMode(this, new AB2SkeletonRenderer()));
+        modeMap.put(AB2SampleMode.class, new AB2SampleMode(this, new AB2SampleRenderer()));
     }
 
     public void start() {
