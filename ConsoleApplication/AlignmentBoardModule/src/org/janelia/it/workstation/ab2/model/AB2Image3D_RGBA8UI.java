@@ -9,6 +9,13 @@ public class AB2Image3D_RGBA8UI {
 
     public AB2Image3D_RGBA8UI() {}
 
+    public AB2Image3D_RGBA8UI(int xDim, int yDim, int zDim, byte[] data) {
+        this.xDim=xDim;
+        this.yDim=yDim;
+        this.zDim=zDim;
+        this.data=data;
+    }
+
     public void allocate(int xDim, int yDim, int zDim) {
         this.xDim=xDim;
         this.yDim=yDim;

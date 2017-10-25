@@ -1,31 +1,29 @@
 package org.janelia.it.workstation.ab2.renderer;
 
-import java.awt.image.BufferedImage;
+import java.lang.reflect.Array;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.media.opengl.GL4;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Vector2;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.actor.BoundingBoxActor;
 import org.janelia.it.workstation.ab2.actor.Camera3DFollowBoxActor;
-import org.janelia.it.workstation.ab2.actor.Image2DActor;
 import org.janelia.it.workstation.ab2.actor.Image3DActor;
-import org.janelia.it.workstation.ab2.actor.LineSetActor;
-import org.janelia.it.workstation.ab2.actor.PickSquareActor;
 import org.janelia.it.workstation.ab2.actor.PointSetActor;
-import org.janelia.it.workstation.ab2.actor.TextLabelActor;
-import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
+import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.model.AB2Image3D_RGBA8UI;
-import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
 import org.janelia.it.workstation.ab2.shader.AB2ActorPickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
-import org.janelia.it.workstation.ab2.test.AB2SimulatedVolumeGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,21 +35,10 @@ public class AB2SampleRenderer extends AB23DRenderer {
     private BoundingBoxActor boundingBoxActor;
     private Camera3DFollowBoxActor cameraFollowBoxActor;
 
-    private List<AB2NeuronSkeleton> skeletons;
-    private List<PointSetActor> pointSetActors=new ArrayList<>();
-    private List<LineSetActor> lineSetActors=new ArrayList<>();
-
-    private PickSquareActor pickSquareActor;
-    private Image2DActor image2DActor;
     private Image3DActor image3DActor;
-    private TextLabelActor textLabelActor;
 
-    AB2SimulatedVolumeGenerator volumeGenerator;
-
-    GLShaderActionSequence drawShaderSequence;
-    GLShaderActionSequence pickShaderSequence;
-
-    //static final int BOUNDING_BOX_ID=1;
+    private GLShaderActionSequence drawShaderSequence;
+    private GLShaderActionSequence pickShaderSequence;
 
     int actorCount=0;
 
@@ -72,28 +59,44 @@ public class AB2SampleRenderer extends AB23DRenderer {
 
     @Override
     public void init(GL4 gl) {
-
         addBoundingBox();
         addOriginPointActor();
-//        addSkeletonActors();
-        addImage3DActor();
-
-        addPickSquareActor();
-        addImage2DActor();
-        addTextLabelActor();
-
         addCameraFollowBoxActor();
-
         super.init(gl);
         initialized=true;
     }
 
     public void clearActors() {
-        // Does this method already exist in base class?
+        clearActionSequenceActors(drawShaderSequence);
+        clearActionSequenceActors(pickShaderSequence);
     }
 
     public void addSample3DImage(byte[] data) {
+        clearImage3DActor();
+        AB2Image3D_RGBA8UI image3d=createImage3dFromBytes(data);
+        addImage3DActor(image3d);
+    }
 
+    private void clearImage3DActor() {
+        actorDisposalQueue.add(new ImmutablePair<>(image3DActor, drawShaderSequence.getShader()));
+        image3DActor=null;
+    }
+
+    static public AB2Image3D_RGBA8UI createImage3dFromBytes(byte[] data) {
+
+        // First get dimensions
+        byte[] dimBytes=new byte[12];
+        for (int i=0;i<12;i++) { dimBytes[i]=data[i]; }
+        IntBuffer intBuf = ByteBuffer.wrap(dimBytes).asIntBuffer();
+        int[] dimArray = new int[intBuf.remaining()];
+        intBuf.get(dimArray);
+
+        // Populate
+        int imageSize=dimArray[0] * dimArray[1] * dimArray[2] * 4;
+        byte[] newData= Arrays.copyOfRange(data, 12, imageSize+12);
+        AB2Image3D_RGBA8UI image3d=new AB2Image3D_RGBA8UI(dimArray[0], dimArray[1], dimArray[2], newData);
+        data=null;
+        return image3d;
     }
 
     private void addOriginPointActor() {
@@ -111,31 +114,10 @@ public class AB2SampleRenderer extends AB23DRenderer {
         drawShaderSequence.getActorSequence().add(cameraFollowBoxActor);
     }
 
-    private void addSkeletonActors() {
-        if (skeletons==null) {
-            return;
-        }
-
-        for (int i=0;i<skeletons.size();i++) {
-            List<Vector3> skeletonPoints = skeletons.get(i).getSkeletonPointSet();
-            List<Vector3> skeletonLines = skeletons.get(i).getSkeletonLineSet();
-            Vector4 color=volumeGenerator.getColorByLabelIndex(i);
-
-            PointSetActor pointSetActor = new PointSetActor(this, getNextActorIndex(), skeletonPoints);
-            drawShaderSequence.getActorSequence().add(pointSetActor);
-            colorIdMap.put(pointSetActor.getActorId(), color);
-
-            LineSetActor lineSetActor = new LineSetActor(this, getNextActorIndex(), skeletonLines);
-            drawShaderSequence.getActorSequence().add(lineSetActor);
-            colorIdMap.put(lineSetActor.getActorId(), color);
-        }
-    }
-
-    private void addImage3DActor() {
-        AB2Image3D_RGBA8UI rawImage=volumeGenerator.getRawImage();
+    private void addImage3DActor(AB2Image3D_RGBA8UI image3d) {
         Vector3 v0=new Vector3(0f, 0f, 0f);
         Vector3 v1=new Vector3(1f, 1f, 1f);
-        image3DActor=new Image3DActor(this, getNextActorIndex(), v0, v1, rawImage.getXDim(), rawImage.getYDim(), rawImage.getZDim(), rawImage.getData());
+        image3DActor=new Image3DActor(this, getNextActorIndex(), v0, v1, image3d.getXDim(), image3d.getYDim(), image3d.getZDim(), image3d.getData());
         drawShaderSequence.getActorSequence().add(image3DActor);
     }
 
@@ -146,61 +128,12 @@ public class AB2SampleRenderer extends AB23DRenderer {
         drawShaderSequence.getActorSequence().add(boundingBoxActor);
     }
 
-    private void addPickSquareActor() {
-        // Pick Square
-        pickSquareActor=new PickSquareActor(this, getNextActorIndex(), new Vector2(0.95f, 0.95f), new Vector2(1.0f, 1.0f),
-                new Vector4(1f, 0f, 0f, 1f), new Vector4(0f, 1f, 0f, 1f));
-        colorIdMap.put(pickSquareActor.getActorId(), pickSquareActor.getColor0());
-        drawShaderSequence.getActorSequence().add(pickSquareActor);
-        pickShaderSequence.getActorSequence().add(pickSquareActor);
-    }
-
-    private void addImage2DActor() {
-        // Image2DActor
-        BufferedImage bufferedImage= GLAbstractActor.getImageByFilename("UbuntuFont.png");
-        int screenWidth=viewport.getWidthPixels();
-        int screenHeight=viewport.getHeightPixels();
-
-        if (screenWidth==0) {
-            screenWidth= AB2Controller.getController().getGljPanel().getSurfaceWidth();
-        }
-        if (screenHeight==0) {
-            screenHeight=AB2Controller.getController().getGljPanel().getSurfaceHeight();
-        }
-        float imageNormalHeight=(float)((bufferedImage.getHeight()*1.0)/screenHeight);
-        float imageAspectRatio=(float)((bufferedImage.getWidth()*1.0)/(bufferedImage.getHeight()*1.0));
-        float imageNormalWidth=imageNormalHeight*imageAspectRatio;
-        logger.info("imageNormalWidth="+imageNormalWidth);
-        logger.info("imageNormalHeight="+imageNormalHeight);
-        Vector2 v0=new Vector2(0.1f, 0.6f);
-        Vector2 v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
-        image2DActor=new Image2DActor(this, getNextActorIndex(), v0, v1, bufferedImage, 1.0f);
-        colorIdMap.put(image2DActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
-        drawShaderSequence.getActorSequence().add(image2DActor);
-        pickShaderSequence.getActorSequence().add(image2DActor);
-    }
-
-    private void addTextLabelActor() {
-        // TextLabelActor
-        Vector2 t0=new Vector2(0.1f, 0.2f);
-        textLabelActor=new TextLabelActor(this, getNextActorIndex(), TextLabelActor.UBUNTU_FONT_STRING, t0,
-                new Vector4(1f, 1f, 1f, 1f), new Vector4(0.4f, 0.1f, 0.1f, 0.5f));
-        drawShaderSequence.getActorSequence().add(textLabelActor);
-        pickShaderSequence.getActorSequence().add(textLabelActor);
-    }
-
     public void setColorId(int styleId, Vector4 color) {
         colorIdMap.put(styleId, color);
     }
 
     public Vector4 getColorId(int styleId) {
         return colorIdMap.get(styleId);
-    }
-
-
-    public synchronized void setSkeletonsAndVolume(List<AB2NeuronSkeleton> skeletons, AB2SimulatedVolumeGenerator volumeGenerator) {
-        this.skeletons=skeletons;
-        this.volumeGenerator=volumeGenerator;
     }
 
     public void reshape(GL4 gl, int x, int y, int width, int height) {

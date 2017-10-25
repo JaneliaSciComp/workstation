@@ -14,6 +14,8 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import javax.media.opengl.GL4;
 import javax.media.opengl.glu.GLU;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.OrthographicCamera;
@@ -26,7 +28,9 @@ import org.janelia.geometry3d.Viewport;
 import org.janelia.geometry3d.camera.ConstRotation;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2Event;
+import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
+import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,6 +81,7 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     protected boolean initialized=false;
 
     protected ConcurrentLinkedDeque<MouseClickEvent> mouseClickEvents=new ConcurrentLinkedDeque<>();
+    protected ConcurrentLinkedDeque<Pair<GLAbstractActor, GLShaderProgram>> actorDisposalQueue=new ConcurrentLinkedDeque<>();
 
     protected class MouseClickEvent {
         public int x=0;
@@ -162,6 +167,15 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         }
     }
 
+    public void clearActionSequenceActors(GLShaderActionSequence actionSequence) {
+        List<GLAbstractActor> drawActors = actionSequence.getActorSequence();
+        GLShaderProgram drawShader = actionSequence.getShader();
+        for (GLAbstractActor drawActor : drawActors) {
+            actorDisposalQueue.add(new ImmutablePair<>(drawActor, drawShader));
+        }
+        actionSequence.getActorSequence().clear();
+    }
+
     public Matrix4 getVp3d() { return new Matrix4(vp3d); }
 
     public Matrix4 getVp2d() { return new Matrix4(vp2d); }
@@ -173,6 +187,15 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     protected synchronized void displaySync(GL4 gl) {
 
         if (!initialized) return;
+
+        if (actorDisposalQueue.size()>0) {
+            for (Pair<GLAbstractActor, GLShaderProgram> pair : actorDisposalQueue) {
+                GLAbstractActor actor=pair.getLeft();
+                GLShaderProgram shader=pair.getRight();
+                actor.dispose(gl, shader);
+            }
+        }
+        actorDisposalQueue.clear();
 
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
         gl.glEnable(GL4.GL_DEPTH_TEST);

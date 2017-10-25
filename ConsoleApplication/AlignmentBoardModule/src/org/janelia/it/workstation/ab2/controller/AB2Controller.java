@@ -125,7 +125,7 @@ public class AB2Controller implements GLEventListener {
         if (controllerHandle!=null) {
             return;
         } else {
-            currentMode=modeMap.get(AB2SkeletonMode.class);
+            currentMode=modeMap.get(AB2SampleMode.class);
             currentMode.start();
             controllerHandle=controllerExecutor.scheduleWithFixedDelay(eventHandler, 500, 500, TimeUnit.MICROSECONDS);
         }
