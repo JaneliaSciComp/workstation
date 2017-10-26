@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.it.jacs.shared.utils.ReflectionsHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.facade.impl.ejb.LegacyFacadeImpl;
@@ -27,6 +26,7 @@ import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.Preference;
 import org.janelia.model.security.Subject;
+import org.janelia.model.util.ReflectionsFixer;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +70,7 @@ public class DomainMgr {
     private DomainMgr() {
         log.info("Initializing Domain Manager");
         try {
-            final Reflections reflections = ReflectionsHelper.getReflections(DOMAIN_FACADE_PACKAGE_NAME, getClass());
+            final Reflections reflections = ReflectionsFixer.getReflections(DOMAIN_FACADE_PACKAGE_NAME, getClass());
             domainFacade = getNewInstance(reflections, DomainFacade.class);
             ontologyFacade = getNewInstance(reflections, OntologyFacade.class);
             sampleFacade = getNewInstance(reflections, SampleFacade.class);
