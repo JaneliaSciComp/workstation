@@ -87,7 +87,7 @@ public final class DownloadVisualPanel1 extends JPanel {
     }
     
     /**
-     * Creates new form DownloadVisualPanel2
+     * Creates new form DownloadVisualPanel1
      */
     public DownloadVisualPanel1(DownloadWizardPanel1 wizardPanel) {
         this.wizardPanel = wizardPanel;

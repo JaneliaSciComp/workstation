@@ -320,12 +320,26 @@ public final class DownloadWizardAction implements ActionListener {
         state.setImageCategory(imageCategory);
         
         String artifactDescriptorString = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", null);
-        log.info("Setting last artifactDescriptorString: "+artifactDescriptorString);
-        state.setArtifactDescriptorString(artifactDescriptorString);
+        try {
+            log.info("Setting last artifactDescriptorString: "+artifactDescriptorString);
+            state.setArtifactDescriptorString(artifactDescriptorString);
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
+            log.error("Error reading artifactDescriptors preference. Clearing the corrupted preference.", e);
+            FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", null);
+        }
         
         String outputExtensionString = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", null);
-        log.info("Setting last outputExtensionString: "+outputExtensionString);
-        state.setOutputExtensionString(outputExtensionString);
+        try {
+            log.info("Setting last outputExtensionString: "+outputExtensionString);
+            state.setOutputExtensionString(outputExtensionString);
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
+            log.error("Error reading outputExtensions preference. Clearing the corrupted preference.", e);
+            FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", null);
+        }
 
         boolean splitChannels = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "splitChannels", state.isSplitChannels());
         log.info("Setting last splitChannels: "+splitChannels);

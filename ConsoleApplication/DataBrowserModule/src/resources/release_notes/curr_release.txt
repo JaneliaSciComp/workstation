@@ -1,7 +1,5 @@
-// 6.7
+// 6.8
 
 Workstation Browser  
-* Added "Possible Contamination" data reporting option
-* Added a new ontology term type called "Accumulation" which allows for incremental editing
-* Fixed annotation editor's Cancel button
-* Fixed problem with opening neuron separations after many have been opened
+* Fixed some minor bugs
+* Preparation for data model refactoring

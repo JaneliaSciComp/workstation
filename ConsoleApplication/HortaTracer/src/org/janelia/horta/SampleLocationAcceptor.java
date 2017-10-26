@@ -95,6 +95,14 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     // First ensure that this component uses same sample.
                     URL url = sampleLocation.getSampleUrl();
                     TmSample sample = sampleLocation.getSample();
+
+                    // trying to run down a bug:
+                    if (sample == null) {
+                        logger.info("found null sample for sample url " + url + " at coordinates "
+                            + sampleLocation.getFocusXUm() + ", "
+                            + sampleLocation.getFocusYUm() + ", "
+                            + sampleLocation.getFocusZUm());
+                    }
                     
                     // First check to see if ktx tiles are available
                     BlockTileSource ktxSource = null;
@@ -164,24 +172,33 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             if (urlStr.equals(previousUrlStr))
                 return previousSource; // Source did not change
         }
+        
+        String ktxPathStr = null;
         try {
             URL ktxFolderPathFileUrl = new URL(renderedOctreeUrl, "secondary_folder.txt");
             logger.info("Trying to find KTX path via {}", ktxFolderPathFileUrl);
             InputStream pathStream = ktxFolderPathFileUrl.openStream();
-            String ktxPathStr = IOUtils.toString(pathStream).trim();
-            if (!ktxPathStr.endsWith("/"))
+            ktxPathStr = IOUtils.toString(pathStream).trim();     
+        } catch (MalformedURLException ex) {
+            logger.info("Cannot load secondary_folder.txt",ex);
+        } catch (IOException ex) {
+            logger.info("Cannot load secondary_folder.txt: {}",ex.getMessage());
+            
+            // not great way to differentiate new style from old style; need to use something other than URL
+            ktxPathStr = "ktx/";
+        }
+            
+        try {
+             if (!ktxPathStr.endsWith("/"))
                 ktxPathStr = ktxPathStr + "/";
             URL ktxFolderUrl = new URL(renderedOctreeUrl, ktxPathStr);
             BlockTileSource ktxSource = new KtxOctreeBlockTileSource(ktxFolderUrl, sample);
             nttc.setKtxSource(ktxSource);
             return ktxSource;
-        } 
-        catch (MalformedURLException ex) {
-            logger.info("Cannot load secondary_folder.txt",ex);
-        } 
-        catch (IOException ex) {
-            logger.info("Cannot load secondary_folder.txt: {}",ex.getMessage());
+        } catch (Exception ex) {
+            logger.info("Cannot load ktx directory strucutre: {}",ex.getMessage());
         }
+
         return null;
     }
     

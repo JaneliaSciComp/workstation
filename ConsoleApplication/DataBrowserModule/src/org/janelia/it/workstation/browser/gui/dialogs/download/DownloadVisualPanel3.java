@@ -184,7 +184,7 @@ public final class DownloadVisualPanel3 extends JPanel {
                             for (FileType fileType : artifactDescriptor.getSelectedFileTypes()) {
                                 log.debug("      Adding item for file type '{}'", fileType);
                                 DownloadFileItem downloadItem = new DownloadFileItem(downloadObject.getFolderPath(), domainObject);
-                                downloadItem.init(artifactDescriptor, hasFiles, fileType, outputExtensions, splitChannels, flattenStructure, filenamePattern);
+                                downloadItem.init(artifactDescriptor, hasFiles, fileType, outputExtensions, splitChannels && fileType.is3dImage(), flattenStructure, filenamePattern);
                                 downloadFileItems.add(downloadItem);
                             }
                         }

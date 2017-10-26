@@ -164,5 +164,13 @@ public class DescriptorUtils {
     public static ArtifactDescriptor deserialize(String artifactDescriptorString) throws Exception {
         return mapper.readValue(artifactDescriptorString, ArtifactDescriptor.class);
     }
+
+    public static String serializeList(ArtifactDescriptorList descriptorList) throws Exception {
+        return mapper.writeValueAsString(descriptorList);
+    }
+
+    public static ArtifactDescriptorList deserializeList(String descriptorListString) throws Exception {
+        return mapper.readValue(descriptorListString, ArtifactDescriptorList.class);
+    }
     
 }

@@ -68,27 +68,6 @@ class DownloadWizardState {
     public void setDefaultArtifactDescriptor(ArtifactDescriptor defaultResultDescriptor) {
         this.defaultResultDescriptor = defaultResultDescriptor;
     }
-
-    public String getDefaultArtifactDescriptorString() {
-        try {
-            return DescriptorUtils.serialize(defaultResultDescriptor);
-        }
-        catch (Exception e) {
-            FrameworkImplProvider.handleExceptionQuietly(e);
-            return null;
-        }
-    }
-
-    public void setDefaultArtifactDescriptorString(String artifactDescriptorString) {
-        if (StringUtils.isBlank(artifactDescriptorString)) return;
-        try {
-            this.defaultResultDescriptor = DescriptorUtils.deserialize(artifactDescriptorString);
-        }
-        catch (Exception e) {
-            this.defaultResultDescriptor = null;
-            FrameworkImplProvider.handleExceptionQuietly(e);
-        }
-    }
     
     public List<DownloadObject> getDownloadObjects() {
         return downloadObjects;
@@ -150,7 +129,7 @@ class DownloadWizardState {
         try {
             ArtifactDescriptorList list = new ArtifactDescriptorList();
             list.addAll(artifactDescriptors);
-            return mapper.writeValueAsString(list);
+            return DescriptorUtils.serializeList(list);
         }
         catch (Exception e) {
             FrameworkImplProvider.handleExceptionQuietly(e);
@@ -158,14 +137,14 @@ class DownloadWizardState {
         }
     }
 
-    public void setArtifactDescriptorString(String artifactDescriptorString) {
+    public void setArtifactDescriptorString(String artifactDescriptorString) throws Exception {
         if (StringUtils.isBlank(artifactDescriptorString)) return;
         try {
-            this.artifactDescriptors = mapper.readValue(artifactDescriptorString, ArtifactDescriptorList.class);
+            this.artifactDescriptors = DescriptorUtils.deserializeList(artifactDescriptorString);
         }
         catch (Exception e) {
             this.artifactDescriptors = new ArrayList<>();
-            FrameworkImplProvider.handleExceptionQuietly(e);
+            throw e;
         }
     }
     
@@ -197,14 +176,14 @@ class DownloadWizardState {
         }
     }
     
-    public void setOutputExtensionString(String outputExtensionString) {
+    public void setOutputExtensionString(String outputExtensionString) throws Exception {
         if (StringUtils.isBlank(outputExtensionString)) return;
         try {
             this.outputExtensions = mapper.readValue(outputExtensionString, OutputExtensionMap.class);
         }
         catch (Exception e) {
             this.outputExtensions = new HashMap<>();
-            FrameworkImplProvider.handleExceptionQuietly(e);
+            throw e;
         }
     }
     
