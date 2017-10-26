@@ -39,6 +39,8 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
 
+        logger.info("init() start");
+
         float[] boundaryData = new float[] {
                 v0.getX(), v0.getY(), v0.getZ(),
                 v0.getX(), v1.getY(), v0.getZ(),
@@ -96,12 +98,14 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
 
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-        //logger.info("BoundingBoxActor init() finished");
+        logger.info("Camera3DFollowBoxActor init() finished");
 
     }
 
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
+
+        logger.info("display() start");
 
         AB2ActorShader actorShader=(AB2ActorShader)shader;
         actorShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
@@ -131,7 +135,7 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
 
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-        //logger.info("BoundingBoxActor display() finished");
+        logger.info("Camera3DFollowBoxActor display() finished");
 
     }
 

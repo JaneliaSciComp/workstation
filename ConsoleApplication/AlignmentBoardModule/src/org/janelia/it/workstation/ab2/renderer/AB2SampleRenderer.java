@@ -59,10 +59,13 @@ public class AB2SampleRenderer extends AB23DRenderer {
 
     @Override
     public void init(GL4 gl) {
+        logger.info("Starting init()");
         addBoundingBox();
         addOriginPointActor();
         addCameraFollowBoxActor();
+        logger.info("drawShaderSequence containts "+drawShaderSequence.getActorSequence().size()+" actors");
         super.init(gl);
+        logger.info("Finished init()");
         initialized=true;
     }
 
@@ -131,7 +134,9 @@ public class AB2SampleRenderer extends AB23DRenderer {
         // Bounding Box
         boundingBoxActor=new BoundingBoxActor(this, getNextActorIndex(), new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
         colorIdMap.put(boundingBoxActor.getActorId(), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+        logger.info("addBoundingBox() adding boundingBoxActor");
         drawShaderSequence.getActorSequence().add(boundingBoxActor);
+        logger.info("drawShaderSequence actor list size="+drawShaderSequence.getActorSequence().size());
     }
 
     public void setColorId(int styleId, Vector4 color) {

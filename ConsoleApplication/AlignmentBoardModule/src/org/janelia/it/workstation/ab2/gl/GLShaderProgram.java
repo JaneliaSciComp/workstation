@@ -135,6 +135,7 @@ public abstract class GLShaderProgram {
     }
 
     private void loadOneShader(int shaderId, String resourceName, GL4 gl) throws ShaderCreationException {
+        logger.info("loadOneShader resourceName="+resourceName+" start()");
         try {
             InputStream resourceStream = getClass().getResourceAsStream(
                     resourceName
@@ -178,10 +179,10 @@ public abstract class GLShaderProgram {
                 } else
                     throw new ShaderCreationException( resourceName + ": "+ "unknown compilation error" );
             }
-
+            logger.info("loadOneShader done()");
         } catch (Exception exc) {
+            logger.error("Failure during loadOneShader() ex="+exc.getMessage());
             throw new ShaderCreationException( "Failed to load shader " + resourceName, exc );
-
         }
     }
 

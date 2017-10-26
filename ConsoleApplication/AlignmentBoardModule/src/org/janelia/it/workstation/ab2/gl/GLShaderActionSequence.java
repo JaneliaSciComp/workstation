@@ -57,11 +57,14 @@ public class GLShaderActionSequence {
 
 
     public void init(GL4 gl) throws Exception {
+        logger.info("init() start");
         shader.init(gl);
+        logger.info("actorSequence contains "+actorSequence.size()+" actors");
         for (GLAbstractActor actor : actorSequence) {
 //            actor.setMode(actorMode);
             actor.init(gl, shader);
         }
+        logger.info("init() done");
     }
 
     public void display(GL4 gl) {

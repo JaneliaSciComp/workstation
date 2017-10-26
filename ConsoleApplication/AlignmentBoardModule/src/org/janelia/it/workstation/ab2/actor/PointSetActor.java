@@ -38,6 +38,8 @@ public class PointSetActor extends GLAbstractActor {
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
 
+        logger.info("init() start");
+
         float[] pointData=new float[points.size()*3];
 
         for (int i=0;i<points.size();i++) {
@@ -66,12 +68,14 @@ public class PointSetActor extends GLAbstractActor {
 
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
+        logger.info("init() done");
+
     }
 
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
 
-        //logger.info("display() start");
+        logger.info("display() start");
 
         if (shader instanceof AB2ActorShader) {
             AB2ActorShader actorShader=(AB2ActorShader)shader;
@@ -106,7 +110,7 @@ public class PointSetActor extends GLAbstractActor {
 
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-        //logger.info("display() end");
+        logger.info("display() end");
 
     }
 

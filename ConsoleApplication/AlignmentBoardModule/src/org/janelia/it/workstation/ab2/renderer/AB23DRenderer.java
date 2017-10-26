@@ -143,13 +143,16 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     }
 
     protected synchronized void initSync(GL4 gl) {
+        logger.info("initSync() start drawShaderList.size="+drawShaderList.size()+" pickShaderList.size="+pickShaderList.size());
         try {
 
             for (GLShaderActionSequence shaderActionSequence : drawShaderList) {
+                logger.info("shaderActionSequence init() called from drawShaderList");
                 shaderActionSequence.init(gl);
             }
 
             for (GLShaderActionSequence shaderActionSequence : pickShaderList) {
+                logger.info("shaderActionSequence init() called from pickShaderList");
                 shaderActionSequence.init(gl);
             }
 
@@ -188,7 +191,10 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 
     protected synchronized void displaySync(GL4 gl) {
 
-        if (!initialized) return;
+        if (!initialized) {
+            logger.info("Not initialized - returning");
+            return;
+        }
 
         if (actorDisposalQueue.size()>0) {
             for (Pair<GLAbstractActor, GLShaderProgram> pair : actorDisposalQueue) {
@@ -214,6 +220,9 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 //        gl.glDisable(GL4.GL_BLEND);
 //        gl.glClearColor(0f, 0f, 0f, 1f);
 //        gl.glClear(GL4.GL_COLOR_BUFFER_BIT);
+
+        checkGlError(gl, "Check0");
+        logger.info("Past Check0");
 
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
         checkGlError(gl, "Check1");
@@ -263,7 +272,9 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 
         gl.glEnable(GL4.GL_BLEND);
 
+        checkGlError(gl, "Check10");
 
+        logger.info("past Check10");
 
         Matrix4 projectionMatrix3d=new Matrix4(camera3d.getProjectionMatrix());
         Matrix4 viewMatrix3d=new Matrix4(camera3d.getViewMatrix());
@@ -279,7 +290,11 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
             shaderActionSequence.display(gl);
         }
 
+        logger.info("Beginning click event check");
+
         if (mouseClickEvents.size()>0 && pickShaderList.size()>0) {
+
+            logger.info("mouseClickEvents>0");
 
             // From: https://www.opengl.org/discussion_boards/showthread.php/198703-Framebuffer-Integer-Texture-Attachment
             //
@@ -333,7 +348,11 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
             }
 
             gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
+
+            logger.info("Done with mouseClickEvents");
         }
+
+        logger.info("Done with displaySync()");
 
     }
 
@@ -347,7 +366,10 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         viewport.setWidthPixels(width);
         viewport.getChangeObservable().notifyObservers();
         resetPickFramebuffer(gl, width, height);
-        if (initialized) display(gl);
+        if (initialized) {
+            logger.info("initialized=true, calling display(gl) after reshape()");
+            display(gl);
+        }
     }
 
 
@@ -508,6 +530,7 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
     }
 
     protected void resetPickFramebuffer(GL4 gl, int width, int height) {
+        logger.info("resetPickFramebuffer start");
         disposePickFramebuffer(gl);
 
         pickFramebufferId=IntBuffer.allocate(1);
@@ -534,11 +557,12 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
             logger.error("Failed to establish framebuffer: {}", decodeFramebufferStatus(status));
         }
         else {
-            // logger.info("Picking Framebuffer complete.");
+            logger.info("Picking Framebuffer complete.");
         }
 
         gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0);
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0);
+        logger.info("resetPickFrameBuffer end");
 
     }
 
