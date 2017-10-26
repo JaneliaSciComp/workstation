@@ -208,11 +208,19 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         }
         actorInitQueue.clear();
 
+        // paint solid background color
+//        gl.glDisable(GL4.GL_BLEND);
+//        gl.glClearColor(0f, 0f, 0f, 1f);
+//        gl.glClear(GL4.GL_COLOR_BUFFER_BIT);
+
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
         gl.glEnable(GL4.GL_DEPTH_TEST);
         gl.glEnable(GL4.GL_BLEND);
-        gl.glBlendFunc(GL4.GL_SRC_ALPHA, GL4.GL_ONE_MINUS_SRC_ALPHA);
+//        gl.glBlendFunc(GL4.GL_SRC_ALPHA, GL4.GL_ONE_MINUS_SRC_ALPHA);
+//        gl.glBlendFunc(GL4.GL_SRC_ALPHA_SATURATE, GL4.GL_ONE);
         gl.glClearBufferfv(gl.GL_COLOR, 0, backgroundColorBuffer);
+        gl.glBlendEquation(GL4.GL_MAX);
+        gl.glBlendFunc(GL4.GL_ONE, GL4.GL_DST_ALPHA);
 
         Matrix4 projectionMatrix3d=new Matrix4(camera3d.getProjectionMatrix());
         Matrix4 viewMatrix3d=new Matrix4(camera3d.getViewMatrix());
