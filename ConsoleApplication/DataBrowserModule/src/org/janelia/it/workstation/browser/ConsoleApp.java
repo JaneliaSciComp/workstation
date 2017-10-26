@@ -102,7 +102,7 @@ public class ConsoleApp {
             log.info("Using remote REST URL defined in console.properties as domain.facade.rest.url: "+remoteRestUrl);
         }
         else {
-            this.remoteRestUrl = String.format("http://%s:8180/rest-v1/", JACS_SERVER);
+            this.remoteRestUrl = String.format("http://%s:8180/rest-v2/", JACS_SERVER);
             log.info("Derived remote REST URL from -Djacs.server parameter: "+remoteRestUrl);
         }        
         
