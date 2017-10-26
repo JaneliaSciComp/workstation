@@ -1923,6 +1923,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
      public void loadUserPreferences() throws Exception {
+         if (this.getCurrentSample()==null || this.getCurrentSample().getId()==null) return;
         Preference userPreferences = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString());
         if (userPreferences!=null && currentTagMap!=null) {
             Map<String,Map<String,Object>> tagGroupMappings = (Map<String,Map<String,Object>>)userPreferences.getValue();
