@@ -189,7 +189,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
                     @Override
                     protected void hadError(Throwable error) {
-                        FrameworkImplProvider.handleExceptionQuietly("Could not load serialized editor state",error);
+                        log.warn("Could not load serialized editor state", error);
                     }
                 };
                 worker.execute();
