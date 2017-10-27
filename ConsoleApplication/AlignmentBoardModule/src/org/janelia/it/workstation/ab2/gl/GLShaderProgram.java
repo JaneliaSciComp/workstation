@@ -115,11 +115,11 @@ public abstract class GLShaderProgram {
                 throw new ShaderCreationException( errBuilder.toString() );
 
             }
-            LongBuffer lb = LongBuffer.allocate(1);
-            gl.glGetInteger64v(GL4.GL_MAX_SHADER_STORAGE_BLOCK_SIZE, lb);
-            logger.info("MAX_SHADER_STORAGE_BLOCK_SIZE="+lb.get(0));
-            gl.glGetInteger64v(GL4.GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, lb);
-            logger.info("MAX_SHADER_STORAGE_BUFFER_BINDINGS="+lb.get(0));
+//            LongBuffer lb = LongBuffer.allocate(1);
+//            gl.glGetInteger64v(GL4.GL_MAX_SHADER_STORAGE_BLOCK_SIZE, lb);
+//            logger.info("MAX_SHADER_STORAGE_BLOCK_SIZE="+lb.get(0));
+//            gl.glGetInteger64v(GL4.GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, lb);
+//            logger.info("MAX_SHADER_STORAGE_BUFFER_BINDINGS="+lb.get(0));
         }
         logger.info("init() done");
     }

@@ -61,8 +61,8 @@ public class AB2SampleRenderer extends AB23DRenderer {
     public void init(GL4 gl) {
         logger.info("Starting init()");
         addBoundingBox();
-        addOriginPointActor();
-        addCameraFollowBoxActor();
+        //addOriginPointActor();
+        //addCameraFollowBoxActor();
         logger.info("drawShaderSequence containts "+drawShaderSequence.getActorSequence().size()+" actors");
         super.init(gl);
         logger.info("Finished init()");

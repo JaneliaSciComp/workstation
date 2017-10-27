@@ -11,6 +11,11 @@ uniform vec4 color1;
 uniform int twoDimensional;
 uniform int textureType;
 
+//  TEXTURE_TYPE_NONE    =0;
+//  TEXTURE_TYPE_2D_RGBA =1;
+//  TEXTURE_TYPE_2D_R8   =2;
+//  TEXTURE_TYPE_3D_RGBA =3;
+
 out vec4 vColor0;
 out vec4 vColor1;
 out vec3 tc_out;
@@ -27,9 +32,14 @@ void main()
      break;
   default:
      gl_Position = mvp3d * vp;
-     vec4 tc4=vec4(tc, 1.0);
-     vec4 tc_out4 = textureMvp3d * tc4;
-     tc_out = tc_out4.xyz;
+     switch(textureType) {
+     case 0:
+        break;
+     default:
+        vec4 tc4=vec4(tc, 1.0);
+        vec4 tc_out4 = textureMvp3d * tc4;
+        tc_out = tc_out4.xyz;
+     }
   }
   vColor0=color0;
   vColor1=color1;

@@ -30,7 +30,7 @@ public abstract class GLAbstractActor {
         this.renderer=renderer;
     }
 
-    public static boolean checkGlErrorActive=false;
+    public static boolean checkGlErrorActive=true;
 
     protected int pickIndex=-1;
 
@@ -79,14 +79,14 @@ public abstract class GLAbstractActor {
 
     public void setModelMatrix(Matrix4 modelMatrix) { this.modelMatrix=modelMatrix; }
 
-    protected void checkGlError(GL4 gl, String message) {
+    public static void checkGlError(GL4 gl, String message) {
         if (checkGlErrorActive) {
             int errorNumber = gl.glGetError();
             if (errorNumber <= 0)
                 return;
             String errorStr = glu.gluErrorString(errorNumber);
-            String className=this.getClass().getName();
-            logger.error("OpenGL error in "+className+" number=" + errorNumber + ": " + errorStr + ": " + message);
+            //String className=this.getClass().getName();
+            logger.error("OpenGL error number=" + errorNumber + ": " + errorStr + ": " + message);
         }
     }
 

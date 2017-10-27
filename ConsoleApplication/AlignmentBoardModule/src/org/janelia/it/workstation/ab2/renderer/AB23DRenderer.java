@@ -144,8 +144,8 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 
     protected synchronized void initSync(GL4 gl) {
         logger.info("initSync() start drawShaderList.size="+drawShaderList.size()+" pickShaderList.size="+pickShaderList.size());
+        checkGlError(gl, "is0");
         try {
-
             for (GLShaderActionSequence shaderActionSequence : drawShaderList) {
                 logger.info("shaderActionSequence init() called from drawShaderList");
                 shaderActionSequence.init(gl);
@@ -191,30 +191,38 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 
     protected synchronized void displaySync(GL4 gl) {
 
+        logger.info("displaySync() start");
+
+        checkGlError(gl, "Check0.5");
+
+        logger.info("past initial gl check");
+
         if (!initialized) {
             logger.info("Not initialized - returning");
             return;
         }
 
         if (actorDisposalQueue.size()>0) {
+            logger.info("Starting actorDisposal loop");
             for (Pair<GLAbstractActor, GLShaderProgram> pair : actorDisposalQueue) {
                 logger.info("Disposing actor in display()");
                 GLAbstractActor actor=pair.getLeft();
                 GLShaderProgram shader=pair.getRight();
                 actor.dispose(gl, shader);
             }
+            actorDisposalQueue.clear();
         }
-        actorDisposalQueue.clear();
 
         if (actorInitQueue.size()>0) {
+            logger.info("Starting actorInit loop");
             for (Pair<GLAbstractActor, GLShaderProgram> pair : actorInitQueue) {
                 logger.info("Initializing actor in display()");
                 GLAbstractActor actor=pair.getLeft();
                 GLShaderProgram shader=pair.getRight();
                 actor.init(gl, shader);
             }
+            actorInitQueue.clear();
         }
-        actorInitQueue.clear();
 
         // paint solid background color
 //        gl.glDisable(GL4.GL_BLEND);
@@ -290,6 +298,8 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
             shaderActionSequence.display(gl);
         }
 
+        checkGlError(gl, "Check11");
+
         logger.info("Beginning click event check");
 
         if (mouseClickEvents.size()>0 && pickShaderList.size()>0) {
@@ -352,8 +362,9 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
             logger.info("Done with mouseClickEvents");
         }
 
-        logger.info("Done with displaySync()");
 
+        checkGlError(gl, "Check12");
+        logger.info("Done with displaySync()");
     }
 
     public double glUnitsPerPixel() {

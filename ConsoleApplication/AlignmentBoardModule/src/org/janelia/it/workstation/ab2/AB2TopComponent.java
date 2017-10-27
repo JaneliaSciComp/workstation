@@ -142,7 +142,7 @@ public final class AB2TopComponent extends TopComponent {
         }
         if (ab2GLPanel==null) {
             logger.info("Check2");
-            ab2GLPanel=new AB2GLPanel(1000, 750, ab2Controller);
+            ab2GLPanel=new AB2GLPanel(600, 400, ab2Controller);
             ab2Controller.setGljPanel(ab2GLPanel);
             glWrapperPanel.setLayout(new BoxLayout(glWrapperPanel, BoxLayout.Y_AXIS));
             glWrapperPanel.add(ab2GLPanel);
