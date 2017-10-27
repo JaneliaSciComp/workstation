@@ -261,7 +261,7 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         checkGlError(gl, "Check9");
 //        gl.glBlendFunc(GL4.GL_SRC_ALPHA_SATURATE, GL4.GL_ONE);
 
-        gl.glDisable(GL4.GL_BLEND);
+//        gl.glDisable(GL4.GL_BLEND);
 
 //        gl.glColorMask(true, true, true, true);
 //        gl.glDepthMask(true);
@@ -278,7 +278,7 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 
 //        gl.glFlush();
 
-        gl.glEnable(GL4.GL_BLEND);
+//        gl.glEnable(GL4.GL_BLEND);
 
         checkGlError(gl, "Check10");
 
@@ -301,6 +301,8 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         checkGlError(gl, "Check11");
 
         logger.info("Beginning click event check");
+
+        gl.glDisable(GL4.GL_BLEND);
 
         if (mouseClickEvents.size()>0 && pickShaderList.size()>0) {
 
