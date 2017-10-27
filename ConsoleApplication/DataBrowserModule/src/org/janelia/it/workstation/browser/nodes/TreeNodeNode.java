@@ -366,6 +366,10 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
             try {
                 log.trace("paste called on TreeNodePasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
                 TreeNode newParent = targetNode.getTreeNode();
+                if (newParent==null) {
+                    log.warn("Target node has no TreeNode: "+targetNode.getDisplayName());
+                    return null;
+                }
                 
                 // Have to keep track of the original parents before we do anything, 
                 // because once we start moving nodes, the parents will be recreated

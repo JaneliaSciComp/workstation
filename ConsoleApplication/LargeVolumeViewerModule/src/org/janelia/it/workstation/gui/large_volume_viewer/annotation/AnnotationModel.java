@@ -1924,6 +1924,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
      public void loadUserPreferences() throws Exception {
+         if (this.getCurrentSample()==null || this.getCurrentSample().getId()==null) return;
          Map<String,Map<String,Object>> tagGroupMappings = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), null);
         if (tagGroupMappings!=null && currentTagMap!=null) {
             currentTagMap.saveTagGroupMappings(tagGroupMappings);
