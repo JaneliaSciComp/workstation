@@ -232,10 +232,10 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
         checkGlError(gl, "Check0");
         logger.info("Past Check0");
 
-        gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
+        gl.glClear(GL4.GL_DEPTH_BUFFER_BIT | GL4.GL_COLOR_BUFFER_BIT | GL4.GL_STENCIL_BUFFER_BIT);
         checkGlError(gl, "Check1");
 
-        gl.glEnable(GL4.GL_DEPTH_TEST);
+        gl.glDisable(GL4.GL_DEPTH_TEST);
         checkGlError(gl, "Check2");
 //        gl.glBlendEquation(GL4.GL_FUNC_ADD);
 //        gl.glDisable(GL4.GL_BLEND);
@@ -263,20 +263,20 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
 
         gl.glDisable(GL4.GL_BLEND);
 
-        gl.glColorMask(true, true, true, true);
-        gl.glDepthMask(true);
+//        gl.glColorMask(true, true, true, true);
+//        gl.glDepthMask(true);
 
-        gl.glDisable(GL4.GL_SCISSOR_TEST);
-        gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
-        checkGlError(gl, "Check4");
-        gl.glClearColor(0.0f, 0.2f, 0.0f, 1.0f);
-        checkGlError(gl, "Check5");
-        gl.glClearDepth(1.0f);
-        checkGlError(gl, "Check6");
-        gl.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT | GL4.GL_STENCIL_BUFFER_BIT);
-        checkGlError(gl, "Check1");
+//        gl.glDisable(GL4.GL_SCISSOR_TEST);
+//        gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
+//        checkGlError(gl, "Check4");
+//        gl.glClearColor(0.0f, 0.2f, 0.0f, 1.0f);
+//        checkGlError(gl, "Check5");
+//        gl.glClearDepth(1.0f);
+//        checkGlError(gl, "Check6");
+//        gl.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT | GL4.GL_STENCIL_BUFFER_BIT);
+//        checkGlError(gl, "Check1");
 
-        gl.glFlush();
+//        gl.glFlush();
 
         gl.glEnable(GL4.GL_BLEND);
 
