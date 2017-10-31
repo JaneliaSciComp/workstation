@@ -10,10 +10,9 @@ import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2PickSquareColorChangeEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
-import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
-import org.janelia.it.workstation.ab2.shader.AB2ActorPickShader;
+import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +77,7 @@ public class PickSquareActor extends GLAbstractActor {
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-        } else if (shader instanceof AB2ActorPickShader) {
+        } else if (shader instanceof AB2PickShader) {
             if (pickIndex<0) {
                 pickIndex = AB2Controller.getController().getNextPickIndex();
                 AB2Controller.getController().setPickEvent(pickIndex, new AB2PickSquareColorChangeEvent(this));
@@ -103,8 +102,8 @@ public class PickSquareActor extends GLAbstractActor {
                 actorShader.setColor0(gl, actorColor);
             }
 
-        } else if (shader instanceof AB2ActorPickShader) {
-            AB2ActorPickShader pickShader=(AB2ActorPickShader)shader;
+        } else if (shader instanceof AB2PickShader) {
+            AB2PickShader pickShader=(AB2PickShader)shader;
             pickShader.setMVP3d(gl, renderer.getVp3d());
             pickShader.setMVP2d(gl, renderer.getVp3d());
             pickShader.setTwoDimensional(gl, true);

@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-import javax.media.opengl.GL2;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector2;
@@ -15,7 +14,7 @@ import org.janelia.it.workstation.ab2.event.AB2Image2DClickEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
-import org.janelia.it.workstation.ab2.shader.AB2ActorPickShader;
+import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,7 +126,7 @@ public class Image2DActor extends GLAbstractActor {
             gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST );
             gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
 
-        } else if (shader instanceof AB2ActorPickShader) {
+        } else if (shader instanceof AB2PickShader) {
             if (pickIndex<0) {
                 pickIndex = AB2Controller.getController().getNextPickIndex();
                 AB2Controller.getController().setPickEvent(pickIndex, new AB2Image2DClickEvent(this));
@@ -156,8 +155,8 @@ public class Image2DActor extends GLAbstractActor {
             checkGlError(gl, "d1 glActiveTexture");
             gl.glBindTexture(GL4.GL_TEXTURE_2D, imageTextureId.get(0));
             checkGlError(gl, "d2 glBindTexture()");
-        } else if (shader instanceof AB2ActorPickShader) {
-            AB2ActorPickShader pickShader=(AB2ActorPickShader)shader;
+        } else if (shader instanceof AB2PickShader) {
+            AB2PickShader pickShader=(AB2PickShader)shader;
             pickShader.setMVP2d(gl, renderer.getVp2d());
             pickShader.setMVP3d(gl, renderer.getVp3d());
             pickShader.setTwoDimensional(gl, true);

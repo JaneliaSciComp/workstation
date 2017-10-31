@@ -1,24 +1,15 @@
 package org.janelia.it.workstation.ab2.renderer;
 
-import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 import javax.media.opengl.GL4;
-import javax.swing.ImageIcon;
 
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector2;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
-import org.janelia.it.jacs.model.ontology.types.Text;
 import org.janelia.it.workstation.ab2.actor.BoundingBoxActor;
 import org.janelia.it.workstation.ab2.actor.Camera3DFollowBoxActor;
 import org.janelia.it.workstation.ab2.actor.Image2DActor;
@@ -29,12 +20,10 @@ import org.janelia.it.workstation.ab2.actor.PointSetActor;
 import org.janelia.it.workstation.ab2.actor.TextLabelActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
-import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
-import org.janelia.it.workstation.ab2.gl.GLShaderUpdateCallback;
 import org.janelia.it.workstation.ab2.model.AB2Image3D_RGBA8UI;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
-import org.janelia.it.workstation.ab2.shader.AB2ActorPickShader;
+import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.janelia.it.workstation.ab2.test.AB2SimulatedVolumeGenerator;
 import org.slf4j.Logger;
@@ -75,7 +64,7 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
         pickShaderSequence=new GLShaderActionSequence("PickSequence");
 
         drawShaderSequence.setShader(new AB2ActorShader());
-        pickShaderSequence.setShader(new AB2ActorPickShader());
+        pickShaderSequence.setShader(new AB2PickShader());
 
         addDrawShaderActionSequence(drawShaderSequence);
         addPickShaderActionSequence(pickShaderSequence);

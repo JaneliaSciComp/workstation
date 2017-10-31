@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.ab2.renderer;
 
-import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -10,7 +9,6 @@ import java.util.List;
 import javax.media.opengl.GL4;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
@@ -22,7 +20,7 @@ import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.model.AB2Image3D_RGBA8UI;
-import org.janelia.it.workstation.ab2.shader.AB2ActorPickShader;
+import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
 import org.slf4j.Logger;
@@ -56,7 +54,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
 
         drawShaderSequence.setShader(new AB2ActorShader());
         basic3DShaderSequence.setShader(new AB2Basic3DShader());
-        pickShaderSequence.setShader(new AB2ActorPickShader());
+        pickShaderSequence.setShader(new AB2PickShader());
 
         addDrawShaderActionSequence(drawShaderSequence);
         addDrawShaderActionSequence(basic3DShaderSequence);
@@ -68,7 +66,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
         logger.info("Starting init()");
         addBoundingBox();
         //addOriginPointActor();
-        //addCameraFollowBoxActor();
+        addCameraFollowBoxActor();
         logger.info("drawShaderSequence containts "+drawShaderSequence.getActorSequence().size()+" actors");
         super.init(gl);
         logger.info("Finished init()");
@@ -124,7 +122,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
     private void addCameraFollowBoxActor() {
         cameraFollowBoxActor=new Camera3DFollowBoxActor(this, getNextActorIndex(), new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
         colorIdMap.put(cameraFollowBoxActor.getActorId(), new Vector4(0.7f, 0.0f, 0.0f, 1.0f));
-        drawShaderSequence.getActorSequence().add(cameraFollowBoxActor);
+        basic3DShaderSequence.getActorSequence().add(cameraFollowBoxActor);
     }
 
     private void addImage3DActor(AB2Image3D_RGBA8UI image3d) {
