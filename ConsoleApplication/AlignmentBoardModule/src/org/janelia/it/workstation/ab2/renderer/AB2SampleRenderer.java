@@ -24,6 +24,7 @@ import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.model.AB2Image3D_RGBA8UI;
 import org.janelia.it.workstation.ab2.shader.AB2ActorPickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
+import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,8 @@ public class AB2SampleRenderer extends AB23DRenderer {
     private Image3DActor image3DActor;
 
     private GLShaderActionSequence drawShaderSequence;
+    private GLShaderActionSequence basic3DShaderSequence;
+
     private GLShaderActionSequence pickShaderSequence;
 
     int actorCount=0;
@@ -48,12 +51,15 @@ public class AB2SampleRenderer extends AB23DRenderer {
         super();
 
         drawShaderSequence=new GLShaderActionSequence("DrawSequence");
+        basic3DShaderSequence=new GLShaderActionSequence( "Basic3D");
         pickShaderSequence=new GLShaderActionSequence("PickSequence");
 
         drawShaderSequence.setShader(new AB2ActorShader());
+        basic3DShaderSequence.setShader(new AB2Basic3DShader());
         pickShaderSequence.setShader(new AB2ActorPickShader());
 
         addDrawShaderActionSequence(drawShaderSequence);
+        addDrawShaderActionSequence(basic3DShaderSequence);
         addPickShaderActionSequence(pickShaderSequence);
     }
 
@@ -135,7 +141,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
         boundingBoxActor=new BoundingBoxActor(this, getNextActorIndex(), new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
         colorIdMap.put(boundingBoxActor.getActorId(), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         logger.info("addBoundingBox() adding boundingBoxActor");
-        drawShaderSequence.getActorSequence().add(boundingBoxActor);
+        basic3DShaderSequence.getActorSequence().add(boundingBoxActor);
         logger.info("drawShaderSequence actor list size="+drawShaderSequence.getActorSequence().size());
     }
 
