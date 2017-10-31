@@ -8,6 +8,7 @@ import java.util.TreeSet;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
@@ -162,7 +163,7 @@ public class DescriptorUtils {
     }
 
     public static ArtifactDescriptor deserialize(String artifactDescriptorString) throws Exception {
-        return mapper.readValue(artifactDescriptorString, ArtifactDescriptor.class);
+        return mapper.readValue(DomainModelViewUtils.convertModelPackages(artifactDescriptorString), ArtifactDescriptor.class);
     }
 
     public static String serializeList(ArtifactDescriptorList descriptorList) throws Exception {
@@ -170,7 +171,7 @@ public class DescriptorUtils {
     }
 
     public static ArtifactDescriptorList deserializeList(String descriptorListString) throws Exception {
-        return mapper.readValue(descriptorListString, ArtifactDescriptorList.class);
+        return mapper.readValue(DomainModelViewUtils.convertModelPackages(descriptorListString), ArtifactDescriptorList.class);
     }
     
 }

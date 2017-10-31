@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 
 /**
  * Snapshot of the state of a list viewer for navigation purposes.
@@ -123,7 +124,7 @@ public class DomainObjectEditorState<T extends DomainObject> {
     }
 
     public static DomainObjectEditorState<?> deserialize(String artifactDescriptorString) throws Exception {
-        return mapper.readValue(artifactDescriptorString, DomainObjectEditorState.class);
+        return mapper.readValue(DomainModelViewUtils.convertModelPackages(artifactDescriptorString), DomainObjectEditorState.class);
     }
 
 }

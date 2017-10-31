@@ -28,6 +28,18 @@ public class DomainModelViewUtils {
     
     private final static DateFormat dateFormatter = new SimpleDateFormat("yyyy/MM/dd hh:mma");
 
+    private static final String OLD_MODEL_PATTERN = "org\\.janelia.it\\.jacs\\.model";
+    private static final String NEW_MODEL = "org.janelia.model";
+    private static final String OLD_SECURITY_MODEL_PATTERN = "org\\.janelia\\.it\\.jacs\\.model\\.domain\\.subjects"; 
+    private static final String NEW_SECURITY_MODEL = "org.janelia.model.security";
+    
+    /**
+     * Convert any occurrences of the old model packages to the new organization.
+     */
+    public static String convertModelPackages(String str) {
+        return str.replaceAll(OLD_MODEL_PATTERN, NEW_MODEL).replaceAll(OLD_SECURITY_MODEL_PATTERN, NEW_SECURITY_MODEL);
+    }
+    
     public static String getDateString(Date date) {
         return dateFormatter.format(date).toLowerCase();
     }
