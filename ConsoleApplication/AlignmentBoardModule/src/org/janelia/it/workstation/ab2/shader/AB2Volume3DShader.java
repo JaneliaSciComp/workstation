@@ -33,33 +33,4 @@ public class AB2Volume3DShader extends GLShaderProgram {
         checkGlError(gl, "AB2ActorShader setTextureMVP3d() error");
     }
 
-    public void setMVP2d(GL4 gl, Matrix4 mvp) {
-        setUniformMatrix4fv(gl, "mvp2d", false, mvp.asArray());
-        checkGlError(gl, "AB2ActorShader setMVP2d() error");
-    }
-
-    public void setColor0(GL4 gl, Vector4 color0) {
-        setUniform4v(gl, "color0", 1, color0.toArray());
-        checkGlError(gl, "AB2ActorShader setColor0() error");
-    }
-
-    public void setColor1(GL4 gl, Vector4 color1) {
-        setUniform4v(gl, "color1", 1, color1.toArray());
-        checkGlError(gl, "AB2ActorShader setColor1() error");
-    }
-
-    public void setTwoDimensional(GL4 gl, boolean twoDimensional) {
-        if (twoDimensional) {
-            setUniform(gl, "twoDimensional", 1);
-        } else {
-            setUniform(gl, "twoDimensional", 0);
-        }
-        checkGlError(gl, "AB2ActorShader setTwoDimensional() error");
-    }
-
-    public void setTextureType(GL4 gl, int textureType) {
-        setUniform(gl, "textureType", textureType);
-        checkGlError(gl, "AB2ActorShader setTextureType() error");
-    }
-
 }

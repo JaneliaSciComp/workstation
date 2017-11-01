@@ -23,6 +23,7 @@ import org.janelia.it.workstation.ab2.model.AB2Image3D_RGBA8UI;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
+import org.janelia.it.workstation.ab2.shader.AB2Volume3DShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
 
     private GLShaderActionSequence drawShaderSequence;
     private GLShaderActionSequence basic3DShaderSequence;
+    private GLShaderActionSequence volume3DShaderSequence;
 
     private GLShaderActionSequence pickShaderSequence;
 
@@ -50,14 +52,17 @@ public class AB2SampleRenderer extends AB23DRenderer {
 
         drawShaderSequence=new GLShaderActionSequence("DrawSequence");
         basic3DShaderSequence=new GLShaderActionSequence( "Basic3D");
+        volume3DShaderSequence=new GLShaderActionSequence("Volume3D");
         pickShaderSequence=new GLShaderActionSequence("PickSequence");
 
         drawShaderSequence.setShader(new AB2ActorShader());
         basic3DShaderSequence.setShader(new AB2Basic3DShader());
+        volume3DShaderSequence.setShader(new AB2Volume3DShader());
         pickShaderSequence.setShader(new AB2PickShader());
 
         addDrawShaderActionSequence(drawShaderSequence);
         addDrawShaderActionSequence(basic3DShaderSequence);
+        addDrawShaderActionSequence(volume3DShaderSequence);
         addPickShaderActionSequence(pickShaderSequence);
     }
 
@@ -129,7 +134,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
         Vector3 v0=new Vector3(0f, 0f, 0f);
         Vector3 v1=new Vector3(1f, 1f, 1f);
         image3DActor=new Image3DActor(this, getNextActorIndex(), v0, v1, image3d.getXDim(), image3d.getYDim(), image3d.getZDim(), image3d.getData());
-        drawShaderSequence.getActorSequence().add(image3DActor);
+        volume3DShaderSequence.getActorSequence().add(image3DActor);
         ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) image3DActor, drawShaderSequence.getShader());
         actorInitQueue.add(actorPair);
     }
