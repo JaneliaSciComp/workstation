@@ -52,8 +52,12 @@ public class Image3DActor extends Camera3DFollowBoxActor {
 
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
+
+        logger.info("init() start");
 //        super.init(gl, shader);
         if (shader instanceof AB2Volume3DShader) {
+
+            logger.info("init() in AB2Volume3DShader");
 
             AB2Volume3DShader volume3DShader=(AB2Volume3DShader)shader;
 
@@ -118,13 +122,20 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             gl.glTexParameteri( GL4.GL_TEXTURE_2D_ARRAY, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_LINEAR );
             gl.glBindTexture(GL4.GL_TEXTURE_2D_ARRAY, 0);
 
+            logger.info("init() done in AB2Volume3DShader");
+
         }
 
     }
 
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
+
+        logger.info("display() start");
+
         if (shader instanceof AB2Volume3DShader) {
+
+            logger.info("display() in AB2Volume3DShader");
 
             AB2Volume3DShader volume3DShader=(AB2Volume3DShader)shader;
             volume3DShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
@@ -152,6 +163,8 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             checkGlError(gl, "d10 glBindBuffer()");
             gl.glBindTexture(GL4.GL_TEXTURE_2D_ARRAY, 0);
             checkGlError(gl, "d11 glBindTexture()");
+
+            logger.info("display() done in AB2Volume3DShader");
         }
     }
 

@@ -15,22 +15,22 @@ public class AB2Volume3DShader extends GLShaderProgram {
 
     @Override
     public String getVertexShaderResourceName() {
-        return "AB2ActorShader_vertex.glsl";
+        return "AB2Volume3DShader_vertex.glsl";
     }
 
     @Override
     public String getFragmentShaderResourceName() {
-        return "AB2ActorShader_fragment.glsl";
+        return "AB2Volume3DShader_fragment.glsl";
     }
 
     public void setMVP3d(GL4 gl, Matrix4 mvp) {
         setUniformMatrix4fv(gl, "mvp3d", false, mvp.asArray());
-        checkGlError(gl, "AB2ActorShader setMVP3d() error");
+        checkGlError(gl, "AB2Volume3DShader setMVP3d() error");
     }
 
     public void setTextureMVP3d(GL4 gl, Matrix4 mvp) {
         setUniformMatrix4fv(gl, "textureMvp3d", false, mvp.asArray());
-        checkGlError(gl, "AB2ActorShader setTextureMVP3d() error");
+        checkGlError(gl, "AB2Volume3DShader setTextureMVP3d() error");
     }
 
 }

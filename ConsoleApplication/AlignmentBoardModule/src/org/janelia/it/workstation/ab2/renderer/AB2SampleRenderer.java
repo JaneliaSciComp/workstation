@@ -37,7 +37,8 @@ public class AB2SampleRenderer extends AB23DRenderer {
 
     private Image3DActor image3DActor;
 
-    private GLShaderActionSequence drawShaderSequence;
+    //private GLShaderActionSequence drawShaderSequence;
+
     private GLShaderActionSequence basic3DShaderSequence;
     private GLShaderActionSequence volume3DShaderSequence;
 
@@ -82,7 +83,8 @@ public class AB2SampleRenderer extends AB23DRenderer {
     }
 
     public void clearActors() {
-        clearActionSequenceActors(drawShaderSequence);
+        clearActionSequenceActors(basic3DShaderSequence);
+        clearActionSequenceActors(volume3DShaderSequence);
         clearActionSequenceActors(pickShaderSequence);
     }
 
@@ -95,7 +97,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
     private void clearImage3DActor() {
         // For some reason, the cast to GLAbstractActor is necessary for compatibility with the apache commons Pair implementation
         if (image3DActor!=null) {
-            ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) image3DActor, drawShaderSequence.getShader());
+            ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) image3DActor, volume3DShaderSequence.getShader());
             actorDisposalQueue.add(actorPair);
             image3DActor = null;
         }
@@ -124,7 +126,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
         originPointList.add(new Vector3(0.5f, 0.5f, 0.5f));
         PointSetActor pointSetActor = new PointSetActor(this, getNextActorIndex(), originPointList);
         colorIdMap.put(pointSetActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
-        drawShaderSequence.getActorSequence().add(pointSetActor);
+        basic3DShaderSequence.getActorSequence().add(pointSetActor);
     }
 
     private void addCameraFollowBoxActor() {
@@ -138,7 +140,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
         Vector3 v1=new Vector3(1f, 1f, 1f);
         image3DActor=new Image3DActor(this, getNextActorIndex(), v0, v1, image3d.getXDim(), image3d.getYDim(), image3d.getZDim(), image3d.getData());
         volume3DShaderSequence.getActorSequence().add(image3DActor);
-        ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) image3DActor, drawShaderSequence.getShader());
+        ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) image3DActor, volume3DShaderSequence.getShader());
         actorInitQueue.add(actorPair);
     }
 
