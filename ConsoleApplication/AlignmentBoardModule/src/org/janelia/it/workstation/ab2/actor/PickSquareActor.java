@@ -104,9 +104,7 @@ public class PickSquareActor extends GLAbstractActor {
 
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
-            pickShader.setMVP3d(gl, renderer.getVp3d());
             pickShader.setMVP2d(gl, renderer.getVp3d());
-            pickShader.setTwoDimensional(gl, true);
             pickShader.setPickId(gl, getPickIndex());
         }
 

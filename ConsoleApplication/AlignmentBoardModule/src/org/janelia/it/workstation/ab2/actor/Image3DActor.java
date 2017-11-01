@@ -18,6 +18,7 @@ import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
+import org.janelia.it.workstation.ab2.shader.AB2Volume3DShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,9 @@ public class Image3DActor extends Camera3DFollowBoxActor {
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
 //        super.init(gl, shader);
-        if (shader instanceof AB2ActorShader) {
+        if (shader instanceof AB2Volume3DShader) {
+
+            AB2Volume3DShader volume3DShader=(AB2Volume3DShader)shader;
 
             // We need to provide a sequence of quads, which we will create using two triangles each.
             // These quads will populate the volume bounded by v0 and v1.
@@ -121,20 +124,11 @@ public class Image3DActor extends Camera3DFollowBoxActor {
 
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
-        if (shader instanceof AB2ActorShader) {
-            AB2ActorShader actorShader=(AB2ActorShader)shader;
-            actorShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
-            actorShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
+        if (shader instanceof AB2Volume3DShader) {
 
-            actorShader.setTextureMVP3d(gl, getPreTextureModelMatrix().multiply(renderer.getRotationAsTransform().transpose()).multiply(getPostTextureModelMatrix()));
-
-            actorShader.setTwoDimensional(gl, false);
-            actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_3D_RGBA);
-
-            Vector4 actorColor=renderer.getColorIdMap().get(actorId);
-            if (actorColor!=null) {
-                actorShader.setColor0(gl, actorColor);
-            }
+            AB2Volume3DShader volume3DShader=(AB2Volume3DShader)shader;
+            volume3DShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
+            volume3DShader.setTextureMVP3d(gl, getPreTextureModelMatrix().multiply(renderer.getRotationAsTransform().transpose()).multiply(getPostTextureModelMatrix()));
 
             gl.glActiveTexture(GL4.GL_TEXTURE0);
             checkGlError(gl, "d1 glActiveTexture");
@@ -204,7 +198,7 @@ public class Image3DActor extends Camera3DFollowBoxActor {
     @Override
     public void dispose(GL4 gl, GLShaderProgram shader) {
 //        super.dispose(gl, shader);
-        if (shader instanceof AB2ActorShader) {
+        if (shader instanceof AB2Volume3DShader) {
             gl.glDeleteVertexArrays(1, vertexArrayId);
             gl.glDeleteBuffers(1, vertexBufferId);
             gl.glDeleteTextures(1, imageTextureId);

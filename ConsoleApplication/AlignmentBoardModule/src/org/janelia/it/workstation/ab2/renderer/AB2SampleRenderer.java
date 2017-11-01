@@ -50,19 +50,23 @@ public class AB2SampleRenderer extends AB23DRenderer {
     public AB2SampleRenderer() {
         super();
 
-        drawShaderSequence=new GLShaderActionSequence("DrawSequence");
+//        drawShaderSequence=new GLShaderActionSequence("DrawSequence");
+
         basic3DShaderSequence=new GLShaderActionSequence( "Basic3D");
         volume3DShaderSequence=new GLShaderActionSequence("Volume3D");
         pickShaderSequence=new GLShaderActionSequence("PickSequence");
 
-        drawShaderSequence.setShader(new AB2ActorShader());
+//        drawShaderSequence.setShader(new AB2ActorShader());
+
         basic3DShaderSequence.setShader(new AB2Basic3DShader());
         volume3DShaderSequence.setShader(new AB2Volume3DShader());
         pickShaderSequence.setShader(new AB2PickShader());
 
-        addDrawShaderActionSequence(drawShaderSequence);
+//        addDrawShaderActionSequence(drawShaderSequence);
+
         addDrawShaderActionSequence(basic3DShaderSequence);
         addDrawShaderActionSequence(volume3DShaderSequence);
+
         addPickShaderActionSequence(pickShaderSequence);
     }
 
@@ -72,7 +76,6 @@ public class AB2SampleRenderer extends AB23DRenderer {
         addBoundingBox();
         //addOriginPointActor();
         addCameraFollowBoxActor();
-        logger.info("drawShaderSequence containts "+drawShaderSequence.getActorSequence().size()+" actors");
         super.init(gl);
         logger.info("Finished init()");
         initialized=true;
@@ -145,7 +148,6 @@ public class AB2SampleRenderer extends AB23DRenderer {
         colorIdMap.put(boundingBoxActor.getActorId(), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         logger.info("addBoundingBox() adding boundingBoxActor");
         basic3DShaderSequence.getActorSequence().add(boundingBoxActor);
-        logger.info("drawShaderSequence actor list size="+drawShaderSequence.getActorSequence().size());
     }
 
     public void setColorId(int styleId, Vector4 color) {
