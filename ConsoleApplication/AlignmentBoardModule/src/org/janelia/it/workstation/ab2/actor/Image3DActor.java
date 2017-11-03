@@ -41,6 +41,14 @@ public class Image3DActor extends Camera3DFollowBoxActor {
     int dimZ;
     byte data3d[];
 
+    float xMod=1.0f;
+    float yMod=1.0f;
+    float zMod=1.0f;
+
+    float xDiff=0f;
+    float yDiff=0f;
+    float zDiff=0f;
+
     public Image3DActor(AB23DRenderer renderer, int actorId, Vector3 v0, Vector3 v1, int dimX, int dimY, int dimZ, byte[] data3d) {
         super(renderer, actorId, v0, v1);
         this.dimX=dimX;
@@ -64,7 +72,43 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             // We need to provide a sequence of quads, which we will create using two triangles each.
             // These quads will populate the volume bounded by v0 and v1.
 
-            int zSlices=2*getMaxDim(); // anti-alias @ 2x maxDim
+            // To compensate for unequal dimensions on x, y, z axes, we will modulate the v0 and v1 values
+            // such that the 0.0-1.0 regions will correspond in each dimension to the data regions. Note
+            // this doesn't address anisotropic effects - this still assumes each voxel is isotropic.
+
+            int maxDim=getMaxDim();
+
+            if (dimX==maxDim) {
+                yMod=(dimX*1f)/(dimY*1f);
+                zMod=(dimX*1f)/(dimZ*1f);
+            } else if (dimY==maxDim) {
+                xMod=(dimY*1f)/(dimX*1f);
+                zMod=(dimY*1f)/(dimZ*1f);
+            } else if (dimZ==maxDim) {
+                xMod=(dimZ*1f)/(dimX*1f);
+                yMod=(dimZ*1f)/(dimY*1f);
+            }
+
+            xDiff=(xMod-1f)*(v1.getX()-v0.getX());
+            yDiff=(yMod-1f)*(v1.getY()-v0.getY());
+            zDiff=(zMod-1f)*(v1.getZ()-v0.getZ());
+
+//            if (xDiff>0f) {
+//                v0.setX(v0.getX()-xDiff/2f);
+//                v1.setX(v1.getX()+xDiff/2f);
+//            }
+//
+//            if (yDiff>0f) {
+//                v0.setY(v0.getY()-yDiff/2f);
+//                v1.setY(v1.getY()+yDiff/2f);
+//            }
+//
+//            if (zDiff>0f) {
+//                v0.setZ(v0.getZ()-zDiff/2f);
+//                v1.setZ(v1.getZ()+zDiff/2f);
+//            }
+
+            int zSlices=2*maxDim; // anti-alias @ 2x maxDim
 
             float[] vd = new float[zSlices*6*6];
 
