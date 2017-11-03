@@ -269,11 +269,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 mergeNeurite(anchor.getNeuronID(), anchor.getGuid(), closest.getNeuronId(), closest.getId());
             } else {
                 // move, don't merge
-                activityLog.logMovedNeurite(getSampleID(), getWorkspaceID(), closest);
+                activityLog.logMovedAnchor(getSampleID(), getWorkspaceID(), anchor.getNeuronID(), closest);
                 moveAnnotation(anchor.getNeuronID(), anchor.getGuid(), anchorVoxelLocation);
             }
         } else {
-            activityLog.logMovedNeurite(getSampleID(), getWorkspaceID(), anchorVoxelLocation);
+            activityLog.logMovedAnchor(getSampleID(), getWorkspaceID(), anchor.getNeuronID(), anchorVoxelLocation);
             moveAnnotation(anchor.getNeuronID(), anchor.getGuid(), anchorVoxelLocation);
         }
     }
@@ -393,7 +393,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
                 StopWatch stopwatch = new StopWatch();
                 final TmWorkspace currentWorkspace = AnnotationManager.this.annotationModel.getCurrentWorkspace();
-                activityLog.logAddAnchor(currentWorkspace.getSampleRef().getTargetId(), currentWorkspace.getId(), finalLocation);
+                activityLog.logAddAnchor(currentWorkspace.getSampleRef().getTargetId(), currentWorkspace.getId(),
+                    currentNeuron.getId(), finalLocation);
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
                     annotationModel.addRootAnnotation(currentNeuron, finalLocation);

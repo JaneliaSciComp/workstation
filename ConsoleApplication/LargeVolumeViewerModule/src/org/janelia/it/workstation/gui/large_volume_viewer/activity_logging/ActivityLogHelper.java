@@ -25,6 +25,8 @@ import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 public class ActivityLogHelper {
     // sample:workspace:micronX,micronY,micronZ:voxX,voxY,voxZ:time
     public static final String BOTH_COORDS_FMT = "%d:%d:%5.3f,%5.3f,%5.3f:%5.3f,%5.3f,%5.3f";
+    // sample:workspace:neuron:micronX,micronY,micronZ:voxX,voxY,voxZ:time
+    public static final String BOTH_COORDS_NEURON_FMT = "%d:%d:%d:%5.3f,%5.3f,%5.3f:%5.3f,%5.3f,%5.3f";
     // workspace:X,Y,Z:time
     public static final String SIMPLE_COORDS_FMT = "%d:%5.3f,%5.3f,%5.3f";
 
@@ -38,8 +40,8 @@ public class ActivityLogHelper {
     private static final CategoryString LONG_TILE_LOAD_CATEGORY_STRING          = new CategoryString("longRunningTileIndexLoad");
     private static final CategoryString LVV_SESSION_CATEGORY_STRING             = new CategoryString("openFolder");
     private static final CategoryString LVV_ADD_ANCHOR_CATEGORY_STRING          = new CategoryString("addAnchor:xyzsw");
+    private static final CategoryString LVV_MOVE_ANCHOR_CATEGORY_STRING         = new CategoryString("moveAnchor:xyzsw");
     private static final CategoryString LVV_MERGE_NEURITES_CATEGORY_STRING      = new CategoryString("mergeNeurites:xyzsw");
-    private static final CategoryString LVV_MOVE_NEURITE_CATEGORY_STRING        = new CategoryString("moveNeurite:xyzsw");
     private static final CategoryString LVV_SPLIT_NEURITE_CATEGORY_STRING       = new CategoryString("splitNeurite:xyzsw");
     private static final CategoryString LVV_SPLIT_ANNO_CATEGORY_STRING          = new CategoryString("splitAnnotation:xyzsw");
     private static final CategoryString LVV_DELETE_LINK_CATEGORY_STRING         = new CategoryString("deleteLink:xyzsw");
@@ -116,11 +118,12 @@ public class ActivityLogHelper {
         );
     }
 
-    public void logAddAnchor(Long sampleId, Long workspaceId, Vec3 location) {
+    public void logAddAnchor(Long sampleId, Long workspaceId, Long neuronID, Vec3 location) {
         //  Change Vec3 to double[] if inconvenient.
         logGeometricEvent(
                 sampleId,
                 workspaceId,
+                neuronID,
                 location.getX(), location.getY(), location.getZ(),
                 LVV_ADD_ANCHOR_CATEGORY_STRING);
     }
@@ -145,6 +148,14 @@ public class ActivityLogHelper {
                 LVV_ADD_ANCHOR_CATEGORY_STRING);
     }
 
+    public void logMovedAnchor(Long sampleID, Long workspaceID, Long neuronID, TmGeoAnnotation source) {
+        this.logGeometricEvent(sampleID, workspaceID, neuronID, source, LVV_MOVE_ANCHOR_CATEGORY_STRING);
+    }
+
+    public void logMovedAnchor(Long sampleID, Long workspaceID, Long neuronID, Vec3 location) {
+        this.logGeometricEvent(sampleID, workspaceID, neuronID, location, LVV_MOVE_ANCHOR_CATEGORY_STRING);
+    }
+
     public void logRerootNeurite(Long sampleID, Long workspaceID, Long neuronID) {
         AccessManager.getAccessManager().logToolEvent(
                 LVV_LOGSTAMP_ID,
@@ -154,27 +165,19 @@ public class ActivityLogHelper {
     }
 
     public void logMergedNeurite(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
-        this.logGeometricEvent(sampleID, workspaceID, source, LVV_MERGE_NEURITES_CATEGORY_STRING);
-    }
-
-    public void logMovedNeurite(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
-        this.logGeometricEvent(sampleID, workspaceID, source, LVV_MOVE_NEURITE_CATEGORY_STRING);
-    }
-
-    public void logMovedNeurite(Long sampleID, long workspaceID, Vec3 location) {
-        this.logGeometricEvent(sampleID, workspaceID, location, LVV_MOVE_NEURITE_CATEGORY_STRING);
+        this.logGeometricEvent(sampleID, workspaceID, source.getNeuronId(), source, LVV_MERGE_NEURITES_CATEGORY_STRING);
     }
 
     public void logSplitNeurite(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
-        this.logGeometricEvent(sampleID, workspaceID, source, LVV_SPLIT_NEURITE_CATEGORY_STRING);
+        this.logGeometricEvent(sampleID, workspaceID, source.getNeuronId(), source, LVV_SPLIT_NEURITE_CATEGORY_STRING);
     }
 
     public void logSplitAnnotation(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
-        this.logGeometricEvent(sampleID, workspaceID, source, LVV_SPLIT_ANNO_CATEGORY_STRING);
+        this.logGeometricEvent(sampleID, workspaceID, source.getNeuronId(), source, LVV_SPLIT_ANNO_CATEGORY_STRING);
     }
 
     public void logDeleteLink(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
-        this.logGeometricEvent(sampleID, workspaceID, source, LVV_DELETE_LINK_CATEGORY_STRING);
+        this.logGeometricEvent(sampleID, workspaceID, source.getNeuronId(), source, LVV_DELETE_LINK_CATEGORY_STRING);
     }
 
     public void logExternallyDeleteLink(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
@@ -220,7 +223,7 @@ public class ActivityLogHelper {
     }
 
     public void logDeleteSubTree(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
-        this.logGeometricEvent(sampleID, workspaceID, source, LVV_DELETE_SUBTREE_CATEGORY_STRING);
+        this.logGeometricEvent(sampleID, workspaceID, source.getNeuronId(), source, LVV_DELETE_SUBTREE_CATEGORY_STRING);
     }
 
     /**
@@ -420,8 +423,26 @@ public class ActivityLogHelper {
         );
     }
 
+    private void logGeometricEvent(Long sampleID, Long workspaceID, Long neuronID, Double x, Double y, Double z, CategoryString category) {
+        String action = formatGeoAction(x, y, z, sampleID, workspaceID, neuronID);
+        AccessManager.getAccessManager().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                category,
+                new ActionString(action)
+        );
+    }
+
     private void logExternalGeometricEvent(Long sampleID, Long workspaceID, Double x, Double y, Double z, float muX, float muY, float muZ, CategoryString category) {
         String action = formatGeoAction(x, y, z, muX, muY, muZ, sampleID, workspaceID);
+        AccessManager.getAccessManager().logToolEvent(
+                EXTERNAL_LVV_LOGSTAMP_ID,   // For now: only Horta makes requests.
+                category,
+                new ActionString(action)
+        );
+    }
+
+    private void logExternalGeometricEvent(Long sampleID, Long workspaceID, Long neuronID, Double x, Double y, Double z, float muX, float muY, float muZ, CategoryString category) {
+        String action = formatGeoAction(x, y, z, muX, muY, muZ, sampleID, workspaceID, neuronID);
         AccessManager.getAccessManager().logToolEvent(
                 EXTERNAL_LVV_LOGSTAMP_ID,   // For now: only Horta makes requests.
                 category,
@@ -436,9 +457,23 @@ public class ActivityLogHelper {
                 category);
     }
 
+    private void logGeometricEvent(Long sampleID, Long workspaceID, Long neuronID, TmGeoAnnotation anno, CategoryString category) {
+        logGeometricEvent(
+                sampleID, workspaceID, neuronID,
+                anno.getX(), anno.getY(), anno.getZ(),
+                category);
+    }
+
     private void logGeometricEvent(Long sampleID, Long workspaceID, Vec3 location, CategoryString category) {
         logGeometricEvent(
                 sampleID, workspaceID,
+                location.getX(), location.getY(), location.getZ(),
+                category);
+    }
+
+    private void logGeometricEvent(Long sampleID, Long workspaceID, Long neuronID, Vec3 location, CategoryString category) {
+        logGeometricEvent(
+                sampleID, workspaceID, neuronID,
                 location.getX(), location.getY(), location.getZ(),
                 category);
     }
@@ -467,11 +502,47 @@ public class ActivityLogHelper {
         return action;
     }
 
+    private String formatGeoAction(Double x, Double y, Double z, Long sampleID, Long workspaceID, Long neuronID) {
+        TileFormat.MicrometerXyz mxyz;
+        String action;
+        double muX = 0;
+        double muY = 0;
+        double muZ = 0;
+        TileFormat tileFormat = sampleToTileFormat.get(sampleID);
+        if (tileFormat != null) {
+            mxyz = tileFormat.micrometerXyzForVoxelXyz(
+                    new TileFormat.VoxelXyz(x.intValue(), y.intValue(), z.intValue()),
+                    CoordinateAxis.Z);
+            muX = mxyz.getX();
+            muY = mxyz.getY();
+            muZ = mxyz.getZ();
+        }
+        action = String.format(
+                BOTH_COORDS_NEURON_FMT,
+                sampleID, workspaceID, neuronID,
+                muX, muY, muZ,
+                x, y, z
+        );
+        return action;
+    }
+
     private String formatGeoAction(Double x, Double y, Double z, float muX, float muY, float muZ, Long sampleID, Long workspaceID) {
         String action;
         action = String.format(
                 BOTH_COORDS_FMT,
                 sampleID, workspaceID,
+                muX, muY, muZ,
+                x, y, z
+        );
+        return action;
+    }
+
+    private String formatGeoAction(Double x, Double y, Double z, float muX, float muY, float muZ, Long sampleID, Long workspaceID,
+        Long neuronID) {
+        String action;
+        action = String.format(
+                BOTH_COORDS_NEURON_FMT,
+                sampleID, workspaceID, neuronID,
                 muX, muY, muZ,
                 x, y, z
         );
