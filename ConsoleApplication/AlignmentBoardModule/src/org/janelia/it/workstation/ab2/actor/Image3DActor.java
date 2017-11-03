@@ -97,10 +97,12 @@ public class Image3DActor extends Camera3DFollowBoxActor {
 
             // Create texture
 
-            ByteBuffer byteBuffer=ByteBuffer.allocate(data3d.length);
-            for (int i=0;i<data3d.length;i++) {
-                byteBuffer.put(i, data3d[i]);
-            }
+//            ByteBuffer byteBuffer=ByteBuffer.allocate(data3d.length);
+//            for (int i=0;i<data3d.length;i++) {
+//                byteBuffer.put(i, data3d[i]);
+//            }
+
+            ByteBuffer byteBuffer = ByteBuffer.wrap(data3d);
 
 //            glBindTexture( GL_TEXTURE_3D, mu3DTex );
 //            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE); -- deprecated, texture mixing intended to be handled in shaders
