@@ -89,31 +89,16 @@ public class Image3DActor extends Camera3DFollowBoxActor {
                 yMod=(dimZ*1f)/(dimY*1f);
             }
 
-            xDiff=(xMod-1f)*(v1.getX()-v0.getX());
-            yDiff=(yMod-1f)*(v1.getY()-v0.getY());
-            zDiff=(zMod-1f)*(v1.getZ()-v0.getZ());
-
-//            if (xDiff>0f) {
-//                v0.setX(v0.getX()-xDiff/2f);
-//                v1.setX(v1.getX()+xDiff/2f);
-//            }
-//
-//            if (yDiff>0f) {
-//                v0.setY(v0.getY()-yDiff/2f);
-//                v1.setY(v1.getY()+yDiff/2f);
-//            }
-//
-//            if (zDiff>0f) {
-//                v0.setZ(v0.getZ()-zDiff/2f);
-//                v1.setZ(v1.getZ()+zDiff/2f);
-//            }
+            xDiff=(v1.getX()-v0.getX())*(1f - 1f/xMod);
+            yDiff=(v1.getY()-v0.getY())*(1f - 1f/yMod);
+            zDiff=(v1.getZ()-v0.getZ())*(1f - 1f/zMod);
 
             int zSlices=2*maxDim; // anti-alias @ 2x maxDim
 
             float[] vd = new float[zSlices*6*6];
 
-            float zvStep=(v1.getZ()-v0.getZ())/(1f*zSlices);
-            float zvStart=v0.getZ()+zvStep/2f;
+            float zvStep=(cZ(v1.getZ())-cZ(v0.getZ()))/(1f*zSlices);
+            float zvStart=cZ(v0.getZ())+zvStep/2f;
             float zStep=1f/(1f*zSlices);
             float zStart=zStep/2f;
 
@@ -172,6 +157,20 @@ public class Image3DActor extends Camera3DFollowBoxActor {
 
         }
 
+    }
+
+    // NOTE: THESE ARE WRONG - WE NEED TEXTURE NORMALIZED, NOT ACTUAL SPACE NORMALIZED
+
+    float cX(float x) {
+        return (((x-v0.getX())/(v1.getX()-v0.getX()))/xMod)+v0.getX()+xDiff/2f;
+    }
+
+    float cY(float y) {
+        return (((y-v0.getY())/(v1.getY()-v0.getY()))/yMod)+v0.getY()+yDiff/2f;
+    }
+
+    float cZ(float z) {
+        return (((z-v0.getZ())/(v1.getZ()-v0.getZ()))/zMod)+v0.getZ()+zDiff/2f;
     }
 
     @Override
