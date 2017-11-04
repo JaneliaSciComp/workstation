@@ -89,16 +89,16 @@ public class Image3DActor extends Camera3DFollowBoxActor {
                 yMod=(dimZ*1f)/(dimY*1f);
             }
 
-            xDiff=(v1.getX()-v0.getX())*(1f - 1f/xMod);
-            yDiff=(v1.getY()-v0.getY())*(1f - 1f/yMod);
-            zDiff=(v1.getZ()-v0.getZ())*(1f - 1f/zMod);
+//            xDiff=(1f - 1f/xMod);
+//            yDiff=(1f - 1f/yMod);
+//            zDiff=(1f - 1f/zMod);
 
             int zSlices=2*maxDim; // anti-alias @ 2x maxDim
 
             float[] vd = new float[zSlices*6*6];
 
-            float zvStep=(cZ(v1.getZ())-cZ(v0.getZ()))/(1f*zSlices);
-            float zvStart=cZ(v0.getZ())+zvStep/2f;
+            float zvStep=(v1.getZ()-v0.getZ())/(1f*zSlices);
+            float zvStart=v0.getZ()+zvStep/2f;
             float zStep=1f/(1f*zSlices);
             float zStart=zStep/2f;
 
@@ -106,13 +106,13 @@ public class Image3DActor extends Camera3DFollowBoxActor {
                 float zv=zvStart+(zi*1f)*zvStep;
                 float z=zStart+(zi*1f)*zStep;
                 int o=zi*36;
-                vd[o]   =v0.getX(); vd[o+1] =v0.getY(); vd[o+2] =zv; vd[o+3] =0f; vd[o+4] =0f; vd[o+5] =z; // lower left
-                vd[o+6] =v1.getX(); vd[o+7] =v0.getY(); vd[o+8] =zv; vd[o+9] =1f; vd[o+10]=0f; vd[o+11]=z; // lower right
-                vd[o+12]=v0.getX(); vd[o+13]=v1.getY(); vd[o+14]=zv; vd[o+15]=0f; vd[o+16]=1f; vd[o+17]=z; // upper left
+                vd[o]   =v0.getX(); vd[o+1] =v0.getY(); vd[o+2] =zv; vd[o+3] =cX(0f); vd[o+4] =cY(0f); vd[o+5] =cZ(z); // lower left
+                vd[o+6] =v1.getX(); vd[o+7] =v0.getY(); vd[o+8] =zv; vd[o+9] =cX(1f); vd[o+10]=cY(0f); vd[o+11]=cZ(z); // lower right
+                vd[o+12]=v0.getX(); vd[o+13]=v1.getY(); vd[o+14]=zv; vd[o+15]=cX(0f); vd[o+16]=cY(1f); vd[o+17]=cZ(z); // upper left
 
-                vd[o+18]=v1.getX(); vd[o+19]=v0.getY(); vd[o+20]=zv; vd[o+21]=1f; vd[o+22]=0f; vd[o+23]=z; // lower right
-                vd[o+24]=v1.getX(); vd[o+25]=v1.getY(); vd[o+26]=zv; vd[o+27]=1f; vd[o+28]=1f; vd[o+29]=z; // upper right
-                vd[o+30]=v0.getX(); vd[o+31]=v1.getY(); vd[o+32]=zv; vd[o+33]=0f; vd[o+34]=1f; vd[o+35]=z; // upper left
+                vd[o+18]=v1.getX(); vd[o+19]=v0.getY(); vd[o+20]=zv; vd[o+21]=cX(1f); vd[o+22]=cY(0f); vd[o+23]=cZ(z); // lower right
+                vd[o+24]=v1.getX(); vd[o+25]=v1.getY(); vd[o+26]=zv; vd[o+27]=cX(1f); vd[o+28]=cY(1f); vd[o+29]=cZ(z); // upper right
+                vd[o+30]=v0.getX(); vd[o+31]=v1.getY(); vd[o+32]=zv; vd[o+33]=cX(0f); vd[o+34]=cY(1f); vd[o+35]=cZ(z); // upper left
             }
 
             vertexFb=createGLFloatBuffer(vd);
@@ -161,17 +161,9 @@ public class Image3DActor extends Camera3DFollowBoxActor {
 
     // NOTE: THESE ARE WRONG - WE NEED TEXTURE NORMALIZED, NOT ACTUAL SPACE NORMALIZED
 
-    float cX(float x) {
-        return (((x-v0.getX())/(v1.getX()-v0.getX()))/xMod)+v0.getX()+xDiff/2f;
-    }
-
-    float cY(float y) {
-        return (((y-v0.getY())/(v1.getY()-v0.getY()))/yMod)+v0.getY()+yDiff/2f;
-    }
-
-    float cZ(float z) {
-        return (((z-v0.getZ())/(v1.getZ()-v0.getZ()))/zMod)+v0.getZ()+zDiff/2f;
-    }
+    float cX(float x) { return ((x-0.5f)*xMod)+0.5f; }
+    float cY(float y) { return ((y-0.5f)*yMod)+0.5f; }
+    float cZ(float z) { return ((z-0.5f)*zMod)+0.5f; }
 
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
