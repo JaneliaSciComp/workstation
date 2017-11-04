@@ -142,6 +142,8 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             AB2Volume3DShader volume3DShader=(AB2Volume3DShader)shader;
             volume3DShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
             volume3DShader.setTextureMVP3d(gl, getPreTextureModelMatrix().multiply(renderer.getRotationAsTransform().transpose()).multiply(getPostTextureModelMatrix()));
+            volume3DShader.setImageDim(gl, new Vector3(dimX*1f, dimY*1f, dimZ*1f));
+            volume3DShader.setImageMaxDIm(gl, getMaxDim()*1f);
 
             gl.glActiveTexture(GL4.GL_TEXTURE0);
             checkGlError(gl, "d1 glActiveTexture");
