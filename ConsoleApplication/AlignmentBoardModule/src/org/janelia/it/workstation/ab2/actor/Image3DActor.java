@@ -41,14 +41,6 @@ public class Image3DActor extends Camera3DFollowBoxActor {
     int dimZ;
     byte data3d[];
 
-    float xMod=1.0f;
-    float yMod=1.0f;
-    float zMod=1.0f;
-
-    float xDiff=0f;
-    float yDiff=0f;
-    float zDiff=0f;
-
     public Image3DActor(AB23DRenderer renderer, int actorId, Vector3 v0, Vector3 v1, int dimX, int dimY, int dimZ, byte[] data3d) {
         super(renderer, actorId, v0, v1);
         this.dimX=dimX;
@@ -72,28 +64,7 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             // We need to provide a sequence of quads, which we will create using two triangles each.
             // These quads will populate the volume bounded by v0 and v1.
 
-            // To compensate for unequal dimensions on x, y, z axes, we will modulate the v0 and v1 values
-            // such that the 0.0-1.0 regions will correspond in each dimension to the data regions. Note
-            // this doesn't address anisotropic effects - this still assumes each voxel is isotropic.
-
-            int maxDim=getMaxDim();
-
-            if (dimX==maxDim) {
-                yMod=(dimX*1f)/(dimY*1f);
-                zMod=(dimX*1f)/(dimZ*1f);
-            } else if (dimY==maxDim) {
-                xMod=(dimY*1f)/(dimX*1f);
-                zMod=(dimY*1f)/(dimZ*1f);
-            } else if (dimZ==maxDim) {
-                xMod=(dimZ*1f)/(dimX*1f);
-                yMod=(dimZ*1f)/(dimY*1f);
-            }
-
-//            xDiff=(1f - 1f/xMod);
-//            yDiff=(1f - 1f/yMod);
-//            zDiff=(1f - 1f/zMod);
-
-            int zSlices=2*maxDim; // anti-alias @ 2x maxDim
+            int zSlices=2*getMaxDim(); // anti-alias @ 2x maxDim
 
             float[] vd = new float[zSlices*6*6];
 
@@ -106,13 +77,13 @@ public class Image3DActor extends Camera3DFollowBoxActor {
                 float zv=zvStart+(zi*1f)*zvStep;
                 float z=zStart+(zi*1f)*zStep;
                 int o=zi*36;
-                vd[o]   =v0.getX(); vd[o+1] =v0.getY(); vd[o+2] =zv; vd[o+3] =cX(0f); vd[o+4] =cY(0f); vd[o+5] =cZ(z); // lower left
-                vd[o+6] =v1.getX(); vd[o+7] =v0.getY(); vd[o+8] =zv; vd[o+9] =cX(1f); vd[o+10]=cY(0f); vd[o+11]=cZ(z); // lower right
-                vd[o+12]=v0.getX(); vd[o+13]=v1.getY(); vd[o+14]=zv; vd[o+15]=cX(0f); vd[o+16]=cY(1f); vd[o+17]=cZ(z); // upper left
+                vd[o]   =v0.getX(); vd[o+1] =v0.getY(); vd[o+2] =zv; vd[o+3] =0f; vd[o+4] =0f; vd[o+5] =z; // lower left
+                vd[o+6] =v1.getX(); vd[o+7] =v0.getY(); vd[o+8] =zv; vd[o+9] =1f; vd[o+10]=0f; vd[o+11]=z; // lower right
+                vd[o+12]=v0.getX(); vd[o+13]=v1.getY(); vd[o+14]=zv; vd[o+15]=0f; vd[o+16]=1f; vd[o+17]=z; // upper left
 
-                vd[o+18]=v1.getX(); vd[o+19]=v0.getY(); vd[o+20]=zv; vd[o+21]=cX(1f); vd[o+22]=cY(0f); vd[o+23]=cZ(z); // lower right
-                vd[o+24]=v1.getX(); vd[o+25]=v1.getY(); vd[o+26]=zv; vd[o+27]=cX(1f); vd[o+28]=cY(1f); vd[o+29]=cZ(z); // upper right
-                vd[o+30]=v0.getX(); vd[o+31]=v1.getY(); vd[o+32]=zv; vd[o+33]=cX(0f); vd[o+34]=cY(1f); vd[o+35]=cZ(z); // upper left
+                vd[o+18]=v1.getX(); vd[o+19]=v0.getY(); vd[o+20]=zv; vd[o+21]=1f; vd[o+22]=0f; vd[o+23]=z; // lower right
+                vd[o+24]=v1.getX(); vd[o+25]=v1.getY(); vd[o+26]=zv; vd[o+27]=1f; vd[o+28]=1f; vd[o+29]=z; // upper right
+                vd[o+30]=v0.getX(); vd[o+31]=v1.getY(); vd[o+32]=zv; vd[o+33]=0f; vd[o+34]=1f; vd[o+35]=z; // upper left
             }
 
             vertexFb=createGLFloatBuffer(vd);
@@ -158,12 +129,6 @@ public class Image3DActor extends Camera3DFollowBoxActor {
         }
 
     }
-
-    // NOTE: THESE ARE WRONG - WE NEED TEXTURE NORMALIZED, NOT ACTUAL SPACE NORMALIZED
-
-    float cX(float x) { return ((x-0.5f)*xMod)+0.5f; }
-    float cY(float y) { return ((y-0.5f)*yMod)+0.5f; }
-    float cZ(float z) { return ((z-0.5f)*zMod)+0.5f; }
 
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
