@@ -12,8 +12,12 @@ import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2MouseDraggedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseReleasedEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AB2View3DMode extends AB2ControllerMode {
+
+    Logger logger= LoggerFactory.getLogger(AB2View3DMode.class);
 
     public enum InteractionMode {
         ROTATE,
@@ -56,6 +60,8 @@ public class AB2View3DMode extends AB2ControllerMode {
     public void dispose(GLAutoDrawable glAutoDrawable) {
         final GL4 gl=glAutoDrawable.getGL().getGL4();
         renderer.dispose(gl);
+        logger.info("dispose() calling System.gc()");
+        System.gc();
     }
 
     @Override

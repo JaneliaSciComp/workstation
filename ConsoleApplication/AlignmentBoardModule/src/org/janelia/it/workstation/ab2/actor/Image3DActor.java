@@ -219,6 +219,8 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             gl.glDeleteVertexArrays(1, vertexArrayId);
             gl.glDeleteBuffers(1, vertexBufferId);
             gl.glDeleteTextures(1, imageTextureId);
+            logger.info("dispose() setting data3d=null");
+            data3d=null;
         }
     }
 
