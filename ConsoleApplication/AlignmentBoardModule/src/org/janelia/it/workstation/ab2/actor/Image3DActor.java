@@ -139,6 +139,9 @@ public class Image3DActor extends Camera3DFollowBoxActor {
 
             logger.info("display() in AB2Volume3DShader");
 
+            gl.glEnable(GL4.GL_CULL_FACE);
+            gl.glCullFace(GL4.GL_BACK);
+
             AB2Volume3DShader volume3DShader=(AB2Volume3DShader)shader;
             volume3DShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
             volume3DShader.setTextureMVP3d(gl, getPreTextureModelMatrix().multiply(renderer.getRotationAsTransform().transpose()).multiply(getPostTextureModelMatrix()));
@@ -167,6 +170,8 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             checkGlError(gl, "d10 glBindBuffer()");
             gl.glBindTexture(GL4.GL_TEXTURE_2D_ARRAY, 0);
             checkGlError(gl, "d11 glBindTexture()");
+
+            gl.glDisable(GL4.GL_CULL_FACE);
 
             logger.info("display() done in AB2Volume3DShader");
         }
