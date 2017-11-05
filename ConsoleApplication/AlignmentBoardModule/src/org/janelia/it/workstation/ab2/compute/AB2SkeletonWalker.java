@@ -13,9 +13,15 @@ callback that it calls at each point to do work.
 import java.util.List;
 
 import org.janelia.geometry3d.Vector3;
+import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AB2SkeletonWalker {
+
+    Logger logger= LoggerFactory.getLogger(AB2SkeletonWalker.class);
+
     AB2NeuronSkeleton skeleton;
     double normalizedStepSize;
 
@@ -25,6 +31,12 @@ public class AB2SkeletonWalker {
     }
 
     public void walkSkeleton(AB2SkeletonWalkerCallback walkerCallback) {
+        if (skeleton==null) {
+            logger.error("skeleton is null");
+        }
+        if (walkerCallback==null) {
+            logger.error("walkerCallback is null");
+        }
         processNode(skeleton.getRootNode(), walkerCallback);
     }
 

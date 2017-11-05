@@ -8,15 +8,13 @@ import java.nio.IntBuffer;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector2;
-import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2Image2DClickEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
-import org.janelia.it.workstation.ab2.shader.AB2Draw2DShader;
+import org.janelia.it.workstation.ab2.shader.AB2Image2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
-import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +47,9 @@ public class Image2DActor extends GLAbstractActor {
 
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
-        if (shader instanceof AB2Draw2DShader) {
+        if (shader instanceof AB2Image2DShader) {
 
-            AB2Draw2DShader draw2DShader=(AB2Draw2DShader)shader;
+            AB2Image2DShader image2DShader=(AB2Image2DShader)shader;
 
             // This combines positional vertices interleaved with 2D texture coordinates. Note: z not used
             // but necessary for shader compatibility.
@@ -141,9 +139,9 @@ public class Image2DActor extends GLAbstractActor {
 
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
-        if (shader instanceof AB2Draw2DShader) {
-            AB2Draw2DShader draw2DShader=(AB2Draw2DShader)shader;
-            draw2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
+        if (shader instanceof AB2Image2DShader) {
+            AB2Image2DShader image2DShader=(AB2Image2DShader)shader;
+            image2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
             gl.glActiveTexture(GL4.GL_TEXTURE0);
             checkGlError(gl, "d1 glActiveTexture");
             gl.glBindTexture(GL4.GL_TEXTURE_2D, imageTextureId.get(0));
@@ -171,7 +169,7 @@ public class Image2DActor extends GLAbstractActor {
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
         checkGlError(gl, "d10 glBindBuffer()");
 
-        if (shader instanceof AB2Draw2DShader) {
+        if (shader instanceof AB2Image2DShader) {
             gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
             checkGlError(gl, "d11 glBindTexture()");
         }
@@ -179,7 +177,7 @@ public class Image2DActor extends GLAbstractActor {
 
     @Override
     public void dispose(GL4 gl, GLShaderProgram shader) {
-        if (shader instanceof AB2Draw2DShader) {
+        if (shader instanceof AB2Image2DShader) {
             gl.glDeleteVertexArrays(1, vertexArrayId);
             gl.glDeleteBuffers(1, vertexBufferId);
             gl.glDeleteTextures(1, imageTextureId);

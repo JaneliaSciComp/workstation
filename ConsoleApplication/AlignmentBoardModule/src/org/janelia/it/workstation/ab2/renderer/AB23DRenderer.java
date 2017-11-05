@@ -343,16 +343,17 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
             }
 
             while (mouseClickEvents.size()>0) {
-                //logger.info("displaySync() processing mouse click");
+                logger.info("displaySync() processing mouse click");
                 MouseClickEvent mouseClickEvent=mouseClickEvents.poll();
                 if (mouseClickEvent!=null) {
-                    //logger.info("Pick at x="+mouseClickEvent.x+" y="+mouseClickEvent.y);
+                    logger.info("Pick at x="+mouseClickEvent.x+" y="+mouseClickEvent.y);
                     int pickId=getPickIdAtXY(gl,mouseClickEvent.x, mouseClickEvent.y, true, false);
-                    //logger.info("Pick id at x="+mouseClickEvent.x+" y="+mouseClickEvent.y+" is="+pickId);
+                    logger.info("Pick id at x="+mouseClickEvent.x+" y="+mouseClickEvent.y+" is="+pickId);
                     // Lookup event
                     if (pickId>0) {
                         AB2Event pickEvent = AB2Controller.getController().getPickEvent(pickId);
                         if (pickEvent!=null) {
+                            logger.info("Adding pickEvent type="+pickEvent.getClass().getName()+" to AB2Controller addEvent()");
                             AB2Controller.getController().addEvent(pickEvent);
                         }
                     }

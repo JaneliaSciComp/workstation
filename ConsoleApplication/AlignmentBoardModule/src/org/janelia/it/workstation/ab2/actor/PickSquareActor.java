@@ -12,6 +12,8 @@ import org.janelia.it.workstation.ab2.event.AB2PickSquareColorChangeEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
+import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
+import org.janelia.it.workstation.ab2.shader.AB2Image2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.slf4j.Logger;
@@ -45,7 +47,7 @@ public class PickSquareActor extends GLAbstractActor {
 
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
-        if (shader instanceof AB2ActorShader) {
+        if (shader instanceof AB2Basic2DShader) {
 
             float[] vertexData = {
 
@@ -90,21 +92,17 @@ public class PickSquareActor extends GLAbstractActor {
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
 
-        if (shader instanceof AB2ActorShader) {
-            AB2ActorShader actorShader=(AB2ActorShader)shader;
-            actorShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
-            actorShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
-            actorShader.setTwoDimensional(gl, true);
-            actorShader.setTextureType(gl, AB2ActorShader.TEXTURE_TYPE_NONE);
-
+        if (shader instanceof AB2Basic2DShader) {
+            AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
+            basic2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
             Vector4 actorColor=renderer.getColorIdMap().get(actorId);
             if (actorColor!=null) {
-                actorShader.setColor0(gl, actorColor);
+                basic2DShader.setColor(gl, actorColor);
             }
 
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
-            pickShader.setMVP2d(gl, renderer.getVp3d());
+            pickShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
             pickShader.setPickId(gl, getPickIndex());
         }
 
@@ -129,7 +127,7 @@ public class PickSquareActor extends GLAbstractActor {
 
     @Override
     public void dispose(GL4 gl, GLShaderProgram shader) {
-        if (shader instanceof AB2ActorShader) {
+        if (shader instanceof AB2Basic2DShader) {
             gl.glDeleteVertexArrays(1, vertexArrayId);
             gl.glDeleteBuffers(1, vertexBufferId);
         }

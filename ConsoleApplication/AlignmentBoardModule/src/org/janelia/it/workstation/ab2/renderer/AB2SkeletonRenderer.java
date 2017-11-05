@@ -23,8 +23,12 @@ import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.model.AB2Image3D_RGBA8UI;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
+import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
+import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
+import org.janelia.it.workstation.ab2.shader.AB2Image2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
+import org.janelia.it.workstation.ab2.shader.AB2Text2DShader;
 import org.janelia.it.workstation.ab2.test.AB2SimulatedVolumeGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +52,10 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
 
     AB2SimulatedVolumeGenerator volumeGenerator;
 
-    GLShaderActionSequence drawShaderSequence;
+    GLShaderActionSequence basic3DShaderSequence;
+    GLShaderActionSequence basic2DShaderSequence;
+    GLShaderActionSequence image2DShaderSequence;
+    GLShaderActionSequence text2DShaderSequence;
     GLShaderActionSequence pickShaderSequence;
 
     //static final int BOUNDING_BOX_ID=1;
@@ -60,13 +67,22 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
     public AB2SkeletonRenderer() {
         super();
 
-        drawShaderSequence=new GLShaderActionSequence("DrawSequence");
+        basic3DShaderSequence=new GLShaderActionSequence("Basic3DSequence");
+        basic2DShaderSequence=new GLShaderActionSequence("Basic2DSequence");
+        image2DShaderSequence=new GLShaderActionSequence("Image2DSequence");
+        text2DShaderSequence=new GLShaderActionSequence( "Text2DSequence");
         pickShaderSequence=new GLShaderActionSequence("PickSequence");
 
-        drawShaderSequence.setShader(new AB2ActorShader());
+        basic3DShaderSequence.setShader(new AB2Basic3DShader());
+        basic2DShaderSequence.setShader(new AB2Basic2DShader());
+        image2DShaderSequence.setShader(new AB2Image2DShader());
+        text2DShaderSequence.setShader(new AB2Text2DShader());
         pickShaderSequence.setShader(new AB2PickShader());
 
-        addDrawShaderActionSequence(drawShaderSequence);
+        addDrawShaderActionSequence(basic3DShaderSequence);
+        addDrawShaderActionSequence(basic2DShaderSequence);
+        addDrawShaderActionSequence(image2DShaderSequence);
+        addDrawShaderActionSequence(text2DShaderSequence);
         addPickShaderActionSequence(pickShaderSequence);
     }
 
@@ -75,8 +91,7 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
 
         addBoundingBox();
         addOriginPointActor();
-//        addSkeletonActors();
-        addImage3DActor();
+        addSkeletonActors();
 
         addPickSquareActor();
         addImage2DActor();
@@ -94,13 +109,13 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
         originPointList.add(new Vector3(0.5f, 0.5f, 0.5f));
         PointSetActor pointSetActor = new PointSetActor(this, getNextActorIndex(), originPointList);
         colorIdMap.put(pointSetActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
-        drawShaderSequence.getActorSequence().add(pointSetActor);
+        basic3DShaderSequence.getActorSequence().add(pointSetActor);
     }
 
     private void addCameraFollowBoxActor() {
         cameraFollowBoxActor=new Camera3DFollowBoxActor(this, getNextActorIndex(), new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
         colorIdMap.put(cameraFollowBoxActor.getActorId(), new Vector4(0.7f, 0.0f, 0.0f, 1.0f));
-        drawShaderSequence.getActorSequence().add(cameraFollowBoxActor);
+        basic3DShaderSequence.getActorSequence().add(cameraFollowBoxActor);
     }
 
     private void addSkeletonActors() {
@@ -114,28 +129,20 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
             Vector4 color=volumeGenerator.getColorByLabelIndex(i);
 
             PointSetActor pointSetActor = new PointSetActor(this, getNextActorIndex(), skeletonPoints);
-            drawShaderSequence.getActorSequence().add(pointSetActor);
+            basic3DShaderSequence.getActorSequence().add(pointSetActor);
             colorIdMap.put(pointSetActor.getActorId(), color);
 
             LineSetActor lineSetActor = new LineSetActor(this, getNextActorIndex(), skeletonLines);
-            drawShaderSequence.getActorSequence().add(lineSetActor);
+            basic3DShaderSequence.getActorSequence().add(lineSetActor);
             colorIdMap.put(lineSetActor.getActorId(), color);
         }
-    }
-
-    private void addImage3DActor() {
-        AB2Image3D_RGBA8UI rawImage=volumeGenerator.getRawImage();
-        Vector3 v0=new Vector3(0f, 0f, 0f);
-        Vector3 v1=new Vector3(1f, 1f, 1f);
-        image3DActor=new Image3DActor(this, getNextActorIndex(), v0, v1, rawImage.getXDim(), rawImage.getYDim(), rawImage.getZDim(), rawImage.getData());
-        drawShaderSequence.getActorSequence().add(image3DActor);
     }
 
     private void addBoundingBox() {
         // Bounding Box
         boundingBoxActor=new BoundingBoxActor(this, getNextActorIndex(), new Vector3(0f, 0f, 0f), new Vector3(1.0f, 1.0f, 1.0f));
         colorIdMap.put(boundingBoxActor.getActorId(), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-        drawShaderSequence.getActorSequence().add(boundingBoxActor);
+        basic3DShaderSequence.getActorSequence().add(boundingBoxActor);
     }
 
     private void addPickSquareActor() {
@@ -143,7 +150,7 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
         pickSquareActor=new PickSquareActor(this, getNextActorIndex(), new Vector2(0.95f, 0.95f), new Vector2(1.0f, 1.0f),
                 new Vector4(1f, 0f, 0f, 1f), new Vector4(0f, 1f, 0f, 1f));
         colorIdMap.put(pickSquareActor.getActorId(), pickSquareActor.getColor0());
-        drawShaderSequence.getActorSequence().add(pickSquareActor);
+        basic2DShaderSequence.getActorSequence().add(pickSquareActor);
         pickShaderSequence.getActorSequence().add(pickSquareActor);
     }
 
@@ -168,7 +175,7 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
         Vector2 v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
         image2DActor=new Image2DActor(this, getNextActorIndex(), v0, v1, bufferedImage, 1.0f);
         colorIdMap.put(image2DActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
-        drawShaderSequence.getActorSequence().add(image2DActor);
+        image2DShaderSequence.getActorSequence().add(image2DActor);
         pickShaderSequence.getActorSequence().add(image2DActor);
     }
 
@@ -177,7 +184,7 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
         Vector2 t0=new Vector2(0.1f, 0.2f);
         textLabelActor=new TextLabelActor(this, getNextActorIndex(), TextLabelActor.UBUNTU_FONT_STRING, t0,
                 new Vector4(1f, 1f, 1f, 1f), new Vector4(0.4f, 0.1f, 0.1f, 0.5f));
-        drawShaderSequence.getActorSequence().add(textLabelActor);
+        text2DShaderSequence.getActorSequence().add(textLabelActor);
         pickShaderSequence.getActorSequence().add(textLabelActor);
     }
 

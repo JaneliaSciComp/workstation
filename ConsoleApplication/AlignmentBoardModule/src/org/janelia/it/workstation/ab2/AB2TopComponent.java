@@ -146,18 +146,18 @@ public final class AB2TopComponent extends TopComponent {
             ab2Controller.setGljPanel(ab2GLPanel);
             glWrapperPanel.setLayout(new BoxLayout(glWrapperPanel, BoxLayout.Y_AXIS));
             glWrapperPanel.add(ab2GLPanel);
-//            AB2SkeletonDomainObject skeletonDomainObject=new AB2SkeletonDomainObject();
-//            try {
-//                logger.info("Check3");
-//                skeletonDomainObject.createSkeletonsAndVolume(10);
-//                logger.info("Created skeleton domain object");
-//            } catch (Exception ex) {
-//                ex.printStackTrace();
-//                logger.error(ex.getMessage());
-//                return;
-//            }
-//            logger.info("Check4");
-//            ab2Controller.setDomainObject(skeletonDomainObject);
+            AB2SkeletonDomainObject skeletonDomainObject=new AB2SkeletonDomainObject();
+            try {
+                logger.info("Check3");
+                skeletonDomainObject.createSkeletonsAndVolume(10);
+                logger.info("Created skeleton domain object");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                logger.error(ex.getMessage());
+                return;
+            }
+            logger.info("Check4");
+            ab2Controller.setDomainObject(skeletonDomainObject);
         }
         logger.info("Check5");
         ab2Controller.start();
