@@ -74,9 +74,9 @@ public class AB2SampleRenderer extends AB23DRenderer {
     @Override
     public void init(GL4 gl) {
         logger.info("Starting init()");
-        addBoundingBox();
+        //addBoundingBox();
         //addOriginPointActor();
-        addCameraFollowBoxActor();
+        //addCameraFollowBoxActor();
         super.init(gl);
         logger.info("Finished init()");
         initialized=true;
