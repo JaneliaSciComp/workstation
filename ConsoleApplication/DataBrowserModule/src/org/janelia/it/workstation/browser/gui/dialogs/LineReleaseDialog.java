@@ -28,6 +28,8 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
@@ -176,6 +178,18 @@ public class LineReleaseDialog extends ModalDialog {
 
         autoReleaseCheckbox = new JCheckBox("Automated release");
         autoReleaseCheckbox.setEnabled(editable);
+        autoReleaseCheckbox.addChangeListener((ChangeEvent e) -> {
+            if (autoReleaseCheckbox.isSelected()) {
+                dateInput.setEnabled(true);
+                lagTimeInput.setEnabled(true);
+                dataSetPanel.setEditable(true);
+            }
+            else {
+                dateInput.setEnabled(false);
+                lagTimeInput.setEnabled(false);
+                dataSetPanel.setEditable(false);
+            }
+        });
         attrPanel.add(autoReleaseCheckbox, "gap para, span 2");
         
         final JLabel dateLabel = new JLabel("Target Release Date: ");
@@ -317,7 +331,10 @@ public class LineReleaseDialog extends ModalDialog {
                     }
                 } 
                 else {
-                    autoReleaseCheckbox.setSelected(true);
+                    autoReleaseCheckbox.setSelected(false);
+                    dateInput.setEnabled(false);
+                    lagTimeInput.setEnabled(false);
+                    dataSetPanel.setEditable(false);
                     nameInput.setText("");
                     dateInput.setDate(new Date());
                     lagTimeInput.setText("");
