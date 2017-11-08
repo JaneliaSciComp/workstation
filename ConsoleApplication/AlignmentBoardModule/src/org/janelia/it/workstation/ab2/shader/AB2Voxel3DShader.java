@@ -4,12 +4,14 @@ import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
-import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 
 public class AB2Voxel3DShader extends GLShaderProgram {
     @Override
     public String getVertexShaderResourceName() { return "AB2Voxel3DShader_vertex.glsl"; }
+
+    @Override
+    public String getGeometryShaderResourceName() { return "AB2Voxel3DShader_geometry.glsl"; }
 
     @Override
     public String getFragmentShaderResourceName() {

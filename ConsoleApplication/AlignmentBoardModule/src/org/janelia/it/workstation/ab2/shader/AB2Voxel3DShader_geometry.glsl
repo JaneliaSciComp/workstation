@@ -38,45 +38,45 @@ void main()
     colorg = colorv[0];
 
     // Back
-    gl_Position = v000p; vz = v000p.z; EmitVertex();
-    gl_Position = v100p; vz = v100p.z; EmitVertex();
-    gl_Position = v010p; vz = v010p.z; EmitVertex();
-    gl_Position = v110p; vz = v110p.z; EmitVertex();
+    gl_Position = v000p; EmitVertex();
+    gl_Position = v100p; EmitVertex();
+    gl_Position = v010p; EmitVertex();
+    gl_Position = v110p; EmitVertex();
     EndPrimitive();
 
     // Front
-    gl_Position = v001p; vz = v001p.z; EmitVertex();
-    gl_Position = v101p; vz = v101p.z; EmitVertex();
-    gl_Position = v011p; vz = v011p.z; EmitVertex();
-    gl_Position = v111p; vz = v111p.z; EmitVertex();
+    gl_Position = v001p; EmitVertex();
+    gl_Position = v101p; EmitVertex();
+    gl_Position = v011p; EmitVertex();
+    gl_Position = v111p; EmitVertex();
     EndPrimitive();
 
     // Top
-    gl_Position = v010p; vz = v010p.z; EmitVertex();
-    gl_Position = v110p; vz = v110p.z; EmitVertex();
-    gl_Position = v011p; vz = v011p.z; EmitVertex();
-    gl_Position = v111p; vz = v111p.z; EmitVertex();
+    gl_Position = v010p; EmitVertex();
+    gl_Position = v110p; EmitVertex();
+    gl_Position = v011p; EmitVertex();
+    gl_Position = v111p; EmitVertex();
     EndPrimitive();
 
     // Bottom
-    gl_Position = v000p; vz = v000p.z; EmitVertex();
-    gl_Position = v100p; vz = v100p.z; EmitVertex();
-    gl_Position = v001p; vz = v001p.z; EmitVertex();
-    gl_Position = v101p; vz = v101p.z; EmitVertex();
+    gl_Position = v000p; EmitVertex();
+    gl_Position = v100p; EmitVertex();
+    gl_Position = v001p; EmitVertex();
+    gl_Position = v101p; EmitVertex();
     EndPrimitive();
 
     // Left
-    gl_Position = v000p; vz = v000p.z; EmitVertex();
-    gl_Position = v001p; vz = v001p.z; EmitVertex();
-    gl_Position = v010p; vz = v010p.z; EmitVertex();
-    gl_Position = v011p; vz = v011p.z; EmitVertex();
+    gl_Position = v000p; EmitVertex();
+    gl_Position = v001p; EmitVertex();
+    gl_Position = v010p; EmitVertex();
+    gl_Position = v011p; EmitVertex();
     EndPrimitive();
 
     // Right
-    gl_Position = v100p; vz = v100p.z; EmitVertex();
-    gl_Position = v101p; vz = v101p.z; EmitVertex();
-    gl_Position = v110p; vz = v110p.z; EmitVertex();
-    gl_Position = v111p; vz = v111p.z; EmitVertex();
+    gl_Position = v100p; EmitVertex();
+    gl_Position = v101p; EmitVertex();
+    gl_Position = v110p; EmitVertex();
+    gl_Position = v111p; EmitVertex();
     EndPrimitive();
 
 }

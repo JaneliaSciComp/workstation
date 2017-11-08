@@ -4,7 +4,9 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 import javax.media.opengl.GL4;
 
@@ -16,6 +18,7 @@ import org.janelia.it.workstation.ab2.actor.BoundingBoxActor;
 import org.janelia.it.workstation.ab2.actor.Camera3DFollowBoxActor;
 import org.janelia.it.workstation.ab2.actor.Image3DActor;
 import org.janelia.it.workstation.ab2.actor.PointSetActor;
+import org.janelia.it.workstation.ab2.actor.Voxel3DActor;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
@@ -24,6 +27,7 @@ import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
 import org.janelia.it.workstation.ab2.shader.AB2Volume3DShader;
+import org.janelia.it.workstation.ab2.shader.AB2Voxel3DShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +45,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
 
     private GLShaderActionSequence basic3DShaderSequence;
     private GLShaderActionSequence volume3DShaderSequence;
+    private GLShaderActionSequence voxel3DShaderSequence;
 
     private GLShaderActionSequence pickShaderSequence;
 
@@ -55,18 +60,21 @@ public class AB2SampleRenderer extends AB23DRenderer {
 
         basic3DShaderSequence=new GLShaderActionSequence( "Basic3D");
         volume3DShaderSequence=new GLShaderActionSequence("Volume3D");
+        voxel3DShaderSequence=new GLShaderActionSequence( "Voxel3D");
         pickShaderSequence=new GLShaderActionSequence("PickSequence");
 
 //        drawShaderSequence.setShader(new AB2ActorShader());
 
         basic3DShaderSequence.setShader(new AB2Basic3DShader());
         volume3DShaderSequence.setShader(new AB2Volume3DShader());
+        voxel3DShaderSequence.setShader(new AB2Voxel3DShader());
         pickShaderSequence.setShader(new AB2PickShader());
 
 //        addDrawShaderActionSequence(drawShaderSequence);
 
         addDrawShaderActionSequence(basic3DShaderSequence);
         addDrawShaderActionSequence(volume3DShaderSequence);
+        addDrawShaderActionSequence(voxel3DShaderSequence);
 
         addPickShaderActionSequence(pickShaderSequence);
     }
@@ -74,17 +82,46 @@ public class AB2SampleRenderer extends AB23DRenderer {
     @Override
     public void init(GL4 gl) {
         logger.info("Starting init()");
-        //addBoundingBox();
-        //addOriginPointActor();
-        //addCameraFollowBoxActor();
+        addBoundingBox();
+        addOriginPointActor();
+        addCameraFollowBoxActor();
+        addVoxel3DActorTest();
         super.init(gl);
         logger.info("Finished init()");
         initialized=true;
     }
 
+    public void addVoxel3DActorTest() {
+        List<Vector3> vertexList=new ArrayList<>();
+        List<Vector4> colorList=new ArrayList<>();
+
+        int dimX=100;
+        int dimY=100;
+        int dimZ=100;
+
+        //Random r=new Random(new Date().getTime());
+
+        vertexList.add(new Vector3(0.40f, 0.40f, 0.40f));
+        vertexList.add(new Vector3(0.45f, 0.45f, 0.45f));
+        vertexList.add(new Vector3(0.50f, 0.50f, 0.50f));
+        vertexList.add(new Vector3(0.55f, 0.55f, 0.55f));
+
+        colorList.add(new Vector4(0.8f, 0.2f, 0.1f, 1.0f));
+        colorList.add(new Vector4(0.2f, 0.8f, 0.2f, 1.0f));
+        colorList.add(new Vector4(0.1f, 0.3f, 0.8f, 1.0f));
+        colorList.add(new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
+
+        logger.info("Creating voxel3DActor");
+        Voxel3DActor voxel3DActor = new Voxel3DActor(this, getNextActorIndex(), vertexList, colorList, dimX, dimY, dimZ);
+
+        logger.info("Adding voxel3DActor to shader sequence");
+        voxel3DShaderSequence.getActorSequence().add(voxel3DActor);
+    }
+
     public void clearActors() {
         clearActionSequenceActors(basic3DShaderSequence);
         clearActionSequenceActors(volume3DShaderSequence);
+        clearActionSequenceActors(voxel3DShaderSequence);
         clearActionSequenceActors(pickShaderSequence);
     }
 

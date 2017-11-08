@@ -11,6 +11,7 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GL4;
 import javax.media.opengl.glu.GLU;
 
+import org.janelia.it.workstation.ab2.shader.AB2Voxel3DShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,16 +55,30 @@ public abstract class GLShaderProgram {
 
         logger.info("init() for shader classname="+this.getClass().getName());
 
+        System.out.println("GLShaderProgram init() classname="+this.getClass().getName());
+        System.out.flush();
+
+//        if (this.getClass().getName().equals(AB2Voxel3DShader.class.getName())) {
+//            logger.info("init() returning for AB2Voxel3DShader");
+//            return;
+//        }
+
         // Create shader program
         if ( getVertexShaderResourceName() != null ) {
             vertexShader = gl.glCreateShader(GL4.GL_VERTEX_SHADER);
             logger.info("Loading vertex shader");
             loadOneShader(vertexShader, getVertexShaderResourceName(), gl);
 
+            System.out.println("GLShaderProgram init() classname="+this.getClass().getName()+" POST-VERTEX LOAD");
+            System.out.flush();
+
             if (getGeometryShaderResourceName()!=null) {
                 geometryShader = gl.glCreateShader(GL4.GL_GEOMETRY_SHADER);
                 logger.info("Loading geometry shader");
                 loadOneShader(geometryShader, getGeometryShaderResourceName(), gl);
+
+                System.out.println("GLShaderProgram init() classname="+this.getClass().getName()+" POST-GEOMETRY LOAD");
+                System.out.flush();
             }
 
             // System.out.println("loaded vertex shader");
@@ -71,18 +86,33 @@ public abstract class GLShaderProgram {
             logger.info("Loading fragment shader");
             loadOneShader(fragmentShader, getFragmentShaderResourceName(), gl);
 
+            System.out.println("GLShaderProgram init() classname="+this.getClass().getName()+" POST-FRAGMENT LOAD");
+            System.out.flush();
+
             // System.out.println("loaded fragment shader");
             if (shaderProgram == 0)
                 shaderProgram = gl.glCreateProgram();
             logger.info("Attaching vertex shader");
             gl.glAttachShader(shaderProgram, vertexShader);
+
+            System.out.println("GLShaderProgram init() classname="+this.getClass().getName()+" POST-VERTEX");
+            System.out.flush();
+
             if (geometryShader!=0) {
                 logger.info("Attaching geometry shader");
                 gl.glAttachShader(shaderProgram, geometryShader);
             }
+
+            System.out.println("GLShaderProgram init() classname="+this.getClass().getName()+" POST-GEOMETRY");
+            System.out.flush();
+
             logger.info("Attaching fragment shader");
             gl.glAttachShader(shaderProgram, fragmentShader);
             logger.info("Linking program");
+
+            System.out.println("GLShaderProgram init() classname="+this.getClass().getName()+" LINKING");
+            System.out.flush();
+
             gl.glLinkProgram(shaderProgram);
             // NOTE: validation here will erase the error log from linking - not helpful!
 //            logger.info("Validating program");
@@ -122,6 +152,9 @@ public abstract class GLShaderProgram {
 //            logger.info("MAX_SHADER_STORAGE_BUFFER_BINDINGS="+lb.get(0));
         }
         logger.info("init() done");
+
+        System.out.println("GLShaderProgram init() classname="+this.getClass().getName()+" DONE");
+        System.out.flush();
     }
 
     public void display(GL4 gl) {
