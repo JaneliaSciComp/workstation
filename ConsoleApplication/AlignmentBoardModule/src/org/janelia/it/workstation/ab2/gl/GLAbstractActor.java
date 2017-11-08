@@ -97,6 +97,14 @@ public abstract class GLAbstractActor {
         return byteBuffer.order(ByteOrder.nativeOrder()).asIntBuffer();
     }
 
+    public static IntBuffer createGLIntBuffer(int[] intArray) {
+        IntBuffer intBuffer = createGLIntBuffer(intArray.length);
+        for (int i=0;i<intArray.length;i++) {
+            intBuffer.put(i, intArray[i]);
+        }
+        return intBuffer;
+    }
+
     public static ShortBuffer createGLShortBuffer(int capacity) {
         int shortBytes=Short.SIZE/Byte.SIZE;
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(capacity*shortBytes);

@@ -34,7 +34,8 @@ public class Voxel3DActor extends GLAbstractActor {
 //    IntBuffer colorArrayId=IntBuffer.allocate(1);
     IntBuffer colorBufferId=IntBuffer.allocate(1);
 
-    ShortBuffer vertexFb;
+    //ShortBuffer vertexFb;
+    IntBuffer vertexFb;
     ByteBuffer colorFb;
 
 
@@ -67,22 +68,27 @@ public class Voxel3DActor extends GLAbstractActor {
             AB2Voxel3DShader voxel3DShader = (AB2Voxel3DShader) shader;
 
             // 10 bytes : RGBA @ 8-bit = 4, + XYZ @ 16-bit = 6
-            short[] xyzData = new short[voxels.size() * 3];
+            int[] xyzData = new int[voxels.size() * 3];
             byte[] colorData = new byte[colors.size() * 4];
 
             for (int i = 0; i < voxels.size(); i++) {
                 Vector3 v = voxels.get(i);
                 Vector4 c = colors.get(i);
-                xyzData[i*3]     = (short)(v.getX()*dimX);
-                xyzData[i*3+1]   = (short)(v.getX()*dimY);
-                xyzData[i*3+2]   = (short)(v.getX()*dimZ);
-                colorData[i*4]   = (byte)(c.get(0)*255);
-                colorData[i*4+1] = (byte)(c.get(1)*255);
-                colorData[i*4+2] = (byte)(c.get(2)*255);
-                colorData[i*4+3] = (byte)(c.get(3)*255);
+                xyzData[i*3]     = (int)(v.getX()*dimX);
+                xyzData[i*3+1]   = (int)(v.getY()*dimY);
+                xyzData[i*3+2]   = (int)(v.getZ()*dimZ);
+//                colorData[i*4]   = (byte)(c.get(0)*255);
+//                colorData[i*4+1] = (byte)(c.get(1)*255);
+//                colorData[i*4+2] = (byte)(c.get(2)*255);
+//                colorData[i*4+3] = (byte)(c.get(3)*255);
+                colorData[i*4]   = 120;
+                colorData[i*4+1] = 0;
+                colorData[i*4+2] = 0;
+                colorData[i*4+3] = -1;
             }
 
-            vertexFb = GLAbstractActor.createGLShortBuffer(xyzData);
+            //vertexFb = GLAbstractActor.createGLShortBuffer(xyzData);
+            vertexFb = GLAbstractActor.createGLIntBuffer(xyzData);
             colorFb = GLAbstractActor.createGLByteBuffer(colorData);
 
             // Vertex VBO
@@ -99,7 +105,7 @@ public class Voxel3DActor extends GLAbstractActor {
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
             checkGlError(gl, "i4 glBindBuffer error");
 
-            gl.glBufferData(GL4.GL_ARRAY_BUFFER, vertexFb.capacity() * 2, vertexFb, GL4.GL_STATIC_DRAW);
+            gl.glBufferData(GL4.GL_ARRAY_BUFFER, vertexFb.capacity() * 4, vertexFb, GL4.GL_STATIC_DRAW);
             checkGlError(gl, "i5 glBufferData error");
 
   //          gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
@@ -174,7 +180,7 @@ public class Voxel3DActor extends GLAbstractActor {
             System.out.println("Voxel3DActor Check3");
             System.out.flush();
 
-            gl.glVertexAttribPointer(0, 3, GL4.GL_R16, false, 0, 0);
+            gl.glVertexAttribPointer(0, 3, GL4.GL_INT, false, 0, 0);
             checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
 
             System.out.println("Voxel3DActor Check4");
@@ -201,10 +207,11 @@ public class Voxel3DActor extends GLAbstractActor {
             gl.glEnableVertexAttribArray(1);
             checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
 
-            System.out.println("Voxel3DActor Check8");
+            int count=vertexFb.capacity()/3;
+            System.out.println("Voxel3DActor Check8 - count="+count);
             System.out.flush();
 
-            gl.glDrawArrays(GL4.GL_POINTS, 0, vertexFb.capacity() / 3);
+            gl.glDrawArrays(GL4.GL_POINTS, 0, count);
             checkGlError(gl, "d7 glDrawArrays() error");
 
             System.out.println("Voxel3DActor Check9");
