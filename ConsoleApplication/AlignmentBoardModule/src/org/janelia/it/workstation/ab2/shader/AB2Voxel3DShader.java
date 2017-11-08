@@ -24,5 +24,10 @@ public class AB2Voxel3DShader extends GLShaderProgram {
         setUniform4v(gl, "color0", 1, color.toArray());
         checkGlError(gl, "AB2Voxel3DShader setColor() error");
     }
+
+    public void setDimXYZ(GL4 gl, int x, int y, int z) {
+        setUniform3v(gl, "dimXYZ", 1, new float[] { x*1f, y*1f, z*1f });
+        checkGlError(gl, "AB2Voxel3DShader setDimXYZ() error");
+    }
 }
 

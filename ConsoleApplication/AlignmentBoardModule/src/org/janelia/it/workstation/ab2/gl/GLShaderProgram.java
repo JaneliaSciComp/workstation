@@ -216,6 +216,15 @@ public abstract class GLShaderProgram {
         return true;
     }
 
+    public boolean setUniform3i(GL4 gl, String varName, int x, int y, int z)
+    {
+        int uniformLoc = gl.glGetUniformLocation( shaderProgram, varName );
+        if ( uniformLoc < 0 )
+            return false;
+        gl.glUniform3i( uniformLoc, x, y, z);
+        return true;
+    }
+
     public boolean setUniform3v(GL4 gl, String varName, int vecCount, float[] data)
     {
         int uniformLoc = gl.glGetUniformLocation( shaderProgram, varName );

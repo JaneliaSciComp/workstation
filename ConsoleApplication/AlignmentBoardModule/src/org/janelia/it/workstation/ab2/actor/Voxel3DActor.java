@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.ab2.actor;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.List;
 
 import javax.media.opengl.GL4;
@@ -29,7 +31,12 @@ public class Voxel3DActor extends GLAbstractActor {
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
 
-    FloatBuffer pointVertexFb;
+//    IntBuffer colorArrayId=IntBuffer.allocate(1);
+    IntBuffer colorBufferId=IntBuffer.allocate(1);
+
+    ShortBuffer vertexFb;
+    ByteBuffer colorFb;
+
 
     public Voxel3DActor(AB23DRenderer renderer, int actorId, List<Vector3> voxels, List<Vector4> colors,
                         int dimX, int dimY, int dimZ) {
@@ -57,19 +64,25 @@ public class Voxel3DActor extends GLAbstractActor {
             AB2Voxel3DShader voxel3DShader = (AB2Voxel3DShader) shader;
 
             // 10 bytes : RGBA @ 8-bit = 4, + XYZ @ 16-bit = 6
-            byte[] bufferData = new byte[voxels.size() * 10];
+            short[] xyzData = new short[voxels.size() * 3];
+            byte[] colorData = new byte[colors.size() * 4];
 
             for (int i = 0; i < voxels.size(); i++) {
                 Vector3 v = voxels.get(i);
                 Vector4 c = colors.get(i);
-
-
-//                pointData[i * 3] = v.getX();
-//                pointData[i * 3 + 1] = v.getY();
-//                pointData[i * 3 + 2] = v.getZ();
+                xyzData[i*3]     = (short)(v.getX()*dimX);
+                xyzData[i*3+1]   = (short)(v.getX()*dimY);
+                xyzData[i*3+2]   = (short)(v.getX()*dimZ);
+                colorData[i*4]   = (byte)(c.get(0)*255);
+                colorData[i*4+1] = (byte)(c.get(1)*255);
+                colorData[i*4+2] = (byte)(c.get(2)*255);
+                colorData[i*4+3] = (byte)(c.get(3)*255);
             }
 
-            pointVertexFb = GLAbstractActor.createGLFloatBuffer(pointData);
+            vertexFb = GLAbstractActor.createGLShortBuffer(xyzData);
+            colorFb = GLAbstractActor.createGLByteBuffer(colorData);
+
+            // Vertex VBO
 
             gl.glGenVertexArrays(1, vertexArrayId);
             checkGlError(gl, "i1 glGenVertexArrays error");
@@ -83,7 +96,26 @@ public class Voxel3DActor extends GLAbstractActor {
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
             checkGlError(gl, "i4 glBindBuffer error");
 
-            gl.glBufferData(GL4.GL_ARRAY_BUFFER, pointVertexFb.capacity() * 4, pointVertexFb, GL4.GL_STATIC_DRAW);
+            gl.glBufferData(GL4.GL_ARRAY_BUFFER, vertexFb.capacity() * 2, vertexFb, GL4.GL_STATIC_DRAW);
+            checkGlError(gl, "i5 glBufferData error");
+
+  //          gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+
+            // Color VBO
+
+//            gl.glGenVertexArrays(1, colorArrayId);
+//            checkGlError(gl, "i1 glGenVertexArrays error");
+
+//            gl.glBindVertexArray(colorArrayId.get(0));
+//            checkGlError(gl, "i2 glBindVertexArray error");
+
+            gl.glGenBuffers(1, colorBufferId);
+            checkGlError(gl, "i3 glGenBuffers() error");
+
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, colorBufferId.get(0));
+            checkGlError(gl, "i4 glBindBuffer error");
+
+            gl.glBufferData(GL4.GL_ARRAY_BUFFER, colorFb.capacity(), colorFb, GL4.GL_STATIC_DRAW);
             checkGlError(gl, "i5 glBufferData error");
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
@@ -106,14 +138,12 @@ public class Voxel3DActor extends GLAbstractActor {
                 return;
             }
 
-            AB2Basic3DShader basic3DShader = (AB2Basic3DShader) shader;
-            basic3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()));
+            AB2Voxel3DShader voxel3DShader = (AB2Voxel3DShader) shader;
+            voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()));
             Vector4 actorColor = renderer.getColorIdMap().get(actorId);
             if (actorColor != null) {
-                basic3DShader.setColor(gl, actorColor);
+                voxel3DShader.setColor(gl, actorColor);
             }
-
-            gl.glPointSize(3.0f);
 
             gl.glBindVertexArray(vertexArrayId.get(0));
             checkGlError(gl, "d1 glBindVertexArray() error");
@@ -121,13 +151,22 @@ public class Voxel3DActor extends GLAbstractActor {
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
             checkGlError(gl, "d2 glBindBuffer error");
 
-            gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
+            gl.glVertexAttribPointer(0, 3, GL4.GL_R16, false, 0, 0);
             checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
 
             gl.glEnableVertexAttribArray(0);
             checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
 
-            gl.glDrawArrays(GL4.GL_POINTS, 0, pointVertexFb.capacity() / 3);
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, colorBufferId.get(0));
+            checkGlError(gl, "d2 glBindBuffer error");
+
+            gl.glVertexAttribPointer(1, 4, GL4.GL_UNSIGNED_BYTE, false, 0, 0);
+            checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
+
+            gl.glEnableVertexAttribArray(1);
+            checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
+
+            gl.glDrawArrays(GL4.GL_POINTS, 0, vertexFb.capacity() / 3);
             checkGlError(gl, "d7 glDrawArrays() error");
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
@@ -140,12 +179,11 @@ public class Voxel3DActor extends GLAbstractActor {
 
     @Override
     public void dispose(GL4 gl, GLShaderProgram shader) {
-        if (shader instanceof AB2Basic3DShader) {
+        if (shader instanceof AB2Voxel3DShader) {
             gl.glDeleteVertexArrays(1, vertexArrayId);
             gl.glDeleteBuffers(1, vertexBufferId);
+            gl.glDeleteBuffers(1, colorBufferId);
         }
     }
-
-
 
 }

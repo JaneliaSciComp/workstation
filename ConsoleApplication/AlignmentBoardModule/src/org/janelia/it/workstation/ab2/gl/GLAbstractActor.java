@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 
 import javax.media.opengl.GL4;
 import javax.media.opengl.glu.GLU;
@@ -96,18 +97,37 @@ public abstract class GLAbstractActor {
         return byteBuffer.order(ByteOrder.nativeOrder()).asIntBuffer();
     }
 
+    public static ShortBuffer createGLShortBuffer(int capacity) {
+        int shortBytes=Short.SIZE/Byte.SIZE;
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(capacity*shortBytes);
+        return byteBuffer.order(ByteOrder.nativeOrder()).asShortBuffer();
+    }
+
+    public static ShortBuffer createGLShortBuffer(short[] shortArray) {
+        ShortBuffer shortBuffer = createGLShortBuffer(shortArray.length);
+        for (int i=0;i<shortArray.length;i++) {
+            shortBuffer.put(i, shortArray[i]);
+        }
+        return shortBuffer;
+    }
+
+    public static ByteBuffer createGLByteBuffer(int capacity) {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(capacity);
+        return byteBuffer.order(ByteOrder.nativeOrder());
+    }
+
+    public static ByteBuffer createGLByteBuffer(byte[] byteArray) {
+        ByteBuffer byteBuffer = createGLByteBuffer(byteArray.length);
+        for (int i=0;i<byteArray.length;i++) {
+            byteBuffer.put(i, byteArray[i]);
+        }
+        return byteBuffer.order(ByteOrder.nativeOrder());
+    }
+
     public static FloatBuffer createGLFloatBuffer(int capacity) {
         int floatBytes=Float.SIZE/Byte.SIZE;
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(capacity*floatBytes);
         return byteBuffer.order(ByteOrder.nativeOrder()).asFloatBuffer();
-    }
-
-    public static IntBuffer createGLIntBuffer(int[] intArray) {
-        IntBuffer intBuffer=createGLIntBuffer(intArray.length);
-        for (int i=0;i<intArray.length;i++) {
-            intBuffer.put(i, intArray[i]);
-        }
-        return intBuffer;
     }
 
     public static FloatBuffer createGLFloatBuffer(float[] floatArray) {
