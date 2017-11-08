@@ -140,10 +140,15 @@ public class Voxel3DActor extends GLAbstractActor {
 
             AB2Voxel3DShader voxel3DShader = (AB2Voxel3DShader) shader;
             voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()));
-            Vector4 actorColor = renderer.getColorIdMap().get(actorId);
-            if (actorColor != null) {
-                voxel3DShader.setColor(gl, actorColor);
-            }
+            voxel3DShader.setDimXYZ(gl, dimX, dimY, dimZ);
+            int dimMax=getMaxDim();
+            float voxelUnitSize=1f/(1f*dimMax);
+            voxel3DShader.setVoxelSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
+
+//            Vector4 actorColor = renderer.getColorIdMap().get(actorId);
+//            if (actorColor != null) {
+//                voxel3DShader.setColor(gl, actorColor);
+//            }
 
             gl.glBindVertexArray(vertexArrayId.get(0));
             checkGlError(gl, "d1 glBindVertexArray() error");
@@ -184,6 +189,17 @@ public class Voxel3DActor extends GLAbstractActor {
             gl.glDeleteBuffers(1, vertexBufferId);
             gl.glDeleteBuffers(1, colorBufferId);
         }
+    }
+
+    public int getMaxDim() {
+        int maxDim=dimX;
+        if (dimY>maxDim) {
+            maxDim=dimY;
+        }
+        if (dimZ>maxDim) {
+            maxDim=dimZ;
+        }
+        return maxDim;
     }
 
 }

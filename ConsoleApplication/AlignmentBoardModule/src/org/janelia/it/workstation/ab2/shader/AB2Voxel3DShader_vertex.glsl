@@ -5,12 +5,12 @@ layout (location=1) in ivec4 ic;
 
 uniform vec3 dimXYZ;
 
-out vec4 colorf;
+out vec4 colorv;
 
 void main()
 {
     vec4 fc=vec4(ic*1f);
-    colorf=vec4(fc/255f);
+    colorv=vec4(fc/255f);
 
     gl_Position = vec4( (iv.x*1f)/dimXYZ.x, (iv.y*1f)/dimXYZ.y, (iv.z*1f)/dimXYZ.z, 1.0);
 }
