@@ -58,6 +58,8 @@ public class Voxel3DActor extends GLAbstractActor {
             System.out.println("Voxel3DActor init() start");
             System.out.flush();
 
+            int maxDim=getMaxDim();
+
             if (voxels.size()!=colors.size()) {
                 logger.error("voxel and color array must be same size");
                 return;
@@ -72,9 +74,9 @@ public class Voxel3DActor extends GLAbstractActor {
             for (int i = 0; i < voxels.size(); i++) {
                 Vector3 v = voxels.get(i);
                 Vector4 c = colors.get(i);
-                xyzData[i*3]     = (short)(v.getX()*dimX);
-                xyzData[i*3+1]   = (short)(v.getY()*dimY);
-                xyzData[i*3+2]   = (short)(v.getZ()*dimZ);
+                xyzData[i*3]     = (short)( (v.getX()-0.5f)*dimX + maxDim/2f);
+                xyzData[i*3+1]   = (short)( (v.getY()-0.5f)*dimY + maxDim/2f);
+                xyzData[i*3+2]   = (short)( (v.getZ()-0.5f)*dimZ + maxDim/2f);
                 colorData[i*4]   = (byte)(c.get(0)*255);
                 colorData[i*4+1] = (byte)(c.get(1)*255);
                 colorData[i*4+2] = (byte)(c.get(2)*255);
