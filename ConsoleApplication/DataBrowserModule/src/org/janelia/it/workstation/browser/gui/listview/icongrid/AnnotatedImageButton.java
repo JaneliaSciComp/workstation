@@ -76,7 +76,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         public void dragGestureRecognized(DragGestureEvent dge) {
             log.info("dragGestureRecognized: {}",dge);
             if (!dragEnabled) {
-                throw new IllegalStateException("Dragging is not enabled");
+                return;
             }
             InputEvent inputevent = dge.getTriggerEvent();
             boolean keyDown = false;
