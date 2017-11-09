@@ -372,6 +372,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     public void objectDeleted(DomainObjectRemoveEvent event) {
         if (event.getDomainObject() instanceof Ontology) {
             Ontology deletedOntology = (Ontology)event.getDomainObject();
+            log.info("Removing ontology '{}' from view.", deletedOntology);
             ontologies.remove(deletedOntology);
             if (ontologyNode!=null && ontologyNode.getId().equals(deletedOntology.getId())) {
                 showOntology(null, false);
@@ -383,7 +384,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     public void objectCreated(DomainObjectCreateEvent event) {
         final DomainObject domainObject = event.getDomainObject();
         if (domainObject instanceof Ontology) {
-            log.info("Refreshing because current ontology '{}' has changed.", domainObject.getName());
+            log.info("Refreshing because a new ontology '{}' was created.", domainObject.getName());
             refresh(false, true, new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
@@ -398,13 +399,14 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     public void objectChanged(DomainObjectChangeEvent event) {
         final DomainObject domainObject = event.getDomainObject();
         if (ontologyNode != null && ontologyNode.getId().equals(domainObject.getId())) {
-            // Current ontology has been invalidated
-            log.info("Refreshing because current ontology '{}' has been invalidated.", domainObject.getName());
+            // Current ontology has changed
+            log.info("Refreshing because current ontology '{}' has changed.", domainObject.getName());
             refresh(false, true, null);
         }
     }
     
     private void selectOntology(Long ontologyId, boolean expandAll) {
+        log.debug("selectOntology({}, expandAll={})", ontologyId, expandAll);
         if (ontologyId==null) {
             showOntology(null, expandAll);
         }
@@ -415,13 +417,13 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     return;
                 }
             }
-            log.warn("Ontology not found: {}",ontologyId);
+            log.warn("Selected ontology not found: {}",ontologyId);
             showNothing();
         }
     }
     
     private void showOntology(Ontology ontology, final boolean expandAll) {
-        log.trace("showOntology({})",ontology);
+        log.debug("showOntology({})", ontology);
         selectRoot(ontology);
         if (ontology==null) {
             showNothing();
@@ -439,6 +441,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     }
 
     private void selectRoot(Ontology ontology) {
+        log.debug("selectRoot({})", ontology);
         if (ontology==null) {
             this.ontologyNode = null;
             mgr.setRootContext(new EmptyNode("No ontology selected"));

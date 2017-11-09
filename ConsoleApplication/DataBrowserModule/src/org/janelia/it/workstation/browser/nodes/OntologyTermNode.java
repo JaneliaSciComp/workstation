@@ -62,7 +62,6 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     
     private final static Logger log = LoggerFactory.getLogger(OntologyTermNode.class);
 
-    private final OntologyChildFactory parentChildFactory;
     private final OntologyChildFactory childFactory;
     
     public OntologyTermNode(OntologyChildFactory parentChildFactory, Ontology ontology, OntologyTerm ontologyTerm) {
@@ -71,42 +70,46 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     
     private OntologyTermNode(OntologyChildFactory parentChildFactory, OntologyChildFactory childFactory, final Ontology ontology, OntologyTerm ontologyTerm) {
         super(parentChildFactory, childFactory.hasNodeChildren()?Children.create(childFactory, false):Children.LEAF, ontologyTerm);
-        this.parentChildFactory = parentChildFactory;
+        
+        log.trace("Creating node@{} -> {}",System.identityHashCode(this),getDisplayName());
+
         this.childFactory = childFactory;
         getLookupContents().add(ontology);
-        getLookupContents().add(new Index.Support() {
-
-            @Override
-            public Node[] getNodes() {
-                return getChildren().getNodes();
-            }
-
-            @Override
-            public int getNodesCount() {
-                return getNodes().length;
-            }
-
-            @Override
-            public void reorder(final int[] order) {
-                SimpleWorker worker = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        DomainModel model = DomainMgr.getDomainMgr().getModel();
-                        OntologyTerm parentTerm = getOntologyTerm();
-                        model.reorderOntologyTerms(ontology.getId(), parentTerm.getId(), order);
-                    }
-                    @Override
-                    protected void hadSuccess() {
-                        // Event model will refresh UI
-                    }
-                    @Override
-                    protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
-                    }
-                };
-                worker.execute();
-            }
-        });
+        if (ontologyTerm.getNumChildren()>0) {
+            getLookupContents().add(new Index.Support() {
+    
+                @Override
+                public Node[] getNodes() {
+                    return getChildren().getNodes();
+                }
+    
+                @Override
+                public int getNodesCount() {
+                    return getNodes().length;
+                }
+    
+                @Override
+                public void reorder(final int[] order) {
+                    SimpleWorker worker = new SimpleWorker() {
+                        @Override
+                        protected void doStuff() throws Exception {
+                            DomainModel model = DomainMgr.getDomainMgr().getModel();
+                            OntologyTerm parentTerm = getOntologyTerm();
+                            model.reorderOntologyTerms(ontology.getId(), parentTerm.getId(), order);
+                        }
+                        @Override
+                        protected void hadSuccess() {
+                            // Event model will refresh UI
+                        }
+                        @Override
+                        protected void hadError(Throwable error) {
+                            ConsoleApp.handleException(error);
+                        }
+                    };
+                    NodeUtils.executeNodeOperation(worker);
+                }
+            });
+        }
     }
     
     protected OntologyChildFactory getChildFactory() {

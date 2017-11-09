@@ -53,10 +53,6 @@ import org.slf4j.LoggerFactory;
 public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
     
     private final static Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
-
-    // We use a single threaded executor so that all node operations are serialized. Re-ordering operations 
-    // in particular must be done sequentially, for obvious reasons.
-    private static final Executor nodeOperationExecutor = Executors.newSingleThreadExecutor();
     
     private TreeNodeChildFactory childFactory;
     
@@ -72,14 +68,17 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
         this.childFactory = childFactory;
         if (treeNode.getNumChildren()>0) {
             getLookupContents().add(new Index.Support() {
+                
                 @Override
                 public Node[] getNodes() {
                     return getChildren().getNodes();
                 }
+                
                 @Override
                 public int getNodesCount() {
                     return getNodes().length;
                 }
+                
                 @Override
                 public void reorder(final int[] order) {
                     
@@ -152,7 +151,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                         }
                     };
                     
-                    nodeOperationExecutor.execute(worker);
+                    NodeUtils.executeNodeOperation(worker);
                 }
             });
         }
