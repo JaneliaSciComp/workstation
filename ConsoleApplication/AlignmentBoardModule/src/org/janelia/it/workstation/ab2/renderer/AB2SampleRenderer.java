@@ -82,9 +82,9 @@ public class AB2SampleRenderer extends AB23DRenderer {
     @Override
     public void init(GL4 gl) {
         logger.info("Starting init()");
-        addBoundingBox();
-        addOriginPointActor();
-        addCameraFollowBoxActor();
+        //addBoundingBox();
+        //addOriginPointActor();
+        //addCameraFollowBoxActor();
         addVoxel3DActorTest();
         super.init(gl);
         logger.info("Finished init()");
@@ -95,21 +95,16 @@ public class AB2SampleRenderer extends AB23DRenderer {
         List<Vector3> vertexList=new ArrayList<>();
         List<Vector4> colorList=new ArrayList<>();
 
-        int dimX=100;
-        int dimY=100;
+        int dimX=1000;
+        int dimY=700;
         int dimZ=100;
 
-        //Random r=new Random(new Date().getTime());
+        Random r=new Random(new Date().getTime());
 
-        vertexList.add(new Vector3(0.40f, 0.40f, 0.40f));
-        vertexList.add(new Vector3(0.45f, 0.45f, 0.45f));
-        vertexList.add(new Vector3(0.50f, 0.50f, 0.50f));
-        vertexList.add(new Vector3(0.55f, 0.55f, 0.55f));
-
-        colorList.add(new Vector4(0.8f, 0.2f, 0.1f, 1.0f));
-        colorList.add(new Vector4(0.2f, 0.8f, 0.2f, 1.0f));
-        colorList.add(new Vector4(0.1f, 0.3f, 0.8f, 1.0f));
-        colorList.add(new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
+        for (int i=0;i<10000;i++) {
+            vertexList.add(new Vector3(r.nextFloat(), r.nextFloat(), r.nextFloat()));
+            colorList.add(new Vector4(r.nextFloat(), r.nextFloat(), r.nextFloat(), r.nextFloat()));
+        }
 
         logger.info("Creating voxel3DActor");
         Voxel3DActor voxel3DActor = new Voxel3DActor(this, getNextActorIndex(), vertexList, colorList, dimX, dimY, dimZ);

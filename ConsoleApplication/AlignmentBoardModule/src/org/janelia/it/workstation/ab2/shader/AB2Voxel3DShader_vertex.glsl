@@ -1,22 +1,15 @@
 #version 450
 
-layout (location=0) in ivec3 iv;
-layout (location=1) in ivec4 ic;
+layout (location=0) in vec3 fv;
+layout (location=1) in vec4 fc;
 
 uniform vec3 dimXYZ;
+uniform vec3 voxelSize;
 
 out vec4 colorv;
 
 void main()
 {
-    vec4 fc=vec4(ic*1f);
-    //colorv=vec4(fc/255f);
-    if (dimXYZ.x>90.0 && dimXYZ.x<110.0) {
-       colorv=vec4(0.0, 1.0, 0.0, 1.0);
-    } else {
-       colorv=vec4(1.0, 0.0, 0.0, 1.0);
-    }
-
-    //gl_Position = vec4( (iv.x*1f)/dimXYZ.x, (iv.y*1f)/dimXYZ.y, (iv.z*1f)/dimXYZ.z, 1.0);
-    gl_Position = vec4(0.5, 0.5, 0.5, 1.0);
+    colorv=fc;
+    gl_Position = vec4(fv.x*voxelSize.x, fv.y*voxelSize.y, fv.z*voxelSize.z, 1.0);
 }
