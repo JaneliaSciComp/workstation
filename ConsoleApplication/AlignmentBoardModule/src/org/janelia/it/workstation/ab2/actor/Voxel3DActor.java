@@ -93,7 +93,7 @@ public class Voxel3DActor extends GLAbstractActor {
             if (b<0) b+=256;
             if (a<0) a+=256;
             if (r>t || g>t || b>t) {
-                voxels.add(new Vector3((xd*1f)/dimXf, (yd*1f)/dimYf, (zd*1f)/dimZf);
+                voxels.add(new Vector3((xd*1f)/dimXf, (yd*1f)/dimYf, (zd*1f)/dimZf));
                 colors.add(new Vector4( (r*1f)/255f, (g*1f)/255f, (b*1f)/255f, (a*1f)/255f));
             }
         }
