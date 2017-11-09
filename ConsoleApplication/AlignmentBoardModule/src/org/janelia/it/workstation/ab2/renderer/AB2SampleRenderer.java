@@ -40,6 +40,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
     private Camera3DFollowBoxActor cameraFollowBoxActor;
 
     private Image3DActor image3DActor;
+    private Voxel3DActor voxel3DActor;
 
     //private GLShaderActionSequence drawShaderSequence;
 
@@ -85,7 +86,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
         //addBoundingBox();
         //addOriginPointActor();
         //addCameraFollowBoxActor();
-        addVoxel3DActorTest();
+        //addVoxel3DActorTest();
         super.init(gl);
         logger.info("Finished init()");
         initialized=true;
@@ -113,6 +114,10 @@ public class AB2SampleRenderer extends AB23DRenderer {
         voxel3DShaderSequence.getActorSequence().add(voxel3DActor);
     }
 
+    public void addVoxel3DActor(Voxel3DActor voxel3DActor) {
+        voxel3DShaderSequence.getActorSequence().add(voxel3DActor);
+    }
+
     public void clearActors() {
         clearActionSequenceActors(basic3DShaderSequence);
         clearActionSequenceActors(volume3DShaderSequence);
@@ -121,9 +126,13 @@ public class AB2SampleRenderer extends AB23DRenderer {
     }
 
     public void addSample3DImage(byte[] data) {
-        clearImage3DActor();
-        AB2Image3D_RGBA8UI image3d=createImage3dFromBytes(data);
-        addImage3DActor(image3d);
+//        clearImage3DActor();
+//        AB2Image3D_RGBA8UI image3d=createImage3dFromBytes(data);
+//        addImage3DActor(image3d);
+
+        clearVoxel3DActor();
+        voxel3DActor=new Voxel3DActor(this, getNextActorIndex(), 0.05f, data);
+        addVoxel3DActor(voxel3DActor);
     }
 
     private void clearImage3DActor() {
@@ -132,6 +141,15 @@ public class AB2SampleRenderer extends AB23DRenderer {
             ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) image3DActor, volume3DShaderSequence.getShader());
             actorDisposalQueue.add(actorPair);
             image3DActor = null;
+        }
+    }
+
+    private void clearVoxel3DActor() {
+        // For some reason, the cast to GLAbstractActor is necessary for compatibility with the apache commons Pair implementation
+        if (voxel3DActor!=null) {
+            ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) voxel3DActor, voxel3DShaderSequence.getShader());
+            actorDisposalQueue.add(actorPair);
+            voxel3DActor = null;
         }
     }
 
