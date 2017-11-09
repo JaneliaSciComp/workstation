@@ -131,7 +131,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
 //        addImage3DActor(image3d);
 
         clearVoxel3DActor();
-        voxel3DActor=new Voxel3DActor(this, getNextActorIndex(), 0.05f, data);
+        voxel3DActor=new Voxel3DActor(this, getNextActorIndex(), 0.15f, data);
         addVoxel3DActor(voxel3DActor);
     }
 

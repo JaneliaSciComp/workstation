@@ -97,6 +97,7 @@ public class Voxel3DActor extends GLAbstractActor {
                 colors.add(new Vector4( (r*1f)/255f, (g*1f)/255f, (b*1f)/255f, (a*1f)/255f));
             }
         }
+        logger.info("Found "+voxels.size()+" qualifying voxels");
     }
 
     @Override
