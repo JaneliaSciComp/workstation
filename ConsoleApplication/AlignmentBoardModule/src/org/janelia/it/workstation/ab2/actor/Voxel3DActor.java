@@ -1,9 +1,11 @@
 package org.janelia.it.workstation.ab2.actor;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.media.opengl.GL4;
@@ -46,6 +48,55 @@ public class Voxel3DActor extends GLAbstractActor {
         this.dimX=dimX;
         this.dimY=dimY;
         this.dimZ=dimZ;
+    }
+
+    public Voxel3DActor(AB23DRenderer renderer, int actorId, float threshold, byte[] dataXYZRGBA) {
+        super(renderer);
+        this.actorId=actorId;
+        voxels=new ArrayList<>();
+        colors=new ArrayList<>();
+        byte t=(byte)(threshold*255f);
+        byte[] xyzData=new byte[12];
+        for (int i=0;i<12;i++) {
+            xyzData[i]=dataXYZRGBA[i];
+        }
+        ByteBuffer xyzBB=ByteBuffer.wrap(xyzData);
+        IntBuffer xyzIB=xyzBB.asIntBuffer();
+        dimX=xyzIB.get(0);
+        dimY=xyzIB.get(1);
+        dimZ=xyzIB.get(2);
+        float dimXf=(float)dimX;
+        float dimYf=(float)dimY;
+        float dimZf=(float)dimZ;
+        int p=12;
+        int xI=dimX;
+        int yI=dimX*dimY;
+        int xd=0;
+        int yd=0;
+        int zd=0;
+        while (p<dataXYZRGBA.length) {
+            int q=p-12;
+            if (q%xI==0) {
+                xd=0;
+                yd++;
+            }
+            if (q%yI==0) {
+                yd=0;
+                zd++;
+            }
+            int r=dataXYZRGBA[p++];
+            int g=dataXYZRGBA[p++];
+            int b=dataXYZRGBA[p++];
+            int a=dataXYZRGBA[p++];
+            if (r<0) r+=256;
+            if (g<0) g+=256;
+            if (b<0) b+=256;
+            if (a<0) a+=256;
+            if (r>t || g>t || b>t) {
+                voxels.add(new Vector3((xd*1f)/dimXf, (yd*1f)/dimYf, (zd*1f)/dimZf);
+                colors.add(new Vector4( (r*1f)/255f, (g*1f)/255f, (b*1f)/255f, (a*1f)/255f));
+            }
+        }
     }
 
     @Override
