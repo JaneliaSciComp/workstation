@@ -58,8 +58,8 @@ public class ResultSelectionButton extends DropDownButton {
         setResultDescriptor(ArtifactDescriptor.LATEST);
     }
 
-    public void setResultDescriptor(ArtifactDescriptor currResult) {
-        this.currResult = currResult;
+    public void setResultDescriptor(ArtifactDescriptor descriptor) {
+        this.currResult = descriptor == null ? ArtifactDescriptor.LATEST : descriptor;
         if (showTitle) {
             String title = StringUtils.abbreviate(currResult.toString(), MAX_TITLE_LENGTH);
             setText(title);
