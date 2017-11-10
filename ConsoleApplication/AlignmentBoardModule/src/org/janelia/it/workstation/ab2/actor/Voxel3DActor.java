@@ -74,8 +74,9 @@ public class Voxel3DActor extends GLAbstractActor {
         int xd=0;
         int yd=0;
         int zd=0;
+        int q=0;
         while (p<dataXYZRGBA.length) {
-            int q=p-12;
+            q=(p-12)/4;
             if (q%xI==0) {
                 xd=0;
                 yd++;
@@ -92,10 +93,24 @@ public class Voxel3DActor extends GLAbstractActor {
             if (g<0) g+=256;
             if (b<0) b+=256;
             if (a<0) a+=256;
+            if (yd==300) {
+                Vector3 v=new Vector3((xd*1f)/dimXf, (yd*1f)/dimYf, (zd*1f)/dimZf);
+                voxels.add(v);
+                colors.add(new Vector4( 0.5f, 0.5f, 0.5f, 0.5f));
+            }
             if (r>t || g>t || b>t) {
-                voxels.add(new Vector3((xd*1f)/dimXf, (yd*1f)/dimYf, (zd*1f)/dimZf));
+                Vector3 v=new Vector3((xd*1f)/dimXf, (yd*1f)/dimYf, (zd*1f)/dimZf);
+                voxels.add(v);
+                if (p%723==0) {
+                    logger.info("v="+v.toString());
+                }
                 colors.add(new Vector4( (r*1f)/255f, (g*1f)/255f, (b*1f)/255f, (a*1f)/255f));
             }
+            xd++;
+        }
+        for (int i=0;i<dimX;i++) {
+            voxels.add(new Vector3( (i*1f)/dimXf, 0.5f, 0.5f));
+            colors.add(new Vector4(1.0f, 0.2f, 0.2f, 0.5f));
         }
         logger.info("Found "+voxels.size()+" qualifying voxels");
     }
@@ -124,15 +139,25 @@ public class Voxel3DActor extends GLAbstractActor {
             byte[] colorData = new byte[colors.size() * 4];
 
             for (int i = 0; i < voxels.size(); i++) {
-                Vector3 v = voxels.get(i);
-                Vector4 c = colors.get(i);
-                xyzData[i*3]     = (short)( (v.getX()-0.5f)*dimX + maxDim/2f);
-                xyzData[i*3+1]   = (short)( (v.getY()-0.5f)*dimY + maxDim/2f);
-                xyzData[i*3+2]   = (short)( (v.getZ()-0.5f)*dimZ + maxDim/2f);
-                colorData[i*4]   = (byte)(c.get(0)*255);
-                colorData[i*4+1] = (byte)(c.get(1)*255);
-                colorData[i*4+2] = (byte)(c.get(2)*255);
-                colorData[i*4+3] = (byte)(c.get(3)*255);
+                if (i<dimX) {
+                    xyzData[i * 3] = (short)i;
+                    xyzData[i * 3 + 1] = 600;
+                    xyzData[i * 3 + 2] = 700;
+                    colorData[i * 4]     = (byte) (0);
+                    colorData[i * 4 + 1] = (byte) (255);
+                    colorData[i * 4 + 2] = (byte) (0);
+                    colorData[i * 4 + 3] = (byte) (120);
+                } else {
+                    Vector3 v = voxels.get(i);
+                    Vector4 c = colors.get(i);
+                    xyzData[i * 3]     = (short) (Math.floor((( (double)(v.getX()) - 0.5) * dimX + maxDim * 0.5)));
+                    xyzData[i * 3 + 1] = (short) (Math.floor((( (double)(v.getY()) - 0.5) * dimY + maxDim * 0.5)));
+                    xyzData[i * 3 + 2] = (short) (Math.floor((( (double)(v.getZ()) - 0.5) * dimZ + maxDim * 0.5)));
+                    colorData[i * 4]     = (byte) (c.get(0) * 255);
+                    colorData[i * 4 + 1] = (byte) (c.get(1) * 255);
+                    colorData[i * 4 + 2] = (byte) (c.get(2) * 255);
+                    colorData[i * 4 + 3] = (byte) (c.get(3) * 255);
+                }
             }
 
             vertexFb = GLAbstractActor.createGLShortBuffer(xyzData);
@@ -180,10 +205,10 @@ public class Voxel3DActor extends GLAbstractActor {
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
 
-        logger.info("display() start");
+        //logger.info("display() start");
 
-        System.out.println("Voxel3DActor display() start");
-        System.out.flush();
+        //System.out.println("Voxel3DActor display() start");
+        //System.out.flush();
 
         if (shader instanceof AB2Voxel3DShader) {
 
@@ -199,66 +224,66 @@ public class Voxel3DActor extends GLAbstractActor {
             float voxelUnitSize=1f/(1f*dimMax);
             voxel3DShader.setVoxelSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
 
-            System.out.println("Voxel3DActor Check1");
-            System.out.flush();
+            //System.out.println("Voxel3DActor Check1");
+            //System.out.flush();
 
             gl.glBindVertexArray(vertexArrayId.get(0));
             checkGlError(gl, "d1 glBindVertexArray() error");
 
-            System.out.println("Voxel3DActor Check2");
-            System.out.flush();
+            //System.out.println("Voxel3DActor Check2");
+            //System.out.flush();
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
             checkGlError(gl, "d2 glBindBuffer error");
 
-            System.out.println("Voxel3DActor Check3");
-            System.out.flush();
+            //System.out.println("Voxel3DActor Check3");
+            //System.out.flush();
 
             gl.glVertexAttribPointer(0, 3, GL4.GL_SHORT, false, 0, 0);
             checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
 
-            System.out.println("Voxel3DActor Check4");
-            System.out.flush();
+            //System.out.println("Voxel3DActor Check4");
+            //System.out.flush();
 
             gl.glEnableVertexAttribArray(0);
             checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
 
-            System.out.println("Voxel3DActor Check5");
-            System.out.flush();
+            //System.out.println("Voxel3DActor Check5");
+            //System.out.flush();
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, colorBufferId.get(0));
             checkGlError(gl, "d2 glBindBuffer error");
 
-            System.out.println("Voxel3DActor Check6");
-            System.out.flush();
+            //System.out.println("Voxel3DActor Check6");
+            //System.out.flush();
 
             gl.glVertexAttribPointer(1, 4, GL4.GL_UNSIGNED_BYTE, true, 0, 0);
             checkGlError(gl, "d3 glVertexAttribPointer 0 () error");
 
-            System.out.println("Voxel3DActor Check7");
-            System.out.flush();
+            //System.out.println("Voxel3DActor Check7");
+            //System.out.flush();
 
             gl.glEnableVertexAttribArray(1);
             checkGlError(gl, "d4 glEnableVertexAttribArray 0 () error");
 
             int count=vertexFb.capacity()/3;
-            System.out.println("Voxel3DActor Check8 - count="+count);
-            System.out.flush();
+            //System.out.println("Voxel3DActor Check8 - count="+count);
+            //System.out.flush();
 
             gl.glDrawArrays(GL4.GL_POINTS, 0, count);
             checkGlError(gl, "d7 glDrawArrays() error");
 
-            System.out.println("Voxel3DActor Check9");
-            System.out.flush();
+            //System.out.println("Voxel3DActor Check9");
+            //System.out.flush();
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
         }
 
-        System.out.println("Voxel3DActor display() end");
-        System.out.flush();
+        //System.out.println("Voxel3DActor display() end");
+        //System.out.flush();
 
-        logger.info("display() end");
+        //logger.info("display() end");
 
     }
 

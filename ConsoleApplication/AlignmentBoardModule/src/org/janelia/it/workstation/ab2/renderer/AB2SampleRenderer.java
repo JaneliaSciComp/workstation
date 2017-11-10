@@ -116,6 +116,8 @@ public class AB2SampleRenderer extends AB23DRenderer {
 
     public void addVoxel3DActor(Voxel3DActor voxel3DActor) {
         voxel3DShaderSequence.getActorSequence().add(voxel3DActor);
+        ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) voxel3DActor, voxel3DShaderSequence.getShader());
+        actorInitQueue.add(actorPair);
     }
 
     public void clearActors() {
@@ -131,7 +133,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
 //        addImage3DActor(image3d);
 
         clearVoxel3DActor();
-        voxel3DActor=new Voxel3DActor(this, getNextActorIndex(), 0.15f, data);
+        voxel3DActor=new Voxel3DActor(this, getNextActorIndex(), 0.05f, data);
         addVoxel3DActor(voxel3DActor);
     }
 
