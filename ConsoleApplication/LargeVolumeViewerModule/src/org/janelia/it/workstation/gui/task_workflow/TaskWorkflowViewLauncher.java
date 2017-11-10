@@ -15,13 +15,8 @@ import javax.swing.Action;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
-import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
 
-/**
- * Facilitates launching the annotation skeleton viewer.
- *
- * @author fosterl
- */
+
 public class TaskWorkflowViewLauncher {
 
     /** Always re-open the view on initial creation. */

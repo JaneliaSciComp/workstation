@@ -40,6 +40,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent {
     public static final String LABEL_TEXT = "Task Workflow";
     private final TopComponentPopulator populator = new TopComponentPopulator();
 
+    private JPanel viewPanel;
+
     public TaskWorkflowViewTopComponent() {
         initComponents();
         setName(Bundle.CTL_TaskWorkflowViewTopComponentTopComponent());
@@ -62,16 +64,15 @@ public final class TaskWorkflowViewTopComponent extends TopComponent {
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addComponent(viewPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addComponent(viewPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private JPanel viewPanel;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {

@@ -24,6 +24,7 @@ public class TopComponentPopulator {
         if (taskPanel == null) {
             taskPanel = new TaskWorkflowPanel(new TaskDataSource());
         }
+
         panel.add(taskPanel, BorderLayout.CENTER);
     }
     
