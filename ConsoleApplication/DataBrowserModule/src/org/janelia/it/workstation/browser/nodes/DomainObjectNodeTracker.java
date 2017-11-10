@@ -1,16 +1,17 @@
 package org.janelia.it.workstation.browser.nodes;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 
 /**
  * Singleton which keeps track of DomainObjectNodes as they are created and destroyed, so that 
@@ -21,7 +22,7 @@ import com.google.common.collect.Multimap;
 @SuppressWarnings({"rawtypes", "unchecked"}) // This class is a generic type disaster
 public class DomainObjectNodeTracker {
 
-    private static final Logger log = LoggerFactory.getLogger(DomainObjectNodeTracker.class);
+    private static final Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
     
     private static final DomainObjectNodeTracker singleton = new DomainObjectNodeTracker();
     
