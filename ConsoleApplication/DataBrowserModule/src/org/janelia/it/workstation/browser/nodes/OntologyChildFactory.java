@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.nodes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -35,13 +36,26 @@ public class OntologyChildFactory extends ChildFactory<OntologyTerm> {
 
     @Override
     protected boolean createKeys(List<OntologyTerm> list) {
-        if (ontologyTerm==null) return false;
-        log.trace("Creating children keys for {}",ontologyTerm.getName());   
-        if (ontologyTerm.getTerms()!=null) {
-            for(OntologyTerm term : ontologyTerm.getTerms()) {
-                if (term==null) continue;
-                list.add(term);
+        try {
+            if (ontologyTerm==null) {
+                throw new IllegalStateException("No ontology term is set for this child factory");
             }
+            
+            log.trace("Creating children keys for {}",ontologyTerm.getName());
+            
+            List<OntologyTerm> temp = new ArrayList<>();
+            if (ontologyTerm.getTerms()!=null) {
+                for(OntologyTerm term : ontologyTerm.getTerms()) {
+                    if (term==null) continue;
+                    temp.add(term);
+                }
+            }
+            list.addAll(temp);
+            log.info("Creating {} children keys for {}",list.size(),ontologyTerm.getName());
+        }
+        catch (Exception ex) {
+            log.error("Error creating ontology term child keys",ex);
+            return false;
         }
         return true;
     }

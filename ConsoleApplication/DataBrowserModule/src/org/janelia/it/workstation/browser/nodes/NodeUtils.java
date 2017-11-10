@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.openide.nodes.Node;
 import org.openide.util.Enumerations;
@@ -19,6 +22,14 @@ import org.slf4j.LoggerFactory;
 public class NodeUtils {
 
     private final static Logger log = LoggerFactory.getLogger(NodeUtils.class);
+
+    // We use a single threaded executor so that all node operations are serialized. Re-ordering operations 
+    // in particular must be done sequentially, for obvious reasons.
+    private static final Executor nodeOperationExecutor = Executors.newSingleThreadExecutor();
+    
+    public static void executeNodeOperation(SimpleWorker worker) {
+        nodeOperationExecutor.execute(worker);
+    }
     
     /**
      * Given a number of children, reorder the last node to the given index, and return the ordering array.

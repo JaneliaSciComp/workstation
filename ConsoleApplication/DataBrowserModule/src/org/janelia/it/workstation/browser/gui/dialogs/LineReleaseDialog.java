@@ -28,6 +28,8 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
@@ -176,6 +178,18 @@ public class LineReleaseDialog extends ModalDialog {
 
         autoReleaseCheckbox = new JCheckBox("Automated release");
         autoReleaseCheckbox.setEnabled(editable);
+        autoReleaseCheckbox.addChangeListener((ChangeEvent e) -> {
+            if (autoReleaseCheckbox.isSelected()) {
+                dateInput.setEnabled(true);
+                lagTimeInput.setEnabled(true);
+                dataSetPanel.setEditable(true);
+            }
+            else {
+                dateInput.setEnabled(false);
+                lagTimeInput.setEnabled(false);
+                dataSetPanel.setEditable(false);
+            }
+        });
         attrPanel.add(autoReleaseCheckbox, "gap para, span 2");
         
         final JLabel dateLabel = new JLabel("Target Release Date: ");
@@ -317,7 +331,10 @@ public class LineReleaseDialog extends ModalDialog {
                     }
                 } 
                 else {
-                    autoReleaseCheckbox.setSelected(true);
+                    autoReleaseCheckbox.setSelected(false);
+                    dateInput.setEnabled(false);
+                    lagTimeInput.setEnabled(false);
+                    dataSetPanel.setEditable(false);
                     nameInput.setText("");
                     dateInput.setDate(new Date());
                     lagTimeInput.setText("");
@@ -355,7 +372,9 @@ public class LineReleaseDialog extends ModalDialog {
     private void saveSyncAndClose(final boolean forceSync) {
 
         Utils.setWaitingCursor(LineReleaseDialog.this);
-
+        
+        final boolean autoRelease = autoReleaseCheckbox.isSelected();
+        
         if (StringUtils.isEmpty(nameInput.getText().trim())) {
             JOptionPane.showMessageDialog(LineReleaseDialog.this, "The release name cannot be blank", "Cannot save release", JOptionPane.ERROR_MESSAGE);
             return;
@@ -387,8 +406,8 @@ public class LineReleaseDialog extends ModalDialog {
             dataSets.add(dataSet.getIdentifier());
         }
 
-        if (dataSets.isEmpty()) {
-            JOptionPane.showMessageDialog(LineReleaseDialog.this, "A release must include at least one data set", "Cannot save release", JOptionPane.ERROR_MESSAGE);
+        if (autoRelease && dataSets.isEmpty()) {
+            JOptionPane.showMessageDialog(LineReleaseDialog.this, "An automated release must include at least one data set", "Cannot save release", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -415,7 +434,7 @@ public class LineReleaseDialog extends ModalDialog {
                 boolean isNew = false;
                 if (releaseEntity == null) {
                     releaseEntity = model.createLineRelease(nameInput.getText(), dateInput.getDate(), lagTimeFinal, dataSets);
-                    releaseEntity.setAutoRelease(autoReleaseCheckbox.isSelected());
+                    releaseEntity.setAutoRelease(autoRelease);
                     isNew = true;
                 }
 
