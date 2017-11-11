@@ -138,6 +138,16 @@ public class Voxel3DActor extends GLAbstractActor {
             short[] xyzData = new short[voxels.size() * 3];
             byte[] colorData = new byte[colors.size() * 4];
 
+            float dimXf=(float)dimX;
+            float dimYf=(float)dimY;
+            float dimZf=(float)dimZ;
+
+            int xOffset=(maxDim-dimX)/2;
+            int yOffset=(maxDim-dimY)/2;
+            int zOffset=(maxDim-dimZ)/2;
+
+            float roundErrorCompensation=0.05f;
+
             for (int i = 0; i < voxels.size(); i++) {
                 if (i<dimX) {
                     xyzData[i * 3] = (short)i;
@@ -150,9 +160,25 @@ public class Voxel3DActor extends GLAbstractActor {
                 } else {
                     Vector3 v = voxels.get(i);
                     Vector4 c = colors.get(i);
-                    xyzData[i * 3]     = (short) (Math.floor((( (double)(v.getX()) - 0.5) * dimX + maxDim * 0.5)));
-                    xyzData[i * 3 + 1] = (short) (Math.floor((( (double)(v.getY()) - 0.5) * dimY + maxDim * 0.5)));
-                    xyzData[i * 3 + 2] = (short) (Math.floor((( (double)(v.getZ()) - 0.5) * dimZ + maxDim * 0.5)));
+
+                    float xf=v.getX()*dimXf+roundErrorCompensation;
+                    float yf=v.getY()*dimYf+roundErrorCompensation;
+                    float zf=v.getZ()*dimZf+roundErrorCompensation;
+
+                    int xd=(int)xf;
+                    int yd=(int)yf;
+                    int zd=(int)zf;
+
+                    //logger.info(""+xf+" "+xd+" "+yf+" "+yd+" "+zf+" "+zd);
+
+                    xyzData[i * 3]     = (short) (xd+xOffset);
+                    xyzData[i * 3 + 1] = (short) (yd+yOffset);
+                    xyzData[i * 3 + 2] = (short) (zd+zOffset);
+
+//                    xyzData[i * 3]     = (short) ((( (double)(v.getX()) - 0.5) * dimX + maxDim * 0.5));
+//                    xyzData[i * 3 + 1] = (short) ((( (double)(v.getY()) - 0.5) * dimY + maxDim * 0.5));
+//                    xyzData[i * 3 + 2] = (short) ((( (double)(v.getZ()) - 0.5) * dimZ + maxDim * 0.5));
+
                     colorData[i * 4]     = (byte) (c.get(0) * 255);
                     colorData[i * 4 + 1] = (byte) (c.get(1) * 255);
                     colorData[i * 4 + 2] = (byte) (c.get(2) * 255);
