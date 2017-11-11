@@ -93,24 +93,12 @@ public class Voxel3DActor extends GLAbstractActor {
             if (g<0) g+=256;
             if (b<0) b+=256;
             if (a<0) a+=256;
-            if (yd==300) {
-                Vector3 v=new Vector3((xd*1f)/dimXf, (yd*1f)/dimYf, (zd*1f)/dimZf);
-                voxels.add(v);
-                colors.add(new Vector4( 0.5f, 0.5f, 0.5f, 0.5f));
-            }
             if (r>t || g>t || b>t) {
                 Vector3 v=new Vector3((xd*1f)/dimXf, (yd*1f)/dimYf, (zd*1f)/dimZf);
                 voxels.add(v);
-                if (p%723==0) {
-                    logger.info("v="+v.toString());
-                }
                 colors.add(new Vector4( (r*1f)/255f, (g*1f)/255f, (b*1f)/255f, (a*1f)/255f));
             }
             xd++;
-        }
-        for (int i=0;i<dimX;i++) {
-            voxels.add(new Vector3( (i*1f)/dimXf, 0.5f, 0.5f));
-            colors.add(new Vector4(1.0f, 0.2f, 0.2f, 0.5f));
         }
         logger.info("Found "+voxels.size()+" qualifying voxels");
     }
@@ -149,41 +137,27 @@ public class Voxel3DActor extends GLAbstractActor {
             float roundErrorCompensation=0.05f;
 
             for (int i = 0; i < voxels.size(); i++) {
-                if (i<dimX) {
-                    xyzData[i * 3] = (short)i;
-                    xyzData[i * 3 + 1] = 600;
-                    xyzData[i * 3 + 2] = 700;
-                    colorData[i * 4]     = (byte) (0);
-                    colorData[i * 4 + 1] = (byte) (255);
-                    colorData[i * 4 + 2] = (byte) (0);
-                    colorData[i * 4 + 3] = (byte) (120);
-                } else {
-                    Vector3 v = voxels.get(i);
-                    Vector4 c = colors.get(i);
+                Vector3 v = voxels.get(i);
+                Vector4 c = colors.get(i);
 
-                    float xf=v.getX()*dimXf+roundErrorCompensation;
-                    float yf=v.getY()*dimYf+roundErrorCompensation;
-                    float zf=v.getZ()*dimZf+roundErrorCompensation;
+                float xf=v.getX()*dimXf+roundErrorCompensation;
+                float yf=v.getY()*dimYf+roundErrorCompensation;
+                float zf=v.getZ()*dimZf+roundErrorCompensation;
 
-                    int xd=(int)xf;
-                    int yd=(int)yf;
-                    int zd=(int)zf;
+                int xd=(int)xf;
+                int yd=(int)yf;
+                int zd=(int)zf;
 
-                    //logger.info(""+xf+" "+xd+" "+yf+" "+yd+" "+zf+" "+zd);
+                //logger.info(""+xf+" "+xd+" "+yf+" "+yd+" "+zf+" "+zd);
 
-                    xyzData[i * 3]     = (short) (xd+xOffset);
-                    xyzData[i * 3 + 1] = (short) (yd+yOffset);
-                    xyzData[i * 3 + 2] = (short) (zd+zOffset);
+                xyzData[i * 3]     = (short) (xd+xOffset);
+                xyzData[i * 3 + 1] = (short) (yd+yOffset);
+                xyzData[i * 3 + 2] = (short) (zd+zOffset);
 
-//                    xyzData[i * 3]     = (short) ((( (double)(v.getX()) - 0.5) * dimX + maxDim * 0.5));
-//                    xyzData[i * 3 + 1] = (short) ((( (double)(v.getY()) - 0.5) * dimY + maxDim * 0.5));
-//                    xyzData[i * 3 + 2] = (short) ((( (double)(v.getZ()) - 0.5) * dimZ + maxDim * 0.5));
-
-                    colorData[i * 4]     = (byte) (c.get(0) * 255);
-                    colorData[i * 4 + 1] = (byte) (c.get(1) * 255);
-                    colorData[i * 4 + 2] = (byte) (c.get(2) * 255);
-                    colorData[i * 4 + 3] = (byte) (c.get(3) * 255);
-                }
+                colorData[i * 4]     = (byte) (c.get(0) * 255);
+                colorData[i * 4 + 1] = (byte) (c.get(1) * 255);
+                colorData[i * 4 + 2] = (byte) (c.get(2) * 255);
+                colorData[i * 4 + 3] = (byte) (c.get(3) * 255);
             }
 
             vertexFb = GLAbstractActor.createGLShortBuffer(xyzData);
