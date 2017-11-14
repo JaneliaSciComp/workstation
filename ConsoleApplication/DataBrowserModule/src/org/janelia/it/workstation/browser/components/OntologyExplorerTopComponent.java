@@ -81,6 +81,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 
 /**
  * Top component for the Ontology Editor, which lets users create ontologies
@@ -236,30 +237,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 refresh();
             }
         });
-        
-        showLoadingIndicator();
-                
-        SimpleWorker worker = new SimpleWorker() {
-
-            @Override
-            protected void doStuff() throws Exception {
-                loadOntologies();
-            }
-
-            @Override
-            protected void hadSuccess() {
-                Long ontologyId = StateMgr.getStateMgr().getCurrentOntologyId();
-                Events.getInstance().postOnEventBus(new OntologySelectionEvent(ontologyId));
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                showNothing();
-                ConsoleApp.handleException(error);
-            }
-        };
-        
-        worker.execute();
     }
     
     /**
@@ -302,6 +279,13 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     }
 
     void readProperties(java.util.Properties p) {
+        if (AccessManager.loggedIn()) {
+            loadInitialState();
+        }
+        else {
+            // Not logged in yet, wait for a SessionStartEvent
+            return;
+        }
     }
     
     // Custom methods
@@ -324,6 +308,45 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         treePanel.add(beanTreeView);
         revalidate();
         repaint();
+    }
+    
+    @Subscribe
+    public void sessionStarted(SessionStartEvent event) {
+        loadInitialState();
+    }
+    
+    private void loadInitialState() {
+        
+        showLoadingIndicator();
+        
+        if (!debouncer.queue(null)) {
+            log.debug("Skipping initial load, since there is a refresh already in progress");
+            return;
+        }
+        
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                loadOntologies();
+            }
+
+            @Override
+            protected void hadSuccess() {
+                Long ontologyId = StateMgr.getStateMgr().getCurrentOntologyId();
+                Events.getInstance().postOnEventBus(new OntologySelectionEvent(ontologyId));
+                debouncer.success();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showNothing();
+                ConsoleApp.handleException(error);
+                debouncer.failure();
+            }
+        };
+        
+        worker.execute();
     }
     
     @Subscribe

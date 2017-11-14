@@ -83,9 +83,6 @@ public class Startup implements Runnable {
         // Create the main console app frame
         ConsoleApp app = ConsoleApp.getConsoleApp();
         
-        // Set the Look and Feel
-        StateMgr.getStateMgr().initLAF();
-
         // Load the branding config so that the user settings are available for logging 
         // in the next step (init user session)
         try {

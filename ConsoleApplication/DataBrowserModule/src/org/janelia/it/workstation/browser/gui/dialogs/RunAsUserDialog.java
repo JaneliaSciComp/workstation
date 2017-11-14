@@ -94,9 +94,7 @@ public class RunAsUserDialog extends ModalDialog {
     private void saveAndClose() {
 
         String runAsUser = usernameField.getText().trim();
-        
         FrameworkImplProvider.setModelProperty(AccessManager.RUN_AS_USER, runAsUser);
-        
         boolean runAsSuccess = AccessManager.getAccessManager().setRunAsUser(runAsUser);
         
         if (!runAsSuccess) {

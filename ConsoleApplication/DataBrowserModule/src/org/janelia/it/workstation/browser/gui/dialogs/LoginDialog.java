@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.function.BiPredicate;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -24,8 +25,8 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.exceptions.FatalCommError;
-import org.janelia.it.workstation.browser.util.Utils;
-import org.openide.LifecycleManager;
+import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -38,8 +39,12 @@ public class LoginDialog extends ModalDialog {
 
     public enum ErrorType {
         NetworkError,
-        AuthError
+        AuthError,
+        TokenExpiredError,
+        OtherError
     }
+    
+    private static final String OK_BUTTON_TEXT = "Login";
     
     private final JPanel mainPanel;
     private final JLabel usernameLabel;
@@ -48,8 +53,11 @@ public class LoginDialog extends ModalDialog {
     private final JPasswordField passwordField;
     private final JCheckBox rememberCheckbox;
     private final JLabel errorLabel;
+    private final JPanel buttonPane; 
     private final JButton cancelButton;
     private final JButton okButton;
+
+    private BiPredicate<String, String> authFunction;
     
     public LoginDialog() {
 
@@ -76,18 +84,17 @@ public class LoginDialog extends ModalDialog {
         mainPanel.add(rememberCheckbox, "span 2");
         mainPanel.add(errorLabel, "span 2");
 
-        cancelButton = new JButton("Exit");
-        cancelButton.setToolTipText("Exit the program");
+        cancelButton = new JButton("Cancel");
+        cancelButton.setToolTipText("Cancel login");
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
-                LifecycleManager.getDefault().exit(0);
             }
         });
         
-        okButton = new JButton("Login");
-        okButton.setToolTipText("Attempt to authenticate");
+        okButton = new JButton(OK_BUTTON_TEXT);
+        okButton.setToolTipText("Attempt to authenticate with the given credentials");
         okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -97,7 +104,7 @@ public class LoginDialog extends ModalDialog {
                 
         getRootPane().setDefaultButton(okButton);
                 
-        JPanel buttonPane = new JPanel();
+        buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
         buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         buttonPane.add(Box.createHorizontalGlue());
@@ -123,11 +130,13 @@ public class LoginDialog extends ModalDialog {
         });
     }
 
-    public void showDialog() {
-        showDialog(null);
+    public void showDialog(BiPredicate<String, String> authFunction) {
+        showDialog(authFunction, null);
     }
     
-    public void showDialog(final ErrorType errorType) {
+    public void showDialog(BiPredicate<String, String> authFunction, final ErrorType errorType) {
+        
+        this.authFunction = authFunction;
         
         String username = (String) getModelProperty(AccessManager.USER_NAME, "");
         String password = (String) getModelProperty(AccessManager.USER_PASSWORD, "");
@@ -155,52 +164,66 @@ public class LoginDialog extends ModalDialog {
         switch (errorType) {
         case NetworkError: return "<html>There was a problem connecting to the server. Please check your network connection and try again.</html>"; 
         case AuthError: return "<html>There is a problem with your username or password. Please try again.</html>"; 
+        case TokenExpiredError: return "<html>Your authentication has expired. Please try loggin in again.</html>";
+        case OtherError: return "<html>There was a problem loggin in. Please try again.</html>";
         }
         throw new IllegalArgumentException("Unsupported error type: "+errorType);
     }
     
     private void saveAndClose() {
 
-        Utils.setWaitingCursor(this);
+        okButton.setIcon(Icons.getLoadingIcon());
+        okButton.setText(null);
+    
+        errorLabel.setText("");
+        errorLabel.setVisible(false);
         
-        try {
-            errorLabel.setText("");
-            errorLabel.setVisible(false);
+        String username = usernameField.getText().trim();
+        String password = new String(passwordField.getPassword());
+        
+        FrameworkImplProvider.setModelProperty(AccessManager.USER_NAME, username);
+        FrameworkImplProvider.setModelProperty(AccessManager.USER_PASSWORD, rememberCheckbox.isSelected()?password:null);
+        FrameworkImplProvider.setModelProperty(AccessManager.REMEMBER_PASSWORD, rememberCheckbox.isSelected());
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            private boolean authSuccess;
             
-            String username = usernameField.getText().trim();
-            String password = new String(passwordField.getPassword());
-            
-            FrameworkImplProvider.setModelProperty(AccessManager.USER_NAME, username);
-            FrameworkImplProvider.setModelProperty(AccessManager.USER_PASSWORD, rememberCheckbox.isSelected()?password:null);
-            FrameworkImplProvider.setModelProperty(AccessManager.REMEMBER_PASSWORD, rememberCheckbox.isSelected());
-            
-            if (!AccessManager.getAccessManager().loginSubject(username, password)) {
-                errorLabel.setText(getErrorMessage(ErrorType.AuthError));
-                errorLabel.setVisible(true);
+            @Override
+            protected void doStuff() throws Exception {
+                authSuccess = authFunction.test(username, password);
             }
-            else {
-                // Logged in. Reinstate the run-as user
-                try {
-                    String runAsUser = (String) getModelProperty(AccessManager.RUN_AS_USER, "");
-                    if (!StringUtils.isBlank(runAsUser)) {
-                        AccessManager.getAccessManager().setRunAsUser(runAsUser);
-                    }
+
+            @Override
+            protected void hadSuccess() {
+                okButton.setIcon(null);
+                okButton.setText(OK_BUTTON_TEXT);
+                if (authSuccess) {
+                    setVisible(false);
                 }
-                catch (Exception e) {
-                    FrameworkImplProvider.setModelProperty(AccessManager.RUN_AS_USER, "");
-                    ConsoleApp.handleException(e);
+                else {
+                    errorLabel.setText(getErrorMessage(ErrorType.AuthError));
+                    errorLabel.setVisible(true);
                 }
-                
-                setVisible(false);
             }
-        }
-        catch (FatalCommError e) {
-            errorLabel.setText(getErrorMessage(ErrorType.NetworkError));
-            errorLabel.setVisible(true);
-        }
-        finally {
-            Utils.setDefaultCursor(this);
-        }
+
+            @Override
+            protected void hadError(Throwable e) {
+                FrameworkImplProvider.handleExceptionQuietly(e);
+                okButton.setIcon(null);
+                okButton.setText(OK_BUTTON_TEXT);
+                if (e instanceof FatalCommError) {
+                    errorLabel.setText(getErrorMessage(ErrorType.NetworkError));
+                    errorLabel.setVisible(true);
+                }
+                else {
+                    errorLabel.setText(getErrorMessage(ErrorType.OtherError));
+                    errorLabel.setVisible(true);
+                }
+            }
+        };
+
+        worker.execute();
     }
     
     private Object getModelProperty(String key, Object defaultValue) {

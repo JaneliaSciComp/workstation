@@ -12,7 +12,6 @@ import org.janelia.it.workstation.browser.filecache.LocalFileCache;
 import org.janelia.it.workstation.browser.filecache.WebDavClient;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.browser.util.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,12 +58,7 @@ public class FileMgr {
         setFileCacheGigabyteCapacity((Integer) 
                 FrameworkImplProvider.getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
         setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(
-                FrameworkImplProvider.getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));        
-        
-        Integer tmpCache = (Integer) FrameworkImplProvider.getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
-        if (null != tmpCache) {
-            PropertyConfigurator.getProperties().setProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, tmpCache.toString());
-        }
+                FrameworkImplProvider.getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));
     }
 
     /**

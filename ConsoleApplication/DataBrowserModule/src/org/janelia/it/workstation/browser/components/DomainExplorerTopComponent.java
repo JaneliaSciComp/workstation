@@ -73,6 +73,8 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 
 
 /**
@@ -189,52 +191,17 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         add(treePanel, BorderLayout.CENTER);
         add(findToolbar, BorderLayout.PAGE_END);
 
-        showLoadingIndicator();
-
         ActionMap map = this.getActionMap();
         map.put(DefaultEditorKit.copyAction, ExplorerUtils.actionCopy(mgr));
         map.put(DefaultEditorKit.cutAction, ExplorerUtils.actionCut(mgr));
         map.put(DefaultEditorKit.pasteAction, ExplorerUtils.actionPaste(mgr));
         map.put("delete", ExplorerUtils.actionDelete(mgr, true)); 
         
-        SimpleWorker worker = new SimpleWorker() {
-
-            @Override
-            protected void doStuff() throws Exception {
-                // Attempt to load stuff into the cache, which the RootNode will query from the EDT
-                DomainMgr.getDomainMgr().getModel().getWorkspaces();
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // Init the list viewer manager
-                DomainListViewManager.getInstance();
-                // Init the global selection model
-                GlobalDomainObjectSelectionModel.getInstance();
-                // Load the data
-                refresh(false, false, new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        if (pathsToExpand!=null) {
-                            log.info("Restoring serialized expanded state");
-                            beanTreeView.expand(pathsToExpand);
-                            pathsToExpand = null;
-                        }
-                        return null;
-                    }
-                });
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                // Init the list viewer manager
-                DomainListViewManager.getInstance();
-                showNothing();
-                ConsoleApp.handleException(error);
-            }
-        };
+        // Init the list viewer manager
+        DomainListViewManager.getInstance();
         
-        worker.execute();
+        // Init the global selection model
+        GlobalDomainObjectSelectionModel.getInstance();
     }
     
     /**
@@ -304,10 +271,20 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 final ExpandedTreeState expandedState =  mapper.readValue(expandedPathStr, ExpandedTreeState.class);
                 if (expandedState!=null) {
                     log.info("Reading state: {} expanded paths",expandedState.getExpandedArrayPaths().size());
+                    // Must write to instance variables from EDT only
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
                             pathsToExpand = expandedState.getExpandedArrayPaths();
+                            log.info("saving pathsToExpand.size= "+pathsToExpand.size());
+
+                            if (AccessManager.loggedIn()) {
+                                loadPreviousSession();
+                            }
+                            else {
+                                // Not logged in yet, wait for a SessionStartEvent
+                                return;
+                            }
                         }
                     });
                 }
@@ -341,6 +318,39 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     @Subscribe
+    public void sessionStarted(SessionStartEvent event) {
+        loadPreviousSession();
+    }
+    
+    private void loadPreviousSession() {
+        
+        showLoadingIndicator();
+        
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                // Attempt to load stuff into the cache, which the RootNode will query from the EDT
+                DomainMgr.getDomainMgr().getModel().getWorkspaces();
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // Load the data
+                refresh(false, false, null);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showNothing();
+                ConsoleApp.handleException(error);
+            }
+        };
+        
+        worker.execute();
+    }
+    
+    @Subscribe
     public void prefChanged(LocalPreferenceChanged event) {
         if (event.getKey().equals(StateMgr.RECENTLY_OPENED_HISTORY)) {
             // Something was added to the history, so we need to update the node's children
@@ -356,7 +366,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     @Subscribe
-    public void objectsInvalidated(DomainObjectRemoveEvent event) {
+    public void objectsRemoved(DomainObjectRemoveEvent event) {
 
         final List<Long[]> expanded = beanTreeView.getExpandedPaths();
         DomainObject domainObject = event.getDomainObject();
@@ -462,21 +472,28 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     mgr.setRootContext(root);
                     showTree();
                     
-                    int numExpanded = 0;
-                    if (restoreState) {
-                        numExpanded = beanTreeView.expand(expanded);
-                        beanTreeView.selectPaths(selected);
+                    if (pathsToExpand!=null) {
+                        log.info("Restoring serialized expanded state");
+                        beanTreeView.expand(pathsToExpand);
+                        pathsToExpand = null;
                     }
-                    if (numExpanded==0) {
-                        log.info("Expanding first node");
-                        for(Node node : root.getChildren().getNodes()) {
-                            beanTreeView.expandNode(node);
-                            if (node instanceof WorkspaceNode) {
-                                break; // Expand everything up to and including the first Home
+                    else {
+                        int numExpanded = 0;
+                        if (restoreState) {
+                            numExpanded = beanTreeView.expand(expanded);
+                            beanTreeView.selectPaths(selected);
+                        }
+                        if (numExpanded==0) {
+                            log.info("Expanding first node");
+                            for(Node node : root.getChildren().getNodes()) {
+                                beanTreeView.expandNode(node);
+                                if (node instanceof WorkspaceNode) {
+                                    break; // Expand everything up to and including the first Home
+                                }
                             }
                         }
                     }
-
+                    
                     ActivityLogHelper.logElapsed("DomainExplorer.refresh", w);
                     debouncer.success();
                 }

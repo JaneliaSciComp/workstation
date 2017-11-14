@@ -43,12 +43,12 @@ public final class StartPageMenuAction extends AbstractAction {
        
         if (topComp!=null) {
             topComp.openAtTabPosition(0);
-            topComp.requestActive();
             // This runs later to avoid NPE from Swing EventQueue
             final StartPageTopComponent tc = topComp;
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
+                    tc.requestActive();
                     tc.requestFocusInWindow();
                 }
             });

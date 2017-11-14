@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.exceptions.SystemError;
 import org.janelia.it.workstation.browser.api.facade.impl.ejb.LegacyFacadeImpl;
 import org.janelia.it.workstation.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.LegacyFacade;
@@ -16,9 +17,10 @@ import org.janelia.it.workstation.browser.api.facade.interfaces.OntologyFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SampleFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.WorkspaceFacade;
+import org.janelia.it.workstation.browser.api.web.AuthServiceClient;
 import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.events.Events;
-import org.janelia.it.workstation.browser.events.lifecycle.RunAsEvent;
+import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.events.model.PreferenceChangeEvent;
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
@@ -56,6 +58,7 @@ public class DomainMgr {
         return instance;
     }
 
+    private AuthServiceClient authClient;
     private DomainFacade domainFacade;
     private OntologyFacade ontologyFacade;
     private SampleFacade sampleFacade;
@@ -70,6 +73,7 @@ public class DomainMgr {
     private DomainMgr() {
         log.info("Initializing Domain Manager");
         try {
+            authClient = new AuthServiceClient();
             final Reflections reflections = ReflectionsFixer.getReflections(DOMAIN_FACADE_PACKAGE_NAME, getClass());
             domainFacade = getNewInstance(reflections, DomainFacade.class);
             ontologyFacade = getNewInstance(reflections, OntologyFacade.class);
@@ -91,8 +95,7 @@ public class DomainMgr {
                     model.invalidateAll();
                 }
             }
-        });
-        
+        });   
     }
     
     private <T> T getNewInstance(Reflections reflections, Class<T> clazz) {
@@ -105,6 +108,10 @@ public class DomainMgr {
             }
         }
         throw new IllegalStateException("No implementation for "+clazz.getName()+" found in "+DOMAIN_FACADE_PACKAGE_NAME);
+    }
+
+    public AuthServiceClient getAuthClient() {
+        return authClient;
     }
 
     public DomainFacade getDomainFacade() {
@@ -136,7 +143,7 @@ public class DomainMgr {
     }
 
     @Subscribe
-    public void runAsUserChanged(RunAsEvent event) {
+    public void runAsUserChanged(SessionStartEvent event) {
         log.info("User changed, resetting model");
         preferenceMap = null;
         model.invalidateAll();
@@ -217,6 +224,7 @@ public class DomainMgr {
     }
 
     public static String getPreferenceSubject() {
+        if (!AccessManager.loggedIn()) throw new SystemError("Not logged in");
         return ApplicationOptions.getInstance().isUseRunAsUserPreferences() ? AccessManager.getSubjectKey() : AccessManager.getAccessManager().getAuthenticatedSubject().getKey();
     }
     

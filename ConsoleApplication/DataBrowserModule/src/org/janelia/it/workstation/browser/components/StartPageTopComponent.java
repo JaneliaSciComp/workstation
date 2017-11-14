@@ -6,12 +6,12 @@ import java.lang.ref.WeakReference;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
+import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.gui.editor.StartPage;
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.nodes.Node;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
@@ -125,60 +125,48 @@ public class StartPageTopComponent extends TopComponent {
         }
         return wc;
     }
-    
-    /**
-     * Called when <code>TopComponent</code> is about to be shown. Shown here
-     * means the component is selected or resides in it own cell in container in
-     * its <code>Mode</code>. The container is visible and not minimized.
-     * <p>
-     * <em>Note:</em> component is considered to be shown, even its container
-     * window is overlapped by another window.
-     * </p>
-     */
-    @Override
-    protected void componentShowing() {
-        if (!initialized) {
-            initialized = true;
-            doInitialize();
-        }
-        if (null != startPage && getComponentCount() == 0) {
-            // notify components down the hierarchy tree that they should
-            // refresh their content (e.g. RSS feeds)
-            add(startPage, BorderLayout.CENTER);
-        }
-        super.componentShowing();
-        setActivatedNodes(new Node[] {});
-    }
 
     @Override
     protected void componentOpened() {
         super.componentOpened();
-        if (ConsoleState.getCurrState()<ConsoleState.WINDOW_SHOWN) {
+        if (ConsoleState.getCurrState() < ConsoleState.WINDOW_SHOWN) {
             if (!ApplicationOptions.getInstance().isShowStartPageOnStartup()) {
                 log.info("Closing start page because 'Show On Startup' is disabled");
                 close();
+                return;
             }
         }
+        if (!initialized) {
+            initialized = true;
+            doInitialize();
+        }
+        if (startPage!=null) {
+            Events.getInstance().registerOnEventBus(startPage);
+        }
         ApplicationOptions.getInstance().addPropertyChangeListener(startPage);
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                requestFocusInWindow();
-            }
-        });
+    }
+
+    @Override
+    protected void componentShowing() {
+        super.componentShowing();
+        if (null != startPage && getComponentCount() == 0) {
+            add(startPage, BorderLayout.CENTER);
+        }
     }
 
     @Override
     protected void componentClosed() {
         super.componentClosed();
+        if (startPage!=null) {
+            Events.getInstance().unregisterOnEventBus(startPage);
+        }
         ApplicationOptions.getInstance().removePropertyChangeListener(startPage);
     }
     
-    @Override protected void componentHidden() {
+    @Override 
+    protected void componentHidden() {
         super.componentHidden();
         if (null != startPage) {
-            // notify components down the hierarchy tree that they no long
-            // need to periodically refresh their content (e.g. RSS feeds)
             remove(startPage);
         }
     }

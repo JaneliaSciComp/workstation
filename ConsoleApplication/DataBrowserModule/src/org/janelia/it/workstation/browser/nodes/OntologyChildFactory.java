@@ -51,7 +51,6 @@ public class OntologyChildFactory extends ChildFactory<OntologyTerm> {
                 }
             }
             list.addAll(temp);
-            log.info("Creating {} children keys for {}",list.size(),ontologyTerm.getName());
         }
         catch (Exception ex) {
             log.error("Error creating ontology term child keys",ex);

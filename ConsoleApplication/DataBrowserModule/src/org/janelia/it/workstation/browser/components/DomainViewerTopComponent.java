@@ -1,12 +1,17 @@
 package org.janelia.it.workstation.browser.components;
 
+import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
 
 import javax.swing.JComponent;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.browser.gui.editor.SampleEditorPanel;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -62,6 +67,7 @@ public final class DomainViewerTopComponent extends TopComponent {
     
     private final InstanceContent content = new InstanceContent();
     private DomainObjectEditor<DomainObject> editor;
+    private Reference refToOpen;
     
     public DomainViewerTopComponent() {
         initComponents();
@@ -90,10 +96,12 @@ public final class DomainViewerTopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         DomainViewerManager.getInstance().activate(this);
+        Events.getInstance().registerOnEventBus(this);
     }
 
     @Override
     public void componentClosed() {
+        Events.getInstance().unregisterOnEventBus(this);
     }
     
     @Override
@@ -111,7 +119,7 @@ public final class DomainViewerTopComponent extends TopComponent {
             editor.deactivate();
         }
     }
-
+    
     void writeProperties(java.util.Properties p) {
         if (p==null) return;
         p.setProperty("version", TC_VERSION);
@@ -132,30 +140,58 @@ public final class DomainViewerTopComponent extends TopComponent {
         final String objectStrRef = p.getProperty("objectRef");
         log.info("Reading state: {}",objectStrRef);
         if (TC_VERSION.equals(version) && objectStrRef!=null) {
-
-            SimpleWorker worker = new SimpleWorker() {
-                DomainObject object;
-                
+            // Must write to instance variables from EDT only
+            SwingUtilities.invokeLater(new Runnable() {
                 @Override
-                protected void doStuff() throws Exception {
-                    object = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
-                }
-
-                @Override
-                protected void hadSuccess() {
-                    if (object!=null) {
-                        loadDomainObject(object, false);
+                public void run() {
+                    refToOpen = Reference.createFor(objectStrRef);
+                    if (AccessManager.loggedIn()) {
+                        loadPreviousSession();
+                    }
+                    else {
+                        // Not logged in yet, wait for a SessionStartEvent
+                        return;
                     }
                 }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    ConsoleApp.handleException(error);
-                }
-            };
-            worker.execute();
-            
+            });
         }
+    }
+    
+    @Subscribe
+    public void sessionStarted(SessionStartEvent event) {
+        loadPreviousSession();
+    }
+    
+    private void loadPreviousSession() {
+        
+        final Reference objectRef = refToOpen;
+        this.refToOpen = null;
+        
+        log.info("Loading previous session: "+refToOpen);
+        
+        if (objectRef==null) return;
+        
+        SimpleWorker worker = new SimpleWorker() {
+            DomainObject object;
+
+            @Override
+            protected void doStuff() throws Exception {
+                object = DomainMgr.getDomainMgr().getModel().getDomainObject(objectRef);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                if (object!=null) {
+                    loadDomainObject(object, false);
+                }
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                ConsoleApp.handleException(error);
+            }
+        };
+        worker.execute();
     }
 
     public DomainObject getCurrent() {
