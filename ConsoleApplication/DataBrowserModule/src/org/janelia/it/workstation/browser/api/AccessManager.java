@@ -10,8 +10,10 @@ import java.util.concurrent.TimeUnit;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.exceptions.FatalCommError;
+import org.janelia.it.workstation.browser.api.exceptions.AuthenticationException;
+import org.janelia.it.workstation.browser.api.exceptions.ServiceException;
 import org.janelia.it.workstation.browser.api.exceptions.SystemError;
+import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.LoginEvent;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionEndEvent;
@@ -160,9 +162,17 @@ public final class AccessManager {
                     moveToLoggedOutState();
                 }
             }
-            catch (FatalCommError e) {
+            catch (AuthenticationException e) {
+                moveToLoggedOutState();
+                loginIssue = ErrorType.AuthError;
+            }
+            catch (ServiceException e) {
                 moveToLoggedOutState();
                 loginIssue = ErrorType.NetworkError;
+            }
+            catch (Throwable t) {
+                moveToLoggedOutState();
+                loginIssue = ErrorType.OtherError;
             }
         }
     }
@@ -236,42 +246,37 @@ public final class AccessManager {
         // Keep these in memory for token refreshes, because user may not want to persist the password
         this.username = username;
         this.password = password;
+    
+        // Authenticate
+        Subject authenticatedSubject = authenticateSubject();
         
-        try {
+        if (authenticatedSubject != null) {
             if (isLoggedIn()) {
                 // Log out current subject first
                 moveToLoggedOutState();
             }
-
-            // Authenticate
-            Subject authenticatedSubject = authenticateSubject();
-            
-            if (authenticatedSubject != null) {
-                moveToLoggedInState(authenticatedSubject);
-                return true;
-            }
-            else {
-                moveToLoggedOutState();
-                return false;
-            }
+            moveToLoggedInState(authenticatedSubject);
+            return true;
         }
-        catch (Exception e) {
-            currState = AuthState.LoggedOut;
-            log.error("Error logging in", e);
-            throw new FatalCommError(ConsoleApp.getConsoleApp().getRemoteRestUrl(),
-                    "Cannot authenticate login. The server may be down. Please try again later.");
+        else {
+            moveToLoggedOutState();
+            return false;
         }
     }
         
-    private Subject authenticateSubject() throws Exception {
+    private Subject authenticateSubject() {
         
         // First get auth token
-        if (!obtainToken(false)) {
-            return null;
-        }
+        obtainToken();
         
         // We're now authenticated. Get or create the Workstation user object.
-        Subject authenticatedSubject = DomainMgr.getDomainMgr().getModel().getOrCreateUser(username);
+        Subject authenticatedSubject;
+        try {
+            authenticatedSubject = DomainMgr.getDomainMgr().getModel().getOrCreateUser(username);
+        }
+        catch (Exception e) {
+            throw new ServiceException("Error getting or creating user "+username, e);
+        }
 
         // Legacy JFS/Webdav needs basic auth
         if (authenticatedSubject != null) {
@@ -290,25 +295,11 @@ public final class AccessManager {
         return authenticatedSubject;
     }
     
-    private synchronized boolean obtainToken(boolean retryErrors) {
-
+    private synchronized void obtainToken() {
         log.info("Attempting to obtain new auth token for {}", username);
-        String newToken = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
-        
-        if (newToken!=null) {
-            this.token = newToken;
-            this.tokenCreationDate = new Date();
-            log.info("Now using token: {}", token);
-            return true;
-        }
-        else {
-            // Expired token cannot be refreshed
-            moveToLoggedOutState();
-            // Show login dialog to allow user to update password
-            LoginDialog loginDialog = new LoginDialog();
-            loginDialog.showDialog(this::loginUser, ErrorType.TokenExpiredError);
-            return false;
-        }
+        this.token = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
+        this.tokenCreationDate = new Date();
+        log.info("Now using token: {}", token);
     }
     
     /**
@@ -333,9 +324,29 @@ public final class AccessManager {
      */
     public String getToken() {
         if (tokenMustBeRenewed()) {
-            // We're way past token refresh time. Probably the client machine went to sleep and skipped all the refreshes. 
-            // We'll attempt to force a refresh and hope for a fresh token that we can return. 
-            obtainToken(true);
+            try {
+                obtainToken();
+            }
+            catch (AuthenticationException e) {
+                log.error("Could not obtain token", e);
+                // A token could not be obtained because the password is no longer valid 
+                // If we're starting up, this will be taken care of by the boostrap system, otherwise...
+                if (ConsoleState.getCurrState() >= ConsoleState.WINDOW_SHOWN) {
+                    // Show login dialog to allow user to update password
+                    LoginDialog loginDialog = new LoginDialog();
+                    loginDialog.showDialog(this::loginUser, ErrorType.TokenExpiredError);
+                }
+            }
+            catch (ServiceException e) {
+                log.error("Could not obtain token", e);
+                // A token could not be obtained because the password is no longer valid 
+                // If we're starting up, this will be taken care of by the boostrap system, otherwise...
+                if (ConsoleState.getCurrState() >= ConsoleState.WINDOW_SHOWN) {
+                    // Show login dialog to allow user to update password
+                    LoginDialog loginDialog = new LoginDialog();
+                    loginDialog.showDialog(this::loginUser, ErrorType.TokenExpiredError);
+                }
+            }
         }
         return token;
     }

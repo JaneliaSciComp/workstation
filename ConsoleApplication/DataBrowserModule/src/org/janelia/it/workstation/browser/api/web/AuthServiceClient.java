@@ -5,6 +5,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+import org.janelia.it.workstation.browser.api.exceptions.AuthenticationException;
+import org.janelia.it.workstation.browser.api.exceptions.ServiceException;
 import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientImpl;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
@@ -36,7 +38,7 @@ public class AuthServiceClient extends RESTClientImpl {
         log.info("Using server URL: {}",serverUrl);
     }
     
-    public String obtainToken(String username, String password) {
+    public String obtainToken(String username, String password) throws AuthenticationException, ServiceException {
         AuthBody body = new AuthBody();
         body.setUsername(username);
         body.setPassword(password);
@@ -45,9 +47,12 @@ public class AuthServiceClient extends RESTClientImpl {
                 .request("application/json")
                 .post(Entity.json(body));
         
+        if (response.getStatus()==401) {
+            throw new AuthenticationException("Invalid username or password");
+        }
+        
         if (response.getStatus()!=200) {
-            log.error("Auth service returned status {} for user {}", response.getStatus(), username);
-            return null;
+            throw new ServiceException("Auth service returned status "+response.getStatus());
         }
         
         JsonNode data = response.readEntity(new GenericType<JsonNode>() {});
@@ -57,14 +62,12 @@ public class AuthServiceClient extends RESTClientImpl {
                 return tokenNode.asText();
             }
             else {
-                log.error("Auth service returned status OK, but an empty token for user {}", username);
+                throw new ServiceException("Auth service returned status OK, but an empty token for user "+username);
             }
         }
         else {
-            log.error("Auth service returned status OK, but an empty response for user {}", username);
+            throw new ServiceException("Auth service returned status OK, but an empty response for user "+username);
         }
-        
-        return null;
     }
     
     /**

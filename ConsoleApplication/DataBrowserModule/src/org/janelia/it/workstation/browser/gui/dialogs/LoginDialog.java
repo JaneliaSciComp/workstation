@@ -21,12 +21,14 @@ import javax.swing.UIManager;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.api.exceptions.FatalCommError;
+import org.janelia.it.workstation.browser.api.exceptions.AuthenticationException;
+import org.janelia.it.workstation.browser.api.exceptions.ServiceException;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -37,6 +39,8 @@ import net.miginfocom.swing.MigLayout;
  */
 public class LoginDialog extends ModalDialog {
 
+    private static final Logger log = LoggerFactory.getLogger(LoginDialog.class);
+    
     public enum ErrorType {
         NetworkError,
         AuthError,
@@ -164,14 +168,14 @@ public class LoginDialog extends ModalDialog {
         switch (errorType) {
         case NetworkError: return "<html>There was a problem connecting to the server. Please check your network connection and try again.</html>"; 
         case AuthError: return "<html>There is a problem with your username or password. Please try again.</html>"; 
-        case TokenExpiredError: return "<html>Your authentication has expired. Please try loggin in again.</html>";
-        case OtherError: return "<html>There was a problem loggin in. Please try again.</html>";
+        case TokenExpiredError: return "<html>There was a problem refreshing your authentication token. Please try logging in again.</html>";
+        case OtherError: return "<html>There was a problem logging in. Please try again.</html>";
         }
         throw new IllegalArgumentException("Unsupported error type: "+errorType);
     }
     
     private void saveAndClose() {
-
+        
         okButton.setIcon(Icons.getLoadingIcon());
         okButton.setText(null);
     
@@ -192,6 +196,7 @@ public class LoginDialog extends ModalDialog {
             @Override
             protected void doStuff() throws Exception {
                 authSuccess = authFunction.test(username, password);
+                log.info("authSuccess="+authSuccess);
             }
 
             @Override
@@ -212,7 +217,11 @@ public class LoginDialog extends ModalDialog {
                 FrameworkImplProvider.handleExceptionQuietly(e);
                 okButton.setIcon(null);
                 okButton.setText(OK_BUTTON_TEXT);
-                if (e instanceof FatalCommError) {
+                if (e instanceof AuthenticationException) {
+                    errorLabel.setText(getErrorMessage(ErrorType.AuthError));
+                    errorLabel.setVisible(true);
+                }
+                if (e instanceof ServiceException) {
                     errorLabel.setText(getErrorMessage(ErrorType.NetworkError));
                     errorLabel.setVisible(true);
                 }
