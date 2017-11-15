@@ -32,7 +32,7 @@ public class AuthServiceClient extends RESTClientImpl {
     
     public AuthServiceClient(String serverUrl) {
         super(log);
-        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl);
+        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, false);
         log.info("Using server URL: {}",serverUrl);
     }
     

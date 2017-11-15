@@ -44,8 +44,9 @@ public class RestJsonClientManager {
     }
 
     private LoadingCache<String, Boolean> failureCache;
+    private Client authClient;
     private Client client;
-
+    
     public RestJsonClientManager() {
 
         this.failureCache = CacheBuilder.newBuilder()
@@ -58,9 +59,19 @@ public class RestJsonClientManager {
                         }
                     });
         
+        this.authClient = buildClient(true);
+        this.client = buildClient(false);
+    }
+    
+    private Client buildClient(boolean auth) {
+
+        client = ClientBuilder.newClient();
+        client.register(MultiPartFeature.class);
+        
         JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        client.register(provider);
         
         ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
         mapper.addHandler(new DeserializationProblemHandler() {
@@ -75,24 +86,24 @@ public class RestJsonClientManager {
             }
         });
 
-        // Add access token to every request
-        ClientRequestFilter authFilter = new ClientRequestFilter() {
-            @Override
-            public void filter(ClientRequestContext requestContext) throws IOException {
-                String accessToken = AccessManager.getAccessManager().getToken();
-                if (accessToken!=null) {
-                    requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+        if (auth) {
+            // Add access token to every request
+            ClientRequestFilter authFilter = new ClientRequestFilter() {
+                @Override
+                public void filter(ClientRequestContext requestContext) throws IOException {
+                    String accessToken = AccessManager.getAccessManager().getToken();
+                    if (accessToken!=null) {
+                        requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+                    }
                 }
-            }
-        };
-
-        client = ClientBuilder.newClient();
-        client.register(provider);
-        client.register(authFilter);
-        client.register(MultiPartFeature.class);
+            };
+            client.register(authFilter);
+        }
+        
+        return client;
     }
 
-    public WebTarget getTarget(String serverUrl) {
-        return client.target(serverUrl);
+    public WebTarget getTarget(String serverUrl, boolean auth) {
+        return auth ? authClient.target(serverUrl) : client.target(serverUrl);
     }
 }

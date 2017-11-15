@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -23,7 +22,6 @@ import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.model.domain.enums.SubjectRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
-import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,29 +39,15 @@ import org.slf4j.LoggerFactory;
  * Starting -> Logged in (if the user information is stored, and can be used to automatically log the user in at start up)
  * Starting -> Logged out (if the user cannot be logged in at start up for any reason)
  * Logged out -> Logged in (if the user authenticates manually after start up)
- * Logged in -> Expiring (after some time, this state is automatically entered so that the token can be refreshed)
- * Expiring -> Logged in (if the token is successfully refreshed)
- * Expiring -> Logged out (if the token cannot be refreshed after TOKEN_REFRESH_MAX_FAILURES tries)
  * 
  */
 public final class AccessManager {
     
     private static final Logger log = LoggerFactory.getLogger(AccessManager.class);
-    private static final RequestProcessor RP = new RequestProcessor(AccessManager.class);
 
-    // How long is the token expected to last? This should be set to something that's larger than 
-    // TOKEN_BEGIN_REFRESH_AFTER_SECS, but less than the actual token lifespan. The value used here is 
-    // 24 hours, which is less than the 48 hours of the actual token. 
-    private static final int TOKEN_LIFESPAN_SECS = 60 * 60 * 24;
-    
-    // Being attempting to refresh the token after it's an hour old.
-    private static final int TOKEN_BEGIN_REFRESH_AFTER_SECS = 60 * 60;
-    
-    // If a token refresh fails, wait a minute and then try again.
-    private static final int TOKEN_FAILURE_WAIT_SECS = 60;
-    
-    // Try for an hour, and if we still can't get a token, fail hard.
-    private static final int TOKEN_REFRESH_MAX_FAILURES = 60; 
+    // How long is the token expected to last? This should be set to something less than the actual token 
+    // life span. The value used here is 24 hours, which is less than the 48 hours of the actual token. 
+    private static final int TOKEN_LIFESPAN_SECS = 60;
     
     public static String RUN_AS_USER = "RunAs";
     public static String USER_NAME = "console.serverLogin";
@@ -73,8 +57,7 @@ public final class AccessManager {
     private enum AuthState {
         Starting,
         LoggedIn,
-        LoggedOut,
-        Expiring
+        LoggedOut
     }
     
     // Start up state
@@ -85,7 +68,6 @@ public final class AccessManager {
     // Running state
     private String username;
     private String password;
-    private int tokenRefreshFailures = 0;
     private String token;
     private Date tokenCreationDate; 
     private Subject authenticatedSubject; 
@@ -143,11 +125,6 @@ public final class AccessManager {
             // Session was not started with a run-as user
             Events.getInstance().postOnEventBus(new SessionStartEvent(actualSubject));
         }
-    }
-    
-    private void moveToExpiringState() {
-        log.info("Moving to expiring state");
-        this.currState = AuthState.Expiring;
     }
     
     private void moveToLoggedOutState() {
@@ -288,7 +265,6 @@ public final class AccessManager {
         
     private Subject authenticateSubject() throws Exception {
         
-        
         // First get auth token
         if (!obtainToken(false)) {
             return null;
@@ -316,64 +292,31 @@ public final class AccessManager {
     
     private synchronized boolean obtainToken(boolean retryErrors) {
 
-        String newToken = null;
-        try {
-            log.info("Attempting to obtain new auth token for {}", username);
-            newToken = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
-        }
-        finally {
-            // If there is an error, we still need to schedule the next refresh.
-            if (newToken==null) {
-                if (retryErrors) {
-                    if (++tokenRefreshFailures < TOKEN_REFRESH_MAX_FAILURES) {
-                        // Retry in a minute
-                        log.info("Will retry auth token in a minute...");
-                        scheduleTokenUpdate(TOKEN_FAILURE_WAIT_SECS);
-                    }
-                    else {
-                        log.info("Reached max token retries ({}). Moving to logged out state, and showing login dialog.", TOKEN_REFRESH_MAX_FAILURES);
-                        // Expired token cannot be refreshed
-                        moveToLoggedOutState();
-                        // Show login dialog to allow user to update password
-                        LoginDialog loginDialog = new LoginDialog();
-                        loginDialog.showDialog(this::loginUser, ErrorType.TokenExpiredError);
-                    }
-                }
-                else {
-                    log.error("Got null auth token");
-                }
-            }
-            else {
-                this.tokenRefreshFailures = 0;
-                this.token = newToken;
-                this.tokenCreationDate = new Date();
-                log.info("Now using token: {}", token);        
-                // Schedule the next refresh
-                scheduleTokenUpdate(TOKEN_BEGIN_REFRESH_AFTER_SECS);
-            }
-        }
+        log.info("Attempting to obtain new auth token for {}", username);
+        String newToken = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
         
-        return newToken!=null;
+        if (newToken!=null) {
+            this.token = newToken;
+            this.tokenCreationDate = new Date();
+            log.info("Now using token: {}", token);
+            return true;
+        }
+        else {
+            // Expired token cannot be refreshed
+            moveToLoggedOutState();
+            // Show login dialog to allow user to update password
+            LoginDialog loginDialog = new LoginDialog();
+            loginDialog.showDialog(this::loginUser, ErrorType.TokenExpiredError);
+            return false;
+        }
     }
     
-    private synchronized void scheduleTokenUpdate(int secs) {
-        RP.post(() -> {
-            try {
-                moveToExpiringState();
-                obtainToken(true);
-            }
-            catch (Throwable t) {
-                FrameworkImplProvider.handleExceptionQuietly("Could not update auth token", t);
-            }
-        }, secs*1000);
-    }
-
     /**
      * Checks to see if the system is in a logged in state. 
      * @return true if a user is authenticated and logged in
      */
     public boolean isLoggedIn() {
-        return currState==AuthState.LoggedIn || currState==AuthState.Expiring;
+        return currState==AuthState.LoggedIn;
     }
 
     /**
@@ -392,7 +335,6 @@ public final class AccessManager {
         if (tokenMustBeRenewed()) {
             // We're way past token refresh time. Probably the client machine went to sleep and skipped all the refreshes. 
             // We'll attempt to force a refresh and hope for a fresh token that we can return. 
-            moveToExpiringState();
             obtainToken(true);
         }
         return token;
@@ -400,7 +342,9 @@ public final class AccessManager {
     
     private boolean tokenMustBeRenewed() {
         if (tokenCreationDate==null) return false;
-        return (Utils.getDateDiff(new Date(), tokenCreationDate, TimeUnit.SECONDS) > TOKEN_LIFESPAN_SECS);
+        long tokenAgeSecs = Utils.getDateDiff(tokenCreationDate, new Date(), TimeUnit.SECONDS);
+        log.info("Token is now {} seconds old", tokenAgeSecs);
+        return (tokenAgeSecs > TOKEN_LIFESPAN_SECS);
     }
     
     /**
