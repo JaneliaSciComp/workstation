@@ -184,7 +184,7 @@ public class LoginDialog extends ModalDialog {
         FrameworkImplProvider.setModelProperty(AccessManager.USER_NAME, username);
         FrameworkImplProvider.setModelProperty(AccessManager.USER_PASSWORD, rememberCheckbox.isSelected()?password:null);
         FrameworkImplProvider.setModelProperty(AccessManager.REMEMBER_PASSWORD, rememberCheckbox.isSelected());
-
+        
         SimpleWorker worker = new SimpleWorker() {
 
             private boolean authSuccess;

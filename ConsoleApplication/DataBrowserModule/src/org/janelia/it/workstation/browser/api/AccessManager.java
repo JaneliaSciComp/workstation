@@ -2,8 +2,10 @@ package org.janelia.it.workstation.browser.api;
 
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -16,6 +18,7 @@ import org.janelia.it.workstation.browser.events.lifecycle.SessionEndEvent;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog.ErrorType;
+import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.model.domain.enums.SubjectRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
@@ -46,8 +49,13 @@ public final class AccessManager {
     
     private static final Logger log = LoggerFactory.getLogger(AccessManager.class);
     private static final RequestProcessor RP = new RequestProcessor(AccessManager.class);
+
+    // How long is the token expected to last? This should be set to something that's larger than 
+    // TOKEN_BEGIN_REFRESH_AFTER_SECS, but less than the actual token lifespan. The value used here is 
+    // 24 hours, which is less than the 48 hours of the actual token. 
+    private static final int TOKEN_LIFESPAN_SECS = 60 * 60 * 24;
     
-    // Refresh the token after it's an hour old. Tokens probably last much longer than this, but let's be safe.
+    // Being attempting to refresh the token after it's an hour old.
     private static final int TOKEN_BEGIN_REFRESH_AFTER_SECS = 60 * 60;
     
     // If a token refresh fails, wait a minute and then try again.
@@ -74,10 +82,13 @@ public final class AccessManager {
     private ErrorType loginIssue;
     
     // Running state
+    private String username;
+    private String password;
     private int tokenRefreshFailures = 0;
     private String token;
+    private Date tokenCreationDate; 
     private Subject authenticatedSubject; 
-    private Subject actualSubject; 
+    private Subject actualSubject;
     private static String bypassSubjectKey;
 
     // Singleton
@@ -243,6 +254,11 @@ public final class AccessManager {
     }
     
     private boolean loginUser(String username, String password) {
+
+        // Keep these in memory for token refreshes, because user may not want to persist the password
+        this.username = username;
+        this.password = password;
+        
         try {
             if (isLoggedIn()) {
                 // Log out current subject first
@@ -250,7 +266,7 @@ public final class AccessManager {
             }
 
             // Authenticate
-            Subject authenticatedSubject = authenticateSubject(username, password);
+            Subject authenticatedSubject = authenticateSubject();
             
             if (authenticatedSubject != null) {
                 moveToLoggedInState(authenticatedSubject);
@@ -269,9 +285,11 @@ public final class AccessManager {
         }
     }
         
-    private Subject authenticateSubject(final String username, final String password) throws Exception {
+    private Subject authenticateSubject() throws Exception {
+        
+        
         // First get auth token
-        if (!obtainToken(username, password, false)) {
+        if (!obtainToken(false)) {
             return null;
         }
         
@@ -295,46 +313,52 @@ public final class AccessManager {
         return authenticatedSubject;
     }
     
-    private synchronized boolean obtainToken(String username, String password, boolean retryErrors) {
+    private synchronized boolean obtainToken(boolean retryErrors) {
 
-        log.info("Attempting to obtain new auth token for {}", username);
-        String newToken = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
-        
-        if (newToken==null) {
-            if (retryErrors) {
-                if (++tokenRefreshFailures < TOKEN_REFRESH_MAX_FAILURES) {
-                    // Retry in a minute
-                    log.info("Will retry auth token in a minute...");
-                    scheduleTokenUpdate(username, password, TOKEN_FAILURE_WAIT_SECS);
+        String newToken = null;
+        try {
+            log.info("Attempting to obtain new auth token for {}", username);
+            newToken = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
+        }
+        finally {
+            // If there is an error, we still need to schedule the next refresh.
+            if (newToken==null) {
+                if (retryErrors) {
+                    if (++tokenRefreshFailures < TOKEN_REFRESH_MAX_FAILURES) {
+                        // Retry in a minute
+                        log.info("Will retry auth token in a minute...");
+                        scheduleTokenUpdate(TOKEN_FAILURE_WAIT_SECS);
+                    }
+                    else {
+                        log.info("Reached max token retries ({}). Moving to logged out state, and showing login dialog.", TOKEN_REFRESH_MAX_FAILURES);
+                        // Expired token cannot be refreshed
+                        moveToLoggedOutState();
+                        // Show login dialog to allow user to update password
+                        LoginDialog loginDialog = new LoginDialog();
+                        loginDialog.showDialog(this::loginUser, ErrorType.TokenExpiredError);
+                    }
                 }
                 else {
-                    log.info("Reached max token retries ({}). Moving to logged out state, and showing login dialog.", TOKEN_REFRESH_MAX_FAILURES);
-                    // Expired token cannot be refreshed
-                    moveToLoggedOutState();
-                    // Show login dialog to allow user to update password
-                    LoginDialog loginDialog = new LoginDialog();
-                    loginDialog.showDialog(this::loginUser, ErrorType.TokenExpiredError);
+                    log.error("Got null auth token");
                 }
             }
             else {
-                log.error("Got null auth token");
+                this.tokenRefreshFailures = 0;
+                this.token = newToken;
+                this.tokenCreationDate = new Date();
+                log.info("Now using token: {}", token);        
+                // Schedule the next refresh
+                scheduleTokenUpdate(TOKEN_BEGIN_REFRESH_AFTER_SECS);
             }
-            return false;
         }
-        else {
-            this.tokenRefreshFailures = 0;
-            this.token = newToken;
-            log.info("Now using token: {}", token);        
-            // Schedule the next refresh
-            scheduleTokenUpdate(username, password, TOKEN_BEGIN_REFRESH_AFTER_SECS);
-            return true;
-        }
+        
+        return newToken!=null;
     }
     
-    private synchronized void scheduleTokenUpdate(String username, String password, int secs) {
+    private synchronized void scheduleTokenUpdate(int secs) {
         RP.post(() -> {
             moveToExpiringState();
-            obtainToken(username, password, true);
+            obtainToken(true);
         }, secs*1000);
     }
 
@@ -359,9 +383,20 @@ public final class AccessManager {
      * @return JWS token 
      */
     public String getToken() {
+        if (tokenMustBeRenewed()) {
+            // We're way past token refresh time. Probably the client machine went to sleep and skipped all the refreshes. 
+            // We'll attempt to force a refresh and hope for a fresh token that we can return. 
+            moveToExpiringState();
+            obtainToken(true);
+        }
         return token;
     }
-
+    
+    private boolean tokenMustBeRenewed() {
+        if (tokenCreationDate==null) return false;
+        return (Utils.getDateDiff(new Date(), tokenCreationDate, TimeUnit.SECONDS) > TOKEN_LIFESPAN_SECS);
+    }
+    
     /**
      * Returns the current authenticated subject (user)
      * @return user
