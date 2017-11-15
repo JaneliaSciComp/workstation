@@ -175,7 +175,7 @@ public class DomainMgr {
         if (preferenceMap==null) {
             preferenceMap = new HashMap<>();
             for (Preference preference : subjectFacade.getPreferences()) {
-                log.info("Loaded preference: {}",preference);
+                log.debug("Loaded preference: {}",preference);
                 preferenceMap.put(getPreferenceMapKey(preference), preference);
             }
             log.info("Loaded {} user preferences", preferenceMap.size());

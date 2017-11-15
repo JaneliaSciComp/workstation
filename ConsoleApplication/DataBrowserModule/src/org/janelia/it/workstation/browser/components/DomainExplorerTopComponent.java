@@ -405,16 +405,16 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             for(DomainObject domainObject : event.getDomainObjects()) {
                 Set<AbstractDomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
                 if (!nodes.isEmpty()) {
-                    log.info("Updating invalidated object: {}",domainObject.getName());
+                    log.debug("Updating invalidated object: {}",domainObject.getName());
                     for(AbstractDomainObjectNode<DomainObject> node : nodes) {
                         try {
                             DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
                             if (refreshed==null) {
-                                log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
+                                log.debug("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
                                 node.destroy();
                             }
                             else {
-                                log.info("  Updating node@{} with refreshed object",System.identityHashCode(node));
+                                log.debug("  Updating node@{} with refreshed object",System.identityHashCode(node));
                                 node.update(refreshed);
                             }
                         }  
