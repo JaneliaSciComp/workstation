@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.task_workflow;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -10,6 +11,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -21,6 +24,7 @@ import javax.swing.table.AbstractTableModel;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +70,28 @@ public class TaskWorkflowPanel extends JPanel {
 
         // point table
         pointTable = new JTable(pointModel);
+        pointTable.addMouseListener(new MouseHandler() {
+            @Override
+            protected void singleLeftClicked(MouseEvent me) {
+                if (me.isConsumed()) {
+                    return;
+                }
+                JTable table = (JTable) me.getSource();
+                int viewRow = table.rowAtPoint(me.getPoint());
+                if (viewRow >= 0) {
+                    int modelRow = pointTable.convertRowIndexToModel(viewRow);
+
+                    int viewColumn = table.columnAtPoint(me.getPoint());
+                    int modelColumn = pointTable.convertColumnIndexToModel(viewColumn);
+
+                    System.out.println("click on row " + modelRow + ", column " + modelColumn);
+
+                }
+                me.consume();
+            }
+        });
+
+
 
         JScrollPane scrollPane = new JScrollPane(pointTable);
         pointTable.setFillsViewportHeight(true);
@@ -74,6 +100,7 @@ public class TaskWorkflowPanel extends JPanel {
         GridBagConstraints cTable = new GridBagConstraints();
         cTable.gridx = 0;
         cTable.gridy = GridBagConstraints.RELATIVE;
+        cTable.weightx = 1.0;
         cTable.weighty = 1.0;
         cTable.anchor = GridBagConstraints.PAGE_START;
         cTable.fill = GridBagConstraints.BOTH;
@@ -91,14 +118,27 @@ public class TaskWorkflowPanel extends JPanel {
         cVert.fill = GridBagConstraints.HORIZONTAL;
         cVert.weighty = 0.0;
 
-        // task transition buttons (next, previous, etc)
 
+        // task transition buttons (next, previous, etc)
+        JPanel taskButtonsPanel = new JPanel();
+        taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
+        add(taskButtonsPanel, cVert);
+
+        JButton nextButton = new JButton("Next");
+        nextButton.addActionListener(event -> onNextButton());
+        taskButtonsPanel.add(nextButton);
 
 
         // workflow management buttons: load, done (?)
+        JPanel workflowButtonsPanel = new JPanel();
+        workflowButtonsPanel.setLayout(new BoxLayout(workflowButtonsPanel, BoxLayout.LINE_AXIS));
+        add(workflowButtonsPanel, cVert);
+
+        workflowButtonsPanel.add(Box.createHorizontalGlue());
+
         JButton loadButton = new JButton("Load list...");
         loadButton.addActionListener(event -> onLoadButton());
-        add(loadButton, cVert);
+        workflowButtonsPanel.add(loadButton);
 
         /*
         // not sure I need this: it'll push content up so it
@@ -129,6 +169,30 @@ public class TaskWorkflowPanel extends JPanel {
         startWorkflow(pointList);
 
         log.info("Loaded point file " + "my point file");
+    }
+
+    /**
+     * the next button brings you to the next unreviewed point
+     */
+    private void onNextButton() {
+
+
+        System.out.println("onNextButton()");
+
+        if (hasPoints()) {
+
+            int viewRow = pointTable.getSelectedRow();
+            if (viewRow >= 0) {
+                // selection exists; find it
+                int modelRow = pointTable.convertRowIndexToModel(viewRow);
+
+            } else {
+                // no selection = go to first unreviewed point
+            }
+
+
+
+        }
     }
 
     /**
@@ -200,6 +264,13 @@ public class TaskWorkflowPanel extends JPanel {
             }
         }
         return pointList;
+    }
+
+    /**
+     * are there any points loaded?
+     */
+    private boolean hasPoints() {
+        return pointModel.getRowCount() > 0;
     }
 
     /**
