@@ -13,7 +13,7 @@ import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
-import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 
@@ -92,7 +92,7 @@ public class ActivityLogHelper {
                 folderOpenTimestamp + ":" + relativeSlice + ":" + tileIndex.toString() + ":elapsed_ms=" + elapsedMs
         );
         // Use the by-category granularity for these.
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LIX_CATEGORY_STRING,
                 actionString,
@@ -100,7 +100,7 @@ public class ActivityLogHelper {
                 Double.MAX_VALUE
         );
         // Use the elapsed cutoff for this parallel category.
-        AccessManager.getAccessManager().logToolThresholdEvent(
+        SessionMgr.getSessionMgr().logToolThresholdEvent(
                 LVV_LOGSTAMP_ID,
                 LONG_TILE_LOAD_CATEGORY_STRING,
                 actionString,
@@ -111,7 +111,7 @@ public class ActivityLogHelper {
     }
 
     public void logFolderOpen(String remoteBasePath, long folderOpenTimestamp) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_SESSION_CATEGORY_STRING,
                 new ActionString(remoteBasePath + ":" + folderOpenTimestamp)
@@ -157,7 +157,7 @@ public class ActivityLogHelper {
     }
 
     public void logRerootNeurite(Long sampleID, Long workspaceID, Long neuronID) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_REROOT_NEURITE_CATEGORY_STRING,
                 new ActionString(sampleID + ":" + workspaceID + ":" + neuronID)
@@ -237,7 +237,7 @@ public class ActivityLogHelper {
         if (annotation == null  ||  workspaceID == null) {
             return;
         }
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 END_OP_VOXEL_CATEGORY_STRING,
                 new ActionString(
@@ -260,7 +260,7 @@ public class ActivityLogHelper {
         if (workspaceID == null  ||  location == null) {
             return;
         }
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 END_OP_VOXEL_CATEGORY_STRING,
                 new ActionString(
@@ -273,7 +273,7 @@ public class ActivityLogHelper {
     }
 
     public void logSnapshotLaunch(String labelText, Long workspaceId) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_3D_LAUNCH_CATEGORY_STRING,
                 new ActionString(labelText + " workspaceId=" + workspaceId)
@@ -287,7 +287,7 @@ public class ActivityLogHelper {
                 && annotationModel.getCurrentWorkspace().getId() != null) {
             action = "Sample/Annotation:" + annotationModel.getCurrentWorkspace().getSampleRef().getTargetId() + ":" + annotationId;
         }
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_NAVIGATE_LANDMARK_CATEGORY_STRING,
                 new ActionString(action)
@@ -295,7 +295,7 @@ public class ActivityLogHelper {
     }
 
     public void logLoadWorkspace(Long workspaceID) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_LOAD_WORKSPACE_CATEGORY_STRING,
                 new ActionString(workspaceID.toString())
@@ -303,7 +303,7 @@ public class ActivityLogHelper {
     }
 
     public void logSetPreference(Long workspaceID, String key) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_SET_PREFERENCE_CATEGORY_STRING,
                 new ActionString(workspaceID.toString() + ":" + key)
@@ -311,7 +311,7 @@ public class ActivityLogHelper {
     }
 
     public void logSelectNeuron(Long workspaceID, Long neuronID) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_SELECT_NEURON_CATEGORY_STRING,
                 new ActionString(workspaceID.toString() + ":" + neuronID.toString())
@@ -319,7 +319,7 @@ public class ActivityLogHelper {
     }
 
     public void logCreateNeuron(Long workspaceID, Long neuronID) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_CREATE_NEURON_CATEGORY_STRING,
                 new ActionString(workspaceID.toString() + ":" + neuronID.toString())
@@ -327,7 +327,7 @@ public class ActivityLogHelper {
     }
 
     public void logRenameNeuron(Long workspaceID, Long neuronID) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_RENAME_NEURON_CATEGORY_STRING,
                 new ActionString(workspaceID.toString() + ":" + neuronID.toString())
@@ -335,7 +335,7 @@ public class ActivityLogHelper {
     }
 
     public void logDeleteNeuron(Long workspaceID, Long neuronID) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_DELETE_NEURON_CATEGORY_STRING,
                 new ActionString(workspaceID.toString() + ":" + neuronID.toString())
@@ -343,7 +343,7 @@ public class ActivityLogHelper {
     }
 
     public void logCreateWorkspace(Long workspaceID) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_CREATE_WORKSPACE_CATEGORY_STRING,
                 new ActionString(workspaceID.toString())
@@ -351,7 +351,7 @@ public class ActivityLogHelper {
     }
 
     public void logAddAnchoredPath(Long workspaceID, Long pathID) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_ADD_ANCHORED_PATH_CATEGORY_STRING,
                 new ActionString(workspaceID.toString() + ":" + pathID.toString())
@@ -359,7 +359,7 @@ public class ActivityLogHelper {
     }
 
     public void logRemoveAnchoredPath(Long workspaceID, Long pathID) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_REMOVE_ANCHORED_PATH_CATEGORY_STRING,
                 new ActionString(workspaceID.toString() + ":" + pathID.toString())
@@ -367,7 +367,7 @@ public class ActivityLogHelper {
     }
 
     public void logSetNote(Long workspaceID, Long annotationID, String note) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_SET_NOTE_CATEGORY_STRING,
                 new ActionString(workspaceID.toString() + ":" + annotationID.toString() + ":" + note)
@@ -375,7 +375,7 @@ public class ActivityLogHelper {
     }
 
     public void logRemoveNote(Long workspaceID, Long annotationID) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_REMOVE_NOTE_CATEGORY_STRING,
                 new ActionString(workspaceID.toString() + ":" + annotationID.toString())
@@ -383,7 +383,7 @@ public class ActivityLogHelper {
     }
 
     public void logSetStyle(Long workspaceID, Long neuronID) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_SET_STYLE_CATEGORY_STRING,
                 new ActionString(workspaceID.toString() + ":" + neuronID.toString())
@@ -391,7 +391,7 @@ public class ActivityLogHelper {
     }
 
     public void logShowWorkspaceInfo(Long workspaceID) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_SHOW_WORKSPACE_INFO_CATEGORY_STRING,
                 new ActionString(workspaceID.toString())
@@ -399,7 +399,7 @@ public class ActivityLogHelper {
     }
 
     public void logExportSWCFile(Long workspaceID, String filename) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_EXPORT_SWC_CATEGORY_STRING,
                 new ActionString(workspaceID.toString() + ":" + filename)
@@ -407,7 +407,7 @@ public class ActivityLogHelper {
     }
 
     public void logImportSWCFile(Long workspaceID, String filename) {
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_IMPORT_SWC_CATEGORY_STRING,
                 new ActionString(workspaceID.toString() + ":" + filename)
@@ -416,7 +416,7 @@ public class ActivityLogHelper {
 
     private void logGeometricEvent(Long sampleID, Long workspaceID, Double x, Double y, Double z, CategoryString category) {
         String action = formatGeoAction(x, y, z, sampleID, workspaceID);
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 category,
                 new ActionString(action)
@@ -425,7 +425,7 @@ public class ActivityLogHelper {
 
     private void logGeometricEvent(Long sampleID, Long workspaceID, Long neuronID, Double x, Double y, Double z, CategoryString category) {
         String action = formatGeoAction(x, y, z, sampleID, workspaceID, neuronID);
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 category,
                 new ActionString(action)
@@ -434,7 +434,7 @@ public class ActivityLogHelper {
 
     private void logExternalGeometricEvent(Long sampleID, Long workspaceID, Double x, Double y, Double z, float muX, float muY, float muZ, CategoryString category) {
         String action = formatGeoAction(x, y, z, muX, muY, muZ, sampleID, workspaceID);
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 EXTERNAL_LVV_LOGSTAMP_ID,   // For now: only Horta makes requests.
                 category,
                 new ActionString(action)
@@ -443,7 +443,7 @@ public class ActivityLogHelper {
 
     private void logExternalGeometricEvent(Long sampleID, Long workspaceID, Long neuronID, Double x, Double y, Double z, float muX, float muY, float muZ, CategoryString category) {
         String action = formatGeoAction(x, y, z, muX, muY, muZ, sampleID, workspaceID, neuronID);
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 EXTERNAL_LVV_LOGSTAMP_ID,   // For now: only Horta makes requests.
                 category,
                 new ActionString(action)

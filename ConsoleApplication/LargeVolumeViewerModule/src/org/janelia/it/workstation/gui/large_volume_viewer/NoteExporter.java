@@ -68,7 +68,7 @@ public class NoteExporter {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode rootNode = mapper.createObjectNode();
         rootNode.put("workspaceID", workspaceID);
-        rootNode.put("username", AccessManager.getAccessManager().getSubject().getName());
+        rootNode.put("username", AccessManager.getAccessManager().getActualSubject().getName());
 
 
 

@@ -107,7 +107,7 @@ public class EditWorkspaceNameDialog extends ModalDialog {
         attrPanel.add(neuronCodeField,"width 100:200:1000, grow");
         
         userInitialsField = new JTextField();
-        userInitialsField.setText(guessUserInitials(AccessManager.getAccessManager().getSubject().getFullName()));
+        userInitialsField.setText(guessUserInitials(AccessManager.getAccessManager().getActualSubject().getFullName()));
         attrPanel.add(userInitialsField,"width 30:100:1000, grow");
 
         suffixField = new JTextField();
