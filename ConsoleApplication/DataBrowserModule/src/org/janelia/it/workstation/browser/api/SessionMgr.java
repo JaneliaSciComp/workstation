@@ -127,27 +127,35 @@ public class SessionMgr {
             Callable<Void> callable = new Callable<Void>() {
                 @Override
                 public Void call() {
-                    Long count = categoryInstanceCount.get(category);
-                    if (count == null) {
-                        count = new Long(0);
-                    }
-                    boolean shouldLog = false;
-                    if (elapsedMs > thresholdMs) {
-                        shouldLog = true;
-                    } else if (count % LOG_GRANULARITY == 0) {
-                        shouldLog = true;
-                    }
-                    categoryInstanceCount.put(category, ++count);
-
-                    if (shouldLog) {
-                        addEventToSession(event);
+                    try {
+                        Long count = categoryInstanceCount.get(category);
+                        if (count == null) {
+                            count = new Long(0);
+                        }
+                        boolean shouldLog = false;
+                        if (elapsedMs > thresholdMs) {
+                            shouldLog = true;
+                        } else if (count % LOG_GRANULARITY == 0) {
+                            shouldLog = true;
+                        }
+                        categoryInstanceCount.put(category, ++count);
+    
+                        if (shouldLog) {
+                            addEventToSession(event);
+                        }
+                    } 
+                    catch (Exception ex) {
+                        log.warn(
+                                "Failed to log tool event for session: {}, user: {}, tool: {}, category: {}, action: {}, timestamp: {}.",
+                                currentSessionId, userLogin, toolName, category, action, timestamp, ex);
                     }
                     return null;
                 }
             };
             SingleThreadedTaskQueue.submit(callable);
-
-        } catch (Exception ex) {
+    
+        } 
+        catch (Exception ex) {
             log.warn(
                     "Failed to log tool event for session: {}, user: {}, tool: {}, category: {}, action: {}, timestamp: {}.",
                     currentSessionId, userLogin, toolName, category, action, timestamp, ex);
@@ -174,20 +182,28 @@ public class SessionMgr {
             Callable<Void> callable = new Callable<Void>() {
                 @Override
                 public Void call() {
-                    boolean shouldLog = false;
-                    if (elapsedMs > thresholdMs) {
-                        shouldLog = true;
-                    }
-
-                    if (shouldLog) {
-                        addEventToSession(event);
+                    try {
+                        boolean shouldLog = false;
+                        if (elapsedMs > thresholdMs) {
+                            shouldLog = true;
+                        }
+    
+                        if (shouldLog) {
+                            addEventToSession(event);
+                        }
+                    } 
+                    catch (Exception ex) {
+                        log.warn(
+                                "Failed to log tool event for session: {}, user: {}, tool: {}, category: {}, action: {}, timestamp: {}.",
+                                currentSessionId, userLogin, toolName, category, action, timestamp, ex);
                     }
                     return null;
                 }
             };
             SingleThreadedTaskQueue.submit(callable);
 
-        } catch (Exception ex) {
+        } 
+        catch (Exception ex) {
             log.warn(
                     "Failed to log tool event for session: {}, user: {}, tool: {}, category: {}, action: {}, timestamp: {}.",
                     currentSessionId, userLogin, toolName, category, action, timestamp, ex);
@@ -212,6 +228,7 @@ public class SessionMgr {
      */
     public void logBatchToolEvent(ToolString toolName, CategoryString category, String batchPrefix, List<String> actions) {
         String userLogin = getLogEventUserLogin();
+
         try {
             final UserToolEvent[] events = new UserToolEvent[actions.size()];
             int evtNum = 0;
@@ -234,12 +251,20 @@ public class SessionMgr {
             Callable<Void> callable = new Callable<Void>() {
                 @Override
                 public Void call() {
-                    addEventsToSession(events);
+                    try {
+                        addEventsToSession(events);
+                    }
+                    catch (Exception ex) {
+                        log.warn(
+                                "Failed to batch-log tool events for session: {}, user: {}, tool: {}, category: {}, action-prefix: {}, timestamp: {}.",
+                                currentSessionId, userLogin, toolName, category, batchPrefix, new Date().getTime(), ex);
+                    }
                     return null;
                 }
             };
             SingleThreadedTaskQueue.submit(callable);
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             log.warn(
                     "Failed to batch-log tool events for session: {}, user: {}, tool: {}, category: {}, action-prefix: {}, timestamp: {}.",
                     currentSessionId, userLogin, toolName, category, batchPrefix, new Date().getTime(), ex);

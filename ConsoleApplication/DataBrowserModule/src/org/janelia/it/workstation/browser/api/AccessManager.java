@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -357,8 +358,13 @@ public final class AccessManager {
     
     private synchronized void scheduleTokenUpdate(int secs) {
         RP.post(() -> {
-            moveToExpiringState();
-            obtainToken(true);
+            try {
+                moveToExpiringState();
+                obtainToken(true);
+            }
+            catch (Throwable t) {
+                FrameworkImplProvider.handleExceptionQuietly("Could not update auth token", t);
+            }
         }, secs*1000);
     }
 
