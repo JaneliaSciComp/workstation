@@ -1,7 +1,8 @@
 package org.janelia.it.workstation.gui.task_workflow.tasks;
 
 /**
- * Created by olbrisd on 11/8/17.
+ * this is the base class for a "task" that needs to be completed in the task workflow.
+ * it's modeled after the tasks in Fly EM's Neu3 TaskProtocol
  */
 abstract public class BaseTask {
 

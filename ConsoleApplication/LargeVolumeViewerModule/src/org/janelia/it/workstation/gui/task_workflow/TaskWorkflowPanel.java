@@ -1,18 +1,42 @@
 package org.janelia.it.workstation.gui.task_workflow;
 
-import javax.swing.BoxLayout;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.AbstractTableModel;
+
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * This panel contains the UI for a task workflow similar to what I implemented
  * in Neu3 for Fly EM.  Users will be given a list of tasks to complete.
+ *
+ * For the first implementation, the tasks will be a list of points.  If we need
+ * something more sophisticated later, I'll expand it into generic tasks as in Neu3.
  */
 public class TaskWorkflowPanel extends JPanel {
     private final TaskDataSourceI dataSource;
+
+    private JTable pointTable;
+    private PointTableModel pointModel = new PointTableModel();
 
     private static final Logger log = LoggerFactory.getLogger(TaskWorkflowPanel.class);
 
@@ -20,22 +44,258 @@ public class TaskWorkflowPanel extends JPanel {
 
         this.dataSource = dataSource;
 
-        // I want to be sure I understand when this thing is created
-        log.info("TaskWorkflowPanel constructor");
+        setupUI();
 
-
-        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-
-        JLabel label = new JLabel("     placeholder     ", JLabel.CENTER);
-        add(label);
 
     }
 
+    private void setupUI() {
+
+        setLayout(new GridBagLayout());
+
+        GridBagConstraints cTop = new GridBagConstraints();
+        cTop.gridx = 0;
+        cTop.gridy = 0;
+        cTop.weightx = 1.0;
+        cTop.weighty = 0.0;
+        cTop.anchor = GridBagConstraints.PAGE_START;
+        cTop.fill = GridBagConstraints.HORIZONTAL;
+        cTop.insets = new Insets(10, 0, 0, 0);
+        add(new JLabel("Point review workflow", JLabel.CENTER));
+
+
+        // point table
+        pointTable = new JTable(pointModel);
+
+        JScrollPane scrollPane = new JScrollPane(pointTable);
+        pointTable.setFillsViewportHeight(true);
+
+        // table should take available space
+        GridBagConstraints cTable = new GridBagConstraints();
+        cTable.gridx = 0;
+        cTable.gridy = GridBagConstraints.RELATIVE;
+        cTable.weighty = 1.0;
+        cTable.anchor = GridBagConstraints.PAGE_START;
+        cTable.fill = GridBagConstraints.BOTH;
+        add(scrollPane, cTable);
+
+
+
+
+        // I want most of the components to stack vertically;
+        //  components should fill or align left as appropriate
+        GridBagConstraints cVert = new GridBagConstraints();
+        cVert.gridx = 0;
+        cVert.gridy = GridBagConstraints.RELATIVE;
+        cVert.anchor = GridBagConstraints.PAGE_START;
+        cVert.fill = GridBagConstraints.HORIZONTAL;
+        cVert.weighty = 0.0;
+
+        // task transition buttons (next, previous, etc)
+
+
+
+        // workflow management buttons: load, done (?)
+        JButton loadButton = new JButton("Load list...");
+        loadButton.addActionListener(event -> onLoadButton());
+        add(loadButton, cVert);
+
+        /*
+        // not sure I need this: it'll push content up so it
+        //  doesn't stretch, if needed
+        GridBagConstraints cBottom = new GridBagConstraints();
+        cBottom.gridx = 0;
+        cBottom.gridy = GridBagConstraints.RELATIVE;
+        cBottom.anchor = GridBagConstraints.PAGE_START;
+        cBottom.fill = GridBagConstraints.BOTH;
+        cBottom.weighty = 1.0;
+        add(Box.createVerticalGlue(), cBottom);
+        */
+
+    }
+
+    /**
+     * given a list of points, start the workflow from scratch
+     */
+    private void startWorkflow(List<Vec3> pointList) {
+        pointModel.clear();
+        for (Vec3 point: pointList) {
+            pointModel.addPoint(point);
+        }
+    }
+
+    private void onLoadButton() {
+        List<Vec3> pointList = readPointFile();
+        startWorkflow(pointList);
+
+        log.info("Loaded point file " + "my point file");
+    }
+
+    /**
+     * pop a file chooser; load and parse a point file; return list of points
+     *
+     * file format:
+     *      -- one point per line = whitespace-delimited x, y, z
+     *      -- blank lines allowed
+     *      -- comment lines start with #
+     */
+    private List<Vec3> readPointFile() {
+
+        List<Vec3> pointList = new ArrayList<>();
+
+        // dialog to get file
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Choose point file");
+        chooser.setMultiSelectionEnabled(false);
+        int result = chooser.showOpenDialog(FrameworkImplProvider.getMainFrame());
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File pointFile = chooser.getSelectedFile();
+
+            List<String> lines = null;
+            try {
+                lines = Files.readAllLines(pointFile.toPath(), Charset.defaultCharset());
+            }
+            catch (IOException e) {
+                JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                    "Could not read file " + pointFile,
+                    "Error reading point file",
+                    JOptionPane.ERROR_MESSAGE);
+                return pointList;
+            }
+
+            int nerrors = 0;
+            int npoints = 0;
+            for (String line: lines) {
+                line = line.trim();
+
+                if (line.length() == 0 || line.startsWith("#")) {
+                    // if blank or starts with #, do nothing
+                    continue;
+                } else {
+                    String[] items = line.split("\\s+");
+                    if (items.length != 3) {
+                        nerrors++;
+                        continue;
+                    }
+
+                    try {
+                        Vec3 point = new Vec3(Double.parseDouble(items[0]),
+                            Double.parseDouble(items[1]), Double.parseDouble(items[2]));
+                        pointList.add(point);
+                    }
+                    catch (NumberFormatException e) {
+                        nerrors++;
+                        continue;
+                    }
+                    npoints++;
+                }
+            }
+
+            // if any errors, report number of errors and successes
+            if (nerrors > 0) {
+                JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                    "Not all lines in point file could be parsed; " + npoints + " points parsed with " + nerrors + " errors.",
+                    "Errors parsing point file",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        return pointList;
+    }
+
+    /**
+     * this method is called when the top component is destroyed
+     */
     public void close() {
 
         // do clean up here, which I expect I will need
 
-        log.info("TaskWorkflowPanel.close()");
 
     }
+}
+
+
+class PointTableModel extends AbstractTableModel {
+    private String[] columnNames = {"x", "y", "z", "reviewed"};
+
+    private List<Vec3> points = new ArrayList<>();
+    private List<Boolean> status = new ArrayList<>();
+
+    public void clear() {
+        points.clear();
+        status.clear();
+    }
+
+    public void addPoint(Vec3 point) {
+        points.add(point);
+        status.add(false);
+    }
+
+    @Override
+    public String getColumnName(int column) {
+        return columnNames[column];
+    }
+
+    @Override
+    public int getColumnCount() {
+        return columnNames.length;
+    }
+
+    @Override
+    public int getRowCount() {
+        return points.size();
+    }
+
+    @Override
+    public Object getValueAt(int row, int column) {
+        switch (column) {
+            case 0:
+                return points.get(row).getX();
+            case 1:
+                return points.get(row).getY();
+            case 2:
+                return points.get(row).getZ();
+            case 3:
+                return status.get(row);
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public void setValueAt(Object value, int row, int column) {
+        switch (column) {
+            case 0:
+                points.get(row).setX((double) value);
+            case 1:
+                points.get(row).setY((double) value);
+            case 2:
+                points.get(row).setZ((double) value);
+            case 3:
+                status.set(row, (Boolean) value);
+            default:
+                // nothing
+        }
+    }
+
+    @Override
+    public Class<?> getColumnClass(int column) {
+        switch (column) {
+            case 0:
+            case 1:
+            case 2:
+                return double.class;
+            case 3:
+                return Boolean.class;
+            default:
+                return Object.class;
+        }
+    }
+
+    // this isn't working yet for some reason
+    @Override
+    public boolean isCellEditable(int row, int column) {
+        return column == 3;
+    }
+
+
 }
