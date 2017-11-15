@@ -21,18 +21,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.GLJPanel;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.ab2.event.AB2ChangeModeEvent;
 import org.janelia.it.workstation.ab2.event.AB2DomainObjectUpdateEvent;
 import org.janelia.it.workstation.ab2.event.AB2Event;
-import org.janelia.it.workstation.ab2.controller.AB2CompositionMode;
-import org.janelia.it.workstation.ab2.controller.AB2ControllerMode;
-import org.janelia.it.workstation.ab2.controller.AB2View3DMode;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.model.AB2DomainObject;
 import org.janelia.it.workstation.ab2.renderer.AB2SampleRenderer;
@@ -118,14 +113,14 @@ public class AB2Controller implements GLEventListener {
         modeMap.put(AB2View3DMode.class, new AB2View3DMode(this, new AB2SimpleCubeRenderer()));
         modeMap.put(AB2CompositionMode.class, new AB2CompositionMode(this));
         modeMap.put(AB2SkeletonMode.class, new AB2SkeletonMode(this, new AB2SkeletonRenderer()));
-        modeMap.put(AB2SampleMode.class, new AB2SampleMode(this, new AB2SampleRenderer()));
+        modeMap.put(AB2SampleBasicMode.class, new AB2SampleBasicMode(this, new AB2SampleRenderer()));
     }
 
     public void start() {
         if (controllerHandle!=null) {
             return;
         } else {
-            currentMode=modeMap.get(AB2SampleMode.class);
+            currentMode=modeMap.get(AB2SampleBasicMode.class);
             //currentMode=modeMap.get(AB2SkeletonMode.class);
             currentMode.start();
             controllerHandle=controllerExecutor.scheduleWithFixedDelay(eventHandler, 500, 500, TimeUnit.MICROSECONDS);
@@ -199,11 +194,11 @@ public class AB2Controller implements GLEventListener {
                             currentMode.start();
                         }
                     } else if (event instanceof AB2SampleAddedEvent) {
-                        Class targetModeClass=AB2SampleMode.class;
+                        Class targetModeClass=AB2SampleBasicMode.class;
                         if (currentMode.getClass().equals(targetModeClass)) {
                             currentMode.processEvent(event);
                         } else {
-                            addEvent(new AB2ChangeModeEvent(AB2SampleMode.class));
+                            addEvent(new AB2ChangeModeEvent(AB2SampleBasicMode.class));
                             addEvent(event); // put this back in queue, to be processed after mode change
                         }
                     } else {

@@ -3,27 +3,24 @@ package org.janelia.it.workstation.ab2.controller;
 import java.awt.event.MouseEvent;
 
 import org.janelia.it.workstation.ab2.actor.Image2DActor;
-import org.janelia.it.workstation.ab2.event.AB2DomainObjectUpdateEvent;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2Image2DClickEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseClickedEvent;
 import org.janelia.it.workstation.ab2.event.AB2Sample3DImageLoadedEvent;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.loader.AB2Sample3DImageLoader;
-import org.janelia.it.workstation.ab2.model.AB2SkeletonDomainObject;
 import org.janelia.it.workstation.ab2.renderer.AB2SampleRenderer;
-import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AB2SampleMode extends AB2View3DMode {
+public class AB2SampleBasicMode extends AB2View3DMode {
 
-    Logger logger= LoggerFactory.getLogger(AB2SampleMode.class);
+    Logger logger= LoggerFactory.getLogger(AB2SampleBasicMode.class);
 
 
-    public AB2SampleMode(AB2Controller controller, AB2SampleRenderer renderer) {
+    public AB2SampleBasicMode(AB2Controller controller, AB2SampleRenderer renderer) {
         super(controller, renderer);
-        logger.info("AB2SampleMode() constructor finished");
+        logger.info("AB2SampleBasicMode() constructor finished");
     }
 
     @Override
@@ -35,8 +32,7 @@ public class AB2SampleMode extends AB2View3DMode {
             sampleRenderer.clearActors();
             AB2Sample3DImageLoader sample3DImageLoader=new AB2Sample3DImageLoader(sampleAddedEvent.getSample());
             sample3DImageLoader.execute();
-        }
-        else if  (event instanceof AB2Sample3DImageLoadedEvent) {
+        } else if  (event instanceof AB2Sample3DImageLoadedEvent) {
             AB2Sample3DImageLoadedEvent sample3DImageLoadedEvent=(AB2Sample3DImageLoadedEvent)event;
             sampleRenderer.addSample3DImage(sample3DImageLoadedEvent.getData());
             sample3DImageLoadedEvent.clearData();
