@@ -7,14 +7,12 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.util.Base64;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
-import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
-import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.janelia.model.domain.Preference;
 import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,17 +54,15 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
     }
     
     @Override
-    public Subject loginSubject(String username, String password) throws Exception {
-        String credentials = "Basic " + Base64.encodeAsString(username + ":" + password);
-        Response response = manager.getLoginEndpoint()
+    public User getOrCreateUser(String username) throws Exception {
+        Response response = manager.getUserGetOrCreateEndpoint()
+                .queryParam("subjectKey", "user:"+username)
                 .request("application/json")
-                .header("Authorization", credentials)
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making authenticating user against the server")) {
+        if (checkBadResponse(response.getStatus(), "problem making user request against the server")) {
             throw new WebApplicationException(response);
         }
-        Subject authSubject = response.readEntity(Subject.class);
-        return authSubject;
+        return response.readEntity(User.class);
     }
 
     @Override

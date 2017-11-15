@@ -101,7 +101,7 @@ public class RESTClientManager {
         serviceEndpoints.put("treenode", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/treenode"));
         serviceEndpoints.put("user", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/user"));
         serviceEndpoints.put("dataset", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/dataset"));
-        serviceEndpoints.put("login", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/login"));
+        serviceEndpoints.put("userGetOrCreate", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/user/getorcreate"));
         serviceEndpoints.put("search", client.target(serverUrl + REMOTE_DATA_PREFIX + "/search"));
         serviceEndpoints.put("sample", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/sample"));
         serviceEndpoints.put("release", client.target(serverUrl  + REMOTE_PROCESS_PREFIX + "/release"));
@@ -150,8 +150,8 @@ public class RESTClientManager {
         return serviceEndpoints.get("dataset");
     }
 
-    public WebTarget getLoginEndpoint() {
-        return serviceEndpoints.get("login");
+    public WebTarget getUserGetOrCreateEndpoint() {
+        return serviceEndpoints.get("userGetOrCreate");
     }
 
     public WebTarget getSearchEndpoint() {

@@ -920,8 +920,8 @@ public class DomainModel {
         return subjectFacade.getSubjectByKey(subjectKey);
     }
 
-    public Subject loginSubject(String username, String password) throws Exception {
-        return subjectFacade.loginSubject(username, password);
+    public Subject getOrCreateUser(String username) throws Exception {
+        return subjectFacade.getOrCreateUser(username);
     }
     
     public String dispatchSamples(List<Reference> sampleRefs, String reprocessPurpose, boolean reuse) throws Exception {

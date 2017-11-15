@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.janelia.model.domain.Preference;
 import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
 
 /**
  * Implementations provide access to subjects and their preferences. 
@@ -25,10 +26,11 @@ public interface SubjectFacade {
     public Subject getSubjectByKey(String subjectKey) throws Exception;
 
     /**
-     * authenticates the user against LDAP then loads the user subject
-     * @return authenticated Subject
+     * Returns the User for the current authenticated user. If the user does
+     * not exist in the system, it is created based on metadata in LDAP.
+     * @return User object
      */
-    public Subject loginSubject(String username, String password) throws Exception;
+    public User getOrCreateUser(String username) throws Exception;
 
     /**
      * Returns the current subject's preferences.

@@ -275,8 +275,8 @@ public final class AccessManager {
             return null;
         }
         
-        // make RESTful call to authenticate user
-        Subject authenticatedSubject = DomainMgr.getDomainMgr().getModel().loginSubject(username, password);
+        // We're now authenticated. Get or create the Workstation user object.
+        Subject authenticatedSubject = DomainMgr.getDomainMgr().getModel().getOrCreateUser(username);
 
         // Legacy JFS/Webdav needs basic auth
         if (authenticatedSubject != null) {
