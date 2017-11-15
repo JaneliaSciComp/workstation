@@ -37,10 +37,12 @@ public class DomainModelViewUtils {
      * Convert any occurrences of the old model packages to the new organization.
      */
     public static String convertModelPackages(String str) {
+        if (str==null) return null;
         return str.replaceAll(OLD_MODEL_PATTERN, NEW_MODEL).replaceAll(OLD_SECURITY_MODEL_PATTERN, NEW_SECURITY_MODEL);
     }
     
     public static String getDateString(Date date) {
+        if (date==null) return "";
         return dateFormatter.format(date).toLowerCase();
     }
 
