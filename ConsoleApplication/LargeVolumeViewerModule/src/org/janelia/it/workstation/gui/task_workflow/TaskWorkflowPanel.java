@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.swing.Box;
@@ -22,10 +23,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
+import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.console.viewerapi.SynchronizationHelper;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,12 +50,9 @@ public class TaskWorkflowPanel extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(TaskWorkflowPanel.class);
 
     public TaskWorkflowPanel(TaskDataSourceI dataSource) {
-
         this.dataSource = dataSource;
 
         setupUI();
-
-
     }
 
     private void setupUI() {
@@ -84,14 +86,18 @@ public class TaskWorkflowPanel extends JPanel {
                     int viewColumn = table.columnAtPoint(me.getPoint());
                     int modelColumn = pointTable.convertColumnIndexToModel(viewColumn);
 
-                    System.out.println("click on row " + modelRow + ", column " + modelColumn);
-
+                    // we don't do anything on click in the boolean column (it'll
+                    //  toggle by itself); on a click in x, y, z columns, go to
+                    //  the point
+                    if (modelColumn != 3) {
+                        gotoPoint((double) pointModel.getValueAt(modelRow, 0),
+                            (double) pointModel.getValueAt(modelRow, 1),
+                            (double) pointModel.getValueAt(modelRow, 2));
+                    }
                 }
                 me.consume();
             }
         });
-
-
 
         JScrollPane scrollPane = new JScrollPane(pointTable);
         pointTable.setFillsViewportHeight(true);
@@ -142,7 +148,9 @@ public class TaskWorkflowPanel extends JPanel {
 
         /*
         // not sure I need this: it'll push content up so it
-        //  doesn't stretch, if needed
+        //  doesn't stretch; so far, it's fine without it, but
+        //  I haven't checked the appearance if the user undocks
+        //  the window and lets it get big
         GridBagConstraints cBottom = new GridBagConstraints();
         cBottom.gridx = 0;
         cBottom.gridy = GridBagConstraints.RELATIVE;
@@ -194,6 +202,44 @@ public class TaskWorkflowPanel extends JPanel {
 
         }
     }
+
+    /**
+     * move the camera to the indicated point in LVV and Horta
+     */
+    private void gotoPoint(double x, double y, double z) {
+
+        System.out.println("moving camera to " + x + ", " + y + ", " + z);
+
+
+        // note: be careful not to do anything if no data is loaded; the
+        //  point list can be loaded without data
+
+
+        // this is possibly a bit hacky...
+
+        // there's a try/catch around this in FiltAnnList for some reason;
+        //  it doesn't prevent the GL errors I'm seeing on Mac
+
+        /*
+        SynchronizationHelper helper = new SynchronizationHelper();
+        Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+        SampleLocation sampleLocation = originator.getSampleLocation();
+        sampleLocation.setFocusUm(x, y, z);
+        Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+
+        for (Tiled3dSampleLocationProviderAcceptor acceptor : locationAcceptors) {
+            // in FiltAnnList, we have this:
+            // if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
+            //     acceptor.setSampleLocation(sampleLocation);
+            // }
+            // however, I'm hoping that if we send the location to all acceptors, we'll get LVV, too
+
+            acceptor.setSampleLocation(sampleLocation);
+        }
+        */
+
+    }
+
 
     /**
      * pop a file chooser; load and parse a point file; return list of points
@@ -362,11 +408,9 @@ class PointTableModel extends AbstractTableModel {
         }
     }
 
-    // this isn't working yet for some reason
     @Override
     public boolean isCellEditable(int row, int column) {
         return column == 3;
     }
-
 
 }
