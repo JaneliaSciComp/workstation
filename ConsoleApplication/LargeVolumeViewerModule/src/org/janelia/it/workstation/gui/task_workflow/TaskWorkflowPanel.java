@@ -126,7 +126,10 @@ public class TaskWorkflowPanel extends JPanel {
         cVert.weighty = 0.0;
 
 
+
         // task transition buttons (next, previous, etc)
+        // this isn't ready yet
+        /*
         JPanel taskButtonsPanel = new JPanel();
         taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
         add(taskButtonsPanel, cVert);
@@ -134,6 +137,7 @@ public class TaskWorkflowPanel extends JPanel {
         JButton nextButton = new JButton("Next");
         nextButton.addActionListener(event -> onNextButton());
         taskButtonsPanel.add(nextButton);
+         */
 
 
         // workflow management buttons: load, done (?)
