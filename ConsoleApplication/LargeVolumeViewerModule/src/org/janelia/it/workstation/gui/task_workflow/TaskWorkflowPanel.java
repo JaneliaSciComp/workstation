@@ -174,6 +174,16 @@ public class TaskWorkflowPanel extends JPanel {
     }
 
     private void onLoadButton() {
+        // don't load list if no data is loaded
+        if (dataSource.getAnnotationModel() == null) {
+            JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                    "You can't load a point file until a workspace is opened!",
+                    "Can't read point file",
+                    JOptionPane.ERROR_MESSAGE);
+
+            return;
+        }
+
         List<Vec3> pointList = readPointFile();
         startWorkflow(pointList);
 
@@ -184,7 +194,6 @@ public class TaskWorkflowPanel extends JPanel {
      * the next button brings you to the next unreviewed point
      */
     private void onNextButton() {
-
 
         System.out.println("onNextButton()");
 
@@ -208,12 +217,6 @@ public class TaskWorkflowPanel extends JPanel {
      * move the camera to the indicated point in LVV and Horta
      */
     private void gotoPoint(double x, double y, double z) {
-
-        // note: be careful not to do anything if no data is loaded; the
-        //  point list can be loaded without data
-        if (dataSource.getAnnotationModel() == null) {
-            return;
-        }
 
         // this is possibly a bit hacky...I followed the example in FilteredAnnList;
         //  we use the LVV sample provider to get the sample location, then poke
