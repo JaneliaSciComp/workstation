@@ -238,6 +238,12 @@
                 <package>com.mongodb.operation</package>
                 <package>com.mongodb.selector</package>
                 <package>com.mongodb.util</package>
+                <package>com.rabbitmq.client</package>
+                <package>com.rabbitmq.client.impl</package>
+                <package>com.rabbitmq.client.impl.nio</package>
+                <package>com.rabbitmq.client.recovery</package>
+                <package>com.rabbitmq.client.tools.json</package>
+                <package>com.rabbitmq.client.tools.jsonrpc</package>
                 <package>com.sun.activation.registries</package>
                 <package>com.sun.activation.viewers</package>
                 <package>com.sun.istack</package>
@@ -1611,6 +1617,8 @@
                 <package>org.janelia.it.jacs.shared.utils.genbank</package>
                 <package>org.janelia.it.jacs.shared.utils.zeiss</package>
                 <package>org.janelia.it.jacs.shared.viewer3d</package>
+                <package>org.janelia.it.messaging.broker.sharedworkspace</package>
+                <package>org.janelia.it.messaging.client</package>
                 <package>org.jaxen</package>
                 <package>org.jaxen.dom</package>
                 <package>org.jaxen.dom4j</package>
@@ -2174,6 +2182,10 @@
                 <binary-origin>release/modules/ext/XmlSchema-1.4.3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/amqp-client-5.0.0.jar</runtime-relative-path>
+                <binary-origin>C:\mouselight4\janelia-workstation\ConsoleApplication\ConsoleWrapper\release\modules\ext\amqp-client-5.0.0.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/activation-1.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/activation-1.1.jar</binary-origin>
             </class-path-extension>
@@ -2200,6 +2212,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/jersey-container-servlet-core-2.21.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jersey-container-servlet-core-2.21.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jacs-messaging-1.0.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jacs-messaging-1.0.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jacs-shared.jar</runtime-relative-path>

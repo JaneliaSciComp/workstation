@@ -161,6 +161,16 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 addTimer.report();
             }
         });
+        
+        // register with Message Server to receive async updates
+        RefreshHandler handler = new RefreshHandler();
+        handler.setAnnotationModel(this);
+        try {
+            handler.init();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
     }
 
     public boolean editsAllowed() {
