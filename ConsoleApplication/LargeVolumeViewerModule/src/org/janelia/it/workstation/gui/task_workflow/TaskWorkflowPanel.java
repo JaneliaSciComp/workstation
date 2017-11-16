@@ -28,6 +28,7 @@ import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
@@ -221,20 +222,20 @@ public class TaskWorkflowPanel extends JPanel {
         //  it doesn't prevent the GL errors I'm seeing on Mac
 
         /*
-        SynchronizationHelper helper = new SynchronizationHelper();
-        Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-        SampleLocation sampleLocation = originator.getSampleLocation();
-        sampleLocation.setFocusUm(x, y, z);
-        Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+        try {
+            SynchronizationHelper helper = new SynchronizationHelper();
+            Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+            SampleLocation sampleLocation = originator.getSampleLocation();
+            sampleLocation.setFocusUm(x, y, z);
+            Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
 
-        for (Tiled3dSampleLocationProviderAcceptor acceptor : locationAcceptors) {
-            // in FiltAnnList, we have this:
-            // if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
-            //     acceptor.setSampleLocation(sampleLocation);
-            // }
-            // however, I'm hoping that if we send the location to all acceptors, we'll get LVV, too
-
-            acceptor.setSampleLocation(sampleLocation);
+            for (Tiled3dSampleLocationProviderAcceptor acceptor : locationAcceptors) {
+                if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
+                    acceptor.setSampleLocation(sampleLocation);
+                }
+            }
+        } catch (Exception e) {
+            ConsoleApp.handleException(e);
         }
         */
 
