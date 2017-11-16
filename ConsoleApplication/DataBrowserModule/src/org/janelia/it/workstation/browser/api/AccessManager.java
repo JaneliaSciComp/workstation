@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -20,12 +21,15 @@ import org.janelia.it.workstation.browser.events.lifecycle.SessionEndEvent;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog.ErrorType;
+import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.model.domain.enums.SubjectRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.util.concurrent.RateLimiter;
 
 /**
  * Manages the access credentials and current privileges. Takes care of logging in users during start-up, and 
@@ -68,6 +72,8 @@ public final class AccessManager {
     private ErrorType loginIssue;
     
     // Running state
+    private final Debouncer tokenRefreshDebouncer = new Debouncer();
+    private final RateLimiter tokenRefreshRateLimiter = RateLimiter.create(1); // one token refresh is allowed every second
     private String username;
     private String password;
     private String token;
@@ -184,8 +190,9 @@ public final class AccessManager {
      */
     public void resolveLoginIssue() {
         if (hadLoginIssue) {
-            LoginDialog loginDialog = new LoginDialog();
-            loginDialog.showDialog(this::loginUser, loginIssue);
+            SwingUtilities.invokeLater(() -> {
+                LoginDialog.getInstance().showDialog(loginIssue);
+            });
         }
     }
 
@@ -237,11 +244,12 @@ public final class AccessManager {
      * This method can be called when the user requests a login dialog to be shown.
      */
     public void userRequestedLoginDialog() {
-        LoginDialog loginDialog = new LoginDialog();
-        loginDialog.showDialog(this::loginUser);
+        SwingUtilities.invokeLater(() -> {
+            LoginDialog.getInstance().showDialog();
+        });
     }
     
-    private boolean loginUser(String username, String password) {
+    public boolean loginUser(String username, String password) {
 
         // Keep these in memory for token refreshes, because user may not want to persist the password
         this.username = username;
@@ -251,15 +259,10 @@ public final class AccessManager {
         Subject authenticatedSubject = authenticateSubject();
         
         if (authenticatedSubject != null) {
-            if (isLoggedIn()) {
-                // Log out current subject first
-                moveToLoggedOutState();
-            }
             moveToLoggedInState(authenticatedSubject);
             return true;
         }
         else {
-            moveToLoggedOutState();
             return false;
         }
     }
@@ -295,13 +298,6 @@ public final class AccessManager {
         return authenticatedSubject;
     }
     
-    private synchronized void obtainToken() {
-        log.info("Attempting to obtain new auth token for {}", username);
-        this.token = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
-        this.tokenCreationDate = new Date();
-        log.info("Now using token: {}", token);
-    }
-    
     /**
      * Checks to see if the system is in a logged in state. 
      * @return true if a user is authenticated and logged in
@@ -323,38 +319,59 @@ public final class AccessManager {
      * @return JWS token 
      */
     public String getToken() {
-        if (tokenMustBeRenewed()) {
+        if (tokenRefreshRateLimiter.tryAcquire(0, TimeUnit.SECONDS)) {
             try {
                 obtainToken();
             }
             catch (AuthenticationException e) {
-                log.error("Could not obtain token", e);
+                log.warn("Could not refresh token", e);
                 // A token could not be obtained because the password is no longer valid 
-                // If we're starting up, this will be taken care of by the boostrap system, otherwise...
-                if (ConsoleState.getCurrState() >= ConsoleState.WINDOW_SHOWN) {
-                    // Show login dialog to allow user to update password
-                    LoginDialog loginDialog = new LoginDialog();
-                    loginDialog.showDialog(this::loginUser, ErrorType.TokenExpiredError);
-                }
+//                SwingUtilities.invokeLater(() -> {
+//                    // Show login dialog to allow user to update password
+//                    LoginDialog.getInstance().showDialog(this::loginUser, ErrorType.TokenExpiredError);
+//                });
             }
             catch (ServiceException e) {
-                log.error("Could not obtain token", e);
-                // A token could not be obtained because the password is no longer valid 
-                // If we're starting up, this will be taken care of by the boostrap system, otherwise...
-                if (ConsoleState.getCurrState() >= ConsoleState.WINDOW_SHOWN) {
-                    // Show login dialog to allow user to update password
-                    LoginDialog loginDialog = new LoginDialog();
-                    loginDialog.showDialog(this::loginUser, ErrorType.TokenExpiredError);
-                }
+                log.warn("Could not refresh token", e);
+                // A token could not be obtained because of a service problem
+//                SwingUtilities.invokeLater(() -> {
+//                    // Show login dialog to allow user to update password
+//                    LoginDialog.getInstance().showDialog(this::loginUser, ErrorType.TokenExpiredError);
+//                });
             }
         }
+        else {
+            log.trace("Throttling token refresh");
+        }
+        log.trace("Returning token: {}", token);
         return token;
+    }
+
+    private synchronized void obtainToken() {
+
+        if (!tokenRefreshDebouncer.queue()) {
+            log.debug("Skipping token refresh, since there is one already in progress");
+            return;
+        }
+        
+        try {
+            if (tokenMustBeRenewed()) {
+                log.info("Attempting to obtain new auth token for {}", username);
+                this.token = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
+                this.tokenCreationDate = new Date();
+                log.info("Now using token: {}", token);
+            }
+        }
+        finally {
+            tokenRefreshDebouncer.success();
+        }
+        
     }
     
     private boolean tokenMustBeRenewed() {
-        if (tokenCreationDate==null) return false;
+        if (tokenCreationDate==null) return true;
         long tokenAgeSecs = Utils.getDateDiff(tokenCreationDate, new Date(), TimeUnit.SECONDS);
-        log.info("Token is now {} seconds old", tokenAgeSecs);
+        log.debug("Token is now {} seconds old", tokenAgeSecs);
         return (tokenAgeSecs > TOKEN_LIFESPAN_SECS);
     }
     

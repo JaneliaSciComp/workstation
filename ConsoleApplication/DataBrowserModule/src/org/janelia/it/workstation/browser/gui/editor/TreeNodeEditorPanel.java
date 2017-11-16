@@ -27,7 +27,6 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Preference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.perf4j.StopWatch;

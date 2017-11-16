@@ -5,7 +5,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.util.function.BiPredicate;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -60,10 +59,17 @@ public class LoginDialog extends ModalDialog {
     private final JPanel buttonPane; 
     private final JButton cancelButton;
     private final JButton okButton;
-
-    private BiPredicate<String, String> authFunction;
     
-    public LoginDialog() {
+    // Singleton
+    private static LoginDialog instance;
+    static public LoginDialog getInstance() {
+        if (instance == null) {
+            instance = new LoginDialog();
+        }
+        return instance;
+    }
+    
+    private LoginDialog() {
 
         setTitle("Login");
         
@@ -86,7 +92,7 @@ public class LoginDialog extends ModalDialog {
         mainPanel.add(passwordLabel);
         mainPanel.add(passwordField);
         mainPanel.add(rememberCheckbox, "span 2");
-        mainPanel.add(errorLabel, "span 2");
+        mainPanel.add(errorLabel, "span 2, width 350px");
 
         cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Cancel login");
@@ -134,13 +140,30 @@ public class LoginDialog extends ModalDialog {
         });
     }
 
-    public void showDialog(BiPredicate<String, String> authFunction) {
-        showDialog(authFunction, null);
+    public void showDialog() {
+        showDialog(null);
     }
     
-    public void showDialog(BiPredicate<String, String> authFunction, final ErrorType errorType) {
+    public void showDialog(final ErrorType errorType) {
         
-        this.authFunction = authFunction;
+        if (isVisible()) {
+            // The singleton dialog is already showing, just bring it to the front
+            log.info("Login dialog already visible");
+            toFront();
+            repaint();
+            return;
+        }
+        
+        log.info("Showing login dialog with errorType={}", errorType);
+        
+        if (errorType==null) {
+            errorLabel.setText("");
+            errorLabel.setVisible(false);
+        }
+        else {
+            errorLabel.setText(getErrorMessage(errorType));
+            errorLabel.setVisible(true);
+        }
         
         String username = (String) getModelProperty(AccessManager.USER_NAME, "");
         String password = (String) getModelProperty(AccessManager.USER_PASSWORD, "");
@@ -149,16 +172,6 @@ public class LoginDialog extends ModalDialog {
         usernameField.setText(username);
         passwordField.setText(password);
         rememberCheckbox.setSelected(remember);
-
-        if (errorType!=null) {
-            this.addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentShown(ComponentEvent e) {
-                    errorLabel.setText(getErrorMessage(errorType));
-                    errorLabel.setVisible(true);
-                }
-            });
-        }
         
         ActivityLogHelper.logUserAction("LoginDialog.showDialog");
         packAndShow();
@@ -195,8 +208,7 @@ public class LoginDialog extends ModalDialog {
             
             @Override
             protected void doStuff() throws Exception {
-                authSuccess = authFunction.test(username, password);
-                log.info("authSuccess="+authSuccess);
+                authSuccess = AccessManager.getAccessManager().loginUser(username, password);
             }
 
             @Override
@@ -214,7 +226,6 @@ public class LoginDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable e) {
-                FrameworkImplProvider.handleExceptionQuietly(e);
                 okButton.setIcon(null);
                 okButton.setText(OK_BUTTON_TEXT);
                 if (e instanceof AuthenticationException) {
@@ -222,10 +233,12 @@ public class LoginDialog extends ModalDialog {
                     errorLabel.setVisible(true);
                 }
                 if (e instanceof ServiceException) {
+                    log.error("Error authenticating", e);
                     errorLabel.setText(getErrorMessage(ErrorType.NetworkError));
                     errorLabel.setVisible(true);
                 }
                 else {
+                    log.error("Error authenticating", e);
                     errorLabel.setText(getErrorMessage(ErrorType.OtherError));
                     errorLabel.setVisible(true);
                 }

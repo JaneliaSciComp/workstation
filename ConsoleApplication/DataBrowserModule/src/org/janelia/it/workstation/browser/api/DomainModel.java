@@ -246,7 +246,12 @@ public class DomainModel {
      * Clear the entire cache without raising any events. This is basically only useful for changing logins.
      */
     public void invalidateAll() {
-        log.debug("Invalidating all objects");
+        // Invalidating everything causes a lot of updates. We should only do it 
+        // if the token is valid. 
+        if (AccessManager.getAccessManager().getToken()==null) {
+            throw new IllegalStateException("Cannot refresh when token is invalid");
+        }
+        log.info("Invalidating all objects");
         synchronized (modelLock) {
             this.workspaceCache = null;
             this.ontologyCache = null;

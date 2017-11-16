@@ -136,6 +136,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     
     private OntologyNode ontologyNode;
     private boolean recordingKeyBinds = false;
+    private boolean loadInitialState = true;
         
     public OntologyExplorerTopComponent() {
         initComponents();
@@ -284,7 +285,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         }
         else {
             // Not logged in yet, wait for a SessionStartEvent
-            return;
         }
     }
     
@@ -316,6 +316,10 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     }
     
     private void loadInitialState() {
+        
+        if (!loadInitialState) return;
+        log.info("Loading initial session");
+        this.loadInitialState = false;
         
         showLoadingIndicator();
         

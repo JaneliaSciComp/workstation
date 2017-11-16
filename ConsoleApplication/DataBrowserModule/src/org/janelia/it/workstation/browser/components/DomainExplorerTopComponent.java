@@ -126,6 +126,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     private Lookup.Result<AbstractNode> result = null;
     private RootNode root;
     private List<Long[]> pathsToExpand;
+    private boolean loadInitialState = true;
 
     public DomainExplorerTopComponent() {
         initComponents();
@@ -277,13 +278,11 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                         public void run() {
                             pathsToExpand = expandedState.getExpandedArrayPaths();
                             log.info("saving pathsToExpand.size= "+pathsToExpand.size());
-
                             if (AccessManager.loggedIn()) {
-                                loadPreviousSession();
+                                loadInitialSession();
                             }
                             else {
                                 // Not logged in yet, wait for a SessionStartEvent
-                                return;
                             }
                         }
                     });
@@ -319,10 +318,14 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     @Subscribe
     public void sessionStarted(SessionStartEvent event) {
-        loadPreviousSession();
+        loadInitialSession();
     }
     
-    private void loadPreviousSession() {
+    private void loadInitialSession() {
+        
+        if (!loadInitialState) return;
+        log.info("Loading previous session");
+        this.loadInitialState = false;
         
         showLoadingIndicator();
         
@@ -449,7 +452,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             return;
         }
 
-        log.info("refresh(restoreState={})",restoreState);
+        log.info("refresh(invalidateCache={},restoreState={})",invalidateCache,restoreState);
         final StopWatch w = new StopWatch();
         
         final List<Long[]> expanded = root!=null && restoreState ? beanTreeView.getExpandedPaths() : null;
@@ -460,9 +463,12 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             @Override
             protected void doStuff() throws Exception {
                 if (invalidateCache) {
-                    DomainModel model = DomainMgr.getDomainMgr().getModel();
-                    model.invalidateAll();
+                    DomainMgr.getDomainMgr().getModel().invalidateAll();
                 }
+                // This is attempted by the RootNode below, but we try it here
+                // first so that we can fail early in case there's a network 
+                // problem. 
+                DomainMgr.getDomainMgr().getModel().getWorkspaces();
             }
 
             @Override

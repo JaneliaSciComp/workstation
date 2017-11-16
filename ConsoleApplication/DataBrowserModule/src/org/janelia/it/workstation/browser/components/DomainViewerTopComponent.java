@@ -150,7 +150,6 @@ public final class DomainViewerTopComponent extends TopComponent {
                     }
                     else {
                         // Not logged in yet, wait for a SessionStartEvent
-                        return;
                     }
                 }
             });
@@ -164,12 +163,10 @@ public final class DomainViewerTopComponent extends TopComponent {
     
     private void loadPreviousSession() {
         
+        if (refToOpen==null) return;
+        log.info("Loading previous session: "+refToOpen);
         final Reference objectRef = refToOpen;
         this.refToOpen = null;
-        
-        log.info("Loading previous session: "+refToOpen);
-        
-        if (objectRef==null) return;
         
         SimpleWorker worker = new SimpleWorker() {
             DomainObject object;

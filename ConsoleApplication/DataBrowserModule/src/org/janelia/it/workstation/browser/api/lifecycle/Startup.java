@@ -5,7 +5,6 @@ import java.util.logging.LogManager;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ServiceMgr;
-import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationOpening;
 import org.janelia.it.workstation.browser.logging.LogFormatter;

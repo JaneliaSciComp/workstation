@@ -181,7 +181,6 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
                         }
                         else {
                             // Not logged in yet, wait for a SessionStartEvent
-                            return;
                         }
                     }
                 });
@@ -205,13 +204,18 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     
     private void loadPreviousSession() {
 
+        if (intialState == null) return;
+        log.info("Loading initial session");
+        final String stateToLoad = intialState;
+        this.intialState = null;
+
         SimpleWorker worker = new SimpleWorker() {
             DomainObjectEditorState<?> state;
             DomainObject domainObject;
 
             @Override
             protected void doStuff() throws Exception {
-                state = DomainObjectEditorState.deserialize(intialState);
+                state = DomainObjectEditorState.deserialize(stateToLoad);
                 if (state.getDomainObject().getId()!=null) {
                     // Refresh the object, if it's coming from the database
                     domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(state.getDomainObject());

@@ -220,7 +220,7 @@ public class DomainMgr {
         Preference updated = subjectFacade.savePreference(preference);
         preferenceMap.put(getPreferenceMapKey(preference), updated);
         notifyPreferenceChanged(updated);
-        log.info("Saved preference in category {} with {}={}",preference.getCategory(),preference.getKey(),preference.getValue());
+        log.info("Saved preference {} in category {} with {}={}",preference.getId(), preference.getCategory(), preference.getKey(), preference.getValue());
     }
 
     public static String getPreferenceSubject() {
