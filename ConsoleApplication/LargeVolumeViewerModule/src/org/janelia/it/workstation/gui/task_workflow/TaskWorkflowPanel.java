@@ -209,38 +209,39 @@ public class TaskWorkflowPanel extends JPanel {
      */
     private void gotoPoint(double x, double y, double z) {
 
-        System.out.println("moving camera to " + x + ", " + y + ", " + z);
-
-
         // note: be careful not to do anything if no data is loaded; the
         //  point list can be loaded without data
+        if (dataSource.getAnnotationModel() == null) {
+            return;
+        }
 
+        // this is possibly a bit hacky...I followed the example in FilteredAnnList;
+        //  we use the LVV sample provider to get the sample location, then poke
+        //  our values in; that's sent to the appropriate Horta acceptor; then
+        //  since we know that LVV is an acceptor, too, we can just put the altered
+        //  sample location back into the originator to trigger that move
 
-        // this is possibly a bit hacky...
-
-        // there's a try/catch around this in FiltAnnList for some reason;
-        //  it doesn't prevent the GL errors I'm seeing on Mac
-
-        /*
+        // not sure what the try/catch is preventing, but it was in the code I copied
         try {
             SynchronizationHelper helper = new SynchronizationHelper();
             Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
             SampleLocation sampleLocation = originator.getSampleLocation();
             sampleLocation.setFocusUm(x, y, z);
-            Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
 
+            // Horta
+            Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
             for (Tiled3dSampleLocationProviderAcceptor acceptor : locationAcceptors) {
                 if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
                     acceptor.setSampleLocation(sampleLocation);
                 }
             }
+
+            // LVV
+            originator.setSampleLocation(sampleLocation);
         } catch (Exception e) {
             ConsoleApp.handleException(e);
         }
-        */
-
     }
-
 
     /**
      * pop a file chooser; load and parse a point file; return list of points
