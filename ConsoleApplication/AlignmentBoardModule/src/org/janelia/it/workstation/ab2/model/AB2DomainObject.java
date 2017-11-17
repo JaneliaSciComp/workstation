@@ -3,10 +3,12 @@ package org.janelia.it.workstation.ab2.model;
 import java.util.Date;
 import java.util.Set;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.AbstractDomainObject;
 
-public class AB2DomainObject implements DomainObject
+public class AB2DomainObject extends AbstractDomainObject
 {
+    private DataModel dataModel;
+    private ViewModel viewModel;
 
     ////////////////////////////////////////////////////////////////////////////////////
     /// From DomainObject
@@ -51,5 +53,13 @@ public class AB2DomainObject implements DomainObject
 
     /** Returns a user-readable label for the domain object sub-type */
     public String getType() { return null; }
+
+    public DataModel getDataModel() { return dataModel; }
+
+    public void setDataModel(DataModel dataModel) { this.dataModel=dataModel; }
+
+    public ViewModel getViewModel() { return viewModel; }
+
+    public void setViewModel(ViewModel viewModel) { this.viewModel=viewModel; }
 
 }
