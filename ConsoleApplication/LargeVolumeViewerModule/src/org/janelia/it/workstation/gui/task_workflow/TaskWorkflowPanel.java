@@ -235,6 +235,13 @@ public class TaskWorkflowPanel extends JPanel {
             SampleLocation sampleLocation = originator.getSampleLocation();
             sampleLocation.setFocusUm(x, y, z);
 
+            // the order you do these determines which will be at front when you're done;
+            //  do LVV first so it matches the behavior from FilteredAnnList
+
+            // LVV
+            originator.setSampleLocation(sampleLocation);
+
+
             // Horta
             Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
             for (Tiled3dSampleLocationProviderAcceptor acceptor : locationAcceptors) {
@@ -242,9 +249,6 @@ public class TaskWorkflowPanel extends JPanel {
                     acceptor.setSampleLocation(sampleLocation);
                 }
             }
-
-            // LVV
-            originator.setSampleLocation(sampleLocation);
         } catch (Exception e) {
             ConsoleApp.handleException(e);
         }
