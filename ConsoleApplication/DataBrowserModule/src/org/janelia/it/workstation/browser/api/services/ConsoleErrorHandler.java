@@ -1,10 +1,10 @@
 package org.janelia.it.workstation.browser.api.services;
 
 import java.util.logging.Logger;
+
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.framework.system.ErrorHandler;
-import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.browser.logging.CustomLoggingLevel;
 import org.openide.util.lookup.ServiceProvider;

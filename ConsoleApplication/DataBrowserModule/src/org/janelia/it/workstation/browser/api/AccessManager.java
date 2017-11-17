@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -14,7 +15,6 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.exceptions.AuthenticationException;
 import org.janelia.it.workstation.browser.api.exceptions.ServiceException;
 import org.janelia.it.workstation.browser.api.exceptions.SystemError;
-import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.LoginEvent;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionEndEvent;
@@ -51,9 +51,9 @@ public final class AccessManager {
     
     private static final Logger log = LoggerFactory.getLogger(AccessManager.class);
 
-    // How long is the token expected to last? This should be set to something less than the actual token 
-    // life span. The value used here is 24 hours, which is less than the 48 hours of the actual token. 
-    private static final int TOKEN_LIFESPAN_SECS = 60;
+    // How long is the token expected to last? This should be set to something less than the actual token life span. 
+    // The value used here is 12 hours, which is significantly less than the 48 hour life span of the actual token. 
+    private static final int TOKEN_LIFESPAN_SECS = 60 * 60 * 12;
     
     public static String RUN_AS_USER = "RunAs";
     public static String USER_NAME = "console.serverLogin";
@@ -324,20 +324,14 @@ public final class AccessManager {
                 obtainToken();
             }
             catch (AuthenticationException e) {
+                // These exceptions are swallowed here because we don't need the user to know about them. 
+                // There may be intermittent issues with fetching tokens, but that shouldn't affect the 
+                // user experience. If we actually get to the point where the current token is no longer 
+                // valid, then the ConsoleErrorHandler will ask the user for a new password.
                 log.warn("Could not refresh token", e);
-                // A token could not be obtained because the password is no longer valid 
-//                SwingUtilities.invokeLater(() -> {
-//                    // Show login dialog to allow user to update password
-//                    LoginDialog.getInstance().showDialog(this::loginUser, ErrorType.TokenExpiredError);
-//                });
             }
             catch (ServiceException e) {
                 log.warn("Could not refresh token", e);
-                // A token could not be obtained because of a service problem
-//                SwingUtilities.invokeLater(() -> {
-//                    // Show login dialog to allow user to update password
-//                    LoginDialog.getInstance().showDialog(this::loginUser, ErrorType.TokenExpiredError);
-//                });
             }
         }
         else {
@@ -356,7 +350,7 @@ public final class AccessManager {
         
         try {
             if (tokenMustBeRenewed()) {
-                log.info("Attempting to obtain new auth token for {}", username);
+                log.debug("Attempting to obtain new auth token for {}", username);
                 this.token = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
                 this.tokenCreationDate = new Date();
                 log.info("Now using token: {}", token);
@@ -364,8 +358,7 @@ public final class AccessManager {
         }
         finally {
             tokenRefreshDebouncer.success();
-        }
-        
+        }   
     }
     
     private boolean tokenMustBeRenewed() {
