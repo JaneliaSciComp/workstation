@@ -175,6 +175,9 @@ public class TaskWorkflowPanel extends JPanel {
         for (Vec3 point: pointList) {
             pointModel.addPoint(point);
         }
+
+        // this shouldn't be needed, but Windows doesn't redraw without it:
+        pointModel.fireTableDataChanged();
     }
 
     private void onLoadButton() {
