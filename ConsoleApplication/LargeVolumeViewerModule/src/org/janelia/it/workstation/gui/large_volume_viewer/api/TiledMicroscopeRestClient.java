@@ -11,9 +11,12 @@ import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -62,6 +65,9 @@ public class TiledMicroscopeRestClient {
 
     public TiledMicroscopeRestClient() {
         log.info("Using server URL: {}",REMOTE_API_URL);
+
+        this.client = ClientBuilder.newClient();
+        
         JacksonJsonProvider provider = new JacksonJaxbJsonProvider();
         ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
         mapper.addHandler(new DeserializationProblemHandler() {
@@ -71,7 +77,19 @@ public class TiledMicroscopeRestClient {
                 return true;
             }
         });
-        this.client = ClientBuilder.newClient();
+
+        // Add access token to every request
+        ClientRequestFilter authFilter = new ClientRequestFilter() {
+            @Override
+            public void filter(ClientRequestContext requestContext) throws IOException {
+                String accessToken = AccessManager.getAccessManager().getToken();
+                if (accessToken!=null) {
+                    requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+                }
+            }
+        };
+        client.register(authFilter);
+        
         client.register(provider);
         client.register(MultiPartFeature.class);
     }
