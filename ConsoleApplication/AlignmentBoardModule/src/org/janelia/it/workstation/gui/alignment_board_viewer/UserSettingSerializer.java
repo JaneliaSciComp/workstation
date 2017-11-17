@@ -1,9 +1,9 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer;
 
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
+import org.janelia.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.workstation.gui.viewer3d.CropCoordSet;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.jacs.shared.geom.UnitVec3;

@@ -12,12 +12,12 @@ import javax.swing.JMenuItem;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectAppender;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectCreator;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.sample.ObjectiveSample;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SamplePipelineRun;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

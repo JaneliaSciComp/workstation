@@ -2,8 +2,8 @@ package org.janelia.it.workstation.browser.gui.editor;
 
 import java.util.concurrent.Callable;
 
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
+import org.janelia.model.domain.sample.PipelineResult;
 
 /**
  * An editor for a single sample result object.

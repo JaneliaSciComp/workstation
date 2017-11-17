@@ -3,11 +3,11 @@ package org.janelia.it.workstation.browser.api.facade.interfaces;
 import java.util.Collection;
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.ReverseReference;
-import org.janelia.it.jacs.model.domain.report.DatabaseSummary;
-import org.janelia.it.jacs.model.domain.report.DiskUsageSummary;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ReverseReference;
+import org.janelia.model.domain.report.DatabaseSummary;
+import org.janelia.model.domain.report.DiskUsageSummary;
 
 /**
  * Implementations provide generic access to domain objects.

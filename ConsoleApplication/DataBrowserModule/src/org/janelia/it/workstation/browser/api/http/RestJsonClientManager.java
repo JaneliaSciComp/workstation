@@ -1,12 +1,18 @@
 package org.janelia.it.workstation.browser.api.http;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +26,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 public class RestJsonClientManager {
 
@@ -33,27 +42,68 @@ public class RestJsonClientManager {
         }
         return instance;
     }
-    
-    private Client client;
 
+    private LoadingCache<String, Boolean> failureCache;
+    private Client authClient;
+    private Client client;
+    
     public RestJsonClientManager() {
+
+        this.failureCache = CacheBuilder.newBuilder()
+                .maximumSize(1000)
+                .expireAfterWrite(10, TimeUnit.MINUTES)
+                .build(
+                    new CacheLoader<String, Boolean>() {
+                        public Boolean load(String key) throws Exception {
+                            return false;
+                        }
+                    });
+        
+        this.authClient = buildClient(true);
+        this.client = buildClient(false);
+    }
+    
+    private Client buildClient(boolean auth) {
+
         client = ClientBuilder.newClient();
+        client.register(MultiPartFeature.class);
+        
         JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        client.register(provider);
+        
         ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
         mapper.addHandler(new DeserializationProblemHandler() {
             @Override
             public boolean handleUnknownProperty(DeserializationContext ctxt, JsonParser jp, JsonDeserializer<?> deserializer, Object beanOrClass, String propertyName) throws IOException, JsonProcessingException {
-                log.error("Failed to deserialize property which does not exist in model: {}.{}",beanOrClass.getClass().getName(),propertyName);
+                String key = beanOrClass.getClass().getName()+"."+propertyName;
+                if (failureCache.getIfPresent(key)==null) {
+                    log.error("Failed to deserialize property which does not exist in model: {}",key);
+                    failureCache.put(key, true);
+                }
                 return true;
             }
         });
 
-        client.register(provider);
+        if (auth) {
+            // Add access token to every request
+            ClientRequestFilter authFilter = new ClientRequestFilter() {
+                @Override
+                public void filter(ClientRequestContext requestContext) throws IOException {
+                    String accessToken = AccessManager.getAccessManager().getToken();
+                    if (accessToken!=null) {
+                        requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+                    }
+                }
+            };
+            client.register(authFilter);
+        }
+        
+        return client;
     }
 
-    public WebTarget getTarget(String serverUrl) {
-        return client.target(serverUrl);
+    public WebTarget getTarget(String serverUrl, boolean auth) {
+        return auth ? authClient.target(serverUrl) : client.target(serverUrl);
     }
 }

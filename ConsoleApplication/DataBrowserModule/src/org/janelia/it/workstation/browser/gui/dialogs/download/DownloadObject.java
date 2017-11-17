@@ -2,7 +2,7 @@ package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObject;
 
 public class DownloadObject {
     

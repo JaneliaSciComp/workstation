@@ -22,7 +22,7 @@ public class OntologyTermFlavor extends DataFlavor {
         }
     }
     
-    public static final DataFlavor SINGLE_FLAVOR = createConstant("application/x-domain-object;class=org.janelia.it.jacs.model.domain.ontology.OntologyTerm","Ontology Term");
+    public static final DataFlavor SINGLE_FLAVOR = createConstant("application/x-domain-object;class=org.janelia.model.domain.ontology.OntologyTerm","Ontology Term");
     public static final DataFlavor LIST_FLAVOR = createConstant("application/x-domain-object-list;class=java.util.List","Ontology Term List");
 
     private OntologyTermFlavor(String mt, String prn) {

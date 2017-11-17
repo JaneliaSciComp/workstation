@@ -9,11 +9,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.Sample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,21 @@ public class DomainModelViewUtils {
     
     private final static DateFormat dateFormatter = new SimpleDateFormat("yyyy/MM/dd hh:mma");
 
+    private static final String OLD_MODEL_PATTERN = "org\\.janelia.it\\.jacs\\.model";
+    private static final String NEW_MODEL = "org.janelia.model";
+    private static final String OLD_SECURITY_MODEL_PATTERN = "org\\.janelia\\.it\\.jacs\\.model\\.domain\\.subjects"; 
+    private static final String NEW_SECURITY_MODEL = "org.janelia.model.security";
+    
+    /**
+     * Convert any occurrences of the old model packages to the new organization.
+     */
+    public static String convertModelPackages(String str) {
+        if (str==null) return null;
+        return str.replaceAll(OLD_MODEL_PATTERN, NEW_MODEL).replaceAll(OLD_SECURITY_MODEL_PATTERN, NEW_SECURITY_MODEL);
+    }
+    
     public static String getDateString(Date date) {
+        if (date==null) return "";
         return dateFormatter.format(date).toLowerCase();
     }
 

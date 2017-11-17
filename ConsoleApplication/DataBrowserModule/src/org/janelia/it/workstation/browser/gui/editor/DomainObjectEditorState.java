@@ -3,16 +3,17 @@ package org.janelia.it.workstation.browser.gui.editor;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 
 /**
  * Snapshot of the state of a list viewer for navigation purposes.
@@ -123,7 +124,7 @@ public class DomainObjectEditorState<T extends DomainObject> {
     }
 
     public static DomainObjectEditorState<?> deserialize(String artifactDescriptorString) throws Exception {
-        return mapper.readValue(artifactDescriptorString, DomainObjectEditorState.class);
+        return mapper.readValue(DomainModelViewUtils.convertModelPackages(artifactDescriptorString), DomainObjectEditorState.class);
     }
 
 }

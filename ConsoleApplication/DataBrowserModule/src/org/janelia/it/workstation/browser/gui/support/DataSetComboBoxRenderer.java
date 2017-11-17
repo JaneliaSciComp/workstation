@@ -7,8 +7,8 @@ import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 import javax.swing.SwingConstants;
 
-import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.model.domain.sample.DataSet;
 
 /**
  * A combo-box renderer for Data Set selection. 

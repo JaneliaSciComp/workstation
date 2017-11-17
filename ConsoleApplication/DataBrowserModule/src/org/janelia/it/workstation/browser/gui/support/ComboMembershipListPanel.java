@@ -80,11 +80,12 @@ public class ComboMembershipListPanel<T> extends MembershipListPanel<T> {
 
     }
 
+    @Override
     public void setEditable(boolean editable) {
         super.setEditable(editable);
         addPane.setVisible(editable);
     }
-    
+
     public void initItemsInCombo(List<T> items) {
         for (T subject : items) {
             comboBoxModel.addElement(subject);

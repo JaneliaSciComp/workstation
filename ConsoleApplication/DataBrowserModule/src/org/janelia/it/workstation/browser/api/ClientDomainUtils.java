@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.browser.api;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainObject;
 
 /**
  * Miscellaneous utility methods for dealing with the Domain model on the client side. Generic utility methods for the domain model 
@@ -17,6 +17,7 @@ public class ClientDomainUtils {
      * @return
      */
     public static boolean isOwner(DomainObject domainObject) {
+        if (!AccessManager.loggedIn()) return false;
         return DomainUtils.isOwner(domainObject, AccessManager.getSubjectKey());
     } 
     
@@ -26,6 +27,7 @@ public class ClientDomainUtils {
      * @return T=Yes; F=No
      */
     public static boolean hasReadAccess(DomainObject domainObject) {
+        if (!AccessManager.loggedIn()) return false;
         return DomainUtils.hasReadAccess(domainObject, AccessManager.getReaderSet());
     }
     
@@ -35,6 +37,7 @@ public class ClientDomainUtils {
      * @return T=Yes; F=No
      */
     public static boolean hasWriteAccess(DomainObject domainObject) {
+        if (!AccessManager.loggedIn()) return false;
         return DomainUtils.hasWriteAccess(domainObject, AccessManager.getWriterSet());
     }
 }

@@ -9,8 +9,8 @@ import java.util.Set;
 
 import javax.swing.JComponent;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.browser.flavors.DomainObjectFlavor;
+import org.janelia.model.domain.DomainObject;
 
 /**
  * List of entities being transferred, supporting multiple output flavors.

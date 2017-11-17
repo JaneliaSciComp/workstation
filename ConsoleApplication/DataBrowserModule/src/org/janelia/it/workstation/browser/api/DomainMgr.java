@@ -7,12 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.it.jacs.model.domain.Preference;
-import org.janelia.it.jacs.model.domain.Subject;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.shared.utils.ReflectionsHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.exceptions.SystemError;
 import org.janelia.it.workstation.browser.api.facade.impl.ejb.LegacyFacadeImpl;
 import org.janelia.it.workstation.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.LegacyFacade;
@@ -20,13 +17,18 @@ import org.janelia.it.workstation.browser.api.facade.interfaces.OntologyFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SampleFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.WorkspaceFacade;
+import org.janelia.it.workstation.browser.api.web.AuthServiceClient;
 import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.events.Events;
-import org.janelia.it.workstation.browser.events.lifecycle.RunAsEvent;
+import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.events.model.PreferenceChangeEvent;
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.Preference;
+import org.janelia.model.security.Subject;
+import org.janelia.model.util.ReflectionsFixer;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +58,7 @@ public class DomainMgr {
         return instance;
     }
 
+    private AuthServiceClient authClient;
     private DomainFacade domainFacade;
     private OntologyFacade ontologyFacade;
     private SampleFacade sampleFacade;
@@ -70,7 +73,8 @@ public class DomainMgr {
     private DomainMgr() {
         log.info("Initializing Domain Manager");
         try {
-            final Reflections reflections = ReflectionsHelper.getReflections(DOMAIN_FACADE_PACKAGE_NAME, getClass());
+            authClient = new AuthServiceClient();
+            final Reflections reflections = ReflectionsFixer.getReflections(DOMAIN_FACADE_PACKAGE_NAME, getClass());
             domainFacade = getNewInstance(reflections, DomainFacade.class);
             ontologyFacade = getNewInstance(reflections, OntologyFacade.class);
             sampleFacade = getNewInstance(reflections, SampleFacade.class);
@@ -91,8 +95,7 @@ public class DomainMgr {
                     model.invalidateAll();
                 }
             }
-        });
-        
+        });   
     }
     
     private <T> T getNewInstance(Reflections reflections, Class<T> clazz) {
@@ -105,6 +108,10 @@ public class DomainMgr {
             }
         }
         throw new IllegalStateException("No implementation for "+clazz.getName()+" found in "+DOMAIN_FACADE_PACKAGE_NAME);
+    }
+
+    public AuthServiceClient getAuthClient() {
+        return authClient;
     }
 
     public DomainFacade getDomainFacade() {
@@ -136,7 +143,7 @@ public class DomainMgr {
     }
 
     @Subscribe
-    public void runAsUserChanged(RunAsEvent event) {
+    public void runAsUserChanged(SessionStartEvent event) {
         log.info("User changed, resetting model");
         preferenceMap = null;
         model.invalidateAll();
@@ -168,7 +175,7 @@ public class DomainMgr {
         if (preferenceMap==null) {
             preferenceMap = new HashMap<>();
             for (Preference preference : subjectFacade.getPreferences()) {
-                log.info("Loaded preference: {}",preference);
+                log.debug("Loaded preference: {}",preference);
                 preferenceMap.put(getPreferenceMapKey(preference), preference);
             }
             log.info("Loaded {} user preferences", preferenceMap.size());
@@ -181,19 +188,19 @@ public class DomainMgr {
      * @param key
      * @return
      */
-    public Preference getPreference(String category, String key) throws Exception {
+    Preference getPreference(String category, String key) throws Exception {
         loadPreferences();
         String mapKey = category+":"+key;
         return preferenceMap.get(mapKey);
     }
 
-    public Object getPreferenceValue(String category, String key, Object defaultValue) throws Exception {
+    <T> T getPreferenceValue(String category, String key, T defaultValue) throws Exception {
         Preference preference = getPreference(category, key);
         if (preference==null) return defaultValue;
-        return preference.getValue();
+        return (T)preference.getValue();
     }
 
-    public List<Preference> getPreferences(String category) throws Exception {
+    List<Preference> getPreferences(String category) throws Exception {
         loadPreferences();
         List<Preference> categoryPreferences = new ArrayList<>();
         for(Preference preference : preferenceMap.values()) {
@@ -209,14 +216,15 @@ public class DomainMgr {
      * @param preference
      * @throws Exception
      */
-    public void savePreference(Preference preference) throws Exception {
+    void savePreference(Preference preference) throws Exception {
         Preference updated = subjectFacade.savePreference(preference);
         preferenceMap.put(getPreferenceMapKey(preference), updated);
         notifyPreferenceChanged(updated);
-        log.info("Saved preference in category {} with {}={}",preference.getCategory(),preference.getKey(),preference.getValue());
+        log.info("Saved preference {} in category {} with {}={}",preference.getId(), preference.getCategory(), preference.getKey(), preference.getValue());
     }
 
     public static String getPreferenceSubject() {
+        if (!AccessManager.loggedIn()) throw new SystemError("Not logged in");
         return ApplicationOptions.getInstance().isUseRunAsUserPreferences() ? AccessManager.getSubjectKey() : AccessManager.getAccessManager().getAuthenticatedSubject().getKey();
     }
     
@@ -227,7 +235,7 @@ public class DomainMgr {
      * @param value
      * @throws Exception
      */
-    public void setPreference(String category, String key, Object value) throws Exception {
+    void setPreference(String category, String key, Object value) throws Exception {
         Preference preference = DomainMgr.getDomainMgr().getPreference(category, key);
         if (preference==null) {
             preference = new Preference(getPreferenceSubject(), category, key, value);

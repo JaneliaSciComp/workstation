@@ -3,8 +3,8 @@ package org.janelia.it.workstation.browser.gui.listview.icongrid;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.browser.model.ImageDecorator;
+import org.janelia.model.domain.ontology.Annotation;
 
 /**
  * Provides a standardized API for accessing information about a set of image objects of type T, 

@@ -9,16 +9,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.model.domain.ontology.Accumulation;
-import org.janelia.it.jacs.model.domain.ontology.Category;
-import org.janelia.it.jacs.model.domain.ontology.Custom;
-import org.janelia.it.jacs.model.domain.ontology.EnumItem;
-import org.janelia.it.jacs.model.domain.ontology.EnumText;
-import org.janelia.it.jacs.model.domain.ontology.Interval;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.jacs.model.domain.ontology.Tag;
-import org.janelia.it.jacs.model.domain.ontology.Text;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -29,6 +19,16 @@ import org.janelia.it.workstation.browser.gui.support.NodeChooser;
 import org.janelia.it.workstation.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.browser.nodes.OntologyTermNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.ontology.Accumulation;
+import org.janelia.model.domain.ontology.Category;
+import org.janelia.model.domain.ontology.Custom;
+import org.janelia.model.domain.ontology.EnumItem;
+import org.janelia.model.domain.ontology.EnumText;
+import org.janelia.model.domain.ontology.Interval;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.ontology.Tag;
+import org.janelia.model.domain.ontology.Text;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +73,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
         final Ontology ontology = termNode.getOntology();
         final OntologyTerm term = termNode.getOntologyTerm();
         
-        if (term instanceof org.janelia.it.jacs.model.domain.ontology.Enum) {
+        if (term instanceof org.janelia.model.domain.ontology.Enum) {
             // Alternative "Add" menu for enumeration nodes
             JMenuItem smi = new JMenuItem("Item");
             smi.addActionListener(new ActionListener() {
@@ -86,7 +86,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
         }
         else if (term.allowsChildren() || term instanceof Tag) {
 
-            Class[] nodeTypes = {Category.class, Tag.class, org.janelia.it.jacs.model.domain.ontology.Enum.class, EnumText.class, Interval.class, Text.class, Accumulation.class, Custom.class};
+            Class[] nodeTypes = {Category.class, Tag.class, org.janelia.model.domain.ontology.Enum.class, EnumText.class, Interval.class, Text.class, Accumulation.class, Custom.class};
             for (final Class<? extends OntologyTerm> nodeType : nodeTypes) {
                 try {
                     JMenuItem smi = new JMenuItem(nodeType.newInstance().getTypeName());
@@ -156,7 +156,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
             OntologyTermNode chosenEnumNode = (OntologyTermNode)chosenElements.get(0);
             OntologyTerm chosenTerm = chosenEnumNode.getOntologyTerm();
             
-            if (!(chosenTerm instanceof org.janelia.it.jacs.model.domain.ontology.Enum)) {
+            if (!(chosenTerm instanceof org.janelia.model.domain.ontology.Enum)) {
                 JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "You must choosen an enumeration", "Error", JOptionPane.ERROR_MESSAGE);
             }
 

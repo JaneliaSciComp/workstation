@@ -26,6 +26,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.text.DefaultFormatter;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.FileMgr;
@@ -305,7 +306,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
         Integer cacheCapacity = (Integer) fileCacheSpinner.getValue();
         
         final boolean cacheDisabledChanged =
-                ! cacheDisabled.equals(ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY));
+                ! cacheDisabled.equals(FrameworkImplProvider.getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY));
         if (cacheDisabledChanged) {
             log.info("Saving file cache disabled setting: "+cacheDisabled);
             FileMgr.getFileMgr().setFileCacheDisabled(cacheDisabled);

@@ -33,8 +33,8 @@ package org.janelia.console.viewerapi.model;
 import java.awt.Color;
 import java.util.Collection;
 import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronTagMap;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 
 /**
  *

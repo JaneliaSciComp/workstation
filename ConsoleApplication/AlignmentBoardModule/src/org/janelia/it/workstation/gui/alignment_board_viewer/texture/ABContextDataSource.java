@@ -14,12 +14,12 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.Renderab
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.model.domain.gui.alignment_board.AlignmentContext;
+import org.janelia.model.domain.sample.Sample;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

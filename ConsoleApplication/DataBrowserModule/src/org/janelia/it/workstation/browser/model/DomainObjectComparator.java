@@ -2,8 +2,8 @@ package org.janelia.it.workstation.browser.model;
 
 import java.util.Comparator;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
+import org.janelia.model.domain.DomainObject;
 
 import com.google.common.collect.ComparisonChain;
 

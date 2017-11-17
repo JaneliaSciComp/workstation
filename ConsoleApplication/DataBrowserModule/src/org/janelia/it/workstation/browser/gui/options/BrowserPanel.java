@@ -1,6 +1,10 @@
 package org.janelia.it.workstation.browser.gui.options;
 
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.*;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.UNLOAD_IMAGES_PROPERTY;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -12,7 +16,7 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImagesPanel;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.slf4j.Logger;
@@ -53,8 +57,6 @@ final class BrowserPanel extends javax.swing.JPanel {
 
     void load() {
 
-        ConsoleApp app = ConsoleApp.getConsoleApp();
-
         log.info("Loading browser settings...");
         mainPanel.removeAll();
 
@@ -70,11 +72,11 @@ final class BrowserPanel extends javax.swing.JPanel {
             }
         });
 
-        if (app.getModelProperty(UNLOAD_IMAGES_PROPERTY) == null) {
-            app.setModelProperty(UNLOAD_IMAGES_PROPERTY, Boolean.FALSE);
+        if (FrameworkImplProvider.getModelProperty(UNLOAD_IMAGES_PROPERTY) == null) {
+            FrameworkImplProvider.setModelProperty(UNLOAD_IMAGES_PROPERTY, Boolean.FALSE);
         }
         else {
-            unloadImagesCheckbox.setSelected((Boolean) app.getModelProperty(UNLOAD_IMAGES_PROPERTY));
+            unloadImagesCheckbox.setSelected((Boolean) FrameworkImplProvider.getModelProperty(UNLOAD_IMAGES_PROPERTY));
         }
 
         mainPanel.addItem(unloadImagesCheckbox);
@@ -89,11 +91,11 @@ final class BrowserPanel extends javax.swing.JPanel {
             }
         });
 
-        if (app.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY) == null) {
-            app.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, Boolean.FALSE);
+        if (FrameworkImplProvider.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY) == null) {
+            FrameworkImplProvider.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, Boolean.FALSE);
         }
         else {
-            disableImageDrag.setSelected((Boolean) app.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY));
+            disableImageDrag.setSelected((Boolean) FrameworkImplProvider.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY));
         }
 
         mainPanel.addItem(disableImageDrag);
@@ -107,11 +109,11 @@ final class BrowserPanel extends javax.swing.JPanel {
                 controller.changed();
             }
         });
-        if (app.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY) == null) {
-            app.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, Boolean.FALSE);
+        if (FrameworkImplProvider.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY) == null) {
+            FrameworkImplProvider.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, Boolean.FALSE);
         }
         else {
-            allowDuplicateAnnotations.setSelected((Boolean) app.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY));
+            allowDuplicateAnnotations.setSelected((Boolean) FrameworkImplProvider.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY));
         }
 
         mainPanel.addItem(allowDuplicateAnnotations);
@@ -125,11 +127,11 @@ final class BrowserPanel extends javax.swing.JPanel {
                 controller.changed();
             }
         });
-        if (app.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY) == null) {
-            app.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, Boolean.FALSE);
+        if (FrameworkImplProvider.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY) == null) {
+            FrameworkImplProvider.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, Boolean.FALSE);
         }
         else {
-            showAnnotationTables.setSelected((Boolean) app.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY));
+            showAnnotationTables.setSelected((Boolean) FrameworkImplProvider.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY));
         }
 
         mainPanel.addItem(showAnnotationTables);
@@ -146,11 +148,11 @@ final class BrowserPanel extends javax.swing.JPanel {
             }
         });
 
-        if (app.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY) == null) {
-            app.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
+        if (FrameworkImplProvider.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY) == null) {
+            FrameworkImplProvider.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
         }
         else {
-            annotationTableHeight.setValue((Integer) app.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY));
+            annotationTableHeight.setValue((Integer) FrameworkImplProvider.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY));
         }
 
         mainPanel.addItem("Annotation table height", annotationTableHeight);
@@ -158,31 +160,29 @@ final class BrowserPanel extends javax.swing.JPanel {
 
     void store() {
 
-        ConsoleApp app = ConsoleApp.getConsoleApp();
-
-        if (unloadImagesCheckbox.isSelected() != (Boolean) app.getModelProperty(UNLOAD_IMAGES_PROPERTY)) {
+        if (unloadImagesCheckbox.isSelected() != (Boolean) FrameworkImplProvider.getModelProperty(UNLOAD_IMAGES_PROPERTY)) {
             log.info("Saving unload images setting: "+unloadImagesCheckbox.isSelected());
-            app.setModelProperty(UNLOAD_IMAGES_PROPERTY, unloadImagesCheckbox.isSelected());
+            FrameworkImplProvider.setModelProperty(UNLOAD_IMAGES_PROPERTY, unloadImagesCheckbox.isSelected());
         }
 
-        if (disableImageDrag.isSelected() != (Boolean) app.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY)) {
+        if (disableImageDrag.isSelected() != (Boolean) FrameworkImplProvider.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY)) {
             log.info("Saving disable image drag: "+disableImageDrag.isSelected());
-            app.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, disableImageDrag.isSelected());
+            FrameworkImplProvider.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, disableImageDrag.isSelected());
         }
 
-        if (allowDuplicateAnnotations.isSelected() != (Boolean) app.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY)) {
+        if (allowDuplicateAnnotations.isSelected() != (Boolean) FrameworkImplProvider.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY)) {
             log.info("Saving allow annotation duplicates: "+allowDuplicateAnnotations.isSelected());
-            app.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, allowDuplicateAnnotations.isSelected());
+            FrameworkImplProvider.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, allowDuplicateAnnotations.isSelected());
         }
         
-        if (showAnnotationTables.isSelected() != (Boolean) app.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY)) {
+        if (showAnnotationTables.isSelected() != (Boolean) FrameworkImplProvider.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY)) {
             log.info("Saving show annotation tables: "+showAnnotationTables.isSelected());
-            app.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, showAnnotationTables.isSelected());
+            FrameworkImplProvider.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, showAnnotationTables.isSelected());
         }
 
-        if (annotationTableHeight.getValue() != (Integer) app.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY)) {
+        if (annotationTableHeight.getValue() != (Integer) FrameworkImplProvider.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY)) {
             log.info("Saving annotation table height: "+annotationTableHeight.getValue());
-            app.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, annotationTableHeight.getValue());
+            FrameworkImplProvider.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, annotationTableHeight.getValue());
         }
     }
 

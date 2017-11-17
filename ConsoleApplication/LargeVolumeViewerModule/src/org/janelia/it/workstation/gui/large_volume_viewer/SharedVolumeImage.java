@@ -7,7 +7,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 
 import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -17,6 +16,7 @@ import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

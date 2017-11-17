@@ -15,11 +15,11 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.browser.nodes.OntologyNode;
+import org.janelia.model.domain.ontology.Ontology;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
 /**

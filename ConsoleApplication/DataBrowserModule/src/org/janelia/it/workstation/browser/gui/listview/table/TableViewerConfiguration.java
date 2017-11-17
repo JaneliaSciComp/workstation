@@ -4,11 +4,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.jacs.model.domain.Preference;
+
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.Preference;
 
 /**
  * UI configuration for a TableViewerPanel. 
@@ -56,17 +58,17 @@ public class TableViewerConfiguration {
     public static TableViewerConfiguration loadConfig() {
         try {
             TableViewerConfiguration config;
-            Preference columnsPreference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS);
+            String columnsPreference = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, null);
             
             if (columnsPreference==null) {
                 config = new TableViewerConfiguration();
             }
             else {
                 try {
-                    config = TableViewerConfiguration.deserialize((String)columnsPreference.getValue());
+                    config = TableViewerConfiguration.deserialize(columnsPreference);
                 }
                 catch (Exception e) {
-                    throw new IllegalStateException("Cannot deserialize column preference: "+columnsPreference.getValue());
+                    throw new IllegalStateException("Cannot deserialize column preference: "+columnsPreference);
                 }
             }
 
@@ -80,6 +82,6 @@ public class TableViewerConfiguration {
 
     public void save() throws Exception {
         String value = TableViewerConfiguration.serialize(this);
-        DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, value);
+        FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, value);
     }
 }

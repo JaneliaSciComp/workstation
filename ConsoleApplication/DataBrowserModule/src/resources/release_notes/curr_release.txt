@@ -1,5 +1,8 @@
-// 6.8
+// 7.0
 
 Workstation Browser  
-* Fixed some minor bugs
-* Preparation for data model refactoring
+* Updated to use secure network connections and token-based authentication
+* Failed logins no longer exit the application
+* Improved interface for non-automated Fly Line Releases
+* Fixed issue with empty space sometimes appearing in the ontology tree
+* Fixed "dragging is not enabled" error

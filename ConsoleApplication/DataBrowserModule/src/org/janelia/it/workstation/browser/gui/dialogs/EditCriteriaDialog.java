@@ -13,10 +13,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.model.domain.gui.search.criteria.AttributeValueCriteria;
+import org.janelia.model.domain.gui.search.criteria.Criteria;
+import org.janelia.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.jdesktop.swingx.JXDatePicker;
 
 import net.miginfocom.swing.MigLayout;

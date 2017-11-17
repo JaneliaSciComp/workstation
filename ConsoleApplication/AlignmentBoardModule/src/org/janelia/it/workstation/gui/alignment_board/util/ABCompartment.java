@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.alignment_board.util;
 
-import org.janelia.it.jacs.model.domain.compartments.Compartment;
-import org.janelia.it.jacs.model.domain.enums.FileType;
+import org.janelia.model.domain.compartments.Compartment;
+import org.janelia.model.domain.enums.FileType;
 
 public class ABCompartment extends ABItem {
     private Compartment compartment;

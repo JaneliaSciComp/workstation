@@ -5,16 +5,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 
 import javax.swing.tree.TreePath;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardReference;
 
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.alignment_board.AlignmentBoard;
+import org.janelia.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.model.domain.gui.alignment_board.AlignmentBoardReference;
 import org.netbeans.swing.outline.Outline;
 import org.netbeans.swing.outline.OutlineModel;
 import org.slf4j.Logger;

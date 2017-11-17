@@ -11,18 +11,12 @@ import java.util.Set;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
-import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.jacs.model.domain.Preference;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.ontology.Category;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
-import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.state.NavigationHistory;
@@ -37,6 +31,13 @@ import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBind;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBindings;
 import org.janelia.it.workstation.browser.util.RendererType2D;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.Preference;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.ontology.Category;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.security.util.PermissionTemplate;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,17 +83,17 @@ public class StateMgr {
     private StateMgr() {     
         log.info("Initializing State Manager");
         try {
-            this.autoShareTemplate = (PermissionTemplate)ConsoleApp.getConsoleApp().getModelProperty(AUTO_SHARE_TEMPLATE);
+            this.autoShareTemplate = (PermissionTemplate)FrameworkImplProvider.getModelProperty(AUTO_SHARE_TEMPLATE);
             
-            if (ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY) == null) {
-                ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY, false);
+            if (FrameworkImplProvider.getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY) == null) {
+                FrameworkImplProvider.setModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY, false);
             }
     
-            if (ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D) == null) {
-                ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
+            if (FrameworkImplProvider.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D) == null) {
+                FrameworkImplProvider.setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
             }
             
-            log.debug("Using 2d renderer: {}", ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D));
+            log.debug("Using 2d renderer: {}", FrameworkImplProvider.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D));
         }
         catch (Throwable e) {
             // Catch all exceptions, because anything failing to init here cannot be allowed to prevent the Workstation from starting
@@ -117,101 +118,7 @@ public class StateMgr {
         if (!uiDefaults.containsKey("ws.TreeExtraLabel")) {
             uiDefaults.put("ws.TreeExtraLabel", uiDefaults.get("Label.disabledForeground"));
         }
-        
-        // TODO: eventually we want to eliminate this dependency entirely, but for now we still use Synthetica Addons in a few places
-        
-        String[] li = {"Licensee=HHMI", "LicenseRegistrationNumber=122030", "Product=Synthetica", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=2.20.999"};
-        UIManager.put("Synthetica.license.info", li);
-        UIManager.put("Synthetica.license.key", "9A519ECE-5BB55629-B2E1233E-9E3E72DB-19992C5D");
-
-        String[] li2 = {"Licensee=HHMI", "LicenseRegistrationNumber=142016", "Product=SyntheticaAddons", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=1.10.999"};
-        UIManager.put("SyntheticaAddons.license.info", li2);
-        UIManager.put("SyntheticaAddons.license.key", "43BF31CE-59317732-9D0D5584-654D216F-7806C681");
     }
-//        // Ensure the Synthetica choices are all available.
-//        UIManager.installLookAndFeel("Synthetica AluOxide Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaAluOxideLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica BlackEye Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica BlackMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackMoonLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica BlackStar Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackStarLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica BlueIce Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueIceLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica BlueLight Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueLightLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica BlueMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueMoonLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica BlueSteel Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueSteelLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica Classy Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaClassyLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica GreenDream Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaGreenDreamLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica MauveMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaMauveMetallicLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica OrangeMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaOrangeMetallicLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica SilverMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSilverMoonLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica Simple2D Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSimple2DLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica SkyMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSkyMetallicLookAndFeel");
-//        UIManager.installLookAndFeel("Synthetica WhiteVision Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaWhiteVisionLookAndFeel");
-//        LookAndFeelInfo[] installedInfos = UIManager.getInstalledLookAndFeels();
-//
-//        String lafName = (String) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
-//        LookAndFeel currentLaf = UIManager.getLookAndFeel();
-//        LookAndFeelInfo currentLafInfo = null;
-//        if (lafName==null) lafName = "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel";
-//        try {
-//            boolean installed = false;
-//            for (LookAndFeelInfo lafInfo : installedInfos) {
-//                if (lafInfo.getClassName().equals(lafName)) {
-//                    installed = true;
-//                }
-//                if (lafInfo.getName().equals(currentLaf.getName())) {
-//                    currentLafInfo = lafInfo;
-//                }
-//            }
-//            if (installed) {
-//                setLookAndFeel(lafName);
-//            }
-//            else if (currentLafInfo != null) {
-//                setLookAndFeel(currentLafInfo.getName());
-//                ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
-//            }
-//            else {
-//                log.error("Could not set Look and Feel: {}",lafName);
-//            }
-//        }
-//        catch (Exception ex) {
-//            ConsoleApp.handleException(ex);
-//        }
-//    }
-
-//    private void setLookAndFeel(String lookAndFeelClassName) {
-//        try {
-//            if (lookAndFeelClassName.contains("BlackEye")) {
-//                isDarkLook = true;
-//                try {
-//                    
-//                    UIManager.setLookAndFeel(new SyntheticaBlackEyeLookAndFeel() {
-//                        @Override
-//                        protected void loadCustomXML() throws ParseException {
-//                            loadXMLConfig("/SyntheticaBlackEyeLookAndFeel.xml");
-//                        }
-//                    });
-//                    
-//                    // Override HTML link color to baby blue, which is the same as the Synthetica black eye highlight color. 
-//                    // Don't ask me why the following works even after the HTMLEditorKit instance goes out of scope. Some stones are best left unturned.
-//                    HTMLEditorKit kit = new HTMLEditorKit();
-//                    StyleSheet styleSheet = kit.getStyleSheet();
-//                    styleSheet.addRule("a {color:#BADCFB;}");
-//                    
-//                }
-//                catch (IllegalComponentStateException ex) {
-//                    ConsoleApp.handleException(ex);
-//                }
-//            }
-//            else {
-//                UIManager.setLookAndFeel(lookAndFeelClassName);
-//            }
-//
-//            ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
-//            log.info("Configured Look and Feel: {}", lookAndFeelClassName);
-//        }
-//        catch (Exception ex) {
-//            ConsoleApp.handleException(ex);
-//        }
-//    }
     
     public boolean isDarkLook() {
         Boolean dark = (Boolean) UIManager.get("nb.dark.theme");
@@ -221,7 +128,7 @@ public class StateMgr {
     @Subscribe
     public void cleanup(ApplicationClosing e) {
         log.info("Saving auto-share template");
-        ConsoleApp.getConsoleApp().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
+        FrameworkImplProvider.setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
     }
 
     public NavigationHistory getNavigationHistory(DomainListViewTopComponent topComponent) {
@@ -254,7 +161,7 @@ public class StateMgr {
     }
     
     public Long getCurrentOntologyId() {
-        String lastSelectedOntology = (String) ConsoleApp.getConsoleApp().getModelProperty("lastSelectedOntology");
+        String lastSelectedOntology = (String) FrameworkImplProvider.getModelProperty("lastSelectedOntology");
         if (StringUtils.isEmpty(lastSelectedOntology)) {
             return null;
         }
@@ -265,7 +172,7 @@ public class StateMgr {
     public void setCurrentOntologyId(Long ontologyId) {
         log.info("Setting current ontology to {}", ontologyId);
         String idStr = ontologyId==null?null:ontologyId.toString();
-        ConsoleApp.getConsoleApp().setModelProperty("lastSelectedOntology", idStr);
+        FrameworkImplProvider.setModelProperty("lastSelectedOntology", idStr);
         Events.getInstance().postOnEventBus(new OntologySelectionEvent(ontologyId));
     }
 
@@ -359,7 +266,7 @@ public class StateMgr {
 
     public void setAutoShareTemplate(PermissionTemplate autoShareTemplate) {
         this.autoShareTemplate = autoShareTemplate;
-        ConsoleApp.getConsoleApp().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
+        FrameworkImplProvider.setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
     }
     
     public List<String> getRecentlyOpenedHistory() {
@@ -380,7 +287,7 @@ public class StateMgr {
     
     private List<String> getHistoryProperty(String prop) {
         @SuppressWarnings("unchecked")
-        List<String> history = (List<String>)ConsoleApp.getConsoleApp().getModelProperty(prop);
+        List<String> history = (List<String>)FrameworkImplProvider.getModelProperty(prop);
         if (history == null) return new ArrayList<>();
         // Must make a copy of the list so that we don't use the same reference that's in the cache.
         log.debug("History property {} contains {}",prop,history);
@@ -400,7 +307,7 @@ public class StateMgr {
         log.debug("Adding {} to recently opened history",value);
         // Must make a copy of the list so that our reference doesn't go into the cache.
         List<String> copy = new ArrayList<>(history);
-        ConsoleApp.getConsoleApp().setModelProperty(prop, copy); 
+        FrameworkImplProvider.setModelProperty(prop, copy); 
     }
     
     public Task getTaskById(Long taskId) throws Exception {

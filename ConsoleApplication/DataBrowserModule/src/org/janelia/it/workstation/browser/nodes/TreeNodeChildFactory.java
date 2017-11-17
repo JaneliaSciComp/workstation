@@ -7,12 +7,12 @@ import java.util.Map;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
@@ -97,8 +97,8 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
                 for(Reference reference : treeNode.getChildren()) {
                     if (reference==null) continue;
                     DomainObject obj = map.get(reference.getTargetId());
-                    log.trace(reference.getTargetClassName()+"#"+reference.getTargetId()+" -> "+obj);
                     if (obj!=null) {
+                        log.trace(reference+" -> "+obj.getName());
                         if (isSupportedAsChild(obj.getClass())) {
                             temp.add(obj);
                         }

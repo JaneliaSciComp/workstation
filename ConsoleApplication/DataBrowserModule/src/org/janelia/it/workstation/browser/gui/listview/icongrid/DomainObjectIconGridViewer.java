@@ -15,19 +15,6 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Preference;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.interfaces.IsParent;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.AnnotationContextMenu;
@@ -54,6 +41,19 @@ import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.access.domain.DynamicDomainObjectProxy;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Preference;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.interfaces.IsParent;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.workspace.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -216,10 +216,10 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         worker.execute();
     }
     
-    private Preference getPreference(String category) {
+    private String getPreference(String category) {
         try {
             final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
-            return DomainMgr.getDomainMgr().getPreference(category, parentObject.getId().toString());
+            return FrameworkImplProvider.getRemotePreferenceValue(category, parentObject.getId().toString(), null);
         }
         catch (Exception e) {
             log.error("Error getting preference", e);
@@ -230,7 +230,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private void setPreference(final String category, final Object value) throws Exception {
         final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
         if (parentObject.getId()!=null) {
-            DomainMgr.getDomainMgr().setPreference(category, parentObject.getId().toString(), value);
+            FrameworkImplProvider.setRemotePreferenceValue(category, parentObject.getId().toString(), value);
         }
     }
     
@@ -322,16 +322,15 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject!=null && parentObject.getId()!=null) {
                     
-                    Preference preference = getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT);
+                    String preference = getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT);
                     log.info("Got result preference: "+preference);
                     if (preference!=null) {
                         try {
-                            ArtifactDescriptor resultDescriptor = DescriptorUtils.deserialize((String) preference.getValue());
+                            ArtifactDescriptor resultDescriptor = DescriptorUtils.deserialize(preference);
                             resultButton.setResultDescriptor(resultDescriptor);
                         }
                         catch (Exception e) {
-                            FrameworkImplProvider.handleExceptionQuietly(e);
-                            log.error("Error deserializing preference {}. Clearing it.", preference.getId(), e);
+                            log.error("Error deserializing preference {}. Clearing it.", preference, e);
                             setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, null);
                         }
                     }
@@ -339,10 +338,10 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                         resultButton.reset();
                     }
                     
-                    Preference preference2 = getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE);
+                    String preference2 = getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE);
                     log.info("Got image type preference: "+preference2);
                     if (preference2!=null) {
-                        typeButton.setImageTypeName((String)preference2.getValue());
+                        typeButton.setImageTypeName(preference2);
                     }
                     else {
                         typeButton.reset();
@@ -521,7 +520,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     protected void setMustHaveImage(boolean mustHaveImage) {
         try {
-            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, mustHaveImage);
+            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, mustHaveImage);
             refreshDomainObjects();
         }
         catch (Exception e) {
@@ -532,20 +531,16 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     protected boolean isMustHaveImage() {
         boolean defaultValue = false;
-        Preference preference;
+        Boolean preference;
         try {
-            preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE);
+            preference = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, defaultValue);
         }
         catch (Exception e) {
             log.error("Error getting preference", e);
             return defaultValue;
         }
-        if (preference==null) {
-            return defaultValue;
-        }
         log.info("Got must have image preference: "+preference);
-        Boolean value = (Boolean)preference.getValue();
-        return value==null ? defaultValue : value;
+        return preference;
     }
     
     @Override

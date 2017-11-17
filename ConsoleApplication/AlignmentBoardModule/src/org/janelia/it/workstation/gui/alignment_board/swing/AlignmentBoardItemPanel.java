@@ -9,11 +9,12 @@ import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.util.ColorSwatch;
+import org.janelia.model.domain.gui.alignment_board.AlignmentBoardItem;
 
 /**
  * Panel holds data about an alignment board item.

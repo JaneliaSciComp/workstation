@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.model.search;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObject;
 
 /**
  * Searches a ResultIterator to find objects matching some string

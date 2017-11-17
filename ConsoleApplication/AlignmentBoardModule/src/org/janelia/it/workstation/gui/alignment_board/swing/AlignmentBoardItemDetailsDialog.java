@@ -20,9 +20,9 @@ import javax.swing.JPanel;
 import java.awt.Dialog;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
+import org.janelia.model.domain.gui.alignment_board.AlignmentBoardItem;
 
 /**
  * A dialog for viewing details about an entity.

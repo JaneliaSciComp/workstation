@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.alignment_board.util;
 
-import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
+import org.janelia.model.domain.compartments.CompartmentSet;
 
 public class ABCompartmentSet extends ABItem {
 

@@ -13,17 +13,8 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Preference;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.sample.FileGroup;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
+
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -39,6 +30,17 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Preference;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasFileGroups;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.sample.FileGroup;
+import org.janelia.model.domain.sample.ObjectiveSample;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,10 +128,10 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
             DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
 
-            Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
+            String preference2 = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString(), null);
             log.info("Got image type preference: "+preference2);
             if (preference2!=null) {
-                typeButton.setImageTypeName((String)preference2.getValue());
+                typeButton.setImageTypeName(preference2);
             }
             typeButton.populate(hasFileGroups.getGroups());
 
@@ -328,7 +330,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             protected void doStuff() throws Exception {
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject.getId()!=null) {
-                    DomainMgr.getDomainMgr().setPreference(name, parentObject.getId().toString(), value);
+                    FrameworkImplProvider.setRemotePreferenceValue(name, parentObject.getId().toString(), value);
                 }
             }
 

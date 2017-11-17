@@ -6,12 +6,12 @@ import javax.swing.JComponent;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DropAcceptor;
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardPanel;
 import org.janelia.it.workstation.gui.alignment_board_viewer.LayersPanel;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.model.domain.DomainObject;
 import org.openide.util.lookup.ServiceProvider;
 
 /**

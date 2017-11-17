@@ -127,7 +127,7 @@ public class DownloadWizardPanel3 implements WizardDescriptor.ValidatingPanel<Wi
             }
         }
         if (!found) {
-            ConsoleApp.getConsoleApp().setModelProperty(DownloadVisualPanel3.FILE_PATTERN_PROP_NAME, filePattern);
+            FrameworkImplProvider.setModelProperty(DownloadVisualPanel3.FILE_PATTERN_PROP_NAME, filePattern);
         }
     }
 }

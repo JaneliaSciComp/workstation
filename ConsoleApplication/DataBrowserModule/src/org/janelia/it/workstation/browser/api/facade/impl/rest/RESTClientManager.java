@@ -7,11 +7,15 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,9 +88,23 @@ public class RESTClientManager {
                 return true;
             }
         });
+        
+        // Add access token to every request
+        ClientRequestFilter authFilter = new ClientRequestFilter() {
+            @Override
+            public void filter(ClientRequestContext requestContext) throws IOException {
+                String accessToken = AccessManager.getAccessManager().getToken();
+                if (accessToken!=null) {
+                    requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+                }
+            }
+        };
+        
         client = ClientBuilder.newClient();
         client.register(provider);
+        client.register(authFilter);
         client.register(MultiPartFeature.class);
+                
         registerRestUris();   
     }
 
@@ -101,7 +119,7 @@ public class RESTClientManager {
         serviceEndpoints.put("treenode", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/treenode"));
         serviceEndpoints.put("user", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/user"));
         serviceEndpoints.put("dataset", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/dataset"));
-        serviceEndpoints.put("login", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/login"));
+        serviceEndpoints.put("userGetOrCreate", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/user/getorcreate"));
         serviceEndpoints.put("search", client.target(serverUrl + REMOTE_DATA_PREFIX + "/search"));
         serviceEndpoints.put("sample", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/sample"));
         serviceEndpoints.put("release", client.target(serverUrl  + REMOTE_PROCESS_PREFIX + "/release"));
@@ -150,8 +168,8 @@ public class RESTClientManager {
         return serviceEndpoints.get("dataset");
     }
 
-    public WebTarget getLoginEndpoint() {
-        return serviceEndpoints.get("login");
+    public WebTarget getUserGetOrCreateEndpoint() {
+        return serviceEndpoints.get("userGetOrCreate");
     }
 
     public WebTarget getSearchEndpoint() {
