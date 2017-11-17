@@ -147,7 +147,7 @@ public class TaskWorkflowPanel extends JPanel {
 
         workflowButtonsPanel.add(Box.createHorizontalGlue());
 
-        JButton loadButton = new JButton("Load list...");
+        JButton loadButton = new JButton("Load point list...");
         loadButton.addActionListener(event -> onLoadButton());
         workflowButtonsPanel.add(loadButton);
 
@@ -348,7 +348,7 @@ public class TaskWorkflowPanel extends JPanel {
 
 
 class PointTableModel extends AbstractTableModel {
-    private String[] columnNames = {"x", "y", "z", "reviewed"};
+    private String[] columnNames = {"x (µm)", "y (µm)", "z (µm)", "reviewed"};
 
     private List<Vec3> points = new ArrayList<>();
     private List<Boolean> status = new ArrayList<>();
