@@ -330,7 +330,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                             resultButton.setResultDescriptor(resultDescriptor);
                         }
                         catch (Exception e) {
-                            FrameworkImplProvider.handleExceptionQuietly(e);
                             log.error("Error deserializing preference {}. Clearing it.", preference, e);
                             setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, null);
                         }
