@@ -134,6 +134,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
+import org.janelia.it.workstation.gui.task_workflow.TaskWorkflowViewLauncher;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
@@ -275,6 +276,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private Snapshot3DLauncher snapshot3dLauncher;
     private SkeletonController skeletonController;
     private AnnotationSkeletonViewLauncher annotationSkeletonViewLauncher;
+    private TaskWorkflowViewLauncher taskWorkflowViewLauncher;
     private PathTraceRequestListener pathTraceListener;
     private WorkspaceClosureListener wsCloseListener;
     
@@ -532,6 +534,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     result.add(addCopyOctreePathMenuItem());
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
+                    result.addAll(taskWorkflowViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());                    
                     
                     return result;
@@ -1366,7 +1369,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
      * given a string containing the canonical Linux path to the data,
      * open the data in the viewer
      *
-     * @param canonicalLinuxPath
+     * @param sample
      * @return
      * @throws MalformedURLException
      */
@@ -1489,6 +1492,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         snapshot3dLauncher.setAnnotationManager(annotationMgr);
         annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
+        taskWorkflowViewLauncher = new TaskWorkflowViewLauncher();
         volumeImage.setRemoteBasePath(canonicalLinuxPath);       
         
         return loadURL(url, sample);
