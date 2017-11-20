@@ -2,7 +2,10 @@ package org.janelia.it.workstation.gui.alignment_board_viewer.renderable;
 
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
-
+import org.janelia.model.domain.compartments.Compartment;
+import org.janelia.model.domain.compartments.CompartmentSet;
+import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.Sample;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
@@ -10,10 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
-import org.janelia.it.jacs.model.domain.compartments.Compartment;
-import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.Sample;
+
 import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 
 import static org.junit.Assert.*;

@@ -2,8 +2,8 @@ package org.janelia.it.workstation.browser.events.selection;
 
 import java.util.Arrays;
 
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.workstation.browser.nodes.FilterNode;
+import org.janelia.model.domain.gui.search.Filter;
 
 /**
  *

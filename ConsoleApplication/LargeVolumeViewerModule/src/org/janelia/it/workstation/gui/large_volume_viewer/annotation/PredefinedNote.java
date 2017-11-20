@@ -3,8 +3,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 
 /**
  * this enum defines the predefined notes that a user can add to

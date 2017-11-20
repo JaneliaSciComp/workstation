@@ -2,14 +2,14 @@ package org.janelia.it.workstation.browser.components;
 
 import java.awt.Component;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.NeuronFragment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

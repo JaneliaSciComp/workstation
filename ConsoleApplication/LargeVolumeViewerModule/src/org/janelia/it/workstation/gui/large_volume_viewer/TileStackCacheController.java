@@ -37,7 +37,7 @@ import org.janelia.it.jacs.shared.lvv.SimpleFileCache;
 import org.janelia.it.jacs.shared.lvv.TextureData2d;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
-import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
@@ -140,7 +140,7 @@ public class TileStackCacheController {
         sliceSize = octreeMetadataSniffer.getSliceSize(); // maybe 16-bit
         log.info("initFilesystemMetadata()");
         folderOpenTimestamp = new Date().getTime();
-        AccessManager.getAccessManager().logToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LargeVolumeViewerTopComponent.LVV_LOGSTAMP_ID,
                 LTT_SESSION_CATEGORY_STRING,
                 new ActionString(remoteBasePath + ":" + folderOpenTimestamp)
@@ -766,7 +766,7 @@ public class TileStackCacheController {
                 // slice loads.
                 File topFolder = tileStackCacheController.getTopFolder();
                 String specificPart = file.toString().substring(topFolder.toString().length());
-                AccessManager.getAccessManager().logToolEvent(
+                SessionMgr.getSessionMgr().logToolEvent(
                     LargeVolumeViewerTopComponent.LVV_LOGSTAMP_ID,
                     LTT_CATEGORY_STRING,
                     new ActionString(

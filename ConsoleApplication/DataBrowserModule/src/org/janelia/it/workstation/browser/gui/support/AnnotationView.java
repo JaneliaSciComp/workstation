@@ -2,7 +2,7 @@ package org.janelia.it.workstation.browser.gui.support;
 
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.model.domain.ontology.Annotation;
 
 /**
  * A common interface for all panels which display a list of annotations.

@@ -12,12 +12,12 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
+import org.janelia.model.domain.DomainObject;
 
 import com.google.common.eventbus.Subscribe;
 

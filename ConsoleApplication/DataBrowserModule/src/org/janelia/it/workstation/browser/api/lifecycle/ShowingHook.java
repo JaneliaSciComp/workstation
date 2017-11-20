@@ -10,7 +10,9 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.logging.EDTExceptionInterceptor;
 import org.janelia.it.workstation.browser.nb_action.StartPageMenuAction;
@@ -61,54 +63,72 @@ public class ShowingHook implements Runnable {
         
         log.info("Showing main window");
         frame.setVisible(true);
-
-        // Open the start page, if necessary
-        if (ApplicationOptions.getInstance().isShowStartPageOnStartup()) {
-            StartPageMenuAction action = new StartPageMenuAction();
-            action.actionPerformed(null);
-        }
         
-        if (frame.getExtendedState()==JFrame.MAXIMIZED_BOTH) {
-            // Workaround for a framework bug. Ensure the window doesn't cover the Windows toolbar. 
-            log.info("Window is maximized. Resizing to make sure it doesn't cover Windows toolbar.");
-            GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            frame.setSize(env.getMaximumWindowBounds().getSize());
-            frame.setMaximizedBounds(env.getMaximumWindowBounds());
-            frame.setExtendedState(frame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
-        }
-        else {
-            Dimension currSize = frame.getSize();
-            if (currSize.width<20 || currSize.height<20) {
-                log.info("Window is too small. Resetting to 80% of screen size.");
-                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-                double width = screenSize.getWidth();
-                double height = screenSize.getHeight();
-                frame.setLocation(new Point(0, 30)); // 30 pixels down to avoid Mac toolbar at the top of the screen
-                frame.setSize(new Dimension((int)Math.round(width*0.8), (int)Math.round(height*0.8)));
-                resetWindows();
+        // Open the start page, if necessary
+        try {
+            if (ApplicationOptions.getInstance().isShowStartPageOnStartup()) {
+                StartPageMenuAction action = new StartPageMenuAction();
+                action.actionPerformed(null);
             }
+        }
+        catch (Throwable e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
+        }
+
+        try {
+            if (frame.getExtendedState()==JFrame.MAXIMIZED_BOTH) {
+                // Workaround for a framework bug. Ensure the window doesn't cover the Windows toolbar. 
+                log.info("Window is maximized. Resizing to make sure it doesn't cover Windows toolbar.");
+                GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                frame.setSize(env.getMaximumWindowBounds().getSize());
+                frame.setMaximizedBounds(env.getMaximumWindowBounds());
+                frame.setExtendedState(frame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+            }
+            else {
+                Dimension currSize = frame.getSize();
+                if (currSize.width<20 || currSize.height<20) {
+                    log.info("Window is too small. Resetting to 80% of screen size.");
+                    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                    double width = screenSize.getWidth();
+                    double height = screenSize.getHeight();
+                    frame.setLocation(new Point(0, 30)); // 30 pixels down to avoid Mac toolbar at the top of the screen
+                    frame.setSize(new Dimension((int)Math.round(width*0.8), (int)Math.round(height*0.8)));
+                    resetWindows();
+                }
+            }
+        }
+        catch (Throwable e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
         }
         
         ConsoleState.setCurrState(ConsoleState.WINDOW_SHOWN);
 
-        if (Startup.isBrandingValidationException()) {
-            JOptionPane.showMessageDialog(
-                    WindowLocator.getMainFrame(),
-                    "Could not initialize configuration. Please reinstall the application.",
-                    "Error initializing configuration",
-                    JOptionPane.ERROR_MESSAGE,
-                    null
-            );
+        try {
+            if (Startup.isBrandingValidationException()) {
+                JOptionPane.showMessageDialog(
+                        WindowLocator.getMainFrame(),
+                        "Could not initialize configuration. Please reinstall the application.",
+                        "Error initializing configuration",
+                        JOptionPane.ERROR_MESSAGE,
+                        null
+                );
+            }
+            else if (BrandingConfig.getBrandingConfig().isNeedsRestart()) {
+                JOptionPane.showMessageDialog(
+                        WindowLocator.getMainFrame(),
+                        "Configuration has been updated. Please restart the application.",
+                        "Configuration updated",
+                        JOptionPane.WARNING_MESSAGE,
+                        null
+                );
+            }
         }
-        else if (BrandingConfig.getBrandingConfig().isNeedsRestart()) {
-            JOptionPane.showMessageDialog(
-                    WindowLocator.getMainFrame(),
-                    "Configuration has been updated. Please restart the application.",
-                    "Configuration updated",
-                    JOptionPane.WARNING_MESSAGE,
-                    null
-            );
+        catch (Throwable e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
         }
+
+        // If there were any issues with auto-login before, resolve them now by showing the login dialog
+        AccessManager.getAccessManager().resolveLoginIssue();
         
 //        if (SystemInfo.getJavaInfo().contains("1.7")) {
 //
@@ -127,7 +147,7 @@ public class ShowingHook implements Runnable {
 //            }
 //            else if (selectedOption==1) {                
 //                
-//                String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
+//                String email = (String) FrameworkImplProvider.getModelProperty(AccessManager.USER_EMAIL);
 //                
 //                MailDialogueBox popup = MailDialogueBox.newDialog(WindowLocator.getMainFrame(), email)
 //                        .withTitle("Create A Ticket")

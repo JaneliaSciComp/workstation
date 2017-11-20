@@ -5,12 +5,12 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.model.domain.DomainObject;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;

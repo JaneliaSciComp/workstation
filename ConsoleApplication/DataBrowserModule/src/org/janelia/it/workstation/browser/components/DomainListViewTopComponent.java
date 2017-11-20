@@ -1,20 +1,20 @@
 package org.janelia.it.workstation.browser.components;
 
+import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
 import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.gui.search.Filtering;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.editor.FilterEditorPanel;
@@ -25,6 +25,10 @@ import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.search.Filtering;
+import org.janelia.model.domain.workspace.TreeNode;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -75,6 +79,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     private DomainObjectNodeSelectionEditor editor;
     private FindContext findContext;
     private boolean active = false;
+    private String intialState;
     
     public DomainListViewTopComponent() {
         initComponents();
@@ -102,10 +107,12 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     @Override
     public void componentOpened() {
         DomainListViewManager.getInstance().activate(this);
+        Events.getInstance().registerOnEventBus(this);
     }
     
     @Override
     public void componentClosed() {
+        Events.getInstance().unregisterOnEventBus(this);
     }
 
     @Override
@@ -163,67 +170,25 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             // Current version saved the entire editor state
             final String editorState = p.getProperty("editorState");
             log.info("Reading state: {}",editorState);
-
             if (editorState != null) {
-
-                SimpleWorker worker = new SimpleWorker() {
-                    DomainObjectEditorState<?> state;
-                    DomainObject domainObject;
-                    
+                // Must write to instance variables from EDT only
+                SwingUtilities.invokeLater(new Runnable() {
                     @Override
-                    protected void doStuff() throws Exception {
-                        state = DomainObjectEditorState.deserialize(editorState);
-                        if (state.getDomainObject().getId()!=null) {
-                            // Refresh the object, if it's coming from the database
-                            domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(state.getDomainObject());
-                            if (domainObject!=null) {
-                                state.setDomainObject(domainObject);
-                            }
+                    public void run() {
+                        intialState = editorState;
+                        if (AccessManager.loggedIn()) {
+                            loadPreviousSession();
+                        }
+                        else {
+                            // Not logged in yet, wait for a SessionStartEvent
                         }
                     }
-
-                    @Override
-                    protected void hadSuccess() {
-                        loadState(state);
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        log.warn("Could not load serialized editor state", error);
-                    }
-                };
-                worker.execute();
+                });
             }
         }
         else if (TC_VERSION_IDONLY.equals(version)) {
-            // An older version only saved the object id 
-            final String objectStrRef = p.getProperty("objectRef");
-
-            if (!StringUtils.isEmpty(objectStrRef)) {
-                log.info("Reading state: {}",objectStrRef);
-                
-                SimpleWorker worker = new SimpleWorker() {
-                    DomainObject domainObject;
-                    
-                    @Override
-                    protected void doStuff() throws Exception {
-                        domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        if (domainObject!=null) {
-                            loadDomainObject(domainObject, false);
-                        }
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        FrameworkImplProvider.handleExceptionQuietly("Could not load serialized editor state",error);
-                    }
-                };
-                worker.execute();
-            }
+            // An older version only saved the object id.
+            // This is no longer supported.
         }
         else {
             log.warn("Unrecognized TC version: {}",version);
@@ -232,6 +197,47 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     
     // Custom methods
 
+    @Subscribe
+    public void sessionStarted(SessionStartEvent event) {
+        loadPreviousSession();
+    }
+    
+    private void loadPreviousSession() {
+
+        if (intialState == null) return;
+        log.info("Loading initial session");
+        final String stateToLoad = intialState;
+        this.intialState = null;
+
+        SimpleWorker worker = new SimpleWorker() {
+            DomainObjectEditorState<?> state;
+            DomainObject domainObject;
+
+            @Override
+            protected void doStuff() throws Exception {
+                state = DomainObjectEditorState.deserialize(stateToLoad);
+                if (state.getDomainObject().getId()!=null) {
+                    // Refresh the object, if it's coming from the database
+                    domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(state.getDomainObject());
+                    if (domainObject!=null) {
+                        state.setDomainObject(domainObject);
+                    }
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+                loadState(state);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                log.warn("Could not load serialized editor state", error);
+            }
+        };
+        worker.execute();
+    }
+    
     @Override
     public void setFindContext(FindContext findContext) {
         this.findContext = findContext; 

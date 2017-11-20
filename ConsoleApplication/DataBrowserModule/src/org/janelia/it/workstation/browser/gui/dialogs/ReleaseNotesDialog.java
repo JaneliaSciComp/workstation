@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.browser.gui.dialogs;
 
 import static org.janelia.it.workstation.browser.gui.options.OptionConstants.LAST_SHOWN_RELEASE_NOTES;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SHOW_RELEASE_NOTES;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -25,6 +24,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
@@ -241,11 +241,11 @@ public class ReleaseNotesDialog extends ModalDialog {
     }
     
     public static String getLastShownReleaseNotes() {
-        return (String) ConsoleApp.getConsoleApp().getModelProperty(LAST_SHOWN_RELEASE_NOTES);
+        return (String) FrameworkImplProvider.getModelProperty(LAST_SHOWN_RELEASE_NOTES);
     }
     
     private static void setLastShownReleaseNotes(String value) {
-        ConsoleApp.getConsoleApp().setModelProperty(LAST_SHOWN_RELEASE_NOTES, value);  
+        FrameworkImplProvider.setModelProperty(LAST_SHOWN_RELEASE_NOTES, value);  
     }
     
     private class ReleaseNotes {

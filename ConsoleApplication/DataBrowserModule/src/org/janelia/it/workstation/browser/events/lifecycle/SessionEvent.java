@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.events.lifecycle;
 
-import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.model.security.Subject;
 
 /**
  * The current user has changed in some way. 

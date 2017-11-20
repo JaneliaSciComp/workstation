@@ -5,7 +5,6 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -13,6 +12,7 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.ontology.Ontology;
 
 public final class NewOntologyActionListener implements ActionListener {
 

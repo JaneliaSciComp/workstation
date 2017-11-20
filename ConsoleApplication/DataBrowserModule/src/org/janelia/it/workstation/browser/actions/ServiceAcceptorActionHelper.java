@@ -14,9 +14,9 @@ import javax.swing.JSeparator;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.browser.api.StateMgr;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

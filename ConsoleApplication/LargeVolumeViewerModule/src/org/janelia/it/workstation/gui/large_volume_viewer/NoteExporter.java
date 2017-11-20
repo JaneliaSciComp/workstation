@@ -13,11 +13,11 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 
 /**
  * this class exports the notes attached to points in a neuron; the notes are exported
@@ -68,7 +68,7 @@ public class NoteExporter {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode rootNode = mapper.createObjectNode();
         rootNode.put("workspaceID", workspaceID);
-        rootNode.put("username", AccessManager.getAccessManager().getSubject().getName());
+        rootNode.put("username", AccessManager.getAccessManager().getActualSubject().getName());
 
 
 

@@ -31,7 +31,7 @@ public class SageRestClient extends RESTClientImpl {
     
     public SageRestClient() {
         super(log);
-        this.service = RestJsonClientManager.getInstance().getTarget(REMOTE_API_URL);
+        this.service = RestJsonClientManager.getInstance().getTarget(REMOTE_API_URL, true);
     }
 
     public Collection<String> getPublishingNames(String lineName) throws Exception {

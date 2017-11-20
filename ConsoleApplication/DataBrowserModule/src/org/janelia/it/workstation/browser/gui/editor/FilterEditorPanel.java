@@ -31,21 +31,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Preference;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.gui.search.Filtering;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.TreeNodeCriteria;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -77,6 +63,21 @@ import org.janelia.it.workstation.browser.nodes.FilterNode;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.DomainObjectAttribute;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Preference;
+import org.janelia.model.domain.gui.search.Filter;
+import org.janelia.model.domain.gui.search.Filtering;
+import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;
+import org.janelia.model.domain.gui.search.criteria.AttributeValueCriteria;
+import org.janelia.model.domain.gui.search.criteria.Criteria;
+import org.janelia.model.domain.gui.search.criteria.DateRangeCriteria;
+import org.janelia.model.domain.gui.search.criteria.FacetCriteria;
+import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.Sample;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -866,11 +867,11 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private void loadPreferences() {
         if (filter.getId()==null) return;
         try {
-            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString());
+            String sortCriteriaPref = FrameworkImplProvider.getRemotePreferenceValue(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), null);
             if (sortCriteriaPref!=null) {
-                log.debug("Loaded sort criteria preference: {}",sortCriteriaPref.getValue());
-                searchConfig.setSortCriteria((String) sortCriteriaPref.getValue());
+                log.debug("Loaded sort criteria preference: {}",sortCriteriaPref);
+                searchConfig.setSortCriteria((String) sortCriteriaPref);
             }
             else {
                 searchConfig.setSortCriteria(null);
@@ -884,7 +885,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private void savePreferences() {
         if (filter.getId()==null || StringUtils.isEmpty(searchConfig.getSortCriteria())) return;
         try {
-            DomainMgr.getDomainMgr().setPreference(
+            FrameworkImplProvider.setRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), searchConfig.getSortCriteria());
             log.debug("Saved sort criteria preference: {}",searchConfig.getSortCriteria());
         }

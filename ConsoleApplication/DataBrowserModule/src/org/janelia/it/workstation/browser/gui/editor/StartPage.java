@@ -28,25 +28,29 @@ import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.jacs.model.domain.report.DatabaseSummary;
-import org.janelia.it.jacs.model.domain.report.DiskUsageSummary;
-import org.janelia.it.jacs.model.domain.report.QuotaUsage;
-import org.janelia.it.jacs.model.domain.sample.DataSet;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.gui.listview.ViewerToolbar;
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.browser.nb_action.NewFilterActionListener;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.report.DatabaseSummary;
+import org.janelia.model.domain.report.DiskUsageSummary;
+import org.janelia.model.domain.report.QuotaUsage;
+import org.janelia.model.domain.sample.DataSet;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.Subscribe;
+
 import net.miginfocom.swing.MigLayout;
+import org.janelia.it.workstation.browser.api.AccessManager;
 
 /**
  * Start Page which is automatically shown to the user on every startup (unless disabled by user preference) 
@@ -270,6 +274,13 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         dataSummaryPanel.add(new JLabel(Icons.getLoadingIcon()), "spanx 2, al center center");
         
         mainPanel.updateUI();
+
+        diskSpacePanel.setVisible(false);
+        dataSummaryPanel.setVisible(false);
+
+        if (!AccessManager.loggedIn()) {
+            return;
+        }
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -363,6 +374,8 @@ public class StartPage extends JPanel implements PropertyChangeListener {
             }
         }
         
+        diskSpacePanel.setVisible(true);
+        
     }
     
     private void populateDataView(DatabaseSummary dataSummary) {
@@ -400,6 +413,8 @@ public class StartPage extends JPanel implements PropertyChangeListener {
             lsmCountLabel.setText(counts.get(LSMImage.class.getSimpleName())+"");
             annotationCountLabel.setText(counts.get(Annotation.class.getSimpleName())+"");
         }
+        
+        dataSummaryPanel.setVisible(true);
     }
     
     private ImageIcon getScaledIcon(ImageIcon icon, int width, int height) {
@@ -420,6 +435,14 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         return label;
     }
 
+    @Subscribe
+    public void objectsInvalidated(DomainObjectInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            log.debug("Total invalidation detected, refreshing...");
+            refresh();
+        }
+    }
+    
     @Override
     public boolean requestFocusInWindow() {
         boolean success = super.requestFocusInWindow();

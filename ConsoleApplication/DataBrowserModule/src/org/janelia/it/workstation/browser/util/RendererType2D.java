@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.util;
 
-import org.janelia.it.jacs.model.entity.cv.NamedEnum;
+import org.janelia.model.domain.enums.NamedEnum;
 
 /**
  * Enumeration of renderers that the workstation supports. 

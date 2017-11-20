@@ -11,5 +11,5 @@ public interface PreferenceHandler {
 
     void setPreferenceValue(String category, String key, Object value) throws Exception;
 
-    Object getPreferenceValue(String category, String key, Object defaultValue) throws Exception;
+    <T> T getPreferenceValue(String category, String key, T defaultValue) throws Exception;
 }

@@ -6,9 +6,9 @@
 
 package org.janelia.it.workstation.gui.alignment_board.nodes;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.gui.alignment_board.AlignmentBoard;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 

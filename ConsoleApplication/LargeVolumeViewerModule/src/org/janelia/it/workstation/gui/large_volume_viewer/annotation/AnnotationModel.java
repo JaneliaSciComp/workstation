@@ -19,18 +19,7 @@ import javax.swing.SwingUtilities;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronTagMap;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
-import org.janelia.it.jacs.model.util.MatrixUtilities;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.ParametrizedLine;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.SWCData;
@@ -69,13 +58,25 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
-import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.access.tiledMicroscope.TmModelManipulator;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.Preference;
+import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
+import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
+import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.util.MatrixUtilities;
 
 /**
  * This class is responsible for handling requests from the AnnotationManager.  those
@@ -1924,9 +1925,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     
      public void loadUserPreferences() throws Exception {
          if (this.getCurrentSample()==null || this.getCurrentSample().getId()==null) return;
-        Preference userPreferences = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString());
-        if (userPreferences!=null && currentTagMap!=null) {
-            Map<String,Map<String,Object>> tagGroupMappings = (Map<String,Map<String,Object>>)userPreferences.getValue();
+         Map<String,Map<String,Object>> tagGroupMappings = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), null);
+        if (tagGroupMappings!=null && currentTagMap!=null) {
             currentTagMap.saveTagGroupMappings(tagGroupMappings);
             if (neuronSetAdapter!=null && neuronSetAdapter.getMetaWorkspace()!=null) {
                 neuronSetAdapter.getMetaWorkspace().setTagMetadata(currentTagMap);
@@ -1955,7 +1955,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     public void saveUserPreferences() throws Exception {
         // for now use the tag map as the user preferences... as preferences increase, generalize the structure
-        DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), currentTagMap.getAllTagGroupMappings());
+        FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), currentTagMap.getAllTagGroupMappings());
     }
     
 

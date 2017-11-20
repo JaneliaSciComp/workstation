@@ -21,13 +21,6 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.ontology.EnumText;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -35,6 +28,13 @@ import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.ontology.EnumText;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.ontology.OntologyTermReference;
 
 /**
  * TODO: This probably doesn't work as it should anymore (after the port to NG), but it's not used by anyone. Maybe someday we can resurrect it. 

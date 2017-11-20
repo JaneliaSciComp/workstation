@@ -25,7 +25,6 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
-import org.janelia.it.jacs.model.domain.sample.LineRelease;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -36,6 +35,7 @@ import org.janelia.it.workstation.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.sample.LineRelease;
 
 /**
  * A dialog for viewing all the fly line releases that a user has access to.

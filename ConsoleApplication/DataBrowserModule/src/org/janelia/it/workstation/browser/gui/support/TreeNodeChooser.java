@@ -6,9 +6,9 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.nodes.UserViewTreeNodeNode;
+import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.nodes.Node;
 
 

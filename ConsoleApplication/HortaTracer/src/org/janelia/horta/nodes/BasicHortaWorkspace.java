@@ -39,9 +39,9 @@ import org.janelia.console.viewerapi.ComposableObservable;
 // import org.janelia.geometry3d.Vantage;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.VantageInterface;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronTagMap;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 
 /**
  * @author Christopher Bruns

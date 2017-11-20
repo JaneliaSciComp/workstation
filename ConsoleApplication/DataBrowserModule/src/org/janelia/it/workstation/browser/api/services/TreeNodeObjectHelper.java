@@ -3,14 +3,14 @@ package org.janelia.it.workstation.browser.api.services;
 import java.util.Arrays;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.gui.search.Filtering;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.nodes.FilterNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.gui.search.Filter;
+import org.janelia.model.domain.gui.search.Filtering;
+import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;

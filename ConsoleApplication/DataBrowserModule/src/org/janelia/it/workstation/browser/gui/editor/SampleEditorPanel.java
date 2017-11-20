@@ -35,21 +35,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
 
-import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Preference;
-import org.janelia.it.jacs.model.domain.enums.ErrorType;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineError;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
@@ -85,6 +71,21 @@ import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Preference;
+import org.janelia.model.domain.enums.ErrorType;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasAnatomicalArea;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.ObjectiveSample;
+import org.janelia.model.domain.sample.PipelineError;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SamplePipelineRun;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -417,13 +418,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private void loadPreferences() {
         if (sample.getId()==null) return;
         try {
-            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY);
-            if (sortCriteriaPref!=null) {
-                sortCriteria = (String) sortCriteriaPref.getValue();
-            }
-            else {
-                sortCriteria = null;
-            }
+            sortCriteria = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, null);
         }
         catch (Exception e) {
             log.error("Could not load sort criteria",e);
@@ -433,7 +428,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private void savePreferences() {
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
-            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
+            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
         }
         catch (Exception e) {
             log.error("Could not save sort criteria",e);

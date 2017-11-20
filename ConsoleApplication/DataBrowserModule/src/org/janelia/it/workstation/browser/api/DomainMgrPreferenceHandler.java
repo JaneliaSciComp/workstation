@@ -17,7 +17,7 @@ public class DomainMgrPreferenceHandler implements PreferenceHandler {
     }
 
     @Override
-    public Object getPreferenceValue(String category, String key, Object defaultValue) throws Exception {
+    public <T> T getPreferenceValue(String category, String key, T defaultValue) throws Exception {
         return DomainMgr.getDomainMgr().getPreferenceValue(category, key, defaultValue);
     }
     

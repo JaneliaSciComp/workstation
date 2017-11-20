@@ -2,9 +2,9 @@ package org.janelia.it.workstation.browser.events.selection;
 
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 
 import com.google.common.eventbus.Subscribe;
 import org.slf4j.Logger;

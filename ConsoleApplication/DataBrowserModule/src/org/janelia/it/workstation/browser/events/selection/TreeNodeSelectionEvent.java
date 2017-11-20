@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.browser.events.selection;
 
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
+import org.janelia.model.domain.workspace.TreeNode;
 
 import java.util.Arrays;
 

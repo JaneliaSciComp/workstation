@@ -19,12 +19,12 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -107,7 +107,7 @@ public class EditWorkspaceNameDialog extends ModalDialog {
         attrPanel.add(neuronCodeField,"width 100:200:1000, grow");
         
         userInitialsField = new JTextField();
-        userInitialsField.setText(guessUserInitials(AccessManager.getAccessManager().getSubject().getFullName()));
+        userInitialsField.setText(guessUserInitials(AccessManager.getAccessManager().getActualSubject().getFullName()));
         attrPanel.add(userInitialsField,"width 30:100:1000, grow");
 
         suffixField = new JTextField();

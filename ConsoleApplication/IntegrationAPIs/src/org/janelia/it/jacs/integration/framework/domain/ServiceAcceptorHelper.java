@@ -3,7 +3,7 @@ package org.janelia.it.jacs.integration.framework.domain;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObject;
 import org.openide.util.lookup.Lookups;
 
 /**

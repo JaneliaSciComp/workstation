@@ -1,7 +1,8 @@
 package org.janelia.it.jacs.integration.framework.domain;
 
 import java.util.List;
-import org.janelia.it.jacs.model.domain.DomainObject;
+
+import org.janelia.model.domain.DomainObject;
 
 /**
  * Implement this to make a means of adding one or more domain objects to 

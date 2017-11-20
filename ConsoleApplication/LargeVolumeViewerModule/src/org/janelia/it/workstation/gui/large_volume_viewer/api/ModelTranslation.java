@@ -4,11 +4,11 @@ import java.awt.Color;
 
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmChannelColorModel;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.jacs.shared.utils.ColorUtils;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.model.domain.tiledMicroscope.TmChannelColorModel;
+import org.janelia.model.domain.tiledMicroscope.TmColorModel;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.util.ColorUtils;
 
 /**
  * Translate between the TM domain object and the LVV object model.

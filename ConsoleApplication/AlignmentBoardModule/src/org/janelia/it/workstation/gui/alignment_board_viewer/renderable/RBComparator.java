@@ -1,15 +1,16 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.renderable;
 
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.model.domain.compartments.Compartment;
+import org.janelia.model.domain.compartments.CompartmentSet;
+import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
-import org.janelia.it.jacs.model.domain.compartments.Compartment;
-import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.Sample;
+
 import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 
 /**

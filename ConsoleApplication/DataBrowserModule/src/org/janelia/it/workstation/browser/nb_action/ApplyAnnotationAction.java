@@ -9,16 +9,6 @@ import java.util.List;
 import javax.swing.ProgressMonitor;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.ontology.Category;
-import org.janelia.it.jacs.model.domain.ontology.EnumItem;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -30,6 +20,16 @@ import org.janelia.it.workstation.browser.gui.ontology.AnnotationEditor;
 import org.janelia.it.workstation.browser.nodes.OntologyTermNode;
 import org.janelia.it.workstation.browser.workers.ResultWorker;
 import org.janelia.it.workstation.browser.workers.SimpleListenableFuture;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.ontology.Category;
+import org.janelia.model.domain.ontology.EnumItem;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.ontology.OntologyTermReference;
+import org.janelia.model.security.util.PermissionTemplate;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
@@ -81,7 +81,7 @@ public class ApplyAnnotationAction extends NodeAction {
                 
                 OntologyTermNode termNode = (OntologyTermNode)node;
                 OntologyTerm term = termNode.getOntologyTerm();
-                if (term instanceof Category || term instanceof Ontology || term instanceof org.janelia.it.jacs.model.domain.ontology.Enum) {
+                if (term instanceof Category || term instanceof Ontology || term instanceof org.janelia.model.domain.ontology.Enum) {
                     // Can't apply these as an annotation
                     continue;
                 }
@@ -104,7 +104,7 @@ public class ApplyAnnotationAction extends NodeAction {
 
     public void performAction(final OntologyTerm ontologyTerm) {
 
-        if (ontologyTerm instanceof Category || ontologyTerm instanceof org.janelia.it.jacs.model.domain.ontology.Enum) {
+        if (ontologyTerm instanceof Category || ontologyTerm instanceof org.janelia.model.domain.ontology.Enum) {
             // Cannot annotate with a category or enum
             return;
         }

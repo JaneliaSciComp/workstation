@@ -55,13 +55,13 @@ import org.janelia.console.viewerapi.model.BasicNeuronVertexUpdateObservable;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.horta.modelapi.SwcVertex;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

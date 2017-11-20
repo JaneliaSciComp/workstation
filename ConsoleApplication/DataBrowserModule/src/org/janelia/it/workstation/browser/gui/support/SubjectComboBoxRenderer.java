@@ -6,8 +6,9 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 import javax.swing.SwingConstants;
-import org.janelia.it.jacs.model.domain.Subject;
+
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.model.security.Subject;
 
 /**
  * A combo-box renderer for Subject selection. 

@@ -4,7 +4,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.prefs.Preferences;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.openide.util.NbPreferences;
 
 /**
@@ -49,25 +49,25 @@ public class ApplicationOptions {
     }
 
     public boolean isShowReleaseNotes() {
-        Boolean value = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.SHOW_RELEASE_NOTES);
+        Boolean value = (Boolean) FrameworkImplProvider.getModelProperty(OptionConstants.SHOW_RELEASE_NOTES);
         return value==null || value;
     }
     
     public void setShowReleaseNotes(boolean value) {
-        Object oldVal = ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.SHOW_RELEASE_NOTES);  
-        ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.SHOW_RELEASE_NOTES, value);  
+        Object oldVal = FrameworkImplProvider.getModelProperty(OptionConstants.SHOW_RELEASE_NOTES);  
+        FrameworkImplProvider.setModelProperty(OptionConstants.SHOW_RELEASE_NOTES, value);  
         if (null != propSupport)
             propSupport.firePropertyChange(OptionConstants.SHOW_RELEASE_NOTES, oldVal, value);
     }
     
     public boolean isUseRunAsUserPreferences() {
-        Boolean value = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES);
+        Boolean value = (Boolean) FrameworkImplProvider.getModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES);
         return value!=null && value;
     }
     
     public void setUseRunAsUserPreferences(boolean value) {
-        Object oldVal = ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES);  
-        ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES, value); 
+        Object oldVal = FrameworkImplProvider.getModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES);  
+        FrameworkImplProvider.setModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES, value); 
         if (null != propSupport)
             propSupport.firePropertyChange(OptionConstants.USE_RUN_AS_USER_PREFERENCES, oldVal, value); 
     }

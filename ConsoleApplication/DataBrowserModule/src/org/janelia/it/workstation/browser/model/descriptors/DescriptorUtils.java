@@ -7,21 +7,22 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
-import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
-import org.janelia.it.jacs.model.domain.sample.SamplePostProcessingResult;
-import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.interfaces.HasAnatomicalArea;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.NeuronSeparation;
+import org.janelia.model.domain.sample.ObjectiveSample;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SampleAlignmentResult;
+import org.janelia.model.domain.sample.SamplePipelineRun;
+import org.janelia.model.domain.sample.SamplePostProcessingResult;
+import org.janelia.model.domain.sample.SampleTile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -162,7 +163,7 @@ public class DescriptorUtils {
     }
 
     public static ArtifactDescriptor deserialize(String artifactDescriptorString) throws Exception {
-        return mapper.readValue(artifactDescriptorString, ArtifactDescriptor.class);
+        return mapper.readValue(DomainModelViewUtils.convertModelPackages(artifactDescriptorString), ArtifactDescriptor.class);
     }
 
     public static String serializeList(ArtifactDescriptorList descriptorList) throws Exception {
@@ -170,7 +171,7 @@ public class DescriptorUtils {
     }
 
     public static ArtifactDescriptorList deserializeList(String descriptorListString) throws Exception {
-        return mapper.readValue(descriptorListString, ArtifactDescriptorList.class);
+        return mapper.readValue(DomainModelViewUtils.convertModelPackages(descriptorListString), ArtifactDescriptorList.class);
     }
     
 }

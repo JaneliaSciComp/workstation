@@ -8,8 +8,8 @@ import java.util.List;
 import javax.swing.SwingUtilities;
 import javax.swing.text.Position;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.model.domain.DomainObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

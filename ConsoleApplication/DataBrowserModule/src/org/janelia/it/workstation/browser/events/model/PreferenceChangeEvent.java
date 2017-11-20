@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.events.model;
 
-import org.janelia.it.jacs.model.domain.Preference;
+import org.janelia.model.domain.Preference;
 
 /**
  * A user preference has changed. 

@@ -1,3 +1,9 @@
+// 6.8
+
+Workstation Browser  
+* Fixed some minor bugs
+* Preparation for data model refactoring
+
 // 6.7
 
 Workstation Browser  

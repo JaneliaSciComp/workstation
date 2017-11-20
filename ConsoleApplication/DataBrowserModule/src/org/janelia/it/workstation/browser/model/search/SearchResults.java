@@ -4,9 +4,9 @@ import com.google.common.collect.ListMultimap;
 
 import java.util.*;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.ontology.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

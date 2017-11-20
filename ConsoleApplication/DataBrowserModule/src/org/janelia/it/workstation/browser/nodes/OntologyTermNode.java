@@ -14,17 +14,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
-import org.janelia.it.jacs.model.domain.ontology.Accumulation;
-import org.janelia.it.jacs.model.domain.ontology.Category;
-import org.janelia.it.jacs.model.domain.ontology.Custom;
-import org.janelia.it.jacs.model.domain.ontology.EnumItem;
-import org.janelia.it.jacs.model.domain.ontology.EnumText;
-import org.janelia.it.jacs.model.domain.ontology.Interval;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.jacs.model.domain.ontology.Tag;
-import org.janelia.it.jacs.model.domain.ontology.Text;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -43,6 +32,17 @@ import org.janelia.it.workstation.browser.nb_action.OntologyExportAction;
 import org.janelia.it.workstation.browser.nb_action.OntologyImportAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.interfaces.HasIdentifier;
+import org.janelia.model.domain.ontology.Accumulation;
+import org.janelia.model.domain.ontology.Category;
+import org.janelia.model.domain.ontology.Custom;
+import org.janelia.model.domain.ontology.EnumItem;
+import org.janelia.model.domain.ontology.EnumText;
+import org.janelia.model.domain.ontology.Interval;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.ontology.Tag;
+import org.janelia.model.domain.ontology.Text;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
 import org.openide.nodes.Node;
@@ -62,7 +62,6 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     
     private final static Logger log = LoggerFactory.getLogger(OntologyTermNode.class);
 
-    private final OntologyChildFactory parentChildFactory;
     private final OntologyChildFactory childFactory;
     
     public OntologyTermNode(OntologyChildFactory parentChildFactory, Ontology ontology, OntologyTerm ontologyTerm) {
@@ -71,42 +70,46 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     
     private OntologyTermNode(OntologyChildFactory parentChildFactory, OntologyChildFactory childFactory, final Ontology ontology, OntologyTerm ontologyTerm) {
         super(parentChildFactory, childFactory.hasNodeChildren()?Children.create(childFactory, false):Children.LEAF, ontologyTerm);
-        this.parentChildFactory = parentChildFactory;
+        
+        log.trace("Creating node@{} -> {}",System.identityHashCode(this),getDisplayName());
+
         this.childFactory = childFactory;
         getLookupContents().add(ontology);
-        getLookupContents().add(new Index.Support() {
-
-            @Override
-            public Node[] getNodes() {
-                return getChildren().getNodes();
-            }
-
-            @Override
-            public int getNodesCount() {
-                return getNodes().length;
-            }
-
-            @Override
-            public void reorder(final int[] order) {
-                SimpleWorker worker = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        DomainModel model = DomainMgr.getDomainMgr().getModel();
-                        OntologyTerm parentTerm = getOntologyTerm();
-                        model.reorderOntologyTerms(ontology.getId(), parentTerm.getId(), order);
-                    }
-                    @Override
-                    protected void hadSuccess() {
-                        // Event model will refresh UI
-                    }
-                    @Override
-                    protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
-                    }
-                };
-                worker.execute();
-            }
-        });
+        if (ontologyTerm.getNumChildren()>0) {
+            getLookupContents().add(new Index.Support() {
+    
+                @Override
+                public Node[] getNodes() {
+                    return getChildren().getNodes();
+                }
+    
+                @Override
+                public int getNodesCount() {
+                    return getNodes().length;
+                }
+    
+                @Override
+                public void reorder(final int[] order) {
+                    SimpleWorker worker = new SimpleWorker() {
+                        @Override
+                        protected void doStuff() throws Exception {
+                            DomainModel model = DomainMgr.getDomainMgr().getModel();
+                            OntologyTerm parentTerm = getOntologyTerm();
+                            model.reorderOntologyTerms(ontology.getId(), parentTerm.getId(), order);
+                        }
+                        @Override
+                        protected void hadSuccess() {
+                            // Event model will refresh UI
+                        }
+                        @Override
+                        protected void hadError(Throwable error) {
+                            ConsoleApp.handleException(error);
+                        }
+                    };
+                    NodeUtils.executeNodeOperation(worker);
+                }
+            });
+        }
     }
     
     protected OntologyChildFactory getChildFactory() {
@@ -180,7 +183,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         if (term instanceof Category) {
             return Icons.getIcon("folder.png").getImage();
         }
-        else if (term instanceof org.janelia.it.jacs.model.domain.ontology.Enum) {
+        else if (term instanceof org.janelia.model.domain.ontology.Enum) {
             return Icons.getIcon("folder_page.png").getImage();
         }
         else if (term instanceof Interval) {

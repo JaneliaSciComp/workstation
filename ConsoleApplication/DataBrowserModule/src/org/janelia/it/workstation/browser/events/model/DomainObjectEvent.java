@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.events.model;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObject;
 
 /**
  * An event in the domain object model affecting the given domain object in some way.
