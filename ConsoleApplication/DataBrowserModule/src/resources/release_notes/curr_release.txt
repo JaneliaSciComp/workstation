@@ -6,3 +6,4 @@ Workstation Browser
 * Improved interface for non-automated Fly Line Releases
 * Fixed issue with empty space sometimes appearing in the ontology tree
 * Fixed "dragging is not enabled" error
+* Fixed issue where permissions were added to non-owned items dragged into a folder
