@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -169,14 +170,17 @@ public final class AccessManager {
                 }
             }
             catch (AuthenticationException e) {
+                log.warn("Authentication problem during auto-login", e);
                 moveToLoggedOutState();
                 loginIssue = ErrorType.AuthError;
             }
             catch (ServiceException e) {
+                FrameworkImplProvider.handleExceptionQuietly("Problem encountered during auto-login", e);
                 moveToLoggedOutState();
                 loginIssue = ErrorType.NetworkError;
             }
             catch (Throwable t) {
+                FrameworkImplProvider.handleExceptionQuietly("Problem encountered during auto-login", t);
                 moveToLoggedOutState();
                 loginIssue = ErrorType.OtherError;
             }
