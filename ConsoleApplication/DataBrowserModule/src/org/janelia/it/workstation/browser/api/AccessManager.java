@@ -366,7 +366,7 @@ public final class AccessManager {
     }
     
     private boolean tokenMustBeRenewed() {
-        if (tokenCreationDate==null) return true;
+        if (token==null || tokenCreationDate==null) return true;
         long tokenAgeSecs = Utils.getDateDiff(tokenCreationDate, new Date(), TimeUnit.SECONDS);
         log.debug("Token is now {} seconds old", tokenAgeSecs);
         return (tokenAgeSecs > TOKEN_LIFESPAN_SECS);
