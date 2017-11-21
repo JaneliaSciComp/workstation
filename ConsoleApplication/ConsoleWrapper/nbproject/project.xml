@@ -211,33 +211,6 @@
                 <package>com.kenai.jaffl.struct</package>
                 <package>com.kenai.jaffl.util</package>
                 <package>com.kenai.jffi</package>
-                <package>com.mongodb</package>
-                <package>com.mongodb.annotations</package>
-                <package>com.mongodb.assertions</package>
-                <package>com.mongodb.async</package>
-                <package>com.mongodb.binding</package>
-                <package>com.mongodb.bulk</package>
-                <package>com.mongodb.client</package>
-                <package>com.mongodb.client.gridfs</package>
-                <package>com.mongodb.client.gridfs.model</package>
-                <package>com.mongodb.client.model</package>
-                <package>com.mongodb.client.model.geojson</package>
-                <package>com.mongodb.client.model.geojson.codecs</package>
-                <package>com.mongodb.client.result</package>
-                <package>com.mongodb.connection</package>
-                <package>com.mongodb.connection.netty</package>
-                <package>com.mongodb.diagnostics.logging</package>
-                <package>com.mongodb.event</package>
-                <package>com.mongodb.gridfs</package>
-                <package>com.mongodb.internal.async</package>
-                <package>com.mongodb.internal.authentication</package>
-                <package>com.mongodb.internal.connection</package>
-                <package>com.mongodb.internal.management.jmx</package>
-                <package>com.mongodb.internal.validator</package>
-                <package>com.mongodb.management</package>
-                <package>com.mongodb.operation</package>
-                <package>com.mongodb.selector</package>
-                <package>com.mongodb.util</package>
                 <package>com.sun.activation.registries</package>
                 <package>com.sun.activation.viewers</package>
                 <package>com.sun.istack</package>
@@ -342,12 +315,17 @@
                 <package>de.hunsicker.swing.util</package>
                 <package>de.hunsicker.util</package>
                 <package>de.hunsicker.util.concurrent</package>
-                <package>de.undercouch.bson4jackson</package>
-                <package>de.undercouch.bson4jackson.deserializers</package>
-                <package>de.undercouch.bson4jackson.io</package>
-                <package>de.undercouch.bson4jackson.serializers</package>
-                <package>de.undercouch.bson4jackson.types</package>
-                <package>de.undercouch.bson4jackson.uuid</package>
+                <package>de.javasoft.plaf.synthetica.painter</package>
+                <package>de.javasoft.swing</package>
+                <package>de.javasoft.swing.jycombobox</package>
+                <package>de.javasoft.swing.plaf</package>
+                <package>de.javasoft.swing.plaf.addons</package>
+                <package>de.javasoft.swing.plaf.basic</package>
+                <package>de.javasoft.swing.plaf.jycombobox</package>
+                <package>de.javasoft.swing.plaf.jysearchfield</package>
+                <package>de.javasoft.swing.plaf.jytabbedpane</package>
+                <package>de.javasoft.swing.plaf.synthetica</package>
+                <package>de.javasoft.swing.table</package>
                 <package>de.uulm.ecs.ai.owlapi.krssparser</package>
                 <package>de.uulm.ecs.ai.owlapi.krssrenderer</package>
                 <package>delaunay</package>
@@ -1195,16 +1173,6 @@
                 <package>org.apache.xpath.operations</package>
                 <package>org.apache.xpath.patterns</package>
                 <package>org.apache.xpath.res</package>
-                <package>org.bson</package>
-                <package>org.bson.assertions</package>
-                <package>org.bson.codecs</package>
-                <package>org.bson.codecs.configuration</package>
-                <package>org.bson.conversions</package>
-                <package>org.bson.diagnostics</package>
-                <package>org.bson.io</package>
-                <package>org.bson.json</package>
-                <package>org.bson.types</package>
-                <package>org.bson.util</package>
                 <package>org.bytedeco.javacpp</package>
                 <package>org.bytedeco.javacpp.annotation</package>
                 <package>org.bytedeco.javacpp.indexer</package>
@@ -1514,7 +1482,6 @@
                 <package>org.janelia.it.jacs.model.collections</package>
                 <package>org.janelia.it.jacs.model.common</package>
                 <package>org.janelia.it.jacs.model.entity</package>
-                <package>org.janelia.it.jacs.model.entity.cv</package>
                 <package>org.janelia.it.jacs.model.entity.json</package>
                 <package>org.janelia.it.jacs.model.genomics</package>
                 <package>org.janelia.it.jacs.model.jobs</package>
@@ -1598,6 +1565,7 @@
                 <package>org.janelia.model.domain.compartments</package>
                 <package>org.janelia.model.domain.dto</package>
                 <package>org.janelia.model.domain.enums</package>
+                <package>org.janelia.model.domain.enums.algorithms</package>
                 <package>org.janelia.model.domain.gui.alignment_board</package>
                 <package>org.janelia.model.domain.gui.search</package>
                 <package>org.janelia.model.domain.gui.search.criteria</package>
@@ -1701,14 +1669,6 @@
                 <package>org.joda.time.field</package>
                 <package>org.joda.time.format</package>
                 <package>org.joda.time.tz</package>
-                <package>org.jongo</package>
-                <package>org.jongo.bson</package>
-                <package>org.jongo.marshall</package>
-                <package>org.jongo.marshall.jackson</package>
-                <package>org.jongo.marshall.jackson.bson4jackson</package>
-                <package>org.jongo.marshall.jackson.configuration</package>
-                <package>org.jongo.marshall.jackson.oid</package>
-                <package>org.jongo.query</package>
                 <package>org.jvnet.hk2.annotations</package>
                 <package>org.jvnet.hk2.component</package>
                 <package>org.jvnet.hk2.external.generator</package>
@@ -2363,10 +2323,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/vlcj-1.3.0-b1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/vlcj-1.3.0-b1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jywidgets.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jywidgets.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-jaxws-1.5.5.jar</runtime-relative-path>
