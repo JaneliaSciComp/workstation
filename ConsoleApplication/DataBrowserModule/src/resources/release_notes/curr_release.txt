@@ -5,6 +5,7 @@ Workstation Browser
 * Failed logins no longer exit the application
 * Improved error handling for login, network, and server issues
 * Improved interface for non-automated Fly Line Releases
+* Added pipeline errors to Sample, so that they can be easily searched
 * Fixed bug causing empty rows to sometimes appear in the ontology tree
 * Fixed "dragging is not enabled" error
 * Fixed issue where permissions were added to non-owned items dragged into a folder
