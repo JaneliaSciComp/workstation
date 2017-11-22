@@ -56,9 +56,9 @@ public class FileMgr {
                 ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100));
         
         setFileCacheGigabyteCapacity((Integer) 
-                FrameworkImplProvider.getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
+                LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
         setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(
-                FrameworkImplProvider.getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));
+                LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));
     }
 
     /**
@@ -84,7 +84,7 @@ public class FileMgr {
      */
     public final void setFileCacheDisabled(boolean isDisabled) {
 
-        FrameworkImplProvider.setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
+        LocalPreferenceMgr.getInstance().setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
 
         if (isDisabled) {
             log.warn("disabling local cache");
@@ -120,7 +120,7 @@ public class FileMgr {
      * @return the maximum number of gigabytes to store in the local file cache.
      */
     public int getFileCacheGigabyteCapacity() {
-        return (Integer) FrameworkImplProvider.getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
+        return (Integer) LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
     }
 
     /**
@@ -140,7 +140,7 @@ public class FileMgr {
             gigabyteCapacity = MAX_FILE_CACHE_GIGABYTE_CAPACITY;
         }
 
-        FrameworkImplProvider.setModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
+        LocalPreferenceMgr.getInstance().setModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
                 gigabyteCapacity);
 
         if (isFileCacheAvailable()) {

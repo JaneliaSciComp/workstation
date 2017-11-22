@@ -50,6 +50,7 @@ import org.apache.commons.io.IOUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
+import org.janelia.it.workstation.browser.api.LocalPreferenceMgr;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
@@ -128,7 +129,7 @@ public class Utils {
      */
     public static BufferedImage readImage(String path) throws Exception {
         try {
-            String selectedRenderer = (String) FrameworkImplProvider.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D);
+            String selectedRenderer = (String) LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D);
 
             RendererType2D renderer = selectedRenderer == null ? RendererType2D.LOCI : RendererType2D.valueOf(selectedRenderer);
             BufferedImage image = null;
