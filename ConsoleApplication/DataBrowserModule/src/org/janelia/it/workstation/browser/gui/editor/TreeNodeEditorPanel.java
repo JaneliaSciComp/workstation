@@ -257,7 +257,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     }
 
     private void loadPreferences() {
-        if (treeNode.getId()==null) return;
+        if (treeNode==null || treeNode.getId()==null) return;
         try {
             sortCriteria = (String)FrameworkImplProvider.getRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString(), null);
