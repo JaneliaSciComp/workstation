@@ -132,7 +132,7 @@ public final class AccessManager {
         
         if (!sessionStarted) {
             // Session was not started with a run-as user
-            Events.getInstance().postOnEventBus(new SessionStartEvent(actualSubject));
+            setActualSubject(authenticatedSubject);
         }
     }
     
