@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -131,7 +132,7 @@ public final class AccessManager {
         
         if (!sessionStarted) {
             // Session was not started with a run-as user
-            Events.getInstance().postOnEventBus(new SessionStartEvent(actualSubject));
+            setActualSubject(authenticatedSubject);
         }
     }
     
@@ -169,14 +170,17 @@ public final class AccessManager {
                 }
             }
             catch (AuthenticationException e) {
+                log.warn("Authentication problem during auto-login", e);
                 moveToLoggedOutState();
                 loginIssue = ErrorType.AuthError;
             }
             catch (ServiceException e) {
+                FrameworkImplProvider.handleExceptionQuietly("Problem encountered during auto-login", e);
                 moveToLoggedOutState();
                 loginIssue = ErrorType.NetworkError;
             }
             catch (Throwable t) {
+                FrameworkImplProvider.handleExceptionQuietly("Problem encountered during auto-login", t);
                 moveToLoggedOutState();
                 loginIssue = ErrorType.OtherError;
             }
@@ -270,7 +274,7 @@ public final class AccessManager {
     private Subject authenticateSubject() {
         
         // First get auth token
-        obtainToken();
+        renewToken();
         
         // We're now authenticated. Get or create the Workstation user object.
         Subject authenticatedSubject;
@@ -350,19 +354,24 @@ public final class AccessManager {
         
         try {
             if (tokenMustBeRenewed()) {
-                log.debug("Attempting to obtain new auth token for {}", username);
-                this.token = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
-                this.tokenCreationDate = new Date();
-                log.info("Now using token: {}", token);
+                renewToken();
             }
         }
         finally {
             tokenRefreshDebouncer.success();
         }   
     }
+
+    private synchronized void renewToken() {
+        log.debug("Attempting to obtain new auth token for {}", username);
+        this.token = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
+        this.tokenCreationDate = new Date();
+        log.info("Now using token: {}", token);
+    
+    }
     
     private boolean tokenMustBeRenewed() {
-        if (tokenCreationDate==null) return true;
+        if (token==null || tokenCreationDate==null) return true;
         long tokenAgeSecs = Utils.getDateDiff(tokenCreationDate, new Date(), TimeUnit.SECONDS);
         log.debug("Token is now {} seconds old", tokenAgeSecs);
         return (tokenAgeSecs > TOKEN_LIFESPAN_SECS);

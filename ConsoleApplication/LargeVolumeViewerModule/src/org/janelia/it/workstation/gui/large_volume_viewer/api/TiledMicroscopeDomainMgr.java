@@ -96,7 +96,7 @@ public class TiledMicroscopeDomainMgr {
             if (constants.get("numberLevels") instanceof Integer) {
                 sample.setNumImageryLevels(((Integer)constants.get("numberLevels")).longValue());
             } else {
-                sample.setNumImageryLevels((Long)constants.get("numberLevels"));
+                sample.setNumImageryLevels(Long.parseLong((String)constants.get("numberLevels")));
             }
             
             

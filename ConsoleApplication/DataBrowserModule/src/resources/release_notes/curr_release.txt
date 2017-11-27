@@ -1,9 +1,4 @@
-// 7.0
+// 7.0.3
 
-Workstation Browser  
-* Updated to use secure network connections and token-based authentication
-* Failed logins no longer exit the application
-* Improved interface for non-automated Fly Line Releases
-* Fixed issue with empty space sometimes appearing in the ontology tree
-* Fixed "dragging is not enabled" error
-* Fixed issue where permissions were added to non-owned items dragged into a folder
+Large Volume Viewer  
+* Fixed issue with casting JSON response to Long on Sample creation
