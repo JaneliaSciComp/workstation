@@ -1,4 +1,4 @@
-// 7.0
+// 7.0.1
 
 Workstation Browser  
 * Updated to use secure network connections and token-based authentication
