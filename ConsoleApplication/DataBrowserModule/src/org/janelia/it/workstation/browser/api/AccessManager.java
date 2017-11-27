@@ -274,7 +274,7 @@ public final class AccessManager {
     private Subject authenticateSubject() {
         
         // First get auth token
-        obtainToken();
+        renewToken();
         
         // We're now authenticated. Get or create the Workstation user object.
         Subject authenticatedSubject;
@@ -354,15 +354,20 @@ public final class AccessManager {
         
         try {
             if (tokenMustBeRenewed()) {
-                log.debug("Attempting to obtain new auth token for {}", username);
-                this.token = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
-                this.tokenCreationDate = new Date();
-                log.info("Now using token: {}", token);
+                renewToken();
             }
         }
         finally {
             tokenRefreshDebouncer.success();
         }   
+    }
+
+    private synchronized void renewToken() {
+        log.debug("Attempting to obtain new auth token for {}", username);
+        this.token = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
+        this.tokenCreationDate = new Date();
+        log.info("Now using token: {}", token);
+    
     }
     
     private boolean tokenMustBeRenewed() {
