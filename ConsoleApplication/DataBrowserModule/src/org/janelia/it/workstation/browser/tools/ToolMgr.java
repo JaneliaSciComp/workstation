@@ -16,6 +16,7 @@ import java.util.TreeMap;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ServiceMgr;
 import org.janelia.it.workstation.browser.events.Events;
@@ -104,10 +105,10 @@ public class ToolMgr extends PreferenceManager {
 
         // Check for the existence of the group directory property and/or set values.
         String groupDir = "";
-        if (ConsoleApp.getConsoleApp().getModelProperty(GROUP_DIR)==null) {
-            ConsoleApp.getConsoleApp().setModelProperty(GROUP_DIR, groupDir);
+        if (FrameworkImplProvider.getModelProperty(GROUP_DIR)==null) {
+            FrameworkImplProvider.setModelProperty(GROUP_DIR, groupDir);
         }
-        else groupDir = (String)ConsoleApp.getConsoleApp().getModelProperty(GROUP_DIR);
+        else groupDir = (String)FrameworkImplProvider.getModelProperty(GROUP_DIR);
         setGroupPreferenceDirectory(groupDir);
 
         // Establish the initial "default" user file.

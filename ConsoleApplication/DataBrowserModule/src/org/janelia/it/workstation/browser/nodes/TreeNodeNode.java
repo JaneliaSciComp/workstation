@@ -14,9 +14,6 @@ import java.util.concurrent.Executors;
 
 import javax.swing.Action;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -33,6 +30,9 @@ import org.janelia.it.workstation.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.browser.nb_action.RenameAction;
 import org.janelia.it.workstation.browser.nb_action.SearchHereAction;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
@@ -53,10 +53,6 @@ import org.slf4j.LoggerFactory;
 public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
     
     private final static Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
-
-    // We use a single threaded executor so that all node operations are serialized. Re-ordering operations 
-    // in particular must be done sequentially, for obvious reasons.
-    private static final Executor nodeOperationExecutor = Executors.newSingleThreadExecutor();
     
     private TreeNodeChildFactory childFactory;
     
@@ -72,14 +68,17 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
         this.childFactory = childFactory;
         if (treeNode.getNumChildren()>0) {
             getLookupContents().add(new Index.Support() {
+                
                 @Override
                 public Node[] getNodes() {
                     return getChildren().getNodes();
                 }
+                
                 @Override
                 public int getNodesCount() {
                     return getNodes().length;
                 }
+                
                 @Override
                 public void reorder(final int[] order) {
                     
@@ -152,7 +151,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                         }
                     };
                     
-                    nodeOperationExecutor.execute(worker);
+                    NodeUtils.executeNodeOperation(worker);
                 }
             });
         }
@@ -366,6 +365,10 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
             try {
                 log.trace("paste called on TreeNodePasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
                 TreeNode newParent = targetNode.getTreeNode();
+                if (newParent==null) {
+                    log.warn("Target node has no TreeNode: "+targetNode.getDisplayName());
+                    return null;
+                }
                 
                 // Have to keep track of the original parents before we do anything, 
                 // because once we start moving nodes, the parents will be recreated

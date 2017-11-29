@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 
 /**
  * Constraining filter for spatial queries. 

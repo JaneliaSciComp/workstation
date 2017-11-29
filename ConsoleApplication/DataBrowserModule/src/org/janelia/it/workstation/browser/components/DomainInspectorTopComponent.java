@@ -2,14 +2,14 @@ package org.janelia.it.workstation.browser.components;
 
 import java.awt.BorderLayout;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.sample.PipelineError;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.PipelineErrorSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.sample.PipelineError;
+import org.janelia.model.domain.sample.PipelineResult;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;

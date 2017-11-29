@@ -1,14 +1,14 @@
 package org.janelia.it.workstation.browser.nb_action;
 
-import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 @ActionID(
         category = "File",
@@ -26,7 +26,6 @@ public final class SetLoginAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        LoginDialog dialog = new LoginDialog();
-        dialog.showDialog();
+        AccessManager.getAccessManager().userRequestedLoginDialog();
     }
 }

@@ -13,9 +13,6 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.TraceMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
@@ -28,6 +25,9 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.LineEncl
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
+import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

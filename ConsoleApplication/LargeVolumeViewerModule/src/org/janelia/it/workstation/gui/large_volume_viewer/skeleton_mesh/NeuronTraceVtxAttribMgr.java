@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+
 import org.janelia.it.jacs.shared.mesh_loader.BufferPackager;
 import org.janelia.it.jacs.shared.mesh_loader.NormalCompositor;
 import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
@@ -34,6 +34,7 @@ import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -14,9 +14,8 @@ public class ConsoleState {
 
     public static int INITIAL = 0; 
     public static int STARTING_SESSION = 100;
-    public static int LOGGED_IN = 200;
-    public static int WINDOW_SHOWN = 300;
-
+    public static int WINDOW_SHOWN = 200;
+    
     private static int currState = INITIAL;
 
     public static int getCurrState() {

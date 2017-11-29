@@ -3,9 +3,9 @@ package org.janelia.it.workstation.browser.nb_action;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadWizardAction;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.model.domain.DomainObject;
 import org.openide.nodes.Node;
 
 /**

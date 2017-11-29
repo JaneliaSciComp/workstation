@@ -26,11 +26,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.TransferHandler;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
@@ -38,6 +35,9 @@ import org.janelia.it.workstation.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.browser.gui.support.AnnotationView;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ontology.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +76,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         public void dragGestureRecognized(DragGestureEvent dge) {
             log.info("dragGestureRecognized: {}",dge);
             if (!dragEnabled) {
-                throw new IllegalStateException("Dragging is not enabled");
+                return;
             }
             InputEvent inputevent = dge.getTriggerEvent();
             boolean keyDown = false;
@@ -120,7 +120,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         this.selectionModel = selectionModel;
         this.imagesPanel = imagesPanel;
         
-        Boolean disableImageDrag = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY);
+        Boolean disableImageDrag = (Boolean) FrameworkImplProvider.getModelProperty(OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY);
         if (disableImageDrag == null || disableImageDrag == false) {
             if (selectionModel instanceof DomainObjectSelectionModel) {
                 dragEnabled = true;

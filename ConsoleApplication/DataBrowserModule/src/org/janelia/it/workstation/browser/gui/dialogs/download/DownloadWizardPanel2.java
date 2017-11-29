@@ -5,10 +5,15 @@ import javax.swing.event.ChangeListener;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.openide.WizardDescriptor;
+import org.openide.WizardValidationException;
+import org.openide.util.ChangeSupport;
 import org.openide.util.HelpCtx;
 
-public class DownloadWizardPanel2 implements WizardDescriptor.Panel<WizardDescriptor> {
+public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
 
+    private final ChangeSupport changeSupport = new ChangeSupport(this);
+    private WizardDescriptor wiz;
+    
     /**
      * The visual component that displays this panel. If you need to access the
      * component from this class, just use getComponent().
@@ -18,7 +23,7 @@ public class DownloadWizardPanel2 implements WizardDescriptor.Panel<WizardDescri
     @Override
     public DownloadVisualPanel2 getComponent() {
         if (component == null) {
-            component = new DownloadVisualPanel2();
+            component = new DownloadVisualPanel2(this);
         }
         return component;
     }
@@ -31,21 +36,42 @@ public class DownloadWizardPanel2 implements WizardDescriptor.Panel<WizardDescri
         // return new HelpCtx("help.key.here");
     }
 
+    private boolean isValid = false;
+
+    @Override
+    public void validate() throws WizardValidationException {
+        this.isValid = getComponent().isLoaded();
+    }
+    
     @Override
     public boolean isValid() {
-        return true;
+        return isValid;
     }
 
     @Override
     public void addChangeListener(ChangeListener l) {
+        changeSupport.addChangeListener(l);
     }
 
     @Override
     public void removeChangeListener(ChangeListener l) {
+        changeSupport.removeChangeListener(l);
     }
-
+    
+    public final void fireChangeEvent() {
+        try {
+            validate();
+        }
+        catch (WizardValidationException e) {
+            wiz.putProperty(WizardDescriptor.PROP_ERROR_MESSAGE, e.getMessage());
+        }
+        storeSettings(wiz);
+        changeSupport.fireChange();
+    }
+    
     @Override
     public void readSettings(WizardDescriptor wiz) {
+        this.wiz = wiz;
         DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
         getComponent().init(state);
     }

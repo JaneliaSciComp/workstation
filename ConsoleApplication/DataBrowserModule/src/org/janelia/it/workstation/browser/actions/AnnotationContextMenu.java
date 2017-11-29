@@ -6,13 +6,6 @@ import java.util.List;
 
 import javax.swing.JMenuItem;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.ontology.EnumText;
-import org.janelia.it.jacs.model.domain.ontology.Interval;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.jacs.model.domain.ontology.Text;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
@@ -21,6 +14,14 @@ import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ontology.Accumulation;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.ontology.EnumText;
+import org.janelia.model.domain.ontology.Interval;
+import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.ontology.Text;
 
 /**
  * Context pop up menu for annotations.
@@ -107,7 +108,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
 
     protected JMenuItem getEditAnnotationItem(OntologyTerm keyTerm) {
         if (keyTerm==null) return null;
-        if (keyTerm instanceof EnumText || keyTerm instanceof Text || keyTerm instanceof Interval) {
+        if (keyTerm instanceof EnumText || keyTerm instanceof Text || keyTerm instanceof Accumulation || keyTerm instanceof Interval) {
             final BulkEditAnnotationKeyValueAction bulkEditAction = new BulkEditAnnotationKeyValueAction(domainObjectList, annotation);
             return getNamedActionItem(bulkEditAction);
         }

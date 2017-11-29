@@ -393,7 +393,7 @@ public class SkeletonActor implements GLActor {
         Map<Long, Map<SegmentIndex, TracedPathActor>> neuronTracedSegments = model.getNeuronTracedSegments();
 
         for (Long neuronID : neuronTracedSegments.keySet()) {
-            if (neuronStyles.get(neuronID) != null && !neuronStyles.get(neuronID).isVisible()) {
+            if (neuronStyles.get(neuronID) != null && !neuronStyles.get(neuronID).isVisible() && !neuronStyles.get(neuronID).isUserVisible()) {
                 continue;
             }
 

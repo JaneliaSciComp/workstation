@@ -98,6 +98,7 @@ import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.horta.volume.MouseLightYamlBrickSource;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Quaternion;
@@ -157,7 +158,6 @@ import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
@@ -667,6 +667,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         // Delegate tracing interaction to customized class
         tracingInteractor = new TracingInteractor(this, getUndoRedoManager());
+        tracingInteractor.setMetaWorkspace(metaWorkspace);
         
         // push listening into HortaMouseEventDispatcher
         final boolean bDispatchMouseEvents = true;
@@ -2002,6 +2003,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         // logger.info("Horta closed");
         // saveStartupPreferences(); // not called at application close...
         neuronEditDispatcher.onClosed();
+        // clear out SWCbuffers
+        neuronMPRenderer.clearNeuronReconstructions();
     }
 
     @Override

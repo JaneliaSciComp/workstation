@@ -7,11 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Hibernate;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.ForbiddenEntity;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ServiceMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,7 @@ public class PathTranslator {
 
     static {
 
-        jacsDataPath = (String) ConsoleApp.getConsoleApp().getModelProperty(JACS_DATA_PATH_PROPERTY);
+        jacsDataPath = (String) FrameworkImplProvider.getModelProperty(JACS_DATA_PATH_PROPERTY);
         if (jacsDataPath == null) {
             File jacsData = new File(PathTranslator.JACS_DATA_PATH_NFS);
             if (jacsData.canRead()) {
@@ -47,7 +47,7 @@ public class PathTranslator {
             else {
                 jacsDataPath = PathTranslator.getOsSpecificRootPath();
             }
-            ConsoleApp.getConsoleApp().setModelProperty(JACS_DATA_PATH_PROPERTY, jacsDataPath);
+            FrameworkImplProvider.setModelProperty(JACS_DATA_PATH_PROPERTY, jacsDataPath);
         }
 
         log.info("Using JACS data path: " + jacsDataPath);

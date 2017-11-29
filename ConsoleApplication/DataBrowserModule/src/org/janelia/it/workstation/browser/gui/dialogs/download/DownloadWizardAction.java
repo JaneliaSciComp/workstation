@@ -25,18 +25,6 @@ import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -52,6 +40,18 @@ import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.browser.model.search.SolrSearchResults;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.gui.search.Filter;
+import org.janelia.model.domain.interfaces.HasFileGroups;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.NeuronSeparation;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.DialogDisplayer;
 import org.openide.WizardDescriptor;
 import org.openide.awt.ActionID;
@@ -320,12 +320,26 @@ public final class DownloadWizardAction implements ActionListener {
         state.setImageCategory(imageCategory);
         
         String artifactDescriptorString = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", null);
-        log.info("Setting last artifactDescriptorString: "+artifactDescriptorString);
-        state.setArtifactDescriptorString(artifactDescriptorString);
+        try {
+            log.info("Setting last artifactDescriptorString: "+artifactDescriptorString);
+            state.setArtifactDescriptorString(artifactDescriptorString);
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
+            log.error("Error reading artifactDescriptors preference. Clearing the corrupted preference.", e);
+            FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", null);
+        }
         
         String outputExtensionString = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", null);
-        log.info("Setting last outputExtensionString: "+outputExtensionString);
-        state.setOutputExtensionString(outputExtensionString);
+        try {
+            log.info("Setting last outputExtensionString: "+outputExtensionString);
+            state.setOutputExtensionString(outputExtensionString);
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
+            log.error("Error reading outputExtensions preference. Clearing the corrupted preference.", e);
+            FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", null);
+        }
 
         boolean splitChannels = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "splitChannels", state.isSplitChannels());
         log.info("Setting last splitChannels: "+splitChannels);

@@ -2,21 +2,6 @@ package org.janelia.it.workstation.browser.ws;
 
 import org.hibernate.HibernateException;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasImageStack;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.jacs.model.domain.sample.CuratedNeuron;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
-import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -24,6 +9,21 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.PathTranslator;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasImageStack;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.sample.CuratedNeuron;
+import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.NeuronSeparation;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SampleAlignmentResult;
+import org.janelia.model.domain.sample.SampleProcessingResult;
+import org.janelia.model.util.TimebasedIdentifierGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +82,9 @@ public class DomainToEntityTranslator {
     public Entity getSeparationEntity(NeuronSeparation separation) {
 
         PipelineResult result = separation.getParentResult();
+        String llFilepath = DomainUtils.getFilepath(result, FileType.LosslessStack);
         String vllFilepath = DomainUtils.getFilepath(result, FileType.VisuallyLosslessStack);
+        
         String opticalRes = getOpticalResolution(result);
         String chanSpec = getChannelSpec(result);
         
@@ -92,7 +94,12 @@ public class DomainToEntityTranslator {
         separationEntity.setName(separation.getName());
         separationEntity.setEntityTypeName(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
         setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_FILE_PATH, separation.getFilepath());
-        setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_VISUALLY_LOSSLESS_IMAGE, vllFilepath);
+        if (llFilepath!=null) {
+            setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_LOSSLESS_IMAGE, llFilepath);
+        }
+        if (vllFilepath!=null) {
+            setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_VISUALLY_LOSSLESS_IMAGE, vllFilepath);
+        }
         setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_CHANNEL_SPECIFICATION, chanSpec);
         setValueByAttributeName(separationEntity, EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION, opticalRes);
         

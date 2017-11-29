@@ -3,11 +3,17 @@ package org.janelia.it.workstation.browser.gui.editor;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 
 /**
  * Snapshot of the state of a list viewer for navigation purposes.
@@ -16,15 +22,23 @@ import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
  */
 public class DomainObjectEditorState<T extends DomainObject> {
 
-    private final AbstractDomainObjectNode<T> domainObjectNode;
-    private final T domainObject;
-    private final Integer page;
-    private final ListViewerState listViewerState;
-    private final Collection<Reference> selectedIds;
-
+    @JsonIgnore
     private DomainListViewTopComponent topComponent;
+    
+    @JsonIgnore
+    private AbstractDomainObjectNode<T> domainObjectNode;
+    
+    private T domainObject;
+    private Integer page;
+    private ListViewerState listViewerState;
+    private Collection<Reference> selectedIds;
 
-    public DomainObjectEditorState(T domainObject, Integer page, ListViewerState listViewerState, Collection<Reference> selectedIds) {
+    @JsonCreator
+    public DomainObjectEditorState(
+            @JsonProperty("domainObject") T domainObject, 
+            @JsonProperty("page") Integer page, 
+            @JsonProperty("listViewerState") ListViewerState listViewerState, 
+            @JsonProperty("selectedIds") Collection<Reference> selectedIds) {
         this.domainObjectNode = null;
         this.domainObject = domainObject;
         this.page = page;
@@ -40,20 +54,24 @@ public class DomainObjectEditorState<T extends DomainObject> {
         this.selectedIds = new ArrayList<>(selectedIds);
     }
 
-    public AbstractDomainObjectNode<T> getDomainObjectNode() {
-        return domainObjectNode;
+    public DomainListViewTopComponent getTopComponent() {
+        return topComponent;
+    }
+
+    public void setTopComponent(DomainListViewTopComponent topComponent) {
+        this.topComponent = topComponent;
     }
 
     public T getDomainObject() {
         return domainObject;
     }
+    
+    public void setDomainObject(DomainObject domainObject) {
+        this.domainObject = (T)domainObject;
+    }
 
     public Integer getPage() {
         return page;
-    }
-
-    public DomainListViewTopComponent getTopComponent() {
-        return topComponent;
     }
 
     public ListViewerState getListViewerState() {
@@ -64,8 +82,8 @@ public class DomainObjectEditorState<T extends DomainObject> {
         return selectedIds;
     }
 
-    public void setTopComponent(DomainListViewTopComponent topComponent) {
-        this.topComponent = topComponent;
+    public AbstractDomainObjectNode<T> getDomainObjectNode() {
+        return domainObjectNode;
     }
 
     @Override
@@ -98,7 +116,15 @@ public class DomainObjectEditorState<T extends DomainObject> {
         builder.append("\n]");
         return builder.toString();
     }
+
+    private static final ObjectMapper mapper = new ObjectMapper();
     
-    
+    public static String serialize(DomainObjectEditorState<?> descriptor) throws Exception {
+        return mapper.writeValueAsString(descriptor);
+    }
+
+    public static DomainObjectEditorState<?> deserialize(String artifactDescriptorString) throws Exception {
+        return mapper.readValue(DomainModelViewUtils.convertModelPackages(artifactDescriptorString), DomainObjectEditorState.class);
+    }
 
 }

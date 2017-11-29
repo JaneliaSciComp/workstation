@@ -25,14 +25,6 @@ import javax.swing.SwingUtilities;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -51,6 +43,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceLi
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
+import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
@@ -60,6 +53,14 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.janelia.it.workstation.tracing.PathTraceToParentWorker;
 import org.janelia.it.workstation.tracing.VoxelPosition;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
+import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -212,6 +213,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             setNeuronRadius(anchor.getNeuronID());
         }
     }
+    
+    public void editNeuronGroups() {
+        NeuronGroupsDialog ngDialog = new NeuronGroupsDialog();
+        ngDialog.showDialog();
+    }
 
     public void anchorAdded(AnchorSeed seed) {
         addAnnotation(seed.getLocation(), seed.getParentGuid());
@@ -263,11 +269,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 mergeNeurite(anchor.getNeuronID(), anchor.getGuid(), closest.getNeuronId(), closest.getId());
             } else {
                 // move, don't merge
-                activityLog.logMovedNeurite(getSampleID(), getWorkspaceID(), closest);
+                activityLog.logMovedAnchor(getSampleID(), getWorkspaceID(), anchor.getNeuronID(), closest);
                 moveAnnotation(anchor.getNeuronID(), anchor.getGuid(), anchorVoxelLocation);
             }
         } else {
-            activityLog.logMovedNeurite(getSampleID(), getWorkspaceID(), anchorVoxelLocation);
+            activityLog.logMovedAnchor(getSampleID(), getWorkspaceID(), anchor.getNeuronID(), anchorVoxelLocation);
             moveAnnotation(anchor.getNeuronID(), anchor.getGuid(), anchorVoxelLocation);
         }
     }
@@ -387,7 +393,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
                 StopWatch stopwatch = new StopWatch();
                 final TmWorkspace currentWorkspace = AnnotationManager.this.annotationModel.getCurrentWorkspace();
-                activityLog.logAddAnchor(currentWorkspace.getSampleRef().getTargetId(), currentWorkspace.getId(), finalLocation);
+                activityLog.logAddAnchor(currentWorkspace.getSampleRef().getTargetId(), currentWorkspace.getId(),
+                    currentNeuron.getId(), finalLocation);
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
                     annotationModel.addRootAnnotation(currentNeuron, finalLocation);
@@ -1525,7 +1532,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         Color color = askForNeuronColor(getNeuronStyle(neuron));
         if (color != null) {
-            NeuronStyle style = new NeuronStyle(color, neuron.isVisible());
+            NeuronStyle style = new NeuronStyle(color, neuron.isVisible(), false, true);
             setNeuronStyle(neuron, style);
         }
     }
@@ -1639,6 +1646,48 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         style.setVisible(visibility);
         setNeuronStyle(neuron, style);
     }
+    
+    public void setNeuronNonInteractable(List<TmNeuronMetadata> neuronList, boolean nonInteractable) {
+        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
+        for (int i=0; i<neuronList.size(); i++) {
+             NeuronStyle style = getNeuronStyle(neuronList.get(i));
+             style.setNonInteractable(nonInteractable);
+             styleUpdater.put(neuronList.get(i), style);
+        }
+        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
+    } 
+        
+    public void setNeuronUserToggleRadius(List<TmNeuronMetadata> neuronList, boolean toggleRadius) {
+        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
+        for (int i=0; i<neuronList.size(); i++) {
+             NeuronStyle style = getNeuronStyle(neuronList.get(i));
+             style.setUserToggleRadius(toggleRadius);
+             styleUpdater.put(neuronList.get(i), style);
+        }
+        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
+    }
+    
+    public void setNeuronUserProperties(List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle) {
+        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
+        for (int i=0; i<neuronList.size(); i++) {
+             NeuronStyle style = getNeuronStyle(neuronList.get(i));
+             for (String property: properties) {
+                 style.setProperty(property, toggle);
+             }
+             styleUpdater.put(neuronList.get(i), style);
+        }
+        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
+    }
+    
+    public void setNeuronUserVisible(List<TmNeuronMetadata> neuronList, boolean userVisible) {
+        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
+        for (int i=0; i<neuronList.size(); i++) {
+             NeuronStyle style = getNeuronStyle(neuronList.get(i));
+             style.setUserVisible(userVisible);
+             styleUpdater.put(neuronList.get(i), style);
+        }
+        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
+    }
 
     public NeuronStyle getNeuronStyle(TmNeuronMetadata neuron) {
         // simple pass through; I want get/set to look the same, and set is *not*
@@ -1741,14 +1790,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         PathTraceToParentWorker worker = new PathTraceToParentWorker(request, AUTOMATIC_TRACING_TIMEOUT);
         worker.setPathTraceListener(this);
         worker.execute();
-
-        // we'd really prefer to see this worker's status in the Progress Monitor, but as of
-        //  Jan. 2014, that monitor's window repositions itself and comes to front on every
-        //  new task, so it's far too intrusive to be used for our purpose; see FW-2191
-        // worker.executeWithEvents();
     }
 
-    public void exportNeuronsAsSWC(final File swcFile, final int downsampleModulo, final Collection<TmNeuronMetadata> neurons) {
+    public void exportNeuronsAsSWC(final File swcFile, final int downsampleModulo, final Collection<TmNeuronMetadata> neurons,
+       final boolean exportNotes) {
         int nannotations = 0;
         for (TmNeuronMetadata neuron : neurons) {
             nannotations += neuron.getGeoAnnotationMap().size();
@@ -1767,7 +1812,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         //  to the user, but it just doesn't work; both file.canWrite() and
         //  Files.isWritable() give wrong values for reasons I don't understand
 
-
         BackgroundWorker saver = new BackgroundWorker() {
             
             @Override
@@ -1777,7 +1821,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.exportSWCData(swcFile, downsampleModulo, neurons, this);
+                annotationModel.exportSWCData(swcFile, downsampleModulo, neurons, exportNotes, this);
             }
 
             @Override

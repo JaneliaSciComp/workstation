@@ -17,16 +17,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
-import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Preference;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
@@ -50,6 +41,16 @@ import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Preference;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.NeuronSeparation;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -200,11 +201,11 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             resultsPanel.getViewer().toggleEditMode(true);
 
             // get the visibility preference from the domainmgr
-            Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
-                    Long.toString(separation.getId()));
+            List<Long> neuronSepVisibility = (List<Long>)FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
+                    Long.toString(separation.getId()), null);
             List<DomainObject> visibleNeuronFrags = new ArrayList<DomainObject>();
             if (neuronSepVisibility!=null) {
-                Set<Long> visibleFragSet = new HashSet<>((List<Long>)neuronSepVisibility.getValue());
+                Set<Long> visibleFragSet = new HashSet<>(neuronSepVisibility);
                 for (int i=0; i<neuronFrags.size(); i++) {
                     if (visibleFragSet.contains(neuronFrags.get(i).getId())) {
                         visibleNeuronFrags.add(neuronFrags.get(i));
@@ -231,21 +232,12 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
 
     private void saveVisibilities() {
         try {
-            Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
-                    Long.toString(separation.getId()));
-            if (neuronSepVisibility == null) {
-                neuronSepVisibility = new Preference();
-                neuronSepVisibility.setCategory(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY);
-                neuronSepVisibility.setKey(Long.toString(separation.getId()));
-                neuronSepVisibility.setSubjectId(AccessManager.getSubjectKey());
-            }
             List<Long> visibilities = new ArrayList<>();
             List<Reference> visibleFragments = editSelectionModel.getSelectedIds();
             for (int i = 0; i < visibleFragments.size(); i++) {
                 visibilities.add(visibleFragments.get(i).getTargetId());
             }
-            neuronSepVisibility.setValue(visibilities);
-            DomainMgr.getDomainMgr().savePreference(neuronSepVisibility);
+            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY, Long.toString(separation.getId()), visibilities);
         }
         catch (Exception e) {
             log.error("Problem encountered saving preferences", e);
@@ -383,14 +375,14 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     private void prepareResults() throws Exception {
         
         if (enableVisibilityCheckBox.isSelected()) {
-            
-            Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(
+
+            @SuppressWarnings("unchecked")
+            List<Long> neuronSepVisibility = (List<Long>)FrameworkImplProvider.getRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
-                    Long.toString(separation.getId()));
+                    Long.toString(separation.getId()), null);
             
             if (neuronSepVisibility!=null) {
-                @SuppressWarnings("unchecked")
-                Set<Long> fragmentVis = new HashSet<>((List<Long>)neuronSepVisibility.getValue());
+                Set<Long> fragmentVis = new HashSet<>(neuronSepVisibility);
                 for (int i=domainObjects.size()-1; i>=0; i--) {
                     NeuronFragment neuronFragment = (NeuronFragment) domainObjects.get(i);
                     // remove items that are hidden
@@ -467,13 +459,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     private void loadPreferences() {
         if (separation.getId()==null) return;
         try {
-            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY);
-            if (sortCriteriaPref!=null) {
-                sortCriteria = (String) sortCriteriaPref.getValue();
-            }
-            else {
-                sortCriteria = "number";
-            }
+            sortCriteria = (String)FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, "number");
         }
         catch (Exception e) {
             log.error("Could not load sort criteria",e);
@@ -483,7 +469,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     private void savePreferences() {
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
-            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
+            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
         }
         catch (Exception e) {
             log.error("Could not save sort criteria",e);

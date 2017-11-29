@@ -3,7 +3,7 @@ package org.janelia.it.workstation.browser.events.selection;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.sample.FileGroup;
+import org.janelia.model.domain.sample.FileGroup;
 
 /**
  * Event indicating that a file groups's selection has changed.

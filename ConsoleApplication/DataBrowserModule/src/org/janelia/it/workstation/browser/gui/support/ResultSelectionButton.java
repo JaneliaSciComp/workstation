@@ -14,15 +14,15 @@ import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SamplePostProcessingResult;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.ResultCategory;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SamplePostProcessingResult;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Multiset;
@@ -58,8 +58,8 @@ public class ResultSelectionButton extends DropDownButton {
         setResultDescriptor(ArtifactDescriptor.LATEST);
     }
 
-    public void setResultDescriptor(ArtifactDescriptor currResult) {
-        this.currResult = currResult;
+    public void setResultDescriptor(ArtifactDescriptor descriptor) {
+        this.currResult = descriptor == null ? ArtifactDescriptor.LATEST : descriptor;
         if (showTitle) {
             String title = StringUtils.abbreviate(currResult.toString(), MAX_TITLE_LENGTH);
             setText(title);

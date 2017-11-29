@@ -1,3 +1,64 @@
+// 7.0.2
+
+Workstation Browser
+* Updated to use secure network connections and token-based authentication
+* Failed logins no longer exit the application
+* Improved error handling for login, network, and server issues
+* Improved interface for non-automated Fly Line Releases
+* Added pipeline errors to Sample, so that they can be easily searched
+* Fixed bug causing empty rows to sometimes appear in the ontology tree
+* Fixed "dragging is not enabled" error
+* Fixed issue where permissions were added to non-owned items dragged into a folder
+
+// 6.8
+
+Workstation Browser  
+* Fixed some minor bugs
+* Preparation for data model refactoring
+
+// 6.7
+
+Workstation Browser  
+* Added "Possible Contamination" data reporting option
+* Added a new ontology term type called "Accumulation" which allows for incremental editing
+* Fixed annotation editor's Cancel button
+* Fixed problem with opening neuron separations after many have been opened
+
+// 6.6
+
+Workstation Browser
+* Fixed issue with LSM naming in download wizard
+* After restarting, viewer state is now restored even if a filter was not named
+
+Horta/Large Volume Viewer
+* Added Crosscheck Neuron group property combining Radius & Background
+* Fixed AnnotationFilter to navigate to correct location in Horta
+* Fixed issues associated with empty Neuron Tags
+
+// 6.5
+
+Workstation Browser
+* Fixed problem with image grid not redrawing when resizing the window
+* Fixed bug with deleting duplicate folder contents
+* Fixed bug which caused Report A Bug to not work correctly for some users
+
+Large Volume Viewer
+* Notes on annotations can be exported with swc files as a separate json file
+
+Horta/Large Volume Viewer
+* Added neuron groups properties dialog for users to select which properties
+  to toggle for groups of neurons with a specific tag
+
+// 6.4
+
+Workstation Browser
+* Fixed bug with drag and drop that was introduced in the previous release
+* Fixed grid layout for images with many annotations
+* Added warning message when attempting to open purged samples in NA
+
+Large Volume Viewer
+* Added origin/scaling information to Sample metadata in DB
+
 // 6.3
 
 Workstation Browser

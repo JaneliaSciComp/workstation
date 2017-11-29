@@ -1,9 +1,4 @@
-// 6.4
+// 7.0.3
 
-Workstation Browser
-* Fixed bug with drag and drop that was introduced in the previous release
-* Fixed grid layout for images with many annotations
-* Added warning message when attempting to open purged samples in NA
-
-Large Volume Viewer
-* Added origin/scaling information to Sample metadata in DB
+Large Volume Viewer  
+* Fixed issue with casting JSON response to Long on Sample creation

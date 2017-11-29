@@ -1,8 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
@@ -26,6 +23,9 @@ import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
 /**
  * this UI element displays a list of annotations according to a
@@ -148,12 +148,14 @@ public class FilteredAnnotationList extends JPanel {
                             if (panListener != null) {
                                 if (ann != null) {
                                     panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                                   Vec3 location = annotationMgr.getTileFormat().micronVec3ForVoxelVec3Centered(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
                                     // send event to Horta to also center on this item
                                     
                                     try {
                                         SynchronizationHelper helper = new SynchronizationHelper();
                                         Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
                                         SampleLocation sampleLocation = originator.getSampleLocation();
+                                        sampleLocation.setFocusUm(location.getX(), location.getY(), location.getZ());
                                         Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
                                         for (Tiled3dSampleLocationProviderAcceptor acceptor: locationAcceptors) {
                                             if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {

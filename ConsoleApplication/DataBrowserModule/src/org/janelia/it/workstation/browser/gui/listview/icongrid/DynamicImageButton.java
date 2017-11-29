@@ -9,6 +9,7 @@ import java.util.concurrent.Callable;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
@@ -216,7 +217,7 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
     }
 
     private boolean isUnloadImages() {
-        Boolean unloadImagesBool = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY);
+        Boolean unloadImagesBool = (Boolean) FrameworkImplProvider.getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY);
         return unloadImagesBool != null && unloadImagesBool;
     }
 

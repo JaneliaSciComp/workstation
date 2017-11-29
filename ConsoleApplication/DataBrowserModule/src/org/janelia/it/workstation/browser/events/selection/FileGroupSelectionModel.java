@@ -2,9 +2,9 @@ package org.janelia.it.workstation.browser.events.selection;
 
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.interfaces.IsParent;
-import org.janelia.it.jacs.model.domain.sample.FileGroup;
 import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.model.domain.interfaces.IsParent;
+import org.janelia.model.domain.sample.FileGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

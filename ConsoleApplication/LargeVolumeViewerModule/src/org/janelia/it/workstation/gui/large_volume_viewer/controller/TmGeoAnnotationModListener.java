@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 
 /**
  * Implement this to be added as a listener for when TmGeoAnnotations are

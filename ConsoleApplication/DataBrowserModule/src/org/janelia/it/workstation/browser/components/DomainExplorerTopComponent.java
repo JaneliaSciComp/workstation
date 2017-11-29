@@ -21,9 +21,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -52,6 +52,7 @@ import org.janelia.it.workstation.browser.nodes.RootNode;
 import org.janelia.it.workstation.browser.nodes.WorkspaceNode;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.DomainObject;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -72,6 +73,8 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 
 
 /**
@@ -123,6 +126,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     private Lookup.Result<AbstractNode> result = null;
     private RootNode root;
     private List<Long[]> pathsToExpand;
+    private boolean loadInitialState = true;
 
     public DomainExplorerTopComponent() {
         initComponents();
@@ -188,52 +192,17 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         add(treePanel, BorderLayout.CENTER);
         add(findToolbar, BorderLayout.PAGE_END);
 
-        showLoadingIndicator();
-
         ActionMap map = this.getActionMap();
         map.put(DefaultEditorKit.copyAction, ExplorerUtils.actionCopy(mgr));
         map.put(DefaultEditorKit.cutAction, ExplorerUtils.actionCut(mgr));
         map.put(DefaultEditorKit.pasteAction, ExplorerUtils.actionPaste(mgr));
         map.put("delete", ExplorerUtils.actionDelete(mgr, true)); 
         
-        SimpleWorker worker = new SimpleWorker() {
-
-            @Override
-            protected void doStuff() throws Exception {
-                // Attempt to load stuff into the cache, which the RootNode will query from the EDT
-                DomainMgr.getDomainMgr().getModel().getWorkspaces();
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // Init the list viewer manager
-                DomainListViewManager.getInstance();
-                // Init the global selection model
-                GlobalDomainObjectSelectionModel.getInstance();
-                // Load the data
-                refresh(false, false, new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        if (pathsToExpand!=null) {
-                            log.info("Restoring serialized expanded state");
-                            beanTreeView.expand(pathsToExpand);
-                            pathsToExpand = null;
-                        }
-                        return null;
-                    }
-                });
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                // Init the list viewer manager
-                DomainListViewManager.getInstance();
-                showNothing();
-                ConsoleApp.handleException(error);
-            }
-        };
+        // Init the list viewer manager
+        DomainListViewManager.getInstance();
         
-        worker.execute();
+        // Init the global selection model
+        GlobalDomainObjectSelectionModel.getInstance();
     }
     
     /**
@@ -278,6 +247,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     void writeProperties(java.util.Properties p) {
+        if (p==null) return;
         p.setProperty("version", TC_VERSION);
         
         List<Long[]> expandedPaths = beanTreeView.getExpandedPaths();
@@ -293,6 +263,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
     
     void readProperties(java.util.Properties p) {
+        if (p==null) return;
         String version = p.getProperty("version");
         final String expandedPathStr = p.getProperty("expandedPaths");
         if (TC_VERSION.equals(version) && expandedPathStr!=null) {
@@ -301,10 +272,18 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 final ExpandedTreeState expandedState =  mapper.readValue(expandedPathStr, ExpandedTreeState.class);
                 if (expandedState!=null) {
                     log.info("Reading state: {} expanded paths",expandedState.getExpandedArrayPaths().size());
+                    // Must write to instance variables from EDT only
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
                             pathsToExpand = expandedState.getExpandedArrayPaths();
+                            log.info("saving pathsToExpand.size= "+pathsToExpand.size());
+                            if (AccessManager.loggedIn()) {
+                                loadInitialSession();
+                            }
+                            else {
+                                // Not logged in yet, wait for a SessionStartEvent
+                            }
                         }
                     });
                 }
@@ -338,6 +317,43 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     @Subscribe
+    public void sessionStarted(SessionStartEvent event) {
+        loadInitialSession();
+    }
+    
+    private void loadInitialSession() {
+        
+        if (!loadInitialState) return;
+        log.info("Loading previous session");
+        this.loadInitialState = false;
+        
+        showLoadingIndicator();
+        
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                // Attempt to load stuff into the cache, which the RootNode will query from the EDT
+                DomainMgr.getDomainMgr().getModel().getWorkspaces();
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // Load the data
+                refresh(false, false, null);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showNothing();
+                ConsoleApp.handleException(error);
+            }
+        };
+        
+        worker.execute();
+    }
+    
+    @Subscribe
     public void prefChanged(LocalPreferenceChanged event) {
         if (event.getKey().equals(StateMgr.RECENTLY_OPENED_HISTORY)) {
             // Something was added to the history, so we need to update the node's children
@@ -353,7 +369,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     @Subscribe
-    public void objectsInvalidated(DomainObjectRemoveEvent event) {
+    public void objectsRemoved(DomainObjectRemoveEvent event) {
 
         final List<Long[]> expanded = beanTreeView.getExpandedPaths();
         DomainObject domainObject = event.getDomainObject();
@@ -392,16 +408,16 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             for(DomainObject domainObject : event.getDomainObjects()) {
                 Set<AbstractDomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
                 if (!nodes.isEmpty()) {
-                    log.info("Updating invalidated object: {}",domainObject.getName());
+                    log.debug("Updating invalidated object: {}",domainObject.getName());
                     for(AbstractDomainObjectNode<DomainObject> node : nodes) {
                         try {
                             DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
                             if (refreshed==null) {
-                                log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
+                                log.debug("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
                                 node.destroy();
                             }
                             else {
-                                log.info("  Updating node@{} with refreshed object",System.identityHashCode(node));
+                                log.debug("  Updating node@{} with refreshed object",System.identityHashCode(node));
                                 node.update(refreshed);
                             }
                         }  
@@ -436,7 +452,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             return;
         }
 
-        log.info("refresh(restoreState={})",restoreState);
+        log.info("refresh(invalidateCache={},restoreState={})",invalidateCache,restoreState);
         final StopWatch w = new StopWatch();
         
         final List<Long[]> expanded = root!=null && restoreState ? beanTreeView.getExpandedPaths() : null;
@@ -447,9 +463,12 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             @Override
             protected void doStuff() throws Exception {
                 if (invalidateCache) {
-                    DomainModel model = DomainMgr.getDomainMgr().getModel();
-                    model.invalidateAll();
+                    DomainMgr.getDomainMgr().getModel().invalidateAll();
                 }
+                // This is attempted by the RootNode below, but we try it here
+                // first so that we can fail early in case there's a network 
+                // problem. 
+                DomainMgr.getDomainMgr().getModel().getWorkspaces();
             }
 
             @Override
@@ -459,21 +478,28 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     mgr.setRootContext(root);
                     showTree();
                     
-                    int numExpanded = 0;
-                    if (restoreState) {
-                        numExpanded = beanTreeView.expand(expanded);
-                        beanTreeView.selectPaths(selected);
+                    if (pathsToExpand!=null) {
+                        log.info("Restoring serialized expanded state");
+                        beanTreeView.expand(pathsToExpand);
+                        pathsToExpand = null;
                     }
-                    if (numExpanded==0) {
-                        log.info("Expanding first node");
-                        for(Node node : root.getChildren().getNodes()) {
-                            beanTreeView.expandNode(node);
-                            if (node instanceof WorkspaceNode) {
-                                break; // Expand everything up to and including the first Home
+                    else {
+                        int numExpanded = 0;
+                        if (restoreState) {
+                            numExpanded = beanTreeView.expand(expanded);
+                            beanTreeView.selectPaths(selected);
+                        }
+                        if (numExpanded==0) {
+                            log.info("Expanding first node");
+                            for(Node node : root.getChildren().getNodes()) {
+                                beanTreeView.expandNode(node);
+                                if (node instanceof WorkspaceNode) {
+                                    break; // Expand everything up to and including the first Home
+                                }
                             }
                         }
                     }
-
+                    
                     ActivityLogHelper.logElapsed("DomainExplorer.refresh", w);
                     debouncer.success();
                 }
@@ -613,20 +639,20 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
     
     public static boolean isNavigateOnClick() {
-        Boolean navigate = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(NAVIGATE_ON_CLICK);
+        Boolean navigate = (Boolean) FrameworkImplProvider.getModelProperty(NAVIGATE_ON_CLICK);
         return navigate==null || navigate;
     }
     
     private static void setNavigateOnClick(boolean value) {
-        ConsoleApp.getConsoleApp().setModelProperty(NAVIGATE_ON_CLICK, value);  
+        FrameworkImplProvider.setModelProperty(NAVIGATE_ON_CLICK, value);  
     }
 
     public static boolean isShowRecentMenuItems() {
-        Boolean navigate = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(SHOW_RECENTLY_OPENED_ITEMS);
+        Boolean navigate = (Boolean) FrameworkImplProvider.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS);
         return navigate==null || navigate;
     }
     
     private static void setShowRecentMenuItems(boolean value) {
-        ConsoleApp.getConsoleApp().setModelProperty(SHOW_RECENTLY_OPENED_ITEMS, value);  
+        FrameworkImplProvider.setModelProperty(SHOW_RECENTLY_OPENED_ITEMS, value);  
     }
 }

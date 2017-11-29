@@ -5,8 +5,6 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.io.IOException;
 
-import javax.swing.text.html.HTML;
-
 import org.apache.commons.lang.StringEscapeUtils;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.openide.nodes.AbstractNode;

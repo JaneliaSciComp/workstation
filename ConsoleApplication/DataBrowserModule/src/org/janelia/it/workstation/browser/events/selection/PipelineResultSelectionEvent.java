@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.events.selection;
 
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.PipelineResult;
 
 /**
  * Event that is thrown when a sample result is selected in the Sample Viewer. 

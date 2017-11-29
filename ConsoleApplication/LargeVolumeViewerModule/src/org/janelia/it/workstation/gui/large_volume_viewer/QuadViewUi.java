@@ -70,11 +70,6 @@ import org.janelia.console.viewerapi.ToolButton;
 import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
@@ -139,7 +134,13 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
+import org.janelia.it.workstation.gui.task_workflow.TaskWorkflowViewLauncher;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.tiledMicroscope.TmColorModel;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -275,6 +276,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private Snapshot3DLauncher snapshot3dLauncher;
     private SkeletonController skeletonController;
     private AnnotationSkeletonViewLauncher annotationSkeletonViewLauncher;
+    private TaskWorkflowViewLauncher taskWorkflowViewLauncher;
     private PathTraceRequestListener pathTraceListener;
     private WorkspaceClosureListener wsCloseListener;
     
@@ -532,6 +534,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     result.add(addCopyOctreePathMenuItem());
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
+                    result.addAll(taskWorkflowViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());                    
                     
                     return result;
@@ -1366,7 +1369,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
      * given a string containing the canonical Linux path to the data,
      * open the data in the viewer
      *
-     * @param canonicalLinuxPath
+     * @param sample
      * @return
      * @throws MalformedURLException
      */
@@ -1393,6 +1396,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     "/tier2/mousebrainmicro/mousebrainmicro/",
                     "/nrs/mouselight",
                     "/nrs/mltest/",
+                    "/groups/jacs",
                     "/groups/dickson/dicksonlab",
             };
             Path linuxPrefix = null;
@@ -1454,7 +1458,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         // by now, if we ain't got the path, we ain't got the path
         if (!testFile.exists()) {
             JOptionPane.showMessageDialog(this.getParent(),
-                    "Error opening folder " + testFile.getPath() +
+                    "Error opening Linux sample path " + canonicalLinuxPath +
                     " \nIs the file share mounted?",
                     "Folder does not exist.",
                     JOptionPane.ERROR_MESSAGE);
@@ -1467,7 +1471,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             System.getProperty("os.name").contains("Windows")) {
             if (!testFile.isDirectory()) {
                 JOptionPane.showMessageDialog(this.getParent(),
-                        "Error opening path " + testFile.getPath() +
+                        "Error opening Linux sample path " + canonicalLinuxPath +
                                 " \nAre you sure this is a directory?",
                         "Not a directory?",
                         JOptionPane.ERROR_MESSAGE);
@@ -1488,6 +1492,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         snapshot3dLauncher.setAnnotationManager(annotationMgr);
         annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
+        taskWorkflowViewLauncher = new TaskWorkflowViewLauncher();
         volumeImage.setRemoteBasePath(canonicalLinuxPath);       
         
         return loadURL(url, sample);

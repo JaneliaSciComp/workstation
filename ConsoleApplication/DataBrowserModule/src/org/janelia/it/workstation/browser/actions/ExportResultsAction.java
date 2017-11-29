@@ -10,7 +10,6 @@ import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 import javax.swing.filechooser.FileFilter;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -19,6 +18,7 @@ import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.DomainObject;
 
 /**
  * Export a table to TAB or CSV format.

@@ -1,20 +1,20 @@
 package org.janelia.it.workstation.browser.ws;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.sample.NeuronSeparation;
+import org.janelia.model.domain.sample.PipelineResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,6 @@ public class ExternalClientMgr {
     private int portOffset = 0;
     private int portCounter = 1;
 
-    // TODO: These caches should really respect the DomainModel events, like invalidation
     private Map<Long,Entity> separationCache;
     private Map<Long,Entity> sampleCache;
     private Map<Long,Entity> imageCache;
@@ -53,9 +52,9 @@ public class ExternalClientMgr {
     
     public ExternalClientMgr() {
         this.translator = new DomainToEntityTranslator();
-        this.separationCache = new MaxSizeHashMap<>(MAX_CACHE_SIZE);
-        this.sampleCache = new MaxSizeHashMap<>(MAX_CACHE_SIZE);
-        this.imageCache = new MaxSizeHashMap<>(MAX_CACHE_SIZE);
+        this.separationCache = createLRUMap(MAX_CACHE_SIZE);
+        this.sampleCache = createLRUMap(MAX_CACHE_SIZE);
+        this.imageCache = createLRUMap(MAX_CACHE_SIZE);
     }
     
     public void setPortOffset(int portOffset) {
@@ -141,6 +140,16 @@ public class ExternalClientMgr {
             ExternalClientMgr.getInstance().sendMessageToExternalClients("ontologyChanged", parameters);
         }
     }
+
+    @Subscribe
+    public void objectsInvalidated(DomainObjectInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            log.debug("Total invalidation detected, refreshing...");
+            separationCache.clear();
+            sampleCache.clear();
+            imageCache.clear();
+        }
+    }
     
     public void sendNeuronSeparationRequested(NeuronSeparation separation) {
         separationCache.put(separation.getId(), translator.getSeparationEntity(separation));
@@ -168,22 +177,13 @@ public class ExternalClientMgr {
         return sampleCache.get(separationId);
     }
     
-    private class MaxSizeHashMap<K, V> extends HashMap<K, V> {
-
-        private final int max;
-
-        public MaxSizeHashMap(int max) {
-            this.max = max;
-        }
-
-        @Override
-        public V put(K key, V value) {
-            if (size() >= max && !containsKey(key)) {
-                 return null;
-            } 
-            else {
-                 return super.put(key, value);
+    // From https://stackoverflow.com/questions/11469045/how-to-limit-the-maximum-size-of-a-map-by-removing-oldest-entries-when-limit-rea
+    public static <K, V> Map<K, V> createLRUMap(final int maxEntries) {
+        return new LinkedHashMap<K, V>(maxEntries*10/7, 0.7f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+                return size() > maxEntries;
             }
-        }
+        };
     }
 }

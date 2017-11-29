@@ -3,115 +3,292 @@ package org.janelia.it.workstation.browser.api;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
-import org.janelia.it.jacs.model.domain.Subject;
-import org.janelia.it.jacs.model.domain.enums.SubjectRole;
-import org.janelia.it.jacs.model.domain.subjects.User;
-import org.janelia.it.jacs.model.user_data.UserToolEvent;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+import javax.swing.SwingUtilities;
+
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.exceptions.FatalCommError;
+import org.janelia.it.workstation.browser.api.exceptions.AuthenticationException;
+import org.janelia.it.workstation.browser.api.exceptions.ServiceException;
 import org.janelia.it.workstation.browser.api.exceptions.SystemError;
-import org.janelia.it.workstation.browser.api.facade.impl.ejb.EJBFactory;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.LoginEvent;
-import org.janelia.it.workstation.browser.events.lifecycle.RunAsEvent;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.browser.util.PropertyConfigurator;
-import org.janelia.it.workstation.browser.util.SingleThreadedTaskQueue;
+import org.janelia.it.workstation.browser.events.lifecycle.SessionEndEvent;
+import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
+import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
+import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog.ErrorType;
+import org.janelia.it.workstation.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.model.domain.enums.SubjectRole;
+import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.util.concurrent.RateLimiter;
+
 /**
- * Manages the data access credentials and current privileges.
+ * Manages the access credentials and current privileges. Takes care of logging in users during start-up, and 
+ * state changes while the application is running. 
+ * 
+ * There are two user concepts here: 
+ * 1) the authenticated subject: the real user that provided their username/password and successfully authenticated
+ * 2) the actual subject: the subject being used for all access in the application. Usually this is the same as the 
+ *    authenticated subject, but if that subject is an admin, they can "Run As" another user, or even as a group.
+ *    
+ * This manager is also a state machine which encodes AuthState transitions. In particular:
+ * 
+ * Starting -> Logged in (if the user information is stored, and can be used to automatically log the user in at start up)
+ * Starting -> Logged out (if the user cannot be logged in at start up for any reason)
+ * Logged out -> Logged in (if the user authenticates manually after start up)
+ * 
  */
 public final class AccessManager {
     
     private static final Logger log = LoggerFactory.getLogger(AccessManager.class);
 
-    private static final int LOG_GRANULARITY = 100;
-
+    // How long is the token expected to last? This should be set to something less than the actual token life span. 
+    // The value used here is 12 hours, which is significantly less than the 48 hour life span of the actual token. 
+    private static final int TOKEN_LIFESPAN_SECS = 60 * 60 * 12;
+    
     public static String RUN_AS_USER = "RunAs";
-    public static String USER_EMAIL = "UserEmail";
     public static String USER_NAME = "console.serverLogin";
     public static String USER_PASSWORD = "console.serverPassword";
     public static String REMEMBER_PASSWORD = "console.rememberPassword";
 
-    private static AccessManager accessManager;
+    private enum AuthState {
+        Starting,
+        LoggedIn,
+        LoggedOut
+    }
+    
+    // Start up state
+    private AuthState currState = AuthState.Starting;
+    private boolean hadLoginIssue;
+    private ErrorType loginIssue;
+    
+    // Running state
+    private final Debouncer tokenRefreshDebouncer = new Debouncer();
+    private final RateLimiter tokenRefreshRateLimiter = RateLimiter.create(1); // one token refresh is allowed every second
+    private String username;
+    private String password;
+    private String token;
+    private Date tokenCreationDate; 
+    private Subject authenticatedSubject; 
+    private Subject actualSubject;
     private static String bypassSubjectKey;
 
-    private boolean isLoggedIn;
-    private Long currentSessionId;
-    private Subject loggedInSubject;
-    private Subject authenticatedSubject;
-
-    private final Map<CategoryString, Long> categoryInstanceCount = new HashMap<>();
-    
-    private AccessManager() {
-        log.info("Initializing Access Manager");
-        String tempLogin = (String) LocalPreferenceMgr.getInstance().getModelProperty(USER_NAME);
-        String tempPassword = (String) LocalPreferenceMgr.getInstance().getModelProperty(USER_PASSWORD);
-        if (tempLogin != null && tempPassword != null) {
-            PropertyConfigurator.getProperties().setProperty(USER_NAME, tempLogin);
-            PropertyConfigurator.getProperties().setProperty(USER_PASSWORD, tempPassword);
-        }
-    }
-
+    // Singleton
+    private static AccessManager accessManager;
     static public AccessManager getAccessManager() {
         if (accessManager == null) {
             accessManager = new AccessManager();
         }
         return accessManager;
     }
-
-    public boolean loginSubject(String username, String password) {
-        try {
-            if (isLoggedIn()) {
-                logoutUser();
-            }
-
-            // Login and start the session
-            authenticatedSubject = authenticateSubject(username, password);
-            if (null != authenticatedSubject) {
-                isLoggedIn = true;                
-                setSubject(authenticatedSubject);
-                log.info("Authenticated as {}", authenticatedSubject.getKey());
-                
-                String email = ((User)authenticatedSubject).getEmail();
-                if (email==null) {
-                    // Take a guess
-                    email = authenticatedSubject.getName()+"@janelia.hhmi.org";
+    
+    private AccessManager() {
+        log.info("Initializing Access Manager");
+        moveToStartingState();
+    }
+    
+    private void moveToStartingState() {
+        log.info("Moving to starting state");
+        this.currState = AuthState.Starting;
+        this.token = null;
+        this.authenticatedSubject = null;
+        this.actualSubject = null;
+    }
+    
+    private void moveToLoggedInState(Subject authenticatedSubject) {
+        log.info("Moving to logged in state");
+        this.currState = AuthState.LoggedIn;
+        this.authenticatedSubject = authenticatedSubject;
+        
+        ActivityLogHelper.logUserInfo(authenticatedSubject);
+        Events.getInstance().postOnEventBus(new LoginEvent(authenticatedSubject));
+        
+        // Is there a run-as user? 
+        boolean sessionStarted = false;
+        LocalPreferenceMgr prefs = LocalPreferenceMgr.getInstance();
+        String runAsUser = (String)prefs.getModelProperty(AccessManager.RUN_AS_USER);
+        if (runAsUser!=null) {
+            // If so, override the actual subject.
+            try {
+                if (setRunAsUser(runAsUser)) {
+                    sessionStarted = true;
                 }
-                ConsoleApp.getConsoleApp().setModelProperty(AccessManager.USER_EMAIL, email);
-                
-                Events.getInstance().postOnEventBus(new LoginEvent(authenticatedSubject));
-                beginSession();
             }
-
-            return isLoggedIn;
+            catch (Exception e) {
+                prefs.setModelProperty(AccessManager.RUN_AS_USER, "");
+                ConsoleApp.handleException(e);
+            }
         }
-        catch (Exception e) {
-            isLoggedIn = false;
-            log.error("Error logging in", e);
-            throw new FatalCommError(ConsoleApp.getConsoleApp().getRemoteRestUrl(),
-                    "Cannot authenticate login. The server may be down. Please try again later.");
+        
+        if (!sessionStarted) {
+            // Session was not started with a run-as user
+            setActualSubject(authenticatedSubject);
+        }
+    }
+    
+    private void moveToLoggedOutState() {
+        log.info("Moving to logged out state");
+        this.currState = AuthState.LoggedOut;
+        this.token = null;
+        this.authenticatedSubject = null;
+        setActualSubject(null);
+    }
+    
+    /**
+     * Attempt to log in using saved credentials during application start up. 
+     * If this fails, a second (interactive) try can be made once the application 
+     * is showing, by calling resolveLoginIssue. 
+     */
+    public void loginUsingSavedCredentials() {
+
+        // Assume we'll have a login issue unless proven otherwise
+        hadLoginIssue = true;
+        loginIssue = null;
+        
+        // Get saved credentials
+        LocalPreferenceMgr prefs = LocalPreferenceMgr.getInstance();
+        String username = (String)prefs.getModelProperty(AccessManager.USER_NAME);
+        String password = (String)prefs.getModelProperty(AccessManager.USER_PASSWORD);
+
+        if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(password)) {
+            try {
+                if (loginUser(username, password)) {
+                    hadLoginIssue = false;
+                }
+                else {
+                    moveToLoggedOutState();
+                }
+            }
+            catch (AuthenticationException e) {
+                log.warn("Authentication problem during auto-login", e);
+                moveToLoggedOutState();
+                loginIssue = ErrorType.AuthError;
+            }
+            catch (ServiceException e) {
+                FrameworkImplProvider.handleExceptionQuietly("Problem encountered during auto-login", e);
+                moveToLoggedOutState();
+                loginIssue = ErrorType.NetworkError;
+            }
+            catch (Throwable t) {
+                FrameworkImplProvider.handleExceptionQuietly("Problem encountered during auto-login", t);
+                moveToLoggedOutState();
+                loginIssue = ErrorType.OtherError;
+            }
+        }
+    }
+    
+    /**
+     * Should be called when the application is first displayed. If there were login
+     * issues at startup, this will attempt to resolve them by showing the login 
+     * dialog with an appropriate error message. 
+     */
+    public void resolveLoginIssue() {
+        if (hadLoginIssue) {
+            SwingUtilities.invokeLater(() -> {
+                LoginDialog.getInstance().showDialog(loginIssue);
+            });
         }
     }
 
-    private Subject authenticateSubject(final String username, final String password) throws Exception {
-        // make RESTful call to authenticate user
-        Subject authenticatedSubject = DomainMgr.getDomainMgr().getModel().loginSubject(username, password);
-        if (authenticatedSubject!=null) {
+    /**
+     * Can be called to change the current "actual subject". 
+     * @param runAsUser user or group (key or name)
+     * @return true if the user was successfully made actual
+     */
+    public boolean setRunAsUser(String runAsUser) {
+        
+        if (!isAdmin() && !StringUtils.isEmpty(runAsUser)) {
+            log.error("Non-admin user cannot run as another user");
+            setActualSubject(authenticatedSubject);
+            return false;
+        }
+        
+        try {
+            if (!StringUtils.isEmpty(runAsUser)) {
+                String fullUserKey = runAsUser;
+                if (!runAsUser.startsWith("user:") && !runAsUser.startsWith("group:")) {
+                    fullUserKey = "user:" + fullUserKey;
+                }
+                Subject runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByKey(fullUserKey);
+                if (runAsSubject==null) {
+                    // try group before failing
+                    fullUserKey = "group:" + runAsUser;
+                    runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByKey(fullUserKey);
+                    if (runAsSubject==null) {
+                        return false;
+                    }
+                }
+                setActualSubject(runAsSubject);
+            }
+            else {
+                setActualSubject(authenticatedSubject);
+            }
+
+            log.info("Running as {}", getActualSubject().getKey());
+            return true;
+        }
+        catch (Exception e) {
+            ConsoleApp.handleException(e);
+            setActualSubject(authenticatedSubject);
+            return false;
+        }
+    }
+    
+    /**
+     * This method can be called when the user requests a login dialog to be shown.
+     */
+    public void userRequestedLoginDialog() {
+        SwingUtilities.invokeLater(() -> {
+            LoginDialog.getInstance().showDialog();
+        });
+    }
+    
+    public boolean loginUser(String username, String password) {
+
+        // Keep these in memory for token refreshes, because user may not want to persist the password
+        this.username = username;
+        this.password = password;
+    
+        // Authenticate
+        Subject authenticatedSubject = authenticateSubject();
+        
+        if (authenticatedSubject != null) {
+            moveToLoggedInState(authenticatedSubject);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+        
+    private Subject authenticateSubject() {
+        
+        // First get auth token
+        renewToken();
+        
+        // We're now authenticated. Get or create the Workstation user object.
+        Subject authenticatedSubject;
+        try {
+            authenticatedSubject = DomainMgr.getDomainMgr().getModel().getOrCreateUser(username);
+        }
+        catch (Exception e) {
+            throw new ServiceException("Error getting or creating user "+username, e);
+        }
+
+        // Legacy JFS/Webdav needs basic auth
+        if (authenticatedSubject != null) {
+            log.info("Authenticated as {}", authenticatedSubject.getKey());
+            
             log.debug("Setting default authenticator");
             Authenticator.setDefault(new Authenticator() {
                 @Override
@@ -121,274 +298,120 @@ public final class AccessManager {
             });
             FileMgr.getFileMgr().getWebDavClient().setCredentialsUsingAuthenticator();
         }
+        
         return authenticatedSubject;
     }
-
-    private void beginSession() {
-        String userName = getSubject()==null?null:getSubject().getName();
-        UserToolEvent loginEvent = EJBFactory.getRemoteComputeBean().beginSession(
-                userName,
-                ConsoleProperties.getString("console.Title"),
-                ConsoleProperties.getString("console.versionNumber"));
-        if (null!=loginEvent && null!=loginEvent.getSessionId()) {
-            this.currentSessionId = loginEvent.getSessionId();
-        }
-        ActivityLogHelper.logSessionBegin();
-        ActivityLogHelper.logUserInfo(authenticatedSubject);
-    }
-
-    private void endSession() {
-        String userName = getSubject()==null?null:getSubject().getName();
-        EJBFactory.getRemoteComputeBean().endSession(
-                userName,
-            ConsoleProperties.getString("console.Title"),
-            currentSessionId);
-        this.currentSessionId = null;
-        ActivityLogHelper.logSessionEnd();
-    }
-    
-    private void addEventToSession(UserToolEvent event) {
-        EJBFactory.getRemoteComputeBean().addEventToSessionAsync(event);
-    }
-
-    private void addEventsToSession(UserToolEvent[] events) {
-        EJBFactory.getRemoteComputeBean().addEventsToSessionAsync(events);
-    }
-
-    private String getLogEventUserLogin() {
-        String username = PropertyConfigurator.getProperties().getProperty(USER_NAME);
-        if (username!=null) return username;
-        return UserToolEvent.DEFAULT_USER_LOGIN;
-    }
     
     /**
-     * Send an event described by the information given as parameters, to the
-     * logging apparatus. Apply the criteria of:
-     * 1. allow-to-log if more time was taken, than the lower threshold, or
-     * 2. allow-to-log if the count of attempts for category==granularity.
-     * 
-     * @param toolName the stakeholder tool, in this event.
-     * @param category for namespacing.
-     * @param action what happened.
-     * @param timestamp when it happened.
-     * @param elapsedMs how much time passed to carry this out?
-     * @param thresholdMs beyond this time, force log issue.
+     * Checks to see if the system is in a logged in state. 
+     * @return true if a user is authenticated and logged in
      */
-    public void logToolEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
-        String userLogin = getLogEventUserLogin();
-        try {
-            final UserToolEvent event = new UserToolEvent(currentSessionId, userLogin, toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
-            Callable<Void> callable = new Callable<Void>() {
-                @Override
-                public Void call() {
-                    Long count = categoryInstanceCount.get(category);
-                    if (count == null) {
-                        count = new Long(0);
-                    }
-                    boolean shouldLog = false;
-                    if (elapsedMs > thresholdMs) {
-                        shouldLog = true;
-                    } else if (count % LOG_GRANULARITY == 0) {
-                        shouldLog = true;
-                    }
-                    categoryInstanceCount.put(category, ++count);
-
-                    if (shouldLog) {
-                        addEventToSession(event);
-                    }
-                    return null;
-                }
-            };
-            SingleThreadedTaskQueue.submit(callable);
-
-        } catch (Exception ex) {
-            log.warn(
-                    "Failed to log tool event for session: {}, user: {}, tool: {}, category: {}, action: {}, timestamp: {}.",
-                    currentSessionId, userLogin, toolName, category, action, timestamp, ex);
-        }
-    }
-
-    /**
-     * Send an event described by the information given as parameters, to the
-     * logging apparatus. Apply the criteria of:
-     * 1. allow-to-log if more time was taken, than the lower threshold, or
-     * 
-     * @param toolName the stakeholder tool, in this event.
-     * @param category for namespacing.
-     * @param action what happened.
-     * @param timestamp when it happened.
-     * @param elapsedMs how much time passed to carry this out?
-     * @param thresholdMs beyond this time, force log issue.
-     * @todo see about reusing code between this and non-threshold.
-     */
-    public void logToolThresholdEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
-        String userLogin = getLogEventUserLogin();
-        try {
-            final UserToolEvent event = new UserToolEvent(currentSessionId, userLogin, toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
-            Callable<Void> callable = new Callable<Void>() {
-                @Override
-                public Void call() {
-                    boolean shouldLog = false;
-                    if (elapsedMs > thresholdMs) {
-                        shouldLog = true;
-                    }
-
-                    if (shouldLog) {
-                        addEventToSession(event);
-                    }
-                    return null;
-                }
-            };
-            SingleThreadedTaskQueue.submit(callable);
-
-        } catch (Exception ex) {
-            log.warn(
-                    "Failed to log tool event for session: {}, user: {}, tool: {}, category: {}, action: {}, timestamp: {}.",
-                    currentSessionId, userLogin, toolName, category, action, timestamp, ex);
-        }
-    }
-
-    /**
-     * Log a tool event, always.  No criteria will be checked. 
-     */
-    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action) {
-        // Force logging, by setting elapsed > threshold.
-        logToolEvent(toolName, category, action, new Date().getTime(), 1.0, 0.0);
-    }
-
-    /**
-     * Log a whole list of tool events, in one server-pump.
-     * 
-     * @param toolName tool, like LVV or Console
-     * @param category type of event
-     * @param batchPrefix distinguish action/optional, may be null.
-     * @param actions explicit action information.
-     */
-    public void logBatchToolEvent(ToolString toolName, CategoryString category, String batchPrefix, List<String> actions) {
-        String userLogin = getLogEventUserLogin();
-        try {
-            final UserToolEvent[] events = new UserToolEvent[actions.size()];
-            int evtNum = 0;
-            for (String action: actions) {                
-                Date eventDate = null;
-                int pos = action.lastIndexOf(":");
-                if (pos > -1  &&  pos < action.length()) {
-                    eventDate = new Date(Long.parseLong(action.substring(pos + 1)));
-                    action = action.substring(0, pos); // Trim away redundant info.
-                }
-                else {
-                    eventDate = new Date();
-                }
-                if (batchPrefix != null)
-                    action = batchPrefix + ":" + action;
-                UserToolEvent event = new UserToolEvent(currentSessionId, userLogin, toolName.toString(), category.toString(), action, eventDate);
-                events[evtNum++] = event;
-            }
-            
-            Callable<Void> callable = new Callable<Void>() {
-                @Override
-                public Void call() {
-                    addEventsToSession(events);
-                    return null;
-                }
-            };
-            SingleThreadedTaskQueue.submit(callable);
-        } catch (Exception ex) {
-            log.warn(
-                    "Failed to batch-log tool events for session: {}, user: {}, tool: {}, category: {}, action-prefix: {}, timestamp: {}.",
-                    currentSessionId, userLogin, toolName, category, batchPrefix, new Date().getTime(), ex);
-        }
-    }
-
-    /**
-     * Log-tool-event override, which includes elapsed/threshold comparison
-     * values.  If the elapsed time (expected milliseconds) exceeds the
-     * threshold, definitely log.  Also, will check number-of-issues against
-     * a granularity map.  Only issue the message at a preset
-     * granularity.
-     * 
-     * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long, double, double) 
-     * @param elapsedMs
-     * @param thresholdMs 
-     */
-    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, double elapsedMs, double thresholdMs) {
-        logToolEvent(toolName, category, action, new Date().getTime(), elapsedMs, thresholdMs);
-    }
-    
-    public boolean setRunAsUser(String runAsUser) {
-        
-        if (!isAdmin() && !StringUtils.isEmpty(runAsUser)) {
-            throw new IllegalStateException("Non-admin user cannot run as another user");
-        }
-        
-        try {
-            if (!StringUtils.isEmpty(runAsUser)) {
-                // set subject from RESTful service
-                String fullUserKey = runAsUser;
-                if (!runAsUser.startsWith("user") || runAsUser.startsWith("group")) {
-                    fullUserKey = "user:" + fullUserKey;
-                }
-                Subject runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByKey(fullUserKey);
-                if (runAsSubject==null) {
-                    // try group before failing
-                    fullUserKey = "group:" + runAsUser;
-                    runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByKey(fullUserKey);
-                    if (runAsSubject==null)
-                        return false;
-                }
-                setSubject(runAsSubject);
-            }
-            else {
-                setSubject(authenticatedSubject);
-            }
-
-            Events.getInstance().postOnEventBus(new RunAsEvent(authenticatedSubject));
-            log.info("Running as {}", getSubject().getKey());
-                
-            return true;
-        }
-        catch (Exception e) {
-            setSubject(authenticatedSubject);
-            ConsoleApp.handleException(e);
-            return false;
-        }
-    }
-    
-    public void logoutUser() {
-        try {
-            if (getSubject() != null) {
-                endSession();
-                log.info("Logged out with: {}", getSubject().getKey());
-            }
-            isLoggedIn = false;
-            loggedInSubject = null;
-            authenticatedSubject = null;
-        }
-        catch (Exception e) {
-            log.error("Error logging out", e);
-        }
-    }
-
     public boolean isLoggedIn() {
-        return isLoggedIn;
+        return currState==AuthState.LoggedIn;
     }
 
+    /**
+     * Checks to see if the current user is in the admin group.
+     * @return true if current user is admin
+     */
     public boolean isAdmin() {
         return AccessManager.authenticatedSubjectIsInGroup(SubjectRole.Admin);
     }
+
+    /**
+     * Returns the current authentication token.
+     * @return JWS token 
+     */
+    public String getToken() {
+        if (tokenRefreshRateLimiter.tryAcquire(0, TimeUnit.SECONDS)) {
+            try {
+                obtainToken();
+            }
+            catch (AuthenticationException e) {
+                // These exceptions are swallowed here because we don't need the user to know about them. 
+                // There may be intermittent issues with fetching tokens, but that shouldn't affect the 
+                // user experience. If we actually get to the point where the current token is no longer 
+                // valid, then the ConsoleErrorHandler will ask the user for a new password.
+                log.warn("Could not refresh token", e);
+            }
+            catch (ServiceException e) {
+                log.warn("Could not refresh token", e);
+            }
+        }
+        else {
+            log.trace("Throttling token refresh");
+        }
+        log.trace("Returning token: {}", token);
+        return token;
+    }
+
+    private synchronized void obtainToken() {
+
+        if (!tokenRefreshDebouncer.queue()) {
+            log.debug("Skipping token refresh, since there is one already in progress");
+            return;
+        }
+        
+        try {
+            if (tokenMustBeRenewed()) {
+                renewToken();
+            }
+        }
+        finally {
+            tokenRefreshDebouncer.success();
+        }   
+    }
+
+    private synchronized void renewToken() {
+        log.debug("Attempting to obtain new auth token for {}", username);
+        this.token = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
+        this.tokenCreationDate = new Date();
+        log.info("Now using token: {}", token);
     
-    private void setSubject(Subject subject) {
-        this.loggedInSubject = subject;
     }
-
-    public Subject getSubject() {
-        return loggedInSubject;
+    
+    private boolean tokenMustBeRenewed() {
+        if (token==null || tokenCreationDate==null) return true;
+        long tokenAgeSecs = Utils.getDateDiff(tokenCreationDate, new Date(), TimeUnit.SECONDS);
+        log.debug("Token is now {} seconds old", tokenAgeSecs);
+        return (tokenAgeSecs > TOKEN_LIFESPAN_SECS);
     }
-
+    
+    /**
+     * Returns the current authenticated subject (user)
+     * @return user
+     */
     public Subject getAuthenticatedSubject() {
         return authenticatedSubject;
     }
+    
+    /**
+     * Returns the actual user or group for the current session.
+     * @return user or group
+     */
+    public Subject getActualSubject() {
+        return actualSubject;
+    }
 
+    private void setActualSubject(Subject subject) {
+        
+        if (actualSubject!=null) {
+            if (subject!=null && actualSubject.getKey().equals(subject.getKey())) {
+                // Correct subject is already set, nothing needs to happen 
+                return;
+            }
+            
+            // End the current session
+            Events.getInstance().postOnEventBus(new SessionEndEvent(actualSubject));
+        }
+        
+        // Start a new session
+        this.actualSubject = subject;
+        if (actualSubject!=null) {
+            Events.getInstance().postOnEventBus(new SessionStartEvent(actualSubject));
+        }
+    }
+    
     public static Subject getSubjectByKey(String key) {
         try {
             return DomainMgr.getDomainMgr().getModel().getSubjectByKey(key);
@@ -409,8 +432,8 @@ public final class AccessManager {
         return false;
     }
 
-    public static boolean currentUserIsInGroup(SubjectRole role) {
-        Subject subject = AccessManager.getAccessManager().getSubject();
+    public static boolean actualSubjectIsInGroup(SubjectRole role) {
+        Subject subject = getAccessManager().getActualSubject();
         if (subject==null) return false;
         if (subject instanceof User) {
             User user = (User)subject;
@@ -420,8 +443,9 @@ public final class AccessManager {
     }
 
     public static Set<String> getReaderSet() {
-        Subject subject = AccessManager.getAccessManager().getSubject();
+        Subject subject = getAccessManager().getActualSubject();
         Set<String> set = new HashSet<>();
+        if (subject==null) return set;
         set.add(subject.getKey());
         if (subject instanceof User) {
             User user = (User)subject;
@@ -431,8 +455,9 @@ public final class AccessManager {
     }
     
     public static Set<String> getWriterSet() {
-        Subject subject = AccessManager.getAccessManager().getSubject();
+        Subject subject = getAccessManager().getActualSubject();
         Set<String> set = new HashSet<>();
+        if (subject==null) return set;
         set.add(subject.getKey());
         if (subject instanceof User) {
             User user = (User)subject;
@@ -450,11 +475,15 @@ public final class AccessManager {
         bypassSubjectKey = subjectKey;
     }
 
+    public static boolean loggedIn() {
+        return getAccessManager().isLoggedIn();
+    }
+    
     public static String getSubjectKey() {
         if (bypassSubjectKey!=null) {
             return bypassSubjectKey;
         }
-        Subject subject = getAccessManager().getSubject();
+        Subject subject = getAccessManager().getActualSubject();
         if (subject == null) {
             throw new SystemError("Not logged in");
         }
@@ -462,7 +491,7 @@ public final class AccessManager {
     }
 
     public static String getUsername() {
-        Subject subject = getAccessManager().getSubject();
+        Subject subject = getAccessManager().getActualSubject();
         if (subject == null) {
             throw new SystemError("Not logged in");
         }
@@ -470,13 +499,17 @@ public final class AccessManager {
     }
 
     public static String getUserEmail() {
-        Subject subject = getAccessManager().getSubject();
+        Subject subject = getAccessManager().getActualSubject();
         if (subject == null) {
             throw new SystemError("Not logged in");
         }
         if (subject instanceof User) {
             User user = (User)subject;
-            return user.getEmail();
+            String email = user.getEmail();
+            if (StringUtils.isBlank(email)) {
+                email = user.getName()+"@janelia.hhmi.org";
+            }
+            return email;
         }
         return null;
     }

@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.events.model;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObject;
 
 /**
  * A domain object or part of its object graph has changed in some way.

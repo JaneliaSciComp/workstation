@@ -7,21 +7,22 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
-import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
-import org.janelia.it.jacs.model.domain.sample.SamplePostProcessingResult;
-import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.interfaces.HasAnatomicalArea;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.NeuronSeparation;
+import org.janelia.model.domain.sample.ObjectiveSample;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SampleAlignmentResult;
+import org.janelia.model.domain.sample.SamplePipelineRun;
+import org.janelia.model.domain.sample.SamplePostProcessingResult;
+import org.janelia.model.domain.sample.SampleTile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,19 +65,21 @@ public class DescriptorUtils {
             else if (domainObject instanceof NeuronFragment) {
                 NeuronFragment neuron = (NeuronFragment)domainObject;
                 try {
-                    Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, neuron.getSample().getTargetId());
-                    if (sample!=null) {
-                        List<NeuronSeparation> results = sample.getResultsById(NeuronSeparation.class, neuron.getSeparationId());
-                        if (!results.isEmpty()) {
-                            NeuronSeparation separation = results.get(0);
-                            PipelineResult parentResult = separation.getParentResult();
-                            if (parentResult instanceof HasAnatomicalArea) {
-                                HasAnatomicalArea hasAA = (HasAnatomicalArea)parentResult;
-                                boolean aligned = (parentResult instanceof SampleAlignmentResult);
-                                ObjectiveSample objectiveSample = parentResult.getParentRun().getParent();
-                                NeuronFragmentDescriptor desc = new NeuronFragmentDescriptor(objectiveSample.getObjective(), hasAA.getAnatomicalArea(), aligned);
-                                sampleArtifacts.add(desc);
-                                log.trace("  Adding neuron fragment self descriptor: {}", desc);
+                    if (neuron.getSample()!=null) {
+                        Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, neuron.getSample().getTargetId());
+                        if (sample!=null) {
+                            List<NeuronSeparation> results = sample.getResultsById(NeuronSeparation.class, neuron.getSeparationId());
+                            if (!results.isEmpty()) {
+                                NeuronSeparation separation = results.get(0);
+                                PipelineResult parentResult = separation.getParentResult();
+                                if (parentResult instanceof HasAnatomicalArea) {
+                                    HasAnatomicalArea hasAA = (HasAnatomicalArea)parentResult;
+                                    boolean aligned = (parentResult instanceof SampleAlignmentResult);
+                                    ObjectiveSample objectiveSample = parentResult.getParentRun().getParent();
+                                    NeuronFragmentDescriptor desc = new NeuronFragmentDescriptor(objectiveSample.getObjective(), hasAA.getAnatomicalArea(), aligned);
+                                    sampleArtifacts.add(desc);
+                                    log.trace("  Adding neuron fragment self descriptor: {}", desc);
+                                }
                             }
                         }
                     }
@@ -160,7 +163,15 @@ public class DescriptorUtils {
     }
 
     public static ArtifactDescriptor deserialize(String artifactDescriptorString) throws Exception {
-        return mapper.readValue(artifactDescriptorString, ArtifactDescriptor.class);
+        return mapper.readValue(DomainModelViewUtils.convertModelPackages(artifactDescriptorString), ArtifactDescriptor.class);
+    }
+
+    public static String serializeList(ArtifactDescriptorList descriptorList) throws Exception {
+        return mapper.writeValueAsString(descriptorList);
+    }
+
+    public static ArtifactDescriptorList deserializeList(String descriptorListString) throws Exception {
+        return mapper.readValue(DomainModelViewUtils.convertModelPackages(descriptorListString), ArtifactDescriptorList.class);
     }
     
 }

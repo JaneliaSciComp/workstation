@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
-import org.janelia.it.jacs.model.domain.support.SampleUtils;
+import org.janelia.model.access.domain.SampleUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.interfaces.HasAnatomicalArea;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SampleAlignmentResult;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -31,6 +31,14 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
     public ResultArtifactDescriptor() {
     }
     
+    public ResultArtifactDescriptor(String objective, String area, String resultClass, String resultName, boolean aligned) {
+        this.objective = objective;
+        this.area = area;
+        this.resultClass = resultClass;
+        this.resultName = resultName;
+        this.aligned = aligned;
+    }
+
     public ResultArtifactDescriptor(PipelineResult result) {
         this.objective = result.getParentRun().getParent().getObjective();
         if (result instanceof HasAnatomicalArea) {
@@ -94,7 +102,7 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
         List<HasFiles> objects = new ArrayList<>();
         if (sourceObject instanceof Sample) {
             Sample sample = (Sample)sourceObject;
-            objects.addAll(SampleUtils.getMatchingResults(sample, objective, area, aligned, resultName, null));
+            objects.addAll(SampleUtils.getMatchingResults(sample, objective, area, aligned, resultClass, resultName, null));
         }
         return objects;
     }

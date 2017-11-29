@@ -29,12 +29,12 @@ import javax.swing.JViewport;
 import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.browser.gui.support.AnnotationTagCloudPanel;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.model.domain.ontology.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -614,11 +614,10 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         
         if (buttonsPanel.getColumns() != numCols) {
             buttonsPanel.setColumns(numCols);
+            buttonsPanel.revalidate();
+            buttonsPanel.repaint();
         }
 
-        revalidate();
-        repaint();
-        
         loadUnloadImages();
     }
 

@@ -27,11 +27,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Subject;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
@@ -68,6 +63,11 @@ import org.janelia.it.workstation.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.browser.nodes.OntologyTermNode;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.security.Subject;
+import org.janelia.model.security.util.PermissionTemplate;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -81,6 +81,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 
 /**
  * Top component for the Ontology Editor, which lets users create ontologies
@@ -135,6 +136,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     
     private OntologyNode ontologyNode;
     private boolean recordingKeyBinds = false;
+    private boolean loadInitialState = true;
         
     public OntologyExplorerTopComponent() {
         initComponents();
@@ -191,7 +193,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                             
                             log.debug("Rebinding current node: {}",currNode.getDisplayName());
                             org.janelia.it.workstation.browser.actions.Action action = ontologyNode.getActionForNode((OntologyTermNode)currNode);
-    
+
                             if (action == null) {
                                 throw new IllegalStateException("No action for current node");
                             }
@@ -226,6 +228,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 }
             }
         };
+        beanTreeView.replaceKeyListeners(keyListener);
         
         // Prepare the key binding dialog box
         this.keyBindDialog = new KeyBindDialog();
@@ -235,30 +238,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 refresh();
             }
         });
-        
-        showLoadingIndicator();
-                
-        SimpleWorker worker = new SimpleWorker() {
-
-            @Override
-            protected void doStuff() throws Exception {
-                loadOntologies();
-            }
-
-            @Override
-            protected void hadSuccess() {
-                Long ontologyId = StateMgr.getStateMgr().getCurrentOntologyId();
-                Events.getInstance().postOnEventBus(new OntologySelectionEvent(ontologyId));
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                showNothing();
-                ConsoleApp.handleException(error);
-            }
-        };
-        
-        worker.execute();
     }
     
     /**
@@ -301,6 +280,12 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     }
 
     void readProperties(java.util.Properties p) {
+        if (AccessManager.loggedIn()) {
+            loadInitialState();
+        }
+        else {
+            // Not logged in yet, wait for a SessionStartEvent
+        }
     }
     
     // Custom methods
@@ -326,10 +311,53 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     }
     
     @Subscribe
+    public void sessionStarted(SessionStartEvent event) {
+        loadInitialState();
+    }
+    
+    private void loadInitialState() {
+        
+        if (!loadInitialState) return;
+        log.info("Loading initial session");
+        this.loadInitialState = false;
+        
+        showLoadingIndicator();
+        
+        if (!debouncer.queue(null)) {
+            log.debug("Skipping initial load, since there is a refresh already in progress");
+            return;
+        }
+        
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                loadOntologies();
+            }
+
+            @Override
+            protected void hadSuccess() {
+                Long ontologyId = StateMgr.getStateMgr().getCurrentOntologyId();
+                Events.getInstance().postOnEventBus(new OntologySelectionEvent(ontologyId));
+                debouncer.success();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showNothing();
+                ConsoleApp.handleException(error);
+                debouncer.failure();
+            }
+        };
+        
+        worker.execute();
+    }
+    
+    @Subscribe
     public void ontologySelected(OntologySelectionEvent event) {
         Long ontologyId = event.getOntologyId();
         log.trace("selectOntology({})",ontologyId);
-        selectOntology(ontologyId, true);
+        selectOntology(ontologyId);
     }
     
     @Subscribe
@@ -372,9 +400,10 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     public void objectDeleted(DomainObjectRemoveEvent event) {
         if (event.getDomainObject() instanceof Ontology) {
             Ontology deletedOntology = (Ontology)event.getDomainObject();
+            log.info("Removing ontology '{}' from view.", deletedOntology);
             ontologies.remove(deletedOntology);
             if (ontologyNode!=null && ontologyNode.getId().equals(deletedOntology.getId())) {
-                showOntology(null, false);
+                showOntology(null);
             }
         }
     }
@@ -383,11 +412,11 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     public void objectCreated(DomainObjectCreateEvent event) {
         final DomainObject domainObject = event.getDomainObject();
         if (domainObject instanceof Ontology) {
-            log.info("Refreshing because current ontology '{}' has changed.", domainObject.getName());
+            log.info("Refreshing because a new ontology '{}' was created.", domainObject.getName());
             refresh(false, true, new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
-                    selectOntology(domainObject.getId(), true);
+                    selectOntology(domainObject.getId());
                     return null;
                 }
             });
@@ -398,47 +427,54 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     public void objectChanged(DomainObjectChangeEvent event) {
         final DomainObject domainObject = event.getDomainObject();
         if (ontologyNode != null && ontologyNode.getId().equals(domainObject.getId())) {
-            // Current ontology has been invalidated
-            log.info("Refreshing because current ontology '{}' has been invalidated.", domainObject.getName());
+            // Current ontology has changed
+            log.info("Refreshing because current ontology '{}' has changed.", domainObject.getName());
             refresh(false, true, null);
         }
     }
+
+    private void selectOntology(Long ontologyId) {
+        selectOntology(ontologyId, null, null);
+    }
     
-    private void selectOntology(Long ontologyId, boolean expandAll) {
+    private void selectOntology(Long ontologyId, List<Long[]> expanded, List<Long[]> selected) {
+        log.debug("selectOntology({})", ontologyId);
         if (ontologyId==null) {
-            showOntology(null, expandAll);
+            showOntology(null);
         }
         else {
+            boolean found = false;
             for (Ontology ontology : ontologies) {
                 if (ontology.getId().equals(ontologyId)) {
-                    showOntology(ontology, expandAll);
-                    return;
+                    showOntology(ontology);
+                    found = true;
                 }
             }
-            log.warn("Ontology not found: {}",ontologyId);
-            showNothing();
+            if (!found) {
+                log.warn("Selected ontology not found: {}",ontologyId);
+                showNothing();
+            }
         }
+
+        // Ensure the updated tree is visible before expanding nodes
+        beanTreeView.updateUI();
+        
+        SwingUtilities.invokeLater(() -> {
+            log.info("Expanding all");
+            beanTreeView.expandAll();    
+            // Restore tree state
+            if (expanded!=null) {
+                beanTreeView.expand(expanded);
+            }
+            if (selected!=null) {
+                beanTreeView.selectPaths(selected);
+            }
+        });
     }
     
-    private void showOntology(Ontology ontology, final boolean expandAll) {
-        log.trace("showOntology({})",ontology);
-        selectRoot(ontology);
-        if (ontology==null) {
-            showNothing();
-        }
-        else {
-            showTree();
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    if (expandAll) beanTreeView.expandAll();
-                    beanTreeView.replaceKeyListeners(keyListener);
-                }
-            });
-        }
-    }
-
-    private void selectRoot(Ontology ontology) {
+    private void showOntology(Ontology ontology) {
+        log.debug("showOntology({})", ontology);
+        
         if (ontology==null) {
             this.ontologyNode = null;
             mgr.setRootContext(new EmptyNode("No ontology selected"));
@@ -449,6 +485,13 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 KeyBindings.getKeyBindings().loadOntologyKeybinds(ontology.getId(), ontologyNode.getOntologyActionMap());
             }
             mgr.setRootContext(ontologyNode);
+        }
+        
+        if (ontology==null) {
+            showNothing();
+        }
+        else {
+            showTree();
         }
     }
     
@@ -467,8 +510,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             return;
         }
 
-        final StopWatch w = new StopWatch();
         log.info("refresh(restoreState={})",restoreState);
+        final StopWatch w = new StopWatch();
         
         final List<Long[]> expanded = ontologyNode!=null && restoreState ? beanTreeView.getExpandedPaths() : null;
         final List<Long[]> selected = ontologyNode!=null && restoreState ? beanTreeView.getSelectedPaths() : null;
@@ -488,14 +531,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             protected void hadSuccess() {
                 try {
                     if (ontologyNode!=null) {
-                        if (restoreState) {
-                            // Reselect the current ontology
-                            selectOntology(ontologyNode.getId(), false);
-                            // Restore tree state
-                            beanTreeView.expand(expanded);
-                            beanTreeView.selectPaths(selected);
-                            beanTreeView.updateUI();
-                        }
+                        // Reselect the current ontology
+                        selectOntology(ontologyNode.getId(), expanded, selected);
                     }
                     beanTreeView.grabFocus();
                     ActivityLogHelper.logElapsed("OntologyExplorerTopComponent.refresh", w);

@@ -13,15 +13,15 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,7 +97,8 @@ public final class DownloadVisualPanel2 extends JPanel {
         formatMap.put("tif", FORMAT_EXTENSIONS_TIF);
         
     }
-    
+
+    private DownloadWizardPanel2 wizardPanel;
     private final Debouncer debouncer = new Debouncer();
     
     // GUI
@@ -111,6 +112,7 @@ public final class DownloadVisualPanel2 extends JPanel {
     private List<ArtifactDescriptor> artifactDescriptors;
     
     // Outputs
+    private boolean loaded = false;
     private Map<String,String> selectedOutputExtensions;
     private boolean splitChannels;
     
@@ -122,7 +124,8 @@ public final class DownloadVisualPanel2 extends JPanel {
     /**
      * Creates new form DownloadVisualPanel4
      */
-    public DownloadVisualPanel2() {
+    public DownloadVisualPanel2(DownloadWizardPanel2 wizardPanel) {
+        this.wizardPanel = wizardPanel;
         setLayout(new BorderLayout());        
     }
 
@@ -229,6 +232,9 @@ public final class DownloadVisualPanel2 extends JPanel {
                     formatCombos.put(extension, formatCombo);
                 }
                 
+                loaded = true;
+                wizardPanel.fireChangeEvent();
+                
                 splitChannelCheckbox = new JCheckBox();
                 splitChannelCheckbox.setSelected(splitChannels);
                 attrPanel.addItem("Split channels in 3d stacks into individual files", splitChannelCheckbox);
@@ -250,8 +256,12 @@ public final class DownloadVisualPanel2 extends JPanel {
         worker.execute();
     }
     
+    public boolean isLoaded() {
+        return loaded;
+    }
+    
     public boolean isSplitChannels() {
-        return splitChannelCheckbox.isSelected();
+        return splitChannelCheckbox!=null && splitChannelCheckbox.isSelected();
     }
 
     public Map<String,String> getOutputExtensions() {

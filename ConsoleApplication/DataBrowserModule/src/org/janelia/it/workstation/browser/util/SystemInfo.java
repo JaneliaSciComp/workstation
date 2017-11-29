@@ -3,7 +3,7 @@ package org.janelia.it.workstation.browser.util;
 import java.io.File;
 import java.io.IOException;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,11 +122,11 @@ public class SystemInfo {
     }
 
     public static void setDownloadsDir(String downloadsDir) {
-        ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DOWNLOADS_DIR, downloadsDir);
+        FrameworkImplProvider.setModelProperty(OptionConstants.DOWNLOADS_DIR, downloadsDir);
     }
 
     public static File getDownloadsDir() {
-        String downloadsDir = (String) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DOWNLOADS_DIR);
+        String downloadsDir = (String) FrameworkImplProvider.getModelProperty(OptionConstants.DOWNLOADS_DIR);
         File downloadsDirFile;
         // Check for existence and clear out references to tmp
         if (null==downloadsDir || downloadsDir.startsWith("/tmp")) {

@@ -145,7 +145,7 @@ public class DesktopApi {
 				return true;
 			}
 		} catch (IOException e) {
-			log.error("Error running command.", e);
+			log.warn("Error running command.", e);
 			return false;
 		}
 	}

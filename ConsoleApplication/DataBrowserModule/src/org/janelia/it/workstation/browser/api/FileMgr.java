@@ -12,7 +12,6 @@ import org.janelia.it.workstation.browser.filecache.LocalFileCache;
 import org.janelia.it.workstation.browser.filecache.WebDavClient;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.browser.util.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,14 +56,9 @@ public class FileMgr {
                 ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100));
         
         setFileCacheGigabyteCapacity((Integer) 
-                ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
+                LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
         setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(
-                ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));        
-        
-        Integer tmpCache = (Integer) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
-        if (null != tmpCache) {
-            PropertyConfigurator.getProperties().setProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, tmpCache.toString());
-        }
+                LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));
     }
 
     /**
@@ -90,7 +84,7 @@ public class FileMgr {
      */
     public final void setFileCacheDisabled(boolean isDisabled) {
 
-        ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
+        LocalPreferenceMgr.getInstance().setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
 
         if (isDisabled) {
             log.warn("disabling local cache");
@@ -126,7 +120,7 @@ public class FileMgr {
      * @return the maximum number of gigabytes to store in the local file cache.
      */
     public int getFileCacheGigabyteCapacity() {
-        return (Integer) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
+        return (Integer) LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
     }
 
     /**
@@ -146,7 +140,7 @@ public class FileMgr {
             gigabyteCapacity = MAX_FILE_CACHE_GIGABYTE_CAPACITY;
         }
 
-        ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
+        LocalPreferenceMgr.getInstance().setModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
                 gigabyteCapacity);
 
         if (isFileCacheAvailable()) {
@@ -229,19 +223,25 @@ public class FileMgr {
     }
 
     /**
-     * Get the URL for a standard path. It may be a local URL, if the file has been cached, or a remote
-     * URL on the WebDAV server. It might even be a mounted location, if WebDAV is disabled.
+     * Get the URL for a standard path. It may be a local URL, if the file has
+     * been cached, or a remote URL on the WebDAV server. It might even be a
+     * mounted location, if WebDAV is disabled.
      *
-     * @param standardPath a standard system path
+     * @param standardPath
+     *            a standard system path
      * @return an accessible URL for the specified path
      */
     public static URL getURL(String standardPath) {
+        return getURL(standardPath, true);
+    }
+
+    public static URL getURL(String standardPath, boolean cacheAsync) {
         try {
             FileMgr mgr = getFileMgr();
             WebDavClient client = mgr.getWebDavClient();
             URL remoteFileUrl = client.getWebDavUrl(standardPath);
             LocalFileCache cache = mgr.getFileCache();
-            return mgr.isFileCacheAvailable() ? cache.getEffectiveUrl(remoteFileUrl) : remoteFileUrl;
+            return mgr.isFileCacheAvailable() ? cache.getEffectiveUrl(remoteFileUrl, cacheAsync) : remoteFileUrl;
         }
         catch (MalformedURLException e) {
             ConsoleApp.handleException(e);

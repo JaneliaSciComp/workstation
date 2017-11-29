@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.events.selection;
 
-import org.janelia.it.jacs.model.domain.sample.PipelineError;
+import org.janelia.model.domain.sample.PipelineError;
 
 /**
  * Event that is thrown when a sample error is selected in the Sample Viewer. 

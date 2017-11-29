@@ -5,11 +5,11 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
+import org.janelia.model.domain.DomainObject;
 
 /**
  * An interface for a viewer that can display an AnnotatedDomainObjectList.

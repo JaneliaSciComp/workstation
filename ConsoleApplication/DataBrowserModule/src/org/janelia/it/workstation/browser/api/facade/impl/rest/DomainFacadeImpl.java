@@ -11,14 +11,14 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.ReverseReference;
-import org.janelia.it.jacs.model.domain.report.DatabaseSummary;
-import org.janelia.it.jacs.model.domain.report.DiskUsageSummary;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.DomainFacade;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ReverseReference;
+import org.janelia.model.domain.report.DatabaseSummary;
+import org.janelia.model.domain.report.DiskUsageSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

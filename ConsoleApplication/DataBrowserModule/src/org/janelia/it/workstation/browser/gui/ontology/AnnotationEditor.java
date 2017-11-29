@@ -2,18 +2,19 @@ package org.janelia.it.workstation.browser.gui.ontology;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.ontology.EnumText;
-import org.janelia.it.jacs.model.domain.ontology.Interval;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
-import org.janelia.it.jacs.model.domain.ontology.Text;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.dialogs.AnnotationBuilderDialog;
+import org.janelia.model.domain.ontology.Accumulation;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.ontology.EnumText;
+import org.janelia.model.domain.ontology.Interval;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.ontology.OntologyTermReference;
+import org.janelia.model.domain.ontology.Text;
 
 /**
  * Editor for annotation values.
@@ -21,9 +22,7 @@ import org.janelia.it.workstation.browser.gui.dialogs.AnnotationBuilderDialog;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class AnnotationEditor {
-
-    public static final String CANCEL_VALUE = "CANCEL";
-
+    
     private final Ontology ontology;
     private Annotation annotation;
     private OntologyTerm keyTerm;
@@ -36,8 +35,21 @@ public class AnnotationEditor {
     public AnnotationEditor(Ontology ontology, OntologyTerm keyTerm) {
         this.ontology = ontology;
         this.keyTerm = keyTerm;
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        if (keyTerm == null) {
+            try {
+                keyTerm = model.getOntologyTermByReference(annotation.getKeyTerm());
+            }
+            catch (Exception e) {
+                ConsoleApp.handleException(e);
+            }
+        }
     }
 
+    public boolean needsEditor() {
+        return (keyTerm instanceof Interval || keyTerm instanceof EnumText || keyTerm instanceof Accumulation || keyTerm instanceof Text);
+    }
+    
     public String showEditor() {
         try {
             DomainModel model = DomainMgr.getDomainMgr().getModel();
@@ -66,7 +78,7 @@ public class AnnotationEditor {
                 catch (NumberFormatException e) {
                     JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                             "Input out of range [" + interval.getLowerBound() + "," + interval.getUpperBound() + "]");
-                    return CANCEL_VALUE;
+                    return null;
                 }
             }
             else if (keyTerm instanceof EnumText) {
@@ -78,7 +90,7 @@ public class AnnotationEditor {
                 if (valueEnum == null) {
                     Exception error = new Exception(keyTerm.getName() + " has no supporting enumeration.");
                     ConsoleApp.handleException(error);
-                    return CANCEL_VALUE;
+                    return null;
                 }
 
                 Object currValue = null;
@@ -96,7 +108,7 @@ public class AnnotationEditor {
                     value = enumTerm.getName();
                 }
             }
-            else if (keyTerm instanceof Text) {
+            else if (keyTerm instanceof Accumulation) {
 
                 String currValue = null;
                 if (annotation != null) {
@@ -107,7 +119,15 @@ public class AnnotationEditor {
                 dialog.setAnnotationValue(currValue);
                 dialog.setVisible(true);
                 value = dialog.getAnnotationValue();
-                if (value==null) return CANCEL_VALUE;
+            }
+            else if (keyTerm instanceof Text) {
+
+                String currValue = null;
+                if (annotation != null) {
+                    currValue = annotation.getValue();
+                }
+
+                value = JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Value:\n", currValue);
             }
 
             return value;

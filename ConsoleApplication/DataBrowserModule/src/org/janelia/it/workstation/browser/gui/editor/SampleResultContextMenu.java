@@ -7,14 +7,6 @@ import java.util.List;
 
 import javax.swing.JMenuItem;
 
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.browser.actions.OpenInNeuronAnnotatorAction;
@@ -31,6 +23,14 @@ import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.access.domain.SampleUtils;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasFileGroups;
+import org.janelia.model.domain.sample.NeuronSeparation;
+import org.janelia.model.domain.sample.ObjectiveSample;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
 
 /**
  * Right-click context menu for sample results presented in the Sample Editor. 

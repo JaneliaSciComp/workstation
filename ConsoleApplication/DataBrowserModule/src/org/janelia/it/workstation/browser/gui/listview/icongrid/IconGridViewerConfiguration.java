@@ -2,9 +2,9 @@ package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
 import java.util.Map;
 
-import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.model.domain.DomainConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

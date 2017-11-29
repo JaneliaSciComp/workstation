@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.events.model;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObject;
 
 /**
  * The annotations on a domain object have changed in some way.

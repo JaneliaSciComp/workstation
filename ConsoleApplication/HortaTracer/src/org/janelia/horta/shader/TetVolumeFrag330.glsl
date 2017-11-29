@@ -340,7 +340,7 @@ void save_color(in vec4 integratedColor, in TracingCore tracingCore, in float sl
     //      opacity tie, the NEARER ray segment wins.
     // Use a floating point render target, because integer targets won't blend.
     // Pack the opacity into the first 7 bits of a 32-bit float mantissa
-    uint opacityInt = clamp(uint(0x7f * integratedColor.a), 0, 0x7f); // 7 bits of opacity, range 0-127
+    uint opacityInt = clamp(uint(0x7f * integratedColor.a), 0u, uint(0x7f)); // 7 bits of opacity, range 0-127
     relativeDepth = 1.0 - relativeDepth; // In case of equal opacity, we want NEAR depths to beat FAR depths in a GL_MAX comparison
     // Keep depth strictly fractional, for unambiguous packing with integer opacity
     relativeDepth = clamp(relativeDepth, 0.0, 0.999);

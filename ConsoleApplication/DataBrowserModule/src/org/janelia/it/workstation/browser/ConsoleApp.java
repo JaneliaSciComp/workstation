@@ -10,8 +10,12 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.api.LocalPreferenceMgr;
+import org.janelia.it.workstation.browser.api.ServiceMgr;
+import org.janelia.it.workstation.browser.api.SessionMgr;
+import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.api.exceptions.FatalCommError;
 import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
 import org.janelia.it.workstation.browser.api.lifecycle.GracefulBrick;
@@ -73,9 +77,6 @@ public class ConsoleApp {
         ProtectionDomain pd = ConsoleApp.class.getProtectionDomain();
         log.debug("Code Source: "+pd.getCodeSource().getLocation());
                 
-        // Put the menu bar on the application window, instead of in the Mac OS X menu bar
-//        System.setProperty("apple.laf.useScreenMenuBar", "false");
-
         // Put the app name in the Mac OS X menu bar
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", appName);
         
@@ -102,7 +103,7 @@ public class ConsoleApp {
             log.info("Using remote REST URL defined in console.properties as domain.facade.rest.url: "+remoteRestUrl);
         }
         else {
-            this.remoteRestUrl = String.format("http://%s:8180/rest-v1/", JACS_SERVER);
+            this.remoteRestUrl = String.format("http://%s:8180/rest-v2/", JACS_SERVER);
             log.info("Derived remote REST URL from -Djacs.server parameter: "+remoteRestUrl);
         }        
         
@@ -121,53 +122,20 @@ public class ConsoleApp {
         ConsoleState.setCurrState(ConsoleState.STARTING_SESSION);
         
         try {
-            // Read local user preferences
-            LocalPreferenceMgr prefs = LocalPreferenceMgr.getInstance();
-
-            // Must init file services BEFORE calling AccessManager.loginSubject
+            // Init singletons so that they're initialized by a single thread
+            LocalPreferenceMgr.getInstance();
+            AccessManager.getAccessManager();
+            DomainMgr.getDomainMgr();
             FileMgr.getFileMgr();
-            
-            // Try saved credentials
-            String username = (String)prefs.getModelProperty(AccessManager.USER_NAME);
-            String password = (String)prefs.getModelProperty(AccessManager.USER_PASSWORD);
-            String runAsUser = (String)prefs.getModelProperty(AccessManager.RUN_AS_USER);
+            SessionMgr.getSessionMgr();
 
-            if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(password)) {
-                try {
-                    if (!AccessManager.getAccessManager().loginSubject(username, password)) {
-                        // If it didn't work for any reason, show the login dialog without any errors and let the user correct it
-                        LoginDialog loginDialog = new LoginDialog();
-                        loginDialog.showDialog();
-                    }
-                }
-                catch (FatalCommError e) {
-                    LoginDialog loginDialog = new LoginDialog();
-                    loginDialog.showDialog(ErrorType.NetworkError);
-                }
-            }
-            else {
-                LoginDialog loginDialog = new LoginDialog();
-                loginDialog.showDialog();
-            }
+            // Set the Look and Feel
+            StateMgr.getStateMgr().initLAF();
             
-            if (!AccessManager.getAccessManager().isLoggedIn()) {
-                log.warn("User closed login window without successfully logging in, exiting program.");
-                LifecycleManager.getDefault().exit(0);
-                return;
-            }
-
-            // Set run-as user if any
-            try {
-                AccessManager.getAccessManager().setRunAsUser(runAsUser);
-            }
-            catch (Exception e) {
-                prefs.setModelProperty(AccessManager.RUN_AS_USER, "");
-                ConsoleApp.handleException(e);
-            }
+            // Auto-login if credentials were saved from a previous session
+            AccessManager.getAccessManager().loginUsingSavedCredentials();
             
-            ConsoleState.setCurrState(ConsoleState.LOGGED_IN);
-
-            // Uninstall if bricked
+            // Check for potential remote brick
             try {
                 GracefulBrick uninstaller = new GracefulBrick();
                 uninstaller.brickAndUninstall();
@@ -280,14 +248,6 @@ public class ConsoleApp {
         return LocalPreferenceMgr.getInstance().getApplicationOutputDirectory();
     }
     
-    public Object setModelProperty(Object key, Object value) {
-        return LocalPreferenceMgr.getInstance().setModelProperty(key, value);
-    }
-
-    public Object getModelProperty(Object key) {
-        return LocalPreferenceMgr.getInstance().getModelProperty(key);
-    }
-
     public ImageCache getImageCache() {
         return imageCache;
     }

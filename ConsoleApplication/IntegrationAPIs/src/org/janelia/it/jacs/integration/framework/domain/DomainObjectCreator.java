@@ -1,6 +1,6 @@
 package org.janelia.it.jacs.integration.framework.domain;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObject;
 
 /**
  * Implement this to make a means of creating a domain object for viewing another

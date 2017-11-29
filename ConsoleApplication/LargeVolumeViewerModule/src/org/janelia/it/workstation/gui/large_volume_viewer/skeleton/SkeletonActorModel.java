@@ -20,8 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.camera.Camera3d;
@@ -38,6 +36,8 @@ import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -212,8 +212,8 @@ public class SkeletonActorModel {
             for (Long neuronID : neuronVertices.keySet()) {
 
                 NeuronStyle neuronStyle=neuronStyles.get(neuronID);
-
-                if (neuronStyle != null && !neuronStyle.isVisible()) {
+                
+                if (neuronStyle != null && (!neuronStyle.isVisible() || !neuronStyle.isUserVisible())) {
                     continue;
                 }
 
@@ -305,7 +305,7 @@ public class SkeletonActorModel {
 
             for (Long neuronID : neuronVertices.keySet()) {
                 NeuronStyle neuronStyle=neuronStyles.get(neuronID);
-                if (neuronStyle != null && !neuronStyle.isVisible()) {
+                if (neuronStyle != null && !neuronStyle.isVisible() && !neuronStyle.isUserVisible()) {
                     continue;
                 }
                 neuronOrderList.add(neuronID);
@@ -682,7 +682,16 @@ public class SkeletonActorModel {
         if (anchor == null || anchor.getNeuronID() == null || !neuronStyles.containsKey(anchor.getNeuronID())) {
             return false;
         } else {
-            return neuronStyles.get(anchor.getNeuronID()).isVisible();
+            NeuronStyle style = neuronStyles.get(anchor.getNeuronID());
+            return style.isVisible() && style.isUserVisible();
+        }
+    }
+    
+    public boolean anchorIsNonInteractable(Anchor anchor) {
+        if (anchor == null || anchor.getNeuronID() == null || !neuronStyles.containsKey(anchor.getNeuronID())) {
+            return false;
+        } else {
+            return neuronStyles.get(anchor.getNeuronID()).isNonInteractable();
         }
     }
     

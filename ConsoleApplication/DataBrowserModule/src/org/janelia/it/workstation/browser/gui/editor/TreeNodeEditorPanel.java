@@ -4,12 +4,7 @@ import java.awt.BorderLayout;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Preference;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
@@ -29,6 +24,11 @@ import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.workspace.TreeNode;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -257,17 +257,11 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     }
 
     private void loadPreferences() {
-        if (treeNode.getId()==null) return;
+        if (treeNode==null || treeNode.getId()==null) return;
         try {
-            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString());
-            if (sortCriteriaPref!=null) {
-                log.debug("Loaded sort criteria preference: {}",sortCriteriaPref.getValue());
-                sortCriteria = (String)sortCriteriaPref.getValue();
-            }
-            else {
-                sortCriteria = null;
-            }
+            sortCriteria = (String)FrameworkImplProvider.getRemotePreferenceValue(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString(), null);
+            log.debug("Loaded sort criteria preference: {}",sortCriteria);
         }
         catch (Exception e) {
             log.error("Could not load sort criteria",e);
@@ -277,7 +271,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     private void savePreferences() {
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
-            DomainMgr.getDomainMgr().setPreference(
+            FrameworkImplProvider.setRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString(), sortCriteria);
             log.debug("Saved sort criteria preference: {}",sortCriteria);
         }

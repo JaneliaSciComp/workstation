@@ -2,7 +2,7 @@ package org.janelia.it.workstation.browser.gui.editor;
 
 import java.util.concurrent.Callable;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObject;
 
 /**
  * An editor for a single domain object.

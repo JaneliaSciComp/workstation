@@ -3,15 +3,15 @@ package org.janelia.it.workstation.browser.model.descriptors;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.ObjectiveSample;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SampleTile;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

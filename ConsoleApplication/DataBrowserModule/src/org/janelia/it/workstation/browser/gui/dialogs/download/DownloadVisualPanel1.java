@@ -30,8 +30,6 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.sample.SamplePostProcessingResult;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.gui.support.WrapLayout;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
@@ -41,6 +39,8 @@ import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.LSMArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.SelfArtifactDescriptor;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.sample.SamplePostProcessingResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +87,7 @@ public final class DownloadVisualPanel1 extends JPanel {
     }
     
     /**
-     * Creates new form DownloadVisualPanel2
+     * Creates new form DownloadVisualPanel1
      */
     public DownloadVisualPanel1(DownloadWizardPanel1 wizardPanel) {
         this.wizardPanel = wizardPanel;

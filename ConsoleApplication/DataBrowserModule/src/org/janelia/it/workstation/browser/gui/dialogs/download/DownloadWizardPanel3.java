@@ -13,15 +13,10 @@ import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
 import org.openide.util.ChangeSupport;
 import org.openide.util.HelpCtx;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DownloadWizardPanel3 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
-
-    private static final Logger log = LoggerFactory.getLogger(DownloadWizardPanel3.class);
     
     private final ChangeSupport changeSupport = new ChangeSupport(this);
-    
     private WizardDescriptor wiz;
     
     /**
@@ -132,7 +127,7 @@ public class DownloadWizardPanel3 implements WizardDescriptor.ValidatingPanel<Wi
             }
         }
         if (!found) {
-            ConsoleApp.getConsoleApp().setModelProperty(DownloadVisualPanel3.FILE_PATTERN_PROP_NAME, filePattern);
+            FrameworkImplProvider.setModelProperty(DownloadVisualPanel3.FILE_PATTERN_PROP_NAME, filePattern);
         }
     }
 }

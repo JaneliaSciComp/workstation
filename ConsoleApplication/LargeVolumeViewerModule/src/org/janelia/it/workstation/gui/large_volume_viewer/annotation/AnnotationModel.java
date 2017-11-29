@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,20 +16,10 @@ import java.util.Set;
 
 import javax.swing.SwingUtilities;
 
+import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronTagMap;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
-import org.janelia.it.jacs.model.util.MatrixUtilities;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.ParametrizedLine;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.SWCData;
@@ -39,6 +30,7 @@ import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionSupport;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
+import org.janelia.it.workstation.gui.large_volume_viewer.NoteExporter;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
@@ -53,7 +45,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAd
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.SpatialFilter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,8 +54,29 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
 import Jama.Matrix;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.access.tiledMicroscope.TmModelManipulator;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.Preference;
+import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
+import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
+import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.util.MatrixUtilities;
 
 /**
  * This class is responsible for handling requests from the AnnotationManager.  those
@@ -309,10 +321,17 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // Update TC, in case the load bypassed it
         LargeVolumeViewerTopComponent.getInstance().setCurrent(workspace==null ? getCurrentSample() : workspace);    
         fireWorkspaceLoaded(workspace);
+                // load user preferences
+        try {
+            loadUserPreferences();
+        } catch (Exception error) {
+            ConsoleApp.handleException(error);
+        }
         fireNeuronSelected(null);
         if (workspace!=null) {
             activityLog.logLoadWorkspace(workspace.getId());
         }
+
     }
 
     public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
@@ -440,8 +459,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             @Override
             public boolean include(NeuronVertex vertex, TmGeoAnnotation annotation) {
                 boolean notItself = !annotation.getId().equals(excludedAnnotationID);
-                boolean visible = getNeuronStyle(getNeuronFromNeuronID(annotation.getNeuronId())).isVisible();
-                return notItself && visible;
+                NeuronStyle style = getNeuronStyle(getNeuronFromNeuronID(annotation.getNeuronId()));
+                boolean visible = style.isVisible();
+                boolean userVisible = style.isUserVisible();
+                return notItself && visible && userVisible;
             }
         });
         
@@ -1508,13 +1529,15 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * called from multiple threads, and the update is not atomic
      */
     public synchronized void setNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) throws Exception {
-        if (neuron.getVisibility() != style.isVisible() || neuron.getColor() != style.getColor()) {
+      //  if (neuron.getVisibility() != style.isVisible() || neuron.getColor().getRGB() != style.getColor().getRGB()) {
             ModelTranslation.updateNeuronStyle(style, neuron);
             neuronManager.saveNeuronMetadata(neuron);
             // fire change to listeners
             fireNeuronStyleChanged(neuron, style);
             activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
-        }
+     //   } else {
+      //      fireNeuronStyleChanged(neuron, style);
+      //  }
     }
 
     public synchronized void setNeuronColors(List<TmNeuronMetadata> neuronList, Color color) throws Exception {
@@ -1576,13 +1599,17 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * export the neurons in the input list into the given file, in swc format;
      * all neurons (and all their neurites!) are crammed into a single file
      */
-    public void exportSWCData(File swcFile, int downsampleModulo, Collection<TmNeuronMetadata> neurons, Progress progress) throws Exception {
+    public void exportSWCData(File swcFile, int downsampleModulo, Collection<TmNeuronMetadata> neurons,
+        boolean exportNotes, Progress progress) throws Exception {
 
         log.info("Exporting {} neurons to SWC file {}",neurons.size(),swcFile);
         progress.setStatus("Creating headers");
-        
+
+        // I need the neuron order to be deterministic:
+        List<TmNeuronMetadata> neuronList = new ArrayList<>(neurons);
+
         Map<Long,List<String>> neuronHeaders = new HashMap<>();
-        for (TmNeuronMetadata neuron: neurons) {
+        for (TmNeuronMetadata neuron: neuronList) {
             List<String> headers = neuronHeaders.get(neuron.getId());
             if (headers == null) {
                 headers = new ArrayList<>();
@@ -1591,7 +1618,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             NeuronStyle style = getNeuronStyle(neuron);
             float[] color = style.getColorAsFloatArray();
             headers.add(String.format(COLOR_FORMAT, color[0], color[1], color[2]));
-            if (neurons.size() > 1) {
+            if (neuronList.size() > 1) {
                 // Allow user to pick name as name of file, if saving individual neuron.
                 // Do not save the internal name.
                 headers.add(String.format(NAME_FORMAT, neuron.getName()));
@@ -1603,31 +1630,53 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // get swcdata via converter, then write; conversion from TmNeurons is done
         //  all at once so all neurons are off set from the same center of mass
         // First write one file per neuron.
-        List<SWCData> swcDatas = swcDataConverter.fromTmNeuron(neurons, neuronHeaders, downsampleModulo);
-        int total = swcDatas.size()+1;
+        List<SWCData> swcDatas = swcDataConverter.fromTmNeuron(neuronList, neuronHeaders, downsampleModulo);
+        // there's one swc and one note file per neuron, plus aggregate; note how
+        //  we set progress; i only increments per neuron, but we show progress over
+        //  all files
+        int total = 1;
+        if (exportNotes) {
+            total = 2 * (swcDatas.size() + 1);
+        } else {
+            total = swcDatas.size() + 1;
+        }
         if (swcDatas != null && !swcDatas.isEmpty()) {
             int i = 0;
             for (SWCData swcData: swcDatas) {
-                progress.setStatus("Exporting neuron file "+(i+1));
+                progress.setStatus("Exporting neuron file " + (i + 1));
                 if (swcDatas.size() == 1) {
                     swcData.write(swcFile, -1);
                 }
                 else {
                     swcData.write(swcFile, i);
                 }
-                progress.setProgress(i, total);
+                progress.setProgress(2 * i, total);
+
+                if (exportNotes) {
+                    progress.setStatus("Exporting notes file " + (i + 1));
+                    NoteExporter.exportNotes(swcData.getPath(), getWsId(), swcData.getNeuronCenter(),
+                        neuronList.get(i), swcDataConverter);
+                    progress.setProgress(2 * i + 1, total);
+                }
+
                 i++;
             }
         }
 
-        progress.setStatus("Exporting combined file");
-        
+
         // Next write one file containing all neurons, if there are more than one.
         if (swcDatas != null  &&  swcDatas.size() > 1) {
-            SWCData swcData = swcDataConverter.fromAllTmNeuron(neurons, downsampleModulo);
+            SWCData swcData = swcDataConverter.fromAllTmNeuron(neuronList, downsampleModulo);
             if (swcData != null) {
                 swcData.write(swcFile);
+                progress.setStatus("Exporting combined neuron file");
                 activityLog.logExportSWCFile(getCurrentWorkspace().getId(), swcFile.getName());
+
+                if (exportNotes) {
+                    progress.setStatus("Exporting combined notes file");
+                    NoteExporter.exportNotes(swcData.getPath(), getWsId(), swcData.getNeuronCenter(),
+                        neuronList, swcDataConverter);
+                }
             }
         }
 
@@ -1700,7 +1749,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             
             annotations.put(node.getIndex(), unserializedAnnotation);
             nodeParentLinkage.put(node.getIndex(), node.getParentIndex());
-            
+
             if (progress != null && (node.getIndex() % updateFrequency) == 0) {
                 progress.setProgress(node.getIndex(), totalLength);
             }
@@ -1716,8 +1765,46 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             Color color = new Color(colorArr[0], colorArr[1], colorArr[2]);
             neuron.setColor(color);
         }
-        
+
+        // need to save neuron now; notes have to be attached to the final
+        //  annotation IDs, not the placeholders that exist before the save
         neuronManager.saveNeuronData(neuron);
+
+        // check for corresponding notes file; if present, import notes
+
+        // find file; read and parse it
+        File notesFile = findNotesFile(swcFile);
+        if (notesFile.exists()) {
+            // read and parse
+            Map<Vec3, String> notes = parseNotesFile(notesFile);
+
+            // add notes to neuron; get a fresh copy that has updated ann IDs
+            neuron = neuronManager.getNeuronById(neuron.getId());
+            if (notes.size() > 0) {
+                ObjectMapper mapper = new ObjectMapper();
+
+                // unfortunately, the only way to associate the notes with the nodes
+                //  is through a brute-force search; we need to associate the locations
+                //  with the annotation ID, but those IDs are changed during the save,
+                //  and we can't track the mapping; the spatial index is built later
+                //  and asynchronously, so we don't have access to it now
+                // later testing: added a few random notes to a neuron with 28k nodes;
+                //  import took ~1s with or without notes
+                for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+                    for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
+                        Vec3 loc = new Vec3(ann.getX(), ann.getY(), ann.getZ());
+                        if (notes.containsKey(loc)) {
+                            // fortunately, we only need the simplest case seen in setNotes():
+                            ObjectNode node = mapper.createObjectNode();
+                            node.put("note", notes.get(loc));
+                            neuronManager.addStructuredTextAnnotation(neuron, ann.getId(), mapper.writeValueAsString(node));
+                        }
+                    }
+                }
+            // now save again, with the note data
+            neuronManager.saveNeuronData(neuron);
+            }
+        }
 
         // add it to the workspace
         neuronManager.addNeuron(neuron);
@@ -1725,11 +1812,65 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         return neuron;
     }
 
+    private File findNotesFile(File swcFile) {
+        String notesBase = FilenameUtils.removeExtension(swcFile.getName());
+        Path notePath = swcFile.toPath().getParent().resolve(notesBase + ".json");
+        return notePath.toFile();
+    }
+
+    private Map<Vec3, String> parseNotesFile(File notesFile) {
+        Map<Vec3, String> notes = new HashMap<>();
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode rootNode = null;
+        try {
+            rootNode = mapper.readTree(notesFile);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        JsonNode offsetNode = rootNode.path("offset");
+        JsonNode neuronsNode = rootNode.path("neurons");
+        if (offsetNode.isMissingNode() || neuronsNode.isMissingNode()) {
+            // trouble; bail out
+            return notes;
+        }
+
+        double[] offset = {0.0, 0.0, 0.0};
+        for (int i=0; i<3; i++) {
+            offset[i] = offsetNode.get(i).asDouble();
+        }
+
+        for (JsonNode neuronNode: neuronsNode) {
+            JsonNode notesNode = neuronNode.path("notes");
+            if (notesNode.isMissingNode()) {
+                // trouble; skip this node
+                continue;
+            }
+            for (JsonNode noteNode: notesNode) {
+
+                // from swc part, above:
+                double[] point = swcDataConverter.internalFromExternal(
+                        new double[]{
+                                noteNode.get(0).asDouble() + offset[0],
+                                noteNode.get(1).asDouble() + offset[1],
+                                noteNode.get(2).asDouble() + offset[2],});
+                Vec3 loc = new Vec3(point[0], point[1], point[2]);
+                notes.put(loc, noteNode.get(3).asText());
+            }
+        }
+        return notes;
+    }
+
     // and now we have all the NeuronTagMap methods...in each case, it's a simple
     //  wrapper where for mutating calls, we save the map and fire appropriate updates
 
     public Set<String> getPredefinedNeuronTags() {
         return currentTagMap.getPredefinedTags();
+    }
+    
+    public TmNeuronTagMap getAllTagMeta() {
+        return currentTagMap;
     }
 
     public Set<String> getAvailableNeuronTags() {
@@ -1745,6 +1886,78 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public Set<String> getAllNeuronTags() {
         return currentTagMap.getAllTags();
     }
+    
+    public void saveTagMeta(Map<String,Map<String,Object>> allTagMeta) throws Exception {
+        currentTagMap.saveTagGroupMappings(allTagMeta);
+        // persist this map as a user preference for now
+        saveUserPreferences();
+        
+        // sync up with Horta
+        if (neuronSetAdapter.getMetaWorkspace()!=null) {
+            neuronSetAdapter.getMetaWorkspace().setTagMetadata(currentTagMap);
+        }
+    }
+    
+    public void setTagMeta(String tagName, Map<String,Object> meta) {
+        currentTagMap.setTagGroupMapping(tagName, meta);
+    }
+    
+    public Map<String,Object> getTagGroupMapping(String tagName) {
+        return currentTagMap.geTagGroupMapping(tagName);
+    }
+    
+    public Map<String,Map<String,Object>> getTagGroupMappings() {
+        // if load is interrupted, currentTagMap could be null:
+        if (currentTagMap != null) {
+            return currentTagMap.getAllTagGroupMappings();
+        } else {
+            return new HashMap<>();
+        }
+    }
+    
+    public Boolean getToggleUserGroupState () {
+        return currentTagMap.isSaveUserGroupState();
+    }
+    
+    public void setToggleUserGroupState(boolean saveState) {
+        currentTagMap.setSaveUserGroupState(saveState);
+    }
+    
+     public void loadUserPreferences() throws Exception {
+         if (this.getCurrentSample()==null || this.getCurrentSample().getId()==null) return;
+         Map<String,Map<String,Object>> tagGroupMappings = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), null);
+        if (tagGroupMappings!=null && currentTagMap!=null) {
+            currentTagMap.saveTagGroupMappings(tagGroupMappings);
+            if (neuronSetAdapter!=null && neuronSetAdapter.getMetaWorkspace()!=null) {
+                neuronSetAdapter.getMetaWorkspace().setTagMetadata(currentTagMap);
+            }
+            
+            // set toggled group properties on load-up
+            Iterator<String> groupTags = tagGroupMappings.keySet().iterator();
+            while (groupTags.hasNext()) {
+                String groupKey = groupTags.next();
+                Set<TmNeuronMetadata> neurons = getNeuronsForTag(groupKey);
+                List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
+                Map<String,Object> groupMapping = currentTagMap.geTagGroupMapping(groupKey);
+                if (groupMapping!=null && groupMapping.get("toggled")!=null && ((Boolean)groupMapping.get("toggled"))) {
+                    String property = (String)groupMapping.get("toggleprop");                
+                    if (property.equals(NeuronGroupsDialog.PROPERTY_RADIUS)) {
+                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, true);                               
+                    } else if (property.equals(NeuronGroupsDialog.PROPERTY_VISIBILITY)) {
+                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, false);                                        
+                    } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
+                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, true);                                 
+                    }
+                }
+            }
+        }
+    }
+
+    public void saveUserPreferences() throws Exception {
+        // for now use the tag map as the user preferences... as preferences increase, generalize the structure
+        FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), currentTagMap.getAllTagGroupMappings());
+    }
+    
 
     public Set<TmNeuronMetadata> getNeuronsForTag(String tag) {
         return currentTagMap.getNeurons(tag);

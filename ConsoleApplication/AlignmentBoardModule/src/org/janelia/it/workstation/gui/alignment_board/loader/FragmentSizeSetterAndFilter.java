@@ -6,6 +6,7 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RDCompar
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.workstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver;
+import org.janelia.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +14,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
 import org.janelia.it.jacs.model.common.SystemConfigurationProperties;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;

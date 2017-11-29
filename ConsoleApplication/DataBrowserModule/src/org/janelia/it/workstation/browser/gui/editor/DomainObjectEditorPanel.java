@@ -5,11 +5,11 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,13 +88,15 @@ public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JP
         // Prepare to restore the page
         getResultsPanel().setCurrPage(state.getPage());
 
+        getResultsPanel().getViewer().restoreState(state.getListViewerState());
+        
         // Prepare to restore viewer state, after the reload
         Callable<Void> success = new Callable<Void>() {
             @Override
             public Void call() throws Exception {
                 if (state.getListViewerState()!=null) {
                     log.info("State load completed, restoring viewer state {}", state.getListViewerState());
-                    getResultsPanel().getViewer().restoreState(state.getListViewerState());
+//                    getResultsPanel().getViewer().restoreState(state.getListViewerState());
                 }
                 return null;
             }

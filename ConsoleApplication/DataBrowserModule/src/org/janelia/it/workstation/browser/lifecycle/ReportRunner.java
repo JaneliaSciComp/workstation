@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
-import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.SessionMgr;
 
 /**
  * This collects events for forwarding in batch.
@@ -52,7 +52,7 @@ public class ReportRunner implements Runnable {
                         continue;
                     }
                     String discriminator = discriminators.get(i);
-                    AccessManager.getAccessManager().logBatchToolEvent(TOOL_STRING, CATEGORY_STRING, discriminator, messages);
+                    SessionMgr.getSessionMgr().logBatchToolEvent(TOOL_STRING, CATEGORY_STRING, discriminator, messages);
                 }
 
             } catch (Exception ex) {

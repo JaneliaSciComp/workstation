@@ -5,7 +5,6 @@ import java.util.logging.LogManager;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ServiceMgr;
-import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationOpening;
 import org.janelia.it.workstation.browser.logging.LogFormatter;
@@ -51,7 +50,7 @@ public class Startup implements Runnable {
          *       ALL
          */
         System.setProperty("org.janelia.it.workstation.browser.level", "INFO");
-//        System.setProperty("org.janelia.it.workstation.browser.gui.dialogs.download.level", "FINEST");
+        //System.setProperty("org.janelia.it.workstation.browser.gui.dialogs.download.level", "FINEST");
         
         try {
             // Re-read the configuration to parse the system properties we just defined
@@ -83,9 +82,6 @@ public class Startup implements Runnable {
         // Create the main console app frame
         ConsoleApp app = ConsoleApp.getConsoleApp();
         
-        // Set the Look and Feel
-        StateMgr.getStateMgr().initLAF();
-
         // Load the branding config so that the user settings are available for logging 
         // in the next step (init user session)
         try {

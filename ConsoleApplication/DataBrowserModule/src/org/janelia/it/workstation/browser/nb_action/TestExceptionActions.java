@@ -9,8 +9,8 @@ import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.enums.SubjectRole;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.model.domain.enums.SubjectRole;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;

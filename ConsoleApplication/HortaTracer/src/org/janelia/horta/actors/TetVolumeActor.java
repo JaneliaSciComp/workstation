@@ -71,6 +71,7 @@ import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.Finest8DisplayBlockChooser;
 import org.janelia.horta.blocks.KtxTileCache;
 import org.janelia.horta.blocks.OneFineDisplayBlockChooser;
+import org.janelia.horta.blocks.XYDisplayBlockChooser;
 import org.openide.util.Exceptions;
 import org.openide.util.lookup.Lookups;
 import org.slf4j.Logger;
@@ -114,6 +115,9 @@ implements DepthSlabClipper
     private final BlockChooser chooser1 = new OneFineDisplayBlockChooser(); // for proof-of-concept and debugging
     private final BlockChooser chooser8 = new Finest8DisplayBlockChooser();
     private final BlockDisplayUpdater blockDisplayUpdater = new BlockDisplayUpdater(chooser8);
+    // this is a test alternate block chooser (a wide xy array of blocks); not currently used
+    // private final BlockChooser chooserxy = new XYDisplayBlockChooser();
+    // private final BlockDisplayUpdater blockDisplayUpdater = new BlockDisplayUpdater(chooserxy);
     
     private final Collection<GL3Resource> obsoleteActors = new ArrayList<>();
 

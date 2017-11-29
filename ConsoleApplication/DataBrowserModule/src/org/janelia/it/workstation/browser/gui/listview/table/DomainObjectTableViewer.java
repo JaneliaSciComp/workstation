@@ -25,14 +25,6 @@ import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableModel;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.interfaces.IsParent;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
@@ -53,8 +45,19 @@ import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
+import org.janelia.model.access.domain.DomainObjectAttribute;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.access.domain.DynamicDomainObjectProxy;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.interfaces.IsParent;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.workspace.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * A table viewer for domain objects.
@@ -581,34 +584,4 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         );
     }
 
-    private class TableViewerState extends ListViewerState {
-
-        private final int horizontalScrollValue;
-        private final int verticalScrollValue;
-
-        public TableViewerState(int horizontalScrollValue, int verticalScrollValue) {
-            super(ListViewerType.TableViewer);
-            this.horizontalScrollValue = horizontalScrollValue;
-            this.verticalScrollValue = verticalScrollValue;
-        }
-
-        public int getHorizontalScrollValue() {
-            return horizontalScrollValue;
-        }
-
-        public int getVerticalScrollValue() {
-            return verticalScrollValue;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder builder = new StringBuilder();
-            builder.append("TableViewerState [horizontalScrollValue=");
-            builder.append(horizontalScrollValue);
-            builder.append(", verticalScrollValue=");
-            builder.append(verticalScrollValue);
-            builder.append("]");
-            return builder.toString();
-        }
-    }
 }

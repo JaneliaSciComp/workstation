@@ -7,12 +7,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.InvertingComparator;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RBComparator;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.model.domain.sample.NeuronFragment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

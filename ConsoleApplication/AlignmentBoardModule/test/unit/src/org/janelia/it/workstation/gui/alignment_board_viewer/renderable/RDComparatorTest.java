@@ -1,9 +1,9 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.renderable;
 
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.junit.Test;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.model.domain.compartments.CompartmentSet;
 import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;

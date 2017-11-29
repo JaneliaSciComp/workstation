@@ -1,9 +1,9 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.masking;
 
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.model.domain.compartments.Compartment;
+import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.jacs.model.domain.compartments.Compartment;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 
 import org.junit.Test;

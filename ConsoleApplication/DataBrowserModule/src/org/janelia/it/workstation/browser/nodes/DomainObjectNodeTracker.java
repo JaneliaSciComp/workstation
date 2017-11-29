@@ -8,8 +8,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
+import org.janelia.model.domain.DomainObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

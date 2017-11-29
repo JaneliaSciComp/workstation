@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,18 +26,6 @@ import javax.swing.KeyStroke;
 
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.SampleUtils;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
@@ -72,8 +61,21 @@ import org.janelia.it.workstation.browser.nb_action.SetPublishingNameAction;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
+import org.janelia.it.workstation.browser.workers.SimpleListenableFuture;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.access.domain.SampleUtils;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.workspace.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,10 +87,13 @@ import org.slf4j.LoggerFactory;
 public class DomainObjectContextMenu extends PopupContextMenu {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
-    public static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
-    public static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
-    public static final String NEURON_SEP_REMOVAL_MSG = "Remove/preclude Neuron Separation(s)";
-
+    
+    private static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
+    private static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
+    private static final String NEURON_SEP_REMOVAL_MSG = "Remove/preclude Neuron Separation(s)";
+    private static final String WEBSTATION_URL = ConsoleProperties.getInstance().getProperty("webstation.url"); 
+    private static final String HELP_EMAIL = ConsoleProperties.getString("console.HelpEmail");
+    
     // Current selection
     protected DomainObject contextObject;
     protected List<DomainObject> domainObjectList;
@@ -359,36 +364,22 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     ActivityLogHelper.logUserAction("DomainObjectContentMenu.reportAProblemWithThisData", domainObject);
 
                     final ApplyAnnotationAction action = ApplyAnnotationAction.get();
-                    final String value = (String)JOptionPane.showInputDialog(mainFrame,
-                            "Please provide details:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
-                    if (StringUtils.isEmpty(value)) return;
-
-                    SimpleWorker simpleWorker = new SimpleWorker() {
-                        @Override
-                        protected void doStuff() throws Exception {
-                            action.addAnnotation(domainObject, term, value);
-                            String annotationValue = "";
-                            List<Annotation> annotations = DomainMgr.getDomainMgr().getModel().getAnnotations(domainObject);
-                            for (Annotation annotation : annotations) {
-                                if (annotation.getKeyTerm().getOntologyTermId().equals(term.getId())) {
-                                    annotationValue = annotation.getName();
+                    SimpleListenableFuture<List<Annotation>> future = action.annotateReferences(term, Arrays.asList(Reference.createFor(domainObject)));
+                   
+                    if (future!=null) {
+                        future.addListener(() -> {
+                            try {
+                                List<Annotation> annotations = future.get();
+                                if (annotations!=null && !annotations.isEmpty()) {
+                                    DataReporter reporter = new DataReporter(AccessManager.getUserEmail(), HELP_EMAIL, WEBSTATION_URL);
+                                    reporter.reportData(domainObject, annotations.get(0).getName());
                                 }
                             }
-                            DataReporter reporter = new DataReporter((String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL), ConsoleProperties.getString("console.HelpEmail"));
-                            reporter.reportData(domainObject, annotationValue);
-                        }
-
-                        @Override
-                        protected void hadSuccess() {
-                        }
-
-                        @Override
-                        protected void hadError(Throwable error) {
-                            ConsoleApp.handleException(error);
-                        }
-                    };
-
-                    simpleWorker.execute();
+                            catch (Exception ex) {
+                                ConsoleApp.handleException(ex);
+                            }
+                        });
+                    }
                 }
             });
 

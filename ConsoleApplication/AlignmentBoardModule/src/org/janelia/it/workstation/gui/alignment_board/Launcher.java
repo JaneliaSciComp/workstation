@@ -3,9 +3,9 @@ package org.janelia.it.workstation.gui.alignment_board;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.gui.alignment_board.AlignmentBoard;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
 import org.openide.windows.TopComponentGroup;

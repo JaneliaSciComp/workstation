@@ -4,26 +4,26 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
-import org.janelia.it.jacs.model.domain.interfaces.HasFilepath;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
-import org.janelia.it.jacs.model.domain.support.MapUnion;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.access.domain.DynamicDomainObjectProxy;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasAnatomicalArea;
+import org.janelia.model.domain.interfaces.HasFilepath;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.NeuronSeparation;
+import org.janelia.model.domain.sample.ObjectiveSample;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.util.MapUnion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +59,7 @@ public class DownloadFileItem {
     private File targetFile;
     private String sourceExtension;
     private String targetExtension;
+
     
     public DownloadFileItem(List<String> itemPath, DomainObject domainObject) {
         this.itemPath = itemPath;
@@ -77,6 +78,10 @@ public class DownloadFileItem {
         this.errorMessage = null;
         this.resultName = null;
         this.targetFile = null;
+        
+        if (!fileType.is3dImage() && splitChannels) {
+            throw new IllegalStateException("Cannot split channels for non-3d image");
+        }
         
         String sourceFilePath = DomainUtils.getFilepath(fileProvider, fileType);
         if (sourceFilePath==null) {

@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.browser.nodes;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.interfaces.HasIdentifier;
 
 /**
  * Interface for NetBeans Nodes which wrap domain objects.  

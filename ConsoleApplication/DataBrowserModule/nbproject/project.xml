@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>2.4</specification-version>
+                        <specification-version>2.12</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -21,7 +21,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>2.4</specification-version>
+                        <specification-version>2.12</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -30,7 +30,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>2.4</specification-version>
+                        <specification-version>2.12</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -39,7 +39,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>2.4</specification-version>
+                        <specification-version>2.12</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -230,9 +230,11 @@
                 <package>org.janelia.it.workstation.browser.api.facade.impl.ejb</package>
                 <package>org.janelia.it.workstation.browser.api.facade.impl.rest</package>
                 <package>org.janelia.it.workstation.browser.api.facade.interfaces</package>
+                <package>org.janelia.it.workstation.browser.api.http</package>
                 <package>org.janelia.it.workstation.browser.api.lifecycle</package>
                 <package>org.janelia.it.workstation.browser.api.services</package>
                 <package>org.janelia.it.workstation.browser.api.state</package>
+                <package>org.janelia.it.workstation.browser.api.web</package>
                 <package>org.janelia.it.workstation.browser.components</package>
                 <package>org.janelia.it.workstation.browser.events</package>
                 <package>org.janelia.it.workstation.browser.events.lifecycle</package>
@@ -255,17 +257,18 @@
                 <package>org.janelia.it.workstation.browser.gui.options</package>
                 <package>org.janelia.it.workstation.browser.gui.progress</package>
                 <package>org.janelia.it.workstation.browser.gui.support</package>
+                <package>org.janelia.it.workstation.browser.gui.support.buttons</package>
                 <package>org.janelia.it.workstation.browser.gui.support.panels</package>
                 <package>org.janelia.it.workstation.browser.gui.table</package>
                 <package>org.janelia.it.workstation.browser.gui.tree</package>
                 <package>org.janelia.it.workstation.browser.lifecycle</package>
                 <package>org.janelia.it.workstation.browser.logging</package>
                 <package>org.janelia.it.workstation.browser.model</package>
+                <package>org.janelia.it.workstation.browser.model.descriptors</package>
                 <package>org.janelia.it.workstation.browser.model.keybind</package>
                 <package>org.janelia.it.workstation.browser.model.search</package>
                 <package>org.janelia.it.workstation.browser.nb_action</package>
                 <package>org.janelia.it.workstation.browser.nodes</package>
-                <package>org.janelia.it.workstation.browser.sample_trimming</package>
                 <package>org.janelia.it.workstation.browser.tools</package>
                 <package>org.janelia.it.workstation.browser.tools.preferences</package>
                 <package>org.janelia.it.workstation.browser.util</package>

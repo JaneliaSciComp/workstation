@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.slf4j.Logger;

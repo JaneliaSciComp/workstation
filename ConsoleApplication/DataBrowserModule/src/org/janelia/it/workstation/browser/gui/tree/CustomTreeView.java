@@ -151,6 +151,7 @@ public class CustomTreeView extends BeanTreeView {
     }
     
     public void selectPaths(List<Long[]> paths) {
+        if (paths==null) return;
         ExplorerManager mgr = explorerManagerProvider.getExplorerManager();
         try {
             List<Node> nodes = new ArrayList<>();
