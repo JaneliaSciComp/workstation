@@ -1,3 +1,8 @@
+// 7.0.3
+
+Large Volume Viewer
+* Fixed issue with casting JSON response to Long on Sample creation
+
 // 7.0.2
 
 Workstation Browser
