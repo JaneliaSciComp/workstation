@@ -4,12 +4,12 @@ package org.janelia.it.workstation.ab2;
 import java.util.List;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.sample.ObjectiveSample;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SamplePipelineRun;
+import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.it.workstation.ab2.api.AB2RestClient;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;

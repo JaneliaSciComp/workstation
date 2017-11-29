@@ -3,7 +3,7 @@ package org.janelia.it.workstation.ab2.model;
 import java.util.Date;
 import java.util.Set;
 
-import org.janelia.it.jacs.model.domain.AbstractDomainObject;
+import org.janelia.model.domain.AbstractDomainObject;
 
 public class AB2DomainObject extends AbstractDomainObject
 {

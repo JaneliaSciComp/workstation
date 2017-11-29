@@ -7,8 +7,8 @@ package org.janelia.it.workstation.ab2;
 
 import javax.swing.BoxLayout;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.sample.Sample;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.model.AB2Data;
