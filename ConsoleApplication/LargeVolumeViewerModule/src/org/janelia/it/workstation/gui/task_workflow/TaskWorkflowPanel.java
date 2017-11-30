@@ -12,15 +12,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.AbstractTableModel;
 
 import org.janelia.console.viewerapi.SampleLocation;
@@ -59,6 +52,7 @@ public class TaskWorkflowPanel extends JPanel {
     private void setupUI() {
 
         setLayout(new GridBagLayout());
+        setBorder(new EmptyBorder(5, 5, 5, 5));
 
         GridBagConstraints cTop = new GridBagConstraints();
         cTop.gridx = 0;
@@ -82,23 +76,20 @@ public class TaskWorkflowPanel extends JPanel {
                 JTable table = (JTable) me.getSource();
                 int viewRow = table.rowAtPoint(me.getPoint());
                 if (viewRow >= 0) {
-                    int modelRow = pointTable.convertRowIndexToModel(viewRow);
-
-                    int viewColumn = table.columnAtPoint(me.getPoint());
-                    int modelColumn = pointTable.convertColumnIndexToModel(viewColumn);
-
                     // we don't do anything on click in the boolean column (it'll
                     //  toggle by itself); on a click in x, y, z columns, go to
                     //  the point
+                    int viewColumn = table.columnAtPoint(me.getPoint());
+                    int modelColumn = pointTable.convertColumnIndexToModel(viewColumn);
                     if (modelColumn != 3) {
-                        gotoPoint((double) pointModel.getValueAt(modelRow, 0),
-                            (double) pointModel.getValueAt(modelRow, 1),
-                            (double) pointModel.getValueAt(modelRow, 2));
+                        selectGoto(viewRow);
                     }
                 }
                 me.consume();
             }
         });
+        pointTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
 
         JScrollPane scrollPane = new JScrollPane(pointTable);
         pointTable.setFillsViewportHeight(true);
@@ -131,9 +122,10 @@ public class TaskWorkflowPanel extends JPanel {
         // this isn't ready yet
         JPanel taskButtonsPanel = new JPanel();
         taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
+        taskButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         add(taskButtonsPanel, cVert);
 
-        JButton nextButton = new JButton("Next");
+        JButton nextButton = new JButton("Next unreviewed");
         nextButton.addActionListener(event -> onNextButton());
         taskButtonsPanel.add(nextButton);
 
@@ -141,6 +133,7 @@ public class TaskWorkflowPanel extends JPanel {
         // workflow management buttons: load, done (?)
         JPanel workflowButtonsPanel = new JPanel();
         workflowButtonsPanel.setLayout(new BoxLayout(workflowButtonsPanel, BoxLayout.LINE_AXIS));
+        workflowButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         add(workflowButtonsPanel, cVert);
 
         workflowButtonsPanel.add(Box.createHorizontalGlue());
@@ -199,23 +192,49 @@ public class TaskWorkflowPanel extends JPanel {
      * the next button brings you to the next unreviewed point
      */
     private void onNextButton() {
-
-        System.out.println("onNextButton()");
-
         if (hasPoints()) {
-
+            // note: "next" is relative to view state, not model!
             int viewRow = pointTable.getSelectedRow();
+            int startRow;
             if (viewRow >= 0) {
-                // selection exists; find it
-                int modelRow = pointTable.convertRowIndexToModel(viewRow);
-
+                // selection exists
+                startRow = viewRow + 1;
+                if (startRow >= pointModel.getRowCount()) {
+                    startRow = 0;
+                }
             } else {
-                // no selection = go to first unreviewed point
+                // no selection
+                startRow = 0;
             }
-
-
-
+            // working from start row, find the next unreviewed row:
+            int testRow = startRow;
+            while (pointModel.isReviewed(pointTable.convertRowIndexToModel(testRow))) {
+                testRow++;
+                if (testRow >= pointModel.getRowCount()) {
+                    testRow = 0;
+                }
+                if (testRow == startRow) {
+                    JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                            "All points have been reviewed.",
+                            "Nothing left",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+            }
+            selectGoto(testRow);
         }
+    }
+
+    /**
+     * select the given table row and go to the point it contains
+     */
+    private void selectGoto(int viewRow) {
+        pointTable.getSelectionModel().setSelectionInterval(viewRow, viewRow);
+
+        int modelRow = pointTable.convertRowIndexToModel(viewRow);
+        gotoPoint((double) pointModel.getValueAt(modelRow, 0),
+                (double) pointModel.getValueAt(modelRow, 1),
+                (double) pointModel.getValueAt(modelRow, 2));
     }
 
     /**
@@ -397,6 +416,10 @@ class PointTableModel extends AbstractTableModel {
             default:
                 return null;
         }
+    }
+
+    public boolean isReviewed(int row) {
+        return (boolean) getValueAt(row, 3);
     }
 
     @Override
