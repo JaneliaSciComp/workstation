@@ -129,7 +129,6 @@ public class TaskWorkflowPanel extends JPanel {
 
         // task transition buttons (next, previous, etc)
         // this isn't ready yet
-        /*
         JPanel taskButtonsPanel = new JPanel();
         taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
         add(taskButtonsPanel, cVert);
@@ -137,7 +136,6 @@ public class TaskWorkflowPanel extends JPanel {
         JButton nextButton = new JButton("Next");
         nextButton.addActionListener(event -> onNextButton());
         taskButtonsPanel.add(nextButton);
-         */
 
 
         // workflow management buttons: load, done (?)
@@ -261,7 +259,8 @@ public class TaskWorkflowPanel extends JPanel {
      * pop a file chooser; load and parse a point file; return list of points
      *
      * file format:
-     *      -- one point per line = whitespace-delimited x, y, z
+     *      -- one point per line = whitespace-delimited x, y, z (preferred)
+     *      -- one point per line = [x, y, z] (allowed, matches "copy coord to clipboard" format)
      *      -- blank lines allowed
      *      -- comment lines start with #
      */
@@ -298,6 +297,12 @@ public class TaskWorkflowPanel extends JPanel {
                     // if blank or starts with #, do nothing
                     continue;
                 } else {
+                    // to allow the [x, y, z] format from "copy coord to clipboard",
+                    //  we need only remove the [,] characters and it becomes whitespace delimited
+                    line = line.replace("[", "");
+                    line = line.replace(",", "");
+                    line = line.replace("]", "");
+
                     String[] items = line.split("\\s+");
                     if (items.length != 3) {
                         nerrors++;
