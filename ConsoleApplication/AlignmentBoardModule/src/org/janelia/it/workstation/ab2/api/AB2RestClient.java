@@ -68,15 +68,22 @@ public class AB2RestClient {
         MultiPart multipart = response.readEntity(MultiPart.class);
         byte[] data=null;
         for (BodyPart bodyPart : multipart.getBodyParts()) {
-            data=bodyPart.getEntityAs(byte[].class);
-            log.info("Received "+data.length+" bytes");
-            byte[] dimBytes=new byte[12];
-            for (int i=0;i<12;i++) { dimBytes[i]=data[i]; }
-            IntBuffer intBuf = ByteBuffer.wrap(dimBytes).asIntBuffer();
-            int[] dimArray = new int[intBuf.remaining()];
-            intBuf.get(dimArray);
-            for (int j=0;j<dimArray.length;j++) {
-                log.info("dim="+j+" value="+dimArray[j]);
+            if (bodyPart.getMediaType().equals(MediaType.TEXT_PLAIN_TYPE)) {
+                String testString = bodyPart.getEntityAs(String.class);
+                log.info("Received testString="+testString);
+            } else if (bodyPart.getMediaType().equals(MediaType.APPLICATION_OCTET_STREAM_TYPE)) {
+                data = bodyPart.getEntityAs(byte[].class);
+                log.info("Received " + data.length + " bytes");
+                byte[] dimBytes = new byte[12];
+                for (int i = 0; i < 12; i++) {
+                    dimBytes[i] = data[i];
+                }
+                IntBuffer intBuf = ByteBuffer.wrap(dimBytes).asIntBuffer();
+                int[] dimArray = new int[intBuf.remaining()];
+                intBuf.get(dimArray);
+                for (int j = 0; j < dimArray.length; j++) {
+                    log.info("dim=" + j + " value=" + dimArray[j]);
+                }
             }
         }
         return data;
