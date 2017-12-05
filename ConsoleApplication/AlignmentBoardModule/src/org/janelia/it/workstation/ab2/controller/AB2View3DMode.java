@@ -7,11 +7,13 @@ import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.workstation.ab2.event.AB2MouseBeginDragEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseWheelEvent;
 import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2MouseDraggedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseReleasedEvent;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,8 +83,11 @@ public class AB2View3DMode extends AB2ControllerMode {
         AB2UserContext userContext=AB2Controller.getController().getUserContext();
         if (event instanceof AB2MouseReleasedEvent) {
             if (userContext.isMouseIsDragging()) {
-                // need to notify current drag renderer of release event
-                userContext.setMouseIsDragging(false);
+                AB2Renderer dragRenderer=userContext.getCurrentDragRenderer();
+                if (dragRenderer!=null) {
+                    dragRenderer.processEvent(event);
+                }
+                userContext.clear();
             }
         } else if (event instanceof AB2MouseDraggedEvent) {
             MouseEvent mouseEvent=((AB2MouseDraggedEvent) event).getMouseEvent();
@@ -90,40 +95,26 @@ public class AB2View3DMode extends AB2ControllerMode {
 
             if (!userContext.isMouseIsDragging()) {
                 userContext.setMouseIsDragging(true);
-                userContext.setPreviousMousePos(p1);
+                userContext.getPositionHistory().add(p1);
+                AB2Renderer dragRenderer=getRendererAtPosition(p1);
+                AB2MouseBeginDragEvent beginDragEvent=new AB2MouseBeginDragEvent(((AB2MouseDraggedEvent) event).getMouseEvent());
+                if (dragRenderer!=null) {
+                    dragRenderer.processEvent(beginDragEvent);
+                }
+                userContext.setCurrentDragRenderer(dragRenderer);
                 return;
             }
 
-            Point p0 = previousMousePos;
-            Point dPos = new Point(p1.x-p0.x, p1.y-p0.y);
-
-            InteractionMode mode = InteractionMode.ROTATE; // default drag controller is ROTATE
-            if (mouseEvent.isMetaDown()) // command-drag to zoom
-                mode = InteractionMode.ZOOM;
-            if (SwingUtilities.isMiddleMouseButton(mouseEvent)) // middle drag to translate
-                mode = InteractionMode.TRANSLATE;
-            if (mouseEvent.isShiftDown()) // shift-drag to translate
-                mode = InteractionMode.TRANSLATE;
-
-            if (mode == InteractionMode.TRANSLATE) {
-                renderer.translatePixels(dPos.x, dPos.y, 0);
-                controller.repaint();
-            }
-            else if (mode == InteractionMode.ROTATE) {
-                renderer.rotatePixels(dPos.x, dPos.y, 0);
-                controller.repaint();
-            }
-            else if (mode == InteractionMode.ZOOM) {
-                renderer.zoomPixels(p1, p0);
-                controller.repaint();
-            }
-
-            previousMousePos = p1;
+            // Assume we have an established drag state
+            userContext.getPositionHistory().add(p1);
+            AB2Renderer dragRenderer=userContext.getCurrentDragRenderer();
+            dragRenderer.processEvent(event);
+            controller.repaint();
         } else if (event instanceof AB2MouseWheelEvent) {
-            int notches = ((AB2MouseWheelEvent) event).getMouseWheelEvent().getWheelRotation();
-            double zoomRatio = Math.pow(2.0, notches/50.0);
-            renderer.zoom(zoomRatio);
+            AB2Renderer currentRenderer=getRendererAtPosition(((AB2MouseWheelEvent) event).getMouseWheelEvent().getPoint());
+            currentRenderer.processEvent(event);
             controller.repaint();
         }
     }
+
 }

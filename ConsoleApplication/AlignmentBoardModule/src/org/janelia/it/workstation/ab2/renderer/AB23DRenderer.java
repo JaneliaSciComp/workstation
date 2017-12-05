@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.ab2.renderer;
 
 import java.awt.Point;
+import java.awt.event.MouseEvent;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -13,6 +14,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 
 import javax.media.opengl.GL4;
 import javax.media.opengl.glu.GLU;
+import javax.swing.SwingUtilities;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -27,7 +29,13 @@ import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.geometry3d.camera.ConstRotation;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
+import org.janelia.it.workstation.ab2.controller.AB2UserContext;
+import org.janelia.it.workstation.ab2.controller.AB2View3DMode;
 import org.janelia.it.workstation.ab2.event.AB2Event;
+import org.janelia.it.workstation.ab2.event.AB2MouseBeginDragEvent;
+import org.janelia.it.workstation.ab2.event.AB2MouseDraggedEvent;
+import org.janelia.it.workstation.ab2.event.AB2MouseReleasedEvent;
+import org.janelia.it.workstation.ab2.event.AB2MouseWheelEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
@@ -624,7 +632,36 @@ public abstract class AB23DRenderer extends AB2Renderer implements AB2Renderer3D
 
     @Override
     public void processEvent(AB2Event event) {
+        AB2UserContext userContext=AB2Controller.getController().getUserContext();
+        if (event instanceof AB2MouseDraggedEvent) {
+            MouseEvent mouseEvent=((AB2MouseDraggedEvent) event).getMouseEvent();
+            List<Point> points=userContext.getPositionHistory();
+            if (points.size()>1) {
+                Point p0=points.get(points.size()-2);
+                Point p1=points.get(points.size()-1);
+                Point dPos = new Point(p1.x-p0.x, p1.y-p0.y);
 
+                AB2View3DMode.InteractionMode mode = AB2View3DMode.InteractionMode.ROTATE; // default drag controller is ROTATE
+                if (mouseEvent.isMetaDown()) // command-drag to zoom
+                    mode = AB2View3DMode.InteractionMode.ZOOM;
+                if (SwingUtilities.isMiddleMouseButton(mouseEvent)) // middle drag to translate
+                    mode = AB2View3DMode.InteractionMode.TRANSLATE;
+                if (mouseEvent.isShiftDown()) // shift-drag to translate
+                    mode = AB2View3DMode.InteractionMode.TRANSLATE;
+
+                if (mode == AB2View3DMode.InteractionMode.TRANSLATE) {
+                    translatePixels(dPos.x, dPos.y, 0);
+                } else if (mode == AB2View3DMode.InteractionMode.ROTATE) {
+                    rotatePixels(dPos.x, dPos.y, 0);
+                } else if (mode == AB2View3DMode.InteractionMode.ZOOM) {
+                    zoomPixels(p1, p0);
+                }
+            }
+        } else if (event instanceof AB2MouseWheelEvent) {
+            int notches = ((AB2MouseWheelEvent) event).getMouseWheelEvent().getWheelRotation();
+            double zoomRatio = Math.pow(2.0, notches/50.0);
+            zoom(zoomRatio);
+        }
     }
 
 }
