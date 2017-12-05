@@ -34,9 +34,8 @@ import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AB23DRenderer implements AB2Renderer3DControls {
+public abstract class AB23DRenderer extends AB2Renderer implements AB2Renderer3DControls {
     Logger logger = LoggerFactory.getLogger(AB23DRenderer.class);
-    protected static GLU glu = new GLU();
 
     public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2500;
     protected static final double MAX_CAMERA_FOCUS_DISTANCE = 1000000.0;
@@ -621,6 +620,11 @@ public abstract class AB23DRenderer implements AB2Renderer3DControls {
                 rtnVal = "--Message not decoded: " + status;
         }
         return rtnVal;
+    }
+
+    @Override
+    public void processEvent(AB2Event event) {
+
     }
 
 }

@@ -78,16 +78,19 @@ public class AB2View3DMode extends AB2ControllerMode {
 
     @Override
     public void processEvent(AB2Event event) {
+        AB2UserContext userContext=AB2Controller.getController().getUserContext();
         if (event instanceof AB2MouseReleasedEvent) {
-            if (bMouseIsDragging) {
-                bMouseIsDragging=false;
+            if (userContext.isMouseIsDragging()) {
+                // need to notify current drag renderer of release event
+                userContext.setMouseIsDragging(false);
             }
         } else if (event instanceof AB2MouseDraggedEvent) {
             MouseEvent mouseEvent=((AB2MouseDraggedEvent) event).getMouseEvent();
             Point p1 = mouseEvent.getPoint();
-            if (! bMouseIsDragging) {
-                bMouseIsDragging = true;
-                previousMousePos = p1;
+
+            if (!userContext.isMouseIsDragging()) {
+                userContext.setMouseIsDragging(true);
+                userContext.setPreviousMousePos(p1);
                 return;
             }
 

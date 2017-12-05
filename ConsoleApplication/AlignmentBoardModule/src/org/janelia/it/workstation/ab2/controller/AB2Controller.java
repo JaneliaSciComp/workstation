@@ -53,6 +53,7 @@ public class AB2Controller implements GLEventListener {
     private AB2DomainObject domainObject;
     private AB2Event[] pickEventLookup=new AB2Event[MAX_PICK_IDS];
     private int pickCounter=0;
+    private AB2UserContext userContext=new AB2UserContext();
 
     public static AB2Controller getController() {
         if (instance==null) {
@@ -67,6 +68,10 @@ public class AB2Controller implements GLEventListener {
         controllerExecutor=Executors.newSingleThreadScheduledExecutor();
         eventHandler=new EventHandler();
         populateModeMap();
+    }
+
+    public AB2UserContext getUserContext() {
+        return userContext;
     }
 
     public synchronized int getNextPickIndex() {
