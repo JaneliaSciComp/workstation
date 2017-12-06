@@ -1,4 +1,5 @@
-// 7.0.4
+// 7.1
 
-Large Volume Viewer  
-* Fixed issue with exporting multiple neurons to file without .swc extension
+Workstation Browser
+* "Open in Fiji" now works even when displaying post processed results
+* Added Polarity Case 5 pipeline
