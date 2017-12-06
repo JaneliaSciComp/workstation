@@ -75,7 +75,8 @@ public class AB2View3DMode extends AB2ControllerMode {
     @Override
     public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3) {
         final GL4 gl=glAutoDrawable.getGL().getGL4();
-        renderer.reshape(gl, i, i1, i2, i3);
+        logger.info("reshapse "+i+" "+i1+" "+i2+" "+i3);
+        renderer.reshape(gl, i, i1, i2, i3, i2, i3);
     }
 
     @Override

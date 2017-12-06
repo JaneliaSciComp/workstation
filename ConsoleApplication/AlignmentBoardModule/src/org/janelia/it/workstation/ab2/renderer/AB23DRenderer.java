@@ -381,7 +381,8 @@ public abstract class AB23DRenderer extends AB2Renderer implements AB2Renderer3D
         return Math.abs( camera3d.getCameraFocusDistance() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
     }
 
-    public void reshape(GL4 gl, int x, int y, int width, int height) {
+    @Override
+    public void reshape(GL4 gl, int x, int y, int width, int height, int screenWidth, int screenHeight) {
         //logger.info("reshape() x="+x+" y="+y+" width="+width+" height="+height);
         viewport.setHeightPixels(height);
         viewport.setWidthPixels(width);

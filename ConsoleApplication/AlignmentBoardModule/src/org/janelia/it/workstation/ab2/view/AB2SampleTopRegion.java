@@ -1,16 +1,13 @@
 package org.janelia.it.workstation.ab2.view;
 
+import javax.media.opengl.GLAutoDrawable;
+
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 
 public class AB2SampleTopRegion extends GLRegion {
 
     @Override
-    public void setMode(String modeName, int x0, int y0, int x1, int y1) {
+    public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
 
-    }
-
-    @Override
-    public String getMode() {
-        return null;
     }
 }

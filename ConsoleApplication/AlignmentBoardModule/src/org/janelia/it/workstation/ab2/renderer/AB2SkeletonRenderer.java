@@ -204,7 +204,7 @@ public class AB2SkeletonRenderer extends AB23DRenderer {
 
     public void reshape(GL4 gl, int x, int y, int width, int height) {
         //logger.info("reshape() x="+x+" y="+y+" width="+width+" height="+height);
-        super.reshape(gl, x, y, width, height);
+        super.reshape(gl, x, y, width, height, width, height);
     }
 
     @Override
