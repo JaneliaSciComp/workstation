@@ -3,7 +3,7 @@ package org.janelia.it.workstation.browser.model.descriptors;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
@@ -115,6 +115,10 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
         // Strip area from result name
         String areaSuffix = " ("+realArea+")";
         String realResultName = resultName==null?null:resultName.replace(areaSuffix, "");
+        
+        if (realResultName==null && resultClass!=null) {
+            realResultName = StringUtils.splitCamelCase(resultClass);
+        }
         
         StringBuilder sb = new StringBuilder();
         sb.append(objective);
