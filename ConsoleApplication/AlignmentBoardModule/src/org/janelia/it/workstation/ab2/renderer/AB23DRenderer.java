@@ -641,12 +641,12 @@ public abstract class AB23DRenderer extends AB2Renderer implements AB2Renderer3D
                 Point p0=points.get(points.size()-2);
                 Point p1=points.get(points.size()-1);
 
-                logger.info("p0 x="+p0.x+" y="+p0.y+" p1 x="+p1.x+" y="+p1.y+" list="+ points.size());
+                //logger.info("p0 x="+p0.x+" y="+p0.y+" p1 x="+p1.x+" y="+p1.y+" list="+ points.size());
 
                 int xDiff=p1.x-p0.x;
                 int yDiff=p1.y-p0.y;
 
-                if (xDiff>0 || yDiff>0) {
+                if (xDiff!=0 || yDiff!=0) {
 
                     Point dPos = new Point(xDiff, yDiff);
 
