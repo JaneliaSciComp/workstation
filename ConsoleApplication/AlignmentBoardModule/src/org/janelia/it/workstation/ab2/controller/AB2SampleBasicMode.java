@@ -2,6 +2,8 @@ package org.janelia.it.workstation.ab2.controller;
 
 import java.awt.event.MouseEvent;
 
+import javax.media.opengl.GLAutoDrawable;
+
 import org.janelia.it.workstation.ab2.actor.Image2DActor;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2Image2DClickEvent;
@@ -18,15 +20,36 @@ public class AB2SampleBasicMode extends AB2View3DMode {
 
     Logger logger= LoggerFactory.getLogger(AB2SampleBasicMode.class);
 
-    AB2SampleRegionManager sampleRegionManager=new AB2SampleRegionManager();
+    private AB2SampleRegionManager sampleRegionManager=new AB2SampleRegionManager();
 
-    AB2SampleRenderer sampleRenderer;
+    private AB2SampleRenderer sampleRenderer;
 
 
     public AB2SampleBasicMode(AB2Controller controller) {
         super(controller);
         sampleRenderer=sampleRegionManager.getMainRegion().getSampleRenderer();
         logger.info("AB2SampleBasicMode() constructor finished");
+    }
+
+    @Override
+    public void init(GLAutoDrawable glAutoDrawable) {
+        sampleRegionManager.init(glAutoDrawable);
+    }
+
+    @Override
+    public void dispose(GLAutoDrawable glAutoDrawable) {
+        sampleRegionManager.dispose(glAutoDrawable);
+        System.gc();
+    }
+
+    @Override
+    public void display(GLAutoDrawable glAutoDrawable) {
+        sampleRegionManager.display(glAutoDrawable);
+    }
+
+    @Override
+    public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3) {
+        sampleRegionManager.reshape(glAutoDrawable, i, i1, i2, i3);
     }
 
     @Override

@@ -18,11 +18,9 @@ import org.janelia.it.workstation.ab2.view.AB2SampleRegionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AB2View3DMode extends AB2ControllerMode {
+public abstract class AB2View3DMode extends AB2ControllerMode {
 
     Logger logger= LoggerFactory.getLogger(AB2View3DMode.class);
-
-    AB2SampleRegionManager sampleRegionManager=new AB2SampleRegionManager();
 
     public enum InteractionMode {
         ROTATE,
@@ -47,27 +45,6 @@ public class AB2View3DMode extends AB2ControllerMode {
     @Override
     public void shutdown() {
 
-    }
-
-    @Override
-    public void init(GLAutoDrawable glAutoDrawable) {
-        sampleRegionManager.init(glAutoDrawable);
-    }
-
-    @Override
-    public void dispose(GLAutoDrawable glAutoDrawable) {
-        sampleRegionManager.dispose(glAutoDrawable);
-        System.gc();
-    }
-
-    @Override
-    public void display(GLAutoDrawable glAutoDrawable) {
-        sampleRegionManager.dispose(glAutoDrawable);
-    }
-
-    @Override
-    public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3) {
-        sampleRegionManager.reshape(glAutoDrawable, i, i1, i2, i3);
     }
 
     @Override
