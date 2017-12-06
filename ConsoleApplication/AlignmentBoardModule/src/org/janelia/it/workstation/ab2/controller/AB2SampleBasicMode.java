@@ -10,6 +10,7 @@ import org.janelia.it.workstation.ab2.event.AB2Sample3DImageLoadedEvent;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.loader.AB2Sample3DImageLoader;
 import org.janelia.it.workstation.ab2.renderer.AB2SampleRenderer;
+import org.janelia.it.workstation.ab2.view.AB2SampleRegionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,15 +18,19 @@ public class AB2SampleBasicMode extends AB2View3DMode {
 
     Logger logger= LoggerFactory.getLogger(AB2SampleBasicMode.class);
 
+    AB2SampleRegionManager sampleRegionManager=new AB2SampleRegionManager();
 
-    public AB2SampleBasicMode(AB2Controller controller, AB2SampleRenderer renderer) {
-        super(controller, renderer);
+    AB2SampleRenderer sampleRenderer;
+
+
+    public AB2SampleBasicMode(AB2Controller controller) {
+        super(controller);
+        sampleRenderer=sampleRegionManager.getMainRegion().getSampleRenderer();
         logger.info("AB2SampleBasicMode() constructor finished");
     }
 
     @Override
     public void processEvent(AB2Event event) {
-        AB2SampleRenderer sampleRenderer=(AB2SampleRenderer)renderer;
         super.processEvent(event);
         if (event instanceof AB2SampleAddedEvent) {
             AB2SampleAddedEvent sampleAddedEvent=(AB2SampleAddedEvent)event;
@@ -41,7 +46,7 @@ public class AB2SampleBasicMode extends AB2View3DMode {
             MouseEvent mouseEvent=((AB2MouseClickedEvent) event).getMouseEvent();
             int x = mouseEvent.getX();
             int y = mouseEvent.getY(); // y is inverted - 0 is at the top
-            renderer.addMouseClickEvent(x, y);
+            sampleRenderer.addMouseClickEvent(x, y);
             controller.repaint();
         } else if (event instanceof AB2Image2DClickEvent) {
             Image2DActor image2DActor=((AB2Image2DClickEvent)event).getImage2DActor();

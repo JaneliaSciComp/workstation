@@ -115,10 +115,10 @@ public class AB2Controller implements GLEventListener {
     }
 
     private void populateModeMap() {
-        modeMap.put(AB2View3DMode.class, new AB2View3DMode(this, new AB2SimpleCubeRenderer()));
+        //modeMap.put(AB2View3DMode.class, new AB2View3DMode(this, new AB2SimpleCubeRenderer()));
         modeMap.put(AB2CompositionMode.class, new AB2CompositionMode(this));
-        modeMap.put(AB2SkeletonMode.class, new AB2SkeletonMode(this, new AB2SkeletonRenderer()));
-        modeMap.put(AB2SampleBasicMode.class, new AB2SampleBasicMode(this, new AB2SampleRenderer()));
+        //modeMap.put(AB2SkeletonMode.class, new AB2SkeletonMode(this, new AB2SkeletonRenderer()));
+        modeMap.put(AB2SampleBasicMode.class, new AB2SampleBasicMode(this));
     }
 
     public void start() {

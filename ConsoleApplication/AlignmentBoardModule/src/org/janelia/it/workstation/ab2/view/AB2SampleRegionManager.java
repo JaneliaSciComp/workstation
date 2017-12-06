@@ -20,6 +20,10 @@ public class AB2SampleRegionManager extends GLRegionManager {
         regions.add(mainRegion);
     }
 
+    public AB2SampleMainRegion getMainRegion() {
+        return mainRegion;
+    }
+
     @Override
     public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
 

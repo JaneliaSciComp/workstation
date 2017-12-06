@@ -14,6 +14,7 @@ import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2MouseDraggedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseReleasedEvent;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
+import org.janelia.it.workstation.ab2.view.AB2SampleRegionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,20 +22,16 @@ public class AB2View3DMode extends AB2ControllerMode {
 
     Logger logger= LoggerFactory.getLogger(AB2View3DMode.class);
 
+    AB2SampleRegionManager sampleRegionManager=new AB2SampleRegionManager();
+
     public enum InteractionMode {
         ROTATE,
         TRANSLATE,
         ZOOM
     }
 
-    protected AB23DRenderer renderer;
-    protected Point previousMousePos;
-    protected boolean bMouseIsDragging = false;
-
-
-    public AB2View3DMode(AB2Controller controller, AB23DRenderer renderer) {
+    public AB2View3DMode(AB2Controller controller) {
         super(controller);
-        this.renderer=renderer;
     }
 
     @Override
@@ -54,29 +51,23 @@ public class AB2View3DMode extends AB2ControllerMode {
 
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
-        final GL4 gl=glAutoDrawable.getGL().getGL4();
-        renderer.init(gl);
+        sampleRegionManager.init(glAutoDrawable);
     }
 
     @Override
     public void dispose(GLAutoDrawable glAutoDrawable) {
-        final GL4 gl=glAutoDrawable.getGL().getGL4();
-        renderer.dispose(gl);
-        logger.info("dispose() calling System.gc()");
+        sampleRegionManager.dispose(glAutoDrawable);
         System.gc();
     }
 
     @Override
     public void display(GLAutoDrawable glAutoDrawable) {
-        final GL4 gl=glAutoDrawable.getGL().getGL4();
-        renderer.display(gl);
+        sampleRegionManager.dispose(glAutoDrawable);
     }
 
     @Override
     public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3) {
-        final GL4 gl=glAutoDrawable.getGL().getGL4();
-        logger.info("reshapse "+i+" "+i1+" "+i2+" "+i3);
-        renderer.reshape(gl, i, i1, i2, i3, i2, i3);
+        sampleRegionManager.reshape(glAutoDrawable, i, i1, i2, i3);
     }
 
     @Override
