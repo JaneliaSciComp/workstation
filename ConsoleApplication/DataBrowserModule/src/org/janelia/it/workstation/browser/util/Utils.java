@@ -47,7 +47,6 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.IOUtils;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.api.LocalPreferenceMgr;
@@ -135,13 +134,11 @@ public class Utils {
             BufferedImage image = null;
 
             if (renderer == RendererType2D.IMAGE_IO) {
-
                 InputStream stream = null;
                 GetMethod get = null;
                 try {
-
                     if (path.startsWith("http://")) {
-                        HttpClient client = FileMgr.getFileMgr().getWebDavClient().getHttpClient();
+                        HttpClient client = FileMgr.getFileMgr().getHttpClient();
                         get = new GetMethod(path);
                         int responseCode = client.executeMethod(get);
                         log.trace("readImage: GET " + responseCode + ", path=" + path);
@@ -515,7 +512,7 @@ public class Utils {
 
             @Override
             protected void doStuff() throws Exception {
-                file = FileMgr.getCachedFile(filePath, false);
+                file = FileMgr.getFileMgr().getFile(filePath, false);
             }
 
             @Override

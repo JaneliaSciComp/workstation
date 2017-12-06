@@ -1,18 +1,16 @@
 package org.janelia.it.workstation.browser.filecache;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.file.Path;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,35 +20,36 @@ import org.slf4j.LoggerFactory;
  * @author Eric Trautman
  */
 public class WebDavUploader {
+    private static final Logger LOG = LoggerFactory.getLogger(WebDavUploader.class);
 
-    private WebDavClient client;
-    private String rootRemoteUploadPath;
+    private final WebDavClientMgr webDavClientMgr;
+    private String uploadClientHostAddress;
+    private String uploadClientStartTimestamp;
+    private volatile long uploadCount;
 
     /**
-     * Constructs an uploader using the default jacs root upload path.
+     * Constructs an uploader.
      *
-     * @param  client  WebDAV client for the current session
+     * @param webDavClientMgr WebDAV client manager for the current session
      */
-    public WebDavUploader(WebDavClient client) {
-        this(client, ConsoleProperties.getString("console.upload.directory",
-                JACS_ROOT_UPLOAD_PATH));
+    public WebDavUploader(WebDavClientMgr webDavClientMgr) {
+        this.webDavClientMgr = webDavClientMgr;
+        InetAddress address;
+        try {
+            address = InetAddress.getLocalHost();
+            this.uploadClientHostAddress = address.getHostAddress();
+        } catch (UnknownHostException e) {
+            this.uploadClientHostAddress = "unknown";
+            LOG.warn("failed to derive client host address, ignoring error", e);
+        }
+        final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS");
+        this.uploadClientStartTimestamp = sdf.format(new Date());
+
+        this.uploadCount = 0;
     }
 
     /**
-     * Constructs an uploader using the specified root upload path.
-     *
-     * @param  client  WebDAV client for the current session
-     *
-     * @param  rootRemoteUploadPath root path on server for all uploaded files.
-     */
-    public WebDavUploader(WebDavClient client,
-                          String rootRemoteUploadPath) {
-        this.client = client;
-        this.rootRemoteUploadPath = rootRemoteUploadPath;
-    }
-
-    /**
-     * Uplaods the specified file to the server.
+     * Uploads the specified file to the server.
      *
      * @param  file  file to upload.
      *
@@ -60,15 +59,23 @@ public class WebDavUploader {
      *   if the file cannot be uploaded.
      */
     public String uploadFile(File file) throws WebDavException {
-        final String remoteUploadDirectoryPath =
-                client.getUniqueUploadDirectoryPath(rootRemoteUploadPath);
-        final String remoteFilePath = remoteUploadDirectoryPath + file.getName();
-        createDirectory(remoteUploadDirectoryPath);
-        uploadFile(remoteFilePath, file);
+        final String storageName = createStorageName(file);
+        String storageURL = webDavClientMgr.createStorage(storageName);
+        webDavClientMgr.uploadFile(file.toPath());
+        LOG.info("uploaded {} to {}", file, storageURL);
+        return storageURL;
+    }
 
-        LOG.info("uploaded {} to {}", file.getAbsolutePath(), remoteFilePath);
-
-        return remoteUploadDirectoryPath;
+    private String createStorageName(File f) {
+        StringBuilder path = new StringBuilder(128);
+        path.append(uploadClientStartTimestamp);
+        path.append("__");
+        path.append(uploadClientHostAddress);
+        path.append("__");
+        path.append(uploadCount++);
+        path.append("__");
+        path.append(f.getName());
+        return path.toString();
     }
 
     /**
@@ -93,174 +100,34 @@ public class WebDavUploader {
      * @throws WebDavException
      *   if the files cannot be uploaded.
      */
-    public String uploadFiles(List<File> fileList,
-                              File localRootDirectory)
+    public String uploadFiles(List<File> fileList, File localRootDirectory)
             throws IllegalArgumentException, WebDavException {
 
-        final String remoteUploadDirectoryPath =
-                client.getUniqueUploadDirectoryPath(rootRemoteUploadPath);
+        final String storageName = createStorageName(localRootDirectory);
+        String storageURL = webDavClientMgr.createStorageDirectory(storageName);
 
-        createDirectory(remoteUploadDirectoryPath);
+        // need to go through the entire fileList and create the directory hierarchy
+        // and then upload the file content
+        Path localRootPath = localRootDirectory.toPath();
+        Set<Path> filePathHierarchy = fileList.stream()
+                .filter(f -> f.isFile())
+                .map(f -> f.getParentFile().toPath().relativize(localRootPath))
+                .flatMap(fp -> {
+                    int nPathComponents = fp.getNameCount();
+                    return IntStream.range(1, nPathComponents)
+                            .mapToObj(pathIndex -> fp.subpath(0, pathIndex));
+                })
+                .sorted()
+                .collect(Collectors.toSet());
 
-        Map<String, File> remotePathToFileMap = new HashMap<String, File>(fileList.size());
+        filePathHierarchy.forEach(webDavClientMgr::createDirectory);
+        fileList.stream()
+                .filter(f -> f.isFile())
+                .map(f -> f.toPath().relativize(localRootPath))
+                .forEach(webDavClientMgr::uploadFile);
 
-        String path;
-        if (localRootDirectory == null) {
-
-            for (File file : fileList) {
-                path = remoteUploadDirectoryPath + file.getName();
-                if (remotePathToFileMap.containsKey(path)) {
-                    throw new IllegalArgumentException("multiple files share the name '" +
-                                                       file.getName() + "'");
-                }
-                remotePathToFileMap.put(path, file);
-            }
-
-        } else if (localRootDirectory.exists()) {
-
-            List<String> orderedDirectoryPaths = new ArrayList<String>(fileList.size());
-
-            List<String> localFilePaths = new ArrayList<String>(fileList.size());
-
-            try {
-            for (File file : fileList) {
-                if (file.isFile()) {
-                    localFilePaths.add(file.getCanonicalPath());
-                }
-            }
-
-            derivePaths(localRootDirectory.getCanonicalPath() + File.separator,
-                        localFilePaths,
-                        remoteUploadDirectoryPath,
-                        orderedDirectoryPaths,
-                        remotePathToFileMap);
-
-            } catch (IOException e) {
-                throw new IllegalArgumentException("canonical path could not be derived", e);
-            }
-
-            if (orderedDirectoryPaths.size() > 0) {
-                for (String dirPath : orderedDirectoryPaths) {
-                    createDirectory(dirPath);
-                }
-
-                LOG.info("created {} directories under {}",
-                         orderedDirectoryPaths.size(), remoteUploadDirectoryPath);
-            }
-
-        } else {
-
-            throw new IllegalArgumentException(
-                    "specified local root directory " + localRootDirectory.getAbsolutePath() +
-                    " does not exist");
-        }
-
-        uploadFiles(remotePathToFileMap);
-
-        LOG.info("uploaded {} files to {}", fileList.size(), remoteUploadDirectoryPath);
-
-        return remoteUploadDirectoryPath;
+        LOG.info("uploaded {} files to {}", fileList.size(), storageURL);
+        return storageURL;
     }
-
-    /**
-     * Derives the remote (server) paths for all files and populates an
-     * ordered list of directories that need to be created.
-     * This method is protected to support testing.
-     *
-     * @param  localRootPath              common parent path for local files
-     *                                    (should end with the file separator).
-     * @param  localFilePaths             list of local file paths
-     *                                    (should only contain files - no directories).
-     * @param  remoteUploadDirectoryPath  base upload directory path on remote server.
-     * @param  orderedDirectoryPaths      ordered list of directories to be created on server
-     *                                    (returned to caller).
-     * @param  remotePathToFileMap        map of derived remote paths to local files
-     *                                    (returned to caller).
-     *
-     * @throws IllegalArgumentException
-     *   if any path cannot be derived.
-     */
-    protected void derivePaths(String localRootPath,
-                               List<String> localFilePaths,
-                               String remoteUploadDirectoryPath,
-                               List<String> orderedDirectoryPaths,
-                               Map<String, File> remotePathToFileMap)
-            throws IllegalArgumentException {
-
-        Set<String> relativeDirectoryPaths = new HashSet<String>(localFilePaths.size());
-
-        final int relativeStart = localRootPath.length();
-
-        String relativePath;
-        String remotePath;
-        for (String localPath : localFilePaths) {
-            if ((localPath.length() > relativeStart) && (localPath.startsWith(localRootPath))) {
-                relativePath = localPath.substring(relativeStart);
-                relativePath = relativePath.replace('\\', '/');
-                addDirectoryPaths(relativePath, relativeDirectoryPaths);
-                remotePath = remoteUploadDirectoryPath + relativePath;
-                remotePathToFileMap.put(remotePath, new File(localPath));
-            } else {
-                throw new IllegalArgumentException(
-                        localPath + " does not start with specified root " + localRootPath);
-            }
-        }
-
-        for (String relativeDirPath : relativeDirectoryPaths) {
-            orderedDirectoryPaths.add(remoteUploadDirectoryPath + relativeDirPath);
-        }
-
-        // sort the paths so that parent directories are created before children
-        Collections.sort(orderedDirectoryPaths);
-    }
-
-    private void addDirectoryPaths(String relativePath,
-                                   Set<String> relativeDirectoryPaths) {
-        int endIndex = relativePath.indexOf('/');
-        String dirPath;
-        while (endIndex != -1) {
-            endIndex++;
-            dirPath = relativePath.substring(0, endIndex);
-            relativeDirectoryPaths.add(dirPath);
-            endIndex = relativePath.indexOf('/', endIndex);
-        }
-    }
-
-    private void uploadFiles(Map<String, File> remotePathToFileMap)
-            throws WebDavException {
-        for (String path : remotePathToFileMap.keySet()) {
-            uploadFile(path, remotePathToFileMap.get(path));
-        }
-    }
-
-    private void createDirectory(String path)
-            throws WebDavException {
-        final URL url = getWebDavUrl(path);
-        client.createDirectory(url);
-    }
-
-    private void uploadFile(String path,
-                            File file)
-            throws WebDavException {
-        final URL url = getWebDavUrl(path);
-        client.saveFile(url, file);
-    }
-
-    private URL getWebDavUrl(String path)
-            throws WebDavException {
-        URL url;
-        try {
-            // replace spaces with '-' so that launch of external tools is not broken
-            url = client.getWebDavUrl(path.replace(' ','-'));
-        } catch (MalformedURLException e) {
-            throw new WebDavException("failed to create URL for " + path, e);
-        }
-        return url;
-    }
-
-    private static final Logger LOG = LoggerFactory.getLogger(WebDavUploader.class);
-
-    // TODO: this should be parameterized by the build environment (e.g. /nrs/jacs/jacsDev/devstore/upload when building for dev)
-    private static final String JACS_ROOT_UPLOAD_PATH = "/nrs/jacs/jacsData/filestore/upload";
 
 }

@@ -284,21 +284,7 @@ public final class AccessManager {
         catch (Exception e) {
             throw new ServiceException("Error getting or creating user "+username, e);
         }
-
-        // Legacy JFS/Webdav needs basic auth
-        if (authenticatedSubject != null) {
-            log.info("Authenticated as {}", authenticatedSubject.getKey());
-            
-            log.debug("Setting default authenticator");
-            Authenticator.setDefault(new Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(username, password.toCharArray());
-                }
-            });
-            FileMgr.getFileMgr().getWebDavClient().setCredentialsUsingAuthenticator();
-        }
-        
+        FileMgr.getFileMgr().setAuthToken(token);
         return authenticatedSubject;
     }
     

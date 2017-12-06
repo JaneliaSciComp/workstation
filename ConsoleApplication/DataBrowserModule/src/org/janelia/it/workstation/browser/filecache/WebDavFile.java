@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.filecache;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.property.DavProperty;
@@ -20,7 +21,8 @@ import java.net.URL;
  */
 public class WebDavFile {
 
-    private URL url;
+    private String remoteFileUrl;
+    private String remoteFileName;
     private boolean isDirectory;
     private Long contentLength;
     private String etag;
@@ -29,36 +31,18 @@ public class WebDavFile {
      * Parses the specified WebDAV PROPFIND response 'fragment' to
      * populate this file's attributes.
      *
-     * @param  baseUrl              the full URL for the originally requested
+     * @param  remoteFileName       the full remote file name originally requested
      *                              resource (could be a parent directory).
      * @param  multiStatusResponse  the PROPFIND response for the file.
      *
      * @throws IllegalArgumentException
      *   if a file specific URL cannot be constructed.
      */
-    public WebDavFile(URL baseUrl,
-                      MultiStatusResponse multiStatusResponse)
+    WebDavFile(String remoteFileName, MultiStatusResponse multiStatusResponse)
             throws IllegalArgumentException {
 
-        final int baseLength = baseUrl.getPath().length();
-        final String href = multiStatusResponse.getHref();
-        final int hrefLength = href.length();
-
-        if (hrefLength == baseLength) {
-            this.url = baseUrl;
-        } else if (hrefLength > baseLength) {
-            try {
-                this.url = new URL(baseUrl, href.substring(baseLength));
-            } catch (MalformedURLException e) {
-                throw new IllegalArgumentException(
-                        "failed to construct file URL from baseUrl " +
-                        baseUrl + " and href " + href, e);
-            }
-        } else {
-            throw new IllegalArgumentException("invalid href value '" + href +
-                                               "' returned for resource with base URL " + baseUrl);
-        }
-
+        this.remoteFileName = remoteFileName;
+        remoteFileUrl = multiStatusResponse.getHref();
         final DavPropertySet propertySet =
                 multiStatusResponse.getProperties(HttpStatus.SC_OK);
 
@@ -74,8 +58,10 @@ public class WebDavFile {
         final DavProperty<?> contentLengthProperty =
                 propertySet.get(DavPropertyName.GETCONTENTLENGTH);
         if (contentLengthProperty != null) {
-            this.contentLength = Long.parseLong(
-                    String.valueOf(contentLengthProperty.getValue()));
+            String contentLengthStrValue = (String) contentLengthProperty.getValue();
+            if (StringUtils.isNotBlank(contentLengthStrValue)) {
+                this.contentLength = Long.parseLong(contentLengthStrValue);
+            }
         }
 
         final DavProperty<?> etagProperty =
@@ -83,37 +69,24 @@ public class WebDavFile {
         if (etagProperty != null) {
             this.etag = String.valueOf(etagProperty.getValue());
         }
-
     }
 
     /**
-     * Constructs a WebDavFile instance that references the specified file.
-     *
-     * @param  url   the remote URL for this file.
-     * @param  file  a copy of the remote file referenced by this instance.
+     * @return remote href as extracted from the multiresponse
      */
-    public WebDavFile(URL url,
-                      File file) {
-        if (url == null) {
-            try {
-                this.url = file.toURI().toURL();
-            } catch (MalformedURLException e) {
-                throw new IllegalArgumentException(
-                        "failed to create URL for " + file.getAbsolutePath());
-            }
-        } else {
-            this.url = url;
+    public URL getRemoteFileUrl() {
+        try {
+            return new URL(remoteFileUrl);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
-        this.isDirectory = file.isDirectory();
-        this.contentLength = file.length();
-        this.etag = "not-available";
     }
 
     /**
-     * @return the file's URL.
+     * @return the file's remote name.
      */
-    public URL getUrl() {
-        return url;
+    public String getRemoteFileName() {
+        return remoteFileName;
     }
 
     /**
@@ -147,7 +120,7 @@ public class WebDavFile {
 
     @Override
     public String toString() {
-        return "\nWebDavFile{url='" + url + '\'' +
+        return "\nWebDavFile{remoteFileName='" + remoteFileName + '\'' +
                 ", isDirectory=" + isDirectory +
                 ", contentLength=" + contentLength +
                 ", etag=" + etag +

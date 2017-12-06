@@ -336,8 +336,7 @@ public class ImportDialog extends ModalDialog {
                            final List<File> selectedChildren,
                            final String importFolderName,
                            final Long importFolderId) {
-
-        try {            
+        try {
             BackgroundWorker executeWorker = new TaskMonitoringWorker() {
     
                 @Override
@@ -434,7 +433,6 @@ public class ImportDialog extends ModalDialog {
         catch (Exception e) {
             ConsoleApp.handleException(e);
         }
-        
     }
 
     private long startImportFilesTask(File selectedFile,
@@ -442,7 +440,7 @@ public class ImportDialog extends ModalDialog {
                              String importTopLevelFolderName,
                              Long importTopLevelFolderId) throws Exception {
 
-        final WebDavUploader uploader = new WebDavUploader(FileMgr.getFileMgr().getWebDavClient());
+        final WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
 
         String uploadPath;
         if (selectedChildren == null) {

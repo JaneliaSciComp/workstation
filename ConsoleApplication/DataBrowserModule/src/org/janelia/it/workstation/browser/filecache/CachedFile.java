@@ -51,8 +51,7 @@ public class CachedFile {
      * @param  webDavFile  the WebDAV information for the file's remote source.
      * @param  localFile   the local location for the file after retrieval.
      */
-    public CachedFile(WebDavFile webDavFile,
-                      File localFile) {
+    public CachedFile(WebDavFile webDavFile, File localFile) {
         this.webDavFile = webDavFile;
         this.localFile = localFile;
         if (! webDavFile.isDirectory()) {
@@ -66,8 +65,8 @@ public class CachedFile {
     /**
      * @return the source URL for this file.
      */
-    public URL getUrl() {
-        return webDavFile.getUrl();
+    public String getRemoteFileName() {
+        return webDavFile.getRemoteFileName();
     }
 
     /**

@@ -12,8 +12,7 @@ import com.google.common.cache.CacheBuilder;
  */
 public class ImageCache {
 
-    public static final int MAX_NUM_IMAGES = 500; // 500 images total
-
+    private static final int MAX_NUM_IMAGES = 500; // 500 images total
     private final Cache<String, BufferedImage> cache;
 
     public ImageCache() {
