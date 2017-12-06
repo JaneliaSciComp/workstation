@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.ab2.controller;
 
+import java.awt.Point;
 import java.awt.event.MouseEvent;
 
 import javax.media.opengl.GLAutoDrawable;
@@ -11,6 +12,7 @@ import org.janelia.it.workstation.ab2.event.AB2MouseClickedEvent;
 import org.janelia.it.workstation.ab2.event.AB2Sample3DImageLoadedEvent;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.loader.AB2Sample3DImageLoader;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
 import org.janelia.it.workstation.ab2.renderer.AB2SampleRenderer;
 import org.janelia.it.workstation.ab2.view.AB2SampleRegionManager;
 import org.slf4j.Logger;
@@ -29,6 +31,11 @@ public class AB2SampleBasicMode extends AB2View3DMode {
         super(controller);
         sampleRenderer=sampleRegionManager.getMainRegion().getSampleRenderer();
         logger.info("AB2SampleBasicMode() constructor finished");
+    }
+
+    @Override
+    public AB2Renderer getRendererAtPosition(Point point) {
+        return sampleRenderer;
     }
 
     @Override
