@@ -163,7 +163,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
     private boolean isIgnoredForAutoSend(Throwable throwable, String stacktrace) {
         
         // Ignore all disk space issues, these do not represent bugs.
-        if (stacktrace.contains("java.io.IOException: No space left on device")) {
+        if (stacktrace.contains("No space left on device")) {
             return true;
         }
         

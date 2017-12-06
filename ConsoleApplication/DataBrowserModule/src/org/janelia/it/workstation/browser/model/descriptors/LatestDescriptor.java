@@ -63,7 +63,7 @@ public class LatestDescriptor extends ArtifactDescriptor {
         List<HasFiles> objects = new ArrayList<>();
         if (sourceObject instanceof Sample) {
             Sample sample = (Sample)sourceObject;
-            objects.addAll(SampleUtils.getMatchingResults(sample, null, null, aligned, null, null));
+            objects.addAll(SampleUtils.getMatchingResults(sample, null, null, aligned, null, null, null));
         }
         return objects;
     }

@@ -315,17 +315,6 @@
                 <package>de.hunsicker.swing.util</package>
                 <package>de.hunsicker.util</package>
                 <package>de.hunsicker.util.concurrent</package>
-                <package>de.javasoft.plaf.synthetica.painter</package>
-                <package>de.javasoft.swing</package>
-                <package>de.javasoft.swing.jycombobox</package>
-                <package>de.javasoft.swing.plaf</package>
-                <package>de.javasoft.swing.plaf.addons</package>
-                <package>de.javasoft.swing.plaf.basic</package>
-                <package>de.javasoft.swing.plaf.jycombobox</package>
-                <package>de.javasoft.swing.plaf.jysearchfield</package>
-                <package>de.javasoft.swing.plaf.jytabbedpane</package>
-                <package>de.javasoft.swing.plaf.synthetica</package>
-                <package>de.javasoft.swing.table</package>
                 <package>de.uulm.ecs.ai.owlapi.krssparser</package>
                 <package>de.uulm.ecs.ai.owlapi.krssrenderer</package>
                 <package>delaunay</package>
@@ -1487,6 +1476,7 @@
                 <package>org.janelia.it.jacs.model.jobs</package>
                 <package>org.janelia.it.jacs.model.ontology</package>
                 <package>org.janelia.it.jacs.model.ontology.types</package>
+                <package>org.janelia.it.jacs.model.pipelines</package>
                 <package>org.janelia.it.jacs.model.search</package>
                 <package>org.janelia.it.jacs.model.status</package>
                 <package>org.janelia.it.jacs.model.tasks</package>

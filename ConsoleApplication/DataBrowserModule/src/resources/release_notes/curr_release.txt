@@ -1,4 +1,4 @@
-// 7.0.3
+// 7.0.4
 
 Large Volume Viewer  
-* Fixed issue with casting JSON response to Long on Sample creation
+* Fixed issue with exporting multiple neurons to file without .swc extension
