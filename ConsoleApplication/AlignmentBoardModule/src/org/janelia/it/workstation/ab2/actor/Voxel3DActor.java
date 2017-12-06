@@ -10,6 +10,7 @@ import java.util.List;
 
 import javax.media.opengl.GL4;
 
+import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
@@ -29,6 +30,7 @@ public class Voxel3DActor extends GLAbstractActor {
     int dimX;
     int dimY;
     int dimZ;
+    Vector4 xyBounds=new Vector4(-1.1f, 1.1f, -1.1f, 1.1f);
 
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
@@ -37,6 +39,16 @@ public class Voxel3DActor extends GLAbstractActor {
 
     ShortBuffer vertexFb;
     ByteBuffer colorFb;
+
+    Matrix4 postRotationMatrix;
+
+    public void setPostRotationMatrix(Matrix4 postRotationMatrix) {
+        this.postRotationMatrix=postRotationMatrix;
+    }
+
+    public void setXYBounds(Vector4 xyBounds) {
+        this.xyBounds=xyBounds;
+    }
 
 
     public Voxel3DActor(AB23DRenderer renderer, int actorId, List<Vector3> voxels, List<Vector4> colors,
@@ -218,8 +230,13 @@ public class Voxel3DActor extends GLAbstractActor {
             }
 
             AB2Voxel3DShader voxel3DShader = (AB2Voxel3DShader) shader;
-            voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()));
+            if (postRotationMatrix!=null) {
+                voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()).multiply(postRotationMatrix));
+            } else {
+                voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()));
+            }
             voxel3DShader.setDimXYZ(gl, dimX, dimY, dimZ);
+            voxel3DShader.setGLBoundsXY(gl, xyBounds);
             int dimMax=getMaxDim();
             float voxelUnitSize=1f/(1f*dimMax);
             voxel3DShader.setVoxelSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));

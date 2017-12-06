@@ -6,6 +6,7 @@ layout(triangle_strip, max_vertices=24) out;
 in vec4 colorv[];
 out vec4 colorg;
 
+uniform vec4 xyBounds;
 uniform mat4 mvp;
 uniform vec3 voxelSize;
 
@@ -26,6 +27,9 @@ void main()
     vec4 v111 = vec4(base.x + voxelSize.x, base.y + voxelSize.y, base.z + voxelSize.z, base.w);
 
     vec4 v000p = mvp * v000;
+
+    if (v000p.x > xyBounds.x && v000p.x < xyBounds.y && v000p.y > xyBounds.z && v000p.y < xyBounds.w) {
+
     vec4 v010p = mvp * v010;
     vec4 v100p = mvp * v100;
     vec4 v110p = mvp * v110;
@@ -78,5 +82,7 @@ void main()
     gl_Position = v110p; EmitVertex();
     gl_Position = v111p; EmitVertex();
     EndPrimitive();
+
+    }
 
 }

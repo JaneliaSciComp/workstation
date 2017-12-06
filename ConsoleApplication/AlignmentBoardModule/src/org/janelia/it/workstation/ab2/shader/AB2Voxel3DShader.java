@@ -4,6 +4,7 @@ import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 
 public class AB2Voxel3DShader extends GLShaderProgram {
@@ -36,6 +37,11 @@ public class AB2Voxel3DShader extends GLShaderProgram {
     public void setVoxelSize(GL4 gl, Vector3 voxelSize) {
         setUniform3v(gl, "voxelSize", 1, voxelSize.toArray());
         checkGlError(gl, "AB2Voxel3DShader setVoxelSize() error");
+    }
+
+    public void setGLBoundsXY(GL4 gl, Vector4 xyBounds) {
+        setUniform4v(gl, "xyBounds", 1, xyBounds.toArray());
+        checkGlError(gl, "AB2Voxel3DShader setGLBoundsXY() error");
     }
 }
 

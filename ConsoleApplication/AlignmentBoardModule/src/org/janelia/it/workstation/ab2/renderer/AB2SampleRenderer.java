@@ -36,9 +36,11 @@ public class AB2SampleRenderer extends AB23DRenderer {
     Logger logger= LoggerFactory.getLogger(AB2SampleRenderer.class);
 
     private Matrix4 modelMatrix;
+    private Matrix4 prMatrix;
+    private Vector4 voxel3DxyBounds;
+
     private BoundingBoxActor boundingBoxActor;
     private Camera3DFollowBoxActor cameraFollowBoxActor;
-
     private Image3DActor image3DActor;
     private Voxel3DActor voxel3DActor;
 
@@ -115,6 +117,19 @@ public class AB2SampleRenderer extends AB23DRenderer {
     }
 
     public void addVoxel3DActor(Voxel3DActor voxel3DActor) {
+        if (this.voxel3DActor!=null) {
+            clearActionSequenceActors(voxel3DShaderSequence);
+            this.voxel3DActor=null;
+        }
+        if (this.prMatrix!=null) {
+            logger.info("addVoxel3DActor - setting pr matrix");
+            voxel3DActor.setPostRotationMatrix(this.prMatrix);
+        }
+        if (this.voxel3DxyBounds!=null) {
+            logger.info("addVoxel3DActor - setting xy bounds");
+            voxel3DActor.setXYBounds(this.voxel3DxyBounds);
+        }
+        this.voxel3DActor=voxel3DActor;
         voxel3DShaderSequence.getActorSequence().add(voxel3DActor);
         ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) voxel3DActor, voxel3DShaderSequence.getShader());
         actorInitQueue.add(actorPair);
@@ -125,6 +140,11 @@ public class AB2SampleRenderer extends AB23DRenderer {
         clearActionSequenceActors(volume3DShaderSequence);
         clearActionSequenceActors(voxel3DShaderSequence);
         clearActionSequenceActors(pickShaderSequence);
+
+        boundingBoxActor=null;
+        cameraFollowBoxActor=null;
+        image3DActor=null;
+        voxel3DActor=null;
     }
 
     public void addSample3DImage(byte[] data) {
@@ -133,7 +153,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
 //        addImage3DActor(image3d);
 
         clearVoxel3DActor();
-        voxel3DActor=new Voxel3DActor(this, getNextActorIndex(), 0.05f, data);
+        Voxel3DActor voxel3DActor=new Voxel3DActor(this, getNextActorIndex(), 0.05f, data);
         addVoxel3DActor(voxel3DActor);
     }
 
@@ -215,6 +235,27 @@ public class AB2SampleRenderer extends AB23DRenderer {
     public void reshape(GL4 gl, int x, int y, int width, int height) {
         //logger.info("reshape() x="+x+" y="+y+" width="+width+" height="+height);
         super.reshape(gl, x, y, width, height, width, height);
+    }
+
+    // This is for testing
+    public void setVoxel3DActorPostRotationalMatrix(Matrix4 prMatrix) {
+        this.prMatrix=prMatrix;
+        if (voxel3DActor!=null) {
+            voxel3DActor.setPostRotationMatrix(prMatrix);
+            logger.info("voxel3DActor - pr matrix set");
+        } else {
+            logger.info("voxel3DActor is null - pr matrix not set");
+        }
+    }
+
+    public void setVoxel3DxyBounds(Vector4 voxel3DxyBounds) {
+        this.voxel3DxyBounds=voxel3DxyBounds;
+        if (voxel3DActor!=null) {
+            voxel3DActor.setXYBounds(voxel3DxyBounds);
+            logger.info("voxel3DActor - xy bounds set");
+        } else {
+            logger.info("voxel3DActor is null - xy bounds not set");
+        }
     }
 
     @Override
