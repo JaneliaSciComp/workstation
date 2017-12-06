@@ -640,22 +640,33 @@ public abstract class AB23DRenderer extends AB2Renderer implements AB2Renderer3D
             if (points.size()>1) {
                 Point p0=points.get(points.size()-2);
                 Point p1=points.get(points.size()-1);
-                Point dPos = new Point(p1.x-p0.x, p1.y-p0.y);
 
-                AB2View3DMode.InteractionMode mode = AB2View3DMode.InteractionMode.ROTATE; // default drag controller is ROTATE
-                if (mouseEvent.isMetaDown()) // command-drag to zoom
-                    mode = AB2View3DMode.InteractionMode.ZOOM;
-                if (SwingUtilities.isMiddleMouseButton(mouseEvent)) // middle drag to translate
-                    mode = AB2View3DMode.InteractionMode.TRANSLATE;
-                if (mouseEvent.isShiftDown()) // shift-drag to translate
-                    mode = AB2View3DMode.InteractionMode.TRANSLATE;
+                logger.info("p0 x="+p0.x+" y="+p0.y+" p1 x="+p1.x+" y="+p1.y+" list="+ points.size());
 
-                if (mode == AB2View3DMode.InteractionMode.TRANSLATE) {
-                    translatePixels(dPos.x, dPos.y, 0);
-                } else if (mode == AB2View3DMode.InteractionMode.ROTATE) {
-                    rotatePixels(dPos.x, dPos.y, 0);
-                } else if (mode == AB2View3DMode.InteractionMode.ZOOM) {
-                    zoomPixels(p1, p0);
+                int xDiff=p1.x-p0.x;
+                int yDiff=p1.y-p0.y;
+
+                if (xDiff>0 || yDiff>0) {
+
+                    Point dPos = new Point(xDiff, yDiff);
+
+                    AB2View3DMode.InteractionMode mode = AB2View3DMode.InteractionMode.ROTATE; // default drag controller is ROTATE
+                    if (mouseEvent.isMetaDown()) // command-drag to zoom
+                        mode = AB2View3DMode.InteractionMode.ZOOM;
+                    if (SwingUtilities.isMiddleMouseButton(mouseEvent)) // middle drag to translate
+                        mode = AB2View3DMode.InteractionMode.TRANSLATE;
+                    if (mouseEvent.isShiftDown()) // shift-drag to translate
+                        mode = AB2View3DMode.InteractionMode.TRANSLATE;
+
+                    if (mode == AB2View3DMode.InteractionMode.TRANSLATE) {
+                        translatePixels(dPos.x, dPos.y, 0);
+                    }
+                    else if (mode == AB2View3DMode.InteractionMode.ROTATE) {
+                        rotatePixels(dPos.x, dPos.y, 0);
+                    }
+                    else if (mode == AB2View3DMode.InteractionMode.ZOOM) {
+                        zoomPixels(p1, p0);
+                    }
                 }
             }
         } else if (event instanceof AB2MouseWheelEvent) {

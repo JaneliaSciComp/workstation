@@ -26,6 +26,6 @@ public class AB2SampleRegionManager extends GLRegionManager {
 
     @Override
     public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
-
+        mainRegion.reshape(drawable, x, y, width, height, width, height);
     }
 }
