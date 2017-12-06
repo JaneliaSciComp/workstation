@@ -28,7 +28,8 @@ void main()
 
     vec4 v000p = mvp * v000;
 
-    if (v000p.x > xyBounds.x && v000p.x < xyBounds.y && v000p.y > xyBounds.z && v000p.y < xyBounds.w) {
+//    if (v000p.x > xyBounds.x && v000p.x < xyBounds.y && v000p.y > xyBounds.z && v000p.y < xyBounds.w) {
+    if (1.0>0.0) {
 
     vec4 v010p = mvp * v010;
     vec4 v100p = mvp * v100;

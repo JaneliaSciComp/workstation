@@ -3,13 +3,16 @@ package org.janelia.it.workstation.ab2.view;
 import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 
-import antlr.collections.impl.Vector;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.renderer.AB2SampleRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AB2SampleMainRegion extends GLRegion {
+    Logger logger = LoggerFactory.getLogger(AB2SampleMainRegion.class);
+
 
     private AB2SampleRenderer sampleRenderer=new AB2SampleRenderer();
 
@@ -40,7 +43,8 @@ public class AB2SampleMainRegion extends GLRegion {
     @Override
     public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height, int screenWidth, int screenHeight) {
         final GL4 gl=drawable.getGL().getGL4();
-        // todo: sampleRenderer.reshape(gl, x, y, width, height, screenWidth, screenHeight);
+        // todo: fix this to use proper values for sampleRenderer.reshape()
+        sampleRenderer.reshape(gl, x, y, screenWidth, screenHeight, screenWidth, screenHeight);
         computeOffsetParameters(x, y, width, height, screenWidth, screenHeight);
         sampleRenderer.setVoxel3DActorPostRotationalMatrix(getPrMatrix(x, y, width, height, screenWidth, screenHeight));
         sampleRenderer.setVoxel3DxyBounds(getXYBounds(x, y, width, height, screenWidth, screenHeight));
@@ -94,6 +98,17 @@ public class AB2SampleMainRegion extends GLRegion {
 
         xTranslate=2.0f*xCenterFraction-1.0f;
         yTranslate=2.0f*yCenterFraction-1.0f;
+
+        logger.info("x="+x+" y="+y+" width="+width+" height="+height+" screenWidth="+screenWidth+" screenHeight="+screenHeight);
+
+        logger.info("x0="+x0+" y0="+y0);
+        logger.info("w0="+w0+" h0="+h0);
+        logger.info("w1="+w1+" h1="+h1);
+        logger.info("w2="+w2+" h2="+h2);
+
+        logger.info("scale="+scale+" xCenter="+xCenter+" yCenter="+yCenter);
+        logger.info("xCenterFraction="+xCenterFraction+" yCenterFraction="+yCenterFraction);
+        logger.info("xTranslate="+xTranslate+" yTranslate="+yTranslate);
     }
 
 
