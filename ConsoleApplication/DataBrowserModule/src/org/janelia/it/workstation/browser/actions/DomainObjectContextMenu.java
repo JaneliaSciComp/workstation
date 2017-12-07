@@ -56,6 +56,7 @@ import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
+import org.janelia.it.workstation.browser.nb_action.ApplyPublishingNamesAction;
 import org.janelia.it.workstation.browser.nb_action.GetRelatedItemsAction;
 import org.janelia.it.workstation.browser.nb_action.SetPublishingNameAction;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
@@ -174,7 +175,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
         add(getPartialSecondaryDataDeletiontItem());
-        add(getApplyPublishingNameItem());
+        //add(getSetPublishingNameItem());
+        add(getApplyPublishingNamesItem());
         add(getMergeItem());
         
         setNextAddRequiresSeparator(true);
@@ -618,7 +620,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return blockItem;
     }
 
-    protected JMenuItem getApplyPublishingNameItem() {
+    protected JMenuItem getSetPublishingNameItem() {
         
         List<Sample> samples = new ArrayList<>();
         for(DomainObject domainObject : domainObjectList) {
@@ -629,16 +631,21 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         
         if (samples.size()!=domainObjectList.size()) return null;
         
-        JMenuItem menuItem = getNamedActionItem(new SetPublishingNameAction(samples));
+        return getNamedActionItem(new SetPublishingNameAction(samples));
+    }
+    
+    protected JMenuItem getApplyPublishingNamesItem() {
         
-        for(Sample sample : samples) {
-            if (!ClientDomainUtils.hasWriteAccess(sample)) {
-                menuItem.setEnabled(false);
-                break;
+        List<Sample> samples = new ArrayList<>();
+        for(DomainObject domainObject : domainObjectList) {
+            if (domainObject instanceof Sample) {
+                samples.add((Sample)domainObject);
             }
         }
         
-        return menuItem;
+        if (samples.size()!=domainObjectList.size()) return null;
+        
+        return getNamedActionItem(new ApplyPublishingNamesAction(samples));
     }
 
     /** Allows users to rerun their own samples. */
