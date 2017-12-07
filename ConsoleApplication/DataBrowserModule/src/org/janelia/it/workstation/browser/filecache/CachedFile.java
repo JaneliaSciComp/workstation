@@ -66,7 +66,7 @@ public class CachedFile {
      * @return the source URL for this file.
      */
     public String getRemoteFileName() {
-        return webDavFile.getRemoteFileName();
+        return webDavFile.getWebdavFileKey();
     }
 
     /**

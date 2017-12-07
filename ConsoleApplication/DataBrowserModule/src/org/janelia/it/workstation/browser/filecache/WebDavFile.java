@@ -22,7 +22,7 @@ import java.net.URL;
 public class WebDavFile {
 
     private String remoteFileUrl;
-    private String remoteFileName;
+    private String webdavFileKey;
     private boolean isDirectory;
     private Long contentLength;
     private String etag;
@@ -31,17 +31,16 @@ public class WebDavFile {
      * Parses the specified WebDAV PROPFIND response 'fragment' to
      * populate this file's attributes.
      *
-     * @param  remoteFileName       the full remote file name originally requested
-     *                              resource (could be a parent directory).
+     * @param  webdavFileKey        the webdav file key
      * @param  multiStatusResponse  the PROPFIND response for the file.
      *
      * @throws IllegalArgumentException
      *   if a file specific URL cannot be constructed.
      */
-    WebDavFile(String remoteFileName, MultiStatusResponse multiStatusResponse)
+    WebDavFile(String webdavFileKey, MultiStatusResponse multiStatusResponse)
             throws IllegalArgumentException {
 
-        this.remoteFileName = remoteFileName;
+        this.webdavFileKey = webdavFileKey;
         remoteFileUrl = multiStatusResponse.getHref();
         final DavPropertySet propertySet =
                 multiStatusResponse.getProperties(HttpStatus.SC_OK);
@@ -83,10 +82,10 @@ public class WebDavFile {
     }
 
     /**
-     * @return the file's remote name.
+     * @return the webdav file key
      */
-    public String getRemoteFileName() {
-        return remoteFileName;
+    public String getWebdavFileKey() {
+        return webdavFileKey;
     }
 
     /**
@@ -120,7 +119,7 @@ public class WebDavFile {
 
     @Override
     public String toString() {
-        return "\nWebDavFile{remoteFileName='" + remoteFileName + '\'' +
+        return "\nWebDavFile{webdavFileKey='" + webdavFileKey + '\'' +
                 ", isDirectory=" + isDirectory +
                 ", contentLength=" + contentLength +
                 ", etag=" + etag +

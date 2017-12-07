@@ -2,7 +2,6 @@ package org.janelia.it.workstation.browser.filecache;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -20,7 +19,6 @@ import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
-import org.janelia.it.workstation.browser.api.web.JwtAuthScheme;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +57,27 @@ public class WebDavClient {
     }
 
     /**
+     * Finds information about the storage using the storage path prefix
+     *
+     * @param  storagePathPrefix storage key
+     *
+     * @return WebDAV information for the storage.
+     *
+     * @throws WebDavException
+     *   if the storage information cannot be retrieved.
+     */
+    public WebDavFile findStorage(String storagePathPrefix)
+            throws WebDavException {
+        String href = getWebdavFindUrl(storagePathPrefix, "storagePrefix");
+
+        MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0, 0);
+        if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
+            throw new WebDavException("empty response returned for " + storagePathPrefix);
+        }
+        return new WebDavFile(storagePathPrefix, multiStatusResponses[0]);
+    }
+
+    /**
      * Finds information about the specified file.
      *
      * @param  remoteFileName  file's remote reference name.
@@ -68,9 +87,9 @@ public class WebDavClient {
      * @throws WebDavException
      *   if the file information cannot be retrieved.
      */
-    public WebDavFile findFile(String remoteFileName, String context)
+    public WebDavFile findFile(String remoteFileName)
             throws WebDavException {
-        String href = getWebdavFindUrl(remoteFileName, context);
+        String href = getWebdavFindUrl(remoteFileName, "dataStoragePath");
 
         MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0, 0);
         if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
@@ -195,8 +214,6 @@ public class WebDavClient {
         PropFindMethod method = null;
         try {
             method = new PropFindMethod(href, WebDavFile.PROPERTY_NAMES, depth);
-            method.setDoAuthentication(true);
-            method.getHostAuthState().setAuthScheme(new JwtAuthScheme());
             method.addRequestHeader("Accept", "application/xml");
             method.addRequestHeader("Content-Type", "application/xml");
             final int responseCode = httpClient.executeMethod(method);
@@ -234,7 +251,7 @@ public class WebDavClient {
 
     URL getDownloadFileURL(String standardPathName) {
         try {
-            return new URL(baseUrl + "/" + standardPathName);
+            return new URL(baseUrl + "/path/" + standardPathName);
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }

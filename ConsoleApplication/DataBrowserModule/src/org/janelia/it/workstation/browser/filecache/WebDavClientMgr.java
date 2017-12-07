@@ -96,7 +96,7 @@ public class WebDavClientMgr {
     }
 
     private WebDavFile findWebDavFileStorage(String storagePathPrefix) throws WebDavException {
-        return masterWebDavInstance.findFile(storagePathPrefix.toString(), "storagePrefix");
+        return masterWebDavInstance.findStorage(storagePathPrefix);
     }
 
     /**
@@ -111,7 +111,8 @@ public class WebDavClientMgr {
      */
     WebDavFile findFile(String remoteFileName)
             throws WebDavException {
-        return masterWebDavInstance.findFile(remoteFileName, "storagePath");
+        WebDavClient webDavClient = getWebDavClientForStandardPath(remoteFileName);
+        return webDavClient.findFile(remoteFileName);
     }
 
     String createStorage(String storageName) {

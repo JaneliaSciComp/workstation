@@ -10,12 +10,8 @@ import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.auth.AuthPolicy;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.api.web.JWTCredentials;
-import org.janelia.it.workstation.browser.api.web.JwtAuthScheme;
 import org.janelia.it.workstation.browser.filecache.LocalFileCache;
 import org.janelia.it.workstation.browser.filecache.WebDavClientMgr;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
@@ -68,7 +64,6 @@ public class FileMgr {
         HttpConnectionManagerParams managerParams = mgr.getParams();
         managerParams.setDefaultMaxConnectionsPerHost(WEBDAV_MAX_CONNS_PER_HOST);
         managerParams.setMaxTotalConnections(WEBDAV_MAX_TOTAL_CONNECTIONS);
-        AuthPolicy.registerAuthScheme(JwtAuthScheme.JWT_AUTH_SCHEME_NAME, JwtAuthScheme.class);
         httpClient = new HttpClient(mgr);
         webDavClientMgr = new WebDavClientMgr(WEBDAV_BASE_URL, httpClient);
 
@@ -233,11 +228,10 @@ public class FileMgr {
 
     void setAuthToken(String authToken) {
         this.authToken = authToken;
-        this.httpClient.getState().setCredentials(AuthScope.ANY, new JWTCredentials(authToken));
-
-        final HttpClientParams params = httpClient.getParams();
-
-//        params.getDefaults().setParameter("http.default-headers",
-//                ImmutableList.of(new Header("Authorization", "Bearer " + authToken)));
+        // I prefer this method to the AuthState approach because it's more convenient
+        // with the AuthState I have to set authentication required for every HttpMethod instance that requires authentication
+        // and I also have to set the scheme
+        httpClient.getParams().getDefaults().setParameter("http.default-headers",
+                ImmutableList.of(new Header("Authorization", "Bearer " + authToken)));
     }
 }
