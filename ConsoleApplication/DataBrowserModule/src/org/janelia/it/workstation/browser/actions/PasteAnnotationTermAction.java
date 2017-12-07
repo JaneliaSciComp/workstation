@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.actions;
 
 import java.awt.event.ActionEvent;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -46,6 +47,10 @@ public class PasteAnnotationTermAction extends AbstractAction {
                 for (DomainObject domainObject : selectedObjects) {
                     Annotation baseAnnotation = StateMgr.getStateMgr().getCurrentSelectedOntologyAnnotation();
                     Annotation annotation = new Annotation(baseAnnotation);
+                    // We may be copying an annotation we don't own. Don't copy the ownership.
+                    annotation.setOwnerKey(null);
+                    annotation.setReaders(Collections.emptySet());
+                    annotation.setWriters(Collections.emptySet());
                     annotation.setTarget(Reference.createFor(domainObject));
                     annotation = model.create(annotation);
                     setProgress(i++, selectedObjects.size());
