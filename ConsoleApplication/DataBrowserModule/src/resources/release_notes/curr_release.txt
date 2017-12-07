@@ -1,5 +1,8 @@
 // 7.1
 
 Workstation Browser
-* "Open in Fiji" now works even when displaying post processed results
+* Added "Apply Publishing Names" right-click option to automatically populate publishing names 
+* Changed "Open in Fiji" right-click option so that it works even when displaying post processed results
+* Granting write privilege on annotations now confers the ability to delete them 
 * Added Polarity Case 5 pipeline
+* Fixed issue with "Select All" button not appearing when "Show only items with selected imagery" was checked
