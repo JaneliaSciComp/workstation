@@ -35,6 +35,7 @@ import org.janelia.it.workstation.browser.events.selection.DomainObjectSelection
 import org.janelia.it.workstation.browser.gui.dialogs.TableViewerConfigDialog;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerType;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
@@ -82,6 +83,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private List<DomainObjectAttribute> attrs;
 
     // UI state
+    private ListViewerActionListener listener;
     private String sortField;
     private boolean ascending = true;
 
@@ -138,6 +140,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
+    public void setActionListener(ListViewerActionListener listener) {
+        this.listener = listener;
+    }
+
+    @Override
     public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
         super.setSelectionModel(selectionModel);
         this.selectionModel = selectionModel;
@@ -148,6 +155,13 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         return selectionModel;
     }
 
+    @Override
+    public int getNumItemsHidden() {
+        int totalItems = this.domainObjectList.getDomainObjects().size();
+        int totalVisibleItems = getObjects().size();
+        return totalItems-totalVisibleItems;
+    }
+        
     @Override
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
         super.selectObjects(domainObjects, select, clearAll, isUserDriven, notifyModel);

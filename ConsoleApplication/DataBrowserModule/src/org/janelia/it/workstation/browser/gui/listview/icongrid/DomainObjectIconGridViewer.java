@@ -29,6 +29,7 @@ import org.janelia.it.workstation.browser.gui.dialogs.IconGridViewerConfigDialog
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.gui.listview.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
@@ -45,7 +46,6 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Preference;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFiles;
@@ -82,6 +82,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private SearchProvider searchProvider;
 
     // UI state
+    private ListViewerActionListener listener;
     private boolean editMode;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
@@ -238,6 +239,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     public JPanel getPanel() {
         return this;
     }
+        
+    @Override
+    public void setActionListener(ListViewerActionListener listener) {
+        this.listener = listener;
+    }
     
     @Override
     public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
@@ -250,6 +256,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         return selectionModel;
     }
 
+    @Override
+    public int getNumItemsHidden() {
+        int totalItems = this.domainObjectList.getDomainObjects().size();
+        int totalVisibleItems = getObjects().size();
+        return totalItems-totalVisibleItems;
+    }
+    
     @Override
     public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
         log.info("selectEditObjects(domainObjects={},select={})", DomainUtils.abbr(domainObjects), select);
@@ -522,6 +535,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         try {
             FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, mustHaveImage);
             refreshDomainObjects();
+            if (listener!=null) listener.visibleObjectsChanged();
         }
         catch (Exception e) {
             FrameworkImplProvider.handleException(e);
