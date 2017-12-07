@@ -5,6 +5,7 @@ layout (location=1) in vec4 fc;
 
 uniform vec3 dimXYZ;
 uniform vec3 voxelSize;
+uniform mat4 mvp;
 
 out vec4 colorv;
 
