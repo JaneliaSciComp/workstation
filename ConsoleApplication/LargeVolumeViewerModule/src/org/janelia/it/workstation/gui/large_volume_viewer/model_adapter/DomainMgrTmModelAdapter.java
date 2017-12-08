@@ -175,11 +175,11 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
         
         ObjectMapper mapper = new ObjectMapper();
         Map<String,Object> updateHeaders = new HashMap<String,Object> ();
-       // updateHeaders.put(HeaderConstants.TYPE, type);
-       // updateHeaders.put(HeaderConstants.USER, AccessManager.getSubjectKey());
-        updateHeaders.put(HeaderConstants.WORKSPACE, neuron.getWorkspaceId());
+        updateHeaders.put(HeaderConstants.TYPE, type.toString());
+        updateHeaders.put(HeaderConstants.USER, AccessManager.getSubjectKey());
+        updateHeaders.put(HeaderConstants.WORKSPACE, neuron.getWorkspaceId().toString());
         updateHeaders.put(HeaderConstants.METADATA, mapper.writeValueAsString(neuron));
-        //updateHeaders.put(HeaderConstants.NEURONIDS, neuronIds.toString());
+        updateHeaders.put(HeaderConstants.NEURONIDS, neuronIds.toString());
         
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
         byte[] neuronData = exchanger.serializeNeuron(neuron);

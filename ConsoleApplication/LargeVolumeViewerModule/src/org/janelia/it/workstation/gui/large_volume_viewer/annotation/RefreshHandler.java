@@ -61,7 +61,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             throw new IOException("Issue trying to process metadata from update");
         }
         System.out.println ("UYpdate asdfasdfasdf");
-        MessageType msgType = MessageType.valueOf((String)metadata.get(HeaderConstants.TYPE));
+       /* MessageType msgType = MessageType.valueOf((String)metadata.get(HeaderConstants.TYPE));
         String[] neuronIds = ((String)metadata.get(HeaderConstants.NEURONIDS)).split(",");
             log.info("Update received - " + msgType + ": Neuron Ids - " + neuronIds);    
         // first filter out messages to current shared workspace
@@ -74,8 +74,8 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         String user = (String)metadata.get("user");
         if (user==AccessManager.getSubjectKey() && msgType!=MessageType.REQUEST_NEURON_OWNERSHIP)
             return;
-
-        log.info("Update received - " + msgType + ": Neuron Ids - " + neuronIds);
+*/
+  //      log.info("Update received - " + msgType + ": Neuron Ids - " + neuronIds);
         // hook into main GUI thread to update neuron models and fire events on AnnotationModel
         // 
 
