@@ -25,29 +25,44 @@ import org.slf4j.LoggerFactory;
 public class RefreshHandler implements DeliverCallback, CancelCallback {
     
     private static final Logger log = LoggerFactory.getLogger(RefreshHandler.class);
-    private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url");
-    private static final String MESSAGESERVER_USERACCOUNT = ConsoleProperties.getInstance().getProperty("domain.msgserver.useraccount");
-    private static final String MESSAGESERVER_PASSWORD = ConsoleProperties.getInstance().getProperty("domain.msgserver.password");
-    private static final String MESSAGESERVER_REFRESHEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.refresh");
+    private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
+    private static final String MESSAGESERVER_USERACCOUNT = ConsoleProperties.getInstance().getProperty("domain.msgserver.useraccount").trim();
+    private static final String MESSAGESERVER_PASSWORD = ConsoleProperties.getInstance().getProperty("domain.msgserver.password").trim();
+    private static final String MESSAGESERVER_REFRESHEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.refresh").trim();
     
     private AnnotationModel annotationModel;
     private Channel msgChannel;
     private Receiver msgReceiver;
+    static RefreshHandler handler;
     
-    public RefreshHandler() {
+    private RefreshHandler() {
         
     }
     
-    public void init() throws Exception {
-        ConnectionManager connManager = ConnectionManager.getInstance();
-        //connManager.configureTarget(MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD);
+    public static RefreshHandler getInstance() {
+        if (handler==null) {
+            handler = new RefreshHandler();
+            handler.init();
+        }
+        return handler;
+    }
+    
+    
+    private void init() {
+        try {
+            ConnectionManager connManager = ConnectionManager.getInstance();
+            connManager.configureTarget(MESSAGESERVER_URL,  MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD);
+            msgChannel = connManager.getConnection();
         
-        connManager.configureTarget("c13u05", "admin", "mlShar@d");
-        msgChannel = connManager.getConnection();
-        
-        msgReceiver = new Receiver();
-        msgReceiver.init(connManager, "ModelRefresh", true);
-        msgReceiver.setupReceiver(this);
+            msgReceiver = new Receiver();
+            msgReceiver.init(connManager, "ModelRefresh", true);
+            msgReceiver.setupReceiver(this);
+            log.info("Established connection to message server " + MESSAGESERVER_URL);
+        } catch (Exception e) {
+            log.error("Problems initializing connection to message server " + MESSAGESERVER_URL +
+                    ", with credentials username/password: " + MESSAGESERVER_USERACCOUNT + "/" + MESSAGESERVER_PASSWORD);
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -56,12 +71,11 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
     @Override
     public void handle(String string, Delivery dlvr) throws IOException {
         // fire notice to AnnotationModel
-        Map<String,Object> metadata = dlvr.getProperties().getHeaders();
+        /*Map<String,Object> metadata = dlvr.getProperties().getHeaders();
         if (metadata==null) {
             throw new IOException("Issue trying to process metadata from update");
         }
-        System.out.println ("UYpdate asdfasdfasdf");
-       /* MessageType msgType = MessageType.valueOf((String)metadata.get(HeaderConstants.TYPE));
+        MessageType msgType = MessageType.valueOf((String)metadata.get(HeaderConstants.TYPE));
         String[] neuronIds = ((String)metadata.get(HeaderConstants.NEURONIDS)).split(",");
             log.info("Update received - " + msgType + ": Neuron Ids - " + neuronIds);    
         // first filter out messages to current shared workspace
@@ -72,13 +86,16 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         
         // filter out messages that we ourselves sent 
         String user = (String)metadata.get("user");
-        if (user==AccessManager.getSubjectKey() && msgType!=MessageType.REQUEST_NEURON_OWNERSHIP)
+        if (user==AccessManager.getSubjectKey() && msgType) {
+            // if it's a save neuron for a create neuron, find the neuron with the same name and update
+//            annotationModel.getNeuronFromNeuronID(workspaceId)
+        } 
             return;
-*/
+
   //      log.info("Update received - " + msgType + ": Neuron Ids - " + neuronIds);
         // hook into main GUI thread to update neuron models and fire events on AnnotationModel
         // 
-
+*/
     }
 
     /**

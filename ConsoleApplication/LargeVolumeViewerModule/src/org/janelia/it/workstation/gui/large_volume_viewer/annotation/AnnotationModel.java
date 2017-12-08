@@ -137,7 +137,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private final ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
 
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
-    
 
     // ----- constants
     // how far away to try to put split anchors (pixels)
@@ -164,14 +163,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         });
         
         // register with Message Server to receive async updates
-        RefreshHandler handler = new RefreshHandler();
-        handler.setAnnotationModel(this);
-        try {
-            handler.init();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
+        RefreshHandler refreshHandler = RefreshHandler.getInstance();
+        refreshHandler.setAnnotationModel(this);
     }
 
     public boolean editsAllowed() {

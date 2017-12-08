@@ -255,7 +255,7 @@ public class GenerateNeuronsDialog extends ModalDialog {
                         final TmNeuronMetadata neuron = annotationModel.getNeuronManager()
                                 .createTiledMicroscopeNeuron(currentWorkspace, neuronName);
                         generator.generateArtificialNeuronData(neuron);
-                        annotationModel.getNeuronManager().saveNeuronData(neuron).get();
+                        annotationModel.getNeuronManager().saveNeuronData(neuron);
                         setProgress(index++, total);
                     }
                     
