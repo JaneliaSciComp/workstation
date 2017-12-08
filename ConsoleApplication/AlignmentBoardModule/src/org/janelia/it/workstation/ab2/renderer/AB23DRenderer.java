@@ -127,6 +127,31 @@ public abstract class AB23DRenderer extends AB2Renderer implements AB2Renderer3D
 
     public AB23DRenderer() {
         setBackgroundColorBuffer();
+        resetView();
+//        vantage3d=new Vantage(null);
+//        vantage2d=new Vantage(null);
+//        viewport=new Viewport();
+//        viewport.setzNearRelative(0.1f);
+//        camera3d = new PerspectiveCamera(vantage3d, viewport);
+//        camera2d = new OrthographicCamera(vantage2d, viewport);
+//        vantage3d.setFocus(0.0f,0.0f,(float)DEFAULT_CAMERA_FOCUS_DISTANCE);
+//        vantage2d.setFocus(0.0f,0.0f,(float)DEFAULT_CAMERA_FOCUS_DISTANCE);
+    }
+
+    public void resetView() {
+        //vantage2d.resetView();
+        //vantage3d.resetView();
+        //viewport.setzNearRelative(0.1f);
+        //vantage2d.setFocus(0.0f, 0.0f, (float)DEFAULT_CAMERA_FOCUS_DISTANCE);
+        //vantage3d.setFocus(0.0f, 0.0f, (float)DEFAULT_CAMERA_FOCUS_DISTANCE);
+        boolean resetViewport=false;
+        int viewportWidth=0;
+        int viewportHeight=0;
+        if (viewport!=null) {
+            resetViewport=true;
+            viewportWidth=viewport.getWidthPixels();
+            viewportHeight=viewport.getHeightPixels();
+        }
         vantage3d=new Vantage(null);
         vantage2d=new Vantage(null);
         viewport=new Viewport();
@@ -135,6 +160,11 @@ public abstract class AB23DRenderer extends AB2Renderer implements AB2Renderer3D
         camera2d = new OrthographicCamera(vantage2d, viewport);
         vantage3d.setFocus(0.0f,0.0f,(float)DEFAULT_CAMERA_FOCUS_DISTANCE);
         vantage2d.setFocus(0.0f,0.0f,(float)DEFAULT_CAMERA_FOCUS_DISTANCE);
+        if (resetViewport) {
+            viewport.setWidthPixels(viewportWidth);
+            viewport.setHeightPixels(viewportHeight);
+            viewport.getChangeObservable().notifyObservers();
+        }
     }
 
     protected void checkGlError(GL4 gl, String message) {
