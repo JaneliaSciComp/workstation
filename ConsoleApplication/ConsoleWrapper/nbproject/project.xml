@@ -211,6 +211,13 @@
                 <package>com.kenai.jaffl.struct</package>
                 <package>com.kenai.jaffl.util</package>
                 <package>com.kenai.jffi</package>
+                <package>com.rabbitmq.client</package>
+                <package>com.rabbitmq.client.impl</package>
+                <package>com.rabbitmq.client.impl.nio</package>
+                <package>com.rabbitmq.client.impl.recovery</package>
+                <package>com.rabbitmq.tools.json</package>
+                <package>com.rabbitmq.tools.jsonrpc</package>
+                <package>com.rabbitmq.utility</package>
                 <package>com.sun.activation.registries</package>
                 <package>com.sun.activation.viewers</package>
                 <package>com.sun.istack</package>
