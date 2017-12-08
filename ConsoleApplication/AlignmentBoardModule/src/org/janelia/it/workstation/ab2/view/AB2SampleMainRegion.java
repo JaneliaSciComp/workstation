@@ -91,8 +91,8 @@ public class AB2SampleMainRegion extends GLRegion {
         scale=(float)((1.0*w2)/(1.0*w0));
 
         // Now base translation on virtual square coordinates
-        xCenter=x0+w1/2;
-        yCenter=y0+w1/2;
+        xCenter=x0+w2/2;
+        yCenter=y0+w2/2;
 
         xCenterFraction=(float)((1.0*xCenter)/(1.0*w0));
         yCenterFraction=(float)((1.0*yCenter)/(1.0*w0));
