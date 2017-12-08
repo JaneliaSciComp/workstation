@@ -6,3 +6,4 @@ Workstation Browser
 * Granting write privilege on annotations now confers the ability to delete them 
 * Added Polarity Case 5 pipeline
 * Fixed issue with "Select All" button not appearing when "Show only items with selected imagery" was checked
+* Fixed issue with LSMs not appearing when "Show only items with selected imagery" was checked 
