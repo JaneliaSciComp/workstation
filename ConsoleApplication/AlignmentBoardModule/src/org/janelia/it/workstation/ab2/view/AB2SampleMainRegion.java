@@ -126,7 +126,8 @@ public class AB2SampleMainRegion extends GLRegion {
                 0.0f, scale, 0.0f, 0.0f,
                 0.0f, 0.0f, scale, 0.0f,
                 0.0f, 0.0f, 0.0f, 1.0f);
-        Matrix4 modelMatrix=translationMatrix.multiply(scaleMatrix);
+        //Matrix4 modelMatrix=translationMatrix.multiply(scaleMatrix); - NOT CORRECT
+        Matrix4 modelMatrix=scaleMatrix.multiply(translationMatrix);
 
         return modelMatrix;
     }
