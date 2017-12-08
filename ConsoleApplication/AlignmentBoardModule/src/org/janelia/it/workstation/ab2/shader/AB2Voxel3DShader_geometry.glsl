@@ -6,7 +6,6 @@ layout(triangle_strip, max_vertices=24) out;
 in vec4 colorv[];
 out vec4 colorg;
 
-uniform vec4 xyBounds;
 uniform mat4 mvp;
 uniform vec3 voxelSize;
 

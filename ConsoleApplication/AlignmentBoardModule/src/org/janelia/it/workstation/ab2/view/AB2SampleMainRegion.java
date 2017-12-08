@@ -47,7 +47,8 @@ public class AB2SampleMainRegion extends GLRegion {
         sampleRenderer.reshape(gl, x, y, screenWidth, screenHeight, screenWidth, screenHeight);
         computeOffsetParameters(x, y, width, height, screenWidth, screenHeight);
         sampleRenderer.setVoxel3DActorPostRotationalMatrix(getPrMatrix(x, y, width, height, screenWidth, screenHeight));
-        sampleRenderer.setVoxel3DxyBounds(getXYBounds(x, y, width, height, screenWidth, screenHeight));
+        int[] xyBounds=getXYBounds(x, y, width, height, screenWidth, screenHeight);
+        sampleRenderer.setVoxel3DxyBounds(xyBounds[0], xyBounds[1], xyBounds[2], xyBounds[3]);
     }
 
     private void computeOffsetParameters(int x, int y, int width, int height, int screenWidth, int screenHeight) {
@@ -130,16 +131,12 @@ public class AB2SampleMainRegion extends GLRegion {
         return modelMatrix;
     }
 
-    public Vector4 getXYBounds(int x, int y, int width, int height, int screenWidth, int screenHeight) {
-        int xBegin=x0;
-        int xEnd=xBegin+w1;
-        int yBegin=y0;
-        int yEnd=yBegin+w1;
-        float xB=(float)( ( (1.0*xBegin)/(1.0*w0) )*2.0-1.0 );
-        float xE=(float)( ( (1.0*xEnd)/(1.0*w0) )*2.0-1.0);
-        float yB=(float)( ( (1.0*yBegin)/(1.0*w0) )*2.0-1.0 );
-        float yE=(float)( ( (1.0*yEnd)/(1.0*w0) )*2.0-1.0);
-        return new Vector4(xB, xE, yB, yE);
+    public int[] getXYBounds(int x, int y, int width, int height, int screenWidth, int screenHeight) {
+        int bX0=x;
+        int bY0=y;
+        int bX1=x+width;
+        int bY1=y+height;
+        return new int[] { bX0, bY0, bX1, bY1 };
     }
 
 }

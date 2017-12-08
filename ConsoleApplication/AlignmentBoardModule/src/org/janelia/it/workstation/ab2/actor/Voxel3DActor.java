@@ -30,7 +30,7 @@ public class Voxel3DActor extends GLAbstractActor {
     int dimX;
     int dimY;
     int dimZ;
-    Vector4 xyBounds=new Vector4(-1.1f, 1.1f, -1.1f, 1.1f);
+    int[] xyBounds=new int[] { 0, 0, 10000, 10000 }; // effectively no limits
 
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
@@ -46,10 +46,12 @@ public class Voxel3DActor extends GLAbstractActor {
         this.postRotationMatrix=postRotationMatrix;
     }
 
-    public void setXYBounds(Vector4 xyBounds) {
-        this.xyBounds=xyBounds;
+    public void setXYBounds(int x0, int y0, int x1, int y1) {
+        xyBounds[0]=x0;
+        xyBounds[1]=y0;
+        xyBounds[2]=x1;
+        xyBounds[3]=y1;
     }
-
 
     public Voxel3DActor(AB23DRenderer renderer, int actorId, List<Vector3> voxels, List<Vector4> colors,
                         int dimX, int dimY, int dimZ) {
@@ -236,7 +238,7 @@ public class Voxel3DActor extends GLAbstractActor {
                 voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()));
             }
             voxel3DShader.setDimXYZ(gl, dimX, dimY, dimZ);
-            voxel3DShader.setGLBoundsXY(gl, xyBounds);
+            voxel3DShader.setGLBoundsXY(gl, xyBounds[0], xyBounds[1], xyBounds[2], xyBounds[3]);
             int dimMax=getMaxDim();
             float voxelUnitSize=1f/(1f*dimMax);
             voxel3DShader.setVoxelSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));

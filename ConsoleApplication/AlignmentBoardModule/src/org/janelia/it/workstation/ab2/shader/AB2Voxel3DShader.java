@@ -39,8 +39,8 @@ public class AB2Voxel3DShader extends GLShaderProgram {
         checkGlError(gl, "AB2Voxel3DShader setVoxelSize() error");
     }
 
-    public void setGLBoundsXY(GL4 gl, Vector4 xyBounds) {
-        setUniform4v(gl, "xyBounds", 1, xyBounds.toArray());
+    public void setGLBoundsXY(GL4 gl, int x0, int y0, int x1, int y1) {
+        setUniform4i(gl, "xyBounds", x0, y0, x1, y1);
         checkGlError(gl, "AB2Voxel3DShader setGLBoundsXY() error");
     }
 }

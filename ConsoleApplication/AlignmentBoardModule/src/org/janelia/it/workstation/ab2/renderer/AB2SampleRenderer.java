@@ -37,7 +37,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
 
     private Matrix4 modelMatrix;
     private Matrix4 prMatrix;
-    private Vector4 voxel3DxyBounds;
+    private int[] voxel3DxyBounds=new int[] { 0, 0, 10000, 10000 };
 
     private BoundingBoxActor boundingBoxActor;
     private Camera3DFollowBoxActor cameraFollowBoxActor;
@@ -127,7 +127,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
         }
         if (this.voxel3DxyBounds!=null) {
             logger.info("addVoxel3DActor - setting xy bounds");
-            voxel3DActor.setXYBounds(this.voxel3DxyBounds);
+            voxel3DActor.setXYBounds(voxel3DxyBounds[0], voxel3DxyBounds[1], voxel3DxyBounds[2], voxel3DxyBounds[3]);
         }
         this.voxel3DActor=voxel3DActor;
         voxel3DShaderSequence.getActorSequence().add(voxel3DActor);
@@ -248,10 +248,13 @@ public class AB2SampleRenderer extends AB23DRenderer {
         }
     }
 
-    public void setVoxel3DxyBounds(Vector4 voxel3DxyBounds) {
-        this.voxel3DxyBounds=voxel3DxyBounds;
+    public void setVoxel3DxyBounds(int x0, int y0, int x1, int y1) {
+        voxel3DxyBounds[0]=x0;
+        voxel3DxyBounds[1]=y0;
+        voxel3DxyBounds[2]=x1;
+        voxel3DxyBounds[3]=y1;
         if (voxel3DActor!=null) {
-            voxel3DActor.setXYBounds(voxel3DxyBounds);
+            voxel3DActor.setXYBounds(voxel3DxyBounds[0], voxel3DxyBounds[1], voxel3DxyBounds[2], voxel3DxyBounds[3]);
             logger.info("voxel3DActor - xy bounds set");
         } else {
             logger.info("voxel3DActor is null - xy bounds not set");
