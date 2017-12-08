@@ -1,9 +1,16 @@
 package org.janelia.it.workstation.browser.filecache;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.workstation.browser.filecache.CachedFile;
-import org.janelia.it.workstation.browser.filecache.FileNotCacheableException;
-import org.janelia.it.workstation.browser.filecache.LocalFileCache;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,10 +19,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 
 import static org.junit.Assert.*;
 
@@ -24,9 +34,14 @@ import static org.junit.Assert.*;
  *
  * @author Eric Trautman
  */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({WebDavClientMgr.class, RemoteFileCacheLoader.class})
 public class LocalFileCacheTest {
+    private static final Logger LOG = LoggerFactory.getLogger(LocalFileCacheTest.class);
 
-    private MockWebDavClient mockClient;
+    private WebDavClient webDavClient;
+    private HttpClient httpClient;
+    private GetMethod testGetMethod;
     private List<File> testRemoteFiles;
     private int singleFileKilobytes;
     private int immediateFileCount;
@@ -39,8 +54,7 @@ public class LocalFileCacheTest {
 
     @Before
     public void setUp() throws Exception {
-        LOG.info("setUp: entry ----------------------------------------");
-        final String ts = CachedFileTest.buildTimestampName();
+        final String ts = TestFileUtils.buildTimestampName();
         final File cacheRootParentDirectory = new File("test-cache-" + ts);
         final String path = cacheRootParentDirectory.getAbsolutePath();
         if (cacheRootParentDirectory.mkdir()) {
@@ -66,38 +80,53 @@ public class LocalFileCacheTest {
         singleFileKilobytes = 50;
         testRemoteFiles = new ArrayList<>();
 
-        testRemoteFiles.add(
-                CachedFileTest.createFile(nestedRemoteDirectory,
-                                          singleFileKilobytes));
+        testRemoteFiles.add(TestFileUtils.createFile(nestedRemoteDirectory, singleFileKilobytes));
 
         immediateFileCount = 3;
         for (int i = 0; i < immediateFileCount; i++) {
-            testRemoteFiles.add(
-                    CachedFileTest.createFile(remoteTestDirectory,
-                                              singleFileKilobytes));
+            testRemoteFiles.add(TestFileUtils.createFile(remoteTestDirectory, singleFileKilobytes));
         }
 
-        mockClient = new MockWebDavClient();
-        mockClient.mapFilesUsingDefaultUrl(testRemoteFiles);
+        webDavClient = Mockito.mock(WebDavClient.class);
+        httpClient = Mockito.mock(HttpClient.class);
 
         maxNumberOfCachedFiles = testRemoteFiles.size() - 1;
         // adding last file should force removal of first file
         final int cacheKilobytes =
                 (singleFileKilobytes + 1) * maxNumberOfCachedFiles;
-        cache = new LocalFileCache(cacheRootParentDirectory, cacheKilobytes, mockClient, null);
+        PowerMockito.whenNew(WebDavClient.class).withArguments(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpClient.class)).thenReturn(webDavClient);
+
+        Mockito.when(webDavClient.findStorage(ArgumentMatchers.anyString()))
+                .then(invocation -> {
+                    MultiStatusResponse multiStatusResponse = new MultiStatusResponse("http://test", "desc");
+                    return new WebDavFile(invocation.getArgument(0), multiStatusResponse);
+                });
+        Mockito.when(webDavClient.findFile(ArgumentMatchers.anyString()))
+                .then(invocation -> {
+                    String fileName = invocation.getArgument(0);
+                    MultiStatusResponse multiStatusResponse = new MultiStatusResponse("http://test", "desc");
+                    multiStatusResponse.add(new DefaultDavProperty<>(DavPropertyName.GETCONTENTLENGTH, String.valueOf(new File(fileName).length())), 200);
+                    return new WebDavFile(fileName, multiStatusResponse);
+                });
+        Mockito.when(webDavClient.getDownloadFileURL(ArgumentMatchers.anyString()))
+                .then(invocation -> {
+                    return new URL("http://test/path" + invocation.getArgument(0));
+                });
+        testGetMethod = Mockito.mock(GetMethod.class);
+        PowerMockito.whenNew(GetMethod.class).withAnyArguments().thenReturn(testGetMethod);
+        Mockito.when(httpClient.executeMethod(ArgumentMatchers.any(HttpMethod.class))).thenReturn(200);
+
+        cache = new LocalFileCache(cacheRootParentDirectory, cacheKilobytes, null, httpClient, new WebDavClientMgr("http://basewebdav", httpClient));
 
         filesToDeleteDuringTearDown = new ArrayList<>();
         filesToDeleteDuringTearDown.addAll(testRemoteFiles);
 
         directoriesToDeleteDuringTearDown = new ArrayList<>();
         directoriesToDeleteDuringTearDown.add(cacheRootParentDirectory);
-        directoriesToDeleteDuringTearDown.add(cache.getRootDirectory());
         directoriesToDeleteDuringTearDown.add(cache.getActiveDirectory());
         directoriesToDeleteDuringTearDown.add(cache.getTempDirectory());
         directoriesToDeleteDuringTearDown.add(remoteTestDirectory);
         directoriesToDeleteDuringTearDown.add(nestedRemoteDirectory);
-
-        LOG.info("setUp: exit ----------------------------------------");
     }
 
     @After
@@ -106,7 +135,7 @@ public class LocalFileCacheTest {
         LOG.info("tearDown: entry --------------------------------------");
 
         for (File file : filesToDeleteDuringTearDown) {
-            CachedFileTest.deleteFile(file);
+            TestFileUtils.deleteFile(file);
         }
 
         try {
@@ -128,7 +157,7 @@ public class LocalFileCacheTest {
 
         // remove in reverse order so that directories are empty before removal
         for (int i = directoriesToDeleteDuringTearDown.size(); i > 0; i--) {
-            CachedFileTest.deleteFile(directoriesToDeleteDuringTearDown.get(i-1));
+            TestFileUtils.deleteFile(directoriesToDeleteDuringTearDown.get(i-1));
         }
 
         LOG.info("tearDown: exit --------------------------------------");
@@ -147,7 +176,10 @@ public class LocalFileCacheTest {
         int numberOfAdds;
         for (int i = 0; i < maxNumberOfCachedFiles; i++) {
             testRemoteFile = testRemoteFiles.get(i);
-            localFile = cache.getFile(testRemoteFile.toURI().toURL());
+            Mockito.reset(testGetMethod);
+            Mockito.when(testGetMethod.getResponseBodyAsStream()).thenReturn(new FileInputStream(testRemoteFile));
+
+            localFile = cache.getFile(testRemoteFile.getAbsolutePath(), false);
             localFiles.add(localFile);
             numberOfAdds = localFiles.size();
             assertEquals("cached file " + numberOfAdds + " has invalid length",
@@ -158,7 +190,9 @@ public class LocalFileCacheTest {
         }
 
         testRemoteFile = testRemoteFiles.get(maxNumberOfCachedFiles);
-        localFile = cache.getFile(testRemoteFile.toURI().toURL());
+        Mockito.reset(testGetMethod);
+        Mockito.when(testGetMethod.getResponseBodyAsStream()).thenReturn(new FileInputStream(testRemoteFile));
+        localFile = cache.getFile(testRemoteFile.getAbsolutePath(), false);
         localFiles.add(localFile);
         assertEquals("cached file has invalid length",
                      singleFileBytes, localFile.length());
@@ -203,14 +237,13 @@ public class LocalFileCacheTest {
                         file.exists());
         }
 
-        testRemoteFile =
-                CachedFileTest.createFile(remoteTestDirectory,
-                                          cache.getKilobyteCapacity() + 1);
-        mockClient.mapFileUsingDefaultUrl(testRemoteFile);
+        testRemoteFile = TestFileUtils.createFile(remoteTestDirectory, cache.getKilobyteCapacity() + 1);
 
         filesToDeleteDuringTearDown.add(testRemoteFile);
         try {
-            cache.getFile(testRemoteFile.toURI().toURL());
+            Mockito.reset(testGetMethod);
+            Mockito.when(testGetMethod.getResponseBodyAsStream()).thenReturn(new FileInputStream(testRemoteFile));
+            cache.getFile(testRemoteFile.getAbsolutePath(), false);
             fail("file larger than cache should have caused exception");
         } catch (FileNotCacheableException e) {
             Throwable cause = e.getCause();
@@ -225,53 +258,23 @@ public class LocalFileCacheTest {
     public void testGetEffectiveUrl() throws Exception {
         File remoteFile = testRemoteFiles.get(0);
         assertEquals("should not be any cached files before first call", 0, cache.getNumberOfFiles());
-        final URL remoteUrl = remoteFile.toURI().toURL();
-        URL effectiveUrl = cache.getEffectiveUrl(remoteUrl);
+
+        Mockito.reset(testGetMethod);
+        Mockito.when(testGetMethod.getResponseBodyAsStream()).thenReturn(new FileInputStream(remoteFile));
+        URL effectiveUrl = cache.getEffectiveUrl(remoteFile.getAbsolutePath(), true);
         final long numberOfFiles = cache.getNumberOfFiles();
 
-        assertEquals("remote and effective URLs should be the same after first call", remoteUrl, effectiveUrl);
+        assertNotNull(effectiveUrl);
+        assertFalse("effective URL should not be a file URL", effectiveUrl.toString().startsWith("file:"));
         assertEquals("should not be any cached files immediately after first call", 0, numberOfFiles);
 
         // give async load a chance to complete
         Thread.sleep(1000);
 
-        effectiveUrl = cache.getEffectiveUrl(remoteUrl);
+        effectiveUrl = cache.getEffectiveUrl(remoteFile.getAbsolutePath(), false);
 
         assertEquals("the requested file should be cached after a short wait", 1, cache.getNumberOfFiles());
-
-        assertFalse("remote and effective URLs should differ after file is cached", remoteUrl.equals(effectiveUrl));
-    }
-
-    @Test
-    @Category(TestCategories.FastTests.class)
-    public void testGetImmediateDirectory() throws Exception {
-        // double capacity to ensure that limit is based upon immediate check
-        cache.setKilobyteCapacity(cache.getKilobyteCapacity() * 2);
-
-        final URL remoteDirectoryUrl = remoteTestDirectory.toURI().toURL();
-        File localDirectory  = cache.getDirectory(remoteDirectoryUrl, false, false);
-
-        assertTrue("local directory for " + remoteDirectoryUrl + " does not exist", localDirectory.exists());
-
-        final long numberOfFiles = cache.getNumberOfFiles();
-
-        assertEquals("cache contains incorrect number of files", immediateFileCount, numberOfFiles);
-    }
-
-    @Test
-    @Category(TestCategories.FastTests.class)
-    public void testGetAllDirectory() throws Exception {
-        // double capacity so that all files can be cached
-        cache.setKilobyteCapacity(cache.getKilobyteCapacity() * 2);
-
-        final URL remoteDirectoryUrl = remoteTestDirectory.toURI().toURL();
-        File localDirectory  = cache.getDirectory(remoteDirectoryUrl, true, false);
-
-        assertTrue("local directory for " + remoteDirectoryUrl + " does not exist", localDirectory.exists());
-
-        final long numberOfFiles = cache.getNumberOfFiles();
-
-        assertEquals("cache contains incorrect number of files", testRemoteFiles.size(), numberOfFiles);
+        assertTrue("effective URL should be a local file URL", effectiveUrl.toString().startsWith("file:/"));
     }
 
     @Test
@@ -282,28 +285,31 @@ public class LocalFileCacheTest {
         // special set-up for this test
 
         final File firstNonNestedRemoteFile = testRemoteFiles.get(1);
-        final File cachedFileWithoutMeta = cache.getFile(firstNonNestedRemoteFile.toURI().toURL());
+        Mockito.reset(testGetMethod);
+        Mockito.when(testGetMethod.getResponseBodyAsStream()).thenReturn(new FileInputStream(firstNonNestedRemoteFile));
+        final File cachedFileWithoutMeta = cache.getFile(firstNonNestedRemoteFile.getAbsolutePath(), true);
 
         final File secondNonNestedRemoteFile = testRemoteFiles.get(2);
-        File deletedCachedFile = cache.getFile(secondNonNestedRemoteFile.toURI().toURL());
+        Mockito.reset(testGetMethod);
+        Mockito.when(testGetMethod.getResponseBodyAsStream()).thenReturn(new FileInputStream(secondNonNestedRemoteFile));
+        File deletedCachedFile = cache.getFile(secondNonNestedRemoteFile.getAbsolutePath(), true);
 
         final File thirdNonNestedRemoteFile = testRemoteFiles.get(3);
-        final File cachedFileWithCorruptedMeta =
-                cache.getFile(thirdNonNestedRemoteFile.toURI().toURL());
+        Mockito.reset(testGetMethod);
+        Mockito.when(testGetMethod.getResponseBodyAsStream()).thenReturn(new FileInputStream(secondNonNestedRemoteFile));
+        final File cachedFileWithCorruptedMeta = cache.getFile(thirdNonNestedRemoteFile.getAbsolutePath(), true);
 
         assertEquals("should be three cached files at start", 3, cache.getNumberOfFiles());
 
         final File parentDirectory = cachedFileWithoutMeta.getParentFile();
 
-        File deletedMetaFile = new File(parentDirectory,
-                                        CachedFile.getMetaFileName(cachedFileWithoutMeta));
+        File deletedMetaFile = new File(parentDirectory, CachedFile.getMetaFileName(cachedFileWithoutMeta));
         if (! deletedMetaFile.delete()) {
             fail("failed to remove cachedFileWithoutMeta meta file " +
                         deletedMetaFile.getAbsolutePath());
         }
 
-        final File orphanedMetaFile = new File(parentDirectory,
-                                               CachedFile.getMetaFileName(deletedCachedFile));
+        final File orphanedMetaFile = new File(parentDirectory, CachedFile.getMetaFileName(deletedCachedFile));
         if (! deletedCachedFile.delete()) {
             fail("failed to remove cached file " + deletedCachedFile.getAbsolutePath());
         }
@@ -361,6 +367,4 @@ public class LocalFileCacheTest {
         assertFalse("file without meta data " + fileToRemove.getAbsolutePath() + " should have been removed",
                     fileToRemove.exists());
     }
-
-    private static final Logger LOG = LoggerFactory.getLogger(LocalFileCacheTest.class);
 }

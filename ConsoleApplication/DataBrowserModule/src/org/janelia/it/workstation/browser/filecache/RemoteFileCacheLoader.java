@@ -1,19 +1,19 @@
 package org.janelia.it.workstation.browser.filecache;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.cache.CacheLoader;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
+
+import com.google.common.cache.CacheLoader;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class manages loading remote files into the cache.
@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class RemoteFileCacheLoader extends CacheLoader<String, CachedFile> {
     private static final Logger LOG = LoggerFactory.getLogger(RemoteFileCacheLoader.class);
-    private static final CharMatcher SLASHES_CHAR_MATCHER = CharMatcher.anyOf("/\\");
     private static final int EOF = -1;
     // Use 2Mb buffer to reduce likelihood of out of memory errors
     // when concurrent threads are loading images.
@@ -33,19 +32,12 @@ public class RemoteFileCacheLoader extends CacheLoader<String, CachedFile> {
 
     private final HttpClient httpClient;
     private final WebDavClientMgr webDavClientMgr;
-    private final long maxCacheableFileSizeInKb;
-    private final File loadCompletedDir;
-    private final File loadInProgressDir;
+    private final LocalFileCache loadedCache;
 
-    public RemoteFileCacheLoader(HttpClient httpClient, WebDavClientMgr webDavClientMgr,
-                                 long maxCacheableFileSizeInKb,
-                                 File loadCompletedDir,
-                                 File loadInProgressDir) {
+    public RemoteFileCacheLoader(HttpClient httpClient, WebDavClientMgr webDavClientMgr, LocalFileCache loadedCache) {
         this.httpClient = httpClient;
         this.webDavClientMgr = webDavClientMgr;
-        this.maxCacheableFileSizeInKb = maxCacheableFileSizeInKb;
-        this.loadCompletedDir = loadCompletedDir;
-        this.loadInProgressDir = loadInProgressDir;
+        this.loadedCache = loadedCache;
     }
 
     @Override
@@ -55,9 +47,8 @@ public class RemoteFileCacheLoader extends CacheLoader<String, CachedFile> {
 
         // check for catastrophic case of file larger than entire cache
         final long size = webDavFile.getKilobytes();
-        if (size < maxCacheableFileSizeInKb) {
-
-            final String urlPath = webDavFile.getRemoteFileUrl().getPath();
+        if (size < loadedCache.getKilobyteCapacity()) {
+            final String cachedFileName = remoteFileName.startsWith("/") ? remoteFileName.substring(1) : remoteFileName;
 
             // Spent a little time profiling fastest method for deriving
             // a unique name for the temp file in a multi-threaded environment.
@@ -65,17 +56,15 @@ public class RemoteFileCacheLoader extends CacheLoader<String, CachedFile> {
             // than java matcher replaceAll.  Also looked at a class (static)
             // synchronized counter which had similar performance to java matcher
             // but performed much worse as concurrency increased past ten threads.
-            final String uniqueTempFileName = SLASHES_CHAR_MATCHER.replaceFrom(urlPath, '-');
-
-            final File tempFile = new File(loadInProgressDir, uniqueTempFileName);
-            final File activeFile = new File(loadCompletedDir, urlPath);
+            final File tempFile = new File(loadedCache.getTempDirectory(), UUID.randomUUID().toString());
+            final File activeFile = new File(loadedCache.getActiveDirectory(), cachedFileName);
 
             cachedFile = loadRemoteFile(webDavFile, tempFile, activeFile);
 
         } else {
             throw new IllegalStateException(
                     size + " kilobyte file exceeds cache capacity of " +
-                    maxCacheableFileSizeInKb);
+                    loadedCache.getKilobyteCapacity());
         }
 
         return cachedFile;

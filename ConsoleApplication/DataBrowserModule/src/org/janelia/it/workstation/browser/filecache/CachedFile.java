@@ -40,8 +40,8 @@ import java.net.URL;
  * @author Eric Trautman
  */
 public class CachedFile {
-    
-    private WebDavFile webDavFile;
+
+    private String remoteFileName;
     private File localFile;
     private File metaFile;
 
@@ -52,7 +52,7 @@ public class CachedFile {
      * @param  localFile   the local location for the file after retrieval.
      */
     public CachedFile(WebDavFile webDavFile, File localFile) {
-        this.webDavFile = webDavFile;
+        this.remoteFileName = webDavFile.getWebdavFileKey();
         this.localFile = localFile;
         if (! webDavFile.isDirectory()) {
             // prefix name with '.' so that the meta files are
@@ -66,7 +66,7 @@ public class CachedFile {
      * @return the source URL for this file.
      */
     public String getRemoteFileName() {
-        return webDavFile.getWebdavFileKey();
+        return remoteFileName;
     }
 
     /**
@@ -102,7 +102,7 @@ public class CachedFile {
     public String toString() {
 
         return "CachedFile{" +
-                "webDavFile=" + webDavFile +
+                "remoteFileName=" + remoteFileName +
                 ", localFile=" + (localFile == null ? null : localFile.getAbsolutePath()) +
                 ", metaFile=" + (metaFile == null ? null : metaFile.getAbsolutePath()) +
                 '}';

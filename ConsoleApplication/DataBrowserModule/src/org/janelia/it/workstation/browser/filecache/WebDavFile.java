@@ -42,8 +42,7 @@ public class WebDavFile {
 
         this.webdavFileKey = webdavFileKey;
         remoteFileUrl = multiStatusResponse.getHref();
-        final DavPropertySet propertySet =
-                multiStatusResponse.getProperties(HttpStatus.SC_OK);
+        final DavPropertySet propertySet = multiStatusResponse.getProperties(HttpStatus.SC_OK);
 
         final DefaultDavProperty<?> resourceTypeProperty =
                 (DefaultDavProperty<?>) propertySet.get(DavPropertyName.RESOURCETYPE);

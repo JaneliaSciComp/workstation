@@ -29,7 +29,12 @@ import java.util.concurrent.Executors;
  */
 public class LocalFileCache {
 
-    private File rootDirectory;
+    private static final Logger LOG = LoggerFactory.getLogger(LocalFileCache.class);
+
+    private static final String CACHE_DIRECTORY_NAME = ".jacs-file-cache";
+    private static final String ACTIVE_DIRECTORY_NAME = "active";
+    private static final String TEMP_DIRECTORY_NAME = "temp";
+
     private File tempDirectory;
     private File activeDirectory;
 
@@ -73,9 +78,9 @@ public class LocalFileCache {
                           WebDavClientMgr webDavClientMgr)
             throws IllegalStateException {
 
-        this.rootDirectory = createAndValidateDirectoryAsNeeded(cacheParentDirectory, CACHE_DIRECTORY_NAME);
-        this.activeDirectory = createAndValidateDirectoryAsNeeded(this.rootDirectory, ACTIVE_DIRECTORY_NAME);
-        this.tempDirectory = createAndValidateDirectoryAsNeeded(this.rootDirectory, TEMP_DIRECTORY_NAME);
+        File cacheRootDirectory = createAndValidateDirectoryAsNeeded(cacheParentDirectory, CACHE_DIRECTORY_NAME);
+        this.activeDirectory = createAndValidateDirectoryAsNeeded(cacheRootDirectory, ACTIVE_DIRECTORY_NAME);
+        this.tempDirectory = createAndValidateDirectoryAsNeeded(cacheRootDirectory, TEMP_DIRECTORY_NAME);
 
         if (kilobyteCapacity < 1) {
             this.kilobyteCapacity = 1;
@@ -123,10 +128,7 @@ public class LocalFileCache {
                         Executors.newFixedThreadPool(4)); // separate thread pool for removing files that expire from the cache
 
         this.webDavClientMgr = webDavClientMgr;
-        this.defaultLoader = new RemoteFileCacheLoader(httpClient, webDavClientMgr,
-                this.kilobyteCapacity,
-                this.activeDirectory,
-                this.tempDirectory);
+        this.defaultLoader = new RemoteFileCacheLoader(httpClient, webDavClientMgr, this);
 
         final File[] tempFiles = tempDirectory.listFiles();
         if ((tempFiles != null) && (tempFiles.length > 0)) {
@@ -314,7 +316,9 @@ public class LocalFileCache {
 
     @Override
     public String toString() {
-        return "LocalFileCache{rootDirectory=" + rootDirectory +
+        return "LocalFileCache{" +
+                "activeDirectory=" + activeDirectory +
+                ", tempDirectory=" + tempDirectory +
                 ", kilobyteCapacity=" + kilobyteCapacity +
                 '}';
     }
@@ -436,11 +440,5 @@ public class LocalFileCache {
         }
         return localFile;
     }
-
-    private static final Logger LOG = LoggerFactory.getLogger(LocalFileCache.class);
-
-    private static final String CACHE_DIRECTORY_NAME = ".jacs-file-cache";
-    private static final String ACTIVE_DIRECTORY_NAME = "active";
-    private static final String TEMP_DIRECTORY_NAME = "temp";
 
 }
