@@ -365,7 +365,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 typeButton.setResultDescriptor(resultButton.getResultDescriptor());
                 typeButton.populate(domainObjectList.getDomainObjects());
 
-                if (mustHaveImage) {
+                if (mustHaveImage && (resultButton.isVisible() || typeButton.isVisible())) {
                     domainObjects = domainObjectList.getDomainObjects().stream()
                         .filter(domainObject -> imageModel.getImageFilepath(domainObject)!=null || ServiceAcceptorHelper.findFirstHelper(domainObject)!=null)
                         .collect(Collectors.toList());

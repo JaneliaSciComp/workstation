@@ -74,7 +74,6 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Preference;
 import org.janelia.model.domain.enums.ErrorType;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
