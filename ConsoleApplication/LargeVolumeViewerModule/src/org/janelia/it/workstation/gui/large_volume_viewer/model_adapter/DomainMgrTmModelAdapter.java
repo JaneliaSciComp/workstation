@@ -23,13 +23,13 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.rabbitmq.client.Channel;
 import java.util.HashMap;
 import java.util.Map;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
-import org.janelia.it.messaging.broker.sharedworkspace.HeaderConstants;
-import org.janelia.it.messaging.broker.sharedworkspace.MessageType;
-import org.janelia.it.messaging.client.ConnectionManager;
-import org.janelia.it.messaging.client.Sender;
+import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
+import org.janelia.messaging.broker.sharedworkspace.MessageType;
+import org.janelia.messaging.client.ConnectionManager;
+import org.janelia.messaging.client.Sender;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
 
 /**
  * Implementation of the model adapter, which pulls/pushes data through

@@ -2031,8 +2031,6 @@
                 <binary-origin>release/modules/ext/mail-1.4.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-<<<<<<< HEAD
-=======
                 <runtime-relative-path>ext/hk2-utils-2.4.0-b31.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/hk2-utils-2.4.0-b31.jar</binary-origin>
             </class-path-extension>
