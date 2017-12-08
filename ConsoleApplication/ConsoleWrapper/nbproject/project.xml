@@ -2359,7 +2359,6 @@
                 <binary-origin>release/modules/ext/reflections-0.9.9-RC1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
->>>>>>> remotes/origin/SharedWorkspace
                 <runtime-relative-path>ext/bcel-5.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/bcel-5.1.jar</binary-origin>
             </class-path-extension>
