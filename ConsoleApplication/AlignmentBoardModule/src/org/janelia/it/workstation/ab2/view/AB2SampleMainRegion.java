@@ -24,19 +24,7 @@ public class AB2SampleMainRegion extends GLRegion {
         return sampleRenderer;
     }
 
-    int w0;
-    int h0;
-    int x0;
-    int y0;
-    int w1;
-    int h1;
-    int w2;
-    int h2;
     float scale;
-    int xCenter;
-    int yCenter;
-    float xCenterFraction;
-    float yCenterFraction;
     float xTranslate;
     float yTranslate;
 
@@ -52,64 +40,43 @@ public class AB2SampleMainRegion extends GLRegion {
     }
 
     private void computeOffsetParameters(int x, int y, int width, int height, int screenWidth, int screenHeight) {
-        // OpenGL will center and clip the smaller of the screen dimensions, so we need to find the size of the
-        // virtual square we are working with.
+        // OpenGL expands the -1,1 range for X,Y to cover the entire screen regardless of aspect ratio, so
+        // since we are adding a "final stage" transform, we need to keep this in mind.
 
-        // Initially, assume screenWidth>screenHeight
-        w0=screenWidth;
-        h0=screenWidth;
+        // Here is our strategy:
+        //
+        // 1 - Renormalize the target positions for each axis, translating pixels to the -1,1 GL XY range, for
+        //     both the lower-left position of the desired box, and the X and Y lengths of each side.
+        //
+        // 2 - Using the 1/2 distance of each side length in normalized screen coordinates, add this to the target
+        //     lower-left positions to get the actual center point of the box.
+        //
+        // 3 - Compute the translation components to recenter the image on the center of the target box.
+        //
+        // 4 - We want the scale to be smaller of either case, by comparing the scale difference between
+        //     using one aspect side or the other.
 
-        // We need to create virtual pixel position on the virtual square pixel field
-        x0=x;
-        int yDownFromMiddle=screenHeight/2-y;
-        y0=screenWidth/2-yDownFromMiddle;
+        double xfr = (1.0 * x)/(1.0 * screenWidth);
+        double yfr = (1.0 * y)/(1.0 * screenHeight);
 
-        // Deal with screenHeight>screenWidth
-        if (screenHeight>screenWidth) {
-            w0=screenHeight;
-            h0=screenHeight;
-            y0=y;
-            int xDownFromMiddle=screenWidth/2-x;
-            x0=screenHeight/2-xDownFromMiddle;
+        double xns = xfr * 2.0 - 1.0;
+        double yns = yfr * 2.0 - 1.0;
+
+        double xlr = (1.0 * width) / (1.0 * screenWidth);
+        double ylr = (1.0 * height) / (1.0 * screenHeight);
+
+        // Note: because there is a X2 for nsc, and then a 1/2 for half length, these cancel, can just use xlr,ylr
+        xTranslate = (float)(xns + xlr);
+        yTranslate = (float)(yns + ylr);
+
+        double widthScale = (1.0 * width) / (1.0 * screenWidth);
+        double heightScale = (1.0 * height) / (1.0 * screenHeight);
+
+        scale = (float)widthScale;
+        if (heightScale < scale) {
+            scale = (float)heightScale;
         }
 
-        // The translation, to line up correctly, needs first to take into account scale, so we do scale first.
-
-        // Because we want the dimensions for the main region to be square, we will take the smaller of the two
-        w1=height;
-        h1=height;
-        w2=width;
-        h2=width;
-        if (height<width) {
-            w1=width;
-            h1=width;
-            w2=height;
-            h2=height;
-        }
-
-        // For scale, we want the fraction of total, using the result which is smallest
-        scale=(float)((1.0*w2)/(1.0*w0));
-
-        // Now base translation on virtual square coordinates
-        xCenter=x0+w1/2;
-        yCenter=y0+w1/2;
-
-        xCenterFraction=(float)((1.0*xCenter)/(1.0*w0));
-        yCenterFraction=(float)((1.0*yCenter)/(1.0*w0));
-
-        xTranslate=2.0f*xCenterFraction-1.0f;
-        yTranslate=2.0f*yCenterFraction-1.0f;
-
-        logger.info("x="+x+" y="+y+" width="+width+" height="+height+" screenWidth="+screenWidth+" screenHeight="+screenHeight);
-
-        logger.info("x0="+x0+" y0="+y0);
-        logger.info("w0="+w0+" h0="+h0);
-        logger.info("w1="+w1+" h1="+h1);
-        logger.info("w2="+w2+" h2="+h2);
-
-        logger.info("scale="+scale+" xCenter="+xCenter+" yCenter="+yCenter);
-        logger.info("xCenterFraction="+xCenterFraction+" yCenterFraction="+yCenterFraction);
-        logger.info("xTranslate="+xTranslate+" yTranslate="+yTranslate);
     }
 
 
