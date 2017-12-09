@@ -40,12 +40,6 @@ public class Voxel3DActor extends GLAbstractActor {
     ShortBuffer vertexFb;
     ByteBuffer colorFb;
 
-    Matrix4 postRotationMatrix;
-
-    public void setPostRotationMatrix(Matrix4 postRotationMatrix) {
-        this.postRotationMatrix=postRotationMatrix;
-    }
-
     public void setXYBounds(int x0, int y0, int x1, int y1) {
         xyBounds[0]=x0;
         xyBounds[1]=y0;
@@ -232,8 +226,8 @@ public class Voxel3DActor extends GLAbstractActor {
             }
 
             AB2Voxel3DShader voxel3DShader = (AB2Voxel3DShader) shader;
-            if (postRotationMatrix!=null) {
-                voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()).multiply(postRotationMatrix));
+            if (this.postProjectionMatrix!=null) {
+                voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()).multiply(postProjectionMatrix));
             } else {
                 voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()));
             }

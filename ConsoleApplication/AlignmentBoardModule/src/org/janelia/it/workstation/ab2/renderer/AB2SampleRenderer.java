@@ -123,7 +123,7 @@ public class AB2SampleRenderer extends AB23DRenderer {
         }
         if (this.prMatrix!=null) {
             logger.info("addVoxel3DActor - setting pr matrix");
-            voxel3DActor.setPostRotationMatrix(this.prMatrix);
+            voxel3DActor.setPostProjectionMatrix(this.prMatrix);
         }
         if (this.voxel3DxyBounds!=null) {
             logger.info("addVoxel3DActor - setting xy bounds");
@@ -239,10 +239,10 @@ public class AB2SampleRenderer extends AB23DRenderer {
     }
 
     // This is for testing
-    public void setVoxel3DActorPostRotationalMatrix(Matrix4 prMatrix) {
+    public void setVoxel3DActorPostProjectionMatrix(Matrix4 prMatrix) {
         this.prMatrix=prMatrix;
         if (voxel3DActor!=null) {
-            voxel3DActor.setPostRotationMatrix(prMatrix);
+            voxel3DActor.setPostProjectionMatrix(prMatrix);
             logger.info("voxel3DActor - pr matrix set");
         } else {
             logger.info("voxel3DActor is null - pr matrix not set");
