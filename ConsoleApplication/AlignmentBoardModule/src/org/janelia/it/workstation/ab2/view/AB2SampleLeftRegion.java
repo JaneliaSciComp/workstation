@@ -7,7 +7,7 @@ import org.janelia.it.workstation.ab2.gl.GLRegion;
 public class AB2SampleLeftRegion extends GLRegion {
 
     @Override
-    public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height, int screenWidth, int screenHeight) {
+    protected void reshape(GLAutoDrawable drawable) {
 
     }
 }

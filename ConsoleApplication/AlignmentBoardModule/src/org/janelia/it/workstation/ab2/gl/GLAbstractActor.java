@@ -40,6 +40,7 @@ public abstract class GLAbstractActor {
     public int getPickIndex() { return pickIndex; }
 
     protected Matrix4 modelMatrix;
+    protected Matrix4 postProjectionMatrix;
 
     protected int actorId=0;
 
@@ -76,6 +77,18 @@ public abstract class GLAbstractActor {
             modelMatrix=translationMatrix.multiply(scaleMatrix);
         }
         return new Matrix4(modelMatrix);
+    }
+
+    public Matrix4 getPostProjectionMatrix() {
+        if (postProjectionMatrix!=null) {
+            return new Matrix4(postProjectionMatrix);
+        } else {
+            return null;
+        }
+    }
+
+    public void setPostProjectionMatrix(Matrix4 postProjectionMatrix) {
+        this.postProjectionMatrix=postProjectionMatrix;
     }
 
     public void setModelMatrix(Matrix4 modelMatrix) { this.modelMatrix=modelMatrix; }
