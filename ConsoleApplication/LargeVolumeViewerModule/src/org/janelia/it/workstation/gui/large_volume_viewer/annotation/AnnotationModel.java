@@ -405,6 +405,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         return annotation;
     }
     
+    public TmNeuronMetadata getCreatedNeurons() {
+        return null;
+    }
+    
     public TmNeuronMetadata getNeuronFromNeuronID(Long neuronID) {
         TmNeuronMetadata foundNeuron = neuronManager.getNeuronById(neuronID);
         if (foundNeuron == null) {
