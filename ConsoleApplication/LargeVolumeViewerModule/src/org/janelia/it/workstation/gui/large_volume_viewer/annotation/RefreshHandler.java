@@ -4,6 +4,8 @@ import com.rabbitmq.client.CancelCallback;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 import com.rabbitmq.client.Delivery;
+import com.rabbitmq.client.LongString;
+import com.rabbitmq.client.impl.LongStringHelper;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -64,38 +66,46 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             e.printStackTrace();
         }
     }
+    
+    private String convertLongString (LongString data) {
+        return LongStringHelper.asLongString(data.getBytes()).toString();
+    }
 
     /**
      * Successful refresh update received
      */
     @Override
-    public void handle(String string, Delivery dlvr) throws IOException {
+    public void handle(String string, Delivery message) throws IOException {
         // fire notice to AnnotationModel
-        /*Map<String,Object> metadata = dlvr.getProperties().getHeaders();
-        if (metadata==null) {
+        Map<String,Object> msgHeaders = message.getProperties().getHeaders();
+        if (msgHeaders==null) {
             throw new IOException("Issue trying to process metadata from update");
         }
-        MessageType msgType = MessageType.valueOf((String)metadata.get(HeaderConstants.TYPE));
-        String[] neuronIds = ((String)metadata.get(HeaderConstants.NEURONIDS)).split(",");
-            log.info("Update received - " + msgType + ": Neuron Ids - " + neuronIds);    
-        // first filter out messages to current shared workspace
-        Long workspaceId = (Long)metadata.get("workspace");
-        Long currentWorkspaceId = annotationModel.getCurrentWorkspace().getId();
-        if (workspaceId!=currentWorkspaceId) 
-            return;
+        byte[] msgBody = message.getBody();
+        String user = convertLongString((LongString) msgHeaders.get(HeaderConstants.USER));
+        Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
+        MessageType action =  MessageType.valueOf(convertLongString((LongString) msgHeaders.get(HeaderConstants.TYPE)));
+        String metadata = convertLongString((LongString) msgHeaders.get(HeaderConstants.METADATA));
         
-        // filter out messages that we ourselves sent 
-        String user = (String)metadata.get("user");
-        if (user==AccessManager.getSubjectKey() && msgType) {
-            // if it's a save neuron for a create neuron, find the neuron with the same name and update
-//            annotationModel.getNeuronFromNeuronID(workspaceId)
-        } 
-            return;
+        switch (action) {
+            case NEURON_SAVE_NEURONDATA:
+            case NEURON_SAVE_METADATA:
+            case NEURON_DELETE:
+                // refresh client model, fireModelUpdates, etc.
+                if (user==AccessManager.getSubjectKey() && action==MessageType.NEURON_SAVE_METADATA) {
+                    // if created neuron, merge model, otherwise ignore
+                } else {
+                    // update neuron model and refresh
+                }
+                break;
+                
+            case REQUEST_NEURON_OWNERSHIP:
+                // some other user is asking for ownership of this neuron... process accordingly
+                break;
+            case NEURON_OWNERSHIP_DECISION:
+                // result of ownership request, check decision and use neuron metadata object attached to this message
+        }
 
-  //      log.info("Update received - " + msgType + ": Neuron Ids - " + neuronIds);
-        // hook into main GUI thread to update neuron models and fire events on AnnotationModel
-        // 
-*/
     }
 
     /**
