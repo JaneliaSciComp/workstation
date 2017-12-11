@@ -12,7 +12,7 @@ import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2Image2DClickEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
-import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer3D;
 import org.janelia.it.workstation.ab2.shader.AB2Image2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ public class Image2DActor extends GLAbstractActor {
     BufferedImage bufferedImage;
     float alpha;
 
-    public Image2DActor(AB23DRenderer renderer, int actorId, Vector2 v0, Vector2 v1, BufferedImage bufferedImage, float alpha) {
+    public Image2DActor(AB2Renderer3D renderer, int actorId, Vector2 v0, Vector2 v1, BufferedImage bufferedImage, float alpha) {
         super(renderer);
         this.actorId=actorId;
         this.v0=v0;

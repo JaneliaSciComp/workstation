@@ -15,7 +15,7 @@ import javax.media.opengl.glu.GLU;
 import javax.swing.ImageIcon;
 
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer3D;
 import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +25,9 @@ public abstract class GLAbstractActor {
 
     protected static GLU glu = new GLU();
     private static Logger logger = LoggerFactory.getLogger(GLAbstractActor.class);
-    protected AB23DRenderer renderer;
+    protected AB2Renderer3D renderer;
 
-    protected GLAbstractActor(AB23DRenderer renderer) {
+    protected GLAbstractActor(AB2Renderer3D renderer) {
         this.renderer=renderer;
     }
 

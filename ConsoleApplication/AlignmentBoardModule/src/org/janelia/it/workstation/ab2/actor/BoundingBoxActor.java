@@ -5,14 +5,11 @@ import java.nio.IntBuffer;
 
 import javax.media.opengl.GL4;
 
-import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
-import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
-import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
-import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer3D;
 import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +26,7 @@ public class BoundingBoxActor extends GLAbstractActor
 
     FloatBuffer boundaryVertexFb;
 
-    public BoundingBoxActor(AB23DRenderer renderer, int actorId, Vector3 v0, Vector3 v1) {
+    public BoundingBoxActor(AB2Renderer3D renderer, int actorId, Vector3 v0, Vector3 v1) {
         super(renderer);
         this.actorId=actorId;
         this.v0=v0;

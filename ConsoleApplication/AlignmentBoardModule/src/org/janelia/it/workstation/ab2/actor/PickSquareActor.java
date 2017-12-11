@@ -11,11 +11,9 @@ import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2PickSquareColorChangeEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
-import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer3D;
 import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
-import org.janelia.it.workstation.ab2.shader.AB2Image2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
-import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +31,7 @@ public class PickSquareActor extends GLAbstractActor {
 
     FloatBuffer vertexFb;
 
-    public PickSquareActor(AB23DRenderer renderer, int actorId, Vector2 v0, Vector2 v1, Vector4 color0, Vector4 color1) {
+    public PickSquareActor(AB2Renderer3D renderer, int actorId, Vector2 v0, Vector2 v1, Vector4 color0, Vector4 color1) {
         super(renderer);
         this.actorId=actorId;
         this.v0=v0;

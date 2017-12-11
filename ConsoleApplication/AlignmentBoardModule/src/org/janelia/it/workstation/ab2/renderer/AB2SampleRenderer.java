@@ -24,14 +24,13 @@ import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.model.AB2Image3D_RGBA8UI;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
-import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
 import org.janelia.it.workstation.ab2.shader.AB2Volume3DShader;
 import org.janelia.it.workstation.ab2.shader.AB2Voxel3DShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AB2SampleRenderer extends AB23DRenderer {
+public class AB2SampleRenderer extends AB2Renderer3D {
 
     Logger logger= LoggerFactory.getLogger(AB2SampleRenderer.class);
 

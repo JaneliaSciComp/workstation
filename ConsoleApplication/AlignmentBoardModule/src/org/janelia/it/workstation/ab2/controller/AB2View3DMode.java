@@ -3,18 +3,12 @@ package org.janelia.it.workstation.ab2.controller;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 
-import javax.media.opengl.GL4;
-import javax.media.opengl.GLAutoDrawable;
-import javax.swing.SwingUtilities;
-
 import org.janelia.it.workstation.ab2.event.AB2MouseBeginDragEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseWheelEvent;
-import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2MouseDraggedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseReleasedEvent;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
-import org.janelia.it.workstation.ab2.view.AB2SampleRegionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

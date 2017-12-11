@@ -10,8 +10,7 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
-import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
-import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer3D;
 import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +26,7 @@ public class LineSetActor extends GLAbstractActor {
 
     FloatBuffer lineVertexFb;
 
-    public LineSetActor(AB23DRenderer renderer, int actorId, List<Vector3> vertices) {
+    public LineSetActor(AB2Renderer3D renderer, int actorId, List<Vector3> vertices) {
         super(renderer);
         this.renderer=renderer;
         this.actorId=actorId;

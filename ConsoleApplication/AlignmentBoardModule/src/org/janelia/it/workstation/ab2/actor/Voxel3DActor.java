@@ -1,8 +1,6 @@
 package org.janelia.it.workstation.ab2.actor;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
@@ -10,13 +8,11 @@ import java.util.List;
 
 import javax.media.opengl.GL4;
 
-import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
-import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
-import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer3D;
 import org.janelia.it.workstation.ab2.shader.AB2Voxel3DShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +43,7 @@ public class Voxel3DActor extends GLAbstractActor {
         xyBounds[3]=y1;
     }
 
-    public Voxel3DActor(AB23DRenderer renderer, int actorId, List<Vector3> voxels, List<Vector4> colors,
+    public Voxel3DActor(AB2Renderer3D renderer, int actorId, List<Vector3> voxels, List<Vector4> colors,
                         int dimX, int dimY, int dimZ) {
         super(renderer);
         this.actorId=actorId;
@@ -58,7 +54,7 @@ public class Voxel3DActor extends GLAbstractActor {
         this.dimZ=dimZ;
     }
 
-    public Voxel3DActor(AB23DRenderer renderer, int actorId, float threshold, byte[] dataXYZRGBA) {
+    public Voxel3DActor(AB2Renderer3D renderer, int actorId, float threshold, byte[] dataXYZRGBA) {
         super(renderer);
         this.actorId=actorId;
         voxels=new ArrayList<>();

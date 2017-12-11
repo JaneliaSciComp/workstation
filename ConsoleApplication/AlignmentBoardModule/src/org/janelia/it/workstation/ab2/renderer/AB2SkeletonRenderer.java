@@ -21,19 +21,17 @@ import org.janelia.it.workstation.ab2.actor.TextLabelActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
-import org.janelia.it.workstation.ab2.model.AB2Image3D_RGBA8UI;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
 import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
 import org.janelia.it.workstation.ab2.shader.AB2Image2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
-import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.janelia.it.workstation.ab2.shader.AB2Text2DShader;
 import org.janelia.it.workstation.ab2.test.AB2SimulatedVolumeGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AB2SkeletonRenderer extends AB23DRenderer {
+public class AB2SkeletonRenderer extends AB2Renderer3D {
 
     Logger logger= LoggerFactory.getLogger(AB2SkeletonRenderer.class);
 

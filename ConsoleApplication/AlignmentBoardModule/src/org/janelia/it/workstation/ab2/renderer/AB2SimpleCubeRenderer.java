@@ -6,16 +6,14 @@ import java.nio.IntBuffer;
 import javax.media.opengl.GL4;
 
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
-import org.janelia.it.workstation.ab2.gl.GLActorUpdateCallback;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
-import org.janelia.it.workstation.ab2.gl.GLShaderUpdateCallback;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.janelia.it.workstation.ab2.shader.AB2SimpleCubeShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AB2SimpleCubeRenderer extends AB23DRenderer {
+public class AB2SimpleCubeRenderer extends AB2Renderer3D {
 
     Logger logger= LoggerFactory.getLogger(AB2SimpleCubeRenderer.class);
 

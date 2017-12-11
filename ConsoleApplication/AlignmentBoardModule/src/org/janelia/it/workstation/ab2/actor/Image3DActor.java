@@ -8,16 +8,9 @@ import java.nio.IntBuffer;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Rotation;
-import org.janelia.geometry3d.Vector2;
 import org.janelia.geometry3d.Vector3;
-import org.janelia.geometry3d.Vector4;
-import org.janelia.it.workstation.ab2.controller.AB2Controller;
-import org.janelia.it.workstation.ab2.event.AB2Image2DClickEvent;
-import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
-import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
-import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer3D;
 import org.janelia.it.workstation.ab2.shader.AB2Volume3DShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +34,7 @@ public class Image3DActor extends Camera3DFollowBoxActor {
     int dimZ;
     byte data3d[];
 
-    public Image3DActor(AB23DRenderer renderer, int actorId, Vector3 v0, Vector3 v1, int dimX, int dimY, int dimZ, byte[] data3d) {
+    public Image3DActor(AB2Renderer3D renderer, int actorId, Vector3 v0, Vector3 v1, int dimX, int dimY, int dimZ, byte[] data3d) {
         super(renderer, actorId, v0, v1);
         this.dimX=dimX;
         this.dimY=dimY;

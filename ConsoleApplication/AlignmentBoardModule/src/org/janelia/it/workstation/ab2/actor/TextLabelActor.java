@@ -13,9 +13,8 @@ import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2TextLabelClickEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
-import org.janelia.it.workstation.ab2.renderer.AB23DRenderer;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer3D;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
-import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
 import org.janelia.it.workstation.ab2.shader.AB2Text2DShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +63,7 @@ public class TextLabelActor extends GLAbstractActor {
     static final public String UBUNTU_FONT_STRING="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)!@#$%^&*(-_+=[]{};:\'\""+
             ","+".<>"+"/?"+"\\"+"|"+"`~";
 
-    public TextLabelActor(AB23DRenderer renderer,
+    public TextLabelActor(AB2Renderer3D renderer,
                           int actorId,
                           String text,
                           Vector2 v0,
