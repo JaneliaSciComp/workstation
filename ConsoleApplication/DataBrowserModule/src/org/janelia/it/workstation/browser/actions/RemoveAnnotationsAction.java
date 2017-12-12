@@ -11,6 +11,7 @@ import javax.swing.ProgressMonitor;
 import org.apache.commons.lang.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
@@ -75,11 +76,13 @@ public class RemoveAnnotationsAction extends AbstractAction {
                 List<Annotation> toRemove = new ArrayList<>();
                 for (DomainObject selectedObject : selectedObjects) {
                     for (Annotation annotation : imageModel.getAnnotations(selectedObject)) {
-                        if (matchIdOrName && StringUtils.equals(annotation.getName(), RemoveAnnotationsAction.this.annotation.getName())) {
-                            toRemove.add(annotation);            
-                        }
-                        else if (!matchIdOrName && annotation.getKeyTerm().getOntologyTermId().equals(RemoveAnnotationsAction.this.annotation.getKeyTerm().getOntologyTermId())) {
-                            toRemove.add(annotation);            
+                        if (ClientDomainUtils.hasWriteAccess(annotation)) {
+                            if (matchIdOrName && StringUtils.equals(annotation.getName(), RemoveAnnotationsAction.this.annotation.getName())) {
+                                toRemove.add(annotation);            
+                            }
+                            else if (!matchIdOrName && annotation.getKeyTerm().getOntologyTermId().equals(RemoveAnnotationsAction.this.annotation.getKeyTerm().getOntologyTermId())) {
+                                toRemove.add(annotation);            
+                            }
                         }
                     }
                 }

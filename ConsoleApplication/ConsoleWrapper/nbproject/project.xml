@@ -211,6 +211,13 @@
                 <package>com.kenai.jaffl.struct</package>
                 <package>com.kenai.jaffl.util</package>
                 <package>com.kenai.jffi</package>
+                <package>com.rabbitmq.client</package>
+                <package>com.rabbitmq.client.impl</package>
+                <package>com.rabbitmq.client.impl.nio</package>
+                <package>com.rabbitmq.client.impl.recovery</package>
+                <package>com.rabbitmq.tools.json</package>
+                <package>com.rabbitmq.tools.jsonrpc</package>
+                <package>com.rabbitmq.utility</package>
                 <package>com.sun.activation.registries</package>
                 <package>com.sun.activation.viewers</package>
                 <package>com.sun.istack</package>
@@ -1549,6 +1556,8 @@
                 <package>org.janelia.it.jacs.shared.utils.genbank</package>
                 <package>org.janelia.it.jacs.shared.utils.zeiss</package>
                 <package>org.janelia.it.jacs.shared.viewer3d</package>
+                <package>org.janelia.messaging.broker.sharedworkspace</package>
+                <package>org.janelia.messaging.client</package>
                 <package>org.janelia.model.access.domain</package>
                 <package>org.janelia.model.access.tiledMicroscope</package>
                 <package>org.janelia.model.domain</package>
@@ -1895,24 +1904,8 @@
                 <package>video</package>
             </public-packages>
             <class-path-extension>
-                <runtime-relative-path>ext/jackson-module-jaxb-annotations-2.5.4.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jackson-module-jaxb-annotations-2.5.4.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jibx-run-1.2.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jibx-run-1.2.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/xuggle-xuggler-5.4.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/xuggle-xuggler-5.4.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/hibernate-entitymanager.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/hibernate-entitymanager.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/ffmpeg.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/ffmpeg.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/ij-1.48c.jar</runtime-relative-path>
@@ -1927,24 +1920,12 @@
                 <binary-origin>release/modules/ext/beansbinding-1.2.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/hk2-api-2.4.0-b31.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/hk2-api-2.4.0-b31.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/juli-6.0.16.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/juli-6.0.16.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/protostuff-compiler-1.3.9-SNAPSHOT-jar-with-dependencies.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/protostuff-compiler-1.3.9-SNAPSHOT-jar-with-dependencies.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/httpcore-4.0.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/httpcore-4.0.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/axis2-adb-1.5.5.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/axis2-adb-1.5.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/xmlbeans-2.3.0.jar</runtime-relative-path>
@@ -1959,16 +1940,8 @@
                 <binary-origin>release/modules/ext/jackson-jaxrs-json-provider-2.5.4.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/bio-formats.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/bio-formats.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/axiom-impl-1.2.11.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axiom-impl-1.2.11.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jersey-media-multipart-2.21.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jersey-media-multipart-2.21.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/log4j-1.2.15.jar</runtime-relative-path>
@@ -1979,20 +1952,8 @@
                 <binary-origin>release/modules/ext/pal-optimization.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/axis2-mtompolicy-1.5.5.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/axis2-mtompolicy-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/axis2-fastinfoset-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-fastinfoset-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jackson-jaxrs-base-2.5.4.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jackson-jaxrs-base-2.5.4.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/reflections-0.9.9-RC1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/reflections-0.9.9-RC1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/miglayout-4.0-swing.jar</runtime-relative-path>
@@ -2023,6 +1984,322 @@
                 <binary-origin>release/modules/ext/mail-1.4.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/hk2-utils-2.4.0-b31.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/hk2-utils-2.4.0-b31.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/kd.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/kd.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/ffmpeg-windows-x86.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ffmpeg-windows-x86.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/axis2-kernel-1.5.5.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/axis2-kernel-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/axis2-ant-plugin-1.5.5.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/axis2-ant-plugin-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/commons-fileupload-1.2.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-fileupload-1.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/hk2-locator-2.4.0-b31.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/hk2-locator-2.4.0-b31.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/axis2-soapmonitor-servlet-1.5.5.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/axis2-soapmonitor-servlet-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/javax.ws.rs-api-2.0.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/javax.ws.rs-api-2.0.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/gwt-serializable.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/gwt-serializable.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/protostuff-runtime-registry-1.3.9-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-runtime-registry-1.3.9-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/commons-io-2.4.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-io-2.4.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/protostuff-runtime-registry-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-runtime-registry-1.3.9-SNAPSHOT-sources.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/metakit.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/metakit.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/wstx-asl-3.2.9.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/wstx-asl-3.2.9.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/platform.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/platform.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jacs-model.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jacs-model.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/javassist-3.16.1-GA.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/javassist-3.16.1-GA.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/saaj-impl-1.3.2.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/saaj-impl-1.3.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/protostuff-runtime-md-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-runtime-md-1.3.9-SNAPSHOT-sources.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/axiom-dom-1.2.11.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/axiom-dom-1.2.11.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/woden-api-1.0M8.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/woden-api-1.0M8.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jetty-util-8.1.8.v20121106.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jetty-util-8.1.8.v20121106.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/axis2-saaj-1.5.5.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/axis2-saaj-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/geronimo-annotation_1.0_spec-1.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/geronimo-annotation_1.0_spec-1.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/vlcj-1.3.0-b1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/vlcj-1.3.0-b1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/neethi-2.0.5.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/neethi-2.0.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jersey-guava-2.21.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-guava-2.21.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jsr305-1.3.9.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jsr305-1.3.9.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/loci-common.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/loci-common.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/compute-client.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/compute-client.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/ehcache-core-2.5.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ehcache-core-2.5.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/ffmpeg-macosx-x86_64.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ffmpeg-macosx-x86_64.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/VIB-lib-2.0.0-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/VIB-lib-2.0.0-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/XmlSchema-1.4.3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/XmlSchema-1.4.3.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/amqp-client-5.0.0.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/amqp-client-5.0.0.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/activation-1.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/activation-1.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jaxb-api-2.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jaxb-api-2.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/xml-resolver-1.2.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/xml-resolver-1.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/protostuff-core-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-core-1.3.9-SNAPSHOT-sources.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/tribes-6.0.16.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/tribes-6.0.16.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/axis2-xmlbeans-1.5.5.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/axis2-xmlbeans-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jersey-container-servlet-core-2.21.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-container-servlet-core-2.21.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jacs-shared.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jacs-shared.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/protostuff-api-1.3.9-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-api-1.3.9-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jackson-databind-2.5.4.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-databind-2.5.4.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/rsyntaxtextarea-2.6.0-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/rsyntaxtextarea-2.6.0-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jetty-io-8.1.8.v20121106.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jetty-io-8.1.8.v20121106.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jersey-media-jaxb-2.21.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-media-jaxb-2.21.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/hibernate-annotations.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/hibernate-annotations.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/javax.annotation-api-1.2.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/javax.annotation-api-1.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jersey-entity-filtering-2.21.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-entity-filtering-2.21.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jersey-container-servlet-2.21.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-container-servlet-2.21.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/slf4j-jdk14-1.7.21.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/slf4j-jdk14-1.7.21.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/javax.inject-2.4.0-b31.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/javax.inject-2.4.0-b31.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/mex-1.5.5-impl.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/mex-1.5.5-impl.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/hibernate3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/hibernate3.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/ome_plugins.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ome_plugins.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jackrabbit-webdav-2.5.2.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackrabbit-webdav-2.5.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/axis2-metadata-1.5.5.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/axis2-metadata-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/gson-2.2.2.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/gson-2.2.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/org-netbeans-swing-outline.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/org-netbeans-swing-outline.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jetty-http-8.1.8.v20121106.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jetty-http-8.1.8.v20121106.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/protostuff-api-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-api-1.3.9-SNAPSHOT-sources.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/protostuff-xml-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-xml-1.3.9-SNAPSHOT-sources.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/geronimo-saaj_1.3_spec-1.0.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/geronimo-saaj_1.3_spec-1.0.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jetty-servlet-8.1.8.v20121106.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jetty-servlet-8.1.8.v20121106.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jackson-module-jaxb-annotations-2.5.4.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-module-jaxb-annotations-2.5.4.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jibx-run-1.2.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jibx-run-1.2.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/hibernate-entitymanager.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/hibernate-entitymanager.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/ffmpeg.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ffmpeg.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/hk2-api-2.4.0-b31.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/hk2-api-2.4.0-b31.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/protostuff-compiler-1.3.9-SNAPSHOT-jar-with-dependencies.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-compiler-1.3.9-SNAPSHOT-jar-with-dependencies.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/axis2-adb-1.5.5.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/axis2-adb-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/bio-formats.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/bio-formats.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jersey-media-multipart-2.21.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-media-multipart-2.21.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/axis2-mtompolicy-1.5.5.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/axis2-mtompolicy-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jackson-jaxrs-base-2.5.4.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-jaxrs-base-2.5.4.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/reflections-0.9.9-RC1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/reflections-0.9.9-RC1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/bcel-5.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/bcel-5.1.jar</binary-origin>
             </class-path-extension>
@@ -2043,10 +2320,6 @@
                 <binary-origin>release/modules/ext/protostuff-runtime-1.3.9-SNAPSHOT.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/hk2-utils-2.4.0-b31.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/hk2-utils-2.4.0-b31.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/protostuff-parser-1.3.9-SNAPSHOT.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/protostuff-parser-1.3.9-SNAPSHOT.jar</binary-origin>
             </class-path-extension>
@@ -2057,10 +2330,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/xalan-2.7.0.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/xalan-2.7.0.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/kd.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/kd.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jaxb-impl-2.1.7.jar</runtime-relative-path>
@@ -2079,14 +2348,6 @@
                 <binary-origin>release/modules/ext/protostuff-runtime-view-1.3.9-SNAPSHOT-sources.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/ffmpeg-windows-x86.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/ffmpeg-windows-x86.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/axis2-kernel-1.5.5.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/axis2-kernel-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/axis2-jaxbri-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-jaxbri-1.5.5.jar</binary-origin>
             </class-path-extension>
@@ -2095,20 +2356,8 @@
                 <binary-origin>release/modules/ext/axis2-transport-http-1.5.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/axis2-ant-plugin-1.5.5.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/axis2-ant-plugin-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/commons-fileupload-1.2.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/commons-fileupload-1.2.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/javacpp.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/javacpp.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/hk2-locator-2.4.0-b31.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/hk2-locator-2.4.0-b31.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/swingx-all-1.6.3.jar</runtime-relative-path>
@@ -2135,24 +2384,8 @@
                 <binary-origin>release/modules/ext/protostuff-collectionschema-1.3.9-SNAPSHOT-sources.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/axis2-soapmonitor-servlet-1.5.5.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/axis2-soapmonitor-servlet-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/javax.ws.rs-api-2.0.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/javax.ws.rs-api-2.0.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/gwt-serializable.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/gwt-serializable.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/protostuff-runtime-registry-1.3.9-SNAPSHOT.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/protostuff-runtime-registry-1.3.9-SNAPSHOT.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/cglib-2.1.3.jar</runtime-relative-path>
@@ -2167,32 +2400,12 @@
                 <binary-origin>release/modules/ext/regexp-1.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/commons-io-2.4.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/commons-io-2.4.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/protostuff-runtime-registry-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/protostuff-runtime-registry-1.3.9-SNAPSHOT-sources.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/antlr-2.7.7.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/antlr-2.7.7.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-spring-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-spring-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/metakit.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/metakit.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/wstx-asl-3.2.9.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/wstx-asl-3.2.9.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/platform.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/platform.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/javassist.jar</runtime-relative-path>
@@ -2203,16 +2416,8 @@
                 <binary-origin>release/modules/ext/jaxen-1.1.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jacs-model.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jacs-model.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/commons-compress-1.8.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/commons-compress-1.8.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/javassist-3.16.1-GA.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/javassist-3.16.1-GA.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/joda-time-2.8.1.jar</runtime-relative-path>
@@ -2221,10 +2426,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/lz4-1.3.0.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/lz4-1.3.0.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/saaj-impl-1.3.2.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/saaj-impl-1.3.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/commons-lang3-3.3.2.jar</runtime-relative-path>
@@ -2243,20 +2444,12 @@
                 <binary-origin>release/modules/ext/MagicApplet.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/protostuff-runtime-md-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/protostuff-runtime-md-1.3.9-SNAPSHOT-sources.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/jersey-client-2.21.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jersey-client-2.21.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jetty-server-8.1.8.v20121106.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jetty-server-8.1.8.v20121106.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/axiom-dom-1.2.11.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/axiom-dom-1.2.11.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/protostuff-collectionschema-1.3.9-SNAPSHOT.jar</runtime-relative-path>
@@ -2267,24 +2460,12 @@
                 <binary-origin>release/modules/ext/protostuff-compiler-1.3.9-SNAPSHOT-sources.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/woden-api-1.0M8.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/woden-api-1.0M8.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/jibx-bind-1.2.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jibx-bind-1.2.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jetty-util-8.1.8.v20121106.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jetty-util-8.1.8.v20121106.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/wstx-asl-3.2.7.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/wstx-asl-3.2.7.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/axis2-saaj-1.5.5.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/axis2-saaj-1.5.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/autocomplete-2.6.0-SNAPSHOT.jar</runtime-relative-path>
@@ -2307,28 +2488,8 @@
                 <binary-origin>release/modules/ext/ffmpeg-linux-x86_64.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/geronimo-annotation_1.0_spec-1.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/geronimo-annotation_1.0_spec-1.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/vlcj-1.3.0-b1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/vlcj-1.3.0-b1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/axis2-jaxws-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-jaxws-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/neethi-2.0.5.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/neethi-2.0.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jersey-guava-2.21.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jersey-guava-2.21.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jsr305-1.3.9.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jsr305-1.3.9.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/commons-httpclient-3.1.jar</runtime-relative-path>
@@ -2339,28 +2500,12 @@
                 <binary-origin>release/modules/ext/slf4j-api-1.7.21.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/loci-common.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/loci-common.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/compute-client.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/compute-client.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/guava-13.0.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/guava-13.0.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/ehcache-core-2.5.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/ehcache-core-2.5.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/protostuff-it-1.3.9-SNAPSHOT.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/protostuff-it-1.3.9-SNAPSHOT.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/ffmpeg-macosx-x86_64.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/ffmpeg-macosx-x86_64.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/snappy-java-1.0.5-M3.jar</runtime-relative-path>
@@ -2375,52 +2520,20 @@
                 <binary-origin>release/modules/ext/Simple_Neurite_Tracer-2.0.2-SNAPSHOT.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/VIB-lib-2.0.0-SNAPSHOT.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/VIB-lib-2.0.0-SNAPSHOT.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/XmlSchema-1.4.3.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/XmlSchema-1.4.3.jar</binary-origin>
+                <runtime-relative-path>ext/jacs-messaging-1.0.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jacs-messaging-1.0.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-codegen-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-codegen-1.5.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/activation-1.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/activation-1.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jaxb-api-2.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jaxb-api-2.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/xml-resolver-1.2.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/xml-resolver-1.2.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/protostuff-core-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/protostuff-core-1.3.9-SNAPSHOT-sources.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/jettison-1.0-RC2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jettison-1.0-RC2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/tribes-6.0.16.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/tribes-6.0.16.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/axis2-jibx-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-jibx-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/axis2-xmlbeans-1.5.5.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/axis2-xmlbeans-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jersey-container-servlet-core-2.21.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jersey-container-servlet-core-2.21.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/asm.jar</runtime-relative-path>
@@ -2433,14 +2546,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/protostuff-core-1.3.9-SNAPSHOT.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/protostuff-core-1.3.9-SNAPSHOT.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jacs-shared.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jacs-shared.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/protostuff-api-1.3.9-SNAPSHOT.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/protostuff-api-1.3.9-SNAPSHOT.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jython.jar</runtime-relative-path>
@@ -2463,14 +2568,6 @@
                 <binary-origin>release/modules/ext/jai_core.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jackson-databind-2.5.4.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jackson-databind-2.5.4.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/rsyntaxtextarea-2.6.0-SNAPSHOT.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/rsyntaxtextarea-2.6.0-SNAPSHOT.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/protostuff-runtime-view-1.3.9-SNAPSHOT.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/protostuff-runtime-view-1.3.9-SNAPSHOT.jar</binary-origin>
             </class-path-extension>
@@ -2487,28 +2584,8 @@
                 <binary-origin>release/modules/ext/swingx-1.6.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jetty-io-8.1.8.v20121106.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jetty-io-8.1.8.v20121106.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jersey-media-jaxb-2.21.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jersey-media-jaxb-2.21.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/protostuff-runtime-md-1.3.9-SNAPSHOT.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/protostuff-runtime-md-1.3.9-SNAPSHOT.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/hibernate-annotations.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/hibernate-annotations.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/javax.annotation-api-1.2.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/javax.annotation-api-1.2.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jersey-entity-filtering-2.21.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jersey-entity-filtering-2.21.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/Jama-1.0.3.jar</runtime-relative-path>
@@ -2519,10 +2596,6 @@
                 <binary-origin>release/modules/ext/snakeyaml-1.11-sources.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jersey-container-servlet-2.21.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jersey-container-servlet-2.21.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/commons-codec-1.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/commons-codec-1.5.jar</binary-origin>
             </class-path-extension>
@@ -2531,24 +2604,12 @@
                 <binary-origin>release/modules/ext/woden-impl-dom-1.0M8.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/slf4j-jdk14-1.7.21.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/slf4j-jdk14-1.7.21.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/mac_widgets-0.9.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/mac_widgets-0.9.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/javax.inject-2.4.0-b31.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/javax.inject-2.4.0-b31.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/xercesImpl-2.8.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/xercesImpl-2.8.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/mex-1.5.5-impl.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/mex-1.5.5-impl.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/owlapi-bin.jar</runtime-relative-path>
@@ -2557,10 +2618,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/apache-solr-solrj-3.5.0.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/apache-solr-solrj-3.5.0.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/hibernate3.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/hibernate3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-json-1.5.5.jar</runtime-relative-path>
@@ -2579,10 +2636,6 @@
                 <binary-origin>release/modules/ext/jktx-1.6.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/ome_plugins.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/ome_plugins.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/axis2-adb-codegen-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-adb-codegen-1.5.5.jar</binary-origin>
             </class-path-extension>
@@ -2595,16 +2648,8 @@
                 <binary-origin>release/modules/ext/geronimo-stax-api_1.0_spec-1.0.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jackrabbit-webdav-2.5.2.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jackrabbit-webdav-2.5.2.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/jalopy-1.5rc3.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jalopy-1.5rc3.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/axis2-metadata-1.5.5.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/axis2-metadata-1.5.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/protostuff-compiler-1.3.9-SNAPSHOT.jar</runtime-relative-path>
@@ -2615,40 +2660,12 @@
                 <binary-origin>release/modules/ext/snakeyaml-1.11.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/gson-2.2.2.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/gson-2.2.2.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/org-netbeans-swing-outline.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/org-netbeans-swing-outline.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jetty-http-8.1.8.v20121106.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jetty-http-8.1.8.v20121106.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/geronimo-jaxws_2.1_spec-1.0.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/geronimo-jaxws_2.1_spec-1.0.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/protostuff-api-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/protostuff-api-1.3.9-SNAPSHOT-sources.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/protostuff-xml-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/protostuff-xml-1.3.9-SNAPSHOT-sources.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/jai_codec.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jai_codec.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/geronimo-saaj_1.3_spec-1.0.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/geronimo-saaj_1.3_spec-1.0.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jetty-servlet-8.1.8.v20121106.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jetty-servlet-8.1.8.v20121106.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/scifio.jar</runtime-relative-path>

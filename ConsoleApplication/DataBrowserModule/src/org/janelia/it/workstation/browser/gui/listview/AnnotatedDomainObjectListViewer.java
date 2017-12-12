@@ -42,6 +42,18 @@ public interface AnnotatedDomainObjectListViewer {
     public DomainObjectSelectionModel getSelectionModel();
 
     /**
+     * Set a listener for actions from this list viewer.
+     * @param listener
+     */
+    public void setActionListener(ListViewerActionListener listener);
+    
+    /**
+     * Returns the number of items currently hidden by the viewer.
+     * @return
+     */
+    public int getNumItemsHidden();
+    
+    /**
      * Tell the viewer that the selection should change.
      * @param domainObjects list of domain objects for which to change selection
      * @param select select if true, deselect if false
@@ -58,7 +70,7 @@ public interface AnnotatedDomainObjectListViewer {
      * @param domainObjectList 
      */
     public void showDomainObjects(AnnotatedDomainObjectList domainObjectList, final Callable<Void> success);
-
+    
     /**
      * Refresh the given domain object.
      * @param domainObject updated domain object

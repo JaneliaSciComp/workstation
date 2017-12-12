@@ -1,4 +1,9 @@
-// 7.0.4
+// 7.1
 
-Large Volume Viewer  
-* Fixed issue with exporting multiple neurons to file without .swc extension
+Workstation Browser
+* Added "Apply Publishing Names" right-click option to automatically populate publishing names 
+* Changed "Open in Fiji" right-click option so that it works even when displaying post processed results
+* Granting write privilege on annotations now confers the ability to delete them 
+* Added Polarity Case 5 pipeline
+* Fixed issue with "Select All" button not appearing when "Show only items with selected imagery" was checked
+* Fixed issue with LSMs not appearing when "Show only items with selected imagery" was checked 

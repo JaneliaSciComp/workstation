@@ -9,6 +9,7 @@ import javax.swing.JMenuItem;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
@@ -88,8 +89,6 @@ public class AnnotationContextMenu extends PopupContextMenu {
 
     protected JMenuItem getCopyAnnotationItem() {
         if (multiple) return null;
-        if (!AccessManager.getSubjectKey().equals(annotation.getOwnerKey())) return null;
-    
         JMenuItem deleteByTermItem = new JMenuItem("  Copy Annotation");
         deleteByTermItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -101,7 +100,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getRemoveAnnotationItem() {
-        if (!AccessManager.getSubjectKey().equals(annotation.getOwnerKey())) return null;
+        if (!ClientDomainUtils.hasWriteAccess(annotation)) return null;
         final RemoveAnnotationsAction removeAction = new RemoveAnnotationsAction(imageModel, domainObjectList, annotation, true);
         return getNamedActionItem(removeAction);
     }

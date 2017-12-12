@@ -1,9 +1,24 @@
+// 7.0.4
+
+Large Volume Viewer  
+* Fixed issue with exporting multiple neurons to file without .swc extension
+
 // 7.0.3
 
 Large Volume Viewer
 * Fixed issue with casting JSON response to Long on Sample creation
 
 // 7.0.2
+
+Workstation Browser
+* Fixed client to use production server
+
+// 7.0.1
+
+Workstation Browser
+* Fixed login for non-admin users
+
+// 7.0
 
 Workstation Browser
 * Updated to use secure network connections and token-based authentication
