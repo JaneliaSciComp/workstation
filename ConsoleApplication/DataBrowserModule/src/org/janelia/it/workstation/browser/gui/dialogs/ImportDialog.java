@@ -444,9 +444,9 @@ public class ImportDialog extends ModalDialog {
 
         String uploadPath;
         if (selectedChildren == null) {
-            uploadPath = uploader.uploadFile(selectedFile);
+            uploadPath = uploader.uploadFile(importTopLevelFolderName, selectedFile);
         } else {
-            uploadPath = uploader.uploadFiles(selectedChildren, selectedFile);
+            uploadPath = uploader.uploadFiles(importTopLevelFolderName, selectedChildren, selectedFile);
         }
 
         final String process = "FileTreeLoader";

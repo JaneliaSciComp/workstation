@@ -19,6 +19,7 @@ import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,26 +107,33 @@ public class WebDavClient {
      * @throws WebDavException
      *   if the directory cannot be created or it already exists.
      */
-    void createDirectory(URL directoryUrl)
+    String createDirectory(URL directoryUrl)
             throws WebDavException {
-
-        MkColMethod method = null;
+        PutMethod method = null;
         Integer responseCode = null;
-
         try {
-            method = new MkColMethod(directoryUrl.toString());
+            method = new PutMethod(directoryUrl.toString());
 
             responseCode = httpClient.executeMethod(method);
-            LOG.trace("createDirectory: {} returned for MKCOL {}", responseCode, directoryUrl);
+            LOG.trace("saveFile: {} returned for PUT {}", responseCode, directoryUrl);
 
             if (responseCode != HttpServletResponse.SC_CREATED) {
-                throw new WebDavException(responseCode + " returned for MKCOL " + directoryUrl,
-                        responseCode);
+                throw new WebDavException(responseCode + " returned for PUT " + directoryUrl, responseCode);
+            }
+            final Header locationHeader = method.getResponseHeader("Location");
+            if (locationHeader == null) {
+                return null;
+            }
+            String location = locationHeader.getValue();
+            if (StringUtils.isBlank(location)) {
+                return null;
+            } else {
+                return location;
             }
         } catch (WebDavException e) {
             throw e;
         } catch (Exception e) {
-            throw new WebDavException("failed to MKCOL " + directoryUrl, e, responseCode);
+            throw new WebDavException("failed to PUT " + directoryUrl, e, responseCode);
         } finally {
             if (method != null) {
                 method.releaseConnection();
@@ -145,7 +153,7 @@ public class WebDavClient {
      * @throws WebDavException
      *   if the save fails for any other reason.
      */
-    void saveFile(URL url, File file)
+    String saveFile(URL url, File file)
             throws IllegalArgumentException, WebDavException {
         InputStream fileStream;
         if (file == null) {
@@ -157,7 +165,7 @@ public class WebDavClient {
             throw new IllegalArgumentException("failed to open stream for " + file.getAbsolutePath(), e);
         }
         try {
-            saveFile(url, fileStream);
+            return saveFile(url, fileStream);
         } finally {
             try {
                 fileStream.close();
@@ -179,7 +187,7 @@ public class WebDavClient {
      * @throws WebDavException
      *   if the save fails for any reason.
      */
-    private void saveFile(URL url, InputStream fileStream)
+    private String saveFile(URL url, InputStream fileStream)
             throws WebDavException {
 
         PutMethod method = null;
@@ -192,10 +200,19 @@ public class WebDavClient {
             responseCode = httpClient.executeMethod(method);
             LOG.trace("saveFile: {} returned for PUT {}", responseCode, url);
 
-            if ((responseCode != HttpServletResponse.SC_CREATED) &&
-                    (responseCode != HttpServletResponse.SC_NO_CONTENT)) {
+            if (responseCode != HttpServletResponse.SC_CREATED) {
                 throw new WebDavException(responseCode + " returned for PUT " + url,
                         responseCode);
+            }
+            final Header locationHeader = method.getResponseHeader("Location");
+            if (locationHeader == null) {
+                return null;
+            }
+            String location = locationHeader.getValue();
+            if (StringUtils.isBlank(location)) {
+                return null;
+            } else {
+                return location;
             }
         } catch (WebDavException e) {
             throw e;
@@ -249,9 +266,53 @@ public class WebDavClient {
         return multiStatusResponses;
     }
 
+    String createStorageDir(String storageName) {
+        return createStorage(getCreateStorageURL(storageName, "DATA_DIRECTORY"));
+    }
+
+    String createStorageFile(String storageName) {
+        return createStorage(getCreateStorageURL(storageName, "SINGLE_DATA_FILE"));
+    }
+
+    private String getCreateStorageURL(String storageName, String storageType) {
+        return baseUrl + "/storage/" + storageName + "/format/" + storageType;
+    }
+
+    private String createStorage(String resourceURI) {
+        MkColMethod method = null;
+        Integer responseCode = null;
+        try {
+            method = new MkColMethod(resourceURI);
+            responseCode = httpClient.executeMethod(method);
+            LOG.trace("createDirectory: {} returned for MKCOL {}", resourceURI, responseCode);
+
+            if (responseCode != HttpServletResponse.SC_CREATED) {
+                throw new WebDavException(responseCode + " returned for MKCOL " + resourceURI, responseCode);
+            }
+            final Header locationHeader = method.getResponseHeader("Location");
+            if (locationHeader == null) {
+                throw new WebDavException("No location header returned for " + resourceURI, responseCode);
+            }
+            String location = locationHeader.getValue();
+            if (StringUtils.isBlank(location)) {
+                throw new WebDavException("No location value set in the header returned for " + resourceURI, responseCode);
+            }
+            return location;
+        } catch (WebDavException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new WebDavException("failed to MKCOL " + resourceURI, e, responseCode);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
+
+    }
+
     URL getDownloadFileURL(String standardPathName) {
         try {
-            return new URL(baseUrl + "/path/" + standardPathName);
+            return new URL(baseUrl + "/" + standardPathName);
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }
@@ -260,4 +321,5 @@ public class WebDavClient {
     private String getWebdavFindUrl(String remoteFileName, String context) {
         return baseUrl + "/" + context + "/" + remoteFileName;
     }
+
 }

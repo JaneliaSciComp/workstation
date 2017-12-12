@@ -1,31 +1,22 @@
 package org.janelia.it.workstation.browser.filecache;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.StreamSupport;
 
-import javax.servlet.http.HttpServletResponse;
-
+import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpStatus;
-import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.MultiStatus;
-import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
-import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
-import org.apache.jackrabbit.webdav.client.methods.PutMethod;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,21 +107,50 @@ public class WebDavClientMgr {
     }
 
     String createStorage(String storageName) {
-        // !!!!!
-        return null; // FIXME
+        return masterWebDavInstance.createStorageFile(storageName);
     }
 
     String createStorageDirectory(String storageName) {
-        // !!!!!!!!!
-        return null; // FIXME
+        return masterWebDavInstance.createStorageDir(storageName);
     }
 
-    String uploadFile(Path file) {
-        return null; // FIXME
+    String uploadFile(File file, String storageURL, String storageLocation) {
+        try {
+            String uploadFileUrl = storageURL + "/file/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation);
+            String uploadedFileUrl = masterWebDavInstance.saveFile(new URL(uploadFileUrl), file);
+            return uploadedFileUrl == null ? storageURL : uploadedFileUrl;
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
-    String createDirectory(Path dir) {
-        return null; // FIXME
+    String createDirectory(String storageURL, String storageLocation) {
+        try {
+            String createDirUrl = storageURL + "/directory/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation);
+            String createdDirUrl = masterWebDavInstance.createDirectory(new URL(createDirUrl));
+            return createdDirUrl == null ? storageURL : createdDirUrl;
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
+    String urlEncodeComp(String pathComp) {
+        if (StringUtils.isBlank(pathComp)) {
+            return "";
+        } else {
+            try {
+                return URLEncoder.encode(pathComp, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+    }
+
+    String urlEncodeComps(String pathComps) {
+        return StringUtils.isBlank(pathComps)
+                ? ""
+                : StreamSupport.stream(Splitter.on(File.separatorChar).split(pathComps).spliterator(), false)
+                    .map(pc -> urlEncodeComp(pc))
+                    .reduce(null, (c1, c2) -> c1 == null ? c2 : c1 + File.separatorChar + c2);
+    }
 }

@@ -4,7 +4,9 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -51,6 +53,7 @@ public class WebDavUploader {
     /**
      * Uploads the specified file to the server.
      *
+     * @param  storageName user assigned storage name
      * @param  file  file to upload.
      *
      * @return the server path for the parent directory of the uploaded file.
@@ -58,12 +61,11 @@ public class WebDavUploader {
      * @throws WebDavException
      *   if the file cannot be uploaded.
      */
-    public String uploadFile(File file) throws WebDavException {
-        final String storageName = createStorageName(file);
+    public String uploadFile(String storageName, File file) throws WebDavException {
         String storageURL = webDavClientMgr.createStorage(storageName);
-        webDavClientMgr.uploadFile(file.toPath());
-        LOG.info("uploaded {} to {}", file, storageURL);
-        return storageURL;
+        String uploadedFileURL = webDavClientMgr.uploadFile(file, storageURL, "");
+        LOG.info("uploaded {} to {} - {}", file, storageURL, uploadedFileURL);
+        return uploadedFileURL;
     }
 
     private String createStorageName(File f) {
@@ -75,12 +77,13 @@ public class WebDavUploader {
         path.append(uploadCount++);
         path.append("__");
         path.append(f.getName());
-        return path.toString();
+        return webDavClientMgr.urlEncodeComps(path.toString());
     }
 
     /**
      * Uploads the specified files to the server.
      *
+     * @param  storageName         user assigned storage name
      * @param  fileList            list of local files to upload.
      *
      * @param  localRootDirectory  a common parent of all listed files that is used to determine
@@ -100,31 +103,71 @@ public class WebDavUploader {
      * @throws WebDavException
      *   if the files cannot be uploaded.
      */
-    public String uploadFiles(List<File> fileList, File localRootDirectory)
+    public String uploadFiles(String storageName, List<File> fileList, File localRootDirectory)
             throws IllegalArgumentException, WebDavException {
 
-        final String storageName = createStorageName(localRootDirectory);
         String storageURL = webDavClientMgr.createStorageDirectory(storageName);
 
         // need to go through the entire fileList and create the directory hierarchy
         // and then upload the file content
+        class PathComps {
+            final Path lastSubPath;
+            final List<Path> subPaths = new ArrayList<>();
+
+            private PathComps() {
+                this(null);
+            }
+
+            private PathComps(Path lastSubPath) {
+                this.lastSubPath = lastSubPath;
+                if (lastSubPath != null) {
+                    this.subPaths.add(lastSubPath);
+                }
+            }
+
+            private PathComps append(Path pathComp) {
+                PathComps res;
+                if (lastSubPath == null) {
+                    res = new PathComps(pathComp);
+                } else {
+                    res = new PathComps(lastSubPath.resolve(pathComp));
+                    res.subPaths.addAll(subPaths);
+                }
+                return res;
+            }
+
+            private PathComps append(PathComps pathComps) {
+                PathComps res = this;
+                for (Path pc : pathComps.subPaths) {
+                    res = res.append(pc);
+                }
+                return res;
+            }
+        }
         Path localRootPath = localRootDirectory.toPath();
         Set<Path> filePathHierarchy = fileList.stream()
                 .filter(f -> f.isFile())
-                .map(f -> f.getParentFile().toPath().relativize(localRootPath))
+                .map(f -> localRootPath.relativize(f.toPath()))
                 .flatMap(fp -> {
                     int nPathComponents = fp.getNameCount();
-                    return IntStream.range(1, nPathComponents)
-                            .mapToObj(pathIndex -> fp.subpath(0, pathIndex));
+                    return IntStream.range(0, nPathComponents - 1)
+                            .mapToObj(fp::getName)
+                            .map(Path::toString)
+                            .map(webDavClientMgr::urlEncodeComp)
+                            .map(pc -> Paths.get(pc))
+                            .reduce(new PathComps(),
+                                    (pathList, pc)-> pathList.append(pc),
+                                    (pl1, pl2) -> pl1.append(pl2))
+                            .subPaths.stream();
                 })
+                .map(fp -> localRootPath.resolve(fp))
                 .sorted()
                 .collect(Collectors.toSet());
 
-        filePathHierarchy.forEach(webDavClientMgr::createDirectory);
+        filePathHierarchy.forEach(fp -> webDavClientMgr.createDirectory(storageURL, localRootPath.relativize(fp).toString()));
         fileList.stream()
                 .filter(f -> f.isFile())
-                .map(f -> f.toPath().relativize(localRootPath))
-                .forEach(webDavClientMgr::uploadFile);
+                .forEach(f -> webDavClientMgr.uploadFile(f, storageURL, webDavClientMgr.urlEncodeComps(localRootPath.relativize(f.toPath()).toString())));
 
         LOG.info("uploaded {} files to {}", fileList.size(), storageURL);
         return storageURL;
