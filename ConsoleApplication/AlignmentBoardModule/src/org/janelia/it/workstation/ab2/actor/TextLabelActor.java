@@ -13,6 +13,7 @@ import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2TextLabelClickEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer2D;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer3D;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.janelia.it.workstation.ab2.shader.AB2Text2DShader;
@@ -35,6 +36,8 @@ public class TextLabelActor extends GLAbstractActor {
 
     IntBuffer imageTextureId=IntBuffer.allocate(1);
     BufferedImage bufferedImage;
+
+    AB2Renderer2D renderer2d;
 
     static BufferedImage textResourceImage;
 
@@ -63,13 +66,14 @@ public class TextLabelActor extends GLAbstractActor {
     static final public String UBUNTU_FONT_STRING="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)!@#$%^&*(-_+=[]{};:\'\""+
             ","+".<>"+"/?"+"\\"+"|"+"`~";
 
-    public TextLabelActor(AB2Renderer3D renderer,
+    public TextLabelActor(AB2Renderer2D renderer,
                           int actorId,
                           String text,
                           Vector2 v0,
                           Vector4 textColor,
                           Vector4 backgroundColor) {
         super(renderer);
+        this.renderer2d=renderer;
         this.actorId=actorId;
         this.v0=v0;
         this.text=text;
@@ -218,7 +222,7 @@ public class TextLabelActor extends GLAbstractActor {
     public void display(GL4 gl, GLShaderProgram shader) {
         if (shader instanceof AB2Text2DShader) {
             AB2Text2DShader text2DShader=(AB2Text2DShader)shader;
-            text2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
+            text2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
             text2DShader.setForegroundColor(gl, getTextColor());
             text2DShader.setBackgroundColor(gl, getBackgroundColor());
 
@@ -228,7 +232,7 @@ public class TextLabelActor extends GLAbstractActor {
             checkGlError(gl, "d2 glBindTexture()");
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
-            pickShader.setMVP2d(gl, renderer.getVp2d());
+            pickShader.setMVP2d(gl, renderer2d.getVp2d());
             pickShader.setPickId(gl, getPickIndex());
         }
 

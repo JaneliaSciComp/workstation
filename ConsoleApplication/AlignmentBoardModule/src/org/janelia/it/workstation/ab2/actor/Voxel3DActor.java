@@ -36,6 +36,8 @@ public class Voxel3DActor extends GLAbstractActor {
     ShortBuffer vertexFb;
     ByteBuffer colorFb;
 
+    AB2Renderer3D renderer3d;
+
     public void setXYBounds(int x0, int y0, int x1, int y1) {
         xyBounds[0]=x0;
         xyBounds[1]=y0;
@@ -46,6 +48,7 @@ public class Voxel3DActor extends GLAbstractActor {
     public Voxel3DActor(AB2Renderer3D renderer, int actorId, List<Vector3> voxels, List<Vector4> colors,
                         int dimX, int dimY, int dimZ) {
         super(renderer);
+        this.renderer3d=renderer;
         this.actorId=actorId;
         this.voxels=voxels;
         this.colors=colors;
@@ -223,9 +226,9 @@ public class Voxel3DActor extends GLAbstractActor {
 
             AB2Voxel3DShader voxel3DShader = (AB2Voxel3DShader) shader;
             if (this.postProjectionMatrix!=null) {
-                voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()).multiply(postProjectionMatrix));
+                voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer3d.getVp3d()).multiply(postProjectionMatrix));
             } else {
-                voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()));
+                voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer3d.getVp3d()));
             }
             voxel3DShader.setDimXYZ(gl, dimX, dimY, dimZ);
             voxel3DShader.setGLBoundsXY(gl, xyBounds[0], xyBounds[1], xyBounds[2], xyBounds[3]);

@@ -28,9 +28,11 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
     IntBuffer boundaryVertexBufferId=IntBuffer.allocate(1);
 
     FloatBuffer boundaryVertexFb;
+    AB2Renderer3D renderer3d;
 
     public Camera3DFollowBoxActor(AB2Renderer3D renderer, int actorId, Vector3 v0, Vector3 v1) {
         super(renderer);
+        this.renderer3d=renderer;
         this.actorId=actorId;
         this.v0=v0;
         this.v1=v1;
@@ -117,7 +119,7 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
 
             logger.info("display() start");
 
-            basic3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()));
+            basic3DShader.setMVP(gl, getModelMatrix().multiply(renderer3d.getVp3d()));
             Vector4 actorColor = renderer.getColorIdMap().get(actorId);
             if (actorColor != null) {
                 basic3DShader.setColor(gl, actorColor);
@@ -171,10 +173,10 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
             modelMatrix=translationMatrix.multiply(scaleMatrix);
         //}
         Rotation r=new Rotation();
-        r.copy(renderer.getRotation());
+        r.copy(renderer3d.getRotation());
         r.transpose();
-        Vector3 v=r.multiply(new Vector3(renderer.getFocusPosition3d()));
-        float d=renderer.getFocusDistance3d();
+        Vector3 v=r.multiply(new Vector3(renderer3d.getFocusPosition3d()));
+        float d=renderer3d.getFocusDistance3d();
         float xh=(float)Math.sqrt((double)(v.getX()*v.getX()+d*d));
         float yh=(float)Math.sqrt((double)(v.getY()*v.getY()+d*d));
         //logger.info("v="+v.toString()+" d="+d);

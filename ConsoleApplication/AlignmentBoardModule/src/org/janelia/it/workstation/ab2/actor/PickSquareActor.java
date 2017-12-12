@@ -11,6 +11,7 @@ import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2PickSquareColorChangeEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer2D;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer3D;
 import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
@@ -30,9 +31,11 @@ public class PickSquareActor extends GLAbstractActor {
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
 
     FloatBuffer vertexFb;
+    AB2Renderer2D renderer2d;
 
-    public PickSquareActor(AB2Renderer3D renderer, int actorId, Vector2 v0, Vector2 v1, Vector4 color0, Vector4 color1) {
+    public PickSquareActor(AB2Renderer2D renderer, int actorId, Vector2 v0, Vector2 v1, Vector4 color0, Vector4 color1) {
         super(renderer);
+        this.renderer2d=renderer;
         this.actorId=actorId;
         this.v0=v0;
         this.v1=v1;
@@ -92,7 +95,7 @@ public class PickSquareActor extends GLAbstractActor {
 
         if (shader instanceof AB2Basic2DShader) {
             AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
-            basic2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
+            basic2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
             Vector4 actorColor=renderer.getColorIdMap().get(actorId);
             if (actorColor!=null) {
                 basic2DShader.setColor(gl, actorColor);
@@ -100,7 +103,7 @@ public class PickSquareActor extends GLAbstractActor {
 
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
-            pickShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
+            pickShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
             pickShader.setPickId(gl, getPickIndex());
         }
 

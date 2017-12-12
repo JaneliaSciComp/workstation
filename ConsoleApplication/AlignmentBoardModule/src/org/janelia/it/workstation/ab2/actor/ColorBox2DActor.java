@@ -11,6 +11,7 @@ import org.janelia.geometry3d.Vector2;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer2D;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer3D;
 import org.janelia.it.workstation.ab2.shader.AB2Image2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
@@ -33,8 +34,11 @@ public class ColorBox2DActor extends GLAbstractActor {
     BufferedImage bufferedImage;
     float alpha;
 
-    public ColorBox2DActor(AB2Renderer3D renderer, int actorId, Vector2 v0, Vector2 v1, BufferedImage bufferedImage, float alpha) {
+    AB2Renderer2D renderer2d;
+
+    public ColorBox2DActor(AB2Renderer2D renderer, int actorId, Vector2 v0, Vector2 v1, BufferedImage bufferedImage, float alpha) {
         super(renderer);
+        this.renderer2d=renderer;
         this.actorId=actorId;
         this.v0=v0;
         this.v1=v1;
@@ -141,14 +145,14 @@ public class ColorBox2DActor extends GLAbstractActor {
     public void display(GL4 gl, GLShaderProgram shader) {
         if (shader instanceof AB2Image2DShader) {
             AB2Image2DShader image2DShader=(AB2Image2DShader)shader;
-            image2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer.getVp2d()));
+            image2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
             gl.glActiveTexture(GL4.GL_TEXTURE0);
             checkGlError(gl, "d1 glActiveTexture");
             gl.glBindTexture(GL4.GL_TEXTURE_2D, imageTextureId.get(0));
             checkGlError(gl, "d2 glBindTexture()");
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
-            pickShader.setMVP2d(gl, renderer.getVp2d());
+            pickShader.setMVP2d(gl, renderer2d.getVp2d());
             pickShader.setPickId(gl, getPickIndex());
         }
 

@@ -34,8 +34,11 @@ public class Image3DActor extends Camera3DFollowBoxActor {
     int dimZ;
     byte data3d[];
 
+    AB2Renderer3D renderer3d;
+
     public Image3DActor(AB2Renderer3D renderer, int actorId, Vector3 v0, Vector3 v1, int dimX, int dimY, int dimZ, byte[] data3d) {
         super(renderer, actorId, v0, v1);
+        renderer3d=renderer;
         this.dimX=dimX;
         this.dimY=dimY;
         this.dimZ=dimZ;
@@ -136,8 +139,8 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             gl.glCullFace(GL4.GL_BACK);
 
             AB2Volume3DShader volume3DShader=(AB2Volume3DShader)shader;
-            volume3DShader.setMVP3d(gl, getModelMatrix().multiply(renderer.getVp3d()));
-            volume3DShader.setTextureMVP3d(gl, getPreTextureModelMatrix().multiply(renderer.getRotationAsTransform().transpose()).multiply(getPostTextureModelMatrix()));
+            volume3DShader.setMVP3d(gl, getModelMatrix().multiply(renderer3d.getVp3d()));
+            volume3DShader.setTextureMVP3d(gl, getPreTextureModelMatrix().multiply(renderer3d.getRotationAsTransform().transpose()).multiply(getPostTextureModelMatrix()));
             volume3DShader.setImageDim(gl, new Vector3(dimX*1f, dimY*1f, dimZ*1f));
             volume3DShader.setImageMaxDIm(gl, getMaxDim()*1f);
 

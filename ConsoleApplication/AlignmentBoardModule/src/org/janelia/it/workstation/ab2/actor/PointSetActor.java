@@ -25,9 +25,11 @@ public class PointSetActor extends GLAbstractActor {
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
 
     FloatBuffer pointVertexFb;
+    AB2Renderer3D renderer3d;
 
     public PointSetActor(AB2Renderer3D renderer, int actorId, List<Vector3> points) {
         super(renderer);
+        this.renderer3d=renderer;
         this.actorId=actorId;
         this.points=points;
     }
@@ -82,7 +84,7 @@ public class PointSetActor extends GLAbstractActor {
 
         if (shader instanceof AB2Basic3DShader) {
             AB2Basic3DShader basic3DShader = (AB2Basic3DShader) shader;
-            basic3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()));
+            basic3DShader.setMVP(gl, getModelMatrix().multiply(renderer3d.getVp3d()));
             Vector4 actorColor = renderer.getColorIdMap().get(actorId);
             if (actorColor != null) {
                 basic3DShader.setColor(gl, actorColor);

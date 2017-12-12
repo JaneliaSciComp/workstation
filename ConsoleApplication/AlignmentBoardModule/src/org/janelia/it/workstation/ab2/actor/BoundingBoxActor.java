@@ -25,9 +25,11 @@ public class BoundingBoxActor extends GLAbstractActor
     IntBuffer boundaryVertexBufferId=IntBuffer.allocate(1);
 
     FloatBuffer boundaryVertexFb;
+    AB2Renderer3D renderer3d;
 
     public BoundingBoxActor(AB2Renderer3D renderer, int actorId, Vector3 v0, Vector3 v1) {
         super(renderer);
+        this.renderer3d=renderer;
         this.actorId=actorId;
         this.v0=v0;
         this.v1=v1;
@@ -132,7 +134,7 @@ public class BoundingBoxActor extends GLAbstractActor
                 basic3DShader.setColor(gl, new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
             }
 
-            basic3DShader.setMVP(gl, getModelMatrix().multiply(renderer.getVp3d()));
+            basic3DShader.setMVP(gl, getModelMatrix().multiply(renderer3d.getVp3d()));
 
             gl.glBindVertexArray(boundaryVertexArrayId.get(0));
             checkGlError(gl, "d1 glBindVertexArray() error");
