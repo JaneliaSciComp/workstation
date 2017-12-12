@@ -396,6 +396,7 @@ public final class AccessManager {
         if (actualSubject!=null) {
             Events.getInstance().postOnEventBus(new SessionStartEvent(actualSubject));
         }
+        FileMgr.getFileMgr().setSubjectProxy(subject);
     }
     
     public static Subject getSubjectByKey(String key) {

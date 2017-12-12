@@ -7,8 +7,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.StreamSupport;
 
@@ -106,12 +104,8 @@ public class WebDavClientMgr {
         return webDavClient.findFile(remoteFileName);
     }
 
-    String createStorage(String storageName) {
-        return masterWebDavInstance.createStorageFile(storageName);
-    }
-
-    String createStorageDirectory(String storageName) {
-        return masterWebDavInstance.createStorageDir(storageName);
+    String createStorageFolder(String storageName) {
+        return masterWebDavInstance.createStorageFolder(storageName);
     }
 
     String uploadFile(File file, String storageURL, String storageLocation) {

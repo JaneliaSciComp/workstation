@@ -266,12 +266,8 @@ public class WebDavClient {
         return multiStatusResponses;
     }
 
-    String createStorageDir(String storageName) {
+    String createStorageFolder(String storageName) {
         return createStorage(getCreateStorageURL(storageName, "DATA_DIRECTORY"));
-    }
-
-    String createStorageFile(String storageName) {
-        return createStorage(getCreateStorageURL(storageName, "SINGLE_DATA_FILE"));
     }
 
     private String getCreateStorageURL(String storageName, String storageType) {

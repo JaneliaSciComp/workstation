@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.filecache;
 
 import org.janelia.it.jacs.model.TestCategories;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.junit.After;
 import org.junit.Before;
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.net.URL;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -69,49 +69,50 @@ public class WebDavUploaderTest {
     }
 
     @Test
-    public void testUploadFile() throws Exception {
-
-        String remotePath = uploader.uploadFile("f1", testFiles.get(0));
-        assertNotNull("null path returned for file upload", remotePath);
-
-//        URL url = client.getWebDavUrl(remotePath);
-//
-//        WebDavFile webDavFile = client.findFile(url);
-//        assertNotNull("uploaded file " + url + " missing from server", webDavFile);
+    public void uploadASingleFile() throws Exception {
+        String testStorageName = "f1";
+        String testStorageUrl = "http://teststorage/" + testStorageName;
+        File testFile = testFiles.get(0);
+        
+        Mockito.when(webDavClientMgr.createStorageFolder(testStorageName))
+                .thenReturn(testStorageUrl);
+        Mockito.when(webDavClientMgr.uploadFile(testFile, testStorageUrl, ""))
+                .thenReturn(testStorageUrl + "/" + testFile.getName());
+        
+        String remoteUrl = uploader.uploadFile(testStorageName, testFile);
+        assertNotNull("null path returned for file upload", remoteUrl);
+        assertEquals(testStorageUrl + "/" + testFile.getName(), remoteUrl);
     }
-//
-//    @Test
-//    @Category(TestCategories.FastTests.class)
-//    public void testDerivePathsForUnix() throws Exception {
-//        commonTestDerivePaths("/a/b/c/root", true);
-//    }
-//
-//    @Test
-//    @Category(TestCategories.FastTests.class)
-//    public void testDerivePathsForWindows() throws Exception {
-//        commonTestDerivePaths("C:\\a\\b\\c\\root", false);
-//    }
-//
-//    private void commonTestDerivePaths(String localRoot,
-//                                       boolean isUnix) throws Exception {
-//
-//        String localRootPathWithTrailingSeparator;
-//        if (isUnix) {
-//            localRootPathWithTrailingSeparator = localRoot + "/";
-//        } else {
-//            localRootPathWithTrailingSeparator = localRoot + "\\";
-//        }
-//
-//        final String remoteRoot = "/remote/upload/123";
-//        final String remoteRootWithTrailingSeparator = remoteRoot + "/";
-//
-//        final String[] relativeUnixPaths = {
-//                "/d/e/f1.mip",
-//                "/d/e/f2.mip",
-//                "/d/f3.mip",
-//                "/f4.mip",
-//                "/g/f5.mip",
-//        };
+
+    @Test
+    public void uploadMultipleFiles() throws Exception {
+        String testStorageName = "f1";
+        String testStorageUrl = "http://teststorage/" + testStorageName;
+        Mockito.when(webDavClientMgr.createStorageFolder(testStorageName))
+                .thenReturn(testStorageUrl);
+
+        Mockito.when(webDavClientMgr.urlEncodeComp(ArgumentMatchers.anyString()))
+                .then(invocation -> invocation.getArgument(0));
+        Mockito.when(webDavClientMgr.urlEncodeComps(ArgumentMatchers.anyString()))
+                .then(invocation -> invocation.getArgument(0));
+
+        String remoteUrl = uploader.uploadFiles(
+                testStorageName, 
+                testFiles,
+                testRootParentDirectory);
+
+        assertNotNull("null path returned for file upload", remoteUrl);
+        assertEquals(testStorageUrl, remoteUrl);
+        
+        Mockito.verify(webDavClientMgr).createDirectory(testStorageUrl, testNestedDirectory.getName());
+        for (File f : testFiles) {
+            Mockito.verify(webDavClientMgr).uploadFile(f, testStorageUrl, 
+                    testRootParentDirectory.toPath().relativize(f.toPath()).toString());
+            
+        }
+        
+    }
+
 //
 //        final String[] expectedOrderedDirPaths = {
 //                "/remote/upload/123/d/",

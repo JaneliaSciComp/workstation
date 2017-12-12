@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.httpclient.Header;
@@ -12,11 +14,13 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.auth.AuthPolicy;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.filecache.LocalFileCache;
 import org.janelia.it.workstation.browser.filecache.WebDavClientMgr;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.model.security.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +56,6 @@ public class FileMgr {
     private final HttpClient httpClient;
     private final WebDavClientMgr webDavClientMgr;
     private LocalFileCache localFileCache;
-    private String authToken;
 
     private FileMgr() {
         
@@ -226,12 +229,25 @@ public class FileMgr {
                 : webDavClientMgr.getDownloadFileURL(standardPathName);
     }
 
+    void setSubjectProxy(Subject proxy) {
+        addDefaultHeader("JacsSubject", proxy != null ? proxy.getKey() : null);
+    }
+
     void setAuthToken(String authToken) {
-        this.authToken = authToken;
         // I prefer this method to the AuthState approach because it's more convenient
         // with the AuthState I have to set authentication required for every HttpMethod instance that requires authentication
         // and I also have to set the scheme
-        httpClient.getParams().getDefaults().setParameter("http.default-headers",
-                ImmutableList.of(new Header("Authorization", "Bearer " + authToken)));
+        addDefaultHeader("Authorization", StringUtils.isBlank(authToken) ? null : "Bearer " + authToken);
+    }
+
+    private void addDefaultHeader(String headerName, String headerValue) {
+        List<Header> defaultHeaders = (List<Header>) httpClient.getParams().getDefaults().getParameter("http.default-headers");
+        ImmutableList.Builder<Header> defaultHeadersBuilder = ImmutableList.builder();
+        if (defaultHeaders != null) {
+            if (headerValue != null) defaultHeadersBuilder.add(new Header(headerName, headerValue));
+            defaultHeadersBuilder.addAll(defaultHeaders.stream().filter(h -> h.getName().equalsIgnoreCase(headerName)).collect(Collectors.toList()));
+        }
+        defaultHeaders = defaultHeadersBuilder.build();
+        httpClient.getParams().getDefaults().setParameter("http.default-headers", defaultHeaders);
     }
 }

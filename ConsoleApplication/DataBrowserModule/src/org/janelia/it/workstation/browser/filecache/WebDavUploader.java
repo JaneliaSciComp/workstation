@@ -62,22 +62,10 @@ public class WebDavUploader {
      *   if the file cannot be uploaded.
      */
     public String uploadFile(String storageName, File file) throws WebDavException {
-        String storageURL = webDavClientMgr.createStorage(storageName);
+        String storageURL = webDavClientMgr.createStorageFolder(storageName);
         String uploadedFileURL = webDavClientMgr.uploadFile(file, storageURL, "");
         LOG.info("uploaded {} to {} - {}", file, storageURL, uploadedFileURL);
         return uploadedFileURL;
-    }
-
-    private String createStorageName(File f) {
-        StringBuilder path = new StringBuilder(128);
-        path.append(uploadClientStartTimestamp);
-        path.append("__");
-        path.append(uploadClientHostAddress);
-        path.append("__");
-        path.append(uploadCount++);
-        path.append("__");
-        path.append(f.getName());
-        return webDavClientMgr.urlEncodeComps(path.toString());
     }
 
     /**
@@ -106,7 +94,7 @@ public class WebDavUploader {
     public String uploadFiles(String storageName, List<File> fileList, File localRootDirectory)
             throws IllegalArgumentException, WebDavException {
 
-        String storageURL = webDavClientMgr.createStorageDirectory(storageName);
+        String storageURL = webDavClientMgr.createStorageFolder(storageName);
 
         // need to go through the entire fileList and create the directory hierarchy
         // and then upload the file content
@@ -127,7 +115,7 @@ public class WebDavUploader {
 
             private PathComps append(Path pathComp) {
                 PathComps res;
-                if (lastSubPath == null) {
+                if (lastSubPath == null || pathComp == null) {
                     res = new PathComps(pathComp);
                 } else {
                     res = new PathComps(lastSubPath.resolve(pathComp));
@@ -151,9 +139,9 @@ public class WebDavUploader {
                 .flatMap(fp -> {
                     int nPathComponents = fp.getNameCount();
                     return IntStream.range(0, nPathComponents - 1)
-                            .mapToObj(fp::getName)
-                            .map(Path::toString)
-                            .map(webDavClientMgr::urlEncodeComp)
+                            .mapToObj(i -> fp.getName(i))
+                            .map(p -> p.toString())
+                            .map(p -> webDavClientMgr.urlEncodeComp(p))
                             .map(pc -> Paths.get(pc))
                             .reduce(new PathComps(),
                                     (pathList, pc)-> pathList.append(pc),
