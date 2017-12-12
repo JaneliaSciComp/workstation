@@ -7,3 +7,4 @@ Workstation Browser
 * Added Polarity Case 5 pipeline
 * Fixed issue with "Select All" button not appearing when "Show only items with selected imagery" was checked
 * Fixed issue with LSMs not appearing when "Show only items with selected imagery" was checked 
+* Downloading thousands of files at once no longer hangs the application 
