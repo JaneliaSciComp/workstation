@@ -9,6 +9,8 @@ Workstation Browser
 * Fixed issue with LSMs not appearing when "Show only items with selected imagery" was checked
 * Downloading thousands of files at once no longer hangs the application
 * Fixed issue with LSMs not appearing when "Show only items with selected imagery" was checked
+
 Large Volume Viewer
 * Fixed issue with exporting multiple neurons to file without .swc extension
 * Improved point review workflow
+* LVV size panel components now resize correctly when stretched
