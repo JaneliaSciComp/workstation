@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.browser.components;
 
-import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
 import java.util.concurrent.Callable;
 
@@ -8,7 +7,6 @@ import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -26,7 +24,6 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -38,6 +35,8 @@ import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Top component which displays lists of domain objects.
@@ -112,6 +111,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     
     @Override
     public void componentClosed() {
+        clearEditor();
         Events.getInstance().unregisterOnEventBus(this);
     }
 
@@ -262,15 +262,18 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         return true;
     }
     
+    public void clearEditor() {
+        if (editor!=null) {
+            remove((JComponent)editor);
+            Events.getInstance().unregisterOnEventBus(editor);
+            Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
+        }
+        this.editor = null;
+    }
+    
     public void setEditorClass(Class<? extends DomainObjectNodeSelectionEditor<?>> editorClass) {
         try {
-            
-            if (editor!=null) {
-                remove((JComponent)editor);
-                Events.getInstance().unregisterOnEventBus(editor);
-                Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
-            }
-            
+            clearEditor();
             editor = editorClass.newInstance();
             Events.getInstance().registerOnEventBus(editor.getEventBusListener());
             Events.getInstance().registerOnEventBus(editor);

@@ -96,6 +96,7 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
 
     @Override
     public void componentClosed() {
+        clearEditor();
     }
     
     @Override
@@ -156,14 +157,18 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         return true;
     }
 
+    public void clearEditor() {
+        if (editor!=null) {
+            remove((JComponent)editor);
+            Events.getInstance().unregisterOnEventBus(editor);
+            Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
+        }
+        this.editor = null;
+    }
+    
     public void setEditorClass(Class<? extends SampleResultEditor> editorClass) {
         try {
-            if (editor!=null) {
-                remove((JComponent)editor);
-                Events.getInstance().unregisterOnEventBus(editor);
-                Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
-            }
-            
+            clearEditor();
             editor = editorClass.newInstance();
             Events.getInstance().registerOnEventBus(editor.getEventBusListener());
             Events.getInstance().registerOnEventBus(editor);
