@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -491,6 +490,11 @@ public final class DownloadWizardAction implements ActionListener {
         if (files==null) {
             files = targetDir.listFiles();
             listCache.put(targetDir, files);
+        }
+
+        if (files==null) {
+            // No files found
+            return null;
         }
         
         final String targetExtension = downloadItem.getTargetExtension();
