@@ -147,8 +147,8 @@ public final class DownloadWizardAction implements ActionListener {
                 log.info("Got {} artifact descriptors", elementSet.size());
                 log.info("Finding files");
                 
-                int progressTotal = downloadItems.size() * elementSet.size();
                 int startIndex = 2;
+                int progressTotal = startIndex + (downloadItems.size() * elementSet.size());
                 
                 artifactFileCounts = new HashMap<>();
                 for(ArtifactDescriptor artifactDescriptor : elementSet) {

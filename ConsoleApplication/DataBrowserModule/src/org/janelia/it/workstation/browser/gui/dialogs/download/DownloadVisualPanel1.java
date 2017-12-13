@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -211,20 +212,30 @@ public final class DownloadVisualPanel1 extends JPanel {
         this.defaultResultDescriptor = state.getDefaultResultDescriptor();
         this.artifactDescriptors = state.getArtifactDescriptors();
         this.artifactFileCounts = state.getArtifactFileCounts();
-        
-        if (artifactDescriptors==null) {
-            artifactDescriptors = new ArrayList<>();
-            if (defaultResultDescriptor!=null) {
-                artifactDescriptors.add(defaultResultDescriptor);
-            }
-        }
-        
+
         // Init filter values
         buildFilterValueLists();
-        setObjective(state.getObjective());
-        setArea(state.getArea());
-        setResultCategory(state.getResultCategory());
-        setImageCategory(state.getImageCategory());
+        
+        if (defaultResultDescriptor!=null) {
+            artifactDescriptors = Arrays.asList(defaultResultDescriptor);
+            List<FileType> defaultFileTypes = new ArrayList<>();
+            defaultFileTypes.add(FileType.LosslessStack);
+            defaultFileTypes.add(FileType.VisuallyLosslessStack);
+            defaultResultDescriptor.setSelectedFileTypes(defaultFileTypes);
+            // TODO: in the future, this could filter down to the selected result descriptor 
+            // to make it more obvious what is being downloaded
+            setObjective(ALL_VALUE);
+            setArea(ALL_VALUE);
+            setResultCategory(ALL_VALUE);
+            setImageCategory(ALL_VALUE);
+        }
+        else {
+            // Only set filters if there is no descriptor override
+            setObjective(state.getObjective());
+            setArea(state.getArea());
+            setResultCategory(state.getResultCategory());
+            setImageCategory(state.getImageCategory());
+        }
         
         JButton resetButton = new JButton();
         resetButton = new JButton("Reset Filters");
