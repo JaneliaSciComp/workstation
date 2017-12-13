@@ -27,6 +27,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
@@ -40,6 +42,8 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
+import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
+import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
@@ -440,6 +444,8 @@ public class ImportDialog extends ModalDialog {
                              String importTopLevelFolderName,
                              Long importTopLevelFolderId) throws Exception {
 
+        AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
+
         final WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
 
         String uploadPath;
@@ -449,22 +455,10 @@ public class ImportDialog extends ModalDialog {
             uploadPath = uploader.uploadFiles(importTopLevelFolderName, selectedChildren, selectedFile);
         }
 
-        final String process = "FileTreeLoader";
-        final boolean filesUploadedFlag = false;
-        Task task = new FileTreeLoaderPipelineTask(new HashSet<Node>(),
-                                                   AccessManager.getSubjectKey(),
-                                                   new ArrayList<Event>(),
-                                                   new HashSet<TaskParameter>(),
-                                                   uploadPath,
-                                                   importTopLevelFolderName,
-                                                   filesUploadedFlag,
-                                                   importTopLevelFolderId);
-        task.setJobName("Import Files Task");
-        task = StateMgr.getStateMgr().saveOrUpdateTask(task);
-
-        // Submit the job
-        StateMgr.getStateMgr().submitJob(process, task);
-        
-        return task.getObjectId();
+        return asyncServiceClient.invokeService("fileTreeLoader",
+                ImmutableList.of(),
+                null,
+                ImmutableMap.of()
+        );
     }
 }

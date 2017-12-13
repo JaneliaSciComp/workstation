@@ -244,9 +244,9 @@ public class FileMgr {
         List<Header> defaultHeaders = (List<Header>) httpClient.getParams().getDefaults().getParameter("http.default-headers");
         ImmutableList.Builder<Header> defaultHeadersBuilder = ImmutableList.builder();
         if (defaultHeaders != null) {
-            if (headerValue != null) defaultHeadersBuilder.add(new Header(headerName, headerValue));
-            defaultHeadersBuilder.addAll(defaultHeaders.stream().filter(h -> h.getName().equalsIgnoreCase(headerName)).collect(Collectors.toList()));
+            defaultHeadersBuilder.addAll(defaultHeaders.stream().filter(h -> !h.getName().equalsIgnoreCase(headerName)).collect(Collectors.toList()));
         }
+        if (headerValue != null) defaultHeadersBuilder.add(new Header(headerName, headerValue));
         defaultHeaders = defaultHeadersBuilder.build();
         httpClient.getParams().getDefaults().setParameter("http.default-headers", defaultHeaders);
     }
