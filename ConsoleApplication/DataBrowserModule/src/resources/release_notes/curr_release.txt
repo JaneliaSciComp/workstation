@@ -14,3 +14,4 @@ Large Volume Viewer
 * Improved point review workflow
 * LVV size panel components now resize correctly when stretched
 * Increased gateway timeout values to allow long running operations (e.g. workspace copy)
+* Added neuron length to workspace info dialog
