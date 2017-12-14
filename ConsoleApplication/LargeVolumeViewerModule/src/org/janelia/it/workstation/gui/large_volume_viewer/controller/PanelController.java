@@ -256,4 +256,32 @@ public class PanelController {
         }
         
     }
+    
+    private class PanelBackgroundAnnotationListener implements BackgroundAnnotationListener {
+        private AnnotationModel model;
+        
+        public PanelBackgroundAnnotationListener(AnnotationModel model) {
+            this.model = model;
+        }
+
+        @Override
+        public void neuronModelChanged(TmNeuronMetadata neuron) {
+            TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
+            filteredAnnotationList.loadNeuron(neuron);
+            wsNeuronList.deleteFromModel(neuron);
+        }
+
+        @Override
+        public void neuronModelCreated(TmNeuronMetadata neuron) {
+           
+            TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
+            filteredAnnotationList.loadNeuron(neuron);
+            wsNeuronList.deleteFromModel(neuron);
+        }
+
+        @Override
+        public void neuronModelDeleted(TmNeuronMetadata neuron) {
+        }
+        
+    }
 }
