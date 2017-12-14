@@ -94,6 +94,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                 // refresh client model, fireModelUpdates, etc.
                 if (user==AccessManager.getSubjectKey() && action==MessageType.NEURON_SAVE_METADATA) {
                     // if created neuron, merge model, otherwise ignore
+                    
                 } else {
                     // update neuron model and refresh
                 }

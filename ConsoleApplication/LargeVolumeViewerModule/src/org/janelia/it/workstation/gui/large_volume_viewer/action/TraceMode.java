@@ -153,7 +153,8 @@ implements MouseMode, KeyListener
 	public void mouseDragged(MouseEvent event) {
 		super.mouseDragged(event);
 		// We might be moving an anchor
-		if (dragAnchor != null) {
+		if (dragAnchor != null && controller.checkOwnership(dragAnchor.getNeuronID())) {
+                    
 			Vec3 loc = worldFromPixel(event.getPoint());
 			skeletonActor.getModel().lightweightPlaceAnchor(dragAnchor, loc);
 		}
