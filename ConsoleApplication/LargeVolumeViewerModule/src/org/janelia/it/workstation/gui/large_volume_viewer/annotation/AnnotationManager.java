@@ -18,6 +18,7 @@ import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -28,6 +29,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
@@ -223,6 +225,30 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         addAnnotation(seed.getLocation(), seed.getParentGuid());
     }
     
+    public boolean checkOwnership(TmNeuronMetadata neuron) {
+        if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
+            handleOwnershipChange(neuron);
+            return false;
+        }
+        return true;
+    }
+    
+    public boolean checkOwnership (Long neuronID) {
+        return checkOwnership(annotationModel.getNeuronFromNeuronID(neuronID));
+    }
+    
+    private void handleOwnershipChange(TmNeuronMetadata neuron) {
+        presentError("You do not own this neuron.You must request access to this neuron to change it.", "Wrong Neuron Ownership");
+    }
+        
+    private void handleOwnershipChange(List<TmNeuronMetadata> neuronList) {
+        String neuronNames = neuronList.stream()
+                .map(TmNeuronMetadata::getName)
+                .collect(Collectors.joining(", "));
+        presentError("You do not own the following neurons, " + neuronNames + 
+                ". You must request access to these neurons to change them.", "Wrong Neuron Ownership");
+    }
+    
     public void moveAnchor(Anchor anchor) {
 
         if (!editsAllowed()) {
@@ -230,6 +256,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             annotationModel.fireAnnotationNotMoved(annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid()));
             return;
         }
+        
+        if (!checkOwnership(anchor.getNeuronID()))
+            return;
         
         // find closest to new anchor location that isn't the annotation already
         //  associated with anchor; remember that anchors are in micron
@@ -361,6 +390,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     "No neuron!");
             return;
         }
+        
+        if (!checkOwnership(currentNeuron))
+            return;
 
         // verify that the parent annotation (if there is one) is in our neuron;
         //  this is probably no longer needed, as the neuron ought to be selected
@@ -439,6 +471,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     "No such annotation");
             return;
         }
+        
+        if (!checkOwnership(neuronID))
+            return;
+        
         if (annotation.isRoot() && annotation.getChildIds().size() > 0) {
             presentError(
                     "This annotation is a root with children, not a link!",
@@ -482,6 +518,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
+        if (!checkOwnership(neuronID))
+            return;
+        
         // if more than one point, ask the user if they are sure (we have
         //  no undo right now!)
         final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(neuronID, annotationID);
@@ -526,6 +565,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             // dialog?
             return;
         }
+        
+        if (!checkOwnership(neuronID))
+            return;
         
         SimpleWorker mover = new SimpleWorker() {
             @Override
@@ -587,7 +629,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * @param targetAnnotationID
      */
     public void mergeNeurite(final Long sourceNeuronID, final Long sourceAnnotationID, final Long targetNeuronID, final Long targetAnnotationID) {
-
+        if (!checkOwnership(sourceNeuronID)||!checkOwnership(targetNeuronID))
+            return;
+        
         TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(sourceNeuronID, sourceAnnotationID);
         TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(targetNeuronID, targetAnnotationID);
         // System.out.println("merge requested, " + sourceAnnotationID + " to " + targetAnnotationID);
@@ -629,6 +673,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 "No selected neurite");
             return;
         }
+                
+        if (!checkOwnership(targetAnchor.getNeuronID()) || !checkOwnership(sourceAnchor.getNeuronID()))
+            return;
 
         TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(sourceAnchor.getNeuronID(),
             sourceAnchor.getGuid());
@@ -717,12 +764,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             presentError("Anchor unexpectedly null!", "Can't move neurite");
             return;
         }
+        
 
         // dialog box with list of neurons, not including current neuron; but
         //  throw in a dummy "create new neuron" option at the top
         final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
         TmNeuronMetadata sourceNeuron = annotationModel.getNeuronFromNeuronID(annotation.getNeuronId());
-
+        if (!checkOwnership(sourceNeuron))
+            return;
+        
         ArrayList<TmNeuronMetadata> neuronList = new ArrayList<>(annotationModel.getNeuronList());
         neuronList.remove(sourceNeuron);
         // not sure alphabetical is the best sort; neuron list is selectable (defaults to creation
@@ -834,7 +884,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             // dialog?
             return;
         }
-
+        
+        if (!checkOwnership(neuronID))
+            return;
+        
         // can't split a root if it has multiple children (ambiguous):
         final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(neuronID, annotationID);
         if (annotation.isRoot() && annotation.getChildIds().size() != 1) {
@@ -870,6 +923,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
+        
+        if (!checkOwnership(neuronID))
+            return;
+        
 
         SimpleWorker rerooter = new SimpleWorker() {
             @Override
@@ -897,6 +954,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
+        
+        if (!checkOwnership(neuronID))
+            return;
+        
 
         // if it's already the root, can't split
         final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(neuronID, newRootAnnotationID);
@@ -939,6 +1000,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             // dialog?
             return;
         }
+        
+        if (!checkOwnership(neuronID))
+            return;
+        
 
         SimpleWorker adder = new SimpleWorker() {
             @Override
@@ -965,6 +1030,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * pop a dialog to add, edit, or delete note at the given annotation
      */
     public void addEditNote(final Long neuronID, final Long annotationID) {
+        if (!checkOwnership(neuronID))
+            return;
+        
         String noteText = getNote(neuronID, annotationID);
 
         AddEditNoteDialog testDialog = new AddEditNoteDialog(
@@ -989,6 +1057,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     public void clearNote(final Long neuronID, final Long annotationID) {
         TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronID);
+        if (!checkOwnership(neuronID))
+            return;
+        
         final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
         if (textAnnotation != null) {
             SimpleWorker deleter = new SimpleWorker() {
@@ -1054,6 +1125,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void setNeuronRadius(final Long neuronID) {
+        if (!checkOwnership(neuronID))
+            return;
+        
         String ans = (String) JOptionPane.showInputDialog(
                 ComponentUtil.getLVVMainWindow(),
                 "Set radius for neuron (µm): ",
@@ -1142,6 +1216,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (neuron == null) {
             return;
         }
+        
+        if (!checkOwnership(neuron))
+            return; 
 
         int nAnnotations = neuron.getGeoAnnotationMap().size();
         int ans = JOptionPane.showConfirmDialog(
@@ -1184,6 +1261,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     "No neuron!");
             return;
         }
+        if (!checkOwnership(neuron))
+            return;
+        
 
         final String neuronName = promptForNeuronName(neuron.getName());
         if (neuronName == null) {
@@ -1555,6 +1635,17 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     public SimpleListenableFuture setBulkNeuronVisibility(Collection<TmNeuronMetadata> neuronList, final boolean visibility) {
         final Collection<TmNeuronMetadata> neurons = neuronList==null?annotationModel.getNeuronList():neuronList;
+        List<TmNeuronMetadata> nonOwnedNeurons = new ArrayList<>();
+        for (TmNeuronMetadata neuron: neurons) {
+            if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
+                nonOwnedNeurons.add(neuron);
+            }
+        } 
+        if (nonOwnedNeurons.size()>0) {
+            handleOwnershipChange(nonOwnedNeurons); 
+            return null;
+        }
+      
         log.info("setBulkNeuronVisibility(neurons.size={}, visibility={})",neurons.size(),visibility);
         SimpleWorker updater = new SimpleWorker() {
             @Override
@@ -1565,7 +1656,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             @Override
             protected void hadSuccess() {
                 Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
-                for (TmNeuronMetadata neuron : neurons) {
+                for (TmNeuronMetadata neuron : neurons) {        
                     neuron.setVisible(visibility);
                     updateMap.put(neuron, getNeuronStyle(neuron));
                 }
@@ -1583,6 +1674,16 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     // hide others = hide all then show current; this is purely a convenience function
     public void hideUnselectedNeurons() {
+        List<TmNeuronMetadata> nonOwnedNeurons = new ArrayList<>();
+        for (TmNeuronMetadata neuron: annotationModel.getNeuronList()) {
+            if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
+                nonOwnedNeurons.add(neuron);
+            }
+        } 
+        if (nonOwnedNeurons.size()>0) {
+            handleOwnershipChange(nonOwnedNeurons); 
+            return;
+        }
         SimpleWorker updater = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
@@ -1610,6 +1711,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
     
     public void toggleSelectedNeurons() {
+        
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
@@ -1642,6 +1744,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void setNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
+        if (!checkOwnership(neuron))
+            return;      
         NeuronStyle style = getNeuronStyle(neuron);
         style.setVisible(visibility);
         setNeuronStyle(neuron, style);

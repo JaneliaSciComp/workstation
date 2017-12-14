@@ -91,6 +91,7 @@ public class NeuronModelAdapter implements NeuronModel
     private boolean nonInteractable; 
     private boolean userVisible;
     private boolean userToggleRadius; 
+    private String ownerKey;
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
     // private TmWorkspace workspace;
@@ -108,6 +109,7 @@ public class NeuronModelAdapter implements NeuronModel
         bIsVisible = true; // TODO: 
         nonInteractable = false; // TODO: 
         userVisible = true;
+        ownerKey = neuron.getOwnerKey();
         vertexes = new VertexList(neuron.getGeoAnnotationMap(), neuronSet);
         edges = new EdgeList(vertexes);
         // this.workspace = workspace;
@@ -585,6 +587,22 @@ public class NeuronModelAdapter implements NeuronModel
     @Override
     public void setUserToggleRadius(boolean userToggleRadius) {
         this.userToggleRadius = userToggleRadius;
+    }
+    
+    /**
+     * @return the ownerKey
+     */
+    @Override
+    public String getOwnerKey() {
+        return ownerKey;
+    }
+
+    /**
+     * @param ownerKey the ownerKey to set
+     */
+    @Override
+    public void setOwnerKey(String ownerKey) {
+        this.ownerKey = ownerKey;
     }
 
     // TODO: - implement Edges correctly
