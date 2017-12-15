@@ -86,7 +86,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
     // to add new sort order: add to enum here, add menu in AnnotationPanel.java,
     //  and implement the sort in sortOrderChanged, below
-    public enum NeuronSortOrder {ALPHABETICAL, CREATIONDATE};
+    public enum NeuronSortOrder {ALPHABETICAL, CREATIONDATE, OWNER};
     private NeuronSortOrder neuronSortOrder = NeuronSortOrder.CREATIONDATE;
 
     public WorkspaceNeuronList(AnnotationManager annotationManager,
@@ -146,6 +146,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                     TmNeuronMetadata neuronMetadata = neuronTableModel.getNeuronAtRow(realRowIndex);
                     if (realColumnIndex == NeuronTableModel.COLUMN_NAME) {
                         tip = neuronMetadata.getName();
+                    } else if (realColumnIndex == NeuronTableModel.COLUMN_OWNER) {
+                        tip = neuronMetadata.getOwnerName();
                     } else if (realColumnIndex == NeuronTableModel.COLUMN_COLOR) {
                         Color color = neuronMetadata.getColor();
                         if (color == null) {
@@ -537,6 +539,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                 case ALPHABETICAL:
                     sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_NAME, SortOrder.ASCENDING)));
                     break;
+                case OWNER:
+                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_OWNER, SortOrder.ASCENDING)));
+                    break;
                 case CREATIONDATE:
                     sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_CREATION_DATE, SortOrder.ASCENDING)));
                     break;
@@ -659,11 +664,12 @@ class NeuronTableModel extends AbstractTableModel {
     public enum NeuronTagMode {NONE, INCLUDE, EXCLUDE};
 
     // note: creation date column will be hidden
-    private String[] columnNames = {"Name", "Style", "Creation Date"};
+    private String[] columnNames = {"Name", "Owner", "Style", "Creation Date"};
 
     public static final int COLUMN_NAME = 0;
-    public static final int COLUMN_COLOR = 1;
-    public static final int COLUMN_CREATION_DATE = 2;
+    public static final int COLUMN_OWNER = 1;
+    public static final int COLUMN_COLOR = 2;
+    public static final int COLUMN_CREATION_DATE = 3;
 
     private ArrayList<TmNeuronMetadata> neurons = new ArrayList<>();
     private ArrayList<TmNeuronMetadata> matchedNeurons = new ArrayList<>();
@@ -817,6 +823,9 @@ class NeuronTableModel extends AbstractTableModel {
             case COLUMN_NAME:
                 // neuron
                 return TmNeuronMetadata.class;
+            case COLUMN_OWNER:
+                // owner
+                return String.class;
             case COLUMN_COLOR:
                 // color
                 return Color.class;
@@ -834,6 +843,9 @@ class NeuronTableModel extends AbstractTableModel {
             case COLUMN_NAME:
                 // neuron name
                 return targetNeuron.getName();
+            case COLUMN_OWNER:
+                // owner
+                return targetNeuron.getOwnerName();
             case COLUMN_COLOR:
                 // Note that is not the same as targetNeuron.getColor(). If the persisted color is null, it picks a default.
                 return annotationModel.getNeuronStyle(targetNeuron).getColor();
