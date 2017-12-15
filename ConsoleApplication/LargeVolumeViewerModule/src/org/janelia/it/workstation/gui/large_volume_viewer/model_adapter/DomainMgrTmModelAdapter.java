@@ -1,5 +1,164 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.model_adapter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
+import org.janelia.model.access.tiledMicroscope.TmModelAdapter;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
+import org.openide.util.RequestProcessor;
+import org.perf4j.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
+import com.rabbitmq.client.Channel;
+import java.util.HashMap;
+import java.util.Map;
+import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
+import org.janelia.messaging.broker.sharedworkspace.MessageType;
+import org.janelia.messaging.client.ConnectionManager;
+import org.janelia.messaging.client.Sender;
+import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
+
+/**
+ * Implementation of the model adapter, which pulls/pushes data through
+ * the TiledMicroscopeDomainMgr.
+ *
+ * When invoked to fetch exchange neurons, this implementation will do so
+ * by way of the model manager.  It adapts the model manipulator for 
+ * client-side use.  Not intended to be used from multiple threads, which are
+ * feeding different workspaces.
+ *
+ * @author fosterl
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
+public class DomainMgrTmModelAdapter implements TmModelAdapter {
+
+    private static Logger log = LoggerFactory.getLogger(DomainMgrTmModelAdapter.class);
+
+    private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
+    private static final String MESSAGESERVER_USERACCOUNT = ConsoleProperties.getInstance().getProperty("domain.msgserver.useraccount").trim();
+    private static final String MESSAGESERVER_PASSWORD = ConsoleProperties.getInstance().getProperty("domain.msgserver.password").trim();
+    private static final String MESSAGESERVER_UPDATESEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.updates").trim();
+    private static final String MESSAGESERVER_ROUTINGKEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.routingkey.updates").trim();
+    
+    private RequestProcessor loadProcessor = new RequestProcessor("Tm-Save-Queue", 1, true);
+    private TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+    private Sender messageSender;
+
+    @Override
+    public List<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) throws Exception {
+        log.info("Loading neurons for workspace: {}", workspace);
+        List<TmNeuronMetadata> neurons = new ArrayList<>();
+
+        try {            
+            StopWatch stopWatch = new StopWatch();
+            List<TmNeuronMetadata> neuronList = tmDomainMgr.getWorkspaceNeurons(workspace.getId());
+            log.info("Loading {} neurons took {} ms", neuronList.size(), stopWatch.getElapsedTime());
+            
+            if (ClientDomainUtils.hasWriteAccess(workspace)) {
+                if (ApplicationPanel.isVerifyNeurons()) {
+                    log.info("Checking neuron data consistency");
+                        
+                    // check neuron consistency and repair (some) problems
+                    for (TmNeuronMetadata neuron: neuronList) {
+                        log.debug("Checking neuron data for TmNeuronMetadata#{}", neuron.getId());
+                        List<String> results = neuron.checkRepairNeuron();
+                        if (results.size() > 0) {
+                            // save results, then output to log; this is unfortunately
+                            //  not visible to the user; we aren't in a place in the
+                            //  code where we can pop a dialog
+                            for (String s: results) {
+                                log.warn(s);
+                            }
+                        	neuron = tmDomainMgr.save(neuron);
+                        }
+                        neurons.add(neuron);
+                    }
+                }
+                else {
+                    neurons.addAll(neuronList);
+                }
+            }
+            else {
+                neurons.addAll(neuronList);
+            }
+
+        }
+        catch (Exception ex) {
+            throw ex;
+        }
+
+        return neurons;
+    }
+    
+    private Sender getSender() {
+        if (messageSender==null) {
+            ConnectionManager connManager = ConnectionManager.getInstance();
+            connManager.configureTarget(MESSAGESERVER_URL,  MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD);
+            messageSender = new Sender();
+            messageSender.init(connManager, MESSAGESERVER_UPDATESEXCHANGE, MESSAGESERVER_ROUTINGKEY);
+        } 
+        return messageSender;
+    }
+    
+    private void sendMessage (TmNeuronMetadata neuron, MessageType type) throws Exception {
+        List<Long> neuronIds = new ArrayList<Long>();
+        neuronIds.add(neuron.getId());
+        
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String,Object> updateHeaders = new HashMap<String,Object> ();
+        updateHeaders.put(HeaderConstants.TYPE, type.toString());
+        updateHeaders.put(HeaderConstants.USER, AccessManager.getSubjectKey());
+        updateHeaders.put(HeaderConstants.WORKSPACE, neuron.getWorkspaceId().toString());
+        updateHeaders.put(HeaderConstants.METADATA, mapper.writeValueAsString(neuron));
+        updateHeaders.put(HeaderConstants.NEURONIDS, neuronIds.toString());
+        
+        TmProtobufExchanger exchanger = new TmProtobufExchanger();
+        byte[] neuronData = exchanger.serializeNeuron(neuron);
+        
+        getSender().sendMessage(updateHeaders, neuronData);
+    }
+
+    @Override
+    public void asyncCreateNeuron(TmNeuronMetadata neuron) throws Exception {
+        // make sure the neuron contains the current user's ownerKey;
+        neuron.setOwnerKey(AccessManager.getSubjectKey());
+        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
+        sendMessage (neuron, MessageType.NEURON_CREATE);
+    }
+
+    @Override
+    public void asyncSaveNeuron(TmNeuronMetadata neuron) throws Exception {
+        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
+        sendMessage (neuron, MessageType.NEURON_SAVE_NEURONDATA);
+    }
+
+    @Override
+    public void asyncSaveNeuronMetadata(TmNeuronMetadata neuron) throws Exception {
+        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
+        sendMessage (neuron, MessageType.NEURON_SAVE_METADATA);
+    }
+
+    @Override
+    public void asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {
+        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
+        sendMessage (neuron, MessageType.NEURON_DELETE);
+    }
+}
+package org.janelia.it.workstation.gui.large_volume_viewer.model_adapter;
+
 import java.util.ArrayList;
 import java.util.List;
 

@@ -61,6 +61,7 @@ import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.model.access.domain.DomainUtils;
@@ -129,6 +130,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private final Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
     private final Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
     private final Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
+    private final Collection<BackgroundAnnotationListener> backgroundAnnotationListeners = new ArrayList<>();
 
     private final TmModelManipulator neuronManager;
 
@@ -211,6 +213,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     public void removeGlobalAnnotationListener(GlobalAnnotationListener listener) {
         globalAnnotationListeners.remove(listener);
+    }
+    
+    public void addBackgroundAnnotationListener(BackgroundAnnotationListener listener) {
+        backgroundAnnotationListeners.add(listener);
+    }
+
+    public void removeBackgroundAnnotationListener(BackgroundAnnotationListener listener) {
+        backgroundAnnotationListeners.remove(listener);
     }
 
     public void setViewStateListener(ViewStateListener listener) {
@@ -495,7 +505,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public synchronized TmNeuronMetadata createNeuron(String name) throws Exception {
         final TmNeuronMetadata neuron = neuronManager.createTiledMicroscopeNeuron(currentWorkspace, name);
 
-        // Update local workspace
+       /* // Update local workspace
         log.info("Neuron was created: "+neuron);
         setCurrentNeuron(neuron);
         
@@ -508,7 +518,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 activityLog.logCreateNeuron(workspace.getId(), neuron.getId());
             }
         });
-        
+        */
         return neuron;
     }
 
@@ -2086,6 +2096,25 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public void fireSpatialIndexReady(TmWorkspace workspace) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.spatialIndexReady(workspace);
+        }
+    }
+    
+        
+    public void fireBackgroundNeuronCreated(TmNeuronMetadata neuron) {
+        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
+            b.neuronModelCreated(neuron);
+        }
+    }
+
+    public void fireBackgroundNeuronDeleted(TmNeuronMetadata neuron) {
+        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
+            b.neuronModelDeleted(neuron);
+        }
+    }
+
+    public void fireBackgroundNeuronChanged(TmNeuronMetadata neuron) {
+        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
+            b.neuronModelChanged(neuron);
         }
     }
     

@@ -1,11 +1,13 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.CancelCallback;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 import com.rabbitmq.client.Delivery;
 import com.rabbitmq.client.LongString;
 import com.rabbitmq.client.impl.LongStringHelper;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +17,8 @@ import org.janelia.messaging.client.Receiver;
 import org.janelia.messaging.broker.sharedworkspace.MessageType;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,36 +80,68 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
      */
     @Override
     public void handle(String string, Delivery message) throws IOException {
-        // fire notice to AnnotationModel
-        Map<String,Object> msgHeaders = message.getProperties().getHeaders();
-        if (msgHeaders==null) {
-            throw new IOException("Issue trying to process metadata from update");
-        }
-        byte[] msgBody = message.getBody();
-        String user = convertLongString((LongString) msgHeaders.get(HeaderConstants.USER));
-        Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
-        MessageType action =  MessageType.valueOf(convertLongString((LongString) msgHeaders.get(HeaderConstants.TYPE)));
-        String metadata = convertLongString((LongString) msgHeaders.get(HeaderConstants.METADATA));
-        
-        switch (action) {
-            case NEURON_SAVE_NEURONDATA:
-            case NEURON_SAVE_METADATA:
-            case NEURON_DELETE:
-                // refresh client model, fireModelUpdates, etc.
-                if (user==AccessManager.getSubjectKey() && action==MessageType.NEURON_SAVE_METADATA) {
-                    // if created neuron, merge model, otherwise ignore
-                    
-                } else {
-                    // update neuron model and refresh
+        try {
+// fire notice to AnnotationModel
+            Map<String, Object> msgHeaders = message.getProperties().getHeaders();
+            if (msgHeaders == null) {
+                throw new IOException("Issue trying to process metadata from update");
+            }
+            
+            Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
+            // if not this workspace, filter out message
+            if (workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
+                return;
+            }
+
+            String user = convertLongString((LongString) msgHeaders.get(HeaderConstants.USER));
+            MessageType action = MessageType.valueOf(convertLongString((LongString) msgHeaders.get(HeaderConstants.TYPE)));
+            String metadata = convertLongString((LongString) msgHeaders.get(HeaderConstants.METADATA));
+            ObjectMapper mapper = new ObjectMapper();
+            TmNeuronMetadata neuron = mapper.readValue(metadata, TmNeuronMetadata.class);
+            
+            // if these changes were made by this user but are not create neuron, filter out results
+            if (user != null && user.equals(AccessManager.getSubjectKey()) && (action!= MessageType.NEURON_OWNERSHIP_DECISION ||
+                    action!=MessageType.REQUEST_NEURON_OWNERSHIP)) {
+                if (action == MessageType.NEURON_CREATE) {
+                    TmProtobufExchanger exchanger = new TmProtobufExchanger();
+                    byte[] msgBody = message.getBody();
+                    exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+                    if (annotationModel.getNeuronManager().mergeCreatedNeuron(neuron)) {
+                        annotationModel.fireBackgroundNeuronCreated(neuron);
+                    }
                 }
-                break;
-                
-            case REQUEST_NEURON_OWNERSHIP:
-                // some other user is asking for ownership of this neuron... process accordingly
-                break;
-            case NEURON_OWNERSHIP_DECISION:
+                return;
+            }
+ 
+            // change relevant to this workspace and not execute don this client, so update model or process request
+            switch (action) {
+                case NEURON_SAVE_NEURONDATA:
+                case NEURON_SAVE_METADATA:
+                    TmProtobufExchanger exchanger = new TmProtobufExchanger();
+                    byte[] msgBody = message.getBody();
+                    exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+                    annotationModel.fireBackgroundNeuronChanged(neuron);
+                    break;
+                case NEURON_DELETE:
+                    exchanger = new TmProtobufExchanger();
+                    msgBody = message.getBody();
+                    exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+                    annotationModel.fireBackgroundNeuronDeleted(neuron);
+                    break;
+                case REQUEST_NEURON_OWNERSHIP:
+                    // some other user is asking for ownership of this neuron... process accordingly
+                    break;
+                case NEURON_OWNERSHIP_DECISION:
                 // result of ownership request, check decision and use neuron metadata object attached to this message
+                    break;
+            }
+        } catch (Exception e) {
+            // problem deserializing the protobuf stream
+            throw new IOException("Issues converting protobufstream back into TmNeuronData", e);
         }
+        
+
+       
 
     }
 
