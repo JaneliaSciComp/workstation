@@ -144,9 +144,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                     int realColumnIndex = convertColumnIndexToModel(colIndex);
                     int realRowIndex = convertRowIndexToModel(rowIndex);
                     TmNeuronMetadata neuronMetadata = neuronTableModel.getNeuronAtRow(realRowIndex);
-                    if (realColumnIndex == 0) {
+                    if (realColumnIndex == NeuronTableModel.COLUMN_NAME) {
                         tip = neuronMetadata.getName();
-                    } else if (realColumnIndex == 1) {
+                    } else if (realColumnIndex == NeuronTableModel.COLUMN_COLOR) {
                         Color color = neuronMetadata.getColor();
                         if (color == null) {
                             // get the default if there isn't a stored user-chosen color
@@ -162,16 +162,16 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
             }
         };
 
-        neuronTable.getColumnModel().getColumn(0).setPreferredWidth(175);
-        neuronTable.getColumnModel().getColumn(1).setPreferredWidth(50);
+        neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_NAME).setPreferredWidth(175);
+        neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_COLOR).setPreferredWidth(50);
         // the color swatch column should not resize; let the name column have
         //  all space
-        neuronTable.getColumnModel().getColumn(1).setMaxWidth(50);
+        neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_COLOR).setMaxWidth(50);
 
         neuronTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         // hide columns that we only maintain for sorting (eg, creation date)
-        neuronTable.removeColumn(neuronTable.getColumnModel().getColumn(2));
+        neuronTable.removeColumn(neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_CREATION_DATE));
 
         // sort, but only programmatically
         neuronTable.setAutoCreateRowSorter(true);
@@ -217,12 +217,12 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                     // which column?
                     int viewColumn = table.columnAtPoint(me.getPoint());
                     int modelColumn = neuronTable.convertColumnIndexToModel(viewColumn);
-                    if (modelColumn == 0) {
+                    if (modelColumn == NeuronTableModel.COLUMN_NAME) {
                         // single click name, select neuron
                         if (neuronSelectedListener != null)
                             neuronSelectedListener.selectNeuron(selectedNeuron);
                     } 
-                    else if (modelColumn == 1) {
+                    else if (modelColumn == NeuronTableModel.COLUMN_COLOR) {
                         // single click color, edit style
                         annotationManager.chooseNeuronStyle(selectedNeuron);
                     }
@@ -535,10 +535,10 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         if (neuronTableModel.getRowCount() > 0) {
             switch(neuronSortOrder) {
                 case ALPHABETICAL:
-                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
+                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_NAME, SortOrder.ASCENDING)));
                     break;
                 case CREATIONDATE:
-                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(2, SortOrder.ASCENDING)));
+                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_CREATION_DATE, SortOrder.ASCENDING)));
                     break;
             }
         }
@@ -660,6 +660,10 @@ class NeuronTableModel extends AbstractTableModel {
 
     // note: creation date column will be hidden
     private String[] columnNames = {"Name", "Style", "Creation Date"};
+
+    public static final int COLUMN_NAME = 0;
+    public static final int COLUMN_COLOR = 1;
+    public static final int COLUMN_CREATION_DATE = 2;
 
     private ArrayList<TmNeuronMetadata> neurons = new ArrayList<>();
     private ArrayList<TmNeuronMetadata> matchedNeurons = new ArrayList<>();
@@ -810,13 +814,13 @@ class NeuronTableModel extends AbstractTableModel {
     // needed to get color to work right; make sure classes match what getValueAt() returns!
     public Class<?> getColumnClass(int column) {
         switch (column) {
-            case 0:
+            case COLUMN_NAME:
                 // neuron
                 return TmNeuronMetadata.class;
-            case 1:
+            case COLUMN_COLOR:
                 // color
                 return Color.class;
-            case 2:
+            case COLUMN_CREATION_DATE:
                 // creation date
                 return Date.class;
             default:
@@ -827,13 +831,13 @@ class NeuronTableModel extends AbstractTableModel {
     public Object getValueAt(int row, int column) {
         TmNeuronMetadata targetNeuron = getNeuronAtRow(row);
         switch (column) {
-            case 0:
+            case COLUMN_NAME:
                 // neuron name
                 return targetNeuron.getName();
-            case 1:
+            case COLUMN_COLOR:
                 // Note that is not the same as targetNeuron.getColor(). If the persisted color is null, it picks a default.
                 return annotationModel.getNeuronStyle(targetNeuron).getColor();
-            case 2:
+            case COLUMN_CREATION_DATE:
                 // creation date, hidden, but there for sorting
                 return targetNeuron.getCreationDate();
             default:
