@@ -53,6 +53,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.PredefinedNote;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -92,11 +93,13 @@ implements NeuronSet// , LookupListener
     private Jama.Matrix voxToMicronMatrix;
     private Jama.Matrix micronToVoxMatrix;
     private final NeuronVertexSpatialIndex spatialIndex = new NeuronVertexSpatialIndex();
+    private final NeuronSetBackgroundAnnotationListener backgroundAnnotationListener;
 
     private NeuronSetAdapter(NeuronList innerNeuronList) {
         super("LVV neurons", innerNeuronList);
         this.innerList = innerNeuronList;
         this.globalAnnotationListener = new MyGlobalAnnotationListener();
+        this.backgroundAnnotationListener = new NeuronSetBackgroundAnnotationListener();
         this.annotationModListener = new MyTmGeoAnnotationModListener();
         this.hortaWorkspaceResult.addLookupListener(new NSALookupListener());
     }
@@ -236,6 +239,7 @@ implements NeuronSet// , LookupListener
         }
         sanityCheckWorkspace();
         annotationModel.addGlobalAnnotationListener(globalAnnotationListener);
+        annotationModel.addBackgroundAnnotationListener(backgroundAnnotationListener);
         annotationModel.addTmGeoAnnotationModListener(annotationModListener);
         getMembershipChangeObservable().notifyObservers();
         log.info("Observing new Annotation Model {}", annotationModel);
@@ -540,6 +544,55 @@ implements NeuronSet// , LookupListener
         }
     }
 
+    private class NeuronSetBackgroundAnnotationListener implements BackgroundAnnotationListener {
+
+        @Override
+        public void neuronModelChanged(TmNeuronMetadata neuron) {
+            // Remove all the existing cached vertices for this neuron
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getCachedVertexes()) {
+                spatialIndex.removeFromIndex(neuronVertex);
+            }
+            
+            // Re-create all the vertices for the neuron, and re-add them to the spatial index
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                spatialIndex.addToIndex(neuronVertex);
+            }
+            
+            // Recreate edges from the updated vertex list
+            neuronModel.updateEdges();
+        }
+
+        @Override
+        public void neuronModelCreated(TmNeuronMetadata neuron) {
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                spatialIndex.addToIndex(neuronVertex);
+            }
+            neuronModel.getGeometryChangeObservable().setChanged();
+            getMembershipChangeObservable().setChanged();
+            getMembershipChangeObservable().notifyObservers(neuronModel);
+        }
+
+        @Override
+        public void neuronModelDeleted(TmNeuronMetadata neuron) {
+            Collection<NeuronVertex> deletedVertices = new ArrayList<>();
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                spatialIndex.removeFromIndex(neuronVertex);
+                deletedVertices.add(neuronVertex);
+            }
+            neuronModel.getVertexesRemovedObservable().setChanged();
+            neuronModel.getVertexesRemovedObservable().notifyObservers(
+                    new VertexCollectionWithNeuron(deletedVertices, neuronModel));
+            
+            neuronModel.getGeometryChangeObservable().setChanged();
+            innerList.removeFromCache(neuron.getId());
+            getMembershipChangeObservable().setChanged();
+            getMembershipChangeObservable().notifyObservers(neuronModel);
+        }
+        
+    }
 
     private class MyGlobalAnnotationListener implements GlobalAnnotationListener {
 

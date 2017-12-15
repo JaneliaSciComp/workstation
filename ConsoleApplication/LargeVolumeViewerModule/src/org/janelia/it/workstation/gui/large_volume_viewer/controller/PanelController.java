@@ -35,6 +35,7 @@ public class PanelController {
     private PanelNotesUpdateListener notesListener;
     private PanelAnnotationListener annotationListener;
     private static final Logger log = LoggerFactory.getLogger(PanelController.class);
+    private PanelBackgroundAnnotationListener backgroundListener;
     
     
     public PanelController(
@@ -61,6 +62,9 @@ public class PanelController {
         
         globalListener = new PanelGlobalListener();
         annotationModel.addGlobalAnnotationListener(globalListener);
+        
+        backgroundListener = new PanelBackgroundAnnotationListener();
+        annotationModel.addBackgroundAnnotationListener(backgroundListener);
         
         notesListener = new PanelNotesUpdateListener();
         annotationModel.setNotesUpdateListener(notesListener);
@@ -258,29 +262,28 @@ public class PanelController {
     }
     
     private class PanelBackgroundAnnotationListener implements BackgroundAnnotationListener {
-        private AnnotationModel model;
-        
-        public PanelBackgroundAnnotationListener(AnnotationModel model) {
-            this.model = model;
+        public PanelBackgroundAnnotationListener() {
         }
 
         @Override
         public void neuronModelChanged(TmNeuronMetadata neuron) {
-            TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
             filteredAnnotationList.loadNeuron(neuron);
-            wsNeuronList.deleteFromModel(neuron);
+            wsNeuronList.updateModel(neuron);
         }
 
         @Override
         public void neuronModelCreated(TmNeuronMetadata neuron) {
-           
             TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
             filteredAnnotationList.loadNeuron(neuron);
-            wsNeuronList.deleteFromModel(neuron);
+            wsNeuronList.updateModel(neuron);
+            // TODO: could use a more granular update
+            wsNeuronList.loadWorkspace(workspace);
         }
 
         @Override
         public void neuronModelDeleted(TmNeuronMetadata neuron) {
+            filteredAnnotationList.loadNeuron(neuron);
+            wsNeuronList.deleteFromModel(neuron);
         }
         
     }
