@@ -3,8 +3,12 @@ package org.janelia.it.workstation.ab2.view;
 import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.workstation.ab2.gl.GLRegionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AB2SampleRegionManager extends GLRegionManager {
+
+    Logger logger = LoggerFactory.getLogger(AB2SampleRegionManager.class);
 
     AB2SampleTopRegion topRegion=new AB2SampleTopRegion();
     AB2SampleBottomRegion bottomRegion=new AB2SampleBottomRegion();

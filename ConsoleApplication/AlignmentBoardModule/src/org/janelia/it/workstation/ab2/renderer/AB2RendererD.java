@@ -334,7 +334,7 @@ public abstract class AB2RendererD extends AB2Renderer {
 
     @Override
     public void reshape(GL4 gl, int x, int y, int width, int height, int screenWidth, int screenHeight) {
-        //logger.info("reshape() x="+x+" y="+y+" width="+width+" height="+height);
+        //logger.info("reshape() x="+x+" y="+y+" width="+width+" height="+height+" screenWidth="+screenWidth+" screenHeight="+screenHeight);
         viewport.setHeightPixels(height);
         viewport.setWidthPixels(width);
         viewport.getChangeObservable().notifyObservers();

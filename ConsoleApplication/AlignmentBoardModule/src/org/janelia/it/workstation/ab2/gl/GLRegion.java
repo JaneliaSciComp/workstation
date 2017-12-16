@@ -60,6 +60,7 @@ public abstract class GLRegion {
         this.height=height;
         this.screenWidth=screenWidth;
         this.screenHeight=screenHeight;
+        reshape(drawable);
     }
 
     protected abstract void reshape(GLAutoDrawable drawable);
