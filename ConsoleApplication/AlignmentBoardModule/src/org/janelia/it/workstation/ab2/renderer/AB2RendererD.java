@@ -144,6 +144,8 @@ public abstract class AB2RendererD extends AB2Renderer {
         for (GLShaderActionSequence shaderActionSequence : pickShaderList) {
             shaderActionSequence.dispose(gl);
         }
+
+        disposePickFramebuffer(gl);
     }
 
     public void clearActionSequenceActors(GLShaderActionSequence actionSequence) {
