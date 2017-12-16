@@ -153,8 +153,8 @@ public class AB2SampleRenderer extends AB2Renderer3D {
 
         clearVoxel3DActor();
         resetView();
-        Voxel3DActor voxel3DActor=new Voxel3DActor(this, getNextActorIndex(), 0.05f, data);
-        addVoxel3DActor(voxel3DActor);
+        Voxel3DActor v=new Voxel3DActor(this, getNextActorIndex(), 0.05f, data);
+        addVoxel3DActor(v);
     }
 
     private void clearImage3DActor() {

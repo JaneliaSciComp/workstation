@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.media.opengl.GL4;
 
+import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
@@ -36,8 +37,6 @@ public class Voxel3DActor extends GLAbstractActor {
     ShortBuffer vertexFb;
     ByteBuffer colorFb;
 
-    AB2Renderer3D renderer3d;
-
     public void setXYBounds(int x0, int y0, int x1, int y1) {
         xyBounds[0]=x0;
         xyBounds[1]=y0;
@@ -48,7 +47,6 @@ public class Voxel3DActor extends GLAbstractActor {
     public Voxel3DActor(AB2Renderer3D renderer, int actorId, List<Vector3> voxels, List<Vector4> colors,
                         int dimX, int dimY, int dimZ) {
         super(renderer);
-        this.renderer3d=renderer;
         this.actorId=actorId;
         this.voxels=voxels;
         this.colors=colors;
@@ -225,6 +223,7 @@ public class Voxel3DActor extends GLAbstractActor {
             }
 
             AB2Voxel3DShader voxel3DShader = (AB2Voxel3DShader) shader;
+            AB2Renderer3D renderer3d=(AB2Renderer3D)renderer;
             if (this.postProjectionMatrix!=null) {
                 voxel3DShader.setMVP(gl, getModelMatrix().multiply(renderer3d.getVp3d()).multiply(postProjectionMatrix));
             } else {

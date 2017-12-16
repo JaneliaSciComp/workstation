@@ -1,4 +1,4 @@
-#version 450
+#version 410
 
 in vec3 tc_out;
 out vec4 color;
