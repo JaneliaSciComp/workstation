@@ -154,6 +154,7 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
             gl.glDeleteVertexArrays(1, boundaryVertexArrayId);
             gl.glDeleteBuffers(1, boundaryVertexBufferId);
         }
+        super.dispose(gl, shader);
     }
 
     public Matrix4 getModelMatrix() {

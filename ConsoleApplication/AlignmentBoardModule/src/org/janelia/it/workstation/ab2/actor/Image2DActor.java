@@ -186,6 +186,7 @@ public class Image2DActor extends GLAbstractActor {
             gl.glDeleteBuffers(1, vertexBufferId);
             gl.glDeleteTextures(1, imageTextureId);
         }
+        super.dispose(gl, shader);
     }
 
 }

@@ -305,6 +305,7 @@ public class Voxel3DActor extends GLAbstractActor {
             gl.glDeleteBuffers(1, vertexBufferId);
             gl.glDeleteBuffers(1, colorBufferId);
         }
+        super.dispose(gl, shader);
     }
 
     public int getMaxDim() {

@@ -166,11 +166,11 @@ public class BoundingBoxActor extends GLAbstractActor
 
     @Override
     public void dispose(GL4 gl, GLShaderProgram shader) {
-
         if (shader instanceof AB2Basic3DShader) {
             gl.glDeleteVertexArrays(1, boundaryVertexArrayId);
             gl.glDeleteBuffers(1, boundaryVertexBufferId);
         }
+        super.dispose(gl, shader);
     }
 
 }

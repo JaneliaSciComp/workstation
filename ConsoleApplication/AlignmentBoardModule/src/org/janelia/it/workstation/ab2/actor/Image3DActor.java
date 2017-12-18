@@ -223,6 +223,7 @@ public class Image3DActor extends Camera3DFollowBoxActor {
             logger.info("dispose() setting data3d=null");
             data3d=null;
         }
+        super.dispose(gl, shader);
     }
 
     public int getMaxDim() {

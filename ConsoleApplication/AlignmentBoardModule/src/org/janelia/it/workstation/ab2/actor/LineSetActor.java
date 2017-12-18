@@ -108,6 +108,7 @@ public class LineSetActor extends GLAbstractActor {
             gl.glDeleteVertexArrays(1, vertexArrayId);
             gl.glDeleteBuffers(1, vertexBufferId);
         }
+        super.dispose(gl, shader);
     }
 
 }

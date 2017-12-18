@@ -14,6 +14,7 @@ are placed in the waitQueue, to be handled by the next Mode controller.
 */
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -29,6 +30,7 @@ import org.janelia.it.workstation.ab2.event.AB2ChangeModeEvent;
 import org.janelia.it.workstation.ab2.event.AB2DomainObjectUpdateEvent;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
+import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.model.AB2DomainObject;
 import org.janelia.it.workstation.ab2.renderer.AB2SampleRenderer;
 import org.janelia.it.workstation.ab2.renderer.AB2SimpleCubeRenderer;
@@ -178,6 +180,7 @@ public class AB2Controller implements GLEventListener {
 
     @Override
     public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3) {
+        GLAbstractActor.applyGlWindowResize(i2, i3);
         if (currentMode!=null) {
             currentMode.reshape(glAutoDrawable, i, i1, i2, i3);
         }

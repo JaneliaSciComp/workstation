@@ -9,6 +9,8 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.media.opengl.GL4;
 import javax.media.opengl.glu.GLU;
@@ -27,9 +29,21 @@ public abstract class GLAbstractActor {
     protected static GLU glu = new GLU();
     private static Logger logger = LoggerFactory.getLogger(GLAbstractActor.class);
     protected AB2RendererD renderer;
+    protected static List<GLAbstractActor> actors=new ArrayList<>();
 
     protected GLAbstractActor(AB2RendererD renderer) {
         this.renderer=renderer;
+        actors.add(this);
+    }
+
+    public static void removeActor(GLAbstractActor actor) {
+        actors.remove(actor);
+    }
+
+    public static void applyGlWindowResize(int width, int height) {
+        for (GLAbstractActor actor : actors) {
+            actor.glWindowResize(width, height);
+        }
     }
 
     public static boolean checkGlErrorActive=true;
@@ -47,11 +61,15 @@ public abstract class GLAbstractActor {
 
     public void setup() {}
 
-    public abstract void dispose(GL4 gl, GLShaderProgram shader);
+    public void dispose(GL4 gl, GLShaderProgram shader) {
+        removeActor(this);
+    }
 
     public abstract void init(GL4 gl, GLShaderProgram shader);
 
     public abstract void display(GL4 gl, GLShaderProgram shader);
+
+    protected void glWindowResize(int width, int height) {}
 
     public void setId(int id) {
         actorId=id;
