@@ -8,6 +8,7 @@ import java.nio.IntBuffer;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector2;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2TextLabelClickEvent;
@@ -24,8 +25,10 @@ public class TextLabelActor extends GLAbstractActor {
 
     private final Logger logger = LoggerFactory.getLogger(TextLabelActor.class);
 
-    Vector2 v0;
+    Vector2 v0; // computed
     Vector2 v1; // computed
+    Vector2 centerPosition;
+
     String text;
     Vector4 textColor;
     Vector4 backgroundColor;
@@ -43,6 +46,16 @@ public class TextLabelActor extends GLAbstractActor {
 
     int labelImageWidth;
     int labelImageHeight;
+    boolean recompute=false;
+
+    int glWidth=500;  // sane initialization value
+    int glHeight=500; // sane initialization value
+
+    Orientation orientation;
+
+    public enum Orientation {
+        NORMAL, VERTICAL_UP, VERTICAL_DOWN
+    }
 
     // Load the resource image once
     static {
@@ -69,16 +82,25 @@ public class TextLabelActor extends GLAbstractActor {
     public TextLabelActor(AB2Renderer2D renderer,
                           int actorId,
                           String text,
-                          Vector2 v0,
+                          Vector2 centerPosition,
                           Vector4 textColor,
-                          Vector4 backgroundColor) {
+                          Vector4 backgroundColor,
+                          Orientation orientation) {
         super(renderer);
         this.renderer2d=renderer;
         this.actorId=actorId;
-        this.v0=v0;
+        this.centerPosition=centerPosition;
         this.text=text;
         this.textColor=textColor;
         this.backgroundColor=backgroundColor;
+        this.orientation=orientation;
+    }
+
+    @Override
+    protected void glWindowResize(int width, int height) {
+        glWidth=width;
+        glHeight=height;
+        recompute=true;
     }
 
     public Vector4 getTextColor() { return textColor; }
@@ -89,10 +111,43 @@ public class TextLabelActor extends GLAbstractActor {
 
     public void setBackgroundColor(Vector4 backgroundColor) { this.backgroundColor=backgroundColor; }
 
-    public void setPosition(Vector2 position) { this.v0 = position; }
+    public void setCenterPosition(Vector2 position) { this.centerPosition = centerPosition; }
+
+    public void setOrientation(Orientation orientation) { this.orientation = orientation; }
 
     @Override
     public boolean isTwoDimensional() { return true; }
+
+    protected void computeVertices(GL4 gl) {
+        int screenHeight=AB2Controller.getController().getGljPanel().getSurfaceHeight();
+        float imageNormalHeight=(float)((labelImageHeight*1.0)/screenHeight);
+        float imageAspectRatio=(float)((labelImageWidth*1.0)/(labelImageHeight*1.0));
+        float imageNormalWidth=imageAspectRatio*imageNormalHeight;
+        v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
+
+        // This combines positional vertices interleaved with 2D texture coordinates
+        float[] vertexData = {
+
+                v0.get(0), v0.get(1), 0f,    0f, 0f, 0f, // lower left
+                v1.get(0), v0.get(1), 0f,    1f, 0f, 0f, // lower right
+                v0.get(0), v1.get(1), 0f,    0f, 1f, 0f, // upper left
+
+                v1.get(0), v0.get(1), 0f,    1f, 0f, 0f, // lower right
+                v1.get(0), v1.get(1), 0f,    1f, 1f, 0f, // upper right
+                v0.get(0), v1.get(1), 0f,    0f, 1f, 0f// upper left
+        };
+
+        // todo: need to figure out whether to replace or refresh buffer data, look into best practices
+
+        vertexFb=createGLFloatBuffer(vertexData);
+
+        gl.glGenVertexArrays(1, vertexArrayId);
+        gl.glBindVertexArray(vertexArrayId.get(0));
+        gl.glGenBuffers(1, vertexBufferId);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+        gl.glBufferData(GL4.GL_ARRAY_BUFFER, vertexFb.capacity() * 4, vertexFb, GL4.GL_STATIC_DRAW);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+    }
 
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
@@ -100,32 +155,7 @@ public class TextLabelActor extends GLAbstractActor {
 
             byte[] labelPixels=createTextImage();
 
-            int screenHeight=AB2Controller.getController().getGljPanel().getSurfaceHeight();
-            float imageNormalHeight=(float)((labelImageHeight*1.0)/screenHeight);
-            float imageAspectRatio=(float)((labelImageWidth*1.0)/(labelImageHeight*1.0));
-            float imageNormalWidth=imageAspectRatio*imageNormalHeight;
-            v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
-
-            // This combines positional vertices interleaved with 2D texture coordinates
-            float[] vertexData = {
-
-                    v0.get(0), v0.get(1), 0f,    0f, 0f, 0f, // lower left
-                    v1.get(0), v0.get(1), 0f,    1f, 0f, 0f, // lower right
-                    v0.get(0), v1.get(1), 0f,    0f, 1f, 0f, // upper left
-
-                    v1.get(0), v0.get(1), 0f,    1f, 0f, 0f, // lower right
-                    v1.get(0), v1.get(1), 0f,    1f, 1f, 0f, // upper right
-                    v0.get(0), v1.get(1), 0f,    0f, 1f, 0f// upper left
-            };
-
-            vertexFb=createGLFloatBuffer(vertexData);
-
-            gl.glGenVertexArrays(1, vertexArrayId);
-            gl.glBindVertexArray(vertexArrayId.get(0));
-            gl.glGenBuffers(1, vertexBufferId);
-            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
-            gl.glBufferData(GL4.GL_ARRAY_BUFFER, vertexFb.capacity() * 4, vertexFb, GL4.GL_STATIC_DRAW);
-            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+            computeVertices(gl);
 
             logger.info("pixel count="+labelPixels.length);
 
