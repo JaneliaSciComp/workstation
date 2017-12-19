@@ -286,7 +286,7 @@ public class TextLabelActor extends GLAbstractActor {
             checkGlError(gl, "d2 glBindTexture()");
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
-            pickShader.setMVP2d(gl, renderer2d.getVp2d());
+            pickShader.setMVP(gl, renderer2d.getVp2d());
             pickShader.setPickId(gl, getPickIndex());
         }
 

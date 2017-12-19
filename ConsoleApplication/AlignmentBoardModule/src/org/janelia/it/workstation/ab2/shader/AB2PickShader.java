@@ -21,8 +21,8 @@ public class AB2PickShader extends GLShaderProgram {
         return "AB2PickShader_fragment.glsl";
     }
 
-    public void setMVP2d(GL4 gl, Matrix4 mvp) {
-        setUniformMatrix4fv(gl, "mvp2d", false, mvp.asArray());
+    public void setMVP(GL4 gl, Matrix4 mvp) {
+        setUniformMatrix4fv(gl, "mvp", false, mvp.asArray());
         checkGlError(gl, "AB2PickShader setMVP2d() error");
     }
 
