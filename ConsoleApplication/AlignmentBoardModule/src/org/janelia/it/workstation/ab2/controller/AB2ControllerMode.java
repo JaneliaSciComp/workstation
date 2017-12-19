@@ -55,6 +55,36 @@ public abstract class AB2ControllerMode implements GLEventListener {
 
     public abstract void shutdown();
 
+    /*
+
+    Discussion of Mouse-related Event Handling
+
+    As the user interacts with the application, volatile state associated with user actions that should not be
+    included in the persistent "model" of the application is kept in an intance of the AB2UserContext class. Typically,
+    this state is temporary information associated with a user action, such as:
+
+     1. drag-and-drop
+     2. the currently selected item
+     3. the current hover item
+
+     Due to performance concerns in the display loop, each GL actor should not inquire whether they are the
+     currently selected item. Rather, whenever the pick buffer indicates a selection, the associated actor is
+     marked as selected, and any previously selected actor is marked as not-selected. This ensures only
+     one actor is selected at a time.
+
+     Similarly, mouse movement position is used to determine the current hover item, also for which there may only
+     be one at a time.
+
+     One important concept is "drop-handling seniority". If a drag-and-drop occurs on a hovered actor, that actor
+     receives the drop, which it may then escalate to its associated renderer. Thus, the "bottom up" approach is first.
+     On the other hand, if a drop occurs at an unmarked pick location, then the drop coordinates are passed to the
+     RegionManager, which then determines the region in which it occured, and then the drop is handed to the
+     Region for handling.
+
+     Thus, Regions, Renderers, and Actors need to handle Events.
+
+     */
+
     public void processEvent(AB2Event event) {
         AB2UserContext userContext=AB2Controller.getController().getUserContext();
         if (event instanceof AB2MouseReleasedEvent) {
