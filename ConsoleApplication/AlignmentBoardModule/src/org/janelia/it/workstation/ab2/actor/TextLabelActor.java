@@ -118,12 +118,27 @@ public class TextLabelActor extends GLAbstractActor {
     @Override
     public boolean isTwoDimensional() { return true; }
 
-    protected void computeVertices(GL4 gl) {
-        int screenHeight=AB2Controller.getController().getGljPanel().getSurfaceHeight();
-        float imageNormalHeight=(float)((labelImageHeight*1.0)/screenHeight);
+    protected void computeVertices(GL4 gl, boolean refreshOnly) {
+        float imageNormalHeight=(float)((labelImageHeight*1.0)/glHeight);
         float imageAspectRatio=(float)((labelImageWidth*1.0)/(labelImageHeight*1.0));
         float imageNormalWidth=imageAspectRatio*imageNormalHeight;
-        v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
+
+        if (orientation.equals(Orientation.NORMAL)) {
+            v0.set(0, centerPosition.get(0) - imageNormalWidth/2.0f);
+            v0.set(1, centerPosition.get(1) - imageNormalHeight/2.0f);
+            v1.set(0, v0.get(0)+imageNormalWidth);
+            v1.set(1, v0.get(1)+imageNormalHeight);
+        } else if (orientation.equals(Orientation.VERTICAL_UP)) {
+            v0.set(0, centerPosition.get(0) + imageNormalHeight/2.0f);
+            v0.set(1, centerPosition.get(1) - imageNormalWidth/2.0f);
+            v1.set(0, v0.get(0)-imageNormalHeight);
+            v1.set(1, v0.get(1)+imageNormalWidth);
+        } else if (orientation.equals(Orientation.VERTICAL_DOWN)) {
+            v0.set(0, centerPosition.get(0)-imageNormalHeight/2.0f);
+            v0.set(1, centerPosition.get(1)+imageNormalWidth/2.0f);
+            v1.set(0, v0.get(0)+imageNormalHeight);
+            v1.set(1, v0.get(1)-imageNormalWidth);
+        }
 
         // This combines positional vertices interleaved with 2D texture coordinates
         float[] vertexData = {
@@ -134,19 +149,27 @@ public class TextLabelActor extends GLAbstractActor {
 
                 v1.get(0), v0.get(1), 0f,    1f, 0f, 0f, // lower right
                 v1.get(0), v1.get(1), 0f,    1f, 1f, 0f, // upper right
-                v0.get(0), v1.get(1), 0f,    0f, 1f, 0f// upper left
+                v0.get(0), v1.get(1), 0f,    0f, 1f, 0f  // upper left
         };
-
-        // todo: need to figure out whether to replace or refresh buffer data, look into best practices
 
         vertexFb=createGLFloatBuffer(vertexData);
 
-        gl.glGenVertexArrays(1, vertexArrayId);
-        gl.glBindVertexArray(vertexArrayId.get(0));
-        gl.glGenBuffers(1, vertexBufferId);
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
-        gl.glBufferData(GL4.GL_ARRAY_BUFFER, vertexFb.capacity() * 4, vertexFb, GL4.GL_STATIC_DRAW);
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+        if (!refreshOnly) {
+            gl.glGenVertexArrays(1, vertexArrayId);
+            gl.glBindVertexArray(vertexArrayId.get(0));
+            gl.glGenBuffers(1, vertexBufferId);
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+            gl.glBufferData(GL4.GL_ARRAY_BUFFER, vertexFb.capacity() * 4, vertexFb, GL4.GL_STATIC_DRAW);
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+        } else {
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+            checkGlError(gl, "Refresh - glBindBuffer");
+            gl.glBufferSubData(GL4.GL_ARRAY_BUFFER, 0, vertexFb.capacity(), vertexFb);
+            checkGlError(gl, "Refresh - glBufferSubData");
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+            checkGlError(gl, "Refresh - glBindBuffer 0");
+        }
+        recompute=false;
     }
 
     @Override
@@ -155,9 +178,7 @@ public class TextLabelActor extends GLAbstractActor {
 
             byte[] labelPixels=createTextImage();
 
-            computeVertices(gl);
-
-            logger.info("pixel count="+labelPixels.length);
+            computeVertices(gl, false);
 
             // Create texture
             gl.glGenTextures(1, imageTextureId);
@@ -169,7 +190,7 @@ public class TextLabelActor extends GLAbstractActor {
             }
 
             int sizeCheck=labelImageWidth*labelImageHeight;
-            logger.info("labelPixels.length="+labelPixels.length+" labelImageWidth="+labelImageWidth+" labelImageHeight="+labelImageHeight+" sizeCheck="+sizeCheck);
+            //logger.info("labelPixels.length="+labelPixels.length+" labelImageWidth="+labelImageWidth+" labelImageHeight="+labelImageHeight+" sizeCheck="+sizeCheck);
 
             byteBuffer.rewind();
             gl.glTexImage2D(GL4.GL_TEXTURE_2D,0, GL4.GL_RGBA, labelImageWidth, labelImageHeight,0,
@@ -183,7 +204,7 @@ public class TextLabelActor extends GLAbstractActor {
             if (pickIndex<0) {
                 pickIndex = AB2Controller.getController().getNextPickIndex();
                 AB2Controller.getController().setPickEvent(pickIndex, new AB2TextLabelClickEvent(this));
-                logger.info("Setting pickIndex="+pickIndex);
+                //logger.info("Setting pickIndex="+pickIndex);
             }
         }
 
@@ -250,6 +271,9 @@ public class TextLabelActor extends GLAbstractActor {
 
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
+        if (recompute) {
+            computeVertices(gl, true);
+        }
         if (shader instanceof AB2Text2DShader) {
             AB2Text2DShader text2DShader=(AB2Text2DShader)shader;
             text2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
