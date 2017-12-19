@@ -56,6 +56,8 @@ public class AB2Controller implements GLEventListener {
     private AB2Event[] pickEventLookup=new AB2Event[MAX_PICK_IDS];
     private int pickCounter=0;
     private AB2UserContext userContext=new AB2UserContext();
+    private int glWidth;
+    private int glHeight;
 
     public static AB2Controller getController() {
         if (instance==null) {
@@ -134,6 +136,8 @@ public class AB2Controller implements GLEventListener {
         }
     }
 
+    public AB2ControllerMode getCurrentMode() { return currentMode; }
+
     public void shutdown() {
         if (controllerHandle!=null) {
             controllerHandle.cancel(true);
@@ -179,12 +183,18 @@ public class AB2Controller implements GLEventListener {
     }
 
     @Override
-    public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3) {
-        GLAbstractActor.applyGlWindowResize(i2, i3);
+    public void reshape(GLAutoDrawable glAutoDrawable, int x, int y, int width, int height) {
+        glWidth=width;
+        glHeight=height;
+        GLAbstractActor.applyGlWindowResize(width, height);
         if (currentMode!=null) {
-            currentMode.reshape(glAutoDrawable, i, i1, i2, i3);
+            currentMode.reshape(glAutoDrawable, x, y, width, height);
         }
     }
+
+    public int getGlWidth() { return glWidth; }
+
+    public int getGlHeight() { return glHeight; }
 
     private class EventHandler implements Runnable {
 

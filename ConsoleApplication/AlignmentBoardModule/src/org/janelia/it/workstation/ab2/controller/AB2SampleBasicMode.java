@@ -46,17 +46,19 @@ public class AB2SampleBasicMode extends AB2View3DMode {
     @Override
     public void dispose(GLAutoDrawable glAutoDrawable) {
         sampleRegionManager.dispose(glAutoDrawable);
-        System.gc();
+        super.dispose(glAutoDrawable);
     }
 
     @Override
     public void display(GLAutoDrawable glAutoDrawable) {
+        super.display(glAutoDrawable);
         sampleRegionManager.display(glAutoDrawable);
     }
 
     @Override
-    public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3) {
-        sampleRegionManager.reshape(glAutoDrawable, i, i1, i2, i3);
+    public void reshape(GLAutoDrawable glAutoDrawable, int x, int y, int width, int height) {
+        super.reshape(glAutoDrawable, x, y, width, height);
+        sampleRegionManager.reshape(glAutoDrawable, x, y, width, height);
     }
 
     @Override
@@ -72,17 +74,7 @@ public class AB2SampleBasicMode extends AB2View3DMode {
             sampleRenderer.addSample3DImage(sample3DImageLoadedEvent.getData());
             sample3DImageLoadedEvent.clearData();
             controller.repaint();
-        } else if (event instanceof AB2MouseClickedEvent) {
-            MouseEvent mouseEvent=((AB2MouseClickedEvent) event).getMouseEvent();
-            int x = mouseEvent.getX();
-            int y = mouseEvent.getY(); // y is inverted - 0 is at the top
-            sampleRenderer.addMouseClickEvent(x, y);
-            controller.repaint();
-        } else if (event instanceof AB2Image2DClickEvent) {
-            Image2DActor image2DActor=((AB2Image2DClickEvent)event).getImage2DActor();
-            logger.info("Handling AB2Image2DClickEvent - actorId="+image2DActor.getActorId()+" pickIndex="+image2DActor.getPickIndex());
         }
     }
-
 
 }

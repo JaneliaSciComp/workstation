@@ -43,41 +43,7 @@ public abstract class AB2View3DMode extends AB2ControllerMode {
 
     @Override
     public void processEvent(AB2Event event) {
-        AB2UserContext userContext=AB2Controller.getController().getUserContext();
-        if (event instanceof AB2MouseReleasedEvent) {
-            if (userContext.isMouseIsDragging()) {
-                AB2Renderer dragRenderer=userContext.getCurrentDragRenderer();
-                if (dragRenderer!=null) {
-                    dragRenderer.processEvent(event);
-                }
-                userContext.clear();
-            }
-        } else if (event instanceof AB2MouseDraggedEvent) {
-            MouseEvent mouseEvent=((AB2MouseDraggedEvent) event).getMouseEvent();
-            Point p1 = mouseEvent.getPoint();
-
-            if (!userContext.isMouseIsDragging()) {
-                userContext.setMouseIsDragging(true);
-                userContext.getPositionHistory().add(p1);
-                AB2Renderer dragRenderer=getRendererAtPosition(p1);
-                AB2MouseBeginDragEvent beginDragEvent=new AB2MouseBeginDragEvent(((AB2MouseDraggedEvent) event).getMouseEvent());
-                if (dragRenderer!=null) {
-                    dragRenderer.processEvent(beginDragEvent);
-                }
-                userContext.setCurrentDragRenderer(dragRenderer);
-                return;
-            }
-
-            // Assume we have an established drag state
-            userContext.getPositionHistory().add(p1);
-            AB2Renderer dragRenderer=userContext.getCurrentDragRenderer();
-            dragRenderer.processEvent(event);
-            controller.repaint();
-        } else if (event instanceof AB2MouseWheelEvent) {
-            AB2Renderer currentRenderer=getRendererAtPosition(((AB2MouseWheelEvent) event).getMouseWheelEvent().getPoint());
-            currentRenderer.processEvent(event);
-            controller.repaint();
-        }
+        super.processEvent(event);
     }
 
 }
