@@ -5,6 +5,7 @@ import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector4;
+import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.renderer.AB2SampleRenderer;
 import org.slf4j.Logger;
@@ -37,6 +38,11 @@ public class AB2SampleMainRegion extends GLRegion {
         sampleRenderer.setVoxel3DActorPostProjectionMatrix(getOffsetPostProjectionMatrix(parameters[0], parameters[1], parameters[2]));
         int[] xyBounds=getXYBounds(x, y, width, height);
         sampleRenderer.setVoxel3DxyBounds(xyBounds[0], xyBounds[1], xyBounds[2], xyBounds[3]);
+    }
+
+    @Override
+    public void processEvent(AB2Event event) {
+        sampleRenderer.processEvent(event);
     }
 
 

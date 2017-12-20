@@ -29,9 +29,8 @@ public class LineSetActor extends GLAbstractActor {
     AB2Renderer3D renderer3d;
 
     public LineSetActor(AB2Renderer3D renderer, int actorId, List<Vector3> vertices) {
-        super(renderer);
+        super(renderer, actorId);
         this.renderer3d=renderer;
-        this.actorId=actorId;
         this.vertices=vertices;
     }
 

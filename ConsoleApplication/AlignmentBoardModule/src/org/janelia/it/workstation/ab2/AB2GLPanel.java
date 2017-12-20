@@ -68,47 +68,47 @@ public class AB2GLPanel extends GLJPanel
 
     @Override
     public void mousePressed(MouseEvent e) {
-        controller.addEvent(new AB2MousePressedEvent(e));
+        controller.processEvent(new AB2MousePressedEvent(e));
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        controller.addEvent(new AB2MouseReleasedEvent(e));
+        controller.processEvent(new AB2MouseReleasedEvent(e));
     }
 
     @Override
     public void mouseEntered(MouseEvent e) {
-        controller.addEvent(new AB2MouseEnteredEvent(e));
+        controller.processEvent(new AB2MouseEnteredEvent(e));
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
-        controller.addEvent(new AB2MouseExitedEvent(e));
+        controller.processEvent(new AB2MouseExitedEvent(e));
     }
 
     @Override
     public void actionPerformed(ActionEvent arg0) {
-        controller.addEvent(new AB2AwtActionEvent(arg0));
+        controller.processEvent(new AB2AwtActionEvent(arg0));
     }
 
     @Override
     public void mouseDragged(MouseEvent event) {
-        controller.addEvent(new AB2MouseDraggedEvent(event));
+        controller.processEvent(new AB2MouseDraggedEvent(event));
     }
 
     @Override
     public void mouseMoved(MouseEvent event) {
-        controller.addEvent(new AB2MouseMovedEvent(event));
+        controller.processEvent(new AB2MouseMovedEvent(event));
     }
 
     @Override
     public void mouseClicked(MouseEvent event) {
-        controller.addEvent(new AB2MouseClickedEvent(event));
+        controller.processEvent(new AB2MouseClickedEvent(event));
     }
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent event) {
-        controller.addEvent(new AB2MouseWheelEvent(event));
+        controller.processEvent(new AB2MouseWheelEvent(event));
     }
 
 }

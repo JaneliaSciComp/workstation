@@ -11,6 +11,7 @@ import org.janelia.it.workstation.ab2.event.AB2Image2DClickEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseClickedEvent;
 import org.janelia.it.workstation.ab2.event.AB2Sample3DImageLoadedEvent;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
+import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.loader.AB2Sample3DImageLoader;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
 import org.janelia.it.workstation.ab2.renderer.AB2SampleRenderer;
@@ -34,9 +35,10 @@ public class AB2SampleBasicMode extends AB2View3DMode {
     }
 
     @Override
-    public AB2Renderer getRendererAtPosition(Point point) {
-        return sampleRenderer;
+    public GLRegion getRegionAtPosition(Point point) {
+        return null;
     }
+
 
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
@@ -50,7 +52,7 @@ public class AB2SampleBasicMode extends AB2View3DMode {
     }
 
     @Override
-    public void display(GLAutoDrawable glAutoDrawable) {
+    public void modeDisplay(GLAutoDrawable glAutoDrawable) {
         super.display(glAutoDrawable);
         sampleRegionManager.display(glAutoDrawable);
     }

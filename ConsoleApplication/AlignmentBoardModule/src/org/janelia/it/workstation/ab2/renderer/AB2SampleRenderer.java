@@ -264,7 +264,6 @@ public class AB2SampleRenderer extends AB2Renderer3D {
     @Override
     public void dispose(GL4 gl) {
         super.dispose(gl);
-        disposePickFramebuffer(gl);
     }
 
 }

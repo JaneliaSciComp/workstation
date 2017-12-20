@@ -31,9 +31,8 @@ public class Camera3DFollowBoxActor extends GLAbstractActor
     AB2Renderer3D renderer3d;
 
     public Camera3DFollowBoxActor(AB2Renderer3D renderer, int actorId, Vector3 v0, Vector3 v1) {
-        super(renderer);
+        super(renderer, actorId);
         this.renderer3d=renderer;
-        this.actorId=actorId;
         this.v0=v0;
         this.v1=v1;
     }

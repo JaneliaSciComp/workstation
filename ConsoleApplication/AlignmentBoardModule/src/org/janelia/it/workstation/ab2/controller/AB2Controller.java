@@ -29,6 +29,7 @@ import javax.media.opengl.awt.GLJPanel;
 import org.janelia.it.workstation.ab2.event.AB2ChangeModeEvent;
 import org.janelia.it.workstation.ab2.event.AB2DomainObjectUpdateEvent;
 import org.janelia.it.workstation.ab2.event.AB2Event;
+import org.janelia.it.workstation.ab2.event.AB2EventHandler;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.model.AB2DomainObject;
@@ -38,12 +39,11 @@ import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AB2Controller implements GLEventListener {
+public class AB2Controller implements GLEventListener, AB2EventHandler {
 
     Logger logger= LoggerFactory.getLogger(AB2Controller.class);
 
     private static AB2Controller instance;
-    private static final int MAX_PICK_IDS=10000;
     private ConcurrentLinkedQueue<AB2Event> eventQueue;
     private ConcurrentLinkedQueue<AB2Event> waitQueue;
     private ScheduledExecutorService controllerExecutor;
@@ -53,7 +53,7 @@ public class AB2Controller implements GLEventListener {
     private AB2ControllerMode currentMode;
     private GLJPanel gljPanel;
     private AB2DomainObject domainObject;
-    private AB2Event[] pickEventLookup=new AB2Event[MAX_PICK_IDS];
+    private Map<Integer,AB2Event> pickEventLookup=new HashMap<>();
     private int pickCounter=0;
     private AB2UserContext userContext=new AB2UserContext();
     private int glWidth;
@@ -79,27 +79,24 @@ public class AB2Controller implements GLEventListener {
     }
 
     public synchronized int getNextPickIndex() {
-        if (pickCounter>=MAX_PICK_IDS) {
-            return -1;
-        }
         pickCounter++;
         return pickCounter;
     }
 
     public void setPickEvent(int index, AB2Event pickEvent) {
         logger.info("Setting pickIndex="+index+" to AB2Event type="+pickEvent.getClass().getName());
-        pickEventLookup[index]=pickEvent;
+        pickEventLookup.put(index,pickEvent);
     }
 
     public AB2Event getPickEvent(int index) {
-        AB2Event pickEvent=pickEventLookup[index];
+        AB2Event pickEvent=pickEventLookup.get(index);
         logger.info("Returning pickEvent for pickIndex="+index+" type="+pickEvent.getClass().getName());
         return pickEvent;
     }
 
     public void setDomainObject(AB2DomainObject domainObject) {
         this.domainObject=domainObject;
-        addEvent(new AB2DomainObjectUpdateEvent());
+        processEvent(new AB2DomainObjectUpdateEvent());
     }
 
     public AB2DomainObject getDomainObject() {
@@ -148,7 +145,7 @@ public class AB2Controller implements GLEventListener {
         }
     }
 
-    public void addEvent(AB2Event event) {
+    public void processEvent(AB2Event event) {
         eventQueue.add(event);
     }
 
@@ -216,8 +213,8 @@ public class AB2Controller implements GLEventListener {
                         if (currentMode.getClass().equals(targetModeClass)) {
                             currentMode.processEvent(event);
                         } else {
-                            addEvent(new AB2ChangeModeEvent(AB2SampleBasicMode.class));
-                            addEvent(event); // put this back in queue, to be processed after mode change
+                            processEvent(new AB2ChangeModeEvent(AB2SampleBasicMode.class));
+                            processEvent(event); // put this back in queue, to be processed after mode change
                         }
                     } else {
                         currentMode.processEvent(event);

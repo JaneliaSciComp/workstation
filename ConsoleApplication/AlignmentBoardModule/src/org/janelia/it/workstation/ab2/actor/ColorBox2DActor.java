@@ -38,9 +38,8 @@ public class ColorBox2DActor extends GLAbstractActor {
     AB2Renderer2D renderer2d;
 
     public ColorBox2DActor(AB2Renderer2D renderer, int actorId, Vector2 v0, Vector2 v1) {
-        super(renderer);
+        super(renderer, actorId);
         this.renderer2d=renderer;
-        this.actorId=actorId;
         this.v0=v0;
         this.v1=v1;
     }
@@ -77,11 +76,6 @@ public class ColorBox2DActor extends GLAbstractActor {
             gl.glBufferData(GL4.GL_ARRAY_BUFFER, vertexFb.capacity() * 4, vertexFb, GL4.GL_STATIC_DRAW);
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-        } else if (shader instanceof AB2PickShader) {
-
-            if (pickIndex<0) {
-                pickIndex = AB2Controller.getController().getNextPickIndex();
-            }
         }
 
     }
@@ -95,7 +89,7 @@ public class ColorBox2DActor extends GLAbstractActor {
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
             pickShader.setMVP(gl, renderer2d.getVp2d());
-            pickShader.setPickId(gl, getPickIndex());
+            pickShader.setPickId(gl, actorId);
         }
 
         gl.glBindVertexArray(vertexArrayId.get(0));

@@ -37,9 +37,8 @@ public class Image2DActor extends GLAbstractActor {
 
 
     public Image2DActor(AB2Renderer2D renderer, int actorId, Vector2 v0, Vector2 v1, BufferedImage bufferedImage, float alpha) {
-        super(renderer);
+        super(renderer, actorId);
         this.renderer2d=renderer;
-        this.actorId=actorId;
         this.v0=v0;
         this.v1=v1;
         this.bufferedImage=bufferedImage;
@@ -132,11 +131,7 @@ public class Image2DActor extends GLAbstractActor {
             gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
 
         } else if (shader instanceof AB2PickShader) {
-            if (pickIndex<0) {
-                pickIndex = AB2Controller.getController().getNextPickIndex();
-                AB2Controller.getController().setPickEvent(pickIndex, new AB2Image2DClickEvent(this));
-                logger.info("Setting pickIndex="+pickIndex);
-            }
+            AB2Controller.getController().setPickEvent(actorId, new AB2Image2DClickEvent(this));
         }
 
     }
@@ -153,7 +148,7 @@ public class Image2DActor extends GLAbstractActor {
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
             pickShader.setMVP(gl, renderer2d.getVp2d());
-            pickShader.setPickId(gl, getPickIndex());
+            pickShader.setPickId(gl, actorId);
         }
 
         gl.glBindVertexArray(vertexArrayId.get(0));

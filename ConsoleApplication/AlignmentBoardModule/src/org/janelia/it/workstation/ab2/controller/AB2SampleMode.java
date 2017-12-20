@@ -1,13 +1,21 @@
 package org.janelia.it.workstation.ab2.controller;
 
+import java.awt.Point;
+
 import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.workstation.ab2.event.AB2Event;
+import org.janelia.it.workstation.ab2.gl.GLRegion;
 
 public class AB2SampleMode extends AB2ControllerMode {
 
     public AB2SampleMode(AB2Controller controller) {
         super(controller);
+    }
+
+    @Override
+    public GLRegion getRegionAtPosition(Point point) {
+        return null;
     }
 
     @Override
@@ -41,7 +49,7 @@ public class AB2SampleMode extends AB2ControllerMode {
     }
 
     @Override
-    public void display(GLAutoDrawable drawable) {
+    public void modeDisplay(GLAutoDrawable drawable) {
 
     }
 

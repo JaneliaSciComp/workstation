@@ -34,9 +34,8 @@ public class PickSquareActor extends GLAbstractActor {
     AB2Renderer2D renderer2d;
 
     public PickSquareActor(AB2Renderer2D renderer, int actorId, Vector2 v0, Vector2 v1, Vector4 color0, Vector4 color1) {
-        super(renderer);
+        super(renderer, actorId);
         this.renderer2d=renderer;
-        this.actorId=actorId;
         this.v0=v0;
         this.v1=v1;
         this.color0=color0;
@@ -81,11 +80,7 @@ public class PickSquareActor extends GLAbstractActor {
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
         } else if (shader instanceof AB2PickShader) {
-            if (pickIndex<0) {
-                pickIndex = AB2Controller.getController().getNextPickIndex();
-                AB2Controller.getController().setPickEvent(pickIndex, new AB2PickSquareColorChangeEvent(this));
-                logger.info("Setting pickIndex="+pickIndex);
-            }
+            AB2Controller.getController().setPickEvent(actorId, new AB2PickSquareColorChangeEvent(this));
         }
 
     }
@@ -104,7 +99,7 @@ public class PickSquareActor extends GLAbstractActor {
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
             pickShader.setMVP(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
-            pickShader.setPickId(gl, getPickIndex());
+            pickShader.setPickId(gl, actorId);
         }
 
         gl.glBindVertexArray(vertexArrayId.get(0));

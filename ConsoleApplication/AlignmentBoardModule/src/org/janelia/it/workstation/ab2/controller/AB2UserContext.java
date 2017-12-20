@@ -9,9 +9,16 @@ import java.util.Map;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
 
 public class AB2UserContext {
+
+    // todo: add support for multi-object select
+
     private List<Point> positionHistory=new ArrayList<>();
     private boolean mouseIsDragging = false;
-    private AB2Renderer currentDragRenderer;
+
+    private Object dragObject;
+    private Object hoverObject;
+    private Object selectObject;
+
     private Map<String,Object> contextMap=new HashMap<>();
 
     public AB2UserContext() {}
@@ -38,17 +45,43 @@ public class AB2UserContext {
 
     public void setContextMap(Map<String, Object> contextMap) { this.contextMap=contextMap; }
 
-    public void setCurrentDragRenderer(AB2Renderer renderer) { this.currentDragRenderer=renderer; }
-
-    public AB2Renderer getCurrentDragRenderer() {
-        return currentDragRenderer;
+    public Object getDragObject() {
+        return dragObject;
     }
 
-    public void clear() {
+    public void setDragObject(Object dragObject) {
+        this.dragObject = dragObject;
+    }
+
+    public Object getHoverObject() {
+        return hoverObject;
+    }
+
+    public void setHoverObject(Object hoverObject) {
+        this.hoverObject = hoverObject;
+    }
+
+    public Object getSelectObject() {
+        return selectObject;
+    }
+
+    public void setSelectObject(Object selectObject) {
+        this.selectObject = selectObject;
+    }
+
+    public void clearDrag() {
         positionHistory.clear();
         mouseIsDragging=false;
-        currentDragRenderer=null;
+        dragObject=null;
+    }
+
+    public void clearAll() {
+        positionHistory.clear();
+        mouseIsDragging=false;
         contextMap=new HashMap<>();
+        dragObject=null;
+        hoverObject=null;
+        selectObject=null;
     }
 
 }

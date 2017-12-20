@@ -8,9 +8,11 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.it.workstation.ab2.event.AB2Event;
+import org.janelia.it.workstation.ab2.event.AB2EventHandler;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
 
-public abstract class GLRegion {
+public abstract class GLRegion implements AB2EventHandler {
     protected int x;
     protected int y;
     protected int width;
@@ -135,5 +137,11 @@ public abstract class GLRegion {
         int bY1=y+height;
         return new int[] { bX0, bY0, bX1, bY1 };
     }
+
+    public void processEvent(AB2Event event) {}
+
+    public void setHover() {}
+
+    public void releaseHover() {}
 
 }

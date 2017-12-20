@@ -5,27 +5,25 @@ import java.awt.event.MouseEvent;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 
 import org.janelia.it.workstation.ab2.actor.Image2DActor;
-import org.janelia.it.workstation.ab2.event.AB2Event;
-import org.janelia.it.workstation.ab2.event.AB2Image2DClickEvent;
-import org.janelia.it.workstation.ab2.event.AB2MouseBeginDragEvent;
-import org.janelia.it.workstation.ab2.event.AB2MouseClickedEvent;
-import org.janelia.it.workstation.ab2.event.AB2MouseDraggedEvent;
-import org.janelia.it.workstation.ab2.event.AB2MouseReleasedEvent;
-import org.janelia.it.workstation.ab2.event.AB2MouseWheelEvent;
+import org.janelia.it.workstation.ab2.event.*;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
+import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
 import org.janelia.it.workstation.ab2.renderer.AB2RendererD;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AB2ControllerMode implements GLEventListener {
+public abstract class AB2ControllerMode implements GLEventListener, AB2EventHandler {
     Logger logger = LoggerFactory.getLogger(AB2ControllerMode.class);
+
+    private ConcurrentLinkedQueue<AB2Event> displayEventQueue;
 
     protected AB2Controller controller;
 
@@ -42,12 +40,11 @@ public abstract class AB2ControllerMode implements GLEventListener {
 
     public AB2ControllerMode(AB2Controller controller) {
         this.controller=controller;
+        displayEventQueue=new ConcurrentLinkedQueue<>();
         drawBuffer.put(0, drawBuffersTargets[0]);
     }
 
-    public AB2Renderer getRendererAtPosition(Point point) {
-        return null;
-    }
+    public abstract GLRegion getRegionAtPosition(Point point);
 
     public abstract void start();
 
@@ -81,52 +78,120 @@ public abstract class AB2ControllerMode implements GLEventListener {
      RegionManager, which then determines the region in which it occured, and then the drop is handed to the
      Region for handling.
 
-     Thus, Regions, Renderers, and Actors need to handle Events.
+     This implies there will al
+
+     Thus, Regions, Renderers, and Actors need to handle Events. However, note that only Regions and Actors have a
+     concept of unique geographic bounds, since more than one renderer can share the same screen space. Strictly
+     speaking, there can be many more than one Actor on a particular pixel, but there will only be one "owning"
+     that pixel in the pick buffer, based on draw order.
 
      */
 
+    // todo: add support for multi-object select
+
+    // NOTE: if an even needs access to the pick framebuffer, it should be forwarded to the display event queue.
+
     public void processEvent(AB2Event event) {
-        AB2UserContext userContext=AB2Controller.getController().getUserContext();
+        AB2UserContext userContext = AB2Controller.getController().getUserContext();
+
         if (event instanceof AB2MouseReleasedEvent) {
             if (userContext.isMouseIsDragging()) {
-                AB2Renderer dragRenderer=userContext.getCurrentDragRenderer();
-                if (dragRenderer!=null) {
-                    dragRenderer.processEvent(event);
+                Object sourceObject = userContext.getDragObject();
+                Object releaseObject = userContext.getHoverObject();
+                AB2MouseEndDragEvent endDragEvent = new AB2MouseEndDragEvent(((AB2MouseReleasedEvent) event).getMouseEvent(), sourceObject);
+                if (releaseObject instanceof GLAbstractActor) {
+                    GLAbstractActor actor = (GLAbstractActor) releaseObject;
+                    actor.processEvent(endDragEvent);
                 }
-                userContext.clear();
+                else if (releaseObject instanceof GLRegion) {
+                    GLRegion region = (GLRegion) releaseObject;
+                    region.processEvent(endDragEvent);
+                }
+                userContext.clearDrag();
             }
-        } else if (event instanceof AB2MouseDraggedEvent) {
-            MouseEvent mouseEvent=((AB2MouseDraggedEvent) event).getMouseEvent();
-            Point p1 = mouseEvent.getPoint();
+            controller.repaint();
 
+        }
+        else if (event instanceof AB2MouseWheelEvent) {
+            Object hoverObject = userContext.getHoverObject();
+            if (hoverObject instanceof GLAbstractActor) {
+                GLAbstractActor glAbstractActor = (GLAbstractActor) hoverObject;
+                glAbstractActor.processEvent(event);
+            }
+            else if (hoverObject instanceof GLRegion) {
+                GLRegion glRegion = (GLRegion) hoverObject;
+                glRegion.processEvent(event);
+            }
+            controller.repaint();
+
+        }
+        else if (event instanceof AB2MouseClickedEvent) {
+            displayEventQueue.add(event);
+            controller.repaint();
+        }
+        else if (event instanceof AB2MouseMovedEvent) {
+            displayEventQueue.add(event);
+            controller.repaint();
+        }
+        else if (event instanceof AB2MouseDraggedEvent) {
+            displayEventQueue.add(event);
+            controller.repaint();
+        }
+
+    }
+
+    private void processDisplayEvent(GL4 gl, AB2Event event) {
+        AB2UserContext userContext=AB2Controller.getController().getUserContext();
+
+        MouseEvent mouseEvent=null;
+        int x=-1;
+        int y=-1;
+        Point p1=null;
+        int pickId=-1;
+        GLAbstractActor pickActor=null;
+
+        if (event instanceof AB2MouseEvent) {
+            AB2MouseEvent ab2MouseEvent=(AB2MouseEvent)event;
+            mouseEvent=ab2MouseEvent.getMouseEvent();
+            x = mouseEvent.getX();
+            y = mouseEvent.getY(); // y is inverted - 0 is at the top
+            p1 = mouseEvent.getPoint();
+            pickId=getPickIdAtXY(gl, x, y, true, true);
+            pickActor=GLAbstractActor.getActorById(pickId);
+        }
+
+        if (event instanceof AB2MouseDraggedEvent) {
+            Object sourceObject = userContext.getSelectObject();
             if (!userContext.isMouseIsDragging()) {
                 userContext.setMouseIsDragging(true);
+                userContext.getPositionHistory().clear();
                 userContext.getPositionHistory().add(p1);
-                AB2Renderer dragRenderer=getRendererAtPosition(p1);
-                AB2MouseBeginDragEvent beginDragEvent=new AB2MouseBeginDragEvent(((AB2MouseDraggedEvent) event).getMouseEvent());
-                if (dragRenderer!=null) {
-                    dragRenderer.processEvent(beginDragEvent);
+                AB2MouseBeginDragEvent beginDragEvent = new AB2MouseBeginDragEvent(((AB2MouseDraggedEvent) event).getMouseEvent());
+                if (sourceObject != null) {
+                    if (sourceObject instanceof GLAbstractActor) {
+                        GLAbstractActor actor = (GLAbstractActor) sourceObject;
+                        actor.processEvent(beginDragEvent);
+                    }
                 }
-                userContext.setCurrentDragRenderer(dragRenderer);
-                return;
             }
+            else {
+                // Assume we have an established drag state
+                userContext.getPositionHistory().add(p1);
+                if (sourceObject != null) {
+                    if (sourceObject instanceof GLAbstractActor) {
+                        GLAbstractActor actor = (GLAbstractActor) sourceObject;
+                        actor.processEvent(event);
+                    }
+                }
+            }
+            controller.repaint();
 
-            // Assume we have an established drag state
-            userContext.getPositionHistory().add(p1);
-            AB2Renderer dragRenderer=userContext.getCurrentDragRenderer();
-            dragRenderer.processEvent(event);
+        }
+
+
             controller.repaint();
-        } else if (event instanceof AB2MouseWheelEvent) {
-            AB2Renderer currentRenderer=getRendererAtPosition(((AB2MouseWheelEvent) event).getMouseWheelEvent().getPoint());
-            currentRenderer.processEvent(event);
-            controller.repaint();
-        } else if (event instanceof AB2MouseClickedEvent) {
-            MouseEvent mouseEvent=((AB2MouseClickedEvent) event).getMouseEvent();
-            int x = mouseEvent.getX();
-            int y = mouseEvent.getY(); // y is inverted - 0 is at the top
-            sampleRenderer.addMouseClickEvent(x, y);
-            controller.repaint();
-        } else if (event instanceof AB2Image2DClickEvent) {
+
+        if (event instanceof AB2Image2DClickEvent) {
             Image2DActor image2DActor=((AB2Image2DClickEvent)event).getImage2DActor();
             logger.info("Handling AB2Image2DClickEvent - actorId="+image2DActor.getActorId()+" pickIndex="+image2DActor.getPickIndex());
         }
@@ -137,14 +202,14 @@ public abstract class AB2ControllerMode implements GLEventListener {
             MouseClickEvent mouseClickEvent=mouseClickEvents.poll();
             if (mouseClickEvent!=null) {
                 logger.info("Pick at x="+mouseClickEvent.x+" y="+mouseClickEvent.y);
-                int pickId=getPickIdAtXY(gl,mouseClickEvent.x, mouseClickEvent.y, true, false);
+                int pickId=getPickIdAtXY(gl,mouseClickEvent.x, mouseClickEvent.y, true, true);
                 logger.info("Pick id at x="+mouseClickEvent.x+" y="+mouseClickEvent.y+" is="+pickId);
                 // Lookup event
                 if (pickId>0) {
                     AB2Event pickEvent = AB2Controller.getController().getPickEvent(pickId);
                     if (pickEvent!=null) {
                         logger.info("Adding pickEvent type="+pickEvent.getClass().getName()+" to AB2Controller addEvent()");
-                        AB2Controller.getController().addEvent(pickEvent);
+                        AB2Controller.getController().processEvent(pickEvent);
                     }
                 }
             }
@@ -170,14 +235,24 @@ public abstract class AB2ControllerMode implements GLEventListener {
     }
 
     @Override
-    public void display(GLAutoDrawable glAutoDrawable) {
-        GL4 gl4=(GL4)(glAutoDrawable.getGL());
+    final public void display(GLAutoDrawable glAutoDrawable) {
+        GL4 gl4 = (GL4) (glAutoDrawable.getGL());
         gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, pickFramebufferId.get(0));
         gl4.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         gl4.glClearDepth(1.0f);
         gl4.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT);
         gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
+        modeDisplay(glAutoDrawable);
+        while (!displayEventQueue.isEmpty()) {
+            AB2Event event = displayEventQueue.poll();
+            if (event != null) {
+                processDisplayEvent(gl4, event);
+            }
+        }
     }
+
+    public abstract void modeDisplay(GLAutoDrawable glAutoDrawable);
+
 
     protected int getPickIdAtXY(GL4 gl, int x, int y, boolean invertY, boolean bindFramebuffer) {
         //logger.info("getPickIdAtXY x="+x+" y="+y+" invert="+invertY);
@@ -228,8 +303,6 @@ public abstract class AB2ControllerMode implements GLEventListener {
     //    glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel);
     //
     //
-
-
     private byte[] readPixels(GL4 gl, int textureId, int attachment, int startX, int startY, int width, int height) {
         gl.glBindTexture(GL4.GL_TEXTURE_2D, textureId);
         int pixelSize = Integer.SIZE/Byte.SIZE;

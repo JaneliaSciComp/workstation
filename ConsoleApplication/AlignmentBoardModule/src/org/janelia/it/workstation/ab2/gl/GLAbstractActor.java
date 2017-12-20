@@ -10,13 +10,17 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.media.opengl.GL4;
 import javax.media.opengl.glu.GLU;
 import javax.swing.ImageIcon;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.it.workstation.ab2.event.AB2Event;
+import org.janelia.it.workstation.ab2.event.AB2EventHandler;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer3D;
 import org.janelia.it.workstation.ab2.renderer.AB2RendererD;
 import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
@@ -24,35 +28,38 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public abstract class GLAbstractActor {
+public abstract class GLAbstractActor implements AB2EventHandler {
 
     protected static GLU glu = new GLU();
     private static Logger logger = LoggerFactory.getLogger(GLAbstractActor.class);
     protected AB2RendererD renderer;
-    protected static List<GLAbstractActor> actors=new ArrayList<>();
+    protected static Map<Integer, GLAbstractActor> actors=new HashMap<>();
 
-    protected GLAbstractActor(AB2RendererD renderer) {
+    protected GLAbstractActor(AB2RendererD renderer, int actorId) {
         this.renderer=renderer;
-        actors.add(this);
+        this.actorId=actorId;
+        actors.put(new Integer(actorId), this);
     }
+
+    public static GLAbstractActor getActorById(int actorId) { return actors.get(actorId); }
 
     public static void removeActor(GLAbstractActor actor) {
         actors.remove(actor);
     }
 
     public static void applyGlWindowResize(int width, int height) {
-        for (GLAbstractActor actor : actors) {
+        for (GLAbstractActor actor : actors.values()) {
             actor.glWindowResize(width, height);
         }
     }
 
     public static boolean checkGlErrorActive=true;
 
-    protected int pickIndex=-1;
+//    protected int pickIndex=-1;
 
-    public void setPickIndex(int pickIndex) { this.pickIndex=pickIndex; }
+//    public void setPickIndex(int pickIndex) { this.pickIndex=pickIndex; }
 
-    public int getPickIndex() { return pickIndex; }
+//    public int getPickIndex() { return pickIndex; }
 
     protected Matrix4 modelMatrix;
     protected Matrix4 postProjectionMatrix;
@@ -71,9 +78,9 @@ public abstract class GLAbstractActor {
 
     protected void glWindowResize(int width, int height) {}
 
-    public void setId(int id) {
-        actorId=id;
-    }
+//    public void setId(int id) {
+//        actorId=id;
+//    }
 
     public int getActorId() {
         return actorId;
@@ -198,6 +205,16 @@ public abstract class GLAbstractActor {
         g2d.dispose();
         return image;
     }
+
+    public void processEvent(AB2Event event) {}
+
+    public void setSelect() {}
+
+    public void releaseSelect() {}
+
+    public void setHover() {}
+
+    public void releaseHover() {}
 
 
 }
