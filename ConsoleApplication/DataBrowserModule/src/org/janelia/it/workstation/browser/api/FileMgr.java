@@ -56,6 +56,7 @@ public class FileMgr {
     private final HttpClient httpClient;
     private final WebDavClientMgr webDavClientMgr;
     private LocalFileCache localFileCache;
+    private Subject currentSubject;
 
     private FileMgr() {
         
@@ -229,8 +230,13 @@ public class FileMgr {
                 : webDavClientMgr.getDownloadFileURL(standardPathName);
     }
 
+    public String getSubjectKey() {
+        return currentSubject == null ? null : currentSubject.getKey();
+    }
+
     void setSubjectProxy(Subject proxy) {
-        addDefaultHeader("JacsSubject", proxy != null ? proxy.getKey() : null);
+        currentSubject = proxy;
+        addDefaultHeader("JacsSubject", getSubjectKey());
     }
 
     void setAuthToken(String authToken) {

@@ -50,14 +50,16 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
     private ProgressHandle handle;
 
 
-    public AsyncServiceMonitoringWorker(Long serviceId, String serviceName) {
-        this.serviceId = serviceId;
+    public AsyncServiceMonitoringWorker() {
     }
     
     @Override
     protected void doStuff() throws Exception {
         AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
         try {
+            if (serviceId == null) {
+                throw new ServiceException("There was no service invocation - serviceId is still empty");
+            }
             while (true) {
                 String serviceStatus = asyncServiceClient.getServiceStatus(serviceId);
                 setStatus(serviceStatus);
@@ -96,9 +98,7 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
                     return;
                 }
             }
-        
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             if (handle!=null) {
                 handle.finish();
             }
@@ -142,6 +142,10 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
         ProgressTopComponent.ensureActive();
         Events.getInstance().postOnEventBus(new WorkerStartedEvent(this));
         getWorkersExecutorService().execute(this);
+    }
+
+    protected void setServiceId(Long serviceId) {
+        this.serviceId = serviceId;
     }
 
     private boolean hasCompletedUnsuccessfully(String state) {

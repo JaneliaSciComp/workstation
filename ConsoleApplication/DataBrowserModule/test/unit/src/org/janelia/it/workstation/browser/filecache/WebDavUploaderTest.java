@@ -103,103 +103,12 @@ public class WebDavUploaderTest {
 
         assertNotNull("null path returned for file upload", remoteUrl);
         assertEquals(testStorageUrl, remoteUrl);
-        
+
         Mockito.verify(webDavClientMgr).createDirectory(testStorageUrl, testNestedDirectory.getName());
         for (File f : testFiles) {
-            Mockito.verify(webDavClientMgr).uploadFile(f, testStorageUrl, 
+            Mockito.verify(webDavClientMgr).uploadFile(f, testStorageUrl,
                     testRootParentDirectory.toPath().relativize(f.toPath()).toString());
-            
-        }
-        
+        }   
     }
 
-//
-//        final String[] expectedOrderedDirPaths = {
-//                "/remote/upload/123/d/",
-//                "/remote/upload/123/d/e/",
-//                "/remote/upload/123/g/"
-//        };
-//
-//        List<String> relativePaths = new ArrayList<>();
-//        for (String unixPath : relativeUnixPaths) {
-//            if (isUnix) {
-//                relativePaths.add(unixPath);
-//            } else {
-//                relativePaths.add(unixPath.replace('/', '\\'));
-//            }
-//        }
-//
-//        List<String> localFilePaths = new ArrayList<>();
-//        for (String relativePath : relativePaths) {
-//            localFilePaths.add(localRoot + relativePath);
-//        }
-//
-//        // use LHM to preserve order
-//        Map<String, File> remotePathToFileMap = new LinkedHashMap<>();
-//        List<String> orderedDirectoryPaths = new ArrayList<>();
-//
-//        uploader.derivePaths(localRootPathWithTrailingSeparator,
-//                             localFilePaths,
-//                             remoteRootWithTrailingSeparator,
-//                             orderedDirectoryPaths,
-//                             remotePathToFileMap);
-//
-//        assertEquals("incorrect remote path map size, map=" + remotePathToFileMap,
-//                localFilePaths.size(),
-//                remotePathToFileMap.size());
-//
-//        int index = 0;
-//        String expectedPath;
-//        for (String remotePath : remotePathToFileMap.keySet()) {
-//            expectedPath = remoteRoot + relativePaths.get(index);
-//            expectedPath = expectedPath.replace('\\', '/');
-//            assertEquals("incorrect file path derived", expectedPath, remotePath);
-//            index++;
-//        }
-//
-//        assertEquals("incorrect directory list size, list=" + orderedDirectoryPaths,
-//                expectedOrderedDirPaths.length,
-//                orderedDirectoryPaths.size());
-//
-//        for (int i = 0; i < expectedOrderedDirPaths.length; i++) {
-//            assertEquals("incorrect dir path " + i + " derived",
-//                    expectedOrderedDirPaths[i], orderedDirectoryPaths.get(i));
-//        }
-//    }
-//
-//    @Test
-//    @Category(TestCategories.SlowIntegrationTests.class)
-//    public void testUploadFilesWithoutRelativePath() throws Exception {
-//        commonTestUploadFiles(null, 1);
-//    }
-//
-//    @Test
-//    @Category(TestCategories.SlowIntegrationTests.class)
-//    public void testUploadFilesWithRelativePath() throws Exception {
-//        commonTestUploadFiles(testRootParentDirectory, 2);
-//    }
-//
-//    private void commonTestUploadFiles(File localRootDirectory,
-//                                       int expectedDistinctParentPaths) throws Exception {
-//        String remotePath = uploader.uploadFiles(testFiles, localRootDirectory);
-//        assertNotNull("null path returned for upload", remotePath);
-//
-//        URL url = client.getWebDavUrl(remotePath);
-//
-//        List<WebDavFile> list = client.findAllInternalFiles(url);
-//
-//        assertEquals("invalid number of files created under " + url, testFiles.size(), list.size());
-//
-//        Set<String> parentPathSet = new HashSet<>();
-//        File file;
-//        for (WebDavFile webDavFile : list) {
-//            file = new File(webDavFile.getUrl().toURI().getPath());
-//            parentPathSet.add(file.getParent());
-//        }
-//
-//        assertEquals("invalid number of distinct parent paths created " + parentPathSet,
-//                expectedDistinctParentPaths, parentPathSet.size());
-//    }
-//
-//    private static final Logger LOG = LoggerFactory.getLogger(WebDavUploaderTest.class);
 }

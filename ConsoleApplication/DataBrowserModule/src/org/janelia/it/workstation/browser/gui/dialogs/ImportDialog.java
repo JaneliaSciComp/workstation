@@ -48,6 +48,7 @@ import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
@@ -341,7 +342,7 @@ public class ImportDialog extends ModalDialog {
                            final String importFolderName,
                            final Long importFolderId) {
         try {
-            BackgroundWorker executeWorker = new TaskMonitoringWorker() {
+            BackgroundWorker executeWorker = new AsyncServiceMonitoringWorker() {
     
                 @Override
                 public String getName() {
@@ -354,11 +355,11 @@ public class ImportDialog extends ModalDialog {
                     setStatus("Submitting task");
                     
                     Long taskId = startImportFilesTask(selectedFile,
-                                selectedChildren,
-                                importFolderName,
-                                importFolderId);
+                            selectedChildren,
+                            importFolderName,
+                            importFolderId);
                     
-                    setTaskId(taskId);
+                    setServiceId(taskId);
                     
                     setStatus("Grid execution");
                     
@@ -439,10 +440,10 @@ public class ImportDialog extends ModalDialog {
         }
     }
 
-    private long startImportFilesTask(File selectedFile,
-                             List<File> selectedChildren,
-                             String importTopLevelFolderName,
-                             Long importTopLevelFolderId) throws Exception {
+    private Long startImportFilesTask(File selectedFile,
+                                      List<File> selectedChildren,
+                                      String importTopLevelFolderName,
+                                      Long importTopLevelFolderId) throws Exception {
 
         AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
 
@@ -455,8 +456,15 @@ public class ImportDialog extends ModalDialog {
             uploadPath = uploader.uploadFiles(importTopLevelFolderName, selectedChildren, selectedFile);
         }
 
-        return asyncServiceClient.invokeService("fileTreeLoader",
-                ImmutableList.of(),
+        ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
+                .add("-folderName", importTopLevelFolderName);
+        if (importTopLevelFolderId != null) {
+            serviceArgsBuilder.add("-parentFolderId", importTopLevelFolderId.toString());
+        }
+        serviceArgsBuilder.add("-storageLocation", uploadPath);
+        return asyncServiceClient.invokeService("dataTreeLoad",
+                serviceArgsBuilder.build(),
+                FileMgr.getFileMgr().getSubjectKey(),
                 null,
                 ImmutableMap.of()
         );
