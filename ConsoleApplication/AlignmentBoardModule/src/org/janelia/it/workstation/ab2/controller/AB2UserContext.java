@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
+import org.janelia.it.workstation.ab2.gl.GLSelectable;
 
 public class AB2UserContext {
 
@@ -15,9 +15,9 @@ public class AB2UserContext {
     private List<Point> positionHistory=new ArrayList<>();
     private boolean mouseIsDragging = false;
 
-    private Object dragObject;
-    private Object hoverObject;
-    private Object selectObject;
+    private GLSelectable dragObject;
+    private GLSelectable hoverObject;
+    private GLSelectable selectObject;
 
     private Map<String,Object> contextMap=new HashMap<>();
 
@@ -45,27 +45,27 @@ public class AB2UserContext {
 
     public void setContextMap(Map<String, Object> contextMap) { this.contextMap=contextMap; }
 
-    public Object getDragObject() {
+    public GLSelectable getDragObject() {
         return dragObject;
     }
 
-    public void setDragObject(Object dragObject) {
+    public void setDragObject(GLSelectable dragObject) {
         this.dragObject = dragObject;
     }
 
-    public Object getHoverObject() {
+    public GLSelectable getHoverObject() {
         return hoverObject;
     }
 
-    public void setHoverObject(Object hoverObject) {
+    public void setHoverObject(GLSelectable hoverObject) {
         this.hoverObject = hoverObject;
     }
 
-    public Object getSelectObject() {
+    public GLSelectable getSelectObject() {
         return selectObject;
     }
 
-    public void setSelectObject(Object selectObject) {
+    public void setSelectObject(GLSelectable selectObject) {
         this.selectObject = selectObject;
     }
 

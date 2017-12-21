@@ -14,9 +14,8 @@ import javax.media.opengl.GLEventListener;
 import org.janelia.it.workstation.ab2.actor.Image2DActor;
 import org.janelia.it.workstation.ab2.event.*;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
+import org.janelia.it.workstation.ab2.gl.GLSelectable;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
-import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
-import org.janelia.it.workstation.ab2.renderer.AB2RendererD;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,32 +95,18 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
         if (event instanceof AB2MouseReleasedEvent) {
             if (userContext.isMouseIsDragging()) {
-                Object sourceObject = userContext.getDragObject();
-                Object releaseObject = userContext.getHoverObject();
+                GLSelectable sourceObject = userContext.getDragObject();
+                GLSelectable releaseObject = userContext.getHoverObject();
                 AB2MouseEndDragEvent endDragEvent = new AB2MouseEndDragEvent(((AB2MouseReleasedEvent) event).getMouseEvent(), sourceObject);
-                if (releaseObject instanceof GLAbstractActor) {
-                    GLAbstractActor actor = (GLAbstractActor) releaseObject;
-                    actor.processEvent(endDragEvent);
-                }
-                else if (releaseObject instanceof GLRegion) {
-                    GLRegion region = (GLRegion) releaseObject;
-                    region.processEvent(endDragEvent);
-                }
+                releaseObject.processEvent(endDragEvent);
                 userContext.clearDrag();
             }
             controller.repaint();
 
         }
         else if (event instanceof AB2MouseWheelEvent) {
-            Object hoverObject = userContext.getHoverObject();
-            if (hoverObject instanceof GLAbstractActor) {
-                GLAbstractActor glAbstractActor = (GLAbstractActor) hoverObject;
-                glAbstractActor.processEvent(event);
-            }
-            else if (hoverObject instanceof GLRegion) {
-                GLRegion glRegion = (GLRegion) hoverObject;
-                glRegion.processEvent(event);
-            }
+            GLSelectable hoverObject = userContext.getHoverObject();
+            hoverObject.processEvent(event);
             controller.repaint();
 
         }
@@ -157,62 +142,84 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             y = mouseEvent.getY(); // y is inverted - 0 is at the top
             p1 = mouseEvent.getPoint();
             pickId=getPickIdAtXY(gl, x, y, true, true);
-            pickActor=GLAbstractActor.getActorById(pickId);
+            if (pickId>0) {
+                pickActor = GLAbstractActor.getActorById(pickId);
+            }
         }
 
         if (event instanceof AB2MouseDraggedEvent) {
-            Object sourceObject = userContext.getSelectObject();
             if (!userContext.isMouseIsDragging()) {
+                GLSelectable dragObject = userContext.getSelectObject();
                 userContext.setMouseIsDragging(true);
                 userContext.getPositionHistory().clear();
                 userContext.getPositionHistory().add(p1);
                 AB2MouseBeginDragEvent beginDragEvent = new AB2MouseBeginDragEvent(((AB2MouseDraggedEvent) event).getMouseEvent());
-                if (sourceObject != null) {
-                    if (sourceObject instanceof GLAbstractActor) {
-                        GLAbstractActor actor = (GLAbstractActor) sourceObject;
-                        actor.processEvent(beginDragEvent);
-                    }
+                if (dragObject != null) {
+                    userContext.setSelectObject(null);
+                    userContext.setDragObject(dragObject);
+                    dragObject.setDrag();
+                    dragObject.releaseSelect();
+                    dragObject.processEvent(beginDragEvent);
                 }
             }
             else {
                 // Assume we have an established drag state
                 userContext.getPositionHistory().add(p1);
-                if (sourceObject != null) {
-                    if (sourceObject instanceof GLAbstractActor) {
-                        GLAbstractActor actor = (GLAbstractActor) sourceObject;
-                        actor.processEvent(event);
+                GLSelectable dragObject = userContext.getDragObject();
+                if (dragObject != null) {
+                    dragObject.processEvent(event);
+                }
+                // Need to update hover state
+                if (pickActor!=null) {
+                    if (!pickActor.equals(userContext.getHoverObject())) {
+                        GLSelectable hoverObject = userContext.getHoverObject();
+                        if (hoverObject!=null) {
+                            hoverObject.releaseHover();
+                        }
+                        userContext.setHoverObject(pickActor);
+                        if (dragObject!=null && dragObject instanceof GLAbstractActor) {
+                            GLAbstractActor dragActor = (GLAbstractActor) dragObject;
+                            pickActor.setHover(dragActor.getActorId());
+                        } else {
+                            pickActor.setHover(0);
+                        }
+                    }
+                } else { // pickActor is null
+                    GLRegion region=getRegionAtPosition(p1);
+                    GLSelectable hoverObject=userContext.getHoverObject();
+                    if (hoverObject!=null) {
+                        if (!userContext.getHoverObject().equals(region)) {
+                            hoverObject.releaseHover();
+                            userContext.setHoverObject(region);
+                            if (dragObject!=null && dragObject instanceof GLAbstractActor) {
+                                GLAbstractActor dragActor = (GLAbstractActor) dragObject;
+                                region.setHover(dragActor.getActorId());
+                            }
+                        }
                     }
                 }
             }
             controller.repaint();
 
-        }
-
-
-            controller.repaint();
-
-        if (event instanceof AB2Image2DClickEvent) {
+        } else if (event instanceof AB2Image2DClickEvent) {
             Image2DActor image2DActor=((AB2Image2DClickEvent)event).getImage2DActor();
             logger.info("Handling AB2Image2DClickEvent - actorId="+image2DActor.getActorId()+" pickIndex="+image2DActor.getPickIndex());
-        }
+
+//            logger.info("Pick at x="+mouseClickEvent.x+" y="+mouseClickEvent.y);
+//            int pickId=getPickIdAtXY(gl,mouseClickEvent.x, mouseClickEvent.y, true, true);
+//            logger.info("Pick id at x="+mouseClickEvent.x+" y="+mouseClickEvent.y+" is="+pickId);
+//            // Lookup event
+//            if (pickId>0) {
+//                AB2Event pickEvent = AB2Controller.getController().getPickEvent(pickId);
+//                if (pickEvent!=null) {
+//                    logger.info("Adding pickEvent type="+pickEvent.getClass().getName()+" to AB2Controller addEvent()");
+//                    AB2Controller.getController().processEvent(pickEvent);
+//                }
+//            }
+
+        } else if (event instanceof AB2MouseMovedEvent) {
 
 
-        while (mouseClickEvents.size()>0) {
-            logger.info("displaySync() processing mouse click");
-            MouseClickEvent mouseClickEvent=mouseClickEvents.poll();
-            if (mouseClickEvent!=null) {
-                logger.info("Pick at x="+mouseClickEvent.x+" y="+mouseClickEvent.y);
-                int pickId=getPickIdAtXY(gl,mouseClickEvent.x, mouseClickEvent.y, true, true);
-                logger.info("Pick id at x="+mouseClickEvent.x+" y="+mouseClickEvent.y+" is="+pickId);
-                // Lookup event
-                if (pickId>0) {
-                    AB2Event pickEvent = AB2Controller.getController().getPickEvent(pickId);
-                    if (pickEvent!=null) {
-                        logger.info("Adding pickEvent type="+pickEvent.getClass().getName()+" to AB2Controller addEvent()");
-                        AB2Controller.getController().processEvent(pickEvent);
-                    }
-                }
-            }
         }
 
     }

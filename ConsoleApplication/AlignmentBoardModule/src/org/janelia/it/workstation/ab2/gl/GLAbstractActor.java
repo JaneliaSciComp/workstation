@@ -9,9 +9,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.media.opengl.GL4;
@@ -21,14 +19,13 @@ import javax.swing.ImageIcon;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2EventHandler;
-import org.janelia.it.workstation.ab2.renderer.AB2Renderer3D;
 import org.janelia.it.workstation.ab2.renderer.AB2RendererD;
 import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public abstract class GLAbstractActor implements AB2EventHandler {
+public abstract class GLAbstractActor implements GLSelectable {
 
     protected static GLU glu = new GLU();
     private static Logger logger = LoggerFactory.getLogger(GLAbstractActor.class);
@@ -212,7 +209,7 @@ public abstract class GLAbstractActor implements AB2EventHandler {
 
     public void releaseSelect() {}
 
-    public void setHover() {}
+    public void setHover(int actorId) {}
 
     public void releaseHover() {}
 
