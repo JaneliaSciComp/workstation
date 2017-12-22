@@ -871,7 +871,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), null);
             if (sortCriteriaPref!=null) {
                 log.debug("Loaded sort criteria preference: {}",sortCriteriaPref);
-                searchConfig.setSortCriteria((String) sortCriteriaPref);
+                searchConfig.setSortCriteria(sortCriteriaPref);
             }
             else {
                 searchConfig.setSortCriteria(null);

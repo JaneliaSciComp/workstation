@@ -860,7 +860,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     protected JMenuItem getDownloadItem() {
         String label = domainObjectList.size() > 1 ? "Download " + domainObjectList.size() + " Items..." : "Download...";
         JMenuItem menuItem = new JMenuItem("  "+label);
-        menuItem.addActionListener(new DownloadWizardAction(domainObjectList, resultDescriptor));
+        menuItem.addActionListener(new DownloadWizardAction(domainObjectList, null));
         menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.META_DOWN_MASK));
         return menuItem;
     }

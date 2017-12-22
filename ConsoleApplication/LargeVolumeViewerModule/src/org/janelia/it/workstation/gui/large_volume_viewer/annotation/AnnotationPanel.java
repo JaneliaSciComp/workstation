@@ -181,6 +181,7 @@ public class AnnotationPanel extends JPanel
         cTop.anchor = GridBagConstraints.PAGE_START;
         cTop.fill = GridBagConstraints.HORIZONTAL;
         cTop.insets = new Insets(10, 0, 0, 0);
+        cTop.weightx = 1.0;
         cTop.weighty = 0.0;
         add(workspaceInfoPanel, cTop);
 
@@ -194,6 +195,7 @@ public class AnnotationPanel extends JPanel
         cVert.gridy = GridBagConstraints.RELATIVE;
         cVert.anchor = GridBagConstraints.PAGE_START;
         cVert.fill = GridBagConstraints.HORIZONTAL;
+        cTop.weightx = 1.0;
         cVert.weighty = 0.0;
 
         // buttons for doing workspace things
@@ -325,13 +327,20 @@ public class AnnotationPanel extends JPanel
         neuronToolMenu.add(new JSeparator());
                         
         sortSubmenu = new JMenu("Sort");
-        JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical") {
+        JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical by name") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 workspaceNeuronList.sortOrderChanged(WorkspaceNeuronList.NeuronSortOrder.ALPHABETICAL);
             }
             });
         sortSubmenu.add(alphaSortButton);
+        JRadioButtonMenuItem ownerSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical by owner") {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                workspaceNeuronList.sortOrderChanged(WorkspaceNeuronList.NeuronSortOrder.OWNER);
+            }
+            });
+        sortSubmenu.add(ownerSortButton);
         JRadioButtonMenuItem creationSortButton = new JRadioButtonMenuItem(new AbstractAction("Creation date") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -341,6 +350,7 @@ public class AnnotationPanel extends JPanel
         sortSubmenu.add(creationSortButton);
         ButtonGroup neuronSortGroup = new ButtonGroup();
         neuronSortGroup.add(alphaSortButton);
+        neuronSortGroup.add(ownerSortButton);
         neuronSortGroup.add(creationSortButton);
         neuronToolMenu.add(sortSubmenu);
 
@@ -420,6 +430,7 @@ public class AnnotationPanel extends JPanel
         cBottom.gridy = GridBagConstraints.RELATIVE;
         cBottom.anchor = GridBagConstraints.PAGE_START;
         cBottom.fill = GridBagConstraints.BOTH;
+        cTop.weightx = 1.0;
         cBottom.weighty = 1.0;
         add(Box.createVerticalGlue(), cBottom);
     }

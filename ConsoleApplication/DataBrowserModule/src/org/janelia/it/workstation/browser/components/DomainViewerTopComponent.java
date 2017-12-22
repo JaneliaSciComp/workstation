@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.browser.components;
 
-import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
 
 import javax.swing.JComponent;
@@ -11,7 +10,6 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
-import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.browser.gui.editor.SampleEditorPanel;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -29,6 +27,8 @@ import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Top component which displays domain object viewers. 
@@ -101,6 +101,7 @@ public final class DomainViewerTopComponent extends TopComponent {
 
     @Override
     public void componentClosed() {
+        clearEditor();
         Events.getInstance().unregisterOnEventBus(this);
     }
     
@@ -206,14 +207,19 @@ public final class DomainViewerTopComponent extends TopComponent {
         content.add(domainObject);
         return true;
     }
+
+    public void clearEditor() {
+        if (editor!=null) {
+            remove((JComponent)editor);
+            Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
+        }
+        this.editor = null;
+    }
     
     @SuppressWarnings("unchecked")
     public void setEditorClass(Class<? extends DomainObjectEditor<?>> editorClass) {
         try {
-            if (editor!=null) {
-                remove((JComponent)editor);
-                Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
-            }
+            clearEditor();
             editor = (DomainObjectEditor<DomainObject>) editorClass.newInstance();
             add((JComponent)editor, BorderLayout.CENTER);
             Events.getInstance().registerOnEventBus(editor.getEventBusListener());

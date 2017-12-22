@@ -37,7 +37,6 @@ import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
-import org.janelia.it.workstation.browser.gui.listview.ListViewerType;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
@@ -56,9 +55,6 @@ import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * A table viewer for domain objects.
@@ -400,6 +396,9 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
         else {
             DomainObjectAttribute attr = attributeMap.get(columnName);
+            if (attr==null) {
+                throw new IllegalStateException("No attribute found for column: "+columnName);
+            }
             DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(object);
             return proxy.get(attr.getLabel());
         }
