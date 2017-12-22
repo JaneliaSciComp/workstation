@@ -100,6 +100,7 @@ implements NeuronSet// , LookupListener
         this.innerList = innerNeuronList;
         this.globalAnnotationListener = new MyGlobalAnnotationListener();
         this.backgroundAnnotationListener = new NeuronSetBackgroundAnnotationListener();
+        backgroundAnnotationListener.setGlobal(globalAnnotationListener);
         this.annotationModListener = new MyTmGeoAnnotationModListener();
         this.hortaWorkspaceResult.addLookupListener(new NSALookupListener());
     }
@@ -545,51 +546,40 @@ implements NeuronSet// , LookupListener
     }
 
     private class NeuronSetBackgroundAnnotationListener implements BackgroundAnnotationListener {
-
+        GlobalAnnotationListener global;
+        
+        public void setGlobal(GlobalAnnotationListener global) {
+            this.global = global;
+        }
+        
         @Override
         public void neuronModelChanged(TmNeuronMetadata neuron) {
             // Remove all the existing cached vertices for this neuron
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getCachedVertexes()) {
+                log.debug("Removing cached vertex: {}", neuronVertex);
                 spatialIndex.removeFromIndex(neuronVertex);
             }
+            // merge in the latest vertices and update the geometry
+            neuronModel.mergeNeuronData(neuron);
             
             // Re-create all the vertices for the neuron, and re-add them to the spatial index
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                log.debug("Re-adding vertex: {}", neuronVertex);
                 spatialIndex.addToIndex(neuronVertex);
             }
             
-            // Recreate edges from the updated vertex list
-            neuronModel.updateEdges();
+            repaintHorta(neuronModel);
         }
 
         @Override
         public void neuronModelCreated(TmNeuronMetadata neuron) {
-            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
-            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
-                spatialIndex.addToIndex(neuronVertex);
-            }
-            neuronModel.getGeometryChangeObservable().setChanged();
-            getMembershipChangeObservable().setChanged();
-            getMembershipChangeObservable().notifyObservers(neuronModel);
+           global.neuronCreated(neuron);
         }
 
         @Override
         public void neuronModelDeleted(TmNeuronMetadata neuron) {
-            Collection<NeuronVertex> deletedVertices = new ArrayList<>();
-            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
-            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
-                spatialIndex.removeFromIndex(neuronVertex);
-                deletedVertices.add(neuronVertex);
-            }
-            neuronModel.getVertexesRemovedObservable().setChanged();
-            neuronModel.getVertexesRemovedObservable().notifyObservers(
-                    new VertexCollectionWithNeuron(deletedVertices, neuronModel));
-            
-            neuronModel.getGeometryChangeObservable().setChanged();
-            innerList.removeFromCache(neuron.getId());
-            getMembershipChangeObservable().setChanged();
-            getMembershipChangeObservable().notifyObservers(neuronModel);
+           global.neuronDeleted(neuron);
         }
         
     }
