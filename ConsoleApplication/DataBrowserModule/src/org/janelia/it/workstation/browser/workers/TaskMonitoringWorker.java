@@ -95,7 +95,9 @@ public class TaskMonitoringWorker extends BackgroundWorker {
                     }
                     return;
                 }
-
+                
+                throwExceptionIfCancelled();
+                
                 try {
                     Thread.sleep(REFRESH_DELAY_MS);
                 }

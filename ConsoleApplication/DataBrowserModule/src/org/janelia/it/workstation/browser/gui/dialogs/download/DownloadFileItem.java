@@ -59,7 +59,7 @@ public class DownloadFileItem {
     private File targetFile;
     private String sourceExtension;
     private String targetExtension;
-
+    private boolean is3d;
     
     public DownloadFileItem(List<String> itemPath, DomainObject domainObject) {
         this.itemPath = itemPath;
@@ -78,6 +78,7 @@ public class DownloadFileItem {
         this.errorMessage = null;
         this.resultName = null;
         this.targetFile = null;
+        this.is3d = fileType.is3dImage();
         
         if (!fileType.is3dImage() && splitChannels) {
             throw new IllegalStateException("Cannot split channels for non-3d image");
@@ -300,6 +301,10 @@ public class DownloadFileItem {
 
     public boolean isSplitChannels() {
         return splitChannels;
+    }
+
+    public boolean is3d() {
+        return is3d;
     }
 
     @Override
