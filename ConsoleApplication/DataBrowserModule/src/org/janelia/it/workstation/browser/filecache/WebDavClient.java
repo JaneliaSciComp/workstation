@@ -308,7 +308,7 @@ public class WebDavClient {
 
     URL getDownloadFileURL(String standardPathName) {
         try {
-            return new URL(baseUrl + "/" + standardPathName);
+            return new URL(baseUrl + "/path/" + standardPathName);
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }
