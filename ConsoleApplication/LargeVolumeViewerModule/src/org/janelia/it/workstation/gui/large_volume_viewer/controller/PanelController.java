@@ -64,6 +64,8 @@ public class PanelController {
         annotationModel.addGlobalAnnotationListener(globalListener);
         
         backgroundListener = new PanelBackgroundAnnotationListener();
+        backgroundListener.setGlobal(globalListener);
+        
         annotationModel.addBackgroundAnnotationListener(backgroundListener);
         
         notesListener = new PanelNotesUpdateListener();
@@ -262,28 +264,28 @@ public class PanelController {
     }
     
     private class PanelBackgroundAnnotationListener implements BackgroundAnnotationListener {
-        public PanelBackgroundAnnotationListener() {
-        }
+        PanelGlobalListener global;
 
         @Override
         public void neuronModelChanged(TmNeuronMetadata neuron) {
-            filteredAnnotationList.loadNeuron(neuron);
-            wsNeuronList.updateModel(neuron);
-        }
-
-        @Override
-        public void neuronModelCreated(TmNeuronMetadata neuron) {
             TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
             filteredAnnotationList.loadNeuron(neuron);
-            wsNeuronList.updateModel(neuron);
             // TODO: could use a more granular update
             wsNeuronList.loadWorkspace(workspace);
         }
 
         @Override
+        public void neuronModelCreated(TmNeuronMetadata neuron) {
+           global.neuronCreated(neuron);
+        }
+
+        @Override
         public void neuronModelDeleted(TmNeuronMetadata neuron) {
-            filteredAnnotationList.loadNeuron(neuron);
-            wsNeuronList.deleteFromModel(neuron);
+            global.neuronDeleted(neuron);
+        }
+
+        private void setGlobal(PanelGlobalListener globalListener) {
+            global = globalListener;
         }
         
     }

@@ -178,6 +178,11 @@ public class NeuronModelAdapter implements NeuronModel
         return result;
     }
     
+    public void mergeNeuronData (TmNeuronMetadata newNeuron) {
+        vertexes.updateWrapping (newNeuron.getGeoAnnotationMap());
+        edges.updateGeometry();
+    }
+    
     @Override
     public boolean transferNeurite(NeuronVertex anchor) {
         if (! (anchor instanceof NeuronVertexAdapter))
