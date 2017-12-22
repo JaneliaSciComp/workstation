@@ -63,9 +63,9 @@ public class WebDavUploader {
      */
     public String uploadFile(String storageName, File file) throws WebDavException {
         String storageURL = webDavClientMgr.createStorageFolder(storageName);
-        String uploadedFileURL = webDavClientMgr.uploadFile(file, storageURL, "");
+        String uploadedFileURL = webDavClientMgr.uploadFile(file, storageURL, webDavClientMgr.urlEncodeComp(file.getName()));
         LOG.info("uploaded {} to {} - {}", file, storageURL, uploadedFileURL);
-        return uploadedFileURL;
+        return storageURL;
     }
 
     /**

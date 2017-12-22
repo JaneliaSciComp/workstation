@@ -237,6 +237,7 @@ public class FileMgr {
     void setSubjectProxy(Subject proxy) {
         currentSubject = proxy;
         addDefaultHeader("JacsSubject", getSubjectKey());
+        addDefaultHeader("username", getSubjectKey());
     }
 
     void setAuthToken(String authToken) {

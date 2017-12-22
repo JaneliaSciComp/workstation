@@ -342,7 +342,7 @@ public class ImportDialog extends ModalDialog {
                            final String importFolderName,
                            final Long importFolderId) {
         try {
-            BackgroundWorker executeWorker = new AsyncServiceMonitoringWorker() {
+            BackgroundWorker executeWorker = new AsyncServiceMonitoringWorker(FileMgr.getFileMgr().getSubjectKey()) {
     
                 @Override
                 public String getName() {

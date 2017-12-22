@@ -46,11 +46,13 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
     }
 
     private Long serviceId;
+    private String subjectKey;
     private String serviceName;
     private ProgressHandle handle;
 
 
-    public AsyncServiceMonitoringWorker() {
+    public AsyncServiceMonitoringWorker(String subjectKey) {
+        this.subjectKey = subjectKey;
     }
     
     @Override
@@ -61,7 +63,7 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
                 throw new ServiceException("There was no service invocation - serviceId is still empty");
             }
             while (true) {
-                String serviceStatus = asyncServiceClient.getServiceStatus(serviceId);
+                String serviceStatus = asyncServiceClient.getServiceStatus(serviceId, subjectKey);
                 setStatus(serviceStatus);
 
                 if (handle==null) {
