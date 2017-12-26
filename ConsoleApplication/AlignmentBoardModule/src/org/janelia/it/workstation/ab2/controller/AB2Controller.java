@@ -53,11 +53,14 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
     private AB2ControllerMode currentMode;
     private GLJPanel gljPanel;
     private AB2DomainObject domainObject;
-    private Map<Integer,AB2Event> pickEventLookup=new HashMap<>();
     private int pickCounter=0;
     private AB2UserContext userContext=new AB2UserContext();
     private int glWidth;
     private int glHeight;
+
+    // We are changing this design so that actors handle their own select events
+    // private Map<Integer,AB2Event> pickEventLookup=new HashMap<>();
+
 
     public static AB2Controller getController() {
         if (instance==null) {
@@ -83,16 +86,17 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
         return pickCounter;
     }
 
-    public void setPickEvent(int index, AB2Event pickEvent) {
-        logger.info("Setting pickIndex="+index+" to AB2Event type="+pickEvent.getClass().getName());
-        pickEventLookup.put(index,pickEvent);
-    }
-
-    public AB2Event getPickEvent(int index) {
-        AB2Event pickEvent=pickEventLookup.get(index);
-        logger.info("Returning pickEvent for pickIndex="+index+" type="+pickEvent.getClass().getName());
-        return pickEvent;
-    }
+    // This design is being changed so that actors handle their own selection events
+//    public void setPickEvent(int index, AB2Event pickEvent) {
+//        logger.info("Setting pickIndex="+index+" to AB2Event type="+pickEvent.getClass().getName());
+//        pickEventLookup.put(index,pickEvent);
+//    }
+//
+//    public AB2Event getPickEvent(int index) {
+//        AB2Event pickEvent=pickEventLookup.get(index);
+//        logger.info("Returning pickEvent for pickIndex="+index+" type="+pickEvent.getClass().getName());
+//        return pickEvent;
+//    }
 
     public void setDomainObject(AB2DomainObject domainObject) {
         this.domainObject=domainObject;

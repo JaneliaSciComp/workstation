@@ -86,7 +86,7 @@ public class TextLabelActor extends GLAbstractActor {
                           Vector4 textColor,
                           Vector4 backgroundColor,
                           Orientation orientation) {
-        super(renderer);
+        super(renderer, actorId);
         this.renderer2d=renderer;
         this.actorId=actorId;
         this.centerPosition=centerPosition;
@@ -200,13 +200,17 @@ public class TextLabelActor extends GLAbstractActor {
             gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST );
             gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
 
-        } else if (shader instanceof AB2PickShader) {
-            if (pickIndex<0) {
-                pickIndex = AB2Controller.getController().getNextPickIndex();
-                AB2Controller.getController().setPickEvent(pickIndex, new AB2TextLabelClickEvent(this));
-                //logger.info("Setting pickIndex="+pickIndex);
-            }
         }
+
+        // Deprecated design in favor of handling via setSelect() or setHover()
+
+//        else if (shader instanceof AB2PickShader) {
+//            if (pickIndex<0) {
+//                pickIndex = AB2Controller.getController().getNextPickIndex();
+//                AB2Controller.getController().setPickEvent(pickIndex, new AB2TextLabelClickEvent(this));
+//                //logger.info("Setting pickIndex="+pickIndex);
+//            }
+//        }
 
     }
 
@@ -287,7 +291,7 @@ public class TextLabelActor extends GLAbstractActor {
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
             pickShader.setMVP(gl, renderer2d.getVp2d());
-            pickShader.setPickId(gl, getPickIndex());
+            pickShader.setPickId(gl, getActorId());
         }
 
         gl.glBindVertexArray(vertexArrayId.get(0));

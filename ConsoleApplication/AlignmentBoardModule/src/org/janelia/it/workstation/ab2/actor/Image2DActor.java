@@ -130,9 +130,11 @@ public class Image2DActor extends GLAbstractActor {
             gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST );
             gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
 
-        } else if (shader instanceof AB2PickShader) {
-            AB2Controller.getController().setPickEvent(actorId, new AB2Image2DClickEvent(this));
         }
+        // Design is changing so that Actors handle their own selection events via setSelect()
+//        else if (shader instanceof AB2PickShader) {
+//            AB2Controller.getController().setPickEvent(actorId, new AB2Image2DClickEvent(this));
+//        }
 
     }
 

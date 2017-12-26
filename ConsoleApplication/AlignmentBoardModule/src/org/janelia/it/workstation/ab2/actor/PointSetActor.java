@@ -28,7 +28,7 @@ public class PointSetActor extends GLAbstractActor {
     AB2Renderer3D renderer3d;
 
     public PointSetActor(AB2Renderer3D renderer, int actorId, List<Vector3> points) {
-        super(renderer);
+        super(renderer, actorId);
         this.renderer3d=renderer;
         this.actorId=actorId;
         this.points=points;

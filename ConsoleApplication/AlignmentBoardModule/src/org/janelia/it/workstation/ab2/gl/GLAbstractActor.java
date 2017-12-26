@@ -213,5 +213,9 @@ public abstract class GLAbstractActor implements GLSelectable {
 
     public void releaseHover() {}
 
+    public void setDrag() {}
+
+    public void releaseDrag() {}
+
 
 }

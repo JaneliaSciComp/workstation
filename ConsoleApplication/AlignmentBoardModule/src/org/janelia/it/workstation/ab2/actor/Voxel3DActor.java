@@ -46,7 +46,7 @@ public class Voxel3DActor extends GLAbstractActor {
 
     public Voxel3DActor(AB2Renderer3D renderer, int actorId, List<Vector3> voxels, List<Vector4> colors,
                         int dimX, int dimY, int dimZ) {
-        super(renderer);
+        super(renderer, actorId);
         this.actorId=actorId;
         this.voxels=voxels;
         this.colors=colors;
@@ -56,7 +56,7 @@ public class Voxel3DActor extends GLAbstractActor {
     }
 
     public Voxel3DActor(AB2Renderer3D renderer, int actorId, float threshold, byte[] dataXYZRGBA) {
-        super(renderer);
+        super(renderer, actorId);
         this.actorId=actorId;
         voxels=new ArrayList<>();
         colors=new ArrayList<>();

@@ -79,9 +79,13 @@ public class PickSquareActor extends GLAbstractActor {
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-        } else if (shader instanceof AB2PickShader) {
-            AB2Controller.getController().setPickEvent(actorId, new AB2PickSquareColorChangeEvent(this));
         }
+
+        // Deprecated design, in favor of the actor taking responsibility based on setSelect(), etc.
+
+//        else if (shader instanceof AB2PickShader) {
+//            AB2Controller.getController().setPickEvent(actorId, new AB2PickSquareColorChangeEvent(this));
+//        }
 
     }
 

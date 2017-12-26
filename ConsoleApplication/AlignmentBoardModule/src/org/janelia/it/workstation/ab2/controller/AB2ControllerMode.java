@@ -11,7 +11,6 @@ import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 
-import org.janelia.it.workstation.ab2.actor.Image2DActor;
 import org.janelia.it.workstation.ab2.event.*;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLSelectable;
@@ -77,12 +76,17 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
      RegionManager, which then determines the region in which it occured, and then the drop is handed to the
      Region for handling.
 
-     This implies there will al
-
      Thus, Regions, Renderers, and Actors need to handle Events. However, note that only Regions and Actors have a
      concept of unique geographic bounds, since more than one renderer can share the same screen space. Strictly
      speaking, there can be many more than one Actor on a particular pixel, but there will only be one "owning"
      that pixel in the pick buffer, based on draw order.
+
+     Note that in this approach, it is the Actors and Regions which are given selection and release events to
+     process, and it is up to them to escalate with new events with greater sematic meaning.
+
+     Thus, semantic content increases with each step:
+
+     MouseEvent -> Actor/Region Event -> RendererEvent -> Controller Event
 
      */
 
@@ -95,10 +99,11 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
         if (event instanceof AB2MouseReleasedEvent) {
             if (userContext.isMouseIsDragging()) {
-                GLSelectable sourceObject = userContext.getDragObject();
                 GLSelectable releaseObject = userContext.getHoverObject();
-                AB2MouseEndDragEvent endDragEvent = new AB2MouseEndDragEvent(((AB2MouseReleasedEvent) event).getMouseEvent(), sourceObject);
-                releaseObject.processEvent(endDragEvent);
+                GLSelectable dragObject = userContext.getDragObject();
+                AB2MouseDropEvent dropEvent = new AB2MouseDropEvent(((AB2MouseReleasedEvent) event).getMouseEvent(), dragObject);
+                releaseObject.processEvent(dropEvent);
+                releaseObject.releaseHover();
                 userContext.clearDrag();
             }
             controller.repaint();
@@ -106,9 +111,10 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         }
         else if (event instanceof AB2MouseWheelEvent) {
             GLSelectable hoverObject = userContext.getHoverObject();
-            hoverObject.processEvent(event);
-            controller.repaint();
-
+            if (hoverObject!=null) {
+                hoverObject.processEvent(event);
+                controller.repaint();
+            }
         }
         else if (event instanceof AB2MouseClickedEvent) {
             displayEventQueue.add(event);
@@ -153,13 +159,15 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 userContext.setMouseIsDragging(true);
                 userContext.getPositionHistory().clear();
                 userContext.getPositionHistory().add(p1);
-                AB2MouseBeginDragEvent beginDragEvent = new AB2MouseBeginDragEvent(((AB2MouseDraggedEvent) event).getMouseEvent());
+                // This is redundant wrt setDrag()
+                //AB2MouseBeginDragEvent beginDragEvent = new AB2MouseBeginDragEvent(((AB2MouseDraggedEvent) event).getMouseEvent());
                 if (dragObject != null) {
                     userContext.setSelectObject(null);
                     userContext.setDragObject(dragObject);
                     dragObject.setDrag();
                     dragObject.releaseSelect();
-                    dragObject.processEvent(beginDragEvent);
+                    // Redundant wrt setDrag()
+                    //dragObject.processEvent(beginDragEvent);
                 }
             }
             else {
@@ -180,20 +188,37 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                         if (dragObject!=null && dragObject instanceof GLAbstractActor) {
                             GLAbstractActor dragActor = (GLAbstractActor) dragObject;
                             pickActor.setHover(dragActor.getActorId());
+
+                            // Redundant wrt setHover()
+                            //AB2ActorHoverEvent actorHoverEvent=new AB2ActorHoverEvent(dragActor);
+                            //pickActor.processEvent(actorHoverEvent);
+
                         } else {
                             pickActor.setHover(0);
                         }
                     }
                 } else { // pickActor is null
                     GLRegion region=getRegionAtPosition(p1);
-                    GLSelectable hoverObject=userContext.getHoverObject();
-                    if (hoverObject!=null) {
-                        if (!userContext.getHoverObject().equals(region)) {
-                            hoverObject.releaseHover();
-                            userContext.setHoverObject(region);
-                            if (dragObject!=null && dragObject instanceof GLAbstractActor) {
-                                GLAbstractActor dragActor = (GLAbstractActor) dragObject;
-                                region.setHover(dragActor.getActorId());
+                    if (region!=null) {
+                        GLSelectable hoverObject=userContext.getHoverObject();
+                        if (hoverObject!=null) {
+                            if (!userContext.getHoverObject().equals(region)) {
+                                hoverObject.releaseHover();
+                                userContext.setHoverObject(region);
+                                if (dragObject != null && dragObject instanceof GLAbstractActor) {
+                                    GLAbstractActor dragActor = (GLAbstractActor) dragObject;
+                                    region.setHover(dragActor.getActorId());
+                                }
+                                else {
+                                    // We are dragging across the region without a drag object, so
+                                    // pass the event
+                                    region.processEvent(event);
+                                }
+                            } else {
+                                // We already have the hover region set correctly
+                                if (dragObject==null || (! (dragObject instanceof GLAbstractActor))) {
+                                    region.processEvent(event);
+                                }
                             }
                         }
                     }
@@ -201,9 +226,28 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             }
             controller.repaint();
 
-        } else if (event instanceof AB2Image2DClickEvent) {
-            Image2DActor image2DActor=((AB2Image2DClickEvent)event).getImage2DActor();
-            logger.info("Handling AB2Image2DClickEvent - actorId="+image2DActor.getActorId()+" pickIndex="+image2DActor.getPickIndex());
+        } else if (event instanceof AB2MouseClickedEvent) {
+            if (pickActor != null) {
+                if (!pickActor.equals(userContext.getSelectObject())) {
+                    GLSelectable selectObject = userContext.getSelectObject();
+                    if (selectObject != null) {
+                        selectObject.releaseSelect();
+                    }
+                    userContext.setSelectObject(pickActor);
+                    pickActor.setSelect();
+                }
+            }
+            else {
+                // This implies region, to which we hand off the event
+                GLRegion region=getRegionAtPosition(p1);
+                if (region!=null) region.processEvent(event);
+            }
+        }
+
+
+        // This design, of using the controller to lookup events based on actor id, is being
+        // deprecated in favor of each actor generating their own events by extending
+        // the setSelect() and setHover() methods, etc.
 
 //            logger.info("Pick at x="+mouseClickEvent.x+" y="+mouseClickEvent.y);
 //            int pickId=getPickIdAtXY(gl,mouseClickEvent.x, mouseClickEvent.y, true, true);
@@ -217,9 +261,28 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 //                }
 //            }
 
-        } else if (event instanceof AB2MouseMovedEvent) {
-
-
+        else if (event instanceof AB2MouseMovedEvent) {
+            // Need to update hover state
+            if (pickActor!=null) {
+                if (!pickActor.equals(userContext.getHoverObject())) {
+                    GLSelectable hoverObject = userContext.getHoverObject();
+                    if (hoverObject!=null) {
+                        hoverObject.releaseHover();
+                    }
+                    userContext.setHoverObject(pickActor);
+                    pickActor.setHover(0);
+                }
+            } else { // pickActor is null
+                GLRegion region=getRegionAtPosition(p1);
+                GLSelectable hoverObject=userContext.getHoverObject();
+                if (hoverObject!=null) {
+                    if (!userContext.getHoverObject().equals(region)) {
+                        hoverObject.releaseHover();
+                        userContext.setHoverObject(region);
+                    }
+                }
+                if (region!=null) region.processEvent(event);
+            }
         }
 
     }
