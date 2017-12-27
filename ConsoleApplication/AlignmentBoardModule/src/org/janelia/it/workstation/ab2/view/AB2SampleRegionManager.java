@@ -30,6 +30,33 @@ public class AB2SampleRegionManager extends GLRegionManager {
 
     @Override
     public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
-        mainRegion.reshape(drawable, 50, 50, 300, 300, width, height);
+
+        int leftWidth=AB2SampleLeftRegion.CLOSED_WIDTH;
+        if (leftRegion.isOpen()) {
+            leftWidth=AB2SampleLeftRegion.OPEN_WIDTH;
+        }
+
+        int rightWidth=AB2SampleRightRegion.CLOSED_WIDTH;
+        if (rightRegion.isOpen()) {
+            rightWidth=AB2SampleRightRegion.OPEN_WIDTH;
+        }
+
+        int topHeight=AB2SampleTopRegion.CLOSED_HEIGHT;
+        if (topRegion.isOpen()) {
+            topHeight=AB2SampleTopRegion.OPEN_HEIGHT;
+        }
+
+        int bottomHeight=AB2SampleBottomRegion.CLOSED_HEIGHT;
+        if (bottomRegion.isOpen()) {
+            bottomHeight=AB2SampleBottomRegion.OPEN_HEIGHT;
+        }
+
+        int mainHeight=height-(topHeight+bottomHeight);
+        int mainWidth=width-(leftWidth+rightWidth);
+        mainRegion.reshape(drawable, leftWidth, bottomHeight, mainWidth, mainHeight, width, height);
+        bottomRegion.reshape(drawable, leftWidth, 0, width-rightWidth, bottomHeight, width, height);
+        topRegion.reshape(drawable, 0, bottomHeight+mainHeight, width, topHeight, width, height);
+        leftRegion.reshape(drawable, 0, 0, leftWidth, height-topHeight, width, height);
+        rightRegion.reshape(drawable, width-rightWidth, 0, rightWidth, height-topHeight, width, height);
     }
 }

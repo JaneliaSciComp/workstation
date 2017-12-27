@@ -143,4 +143,12 @@ public abstract class GLRegion implements GLSelectable {
 
     public void releaseHover() {}
 
+    public void setSelect() {}
+
+    public void releaseSelect() {}
+
+    public void setDrag() {}
+
+    public void releaseDrag() {}
+
 }

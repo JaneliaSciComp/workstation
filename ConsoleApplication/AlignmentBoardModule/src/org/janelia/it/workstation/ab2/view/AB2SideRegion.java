@@ -4,14 +4,18 @@ import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 
-public class AB2SampleLeftRegion extends AB2SideRegion {
-    public static int OPEN_WIDTH=200;
-    public static int CLOSED_WIDTH=30;
+public class AB2SideRegion extends GLRegion {
+    private boolean isOpen=false;
+
+    public boolean isOpen() { return isOpen; }
+
+    public void setOpen(boolean open) {
+        isOpen = open;
+    }
 
     @Override
     protected void reshape(GLAutoDrawable drawable) {
 
     }
-
 
 }

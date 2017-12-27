@@ -8,6 +8,7 @@ import java.nio.IntBuffer;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector2;
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
@@ -19,7 +20,6 @@ import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//todo: finish rewriting this as ColorBox2DActor from Image2DActor
 public class ColorBox2DActor extends GLAbstractActor {
 
     private final Logger logger = LoggerFactory.getLogger(ColorBox2DActor.class);
@@ -35,13 +35,45 @@ public class ColorBox2DActor extends GLAbstractActor {
 //    BufferedImage bufferedImage;
 //    float alpha;
 
+    Vector4 color;
+    Vector4 hoverColor;
+    Vector4 selectColor;
+
     AB2Renderer2D renderer2d;
 
-    public ColorBox2DActor(AB2Renderer2D renderer, int actorId, Vector2 v0, Vector2 v1) {
+    public ColorBox2DActor(AB2Renderer2D renderer, int actorId, Vector2 v0, Vector2 v1,
+                           Vector4 color, Vector4 hoverColor, Vector4 selectColor) {
         super(renderer, actorId);
         this.renderer2d=renderer;
         this.v0=v0;
         this.v1=v1;
+        this.color=color;
+        this.hoverColor=hoverColor;
+        this.selectColor=selectColor;
+    }
+
+    public Vector4 getColor() {
+        return color;
+    }
+
+    public void setColor(Vector4 color) {
+        this.color = color;
+    }
+
+    public Vector4 getHoverColor() {
+        return hoverColor;
+    }
+
+    public void setHoverColor(Vector4 hoverColor) {
+        this.hoverColor = hoverColor;
+    }
+
+    public Vector4 getSelectColor() {
+        return selectColor;
+    }
+
+    public void setSelectColor(Vector4 selectColor) {
+        this.selectColor = selectColor;
     }
 
     @Override
@@ -50,7 +82,7 @@ public class ColorBox2DActor extends GLAbstractActor {
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
 
-        if (shader instanceof AB2Image2DShader) {
+        if (shader instanceof AB2Basic2DShader) {
 
             AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
 
@@ -86,6 +118,13 @@ public class ColorBox2DActor extends GLAbstractActor {
         if (shader instanceof AB2Basic2DShader) {
             AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
             basic2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
+            if (isSelected) {
+                basic2DShader.setColor(gl, selectColor);
+            } else if (isHovered) {
+                basic2DShader.setColor(gl, hoverColor);
+            } else {
+                basic2DShader.setColor(gl, color);
+            }
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
             pickShader.setMVP(gl, renderer2d.getVp2d());

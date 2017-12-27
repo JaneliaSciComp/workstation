@@ -63,6 +63,11 @@ public abstract class GLAbstractActor implements GLSelectable {
 
     protected int actorId=0;
 
+    protected boolean isSelected=false;
+    protected boolean isHovered=false;
+    protected int hoveringActorId=0;
+    protected boolean isDragging=false;
+
     public void setup() {}
 
     public void dispose(GL4 gl, GLShaderProgram shader) {
@@ -205,17 +210,19 @@ public abstract class GLAbstractActor implements GLSelectable {
 
     public void processEvent(AB2Event event) {}
 
-    public void setSelect() {}
+    public void setSelect() { isSelected=true; }
 
-    public void releaseSelect() {}
+    public boolean isSelected() { return isSelected; }
 
-    public void setHover(int actorId) {}
+    public void releaseSelect() { isSelected=false; }
 
-    public void releaseHover() {}
+    public void setHover(int actorId) { this.isHovered=true; this.hoveringActorId=actorId; }
 
-    public void setDrag() {}
+    public void releaseHover() { isHovered=false; hoveringActorId=0; }
 
-    public void releaseDrag() {}
+    public void setDrag() { isDragging=true; }
+
+    public void releaseDrag() { isDragging=false; }
 
 
 }
