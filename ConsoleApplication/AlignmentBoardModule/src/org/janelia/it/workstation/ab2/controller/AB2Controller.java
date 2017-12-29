@@ -14,7 +14,6 @@ are placed in the waitQueue, to be handled by the next Mode controller.
 */
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -33,9 +32,6 @@ import org.janelia.it.workstation.ab2.event.AB2EventHandler;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.model.AB2DomainObject;
-import org.janelia.it.workstation.ab2.renderer.AB2SampleRenderer;
-import org.janelia.it.workstation.ab2.renderer.AB2SimpleCubeRenderer;
-import org.janelia.it.workstation.ab2.renderer.AB2SkeletonRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -187,6 +183,8 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
     public void reshape(GLAutoDrawable glAutoDrawable, int x, int y, int width, int height) {
         glWidth=width;
         glHeight=height;
+        // The applyGlWindowResize() method is to support screen-size independent actors, such as text actors.
+        // It is not related to the screen-size dependent resize hierarchy.
         GLAbstractActor.applyGlWindowResize(width, height);
         if (currentMode!=null) {
             currentMode.reshape(glAutoDrawable, x, y, width, height);

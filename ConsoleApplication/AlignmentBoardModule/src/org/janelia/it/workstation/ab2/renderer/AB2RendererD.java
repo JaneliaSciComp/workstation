@@ -14,7 +14,9 @@ import javax.media.opengl.GL4;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vantage;
+import org.janelia.geometry3d.Vector2;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
@@ -296,5 +298,92 @@ public abstract class AB2RendererD extends AB2Renderer {
     public void processEvent(AB2Event event) {
 
     }
+
+    public static float[] computeOffsetParameters(int x, int y, int width, int height, int screenWidth, int screenHeight) {
+        // OpenGL expands the -1,1 range for X,Y to cover the entire screen regardless of aspect ratio, so
+        // since we are adding a "final stage" transform, we need to keep this in mind.
+
+        // Here is our strategy:
+        //
+        // 1 - Renormalize the target positions for each axis, translating pixels to the -1,1 GL XY range, for
+        //     both the lower-left position of the desired box, and the X and Y lengths of each side.
+        //
+        // 2 - Using the 1/2 distance of each side length in normalized screen coordinates, add this to the target
+        //     lower-left positions to get the actual center point of the box.
+        //
+        // 3 - Compute the translation components to recenter the image on the center of the target box.
+        //
+        // 4 - We want the scale to be smaller of either case, by comparing the scale difference between
+        //     using one aspect side or the other.
+        float[] parameters=new float[3];
+
+        double xfr = (1.0 * x)/(1.0 * screenWidth);
+        double yfr = (1.0 * y)/(1.0 * screenHeight);
+
+        double xns = xfr * 2.0 - 1.0;
+        double yns = yfr * 2.0 - 1.0;
+
+        double xlr = (1.0 * width) / (1.0 * screenWidth);
+        double ylr = (1.0 * height) / (1.0 * screenHeight);
+
+        // Note: because there is a X2 for nsc, and then a 1/2 for half length, these cancel, can just use xlr,ylr
+        float xTranslate = (float)(xns + xlr);
+        float yTranslate = (float)(yns + ylr);
+
+        double widthScale = (1.0 * width) / (1.0 * screenWidth);
+        double heightScale = (1.0 * height) / (1.0 * screenHeight);
+
+        float scale = (float)widthScale;
+        if (heightScale < scale) {
+            scale = (float)heightScale;
+        }
+
+        parameters[0]=xTranslate;
+        parameters[1]=yTranslate;
+        parameters[2]=scale;
+        return parameters;
+    }
+
+
+    public static Matrix4 getOffsetPostProjectionMatrix(float xTranslate, float yTranslate, float scale) {
+        Matrix4 translationMatrix = new Matrix4();
+        translationMatrix.set(
+                1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                xTranslate, yTranslate, 0.0f, 1.0f);
+        Matrix4 scaleMatrix = new Matrix4();
+        scaleMatrix.set(
+                scale, 0.0f, 0.0f, 0.0f,
+                0.0f, scale, 0.0f, 0.0f,
+                0.0f, 0.0f, scale, 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f);
+        Matrix4 prMatrix=scaleMatrix.multiply(translationMatrix);
+        return prMatrix;
+    }
+
+    public static int[] getXYBounds(int x, int y, int width, int height) {
+        int bX0=x;
+        int bY0=y;
+        int bX1=x+width;
+        int bY1=y+height;
+        return new int[] { bX0, bY0, bX1, bY1 };
+    }
+
+    public static Vector2[] getNormed2DPositionsFromScreenCoordinates(int x, int y, int width, int height, int screenWidth, int screenHeight) {
+        double dWidth=1.0*screenWidth;
+        double dHeight=1.0*screenHeight;
+        double normedWidth=(1.0*width)/dWidth;
+        double normedHeight=(1.0*height)/dHeight;
+        double normedXOffset=(1.0 * x)/dWidth;
+        double normedYOffset=(1.0 * y)/dHeight;
+        Vector2[] result=new Vector2[2];
+        Vector2 v0=new Vector2( (float)normedXOffset, (float)normedYOffset);
+        Vector2 v1=new Vector2( (float)(normedXOffset+normedWidth), (float)(normedYOffset+normedHeight));
+        result[0]=v0;
+        result[1]=v1;
+        return result;
+    }
+
 
 }

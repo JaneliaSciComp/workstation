@@ -19,6 +19,7 @@ import org.janelia.it.workstation.ab2.actor.Camera3DFollowBoxActor;
 import org.janelia.it.workstation.ab2.actor.Image3DActor;
 import org.janelia.it.workstation.ab2.actor.PointSetActor;
 import org.janelia.it.workstation.ab2.actor.Voxel3DActor;
+import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
@@ -30,9 +31,9 @@ import org.janelia.it.workstation.ab2.shader.AB2Voxel3DShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AB2SampleRenderer extends AB2Renderer3D {
+public class AB2Main3DRenderer extends AB2Renderer3D {
 
-    Logger logger= LoggerFactory.getLogger(AB2SampleRenderer.class);
+    Logger logger= LoggerFactory.getLogger(AB2Main3DRenderer.class);
 
     private Matrix4 modelMatrix;
     private Matrix4 prMatrix;
@@ -50,13 +51,18 @@ public class AB2SampleRenderer extends AB2Renderer3D {
     private GLShaderActionSequence voxel3DShaderSequence;
 
     private GLShaderActionSequence pickShaderSequence;
+    private AB2Controller controller;
 
-    int actorCount=0;
+    //int actorCount=0;
+    //private int getNextActorIndex() { actorCount++; return actorCount; }
 
-    private int getNextActorIndex() { actorCount++; return actorCount; }
+    private int getNextActorIndex() {
+        return controller.getNextPickIndex();
+    }
 
-    public AB2SampleRenderer() {
+    public AB2Main3DRenderer() {
         super();
+        controller=AB2Controller.getController();
 
 //        drawShaderSequence=new GLShaderActionSequence("DrawSequence");
 
@@ -264,6 +270,15 @@ public class AB2SampleRenderer extends AB2Renderer3D {
     @Override
     public void dispose(GL4 gl) {
         super.dispose(gl);
+    }
+
+    @Override
+    public void reshape(GL4 gl, int x, int y, int width, int height, int screenWidth, int screenHeight) {
+        super.reshape(gl, x, y, width, height, screenWidth, screenHeight);
+        float[] parameters = computeOffsetParameters(x, y, width, height, screenWidth, screenHeight);
+        setVoxel3DActorPostProjectionMatrix(getOffsetPostProjectionMatrix(parameters[0], parameters[1], parameters[2]));
+        int[] xyBounds = getXYBounds(x, y, width, height);
+        setVoxel3DxyBounds(xyBounds[0], xyBounds[1], xyBounds[2], xyBounds[3]);
     }
 
 }

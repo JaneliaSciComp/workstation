@@ -1,20 +1,15 @@
 package org.janelia.it.workstation.ab2.controller;
 
 import java.awt.Point;
-import java.awt.event.MouseEvent;
 
 import javax.media.opengl.GLAutoDrawable;
 
-import org.janelia.it.workstation.ab2.actor.Image2DActor;
 import org.janelia.it.workstation.ab2.event.AB2Event;
-import org.janelia.it.workstation.ab2.event.AB2Image2DClickEvent;
-import org.janelia.it.workstation.ab2.event.AB2MouseClickedEvent;
 import org.janelia.it.workstation.ab2.event.AB2Sample3DImageLoadedEvent;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.loader.AB2Sample3DImageLoader;
-import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
-import org.janelia.it.workstation.ab2.renderer.AB2SampleRenderer;
+import org.janelia.it.workstation.ab2.renderer.AB2Main3DRenderer;
 import org.janelia.it.workstation.ab2.view.AB2SampleRegionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +20,7 @@ public class AB2SampleBasicMode extends AB2View3DMode {
 
     private AB2SampleRegionManager sampleRegionManager=new AB2SampleRegionManager();
 
-    private AB2SampleRenderer sampleRenderer;
+    private AB2Main3DRenderer sampleRenderer;
 
 
     public AB2SampleBasicMode(AB2Controller controller) {

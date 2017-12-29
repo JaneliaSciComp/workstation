@@ -44,19 +44,32 @@ public abstract class GLAbstractActor implements GLSelectable {
         actors.remove(actor);
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    // The glWindowResize methods are necessary to support screen-dimension independent sizing
+    // for certain actors, such as text actors. They are not the means by which size-dependent
+    // changes are made, which is through the regular resize hierarchy.
+
     public static void applyGlWindowResize(int width, int height) {
         for (GLAbstractActor actor : actors.values()) {
             actor.glWindowResize(width, height);
         }
     }
 
+    protected void glWindowResize(int width, int height) {}
+
+    // These are the methods for the hierarchical resize path. Note that the resize() method
+    // does not have any arugments - it is assumed that other methods are used to modify
+    // various Actor attributes (including the above glWindowResize()), which are then
+    // used during the resize() method.
+
+    protected boolean needsResize=false;
+
+    public void resize() {}
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public static boolean checkGlErrorActive=true;
-
-//    protected int pickIndex=-1;
-
-//    public void setPickIndex(int pickIndex) { this.pickIndex=pickIndex; }
-
-//    public int getPickIndex() { return pickIndex; }
 
     protected Matrix4 modelMatrix;
     protected Matrix4 postProjectionMatrix;
@@ -68,6 +81,7 @@ public abstract class GLAbstractActor implements GLSelectable {
     protected int hoveringActorId=0;
     protected boolean isDragging=false;
 
+
     public void setup() {}
 
     public void dispose(GL4 gl, GLShaderProgram shader) {
@@ -78,11 +92,6 @@ public abstract class GLAbstractActor implements GLSelectable {
 
     public abstract void display(GL4 gl, GLShaderProgram shader);
 
-    protected void glWindowResize(int width, int height) {}
-
-//    public void setId(int id) {
-//        actorId=id;
-//    }
 
     public int getActorId() {
         return actorId;
