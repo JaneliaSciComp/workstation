@@ -8,7 +8,7 @@ import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
-import org.janelia.it.workstation.ab2.view.AB2Properties;
+import org.janelia.it.workstation.ab2.AB2Properties;
 
 public class AB2MenuPanelRenderer extends AB2Renderer2D {
 
@@ -16,8 +16,22 @@ public class AB2MenuPanelRenderer extends AB2Renderer2D {
     private GLShaderActionSequence menuPanelDrawSequence;
     private GLShaderActionSequence menuPanelPickSequence;
 
-    public AB2MenuPanelRenderer() {
+    private int x;
+    private int y;
+    private int width;
+    private int height;
+    private int screenWidth;
+    private int screenHeight;
+
+    public AB2MenuPanelRenderer(int x, int y, int width, int height, int screenWidth, int screenHeight) {
         super();
+
+        this.x=x;
+        this.y=y;
+        this.width=width;
+        this.height=height;
+        this.screenWidth=screenWidth;
+        this.screenHeight=screenHeight;
 
         menuPanelDrawSequence = new GLShaderActionSequence(this.getClass().getName());
         menuPanelDrawSequence.setShader(new AB2Basic2DShader());
@@ -31,14 +45,22 @@ public class AB2MenuPanelRenderer extends AB2Renderer2D {
 
     @Override
     public void init(GL4 gl) {
-        createBackgroundPanel(
+        createBackgroundPanel(x, y, width, height, screenWidth, screenHeight);
         super.init(gl);
         initialized=true;
     }
 
     @Override
     public void reshape(GL4 gl, int x, int y, int width, int height, int screenWidth, int screenHeight) {
-        backgroundPanel.
+        this.x=x;
+        this.y=y;
+        this.width=width;
+        this.height=height;
+        this.screenWidth=screenWidth;
+        this.screenHeight=screenHeight;
+
+        Vector2[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(x, y, width, height, screenWidth, screenHeight);
+        backgroundPanel.updateVertices(normed2dPositions[0], normed2dPositions[1]);
     }
 
     private void createBackgroundPanel(int x, int y, int width, int height, int screenWidth, int screenHeight) {

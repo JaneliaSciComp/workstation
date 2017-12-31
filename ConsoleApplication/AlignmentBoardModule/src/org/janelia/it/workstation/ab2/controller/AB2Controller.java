@@ -51,8 +51,8 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
     private AB2DomainObject domainObject;
     private int pickCounter=0;
     private AB2UserContext userContext=new AB2UserContext();
-    private int glWidth;
-    private int glHeight;
+    //private int glWidth;
+    //private int glHeight;
 
     // We are changing this design so that actors handle their own select events
     // private Map<Integer,AB2Event> pickEventLookup=new HashMap<>();
@@ -181,8 +181,6 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
 
     @Override
     public void reshape(GLAutoDrawable glAutoDrawable, int x, int y, int width, int height) {
-        glWidth=width;
-        glHeight=height;
         // The applyGlWindowResize() method is to support screen-size independent actors, such as text actors.
         // It is not related to the screen-size dependent resize hierarchy.
         GLAbstractActor.applyGlWindowResize(width, height);
@@ -191,9 +189,9 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
         }
     }
 
-    public int getGlWidth() { return glWidth; }
+    public int getGlWidth() { return gljPanel.getSurfaceWidth(); }
 
-    public int getGlHeight() { return glHeight; }
+    public int getGlHeight() { return gljPanel.getSurfaceHeight(); }
 
     private class EventHandler implements Runnable {
 

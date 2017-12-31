@@ -2,6 +2,8 @@ package org.janelia.it.workstation.ab2.view;
 
 import javax.media.opengl.GLAutoDrawable;
 
+import org.janelia.it.workstation.ab2.AB2Properties;
+import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLRegionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,13 +12,28 @@ public class AB2SampleRegionManager extends GLRegionManager {
 
     Logger logger = LoggerFactory.getLogger(AB2SampleRegionManager.class);
 
-    AB2SampleTopRegion topRegion=new AB2SampleTopRegion();
-    AB2SampleBottomRegion bottomRegion=new AB2SampleBottomRegion();
-    AB2SampleLeftRegion leftRegion=new AB2SampleLeftRegion();
-    AB2SampleRightRegion rightRegion=new AB2SampleRightRegion();
-    AB2SampleMainRegion mainRegion=new AB2SampleMainRegion();
+    AB2Controller controller;
+
+    AB2SampleTopRegion topRegion;
+    AB2SampleBottomRegion bottomRegion;
+    AB2SampleLeftRegion leftRegion;
+    AB2SampleRightRegion rightRegion;
+    AB2SampleMainRegion mainRegion;
 
     public AB2SampleRegionManager() {
+        this.controller=AB2Controller.getController();
+
+        int x=0;
+        int y=0;
+        int width=controller.getGlWidth();
+        int height=controller.getGlHeight();
+
+        topRegion=new AB2SampleTopRegion(x, y, width, height, width, height);
+        bottomRegion=new AB2SampleBottomRegion();
+        leftRegion=new AB2SampleLeftRegion();
+        rightRegion=new AB2SampleRightRegion();
+        mainRegion=new AB2SampleMainRegion();
+
         regions.add(topRegion);
         regions.add(bottomRegion);
         regions.add(leftRegion);
@@ -41,9 +58,9 @@ public class AB2SampleRegionManager extends GLRegionManager {
             rightWidth=AB2SampleRightRegion.OPEN_WIDTH;
         }
 
-        int topHeight=AB2SampleTopRegion.CLOSED_HEIGHT;
+        int topHeight= AB2Properties.TOP_MENU_CLOSED_HEIGHT;
         if (topRegion.isOpen()) {
-            topHeight=AB2SampleTopRegion.OPEN_HEIGHT;
+            topHeight=AB2Properties.TOP_MENU_OPEN_HEIGHT;
         }
 
         int bottomHeight=AB2SampleBottomRegion.CLOSED_HEIGHT;

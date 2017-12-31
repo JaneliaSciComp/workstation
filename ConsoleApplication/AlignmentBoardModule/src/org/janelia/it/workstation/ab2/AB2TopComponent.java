@@ -89,7 +89,7 @@ public final class AB2TopComponent extends TopComponent {
     public void loadDomainObject(DomainObject domainObject, boolean isUserDriven) {
         if (domainObject instanceof Sample) {
             Sample sample=(Sample)domainObject;
-            AB2Controller.getController().addEvent(new AB2SampleAddedEvent(sample));
+            AB2Controller.getController().processEvent(new AB2SampleAddedEvent(sample));
         }
     }
 

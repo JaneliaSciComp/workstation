@@ -3,18 +3,26 @@ package org.janelia.it.workstation.ab2.view;
 import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 
+import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.renderer.AB2MenuPanelRenderer;
 
 public class AB2SampleTopRegion extends AB2SideRegion {
-    public static int OPEN_HEIGHT=100;
-    public static int CLOSED_HEIGHT=30;
 
     private AB2MenuPanelRenderer menuPanelRenderer;
 
-    public AB2SampleTopRegion() {
-        menuPanelRenderer=new AB2MenuPanelRenderer();
+    public AB2SampleTopRegion(int x, int y, int width, int height, int screenWidth, int screenHeight) {
+        this.x=x;
+        this.y=y;
+        this.width=width;
+        this.height=height;
+        this.screenWidth=screenWidth;
+        this.screenHeight=screenHeight;
+
+        menuPanelRenderer=new AB2MenuPanelRenderer(x, y, width, height, screenWidth, screenHeight);
+
+        renderers.add(menuPanelRenderer);
     }
 
     @Override

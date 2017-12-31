@@ -76,6 +76,26 @@ public class ColorBox2DActor extends GLAbstractActor {
         this.selectColor = selectColor;
     }
 
+    public void updateVertices(Vector2 v0, Vector2 v1) {
+        this.v0=v0;
+        this.v1=v1;
+        needsResize=true;
+    }
+
+    private float[] computeVertexData() {
+        float[] vertexData = {
+
+                v0.get(0), v0.get(1), 0f,    // lower left
+                v1.get(0), v0.get(1), 0f,    // lower right
+                v0.get(0), v1.get(1), 0f,    // upper left
+
+                v1.get(0), v0.get(1), 0f,    // lower right
+                v1.get(0), v1.get(1), 0f,    // upper right
+                v0.get(0), v1.get(1), 0f     // upper left
+        };
+        return vertexData;
+    }
+
     @Override
     public boolean isTwoDimensional() { return true; }
 
@@ -88,16 +108,7 @@ public class ColorBox2DActor extends GLAbstractActor {
 
             // This combines positional vertices interleaved with 2D texture coordinates. Note: z not used
             // but necessary for shader compatibility.
-            float[] vertexData = {
-
-                    v0.get(0), v0.get(1), 0f,    // lower left
-                    v1.get(0), v0.get(1), 0f,    // lower right
-                    v0.get(0), v1.get(1), 0f,    // upper left
-
-                    v1.get(0), v0.get(1), 0f,    // lower right
-                    v1.get(0), v1.get(1), 0f,    // upper right
-                    v0.get(0), v1.get(1), 0f     // upper left
-            };
+            float[] vertexData=computeVertexData();
 
             vertexFb=createGLFloatBuffer(vertexData);
 
@@ -114,6 +125,16 @@ public class ColorBox2DActor extends GLAbstractActor {
 
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
+
+        if (needsResize) {
+            float[] vertexData=computeVertexData();
+            vertexFb=createGLFloatBuffer(vertexData);
+            gl.glBindVertexArray(vertexArrayId.get(0));
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+            gl.glBufferSubData(GL4.GL_ARRAY_BUFFER, 0, vertexFb.capacity(), vertexFb);
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+            needsResize=false;
+        }
 
         if (shader instanceof AB2Basic2DShader) {
             AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
