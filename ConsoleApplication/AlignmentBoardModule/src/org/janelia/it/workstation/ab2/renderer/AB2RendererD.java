@@ -64,8 +64,21 @@ public abstract class AB2RendererD extends AB2Renderer {
     protected boolean initialized=false;
 
 
-    protected ConcurrentLinkedDeque<ImmutablePair<GLAbstractActor, GLShaderProgram>> actorDisposalQueue=new ConcurrentLinkedDeque<>();
-    protected ConcurrentLinkedDeque<ImmutablePair<GLAbstractActor, GLShaderProgram>> actorInitQueue=new ConcurrentLinkedDeque<>();
+    private ConcurrentLinkedDeque<ImmutablePair<GLAbstractActor, GLShaderProgram>> actorDisposalQueue=new ConcurrentLinkedDeque<>();
+    private ConcurrentLinkedDeque<ImmutablePair<GLAbstractActor, GLShaderProgram>> actorInitQueue=new ConcurrentLinkedDeque<>();
+
+    public void addActor(GLAbstractActor actor, GLShaderActionSequence sequence) {
+        sequence.getActorSequence().add(actor);
+        ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>(actor, sequence.getShader());
+        actorInitQueue.add(actorPair);
+    }
+
+    public void removeActor(GLAbstractActor actor, GLShaderActionSequence sequence) {
+        sequence.getActorSequence().remove(actor);
+        ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>(actor, sequence.getShader());
+        actorDisposalQueue.add(actorPair);
+    }
+
 
 //    protected ConcurrentLinkedDeque<MouseClickEvent> mouseClickEvents=new ConcurrentLinkedDeque<>();
 

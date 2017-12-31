@@ -60,12 +60,13 @@ public abstract class GLAbstractActor implements GLSelectable {
     // These are the methods for the hierarchical resize path. Note that the resize() method
     // does not have any arugments - it is assumed that other methods are used to modify
     // various Actor attributes (including the above glWindowResize()), which are then
-    // used during the resize() method.
+    // processed during the resize() method. This implies the glWindowResize() should always
+    // be called first, which is why it is implemented this way in the highest level
+    // of the resize() chain, in the controller.
 
     protected boolean needsResize=false;
 
     public void resize() {}
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
 

@@ -6,25 +6,39 @@ import org.janelia.geometry3d.Vector2;
 import org.janelia.it.workstation.ab2.actor.ColorBox2DActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
+import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
+import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.janelia.it.workstation.ab2.view.AB2Properties;
 
 public class AB2MenuPanelRenderer extends AB2Renderer2D {
 
     private ColorBox2DActor backgroundPanel;
-    private GLShaderActionSequence menuPanelSequence;
+    private GLShaderActionSequence menuPanelDrawSequence;
+    private GLShaderActionSequence menuPanelPickSequence;
 
     public AB2MenuPanelRenderer() {
-        menuPanelSequence = new GLShaderActionSequence(this.getClass().getName());
+        super();
+
+        menuPanelDrawSequence = new GLShaderActionSequence(this.getClass().getName());
+        menuPanelDrawSequence.setShader(new AB2Basic2DShader());
+        addDrawShaderActionSequence(menuPanelDrawSequence);
+
+        menuPanelPickSequence = new GLShaderActionSequence(this.getClass().getName()+"Pick");
+        menuPanelPickSequence.setShader(new AB2PickShader());
+        addPickShaderActionSequence(menuPanelPickSequence);
+
     }
 
+    @Override
+    public void init(GL4 gl) {
+        createBackgroundPanel(
+        super.init(gl);
+        initialized=true;
+    }
 
     @Override
     public void reshape(GL4 gl, int x, int y, int width, int height, int screenWidth, int screenHeight) {
-        if (backgroundPanel==null) {
-            createBackgroundPanel(x, y, width, height, screenWidth, screenHeight);
-        } else {
-            backgroundPanel
-        }
+        backgroundPanel.
     }
 
     private void createBackgroundPanel(int x, int y, int width, int height, int screenWidth, int screenHeight) {

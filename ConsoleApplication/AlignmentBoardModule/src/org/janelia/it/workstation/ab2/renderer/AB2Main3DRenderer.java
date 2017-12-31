@@ -35,7 +35,7 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
 
     Logger logger= LoggerFactory.getLogger(AB2Main3DRenderer.class);
 
-    private Matrix4 modelMatrix;
+    //private Matrix4 modelMatrix;
     private Matrix4 prMatrix;
     private int[] voxel3DxyBounds=new int[] { 0, 0, 10000, 10000 };
 
@@ -135,9 +135,7 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
             voxel3DActor.setXYBounds(voxel3DxyBounds[0], voxel3DxyBounds[1], voxel3DxyBounds[2], voxel3DxyBounds[3]);
         }
         this.voxel3DActor=voxel3DActor;
-        voxel3DShaderSequence.getActorSequence().add(voxel3DActor);
-        ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) voxel3DActor, voxel3DShaderSequence.getShader());
-        actorInitQueue.add(actorPair);
+        addActor(this.voxel3DActor, voxel3DShaderSequence);
     }
 
     public void clearActors() {
@@ -166,8 +164,7 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
     private void clearImage3DActor() {
         // For some reason, the cast to GLAbstractActor is necessary for compatibility with the apache commons Pair implementation
         if (image3DActor!=null) {
-            ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) image3DActor, volume3DShaderSequence.getShader());
-            actorDisposalQueue.add(actorPair);
+            removeActor(image3DActor, volume3DShaderSequence);
             image3DActor = null;
         }
     }
@@ -175,8 +172,7 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
     private void clearVoxel3DActor() {
         // For some reason, the cast to GLAbstractActor is necessary for compatibility with the apache commons Pair implementation
         if (voxel3DActor!=null) {
-            ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) voxel3DActor, voxel3DShaderSequence.getShader());
-            actorDisposalQueue.add(actorPair);
+            removeActor(voxel3DActor, voxel3DShaderSequence);
             voxel3DActor = null;
         }
     }
@@ -217,9 +213,7 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
         Vector3 v0=new Vector3(0f, 0f, 0f);
         Vector3 v1=new Vector3(1f, 1f, 1f);
         image3DActor=new Image3DActor(this, getNextActorIndex(), v0, v1, image3d.getXDim(), image3d.getYDim(), image3d.getZDim(), image3d.getData());
-        volume3DShaderSequence.getActorSequence().add(image3DActor);
-        ImmutablePair<GLAbstractActor, GLShaderProgram> actorPair = new ImmutablePair<>((GLAbstractActor) image3DActor, volume3DShaderSequence.getShader());
-        actorInitQueue.add(actorPair);
+        addActor(image3DActor, voxel3DShaderSequence);
     }
 
     private void addBoundingBox() {

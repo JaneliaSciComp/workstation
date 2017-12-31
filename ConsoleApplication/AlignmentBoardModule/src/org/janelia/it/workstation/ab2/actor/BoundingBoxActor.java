@@ -34,6 +34,47 @@ public class BoundingBoxActor extends GLAbstractActor
         this.v1=v1;
     }
 
+    float[] computeBoundaryData() {
+        float[] boundaryData = new float[]{
+                v0.getX(), v0.getY(), v0.getZ(), 0f, 0f, 0f,
+                v0.getX(), v1.getY(), v0.getZ(), 0f, 0f, 0f,
+
+                v0.getX(), v1.getY(), v0.getZ(), 0f, 0f, 0f,
+                v1.getX(), v1.getY(), v0.getZ(), 0f, 0f, 0f,
+
+                v1.getX(), v1.getY(), v0.getZ(), 0f, 0f, 0f,
+                v1.getX(), v0.getY(), v0.getZ(), 0f, 0f, 0f,
+
+                v1.getX(), v0.getY(), v0.getZ(), 0f, 0f, 0f,
+                v0.getX(), v0.getY(), v0.getZ(), 0f, 0f, 0f,
+
+                v0.getX(), v0.getY(), v1.getZ(), 0f, 0f, 0f,
+                v0.getX(), v1.getY(), v1.getZ(), 0f, 0f, 0f,
+
+                v0.getX(), v1.getY(), v1.getZ(), 0f, 0f, 0f,
+                v1.getX(), v1.getY(), v1.getZ(), 0f, 0f, 0f,
+
+                v1.getX(), v1.getY(), v1.getZ(), 0f, 0f, 0f,
+                v1.getX(), v0.getY(), v1.getZ(), 0f, 0f, 0f,
+
+                v1.getX(), v0.getY(), v1.getZ(), 0f, 0f, 0f,
+                v0.getX(), v0.getY(), v1.getZ(), 0f, 0f, 0f,
+
+                v0.getX(), v1.getY(), v0.getZ(), 0f, 0f, 0f,
+                v0.getX(), v1.getY(), v1.getZ(), 0f, 0f, 0f,
+
+                v0.getX(), v0.getY(), v0.getZ(), 0f, 0f, 0f,
+                v0.getX(), v0.getY(), v1.getZ(), 0f, 0f, 0f,
+
+                v1.getX(), v1.getY(), v0.getZ(), 0f, 0f, 0f,
+                v1.getX(), v1.getY(), v1.getZ(), 0f, 0f, 0f,
+
+                v1.getX(), v0.getY(), v0.getZ(), 0f, 0f, 0f,
+                v1.getX(), v0.getY(), v1.getZ(), 0f, 0f, 0f
+        };
+        return boundaryData;
+    }
+
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
 
@@ -43,43 +84,7 @@ public class BoundingBoxActor extends GLAbstractActor
 
 //            logger.info("BoundingBoxActor init() start");
 
-            float[] boundaryData = new float[]{
-                    v0.getX(), v0.getY(), v0.getZ(), 0f, 0f, 0f,
-                    v0.getX(), v1.getY(), v0.getZ(), 0f, 0f, 0f,
-
-                    v0.getX(), v1.getY(), v0.getZ(), 0f, 0f, 0f,
-                    v1.getX(), v1.getY(), v0.getZ(), 0f, 0f, 0f,
-
-                    v1.getX(), v1.getY(), v0.getZ(), 0f, 0f, 0f,
-                    v1.getX(), v0.getY(), v0.getZ(), 0f, 0f, 0f,
-
-                    v1.getX(), v0.getY(), v0.getZ(), 0f, 0f, 0f,
-                    v0.getX(), v0.getY(), v0.getZ(), 0f, 0f, 0f,
-
-                    v0.getX(), v0.getY(), v1.getZ(), 0f, 0f, 0f,
-                    v0.getX(), v1.getY(), v1.getZ(), 0f, 0f, 0f,
-
-                    v0.getX(), v1.getY(), v1.getZ(), 0f, 0f, 0f,
-                    v1.getX(), v1.getY(), v1.getZ(), 0f, 0f, 0f,
-
-                    v1.getX(), v1.getY(), v1.getZ(), 0f, 0f, 0f,
-                    v1.getX(), v0.getY(), v1.getZ(), 0f, 0f, 0f,
-
-                    v1.getX(), v0.getY(), v1.getZ(), 0f, 0f, 0f,
-                    v0.getX(), v0.getY(), v1.getZ(), 0f, 0f, 0f,
-
-                    v0.getX(), v1.getY(), v0.getZ(), 0f, 0f, 0f,
-                    v0.getX(), v1.getY(), v1.getZ(), 0f, 0f, 0f,
-
-                    v0.getX(), v0.getY(), v0.getZ(), 0f, 0f, 0f,
-                    v0.getX(), v0.getY(), v1.getZ(), 0f, 0f, 0f,
-
-                    v1.getX(), v1.getY(), v0.getZ(), 0f, 0f, 0f,
-                    v1.getX(), v1.getY(), v1.getZ(), 0f, 0f, 0f,
-
-                    v1.getX(), v0.getY(), v0.getZ(), 0f, 0f, 0f,
-                    v1.getX(), v0.getY(), v1.getZ(), 0f, 0f, 0f
-            };
+            float[] boundaryData=computeBoundaryData();
 
             boundaryVertexFb = createGLFloatBuffer(boundaryData);
 
@@ -115,8 +120,32 @@ public class BoundingBoxActor extends GLAbstractActor
 
     }
 
+    public void updateVerticesForResize(Vector3 v0, Vector3 v1) {
+        this.v0=v0;
+        this.v1=v1;
+        needsResize=true;
+    }
+
+    private void updateBoundaryVertexBuffer(GL4 gl) {
+        float[] boundaryData=computeBoundaryData();
+        boundaryVertexFb = createGLFloatBuffer(boundaryData);
+        gl.glBindVertexArray(boundaryVertexArrayId.get(0));
+        checkGlError(gl, "u1 updateBoundaryVertexBuffer");
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, boundaryVertexBufferId.get(0));
+        checkGlError(gl, "u2 updateBoundaryVertexBuffer");
+        gl.glBufferSubData(GL4.GL_ARRAY_BUFFER, 0, boundaryVertexFb.capacity(), boundaryVertexFb);
+        checkGlError(gl, "u3 updateBoundaryVertexBuffer");
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+        checkGlError(gl, "u4 updateBoundaryVertexBuffer");
+    }
+
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
+
+        if (needsResize) {
+            updateBoundaryVertexBuffer(gl);
+            needsResize=false;
+        }
 
         if (shader instanceof AB2Basic3DShader) {
 

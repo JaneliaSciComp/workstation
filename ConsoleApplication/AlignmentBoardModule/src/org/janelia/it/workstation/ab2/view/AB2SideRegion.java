@@ -14,8 +14,6 @@ public class AB2SideRegion extends GLRegion {
     }
 
     @Override
-    protected void reshape(GLAutoDrawable drawable) {
-
-    }
+    protected void reshape(GLAutoDrawable drawable) {}
 
 }
