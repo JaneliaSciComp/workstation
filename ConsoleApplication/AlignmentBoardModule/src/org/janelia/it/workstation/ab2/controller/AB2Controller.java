@@ -197,7 +197,7 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
 
         public void run() {
             while (!eventQueue.isEmpty()) {
-                logger.info("EventHandler run() queue size="+eventQueue.size());
+                //logger.info("EventHandler run() queue size="+eventQueue.size());
                 AB2Event event = eventQueue.poll();
                 if (event != null) {
                     if (event instanceof AB2ChangeModeEvent) {
