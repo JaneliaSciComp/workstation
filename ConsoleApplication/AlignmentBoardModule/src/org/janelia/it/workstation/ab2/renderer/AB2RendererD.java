@@ -173,11 +173,7 @@ public abstract class AB2RendererD extends AB2Renderer {
 
     public void display(GL4 gl) {
 
-        logger.info("displaySync() start");
-
-        checkGlError(gl, "Check0.5");
-
-        logger.info("past initial gl check");
+        checkGlError(gl, "AB2RendererD start");
 
         if (!initialized) {
             logger.info("Not initialized - returning");
@@ -185,9 +181,7 @@ public abstract class AB2RendererD extends AB2Renderer {
         }
 
         if (actorDisposalQueue.size()>0) {
-            logger.info("Starting actorDisposal loop");
             for (Pair<GLAbstractActor, GLShaderProgram> pair : actorDisposalQueue) {
-                logger.info("Disposing actor in display()");
                 GLAbstractActor actor=pair.getLeft();
                 GLShaderProgram shader=pair.getRight();
                 actor.dispose(gl, shader);
@@ -196,9 +190,7 @@ public abstract class AB2RendererD extends AB2Renderer {
         }
 
         if (actorInitQueue.size()>0) {
-            logger.info("Starting actorInit loop");
             for (Pair<GLAbstractActor, GLShaderProgram> pair : actorInitQueue) {
-                logger.info("Initializing actor in display()");
                 GLAbstractActor actor=pair.getLeft();
                 GLShaderProgram shader=pair.getRight();
                 actor.init(gl, shader);
@@ -211,14 +203,11 @@ public abstract class AB2RendererD extends AB2Renderer {
 //        gl.glClearColor(0f, 0f, 0f, 1f);
 //        gl.glClear(GL4.GL_COLOR_BUFFER_BIT);
 
-        checkGlError(gl, "Check0");
-        logger.info("Past Check0");
 
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT | GL4.GL_COLOR_BUFFER_BIT | GL4.GL_STENCIL_BUFFER_BIT);
-        checkGlError(gl, "Check1");
 
         gl.glDisable(GL4.GL_DEPTH_TEST);
-        checkGlError(gl, "Check2");
+
 //        gl.glBlendEquation(GL4.GL_FUNC_ADD);
 //        gl.glDisable(GL4.GL_BLEND);
         //gl.glDepthMask(true);
@@ -231,16 +220,15 @@ public abstract class AB2RendererD extends AB2Renderer {
 
 
         gl.glEnable(GL4.GL_BLEND);
-        checkGlError(gl, "Check7");
 
         gl.glBlendEquation(GL4.GL_MAX);
-        checkGlError(gl, "Check8.1");
+
 //        gl.glBlendEquation(GL4.GL_FUNC_ADD);
 //        checkGlError(gl, "Check8.2");
 
 //        gl.glBlendFunc(GL4.GL_ONE, GL4.GL_DST_ALPHA);
         //gl.glBlendFunc(GL4.GL_SRC_ALPHA, GL4.GL_ONE_MINUS_SRC_ALPHA);
-        checkGlError(gl, "Check9");
+
 //        gl.glBlendFunc(GL4.GL_SRC_ALPHA_SATURATE, GL4.GL_ONE);
 
 //        gl.glDisable(GL4.GL_BLEND);
@@ -262,19 +250,11 @@ public abstract class AB2RendererD extends AB2Renderer {
 
 //        gl.glEnable(GL4.GL_BLEND);
 
-        checkGlError(gl, "Check10");
-
-        logger.info("past Check10");
-
         resetVPMatrix();
 
         for (GLShaderActionSequence shaderActionSequence : drawShaderList) {
             shaderActionSequence.display(gl);
         }
-
-        checkGlError(gl, "Check11");
-
-        logger.info("Beginning click event check");
 
         gl.glDisable(GL4.GL_BLEND);
 
@@ -289,10 +269,6 @@ public abstract class AB2RendererD extends AB2Renderer {
 
         gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
 
-        logger.info("Done with mouseClickEvents");
-
-        checkGlError(gl, "Check12");
-        logger.info("Done with displaySync()");
     }
 
     @Override

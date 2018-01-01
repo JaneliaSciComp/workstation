@@ -115,9 +115,6 @@ public class Voxel3DActor extends GLAbstractActor {
 
         if (shader instanceof AB2Voxel3DShader) {
 
-            System.out.println("Voxel3DActor init() start");
-            System.out.flush();
-
             int maxDim=getMaxDim();
 
             if (voxels.size()!=colors.size()) {
@@ -197,9 +194,6 @@ public class Voxel3DActor extends GLAbstractActor {
             checkGlError(gl, "i5 glBufferData error");
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
-
-            System.out.println("Voxel3DActor init() end");
-            System.out.flush();
 
             logger.info("init() done");
 
