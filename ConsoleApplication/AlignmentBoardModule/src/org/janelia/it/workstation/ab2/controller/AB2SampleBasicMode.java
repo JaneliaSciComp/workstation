@@ -25,7 +25,6 @@ public class AB2SampleBasicMode extends AB2View3DMode {
 
     public AB2SampleBasicMode(AB2Controller controller) {
         super(controller);
-        sampleRenderer=sampleRegionManager.getMainRegion().getSampleRenderer();
         logger.info("AB2SampleBasicMode() constructor finished");
     }
 
@@ -38,6 +37,7 @@ public class AB2SampleBasicMode extends AB2View3DMode {
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
         sampleRegionManager.init(glAutoDrawable);
+        sampleRenderer=sampleRegionManager.getMainRegion().getSampleRenderer();
     }
 
     @Override
@@ -48,7 +48,6 @@ public class AB2SampleBasicMode extends AB2View3DMode {
 
     @Override
     public void modeDisplay(GLAutoDrawable glAutoDrawable) {
-        super.display(glAutoDrawable);
         sampleRegionManager.display(glAutoDrawable);
     }
 
@@ -60,16 +59,23 @@ public class AB2SampleBasicMode extends AB2View3DMode {
 
     @Override
     public void processEvent(AB2Event event) {
+        logger.info("processEvent()");
         super.processEvent(event);
         if (event instanceof AB2SampleAddedEvent) {
+            logger.info("processing AB2SampleAddedEvent");
             AB2SampleAddedEvent sampleAddedEvent=(AB2SampleAddedEvent)event;
             sampleRenderer.clearActors();
+            logger.info("creating AB2Sample3DImageLoader");
             AB2Sample3DImageLoader sample3DImageLoader=new AB2Sample3DImageLoader(sampleAddedEvent.getSample());
+            logger.info("executing sample3DImageLoader");
             sample3DImageLoader.execute();
         } else if  (event instanceof AB2Sample3DImageLoadedEvent) {
+            logger.info("processing AB2Sample3DImageLoadedEvent");
             AB2Sample3DImageLoadedEvent sample3DImageLoadedEvent=(AB2Sample3DImageLoadedEvent)event;
+            logger.info("calling sampleRenderer.addSample3DImage()");
             sampleRenderer.addSample3DImage(sample3DImageLoadedEvent.getData());
             sample3DImageLoadedEvent.clearData();
+            logger.info("calling controller.repaint after sampleRenderer.addSample3DImage");
             controller.repaint();
         }
     }

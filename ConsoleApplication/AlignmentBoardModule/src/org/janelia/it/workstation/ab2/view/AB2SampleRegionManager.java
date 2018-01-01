@@ -20,7 +20,10 @@ public class AB2SampleRegionManager extends GLRegionManager {
     AB2SampleRightRegion rightRegion;
     AB2SampleMainRegion mainRegion;
 
-    public AB2SampleRegionManager() {
+    public AB2SampleRegionManager() {}
+
+    @Override
+    public void init(GLAutoDrawable drawable) {
         this.controller=AB2Controller.getController();
 
         int x=0;
@@ -39,6 +42,8 @@ public class AB2SampleRegionManager extends GLRegionManager {
         regions.add(leftRegion);
         regions.add(rightRegion);
         regions.add(mainRegion);
+
+        super.init(drawable);
     }
 
     public AB2SampleMainRegion getMainRegion() {

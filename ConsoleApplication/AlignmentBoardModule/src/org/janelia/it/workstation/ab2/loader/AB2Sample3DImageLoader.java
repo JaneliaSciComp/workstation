@@ -61,7 +61,7 @@ public class AB2Sample3DImageLoader extends SimpleWorker {
 
     @Override
     protected void hadSuccess() {
-        AB2Controller.getController().addEvent(new AB2Sample3DImageLoadedEvent(data));
+        AB2Controller.getController().processEvent(new AB2Sample3DImageLoadedEvent(data));
         this.data=null;
     }
 

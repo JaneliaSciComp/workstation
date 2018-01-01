@@ -5,6 +5,7 @@ import java.nio.IntBuffer;
 
 import javax.media.opengl.GL4;
 
+import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
@@ -41,7 +42,7 @@ public class AB2SimpleCubeRenderer extends AB2Renderer3D {
     }
 
     private GLAbstractActor createCubeActor() {
-        return new GLAbstractActor(this) {
+        return new GLAbstractActor(this, AB2Controller.getController().getNextPickIndex()) {
 
             @Override
             public void display(GL4 gl, GLShaderProgram shader) {
