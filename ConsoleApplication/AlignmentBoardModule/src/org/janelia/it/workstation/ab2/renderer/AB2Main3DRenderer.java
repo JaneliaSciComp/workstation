@@ -60,9 +60,11 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
         return controller.getNextPickIndex();
     }
 
-    public AB2Main3DRenderer() {
+    public AB2Main3DRenderer(int x, int y, int width, int height, int screenWidth, int screenHeight) {
         super();
         controller=AB2Controller.getController();
+
+        setSizeParameters(x, y, width, height, screenWidth, screenHeight);
 
 //        drawShaderSequence=new GLShaderActionSequence("DrawSequence");
 
@@ -269,6 +271,10 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
     @Override
     public void reshape(GL4 gl, int x, int y, int width, int height, int screenWidth, int screenHeight) {
         super.reshape(gl, x, y, width, height, screenWidth, screenHeight);
+        setSizeParameters(x, y, width, height, screenWidth, screenHeight);
+    }
+
+    private void setSizeParameters(int x, int y, int width, int height, int screenWidth, int screenHeight) {
         float[] parameters = computeOffsetParameters(x, y, width, height, screenWidth, screenHeight);
         setVoxel3DActorPostProjectionMatrix(getOffsetPostProjectionMatrix(parameters[0], parameters[1], parameters[2]));
         int[] xyBounds = getXYBounds(x, y, width, height);

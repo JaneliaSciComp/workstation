@@ -16,9 +16,18 @@ public class AB2SampleMainRegion extends GLRegion {
     Logger logger = LoggerFactory.getLogger(AB2SampleMainRegion.class);
 
 
-    private AB2Main3DRenderer main3DRenderer=new AB2Main3DRenderer();
+    private AB2Main3DRenderer main3DRenderer;
 
-    public AB2SampleMainRegion() {
+    public AB2SampleMainRegion(int x, int y, int width, int height, int screenWidth, int screenHeight) {
+        this.x=x;
+        this.y=y;
+        this.width=width;
+        this.height=height;
+        this.screenWidth=screenWidth;
+        this.screenHeight=screenHeight;
+
+        main3DRenderer=new AB2Main3DRenderer(x, y, width, height, screenWidth, screenHeight);
+
         renderers.add(main3DRenderer);
     }
 

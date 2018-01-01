@@ -11,8 +11,13 @@ import org.janelia.geometry3d.Matrix4;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2EventHandler;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
+import org.janelia.it.workstation.ab2.view.AB2SampleMainRegion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class GLRegion implements GLSelectable {
+    Logger logger = LoggerFactory.getLogger(GLRegion.class);
+
     protected int x;
     protected int y;
     protected int width;
@@ -66,13 +71,16 @@ public abstract class GLRegion implements GLSelectable {
     }
 
     public boolean containsPoint(Point point) {
+        logger.info("containsPoint : pxy="+point.x+" "+point.y+" , x="+x+" y="+y+" width="+width+" height="+height);
         int xTest=point.x;
         if (xTest>=x && xTest<(x+width)) {
             int yTest=point.y;
             if (yTest>=y && yTest<(y+height)) {
+                logger.info("containsPoint=true");
                 return true;
             }
         }
+        logger.info("containsPoint=false");
         return false;
     }
 

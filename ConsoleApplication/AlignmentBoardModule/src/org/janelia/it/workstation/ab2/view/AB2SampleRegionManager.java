@@ -38,7 +38,7 @@ public class AB2SampleRegionManager extends GLRegionManager {
         bottomRegion=new AB2SampleBottomRegion();
         leftRegion=new AB2SampleLeftRegion();
         rightRegion=new AB2SampleRightRegion();
-        mainRegion=new AB2SampleMainRegion();
+        mainRegion=new AB2SampleMainRegion(x, y, width, height, width, height);
 
         regions.add(topRegion);
         regions.add(bottomRegion);
@@ -93,7 +93,8 @@ public class AB2SampleRegionManager extends GLRegionManager {
 
         int mainHeight=height-(topHeight+bottomHeight);
         int mainWidth=width-(leftWidth+rightWidth);
-        mainRegion.reshape(drawable, leftWidth, bottomHeight, mainWidth, mainHeight, width, height);
+        //mainRegion.reshape(drawable, leftWidth, bottomHeight, mainWidth, mainHeight, width, height);
+        mainRegion.reshape(drawable, 200, 200, 400, 400, width, height);
         bottomRegion.reshape(drawable, leftWidth, 0, width-rightWidth, bottomHeight, width, height);
         topRegion.reshape(drawable, 0, bottomHeight+mainHeight, width, topHeight, width, height);
         leftRegion.reshape(drawable, 0, 0, leftWidth, height-topHeight, width, height);
