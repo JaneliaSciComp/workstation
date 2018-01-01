@@ -34,16 +34,18 @@ public class AB2SampleRegionManager extends GLRegionManager {
         int width=controller.getGlWidth();
         int height=controller.getGlHeight();
 
-        topRegion=new AB2SampleTopRegion(x, y, width, height, width, height);
-        bottomRegion=new AB2SampleBottomRegion();
-        leftRegion=new AB2SampleLeftRegion();
-        rightRegion=new AB2SampleRightRegion();
-        mainRegion=new AB2SampleMainRegion(x, y, width, height, width, height);
+        logger.info("init() glWidth="+width+" glHeight="+height);
 
-        regions.add(topRegion);
-        regions.add(bottomRegion);
-        regions.add(leftRegion);
-        regions.add(rightRegion);
+        //topRegion=new AB2SampleTopRegion(x, y, width, height, width, height);
+        //bottomRegion=new AB2SampleBottomRegion();
+        //leftRegion=new AB2SampleLeftRegion();
+        //rightRegion=new AB2SampleRightRegion();
+        mainRegion=new AB2SampleMainRegion(50, 50, 100, 100, width, height);
+
+        //regions.add(topRegion);
+        //regions.add(bottomRegion);
+        //regions.add(leftRegion);
+        //regions.add(rightRegion);
         regions.add(mainRegion);
 
         super.init(drawable);
@@ -56,48 +58,49 @@ public class AB2SampleRegionManager extends GLRegionManager {
     public GLRegion getRegionAtPosition(Point point) {
         if (mainRegion.containsPoint(point)) {
             return mainRegion;
-        } else if (bottomRegion.containsPoint(point)) {
-            return bottomRegion;
-        } else if (rightRegion.containsPoint(point)) {
-            return rightRegion;
-        } else if (leftRegion.containsPoint(point)) {
-            return leftRegion;
-        } else if (topRegion.containsPoint(point)) {
-            return topRegion;
         }
+//        else if (bottomRegion.containsPoint(point)) {
+//            return bottomRegion;
+//        } else if (rightRegion.containsPoint(point)) {
+//            return rightRegion;
+//        } else if (leftRegion.containsPoint(point)) {
+//            return leftRegion;
+//        } else if (topRegion.containsPoint(point)) {
+//            return topRegion;
+//        }
         return null;
     }
 
     @Override
     public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
 
-        int leftWidth=AB2SampleLeftRegion.CLOSED_WIDTH;
-        if (leftRegion.isOpen()) {
-            leftWidth=AB2SampleLeftRegion.OPEN_WIDTH;
-        }
+//        int leftWidth=AB2SampleLeftRegion.CLOSED_WIDTH;
+//        if (leftRegion.isOpen()) {
+//            leftWidth=AB2SampleLeftRegion.OPEN_WIDTH;
+//        }
+//
+//        int rightWidth=AB2SampleRightRegion.CLOSED_WIDTH;
+//        if (rightRegion.isOpen()) {
+//            rightWidth=AB2SampleRightRegion.OPEN_WIDTH;
+//        }
+//
+//        int topHeight= AB2Properties.TOP_MENU_CLOSED_HEIGHT;
+//        if (topRegion.isOpen()) {
+//            topHeight=AB2Properties.TOP_MENU_OPEN_HEIGHT;
+//        }
+//
+//        int bottomHeight=AB2SampleBottomRegion.CLOSED_HEIGHT;
+//        if (bottomRegion.isOpen()) {
+//            bottomHeight=AB2SampleBottomRegion.OPEN_HEIGHT;
+//        }
 
-        int rightWidth=AB2SampleRightRegion.CLOSED_WIDTH;
-        if (rightRegion.isOpen()) {
-            rightWidth=AB2SampleRightRegion.OPEN_WIDTH;
-        }
-
-        int topHeight= AB2Properties.TOP_MENU_CLOSED_HEIGHT;
-        if (topRegion.isOpen()) {
-            topHeight=AB2Properties.TOP_MENU_OPEN_HEIGHT;
-        }
-
-        int bottomHeight=AB2SampleBottomRegion.CLOSED_HEIGHT;
-        if (bottomRegion.isOpen()) {
-            bottomHeight=AB2SampleBottomRegion.OPEN_HEIGHT;
-        }
-
-        int mainHeight=height-(topHeight+bottomHeight);
-        int mainWidth=width-(leftWidth+rightWidth);
+        //int mainHeight=height-(topHeight+bottomHeight);
+        //int mainWidth=width-(leftWidth+rightWidth);
         //mainRegion.reshape(drawable, leftWidth, bottomHeight, mainWidth, mainHeight, width, height);
-        mainRegion.reshape(drawable, 200, 200, 400, 400, width, height);
-        bottomRegion.reshape(drawable, leftWidth, 0, width-rightWidth, bottomHeight, width, height);
-        topRegion.reshape(drawable, 0, bottomHeight+mainHeight, width, topHeight, width, height);
-        leftRegion.reshape(drawable, 0, 0, leftWidth, height-topHeight, width, height);
-        rightRegion.reshape(drawable, width-rightWidth, 0, rightWidth, height-topHeight, width, height);
+        mainRegion.reshape(drawable, 50, 50, 100, 100, width, height);
+        //bottomRegion.reshape(drawable, leftWidth, 0, width-rightWidth, bottomHeight, width, height);
+        //topRegion.reshape(drawable, 0, bottomHeight+mainHeight, width, topHeight, width, height);
+        //leftRegion.reshape(drawable, 0, 0, leftWidth, height-topHeight, width, height);
+        //rightRegion.reshape(drawable, width-rightWidth, 0, rightWidth, height-topHeight, width, height);
     }
 }

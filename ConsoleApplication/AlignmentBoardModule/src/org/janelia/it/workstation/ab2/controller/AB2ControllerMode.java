@@ -97,6 +97,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
     public void processEvent(AB2Event event) {
         logger.info("processEvent type="+event.getClass().getName());
         AB2UserContext userContext = AB2Controller.getController().getUserContext();
+        boolean repaint=false;
 
         if (event instanceof AB2MouseReleasedEvent) {
             if (userContext.isMouseIsDragging()) {
@@ -107,26 +108,29 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 releaseObject.releaseHover();
                 userContext.clearDrag();
             }
-            controller.repaint();
-
+            repaint=true;
         }
         else if (event instanceof AB2MouseWheelEvent) {
             GLSelectable hoverObject = userContext.getHoverObject();
             if (hoverObject!=null) {
                 hoverObject.processEvent(event);
-                controller.repaint();
+                repaint=true;
             }
         }
         else if (event instanceof AB2MouseClickedEvent) {
             displayEventQueue.add(event);
-            controller.repaint();
+            repaint=true;
         }
         else if (event instanceof AB2MouseMovedEvent) {
             displayEventQueue.add(event);
-            controller.repaint();
+            repaint=true;
         }
         else if (event instanceof AB2MouseDraggedEvent) {
             displayEventQueue.add(event);
+            repaint=true;
+        }
+
+        if (repaint) {
             controller.repaint();
         }
 
@@ -259,7 +263,6 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                     }
                 }
             }
-            controller.repaint();
 
         } else if (event instanceof AB2MouseClickedEvent) {
             if (pickActor != null) {
@@ -348,11 +351,16 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         gl4.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT);
         gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
         modeDisplay(glAutoDrawable);
+        boolean repaint=false;
         while (!displayEventQueue.isEmpty()) {
             AB2Event event = displayEventQueue.poll();
             if (event != null) {
                 processDisplayEvent(gl4, event);
+                repaint=true;
             }
+        }
+        if (repaint) {
+            controller.repaint();
         }
     }
 

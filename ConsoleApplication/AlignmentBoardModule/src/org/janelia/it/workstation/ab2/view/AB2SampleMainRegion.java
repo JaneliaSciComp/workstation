@@ -38,7 +38,7 @@ public class AB2SampleMainRegion extends GLRegion {
     @Override
     protected void reshape(GLAutoDrawable drawable) {
         final GL4 gl=drawable.getGL().getGL4();
-        main3DRenderer.reshape(gl, x, y, screenWidth, screenHeight, screenWidth, screenHeight);
+        main3DRenderer.reshape(gl, x, y, width, height, screenWidth, screenHeight);
     }
 
     @Override

@@ -234,12 +234,12 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
         return colorIdMap.get(styleId);
     }
 
-    public void reshape(GL4 gl, int x, int y, int width, int height) {
-        //logger.info("reshape() x="+x+" y="+y+" width="+width+" height="+height);
-        super.reshape(gl, x, y, width, height, width, height);
-    }
+//    public void reshape(GL4 gl, int x, int y, int width, int height) {
+//        //logger.info("reshape() x="+x+" y="+y+" width="+width+" height="+height);
+//        super.reshape(gl, x, y, width, height, width, height);
+//    }
 
-    // This is for testing
+    // The public access is for testing
     public void setVoxel3DActorPostProjectionMatrix(Matrix4 prMatrix) {
         this.prMatrix=prMatrix;
         if (voxel3DActor!=null) {
@@ -250,6 +250,7 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
         }
     }
 
+    // The public access is for testing
     public void setVoxel3DxyBounds(int x0, int y0, int x1, int y1) {
         voxel3DxyBounds[0]=x0;
         voxel3DxyBounds[1]=y0;
@@ -275,7 +276,9 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
     }
 
     private void setSizeParameters(int x, int y, int width, int height, int screenWidth, int screenHeight) {
+        logger.info("setSizeParameters() x="+x+" y="+y+" width="+width+" height="+height+" screenWidth="+screenWidth+" screenHeight="+screenHeight);
         float[] parameters = computeOffsetParameters(x, y, width, height, screenWidth, screenHeight);
+        logger.info("setSizeParameters() xtrans="+parameters[0]+" ytrans="+parameters[1]+" scale="+parameters[2]);
         setVoxel3DActorPostProjectionMatrix(getOffsetPostProjectionMatrix(parameters[0], parameters[1], parameters[2]));
         int[] xyBounds = getXYBounds(x, y, width, height);
         setVoxel3DxyBounds(xyBounds[0], xyBounds[1], xyBounds[2], xyBounds[3]);

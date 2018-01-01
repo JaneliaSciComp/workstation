@@ -277,10 +277,10 @@ public abstract class AB2RendererD extends AB2Renderer {
         viewport.setHeightPixels(height);
         viewport.setWidthPixels(width);
         viewport.getChangeObservable().notifyObservers();
-        if (initialized) {
-            logger.info("initialized=true, calling display(gl) after reshape()");
-            display(gl);
-        }
+//        if (initialized) {
+//            logger.info("initialized=true, calling display(gl) after reshape()");
+//            display(gl);
+//        }
     }
 
     @Override
