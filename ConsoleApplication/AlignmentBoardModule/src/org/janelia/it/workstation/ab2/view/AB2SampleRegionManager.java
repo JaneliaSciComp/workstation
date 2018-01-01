@@ -1,9 +1,12 @@
 package org.janelia.it.workstation.ab2.view;
 
+import java.awt.Point;
+
 import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.workstation.ab2.AB2Properties;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
+import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLRegionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +51,21 @@ public class AB2SampleRegionManager extends GLRegionManager {
 
     public AB2SampleMainRegion getMainRegion() {
         return mainRegion;
+    }
+
+    public GLRegion getRegionAtPosition(Point point) {
+        if (mainRegion.containsPoint(point)) {
+            return mainRegion;
+        } else if (bottomRegion.containsPoint(point)) {
+            return bottomRegion;
+        } else if (rightRegion.containsPoint(point)) {
+            return rightRegion;
+        } else if (leftRegion.containsPoint(point)) {
+            return leftRegion;
+        } else if (topRegion.containsPoint(point)) {
+            return topRegion;
+        }
+        return null;
     }
 
     @Override

@@ -30,7 +30,7 @@ public class AB2SampleBasicMode extends AB2View3DMode {
 
     @Override
     public GLRegion getRegionAtPosition(Point point) {
-        return null;
+        return sampleRegionManager.getRegionAtPosition(point);
     }
 
 

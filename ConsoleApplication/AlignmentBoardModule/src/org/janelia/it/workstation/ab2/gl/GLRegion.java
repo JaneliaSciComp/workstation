@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.ab2.gl;
 
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,6 +63,17 @@ public abstract class GLRegion implements GLSelectable {
         this.screenWidth=screenWidth;
         this.screenHeight=screenHeight;
         reshape(drawable);
+    }
+
+    public boolean containsPoint(Point point) {
+        int xTest=point.x;
+        if (xTest>=x && xTest<(x+width)) {
+            int yTest=point.y;
+            if (yTest>=y && yTest<(y+height)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected abstract void reshape(GLAutoDrawable drawable);
