@@ -1,9 +1,8 @@
 package org.janelia.it.workstation.browser.gui.lasso;
 
-import java.awt.*;
-import java.awt.image.*;
-
-/** Freehand region of interest or freehand line of interest*/
+/**
+ * Code copy and pasted from the ImageJA project. It's not possible to reuse their code as-is because of dependencies on AWT.
+ */
 public class FreehandRoi extends PolygonRoi {
 
 	public FreehandRoi(int sx, int sy, ImagePlus imp) {

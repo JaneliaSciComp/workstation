@@ -3,8 +3,9 @@ package org.janelia.it.workstation.browser.gui.lasso;
 import java.awt.Rectangle;
 
 
-/** This class fills polygons using the scan-line filling algorithm 
-	described at "http://www.cs.rit.edu/~icss571/filling/". */
+/**
+ * Code copy and pasted from the ImageJA project. It's not possible to reuse their code as-is because of dependencies on AWT.
+ */
 public class PolygonFiller {
 	int BLACK=0xff000000, WHITE=0xffffffff;
 	int edges; // number of edges
@@ -84,7 +85,7 @@ public class PolygonFiller {
 
 	/** Fills the polygon using the ImageProcessor's current drawing color. */
 	public void fill(ImageProcessor ip, Rectangle r) {
-//		ip.fill(getMask(r.width, r.height));
+		ip.fill(getMask(r.width, r.height));
 	}
 
 	/** Returns a byte mask containing a filled version of the polygon. */
@@ -93,9 +94,8 @@ public class PolygonFiller {
 		buildEdgeTable(x, y, n);
 		//printEdges();
 		int x1, x2, offset, index;
-		ImageProcessor mask = new BufferedImageProcessor(width, height);
-		// Had to change byte[] to int[] here to accomodate the BufferedImage
-		int[] pixels = (int[])mask.getPixels();
+		ImageProcessor mask = new ByteProcessor(width, height);
+		byte[] pixels = (byte[])mask.getPixels();
 		for (int y=0; y<height; y++) {
 			removeInactiveEdges(y);
 			activateEdges(y);

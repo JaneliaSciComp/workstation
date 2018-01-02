@@ -2,6 +2,9 @@ package org.janelia.it.workstation.browser.gui.lasso;
 
 import java.awt.Image;
 
+/**
+ * Interface to mock ImageJA's ImagePlus.
+ */
 public interface ImagePlus {
 
     int getID();

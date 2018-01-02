@@ -2,6 +2,9 @@ package org.janelia.it.workstation.browser.gui.lasso;
 
 import java.awt.Rectangle;
 
+/**
+ * Interface to mock ImageJA's ImageCanvas.
+ */
 public interface ImageCanvas {
 
     int screenX(int ox);
@@ -25,5 +28,7 @@ public interface ImageCanvas {
     void repaint(int x, int y, int width, int height);
 
     void repaint();
+
+    void setImageUpdated();
 
 }

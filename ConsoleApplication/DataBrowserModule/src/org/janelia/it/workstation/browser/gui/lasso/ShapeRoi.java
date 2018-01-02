@@ -1,16 +1,27 @@
 package org.janelia.it.workstation.browser.gui.lasso;
-import java.awt.*;
-import java.awt.image.*;
-import java.awt.geom.*;
-import java.awt.event.KeyEvent;
-import java.util.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Polygon;
+import java.awt.Rectangle;
+import java.awt.Shape;
+import java.awt.Stroke;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Line2D;
+import java.awt.geom.PathIterator;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.awt.image.Raster;
+import java.util.Vector;
 
-/**A subclass of <code>ij.gui.Roi</code> (2D Regions Of Interest) implemented in terms of java.awt.Shape.
- * A ShapeRoi is constructed from a <code>ij.gui.Roi</code> object, or as a result of logical operators
- * (i.e., union, intersection, exclusive or, and subtraction) provided by this class. These operators use the package
- * <code>java.awt.geom</code> as a backend. <br>
- * This code is in the public domain.
- * @author Cezar M.Tigaret <c.tigaret@ucl.ac.uk>
+/**
+ * Code copy and pasted from the ImageJA project. It's not possible to reuse their code as-is because of dependencies on AWT.
  */
 public class ShapeRoi extends Roi {
 
@@ -121,27 +132,27 @@ public class ShapeRoi extends Roi {
 	/** Constructs a ShapeRoi from an array of variable length path segments. Each
 		segment consists of the segment type followed by 0-3 end points and control
 		points. Depending on the type, a segment uses from 1 to 7 elements of the array. */
-//	public ShapeRoi(float[] shapeArray) {
-//		super(0,0,null);
-//		shape = makeShapeFromArray(shapeArray);
-//		Rectangle r = shape.getBounds();
-//		x = r.x;
-//		y = r.y;
-//		width = r.width;
-//		height = r.height;
-//
-//		state = NORMAL;
-//		oldX=x; oldY=y; oldWidth=width; oldHeight=height;
-//
-//		AffineTransform at = new AffineTransform();
-//		at.translate(-x, -y);
-//		shape = new GeneralPath(at.createTransformedShape(shape));
-//		flatness = ShapeRoi.FLATNESS;
-//		maxerror = ShapeRoi.MAXERROR;
-//		maxPoly = ShapeRoi.MAXPOLY;
-//		flatten = false;
-//		type = COMPOSITE;
-//	}
+	public ShapeRoi(float[] shapeArray) {
+		super(0,0,null);
+		shape = makeShapeFromArray(shapeArray);
+		Rectangle r = shape.getBounds();
+		x = r.x;
+		y = r.y;
+		width = r.width;
+		height = r.height;
+
+		state = NORMAL;
+		oldX=x; oldY=y; oldWidth=width; oldHeight=height;
+
+		AffineTransform at = new AffineTransform();
+		at.translate(-x, -y);
+		shape = new GeneralPath(at.createTransformedShape(shape));
+		flatness = ShapeRoi.FLATNESS;
+		maxerror = ShapeRoi.MAXERROR;
+		maxPoly = ShapeRoi.MAXPOLY;
+		flatten = false;
+		type = COMPOSITE;
+	}
 	
 	/**Returns a deep copy of this. */
 	public synchronized Object clone() { // the equivalent of "operator=" ?
@@ -334,62 +345,62 @@ public class ShapeRoi extends Roi {
 		return shape;
 	}
 
-//	/**Constructs a Shape from a float array. */
-//	Shape makeShapeFromArray(float[] array) {
-//		if(array==null) return null;
-//		Shape s = new GeneralPath(GeneralPath.WIND_EVEN_ODD);
-//		int index=0, type, len;
-//		float[] seg = new float[7];
-//		while (true) {
-//			len = getSegment(array, seg, index);
-//			if (len<0) break;
-//			index += len;
-//			type = (int)seg[0];
-//			switch(type) {
-//				case PathIterator.SEG_MOVETO:
-//					((GeneralPath)s).moveTo(seg[1], seg[2]);
-//					break;
-//				case PathIterator.SEG_LINETO:
-//					((GeneralPath)s).lineTo(seg[1], seg[2]);
-//					break;
-//				case PathIterator.SEG_QUADTO:
-//					((GeneralPath)s).quadTo(seg[1], seg[2],seg[3], seg[4]);
-//					break;
-//				case PathIterator.SEG_CUBICTO:
-//					((GeneralPath)s).curveTo(seg[1], seg[2], seg[3], seg[4], seg[5], seg[6]);
-//					break;
-//				case PathIterator.SEG_CLOSE:
-//					((GeneralPath)s).closePath();
-//					break;
-//				default: break;
-//			}
-//		}
-//		return s;
-//	}
+	/**Constructs a Shape from a float array. */
+	Shape makeShapeFromArray(float[] array) {
+		if(array==null) return null;
+		Shape s = new GeneralPath(GeneralPath.WIND_EVEN_ODD);
+		int index=0, type, len;
+		float[] seg = new float[7];
+		while (true) {
+			len = getSegment(array, seg, index);
+			if (len<0) break;
+			index += len;
+			type = (int)seg[0];
+			switch(type) {
+				case PathIterator.SEG_MOVETO:
+					((GeneralPath)s).moveTo(seg[1], seg[2]);
+					break;
+				case PathIterator.SEG_LINETO:
+					((GeneralPath)s).lineTo(seg[1], seg[2]);
+					break;
+				case PathIterator.SEG_QUADTO:
+					((GeneralPath)s).quadTo(seg[1], seg[2],seg[3], seg[4]);
+					break;
+				case PathIterator.SEG_CUBICTO:
+					((GeneralPath)s).curveTo(seg[1], seg[2], seg[3], seg[4], seg[5], seg[6]);
+					break;
+				case PathIterator.SEG_CLOSE:
+					((GeneralPath)s).closePath();
+					break;
+				default: break;
+			}
+		}
+		return s;
+	}
 	
-//	private int getSegment(float[] array, float[] seg, int index) {
-//		int len = array.length;
-//		if (index>=len) return -1; seg[0]=array[index++];
-//		int type = (int)seg[0];
-//		if (type==PathIterator.SEG_CLOSE) return 1;
-//		if (index>=len) return -1; seg[1]=array[index++];
-//		if (index>=len) return -1; seg[2]=array[index++];
-//		if (type==PathIterator.SEG_MOVETO||type==PathIterator.SEG_LINETO) return 3;
-//		if (index>=len) return -1; seg[3]=array[index++];
-//		if (index>=len) return -1; seg[4]=array[index++];
-//		if (type==PathIterator.SEG_QUADTO) return 5;
-//		if (index>=len) return -1; seg[5]=array[index++];
-//		if (index>=len) return -1; seg[6]=array[index++];
-//		if (type==PathIterator.SEG_CUBICTO) return 7;
-//		return -1;
-//	}
+	private int getSegment(float[] array, float[] seg, int index) {
+		int len = array.length;
+		if (index>=len) return -1; seg[0]=array[index++];
+		int type = (int)seg[0];
+		if (type==PathIterator.SEG_CLOSE) return 1;
+		if (index>=len) return -1; seg[1]=array[index++];
+		if (index>=len) return -1; seg[2]=array[index++];
+		if (type==PathIterator.SEG_MOVETO||type==PathIterator.SEG_LINETO) return 3;
+		if (index>=len) return -1; seg[3]=array[index++];
+		if (index>=len) return -1; seg[4]=array[index++];
+		if (type==PathIterator.SEG_QUADTO) return 5;
+		if (index>=len) return -1; seg[5]=array[index++];
+		if (index>=len) return -1; seg[6]=array[index++];
+		if (type==PathIterator.SEG_CUBICTO) return 7;
+		return -1;
+	}
 
-//	/** Saves an Roi so it can be retrieved later using getRois(). */
-//	void saveRoi(Roi roi) {
-//		if (savedRois==null)
-//			savedRois = new Vector();
-//		savedRois.addElement(roi);
-//	}
+	/** Saves an Roi so it can be retrieved later using getRois(). */
+	void saveRoi(Roi roi) {
+		if (savedRois==null)
+			savedRois = new Vector();
+		savedRois.addElement(roi);
+	}
 
 	/**Converts a Shape into Roi object(s).
 	 * <br>This method parses the shape into (possibly more than one) Roi objects 
@@ -1076,24 +1087,24 @@ public class ShapeRoi extends Roi {
 //		}
 //	}
 
-//	/** Returns this ROI's mask pixels as a ByteProcessor with pixels "in" the mask
-//		set to white (255) and pixels "outside" the mask set to black (0). */
-//	public ImageProcessor getMask() {
-//		if (shape==null)
-//			return null;
-//		if (cachedMask!=null && cachedMask.getPixels()!=null)
-//			return cachedMask;
-//		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
-//		Graphics2D g2d = bi.createGraphics();
-//		g2d.setColor(Color.white);
-//		g2d.fill(shape);
-//		Raster raster = bi.getRaster();
-//		DataBufferByte buffer = (DataBufferByte)raster.getDataBuffer();
-//		byte[] mask = buffer.getData();
-//		cachedMask = new ByteProcessor(width, height, mask, null);
-//		cachedMask.setThreshold(255,255,ImageProcessor.NO_LUT_UPDATE);
-//        return cachedMask;
-//	}
+	/** Returns this ROI's mask pixels as a ByteProcessor with pixels "in" the mask
+		set to white (255) and pixels "outside" the mask set to black (0). */
+	public ImageProcessor getMask() {
+		if (shape==null)
+			return null;
+		if (cachedMask!=null && cachedMask.getPixels()!=null)
+			return cachedMask;
+		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+		Graphics2D g2d = bi.createGraphics();
+		g2d.setColor(Color.white);
+		g2d.fill(shape);
+		Raster raster = bi.getRaster();
+		DataBufferByte buffer = (DataBufferByte)raster.getDataBuffer();
+		byte[] mask = buffer.getData();
+		cachedMask = new ByteProcessor(width, height, mask, null);
+		cachedMask.setThreshold(255,255,ImageProcessor.NO_LUT_UPDATE);
+        return cachedMask;
+	}
 
 	/**Returns a reference to the Shape object encapsulated by this ShapeRoi. */
 	public Shape getShape() {

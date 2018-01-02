@@ -1,11 +1,14 @@
 package org.janelia.it.workstation.browser.gui.lasso;
 
-import java.awt.*;
-import java.awt.image.*;
-import java.awt.geom.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Polygon;
+import java.awt.Rectangle;
 
-/** This class represents a polygon region of interest or polyline of interest. */
+/**
+ * Code copy and pasted from the ImageJA project. It's not possible to reuse their code as-is because of dependencies on AWT.
+ */
 public class PolygonRoi extends Roi {
 
 	protected int maxPoints = 1000; // will be increased if necessary

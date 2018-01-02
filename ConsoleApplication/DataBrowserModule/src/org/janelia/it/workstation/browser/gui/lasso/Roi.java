@@ -1,26 +1,25 @@
 package org.janelia.it.workstation.browser.gui.lasso;
 
-import java.awt.*;
-import java.util.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Event;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.RoundRectangle2D;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Properties;
+import java.util.Vector;
 
 import org.janelia.it.workstation.browser.util.SystemInfo;
 
-import java.io.*;
-import java.awt.image.*;
-import java.awt.event.*;
-import java.awt.geom.*;
-
-/** 
- * A rectangular region of interest and superclass for the other ROI classes. 
- * 
- * This class implements {@code Iterable<Point>} and can thus be
- * used to iterate over the contained coordinates. Usage example: 
- * <pre>
- * Roi roi = ...;
- * for (Point p : roi) {
- *   // process p
- * }
- * </pre>
+/**
+ * Code copy and pasted from the ImageJA project. It's not possible to reuse their code as-is because of dependencies on AWT.
  */
 public class Roi extends Object implements Cloneable, java.io.Serializable, Iterable<Point> {
 

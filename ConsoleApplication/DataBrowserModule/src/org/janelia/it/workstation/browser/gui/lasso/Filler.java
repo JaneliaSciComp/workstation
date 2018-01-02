@@ -1,9 +1,12 @@
 package org.janelia.it.workstation.browser.gui.lasso;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Rectangle;
 
-/** This plugin implements ImageJ's Fill, Clear, Clear Outside and Draw commands. */
-public class Filler {
+/**
+ * Code copy and pasted from the ImageJA project. It's not possible to reuse their code as-is because of dependencies on AWT.
+ */
+public class Filler implements PlugInFilter {
 	
     Color backgroundColor = Color.BLACK;
     Color foregroundColor = Color.WHITE;
@@ -26,7 +29,7 @@ public class Filler {
 //	 		return DONE;
 //		}
 //		IJ.register(Filler.class);
-//		int baseCapabilities = DOES_ALL+ROI_REQUIRED;
+		int baseCapabilities = DOES_ALL+ROI_REQUIRED;
 //	 	if (arg.equals("clear")) {
 //	 		if (roi!=null && roi.getType()==Roi.POINT) {
 //	 			IJ.error("Clear", "Area selection required");
@@ -50,7 +53,7 @@ public class Filler {
 //	 			return DONE;
 //	 	} else
 //			return IJ.setupDialog(imp,baseCapabilities+SUPPORTS_MASKING);
-		return 0;
+		return baseCapabilities;
 	}
 
 	public void run(ImageProcessor ip) {
@@ -208,14 +211,15 @@ public class Filler {
 //			IJ.error("\"Clear Outside\" does not work with line selections.");
 //			return;
 //		}
+
  		sliceCount++;
  		Rectangle r = ip.getRoi();
  		if (mask==null)
  			makeMask(ip, r);
   		ip.setColor(backgroundColor);
  		int stackSize = imp.getStackSize();
-// 		if (stackSize>1)
-// 			ip.snapshot();
+ 		if (stackSize>1)
+ 			ip.snapshot();
 		ip.fill();
  		ip.reset(mask);
 		int width = ip.getWidth();
@@ -241,9 +245,8 @@ public class Filler {
 	public void makeMask(ImageProcessor ip, Rectangle r) {
  		mask = ip.getMask();
  		if (mask==null) {
- 		    throw new IllegalStateException();
-// 			mask = new ByteProcessor(r.width, r.height);
-// 			mask.invert();
+ 			mask = new ByteProcessor(r.width, r.height);
+ 			mask.invert();
  		} else {
  			// duplicate mask (needed because getMask caches masks)
  			mask = mask.duplicate();

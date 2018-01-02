@@ -4,16 +4,19 @@ import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
+/**
+ * Code copy and pasted from the ImageJA project. It's not possible to reuse their code as-is because of dependencies on AWT.
+ */
 public class BufferedImagePlus implements ImagePlus {
 
-    protected BufferedImage image;
+    protected Image img;
     protected ImageProcessor ip;
     protected ImageCanvas canvas;
     protected Roi roi;
     
     public BufferedImagePlus(BufferedImage image) {
-        this.image = image;
-        this.ip = new BufferedImageProcessor(image);
+        this.img = image;
+        this.ip = new ColorProcessor(image);
         this.canvas = new BufferedImageCanvas(this);
     }
     
@@ -27,8 +30,11 @@ public class BufferedImagePlus implements ImagePlus {
     }
     
     @Override
+    /** Returns this image as a AWT image. */
     public Image getImage() {
-        return image;
+        if (img==null && ip!=null)
+            img = ip.createImage();
+        return img;
     }
     
     @Override
@@ -57,8 +63,9 @@ public class BufferedImagePlus implements ImagePlus {
         has not been called).*/
     @Override
     public void draw(){
-        if (canvas!=null)
+        if (canvas!=null) {
             canvas.repaint();
+        }
     }
 
     /** Updates this image from the pixel data in its 
@@ -76,10 +83,10 @@ public class BufferedImagePlus implements ImagePlus {
 //                } catch(Exception e) {}
 //            }
 //        }
-//        if (win!=null) {
-//            win.getCanvas().setImageUpdated();
+        if (canvas!=null) {
+            canvas.setImageUpdated();
 //            if (listeners.size()>0) notifyListeners(UPDATED);
-//        }
+        }
         draw();
     }
     
@@ -87,8 +94,8 @@ public class BufferedImagePlus implements ImagePlus {
         ImageProcessor has generated a new image. */
     @Override
     public void updateImage() {
-//        if (ip!=null)
-//            img = ip.createImage();
+        if (ip!=null)
+            img = ip.createImage();
     }
     
     /** Draws image and roi outline using a clip rect. */
@@ -96,11 +103,11 @@ public class BufferedImagePlus implements ImagePlus {
     public void draw(int x, int y, int width, int height){
         if (canvas!=null) {
             ImageCanvas ic = canvas;
-//            double mag = ic.getMagnification();
+            double mag = 1.0;//ic.getMagnification();
             x = ic.screenX(x);
             y = ic.screenY(y);
-//            width = (int)(width*mag);
-//            height = (int)(height*mag);
+            width = (int)(width*mag);
+            height = (int)(height*mag);
             ic.repaint(x, y, width, height);
 //            if (listeners.size()>0 && roi!=null && roi.getPasteMode()!=Roi.NOT_PASTING)
 //                notifyListeners(UPDATED);

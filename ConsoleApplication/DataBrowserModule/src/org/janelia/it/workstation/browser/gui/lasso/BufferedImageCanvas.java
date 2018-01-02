@@ -12,6 +12,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JPanel;
 
+/**
+ * Code copy and pasted from the ImageJA project. It's not possible to reuse their code as-is because of dependencies on AWT.
+ */
 public class BufferedImageCanvas extends JPanel implements ImageCanvas, MouseListener, MouseMotionListener  {
 
     protected ImagePlus imp;
@@ -119,15 +122,14 @@ public class BufferedImageCanvas extends JPanel implements ImageCanvas, MouseLis
     public boolean getPaintPending() {
         return paintPending.get();
     }
-
+    
     @Override
-    public void update(Graphics g) {
-        paint(g);
-    }
-
-    @Override
-    public void paint(Graphics g) {
+    protected void paintComponent(Graphics g) {
+    
+        super.paintComponent(g);
+        
 //        if (IJ.debugMode) IJ.log("ImageCanvas.paint: "+imp);
+                
         painted = true;
         Roi roi = imp.getRoi();
         if (roi!=null) {
