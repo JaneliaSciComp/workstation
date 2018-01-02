@@ -139,7 +139,8 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
     }
 
     private void processDisplayEvent(GL4 gl, AB2Event event) {
-        AB2UserContext userContext=AB2Controller.getController().getUserContext();
+        logger.info("processDisplayEvent() start - type="+event.getClass().getName());
+        AB2UserContext userContext=controller.getUserContext();
 
         MouseEvent mouseEvent=null;
         int x=-1;
@@ -170,9 +171,9 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         }
 
         if (event instanceof AB2MouseDraggedEvent) {
-            //logger.info("DRAG check1");
+            logger.info("DRAG check1");
             if (!userContext.isMouseIsDragging()) {
-                //logger.info("DRAG check2");
+                logger.info("DRAG check2");
                 GLSelectable dragObject = userContext.getSelectObject();
                 userContext.setMouseIsDragging(true);
                 userContext.getPositionHistory().clear();
@@ -187,23 +188,23 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                     // Redundant wrt setDrag()
                     //dragObject.processEvent(beginDragEvent);
                 } else {
-                    //logger.info("DRAG check3");
+                    logger.info("DRAG check3");
                     if (pickActor==null) {
                         if (p1==null) {
-                            //logger.info("DRAG check3.1");
+                            logger.info("DRAG check3.1");
                         } else {
                             GLRegion region = getRegionAtPosition(p1);
                             if (region != null) {
-                                //logger.info("DRAG check4");
+                                logger.info("DRAG check4");
                                 userContext.setHoverObject(region);
                                 region.processEvent(event);
                             }
                             else {
-                                //logger.info("DRAG check4.5");
+                                logger.info("DRAG check4.5");
                             }
                         }
                     } else {
-                        //logger.info("DRAG check3.5 : pickActor="+pickActor.getClass().getName());
+                        logger.info("DRAG check3.5 : pickActor="+pickActor.getClass().getName());
                     }
                 }
             }
@@ -216,7 +217,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 }
                 // Need to update hover state
                 if (pickActor!=null) {
-                    //logger.info("DRAG check5");
+                    logger.info("DRAG check5");
                     if (!pickActor.equals(userContext.getHoverObject())) {
                         GLSelectable hoverObject = userContext.getHoverObject();
                         if (hoverObject!=null) {
@@ -236,13 +237,13 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                         }
                     }
                 } else { // pickActor is null
-                    //logger.info("DRAG check6");
+                    logger.info("DRAG check6");
                     GLRegion region=getRegionAtPosition(p1);
                     if (region!=null) {
-                        //logger.info("DRAG check7");
+                        logger.info("DRAG check7");
                         GLSelectable hoverObject=userContext.getHoverObject();
                         if (hoverObject!=null) {
-                            //logger.info("DRAG check8");
+                            logger.info("DRAG check8");
                             if (!userContext.getHoverObject().equals(region)) {
                                 hoverObject.releaseHover();
                                 userContext.setHoverObject(region);
@@ -256,10 +257,10 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                                     region.processEvent(event);
                                 }
                             } else {
-                                //logger.info("DRAG check9");
+                                logger.info("DRAG check9");
                                 // We already have the hover region set correctly
                                 if (dragObject==null || (! (dragObject instanceof GLAbstractActor))) {
-                                    //logger.info("DRAG check10");
+                                    logger.info("DRAG check10");
                                     region.processEvent(event);
                                 }
                             }

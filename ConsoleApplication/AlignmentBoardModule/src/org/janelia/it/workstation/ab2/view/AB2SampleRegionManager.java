@@ -56,7 +56,7 @@ public class AB2SampleRegionManager extends GLRegionManager {
     }
 
     public GLRegion getRegionAtPosition(Point point) {
-        if (mainRegion.containsPoint(point)) {
+        if (mainRegion.containsPointUsingYFlip(point)) {
             return mainRegion;
         }
 //        else if (bottomRegion.containsPoint(point)) {

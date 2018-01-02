@@ -59,7 +59,7 @@ public class AB2SampleBasicMode extends AB2View3DMode {
 
     @Override
     public void processEvent(AB2Event event) {
-        //logger.info("processEvent()");
+        logger.info("processEvent() - type="+event.getClass().getName());
         super.processEvent(event);
         if (event instanceof AB2SampleAddedEvent) {
             logger.info("processing AB2SampleAddedEvent");

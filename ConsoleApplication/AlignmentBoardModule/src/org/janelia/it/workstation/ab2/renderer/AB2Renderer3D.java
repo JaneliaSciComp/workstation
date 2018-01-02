@@ -43,6 +43,7 @@ public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3
 
     protected PerspectiveCamera camera3d;
     Matrix4 vp3d;
+    AB2Controller controller;
 
     public ConstRotation getRotation() {
         return vantage.getRotation();
@@ -61,6 +62,7 @@ public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3
     }
 
     public AB2Renderer3D() {
+        controller=AB2Controller.getController();
         setBackgroundColorBuffer();
         resetView();
     }
@@ -161,7 +163,7 @@ public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3
     @Override
     public void processEvent(AB2Event event) {
         super.processEvent(event);
-        AB2UserContext userContext=AB2Controller.getController().getUserContext();
+        AB2UserContext userContext=controller.getUserContext();
         if (event instanceof AB2MouseDraggedEvent) {
             MouseEvent mouseEvent=((AB2MouseDraggedEvent) event).getMouseEvent();
             List<Point> points=userContext.getPositionHistory();
