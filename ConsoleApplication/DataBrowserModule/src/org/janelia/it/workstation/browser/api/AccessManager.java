@@ -47,6 +47,7 @@ import com.google.common.util.concurrent.RateLimiter;
  * Starting -> Logged out (if the user cannot be logged in at start up for any reason)
  * Logged out -> Logged in (if the user authenticates manually after start up)
  * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public final class AccessManager {
     
