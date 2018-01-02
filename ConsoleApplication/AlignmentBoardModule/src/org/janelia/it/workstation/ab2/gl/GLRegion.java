@@ -71,16 +71,16 @@ public abstract class GLRegion implements GLSelectable {
     }
 
     public boolean containsPointUsingYFlip(Point point) {
-        logger.info("containsPoint : pxy="+point.x+" "+point.y+" , x="+x+" y="+y+" width="+width+" height="+height);
+        //logger.info("containsPoint : pxy="+point.x+" "+point.y+" , x="+x+" y="+y+" width="+width+" height="+height);
         int xTest=point.x;
         if (xTest>=x && xTest<(x+width)) {
             int yTest=screenHeight-point.y; // must flip Y if using Point from awt
             if (yTest>=y && yTest<(y+height)) {
-                logger.info("containsPoint=true");
+                //logger.info("containsPoint=true");
                 return true;
             }
         }
-        logger.info("containsPoint=false");
+        //logger.info("containsPoint=false");
         return false;
     }
 

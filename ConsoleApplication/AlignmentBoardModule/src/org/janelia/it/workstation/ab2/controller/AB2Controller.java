@@ -129,7 +129,7 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
             currentMode=modeMap.get(AB2SampleBasicMode.class);
             //currentMode=modeMap.get(AB2SkeletonMode.class);
             currentMode.start();
-            controllerHandle=controllerExecutor.scheduleWithFixedDelay(eventHandler, 100, 100, TimeUnit.MILLISECONDS);
+            controllerHandle=controllerExecutor.scheduleWithFixedDelay(eventHandler, 1000, 10, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -196,7 +196,7 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
     private class EventHandler implements Runnable {
 
         public void run() {
-            logger.info("eventQueue size="+eventQueue.size());
+            //logger.info("eventQueue size="+eventQueue.size());
             while (!eventQueue.isEmpty()) {
                 //logger.info("EventHandler run() queue size="+eventQueue.size());
                 AB2Event event = eventQueue.poll();
