@@ -41,7 +41,9 @@ import org.slf4j.LoggerFactory;
 public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3DControls {
     Logger logger = LoggerFactory.getLogger(AB2Renderer3D.class);
 
-    public static double MAX_DRAG_INCREMENT=10.0;
+    public static double MAX_DRAG_INCREMENT_PERC=0.10;
+
+    Point[] dragPoints;
 
     protected PerspectiveCamera camera3d;
     Matrix4 vp3d;
@@ -67,6 +69,9 @@ public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3
         controller=AB2Controller.getController();
         setBackgroundColorBuffer();
         resetView();
+        dragPoints=new Point[2];
+        dragPoints[0]=new Point();
+        dragPoints[1]=new Point();
     }
 
     @Override
@@ -89,13 +94,39 @@ public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3
 
     public void rotatePixels(double dx, double dy, double dz) {
 
+        //logger.info("rotatePixels() raw : dx="+dx+" dy="+dy+" dz="+dz);
+
+          double maxDragDistance=(MAX_DRAG_INCREMENT_PERC*viewport.getHeightPixels());
+//
+//        double dxCheck=dx;
+//        if (dxCheck<0.0) dxCheck=dxCheck*-1.0;
+//
+//        double dyCheck=dy;
+//        if (dyCheck<0.0) dyCheck=dyCheck*-1.0;
+//
+//        double dzCheck=dz;
+//        if (dzCheck<0.0) dzCheck=dzCheck*-1.0;
+//
+//        if (dxCheck>maxDragDistance*2.0) {
+//            dx=0.0;
+//        }
+//
+//        if (dyCheck>maxDragDistance*2.0) {
+//            dy=0.0;
+//        }
+//
+//        if (dzCheck>maxDragDistance*2.0) {
+//            dz=0.0;
+//        }
+
         // Rotate like a trackball
         double dragDistance = Math.sqrt(dy * dy + dx * dx + dz * dz);
         if (dragDistance <= 0.0)
             return;
 
-        if (dragDistance>MAX_DRAG_INCREMENT) {
-            dragDistance=MAX_DRAG_INCREMENT;
+
+        if (dragDistance>maxDragDistance) {
+            return; // discard
         }
 
         Vector3 rotationAxis=new Vector3( (float)dy, (float)dx, (float)dz);
@@ -166,6 +197,50 @@ public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3
         zoom(zoomRatio);
     }
 
+    // Here we will assume 5 points to start with. We will remove any outlier
+    // and take the average of the remaining pairs for start and end.
+    private void getFilteredStartEnd(List<Point> list, int length) {
+        double maxLength=0.0;
+        int maxIndex=-1;
+        int listSize=list.size();
+        for (int i=0;i<length;i++) {
+            Point p=list.get(listSize-i-1);
+            double l=Math.sqrt(p.x*p.x+p.y*p.y);
+            if (l>maxLength) {
+                maxLength=l;
+                maxIndex=i;
+            }
+        }
+        double startX=0.0;
+        double endX=0.0;
+        double startY=0.0;
+        double endY=0.0;
+        int count=0;
+        int halfWay=(length-1)/2;
+        for (int i=0;i<length;i++) {
+            if (i==maxIndex) {
+                continue;
+            }
+            Point p=list.get(listSize-i-1);
+            if (count<halfWay) {
+                endX+=p.x;
+                endY+=p.y;
+            } else {
+                startX+=p.x;
+                startY+=p.y;
+            }
+            count++;
+        }
+        startX=startX/((double)halfWay);
+        startY=startY/((double)halfWay);
+        endX=endX/((double)halfWay);
+        endY=endY/((double)halfWay);
+        dragPoints[0].x=(int)startX;
+        dragPoints[0].y=(int)startY;
+        dragPoints[1].x=(int)endX;
+        dragPoints[1].y=(int)endY;
+    }
+
     @Override
     public void processEvent(AB2Event event) {
         super.processEvent(event);
@@ -173,9 +248,10 @@ public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3
         if (event instanceof AB2MouseDraggedEvent) {
             MouseEvent mouseEvent=((AB2MouseDraggedEvent) event).getMouseEvent();
             List<Point> points=userContext.getPositionHistory();
-            if (points.size()>1) {
-                Point p0=points.get(points.size()-2);
-                Point p1=points.get(points.size()-1);
+            if (points.size()>4) {
+                getFilteredStartEnd(points, 5);
+                Point p0=dragPoints[0];
+                Point p1=dragPoints[1];
 
                 //logger.info("p0 x="+p0.x+" y="+p0.y+" p1 x="+p1.x+" y="+p1.y+" list="+ points.size());
 

@@ -123,6 +123,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             }
         }
         else if (event instanceof AB2MouseClickedEvent) {
+            //userContext.clearDrag();
             displayEventQueue.add(event);
             repaint=true;
         }
@@ -204,11 +205,9 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             //logger.info("DRAG check1");
             if (!userContext.isMouseIsDragging()) {
                 //logger.info("DRAG check2");
+                userContext.clearDrag();
                 GLSelectable dragObject = userContext.getSelectObject();
                 userContext.setMouseIsDragging(true);
-                userContext.getPositionHistory().clear();
-                // try adding twice to reduce discontinuity problem
-                userContext.getPositionHistory().add(p1);
                 userContext.getPositionHistory().add(p1);
                 // This is redundant wrt setDrag()
                 //AB2MouseBeginDragEvent beginDragEvent = new AB2MouseBeginDragEvent(((AB2MouseDraggedEvent) event).getMouseEvent());
