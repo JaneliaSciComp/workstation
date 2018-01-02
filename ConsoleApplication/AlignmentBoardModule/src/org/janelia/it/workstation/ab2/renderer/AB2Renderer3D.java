@@ -41,6 +41,8 @@ import org.slf4j.LoggerFactory;
 public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3DControls {
     Logger logger = LoggerFactory.getLogger(AB2Renderer3D.class);
 
+    public static double MAX_DRAG_INCREMENT=10.0;
+
     protected PerspectiveCamera camera3d;
     Matrix4 vp3d;
     AB2Controller controller;
@@ -91,6 +93,10 @@ public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3
         double dragDistance = Math.sqrt(dy * dy + dx * dx + dz * dz);
         if (dragDistance <= 0.0)
             return;
+
+        if (dragDistance>MAX_DRAG_INCREMENT) {
+            dragDistance=MAX_DRAG_INCREMENT;
+        }
 
         Vector3 rotationAxis=new Vector3( (float)dy, (float)dx, (float)dz);
         rotationAxis=rotationAxis.normalize();

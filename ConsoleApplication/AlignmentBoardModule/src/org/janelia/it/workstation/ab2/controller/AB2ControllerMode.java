@@ -115,8 +115,11 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         else if (event instanceof AB2MouseWheelEvent) {
             GLSelectable hoverObject = userContext.getHoverObject();
             if (hoverObject!=null) {
+                //logger.info("Handing AB2MouseWheelEvent to hoverObject type="+hoverObject.getClass().getName());
                 hoverObject.processEvent(event);
                 repaint=true;
+            } else {
+                //logger.info("hoverObject is null - nothing to hand off AB2MouseWheelEvent");
             }
         }
         else if (event instanceof AB2MouseClickedEvent) {
@@ -168,6 +171,33 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             if (pickId>0) {
                 pickActor = GLAbstractActor.getActorById(pickId);
             }
+
+            // Need to update hover state
+            if (pickActor!=null) {
+                if (!pickActor.equals(userContext.getHoverObject())) {
+                    GLSelectable hoverObject = userContext.getHoverObject();
+                    if (hoverObject!=null) {
+                        hoverObject.releaseHover();
+                    }
+                    userContext.setHoverObject(pickActor);
+                    pickActor.setHover(0);
+                }
+            } else { // pickActor is null
+                GLRegion region=getRegionAtPosition(p1);
+                if (region!=null) {
+                    GLSelectable hoverObject = userContext.getHoverObject();
+                    if (hoverObject != null) {
+                        if (!userContext.getHoverObject().equals(region)) {
+                            hoverObject.releaseHover();
+                            userContext.setHoverObject(region);
+                        }
+                    }
+                    else {
+                        userContext.setHoverObject(region);
+                    }
+                }
+            }
+
         }
 
         if (event instanceof AB2MouseDraggedEvent) {
@@ -177,6 +207,8 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 GLSelectable dragObject = userContext.getSelectObject();
                 userContext.setMouseIsDragging(true);
                 userContext.getPositionHistory().clear();
+                // try adding twice to reduce discontinuity problem
+                userContext.getPositionHistory().add(p1);
                 userContext.getPositionHistory().add(p1);
                 // This is redundant wrt setDrag()
                 //AB2MouseBeginDragEvent beginDragEvent = new AB2MouseBeginDragEvent(((AB2MouseDraggedEvent) event).getMouseEvent());
@@ -305,26 +337,9 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 //            }
 
         else if (event instanceof AB2MouseMovedEvent) {
-            // Need to update hover state
-            if (pickActor!=null) {
-                if (!pickActor.equals(userContext.getHoverObject())) {
-                    GLSelectable hoverObject = userContext.getHoverObject();
-                    if (hoverObject!=null) {
-                        hoverObject.releaseHover();
-                    }
-                    userContext.setHoverObject(pickActor);
-                    pickActor.setHover(0);
-                }
-            } else { // pickActor is null
-                GLRegion region=getRegionAtPosition(p1);
-                GLSelectable hoverObject=userContext.getHoverObject();
-                if (hoverObject!=null) {
-                    if (!userContext.getHoverObject().equals(region)) {
-                        hoverObject.releaseHover();
-                        userContext.setHoverObject(region);
-                    }
-                }
-                if (region!=null) region.processEvent(event);
+            GLSelectable hoverObject=userContext.getHoverObject();
+            if (hoverObject!=null) {
+                hoverObject.processEvent(event);
             }
         }
 
