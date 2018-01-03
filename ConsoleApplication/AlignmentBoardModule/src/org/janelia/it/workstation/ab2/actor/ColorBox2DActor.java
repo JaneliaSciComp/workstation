@@ -102,6 +102,8 @@ public class ColorBox2DActor extends GLAbstractActor {
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
 
+        //logger.info("init() called");
+
         if (shader instanceof AB2Basic2DShader) {
 
             AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
@@ -126,12 +128,14 @@ public class ColorBox2DActor extends GLAbstractActor {
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
 
+        //logger.info("display() called");
+
         if (needsResize) {
             float[] vertexData=computeVertexData();
             vertexFb=createGLFloatBuffer(vertexData);
             gl.glBindVertexArray(vertexArrayId.get(0));
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
-            gl.glBufferSubData(GL4.GL_ARRAY_BUFFER, 0, vertexFb.capacity(), vertexFb);
+            gl.glBufferSubData(GL4.GL_ARRAY_BUFFER, 0, vertexFb.capacity() * 4, vertexFb);
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
             needsResize=false;
         }

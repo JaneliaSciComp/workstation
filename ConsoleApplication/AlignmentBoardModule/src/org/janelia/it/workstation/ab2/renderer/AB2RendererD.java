@@ -121,6 +121,7 @@ public abstract class AB2RendererD extends AB2Renderer {
     }
 
     protected abstract void resetCamera();
+
     protected void checkGlError(GL4 gl, String message) {
         int errorNumber = gl.glGetError();
         if (errorNumber <= 0)
@@ -197,58 +198,6 @@ public abstract class AB2RendererD extends AB2Renderer {
             }
             actorInitQueue.clear();
         }
-
-        // paint solid background color
-//        gl.glDisable(GL4.GL_BLEND);
-//        gl.glClearColor(0f, 0f, 0f, 1f);
-//        gl.glClear(GL4.GL_COLOR_BUFFER_BIT);
-
-
-        gl.glClear(GL4.GL_DEPTH_BUFFER_BIT | GL4.GL_COLOR_BUFFER_BIT | GL4.GL_STENCIL_BUFFER_BIT);
-
-        gl.glDisable(GL4.GL_DEPTH_TEST);
-
-//        gl.glBlendEquation(GL4.GL_FUNC_ADD);
-//        gl.glDisable(GL4.GL_BLEND);
-        //gl.glDepthMask(true);
-
-        //gl.glClearBufferfv(gl.GL_COLOR, 0, backgroundColorBuffer);
-
-        //gl.glDisable(GL4.GL_BLEND);
-        //checkGlError(gl, "Check3");
-
-
-
-        gl.glEnable(GL4.GL_BLEND);
-
-        gl.glBlendEquation(GL4.GL_MAX);
-
-//        gl.glBlendEquation(GL4.GL_FUNC_ADD);
-//        checkGlError(gl, "Check8.2");
-
-//        gl.glBlendFunc(GL4.GL_ONE, GL4.GL_DST_ALPHA);
-        //gl.glBlendFunc(GL4.GL_SRC_ALPHA, GL4.GL_ONE_MINUS_SRC_ALPHA);
-
-//        gl.glBlendFunc(GL4.GL_SRC_ALPHA_SATURATE, GL4.GL_ONE);
-
-//        gl.glDisable(GL4.GL_BLEND);
-
-//        gl.glColorMask(true, true, true, true);
-//        gl.glDepthMask(true);
-
-//        gl.glDisable(GL4.GL_SCISSOR_TEST);
-//        gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
-//        checkGlError(gl, "Check4");
-//        gl.glClearColor(0.0f, 0.2f, 0.0f, 1.0f);
-//        checkGlError(gl, "Check5");
-//        gl.glClearDepth(1.0f);
-//        checkGlError(gl, "Check6");
-//        gl.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT | GL4.GL_STENCIL_BUFFER_BIT);
-//        checkGlError(gl, "Check1");
-
-//        gl.glFlush();
-
-//        gl.glEnable(GL4.GL_BLEND);
 
         resetVPMatrix();
 
