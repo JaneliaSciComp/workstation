@@ -55,7 +55,7 @@ public class Voxel3DActor extends GLAbstractActor {
         this.dimZ=dimZ;
     }
 
-    public Voxel3DActor(AB2Renderer3D renderer, int actorId, float threshold, byte[] dataXYZRGBA) {
+    public Voxel3DActor(AB2Renderer3D renderer, int actorId, float threshold, byte[] dataXYZRGBA, boolean flipY) {
         super(renderer, actorId);
         this.actorId=actorId;
         voxels=new ArrayList<>();
@@ -80,6 +80,7 @@ public class Voxel3DActor extends GLAbstractActor {
         int yd=0;
         int zd=0;
         int q=0;
+        float yFlipAdjustment=1.0f/(dimY*1f);
         while (p<dataXYZRGBA.length) {
             q=(p-12)/4;
             if (q%xI==0) {
@@ -100,6 +101,9 @@ public class Voxel3DActor extends GLAbstractActor {
             if (a<0) a+=256;
             if (r>t || g>t || b>t) {
                 Vector3 v=new Vector3((xd*1f)/dimXf, (yd*1f)/dimYf, (zd*1f)/dimZf);
+                if (flipY) {
+                    v.setY(1.0f - v.getY() - yFlipAdjustment);
+                }
                 voxels.add(v);
                 colors.add(new Vector4( (r*1f)/255f, (g*1f)/255f, (b*1f)/255f, (a*1f)/255f));
             }

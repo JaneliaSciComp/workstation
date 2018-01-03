@@ -159,7 +159,7 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
 
         clearVoxel3DActor();
         resetView();
-        Voxel3DActor v=new Voxel3DActor(this, getNextActorIndex(), 0.05f, data);
+        Voxel3DActor v=new Voxel3DActor(this, getNextActorIndex(), 0.05f, data, true);
         addVoxel3DActor(v);
     }
 
