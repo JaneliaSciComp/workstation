@@ -152,7 +152,7 @@ public class ColorBox2DActor extends GLAbstractActor {
             }
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
-            pickShader.setMVP(gl, renderer2d.getVp2d());
+            pickShader.setMVP(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
             pickShader.setPickId(gl, actorId);
         }
 

@@ -309,6 +309,13 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                     }
                     userContext.setSelectObject(pickActor);
                     pickActor.setSelect();
+                } else {
+                    // User has clicked on already-selected object, so we reverse and de-select
+                    GLSelectable selectObject = userContext.getSelectObject();
+                    if (selectObject != null) {
+                        selectObject.releaseSelect();
+                    }
+                    userContext.setSelectObject(null);
                 }
             }
             else {
