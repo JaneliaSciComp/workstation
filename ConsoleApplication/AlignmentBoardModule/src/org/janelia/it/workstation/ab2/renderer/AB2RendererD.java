@@ -201,7 +201,9 @@ public abstract class AB2RendererD extends AB2Renderer {
 
         resetVPMatrix();
 
+        logger.info("display() sequence start====");
         for (GLShaderActionSequence shaderActionSequence : drawShaderList) {
+            logger.info("display() sequence="+shaderActionSequence.getName());
             shaderActionSequence.display(gl);
         }
 
@@ -321,5 +323,12 @@ public abstract class AB2RendererD extends AB2Renderer {
         return result;
     }
 
+    public static Vector2 getNormedCenterPositionFromScreenCoordinates(int x, int y, int screenWidth, int screenHeight) {
+        double dWidth=1.0*screenWidth;
+        double dHeight=1.0*screenHeight;
+        double normedXOffset=(1.0 * x)/dWidth;
+        double normedYOffset=(1.0 * y)/dHeight;
+        return new Vector2( (float)normedXOffset, (float)normedYOffset);
+    }
 
 }

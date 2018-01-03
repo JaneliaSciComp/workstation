@@ -25,8 +25,8 @@ public class TextLabelActor extends GLAbstractActor {
 
     private final Logger logger = LoggerFactory.getLogger(TextLabelActor.class);
 
-    Vector2 v0; // computed
-    Vector2 v1; // computed
+    Vector2 v0 = new Vector2(0f, 0f);
+    Vector2 v1 = new Vector2(0f, 0f);
     Vector2 centerPosition;
 
     String text;
@@ -111,7 +111,10 @@ public class TextLabelActor extends GLAbstractActor {
 
     public void setBackgroundColor(Vector4 backgroundColor) { this.backgroundColor=backgroundColor; }
 
-    public void setCenterPosition(Vector2 position) { this.centerPosition = centerPosition; }
+    public void setCenterPosition(Vector2 position) {
+        this.centerPosition = position;
+        recompute=true;
+    }
 
     public void setOrientation(Orientation orientation) { this.orientation = orientation; }
 
@@ -164,7 +167,7 @@ public class TextLabelActor extends GLAbstractActor {
         } else {
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
             checkGlError(gl, "Refresh - glBindBuffer");
-            gl.glBufferSubData(GL4.GL_ARRAY_BUFFER, 0, vertexFb.capacity(), vertexFb);
+            gl.glBufferSubData(GL4.GL_ARRAY_BUFFER, 0, vertexFb.capacity() * 4, vertexFb);
             checkGlError(gl, "Refresh - glBufferSubData");
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
             checkGlError(gl, "Refresh - glBindBuffer 0");
