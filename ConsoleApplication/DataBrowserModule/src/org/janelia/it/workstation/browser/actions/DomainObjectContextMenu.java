@@ -178,6 +178,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         //add(getSetPublishingNameItem());
         add(getApplyPublishingNamesItem());
         add(getMergeItem());
+        add(getColorDepthSearchItem());
         
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
@@ -620,6 +621,24 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return blockItem;
     }
 
+    protected JMenuItem getColorDepthSearchItem() {
+
+        if (multiple) return null;
+        
+        List<Sample> samples = new ArrayList<>();
+        for(DomainObject domainObject : domainObjectList) {
+            if (domainObject instanceof Sample) {
+                samples.add((Sample)domainObject);
+            }
+        }
+        
+        if (samples.size()!=domainObjectList.size()) return null;
+                
+        if (!resultDescriptor.isAligned()) return null;
+        
+        return getNamedActionItem(new ColorDepthMaskAction(samples.get(0), resultDescriptor, typeName));
+    }
+    
     protected JMenuItem getSetPublishingNameItem() {
         
         List<Sample> samples = new ArrayList<>();

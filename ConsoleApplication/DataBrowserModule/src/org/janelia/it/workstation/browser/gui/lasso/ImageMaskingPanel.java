@@ -35,30 +35,48 @@ public class ImageMaskingPanel extends JPanel {
 
     private BufferedImage image;
     private ImagePlus imagePlus;
-    private JButton resetButton;
     private JButton maskButton;
+    private JButton resetButton;
+    private JButton continueButton;
     private BufferedImage mask;
     private Consumer<BufferedImage> onMask;
+    private Consumer<BufferedImage> onContinue;
     
     public ImageMaskingPanel() throws IOException {
         
         setLayout(new BorderLayout());
-
-        resetButton = new JButton("Reset");
-        resetButton.setFocusable(false);
-        resetButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setImage(image);
-            }
-        });
 
         maskButton = new JButton("Mask");
         maskButton.setFocusable(false);
         maskButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                onMask.accept(createMask());
+                createMask();
+                if (onMask!=null) {
+                    onMask.accept(mask);
+                }
+            }
+        });
+
+        resetButton = new JButton("Revert");
+        resetButton.setEnabled(false);
+        resetButton.setFocusable(false);
+        resetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                resetButton.setEnabled(false);
+                setImage(image);
+            }
+        });
+
+        continueButton = new JButton("Continue");
+        continueButton.setFocusable(false);
+        continueButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (onContinue!=null) {
+                    onContinue.accept(mask);
+                }
             }
         });
         
@@ -87,18 +105,26 @@ public class ImageMaskingPanel extends JPanel {
         
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
-        buttonPanel.add(resetButton);
         buttonPanel.add(maskButton);
+        buttonPanel.add(resetButton);
+        buttonPanel.add(continueButton);
         
         add(buttonPanel, BorderLayout.SOUTH);
+        
+        revalidate();
+        repaint();
     }
 
-    private void setOnMask(Consumer<BufferedImage> onMask) {
+    public void setOnMask(Consumer<BufferedImage> onMask) {
         this.onMask = onMask;
     }
-    
-    private BufferedImage createMask() {
 
+    public void setOnContinue(Consumer<BufferedImage> onContinue) {
+        this.onContinue = onContinue;
+    }
+
+    private BufferedImage createMask() {
+        
         prepareProcessor(imagePlus.getImageProcessor(), imagePlus);
         
         // This is usually done by the PlugInFilterRunner. It must be run for unmasking to work:
@@ -108,7 +134,10 @@ public class ImageMaskingPanel extends JPanel {
         Filler fill = new Filler();
         fill.setup("outside", imagePlus);
         fill.run(imagePlus.getImageProcessor());
-
+        
+        // Enable revert button
+        resetButton.setEnabled(true);
+        
         this.mask = imagePlus.getImageProcessor().getBufferedImage();
         return mask;
     }
@@ -139,7 +168,7 @@ public class ImageMaskingPanel extends JPanel {
         
         ImageMaskingPanel maskingPanel = new ImageMaskingPanel();
         maskingPanel.setImage(image);
-        maskingPanel.setOnMask((BufferedImage mask) -> {
+        maskingPanel.setOnContinue((BufferedImage mask) -> {
             if (mask!=null) {
                 try {
                     ImageIO.write(mask, "png", outputFile);
