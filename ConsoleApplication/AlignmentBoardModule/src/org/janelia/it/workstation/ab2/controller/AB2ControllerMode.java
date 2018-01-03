@@ -369,8 +369,8 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
 
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT | GL4.GL_COLOR_BUFFER_BIT | GL4.GL_STENCIL_BUFFER_BIT);
-
-        gl.glDisable(GL4.GL_DEPTH_TEST);
+        gl.glEnable(GL4.GL_DEPTH_TEST);
+        gl.glDisable(GL4.GL_BLEND);
 
 //        gl.glBlendEquation(GL4.GL_FUNC_ADD);
 //        gl.glDisable(GL4.GL_BLEND);
@@ -383,9 +383,9 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
 
 
-        gl.glEnable(GL4.GL_BLEND);
+        //gl.glEnable(GL4.GL_BLEND);
 
-        gl.glBlendEquation(GL4.GL_MAX);
+        //gl.glBlendEquation(GL4.GL_MAX);
 
 //        gl.glBlendEquation(GL4.GL_FUNC_ADD);
 //        checkGlError(gl, "Check8.2");
@@ -419,13 +419,13 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
     final public void display(GLAutoDrawable glAutoDrawable) {
         GL4 gl4 = (GL4) (glAutoDrawable.getGL());
 
-        clearDisplay(gl4);
-
         gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, pickFramebufferId.get(0));
         gl4.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         gl4.glClearDepth(1.0f);
         gl4.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT);
         gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
+
+        clearDisplay(gl4);
 
         modeDisplay(glAutoDrawable);
         boolean repaint=false;

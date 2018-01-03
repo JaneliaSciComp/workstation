@@ -205,8 +205,6 @@ public abstract class AB2RendererD extends AB2Renderer {
             shaderActionSequence.display(gl);
         }
 
-        gl.glDisable(GL4.GL_BLEND);
-
         AB2ControllerMode mode=AB2Controller.getController().getCurrentMode();
 
         gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, mode.getPickFramebufferId());
