@@ -1566,6 +1566,7 @@
                 <package>org.janelia.model.domain.enums</package>
                 <package>org.janelia.model.domain.enums.algorithms</package>
                 <package>org.janelia.model.domain.gui.alignment_board</package>
+                <package>org.janelia.model.domain.gui.colordepth</package>
                 <package>org.janelia.model.domain.gui.search</package>
                 <package>org.janelia.model.domain.gui.search.criteria</package>
                 <package>org.janelia.model.domain.interfaces</package>
