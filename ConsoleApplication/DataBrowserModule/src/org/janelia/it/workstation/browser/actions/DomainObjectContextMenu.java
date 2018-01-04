@@ -43,6 +43,7 @@ import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
+import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthMaskAction;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SpecialAnnotationChooserDialog;

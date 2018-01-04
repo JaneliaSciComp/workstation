@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.actions;
+package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
@@ -10,7 +10,6 @@ import javax.swing.JOptionPane;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
-import org.janelia.it.workstation.browser.gui.colordepth.MaskCreationDialog;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.util.Utils;
