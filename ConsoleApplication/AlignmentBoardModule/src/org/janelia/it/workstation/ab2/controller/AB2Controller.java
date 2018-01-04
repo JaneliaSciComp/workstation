@@ -51,6 +51,8 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
     private AB2DomainObject domainObject;
     private int pickCounter=0;
     private AB2UserContext userContext=new AB2UserContext();
+    private boolean needsRepaint=false;
+
     //private int glWidth;
     //private int glHeight;
 
@@ -80,6 +82,14 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
     public synchronized int getNextPickIndex() {
         pickCounter++;
         return pickCounter;
+    }
+
+    public boolean needsRepaint() {
+        return needsRepaint;
+    }
+
+    public void setNeedsRepaint(boolean needsRepaint) {
+        this.needsRepaint = needsRepaint;
     }
 
     // This design is being changed so that actors handle their own selection events
@@ -113,6 +123,7 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
 
     public void repaint() {
         gljPanel.repaint();
+        needsRepaint=false;
     }
 
     private void populateModeMap() {

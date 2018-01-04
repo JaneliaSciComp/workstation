@@ -182,6 +182,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                     }
                     userContext.setHoverObject(pickActor);
                     pickActor.setHover(0);
+                    controller.setNeedsRepaint(true);
                 }
             } else { // pickActor is null
                 GLRegion region=getRegionAtPosition(p1);
@@ -191,10 +192,12 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                         if (!userContext.getHoverObject().equals(region)) {
                             hoverObject.releaseHover();
                             userContext.setHoverObject(region);
+                            controller.setNeedsRepaint(true);
                         }
                     }
                     else {
                         userContext.setHoverObject(region);
+                        controller.setNeedsRepaint(true);
                     }
                 }
             }
@@ -202,6 +205,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         }
 
         if (event instanceof AB2MouseDraggedEvent) {
+            controller.setNeedsRepaint(true);
             //logger.info("DRAG check1");
             if (!userContext.isMouseIsDragging()) {
                 //logger.info("DRAG check2");
@@ -301,6 +305,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             }
 
         } else if (event instanceof AB2MouseClickedEvent) {
+            controller.setNeedsRepaint(true);
             if (pickActor != null) {
                 if (!pickActor.equals(userContext.getSelectObject())) {
                     GLSelectable selectObject = userContext.getSelectObject();
@@ -346,7 +351,12 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             GLSelectable hoverObject=userContext.getHoverObject();
             if (hoverObject!=null) {
                 hoverObject.processEvent(event);
+                controller.setNeedsRepaint(true);
             }
+        }
+
+        if (controller.needsRepaint()) {
+            controller.repaint();
         }
 
     }
