@@ -17,6 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector2;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
@@ -308,27 +309,27 @@ public abstract class AB2RendererD extends AB2Renderer {
         return new int[] { bX0, bY0, bX1, bY1 };
     }
 
-    public static Vector2[] getNormed2DPositionsFromScreenCoordinates(int x, int y, int width, int height, int screenWidth, int screenHeight) {
+    public static Vector3[] getNormed2DPositionsFromScreenCoordinates(int x, int y, int width, int height, int screenWidth, int screenHeight, float z) {
         double dWidth=1.0*screenWidth;
         double dHeight=1.0*screenHeight;
         double normedWidth=(1.0*width)/dWidth;
         double normedHeight=(1.0*height)/dHeight;
         double normedXOffset=(1.0 * x)/dWidth;
         double normedYOffset=(1.0 * y)/dHeight;
-        Vector2[] result=new Vector2[2];
-        Vector2 v0=new Vector2( (float)normedXOffset, (float)normedYOffset);
-        Vector2 v1=new Vector2( (float)(normedXOffset+normedWidth), (float)(normedYOffset+normedHeight));
+        Vector3[] result=new Vector3[2];
+        Vector3 v0=new Vector3( (float)normedXOffset, (float)normedYOffset, z);
+        Vector3 v1=new Vector3( (float)(normedXOffset+normedWidth), (float)(normedYOffset+normedHeight), z);
         result[0]=v0;
         result[1]=v1;
         return result;
     }
 
-    public static Vector2 getNormedCenterPositionFromScreenCoordinates(int x, int y, int screenWidth, int screenHeight) {
+    public static Vector3 getNormedCenterPositionFromScreenCoordinates(int x, int y, int screenWidth, int screenHeight, float z) {
         double dWidth=1.0*screenWidth;
         double dHeight=1.0*screenHeight;
         double normedXOffset=(1.0 * x)/dWidth;
         double normedYOffset=(1.0 * y)/dHeight;
-        return new Vector2( (float)normedXOffset, (float)normedYOffset);
+        return new Vector3( (float)normedXOffset, (float)normedYOffset, z);
     }
 
 }

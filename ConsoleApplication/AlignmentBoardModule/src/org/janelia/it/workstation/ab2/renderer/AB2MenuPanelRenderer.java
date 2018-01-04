@@ -3,6 +3,7 @@ package org.janelia.it.workstation.ab2.renderer;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector2;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.it.workstation.ab2.actor.ColorBox2DActor;
 import org.janelia.it.workstation.ab2.actor.TextLabelActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
@@ -62,7 +63,7 @@ public class AB2MenuPanelRenderer extends AB2Renderer2D {
     }
 
     private int getAb2LabelX() {
-        return x+50;
+        return x+25;
     }
 
     private int getAb2LabelY() {
@@ -78,23 +79,23 @@ public class AB2MenuPanelRenderer extends AB2Renderer2D {
         this.screenWidth=screenWidth;
         this.screenHeight=screenHeight;
 
-        Vector2[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(x, y, width, height, screenWidth, screenHeight);
+        Vector3[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(x, y, width, height, screenWidth, screenHeight, AB2Properties.MENU_BACKGROUND_Z);
         backgroundPanel.updateVertices(normed2dPositions[0], normed2dPositions[1]);
 
-        Vector2 labelPosition=getNormedCenterPositionFromScreenCoordinates(getAb2LabelX(), getAb2LabelY(), screenWidth, screenHeight);
+        Vector3 labelPosition=getNormedCenterPositionFromScreenCoordinates(getAb2LabelX(), getAb2LabelY(), screenWidth, screenHeight, AB2Properties.AB2_TEXT_LABEL_Z);
         ab2TextLabel.setCenterPosition(labelPosition);
 
     }
 
     private void createAb2TextLabel(int x, int y, int screenWidth, int screenHeight) {
-        Vector2 labelPosition=getNormedCenterPositionFromScreenCoordinates(x, y, screenWidth, screenHeight);
+        Vector3 labelPosition=getNormedCenterPositionFromScreenCoordinates(x, y, screenWidth, screenHeight, AB2Properties.AB2_TEXT_LABEL_Z);
         ab2TextLabel=new TextLabelActor(this, AB2Controller.getController().getNextPickIndex(), "AB2",
                 labelPosition, AB2Properties.AB2_TEXT_LABEL_FOREGROUND, AB2Properties.AB2_TEXT_LABEL_BACKGROUND, TextLabelActor.Orientation.NORMAL);
         labelSequence.getActorSequence().add(ab2TextLabel);
     }
 
     private void createBackgroundPanel(int x, int y, int width, int height, int screenWidth, int screenHeight) {
-        Vector2[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(x, y, width, height, screenWidth, screenHeight);
+        Vector3[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(x, y, width, height, screenWidth, screenHeight, AB2Properties.MENU_BACKGROUND_Z);
 
         logger.info("backgroundPanel v0="+normed2dPositions[0].get(0)+" "+normed2dPositions[0].get(1)+" v1="+
                 normed2dPositions[1].get(0)+" "+normed2dPositions[1].get(1));

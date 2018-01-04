@@ -145,7 +145,7 @@ public class AB2SkeletonRenderer extends AB2Renderer {
 
         private void addPickSquareActor() {
             // Pick Square
-            pickSquareActor=new PickSquareActor(this, getNextActorIndex(), new Vector2(0.95f, 0.95f), new Vector2(1.0f, 1.0f),
+            pickSquareActor=new PickSquareActor(this, getNextActorIndex(), new Vector3(0.95f, 0.95f, 0f), new Vector3(1.0f, 1.0f, 0f),
                     new Vector4(1f, 0f, 0f, 1f), new Vector4(0f, 1f, 0f, 1f));
             colorIdMap.put(pickSquareActor.getActorId(), pickSquareActor.getColor0());
             basic2DShaderSequence.getActorSequence().add(pickSquareActor);
@@ -169,8 +169,8 @@ public class AB2SkeletonRenderer extends AB2Renderer {
             float imageNormalWidth=imageNormalHeight*imageAspectRatio;
             logger.info("imageNormalWidth="+imageNormalWidth);
             logger.info("imageNormalHeight="+imageNormalHeight);
-            Vector2 v0=new Vector2(0.1f, 0.6f);
-            Vector2 v1=new Vector2(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight);
+            Vector3 v0=new Vector3(0.1f, 0.6f, 0f);
+            Vector3 v1=new Vector3(v0.get(0)+imageNormalWidth, v0.get(1)+imageNormalHeight, 0f);
             image2DActor=new Image2DActor(this, getNextActorIndex(), v0, v1, bufferedImage, 1.0f);
             colorIdMap.put(image2DActor.getActorId(), new Vector4(0f, 0f, 1f, 1f));
             image2DShaderSequence.getActorSequence().add(image2DActor);
@@ -179,7 +179,7 @@ public class AB2SkeletonRenderer extends AB2Renderer {
 
         private void addTextLabelActor() {
             // TextLabelActor
-            Vector2 t0=new Vector2(0.1f, 0.2f);
+            Vector3 t0=new Vector3(0.1f, 0.2f, 0f);
             textLabelActor=new TextLabelActor(this, getNextActorIndex(), TextLabelActor.UBUNTU_FONT_STRING, t0,
                     new Vector4(1f, 1f, 1f, 1f), new Vector4(0.4f, 0.1f, 0.1f, 0.5f), TextLabelActor.Orientation.NORMAL);
             text2DShaderSequence.getActorSequence().add(textLabelActor);

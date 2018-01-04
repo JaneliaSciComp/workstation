@@ -8,6 +8,7 @@ import java.nio.IntBuffer;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector2;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2Image2DClickEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
@@ -23,8 +24,8 @@ public class Image2DActor extends GLAbstractActor {
 
     private final Logger logger = LoggerFactory.getLogger(Image2DActor.class);
 
-    Vector2 v0;
-    Vector2 v1;
+    Vector3 v0;
+    Vector3 v1;
 
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
@@ -36,7 +37,7 @@ public class Image2DActor extends GLAbstractActor {
     AB2Renderer2D renderer2d;
 
 
-    public Image2DActor(AB2Renderer2D renderer, int actorId, Vector2 v0, Vector2 v1, BufferedImage bufferedImage, float alpha) {
+    public Image2DActor(AB2Renderer2D renderer, int actorId, Vector3 v0, Vector3 v1, BufferedImage bufferedImage, float alpha) {
         super(renderer, actorId);
         this.renderer2d=renderer;
         this.v0=v0;
@@ -58,13 +59,13 @@ public class Image2DActor extends GLAbstractActor {
             // but necessary for shader compatibility.
             float[] vertexData = {
 
-                    v0.get(0), v0.get(1), 0f,    0f, 0f, 0f,  // lower left
-                    v1.get(0), v0.get(1), 0f,    1f, 0f, 0f,  // lower right
-                    v0.get(0), v1.get(1), 0f,    0f, 1f, 0f,  // upper left
+                    v0.get(0), v0.get(1), v0.get(2),    0f, 0f, 0f,  // lower left
+                    v1.get(0), v0.get(1), v0.get(2),    1f, 0f, 0f,  // lower right
+                    v0.get(0), v1.get(1), v0.get(2),    0f, 1f, 0f,  // upper left
 
-                    v1.get(0), v0.get(1), 0f,    1f, 0f, 0f,  // lower right
-                    v1.get(0), v1.get(1), 0f,    1f, 1f, 0f,  // upper right
-                    v0.get(0), v1.get(1), 0f,    0f, 1f, 0f,  // upper left
+                    v1.get(0), v0.get(1), v1.get(2),    1f, 0f, 0f,  // lower right
+                    v1.get(0), v1.get(1), v1.get(2),    1f, 1f, 0f,  // upper right
+                    v0.get(0), v1.get(1), v1.get(2),    0f, 1f, 0f,  // upper left
             };
 
             vertexFb=createGLFloatBuffer(vertexData);

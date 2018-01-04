@@ -6,6 +6,7 @@ import java.nio.IntBuffer;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector2;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2PickSquareColorChangeEvent;
@@ -22,8 +23,8 @@ public class PickSquareActor extends GLAbstractActor {
 
     private final Logger logger = LoggerFactory.getLogger(PickSquareActor.class);
 
-    Vector2 v0;
-    Vector2 v1;
+    Vector3 v0;
+    Vector3 v1;
     Vector4 color0;
     Vector4 color1;
 
@@ -33,7 +34,7 @@ public class PickSquareActor extends GLAbstractActor {
     FloatBuffer vertexFb;
     AB2Renderer2D renderer2d;
 
-    public PickSquareActor(AB2Renderer2D renderer, int actorId, Vector2 v0, Vector2 v1, Vector4 color0, Vector4 color1) {
+    public PickSquareActor(AB2Renderer2D renderer, int actorId, Vector3 v0, Vector3 v1, Vector4 color0, Vector4 color1) {
         super(renderer, actorId);
         this.renderer2d=renderer;
         this.v0=v0;
@@ -51,13 +52,13 @@ public class PickSquareActor extends GLAbstractActor {
 
             float[] vertexData = {
 
-                    v0.get(0), v0.get(1), 0f,
-                    v1.get(0), v0.get(1), 0f,
-                    v0.get(0), v1.get(1), 0f,
+                    v0.get(0), v0.get(1), v0.get(2),
+                    v1.get(0), v0.get(1), v0.get(2),
+                    v0.get(0), v1.get(1), v0.get(2),
 
-                    v1.get(0), v0.get(1), 0f,
-                    v1.get(0), v1.get(1), 0f,
-                    v0.get(0), v1.get(1), 0f
+                    v1.get(0), v0.get(1), v1.get(2),
+                    v1.get(0), v1.get(1), v1.get(2),
+                    v0.get(0), v1.get(1), v1.get(2)
             };
 
             vertexFb=createGLFloatBuffer(vertexData);

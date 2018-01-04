@@ -16,5 +16,6 @@ void main() {
   imageSize2d=textureSize(image_texture, 0);
   tci2=ivec2(imageSize2d.x*tc_out.x, imageSize2d.y*tc_out.y);
   vec4 colorRgba=texelFetch(image_texture, tci2, 0);
-  color=mix(colorForeground, colorBackground, colorRgba.r);
+  //color=mix(colorForeground, colorBackground, colorRgba.r);
+  color=mix(colorBackground, colorForeground, colorRgba.r);
 }

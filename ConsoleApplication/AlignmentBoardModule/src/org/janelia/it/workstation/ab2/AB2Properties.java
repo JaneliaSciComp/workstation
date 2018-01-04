@@ -10,8 +10,10 @@ public class AB2Properties {
     public static Vector4 MENU_COLOR = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
     public static Vector4 MENU_HOVER_COLOR = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
     public static Vector4 MENU_SELECT_COLOR = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
+    public static float MENU_BACKGROUND_Z=0.9f;
 
     public static Vector4 AB2_TEXT_LABEL_FOREGROUND = new Vector4(0.5f, 0.5f, 0.5f, 1.0f);
     public static Vector4 AB2_TEXT_LABEL_BACKGROUND = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
+    public static float AB2_TEXT_LABEL_Z=0.8f;
 
 }

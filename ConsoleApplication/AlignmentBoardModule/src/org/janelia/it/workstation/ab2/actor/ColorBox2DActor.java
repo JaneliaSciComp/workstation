@@ -8,6 +8,7 @@ import java.nio.IntBuffer;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector2;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
@@ -24,8 +25,8 @@ public class ColorBox2DActor extends GLAbstractActor {
 
     private final Logger logger = LoggerFactory.getLogger(ColorBox2DActor.class);
 
-    Vector2 v0;
-    Vector2 v1;
+    Vector3 v0;
+    Vector3 v1;
 
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
@@ -41,7 +42,7 @@ public class ColorBox2DActor extends GLAbstractActor {
 
     AB2Renderer2D renderer2d;
 
-    public ColorBox2DActor(AB2Renderer2D renderer, int actorId, Vector2 v0, Vector2 v1,
+    public ColorBox2DActor(AB2Renderer2D renderer, int actorId, Vector3 v0, Vector3 v1,
                            Vector4 color, Vector4 hoverColor, Vector4 selectColor) {
         super(renderer, actorId);
         this.renderer2d=renderer;
@@ -76,7 +77,7 @@ public class ColorBox2DActor extends GLAbstractActor {
         this.selectColor = selectColor;
     }
 
-    public void updateVertices(Vector2 v0, Vector2 v1) {
+    public void updateVertices(Vector3 v0, Vector3 v1) {
         this.v0=v0;
         this.v1=v1;
         needsResize=true;
@@ -85,13 +86,13 @@ public class ColorBox2DActor extends GLAbstractActor {
     private float[] computeVertexData() {
         float[] vertexData = {
 
-                v0.get(0), v0.get(1), 0f,    // lower left
-                v1.get(0), v0.get(1), 0f,    // lower right
-                v0.get(0), v1.get(1), 0f,    // upper left
+                v0.get(0), v0.get(1), v0.get(2),    // lower left
+                v1.get(0), v0.get(1), v0.get(2),    // lower right
+                v0.get(0), v1.get(1), v0.get(2),    // upper left
 
-                v1.get(0), v0.get(1), 0f,    // lower right
-                v1.get(0), v1.get(1), 0f,    // upper right
-                v0.get(0), v1.get(1), 0f     // upper left
+                v1.get(0), v0.get(1), v1.get(2),    // lower right
+                v1.get(0), v1.get(1), v1.get(2),    // upper right
+                v0.get(0), v1.get(1), v1.get(2)     // upper left
         };
         return vertexData;
     }

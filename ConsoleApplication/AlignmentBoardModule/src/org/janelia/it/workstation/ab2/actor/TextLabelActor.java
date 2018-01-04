@@ -25,9 +25,9 @@ public class TextLabelActor extends GLAbstractActor {
 
     private final Logger logger = LoggerFactory.getLogger(TextLabelActor.class);
 
-    Vector2 v0 = new Vector2(0f, 0f);
-    Vector2 v1 = new Vector2(0f, 0f);
-    Vector2 centerPosition;
+    Vector3 v0 = new Vector3(0f, 0f, 0f);
+    Vector3 v1 = new Vector3(0f, 0f, 0f);
+    Vector3 centerPosition;
 
     String text;
     Vector4 textColor;
@@ -82,7 +82,7 @@ public class TextLabelActor extends GLAbstractActor {
     public TextLabelActor(AB2Renderer2D renderer,
                           int actorId,
                           String text,
-                          Vector2 centerPosition,
+                          Vector3 centerPosition,
                           Vector4 textColor,
                           Vector4 backgroundColor,
                           Orientation orientation) {
@@ -111,7 +111,7 @@ public class TextLabelActor extends GLAbstractActor {
 
     public void setBackgroundColor(Vector4 backgroundColor) { this.backgroundColor=backgroundColor; }
 
-    public void setCenterPosition(Vector2 position) {
+    public void setCenterPosition(Vector3 position) {
         this.centerPosition = position;
         recompute=true;
     }
@@ -143,16 +143,21 @@ public class TextLabelActor extends GLAbstractActor {
             v1.set(1, v0.get(1)-imageNormalWidth);
         }
 
+        //logger.info("v0="+v0.get(0)+" "+v0.get(1)+" , v1="+v1.get(0)+" "+v1.get(1));
+
+        //v0.set(1, v0.get(1)-0.01f);
+        //v1.set(1, v1.get(1)-0.01f);
+
         // This combines positional vertices interleaved with 2D texture coordinates
         float[] vertexData = {
 
-                v0.get(0), v0.get(1), 0f,    0f, 0f, 0f, // lower left
-                v1.get(0), v0.get(1), 0f,    1f, 0f, 0f, // lower right
-                v0.get(0), v1.get(1), 0f,    0f, 1f, 0f, // upper left
+                v0.get(0), v0.get(1), v0.get(2),    0f, 0f, 0f, // lower left
+                v1.get(0), v0.get(1), v0.get(2),    1f, 0f, 0f, // lower right
+                v0.get(0), v1.get(1), v0.get(2),    0f, 1f, 0f, // upper left
 
-                v1.get(0), v0.get(1), 0f,    1f, 0f, 0f, // lower right
-                v1.get(0), v1.get(1), 0f,    1f, 1f, 0f, // upper right
-                v0.get(0), v1.get(1), 0f,    0f, 1f, 0f  // upper left
+                v1.get(0), v0.get(1), v1.get(2),    1f, 0f, 0f, // lower right
+                v1.get(0), v1.get(1), v1.get(2),    1f, 1f, 0f, // upper right
+                v0.get(0), v1.get(1), v1.get(2),    0f, 1f, 0f  // upper left
         };
 
         vertexFb=createGLFloatBuffer(vertexData);
@@ -165,6 +170,7 @@ public class TextLabelActor extends GLAbstractActor {
             gl.glBufferData(GL4.GL_ARRAY_BUFFER, vertexFb.capacity() * 4, vertexFb, GL4.GL_STATIC_DRAW);
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
         } else {
+            gl.glBindVertexArray(vertexArrayId.get(0));
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
             checkGlError(gl, "Refresh - glBindBuffer");
             gl.glBufferSubData(GL4.GL_ARRAY_BUFFER, 0, vertexFb.capacity() * 4, vertexFb);
@@ -177,6 +183,7 @@ public class TextLabelActor extends GLAbstractActor {
 
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
+        logger.info("init() called");
         if (shader instanceof AB2Text2DShader) {
 
             byte[] labelPixels=createTextImage();
@@ -278,6 +285,9 @@ public class TextLabelActor extends GLAbstractActor {
 
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
+
+        logger.info("display() called");
+
         if (recompute) {
             computeVertices(gl, true);
         }
