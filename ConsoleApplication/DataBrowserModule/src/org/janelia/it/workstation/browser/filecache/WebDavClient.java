@@ -69,7 +69,7 @@ public class WebDavClient {
      */
     public WebDavFile findStorage(String storagePathPrefix)
             throws WebDavException {
-        String href = getWebdavFindUrl(storagePathPrefix, "storagePrefix");
+        String href = getWebdavFindUrl(storagePathPrefix, "storage_prefix");
 
         MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0, 0);
         if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
@@ -90,7 +90,7 @@ public class WebDavClient {
      */
     public WebDavFile findFile(String remoteFileName)
             throws WebDavException {
-        String href = getWebdavFindUrl(remoteFileName, "dataStoragePath");
+        String href = getWebdavFindUrl(remoteFileName, "data_storage_path");
 
         MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0, 0);
         if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
@@ -308,7 +308,7 @@ public class WebDavClient {
 
     URL getDownloadFileURL(String standardPathName) {
         try {
-            return new URL(baseUrl + "/path/" + standardPathName);
+            return new URL(baseUrl + "/storage_path/" + standardPathName);
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }

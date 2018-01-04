@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
  */
 public class WebDavClientMgr {
 
-    private static final Logger LOG = LoggerFactory.getLogger(WebDavClientMgr.class);
     private static final int STORAGE_PATH_PREFIX_COMPS_COUNT = 2;
 
     private static final Cache<String, WebDavClient> WEBDAV_AGENTS_CACHE = CacheBuilder.newBuilder()
