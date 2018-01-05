@@ -55,7 +55,6 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
     private final JLabel subtitleLabel;
     private final JPanel mainPanel;
     private final JPanel buttonPanel;
-//    private final JPanel annotationPanel;
     private AnnotationView annotationView;
     private boolean wantViewable = false;
     private double aspectRatio;
@@ -211,8 +210,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
             this.transferHandler = new DomainObjectTransferHandler((ImageModel<DomainObject,Reference>)imageModel, (DomainObjectSelectionModel)selectionModel);
             setDraggable(this);
             setDraggable(titleLabel);
-            setDraggable(subtitleLabel);
-//            setDraggable(annotationPanel);     
+            setDraggable(subtitleLabel);     
         }
         
         refresh(imageObject);

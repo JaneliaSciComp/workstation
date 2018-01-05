@@ -36,17 +36,15 @@ public class ServiceAcceptorActionHelper {
      */
     public static Collection<AbstractAction> getOpenForContextActions(final DomainObject domainObject) {
 
-        TreeMap<Integer, AbstractAction> orderedMap = new TreeMap<>();
-        Collection<DomainObjectAcceptor> domainObjectAcceptors
-                = ServiceAcceptorHelper.findHandler(
-                        domainObject,
-                        DomainObjectAcceptor.class,
-                        DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH
-                );
+        Collection<DomainObjectAcceptor> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(domainObject);
+        
         boolean lastItemWasSeparator = false;
         int expectedCount = 0;
+        TreeMap<Integer, AbstractAction> orderedMap = new TreeMap<>();
         List<AbstractAction> actionItemList = new ArrayList<>();
+        
         for (final DomainObjectAcceptor domainObjectAcceptor : domainObjectAcceptors) {
+            
             final Integer order = domainObjectAcceptor.getOrder();
             if (domainObjectAcceptor.isPrecededBySeparator() && (!lastItemWasSeparator)) {
                 orderedMap.put(order - 1, null);
@@ -64,16 +62,17 @@ public class ServiceAcceptorActionHelper {
             };
             action.setEnabled(domainObjectAcceptor.isEnabled(domainObject));
             
-            actionItemList.add(action);
-
             orderedMap.put(order, action);
-            actionItemList.add(action); // Bail alternative if ordering fails.
             expectedCount++;
+            
+            actionItemList.add(action); // Bail alternative if ordering fails.
+            
             if (domainObjectAcceptor.isSucceededBySeparator()) {
                 orderedMap.put(order + 1, null);
                 expectedCount++;
                 lastItemWasSeparator = true;
-            } else {
+            } 
+            else {
                 lastItemWasSeparator = false;
             }
         }

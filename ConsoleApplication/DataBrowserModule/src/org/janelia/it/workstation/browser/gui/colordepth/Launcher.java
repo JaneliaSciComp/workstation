@@ -5,16 +5,12 @@ import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.openide.util.lookup.ServiceProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Launches the color depth search interface.
+ * Launches the color depth search viewer.
  */
 @ServiceProvider(service = DomainObjectAcceptor.class, path=DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH)
 public class Launcher implements DomainObjectAcceptor  {
-    
-    private static final Logger log = LoggerFactory.getLogger(Launcher.class);
     
     private static final int MENU_ORDER = 250;
     
@@ -33,13 +29,12 @@ public class Launcher implements DomainObjectAcceptor  {
     }
 
     @Override
-    public boolean isCompatible(DomainObject dObj) {
-        log.trace(dObj.getType() + " called " + dObj.getName() + " class: " + dObj.getClass().getSimpleName());
-        return dObj instanceof ColorDepthSearch;
+    public boolean isCompatible(DomainObject domainObject) {
+        return domainObject instanceof ColorDepthSearch;
     }
     
     @Override
-    public boolean isEnabled(DomainObject dObj) {
+    public boolean isEnabled(DomainObject domainObject) {
         return true;
     }
     

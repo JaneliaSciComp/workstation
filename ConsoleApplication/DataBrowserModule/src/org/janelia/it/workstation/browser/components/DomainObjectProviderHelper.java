@@ -26,31 +26,31 @@ public class DomainObjectProviderHelper {
     /**
      * Is there some service / provider that can handle this domain object?
      * 
-     * @param dObj handling this data.
+     * @param domainObject handling this data.
      * @return some provider has registered to handle this data=T.
      */
-    public boolean isSupported(DomainObject dObj) {
-        return ServiceAcceptorHelper.findAcceptors(dObj).size() > 0;
+    public boolean isSupported(DomainObject domainObject) {
+        return ServiceAcceptorHelper.findAcceptors(domainObject).size() > 0;
     }
 
     /**
      * Carry out whatever operations are provided for this domain object.
      * 
-     * @param dObj this data will be processed.
+     * @param domainObject this data will be processed.
      * @return T=carried out, or user had menu items to carry out action.
      */
-    public boolean service(DomainObject dObj) {
+    public boolean service(DomainObject domainObject) {
         boolean handledHere = false;
         // Option to popup menu is carried out here, if multiple handlers exist.
-        if (dObj != null) {
+        if (domainObject != null) {
             handledHere = true;
-            Collection<DomainObjectAcceptor> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(dObj);
+            Collection<DomainObjectAcceptor> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(domainObject);
             if (domainObjectAcceptors.size() == 1) {
                 DomainObjectAcceptor acceptor = domainObjectAcceptors.iterator().next();
-                acceptor.acceptDomainObject(dObj);
+                acceptor.acceptDomainObject(domainObject);
             }
             else if (domainObjectAcceptors.size() > 1) {
-                showMenu(dObj, domainObjectAcceptors);
+                showMenu(domainObject, domainObjectAcceptors);
             }
         }
         return handledHere;

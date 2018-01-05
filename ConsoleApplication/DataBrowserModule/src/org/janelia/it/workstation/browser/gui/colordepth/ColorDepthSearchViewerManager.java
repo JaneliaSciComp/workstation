@@ -3,7 +3,6 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 import java.awt.Component;
 
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerManager;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;

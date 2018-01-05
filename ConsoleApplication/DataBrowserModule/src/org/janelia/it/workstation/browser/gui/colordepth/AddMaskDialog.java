@@ -32,7 +32,6 @@ import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
-import org.janelia.model.domain.interfaces.HasName;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleAlignmentResult;
 
