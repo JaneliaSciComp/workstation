@@ -23,6 +23,7 @@ import org.janelia.it.workstation.ab2.actor.TextLabelActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
+import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.model.AB2NeuronSkeleton;
 import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
@@ -57,8 +58,8 @@ public class AB2SkeletonRenderer extends AB2Renderer {
 
         GLShaderActionSequence basic3DShaderSequence=new GLShaderActionSequence("Basic3DSequence");
 
-        public SkeletonRenderer() {
-            super();
+        public SkeletonRenderer(GLRegion parentRegion) {
+            super(parentRegion);
             addDrawShaderActionSequence(basic3DShaderSequence);
         }
 
@@ -127,8 +128,8 @@ public class AB2SkeletonRenderer extends AB2Renderer {
         GLShaderActionSequence text2DShaderSequence=new GLShaderActionSequence("Text2DSequence");
         GLShaderActionSequence pickShaderSequence=new GLShaderActionSequence("PickSequence");
 
-        public OverlayRenderer() {
-            super();
+        public OverlayRenderer(GLRegion parentRegion) {
+            super(parentRegion);
             addDrawShaderActionSequence(basic2DShaderSequence);
             addDrawShaderActionSequence(image2DShaderSequence);
             addDrawShaderActionSequence(text2DShaderSequence);
@@ -190,10 +191,10 @@ public class AB2SkeletonRenderer extends AB2Renderer {
 
     private int getNextActorIndex() { actorCount++; return actorCount; }
 
-    public AB2SkeletonRenderer() {
-        super();
-        skeletonRenderer=new SkeletonRenderer();
-        overlayRenderer=new OverlayRenderer();
+    public AB2SkeletonRenderer(GLRegion parentRegion) {
+        super(parentRegion);
+        skeletonRenderer=new SkeletonRenderer(parentRegion);
+        overlayRenderer=new OverlayRenderer(parentRegion);
     }
 
     @Override

@@ -286,7 +286,7 @@ public class TextLabelActor extends GLAbstractActor {
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
 
-        logger.info("display() called");
+        //logger.info("display() called");
 
         if (recompute) {
             computeVertices(gl, true);

@@ -5,6 +5,7 @@ import org.janelia.geometry3d.OrthographicCamera;
 
 import org.janelia.it.workstation.ab2.event.AB2Event;
 
+import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +16,8 @@ public class AB2Renderer2D extends AB2RendererD {
 
     Matrix4 vp2d;
 
-    public AB2Renderer2D() {
+    public AB2Renderer2D(GLRegion parentRegion) {
+        super(parentRegion);
         setBackgroundColorBuffer();
         resetView();
     }

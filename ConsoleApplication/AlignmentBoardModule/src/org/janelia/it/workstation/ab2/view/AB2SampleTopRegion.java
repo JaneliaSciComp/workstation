@@ -20,7 +20,7 @@ public class AB2SampleTopRegion extends AB2SideRegion {
         this.screenWidth=screenWidth;
         this.screenHeight=screenHeight;
 
-        menuPanelRenderer=new AB2MenuPanelRenderer(x, y, width, height, screenWidth, screenHeight);
+        menuPanelRenderer=new AB2MenuPanelRenderer(x, y, width, height, screenWidth, screenHeight, this);
 
         renderers.add(menuPanelRenderer);
     }

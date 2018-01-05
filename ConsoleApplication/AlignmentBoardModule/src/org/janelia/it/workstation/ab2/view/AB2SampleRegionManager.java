@@ -110,10 +110,20 @@ public class AB2SampleRegionManager extends GLRegionManager {
 
         int mainHeight=height-(topHeight+bottomHeight);
         int mainWidth=width-(leftWidth+rightWidth);
-        mainRegion.reshape(drawable, leftWidth, bottomHeight, mainWidth, mainHeight, width, height);
-        bottomRegion.reshape(drawable, leftWidth, 0, width-(leftWidth+rightWidth), bottomHeight, width, height);
-        topRegion.reshape(drawable, 0, bottomHeight+mainHeight, width, topHeight, width, height);
-        leftRegion.reshape(drawable, 0, 0, leftWidth, height-topHeight, width, height);
-        rightRegion.reshape(drawable, width-rightWidth, 0, rightWidth, height-topHeight, width, height);
+
+        mainRegion.updateShape(leftWidth, bottomHeight, mainWidth, mainHeight, width, height);
+        mainRegion.reshape(drawable);
+
+        bottomRegion.updateShape(leftWidth, 0, width-(leftWidth+rightWidth), bottomHeight, width, height);
+        bottomRegion.reshape(drawable);
+
+        topRegion.updateShape(0, bottomHeight+mainHeight, width, topHeight, width, height);
+        topRegion.reshape(drawable);
+
+        leftRegion.updateShape(0, 0, leftWidth, height-topHeight, width, height);
+        leftRegion.reshape(drawable);
+
+        rightRegion.updateShape(width-rightWidth, 0, rightWidth, height-topHeight, width, height);
+        rightRegion.reshape(drawable);
     }
 }

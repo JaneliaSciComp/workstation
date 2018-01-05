@@ -26,7 +26,7 @@ public class AB2SampleMainRegion extends GLRegion {
         this.screenWidth=screenWidth;
         this.screenHeight=screenHeight;
 
-        main3DRenderer=new AB2Main3DRenderer(x, y, width, height, screenWidth, screenHeight);
+        main3DRenderer=new AB2Main3DRenderer(x, y, width, height, screenWidth, screenHeight, this);
 
         renderers.add(main3DRenderer);
     }

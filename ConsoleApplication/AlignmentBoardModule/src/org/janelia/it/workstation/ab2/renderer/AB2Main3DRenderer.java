@@ -21,6 +21,7 @@ import org.janelia.it.workstation.ab2.actor.PointSetActor;
 import org.janelia.it.workstation.ab2.actor.Voxel3DActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
+import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.model.AB2Image3D_RGBA8UI;
@@ -60,8 +61,8 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
         return controller.getNextPickIndex();
     }
 
-    public AB2Main3DRenderer(int x, int y, int width, int height, int screenWidth, int screenHeight) {
-        super();
+    public AB2Main3DRenderer(int x, int y, int width, int height, int screenWidth, int screenHeight, GLRegion parentRegion) {
+        super(parentRegion);
         controller=AB2Controller.getController();
 
         setSizeParameters(x, y, width, height, screenWidth, screenHeight);

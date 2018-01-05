@@ -6,6 +6,7 @@ import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
+import org.janelia.it.workstation.ab2.gl.GLRegionManager;
 
 public class AB2CompositionMode extends AB2ControllerMode {
 
@@ -31,6 +32,11 @@ public class AB2CompositionMode extends AB2ControllerMode {
     @Override
     public void shutdown() {
 
+    }
+
+    @Override
+    public GLRegionManager getRegionManager() {
+        return null;
     }
 
     @Override

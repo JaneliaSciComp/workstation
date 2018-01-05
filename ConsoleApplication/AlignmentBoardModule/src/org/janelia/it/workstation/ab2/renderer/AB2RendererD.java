@@ -24,6 +24,7 @@ import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.controller.AB2ControllerMode;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
+import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.slf4j.Logger;
@@ -45,6 +46,10 @@ public abstract class AB2RendererD extends AB2Renderer {
 
     protected List<GLShaderActionSequence> drawShaderList=new ArrayList<>();
     protected List<GLShaderActionSequence> pickShaderList=new ArrayList<>();
+
+    public AB2RendererD(GLRegion parentRegion) {
+        super(parentRegion);
+    }
 
     public void addDrawShaderActionSequence(GLShaderActionSequence shaderActionSequence) {
         drawShaderList.add(shaderActionSequence);
@@ -202,9 +207,9 @@ public abstract class AB2RendererD extends AB2Renderer {
 
         resetVPMatrix();
 
-        logger.info("display() sequence start====");
+        //logger.info("display() sequence start====");
         for (GLShaderActionSequence shaderActionSequence : drawShaderList) {
-            logger.info("display() sequence="+shaderActionSequence.getName());
+            //logger.info("display() sequence="+shaderActionSequence.getName());
             shaderActionSequence.display(gl);
         }
 

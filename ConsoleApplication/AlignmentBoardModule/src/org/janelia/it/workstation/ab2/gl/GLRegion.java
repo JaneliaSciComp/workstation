@@ -60,15 +60,25 @@ public abstract class GLRegion implements GLSelectable {
         }
     }
 
-    public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height, int screenWidth, int screenHeight) {
+    public void updateShape(int x, int y, int width, int height, int screenWidth, int screenHeight) {
         this.x=x;
         this.y=y;
         this.width=width;
         this.height=height;
         this.screenWidth=screenWidth;
         this.screenHeight=screenHeight;
-        reshape(drawable);
     }
+
+
+//    public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height, int screenWidth, int screenHeight) {
+//        this.x=x;
+//        this.y=y;
+//        this.width=width;
+//        this.height=height;
+//        this.screenWidth=screenWidth;
+//        this.screenHeight=screenHeight;
+//        reshape(drawable);
+//    }
 
     public boolean containsPointUsingYFlip(Point point) {
         //logger.info("containsPoint : pxy="+point.x+" "+point.y+" , x="+x+" y="+y+" width="+width+" height="+height);

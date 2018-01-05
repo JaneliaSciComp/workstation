@@ -3,18 +3,27 @@ package org.janelia.it.workstation.ab2.renderer;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.AB2Properties;
 import org.janelia.it.workstation.ab2.actor.ColorBox2DActor;
 import org.janelia.it.workstation.ab2.actor.TextLabelActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
+import org.janelia.it.workstation.ab2.event.AB2Event;
+import org.janelia.it.workstation.ab2.event.AB2MouseClickedEvent;
+import org.janelia.it.workstation.ab2.event.AB2RegionManagerResizeNeededEvent;
+import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.janelia.it.workstation.ab2.shader.AB2Text2DShader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
 
-    private ColorBox2DActor backgroundPanel;
+    Logger logger = LoggerFactory.getLogger(AB2ImageControlPanelRenderer.class);
+
+    private ImageControlBackgroundColorBoxActor backgroundPanel;
 
     private GLShaderActionSequence panelDrawSequence;
     private GLShaderActionSequence panelPickSequence;
@@ -26,8 +35,27 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
     private int screenWidth;
     private int screenHeight;
 
-    public AB2ImageControlPanelRenderer(int x, int y, int width, int height, int screenWidth, int screenHeight) {
-        super();
+    private boolean isOpen=false;
+
+    private class ImageControlBackgroundColorBoxActor extends ColorBox2DActor {
+
+        public ImageControlBackgroundColorBoxActor(AB2Renderer2D renderer, int actorId, Vector3 v0, Vector3 v1,
+                                                   Vector4 color, Vector4 hoverColor, Vector4 selectColor) {
+            super(renderer, actorId, v0, v1, color, hoverColor, selectColor);
+        }
+
+        @Override
+        public void processEvent(AB2Event event) {
+            //logger.info("ImageControlBackgroundColorBoxActor - processEvent() event="+event.getClass().getName());
+            super.processEvent(event);
+            if (event instanceof AB2MouseClickedEvent) {
+                renderer.processEvent(event);
+            }
+        }
+    }
+
+    public AB2ImageControlPanelRenderer(int x, int y, int width, int height, int screenWidth, int screenHeight, GLRegion parentRegion) {
+        super(parentRegion);
 
         this.x=x;
         this.y=y;
@@ -53,6 +81,10 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         initialized=true;
     }
 
+    public void setOpen(boolean isOpen) {
+        this.isOpen=isOpen;
+    }
+
     @Override
     public void reshape(GL4 gl, int x, int y, int width, int height, int screenWidth, int screenHeight) {
         this.x=x;
@@ -72,14 +104,23 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         Vector3[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(x, y, width, height, screenWidth, screenHeight,
                 AB2Properties.IMAGE_CONTROL_PANEL_BACKGROUND_Z);
 
-        logger.info("backgroundPanel v0="+normed2dPositions[0].get(0)+" "+normed2dPositions[0].get(1)+" v1="+
-                normed2dPositions[1].get(0)+" "+normed2dPositions[1].get(1));
+        //logger.info("backgroundPanel v0="+normed2dPositions[0].get(0)+" "+normed2dPositions[0].get(1)+" v1="+
+        //        normed2dPositions[1].get(0)+" "+normed2dPositions[1].get(1));
 
-        backgroundPanel=new ColorBox2DActor(this, AB2Controller.getController().getNextPickIndex(),
+        backgroundPanel=new ImageControlBackgroundColorBoxActor(this, AB2Controller.getController().getNextPickIndex(),
                 normed2dPositions[0], normed2dPositions[1], AB2Properties.IMAGE_CONTROL_PANEL_COLOR,
                 AB2Properties.IMAGE_CONTROL_PANEL_HOVER_COLOR, AB2Properties.IMAGE_CONTROL_PANEL_SELECT_COLOR);
         panelDrawSequence.getActorSequence().add(backgroundPanel);
         panelPickSequence.getActorSequence().add(backgroundPanel);
+    }
+
+    @Override
+    public void processEvent(AB2Event event) {
+        //logger.info("processEvent() event="+event.getClass().getName());
+        super.processEvent(event);
+        if (event instanceof AB2MouseClickedEvent) {
+            parentRegion.processEvent(event);
+        }
     }
 
 }

@@ -7,6 +7,7 @@ import javax.media.opengl.GL4;
 
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
+import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.shader.AB2ActorShader;
@@ -32,8 +33,8 @@ public class AB2SimpleCubeRenderer extends AB2Renderer3D {
     GLAbstractActor cubeActor;
 
 
-    public AB2SimpleCubeRenderer() {
-        super();
+    public AB2SimpleCubeRenderer(GLRegion parentRegion) {
+        super(parentRegion);
         cubeActor=createCubeActor();
         GLShaderActionSequence drawShaderActionSequence=new GLShaderActionSequence("SimpleCube");
         drawShaderActionSequence.setShader(new AB2ActorShader());

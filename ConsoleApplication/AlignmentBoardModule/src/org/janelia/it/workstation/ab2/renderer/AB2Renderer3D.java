@@ -33,6 +33,7 @@ import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2MouseDraggedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseWheelEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
+import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.slf4j.Logger;
@@ -65,7 +66,8 @@ public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3
         return vantage.getFocusPosition();
     }
 
-    public AB2Renderer3D() {
+    public AB2Renderer3D(GLRegion parentRegion) {
+        super(parentRegion);
         controller=AB2Controller.getController();
         setBackgroundColorBuffer();
         resetView();

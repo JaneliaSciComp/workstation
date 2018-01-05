@@ -13,6 +13,7 @@ import javax.media.opengl.GLEventListener;
 
 import org.janelia.it.workstation.ab2.event.*;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
+import org.janelia.it.workstation.ab2.gl.GLRegionManager;
 import org.janelia.it.workstation.ab2.gl.GLSelectable;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.slf4j.Logger;
@@ -49,6 +50,8 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
     public abstract void stop();
 
     public abstract void shutdown();
+
+    public abstract GLRegionManager getRegionManager();
 
     /*
 
@@ -95,7 +98,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
     // NOTE: if an even needs access to the pick framebuffer, it should be forwarded to the display event queue.
 
     public void processEvent(AB2Event event) {
-        //logger.info("processEvent type="+event.getClass().getName());
+        //logger.info("processEvent() entry, type="+event.getClass().getName());
         AB2UserContext userContext = AB2Controller.getController().getUserContext();
         boolean repaint=false;
 
@@ -123,6 +126,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             }
         }
         else if (event instanceof AB2MouseClickedEvent) {
+            //logger.info("processEvent - received event="+event.getClass().getName());
             //userContext.clearDrag();
             displayEventQueue.add(event);
             repaint=true;
@@ -135,6 +139,12 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             displayEventQueue.add(event);
             repaint=true;
         }
+        else if (event instanceof AB2RegionManagerResizeNeededEvent) {
+            displayEventQueue.add(event);
+            repaint=true;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////
 
         if (repaint) {
             controller.repaint();
@@ -142,9 +152,10 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
     }
 
-    private void processDisplayEvent(GL4 gl, AB2Event event) {
+    private void processDisplayEvent(GLAutoDrawable drawable, AB2Event event) {
         //logger.info("processDisplayEvent() start - type="+event.getClass().getName());
         AB2UserContext userContext=controller.getUserContext();
+        GL4 gl=(GL4)drawable.getGL();
 
         MouseEvent mouseEvent=null;
         int x=-1;
@@ -305,6 +316,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             }
 
         } else if (event instanceof AB2MouseClickedEvent) {
+            //logger.info("processDisplayEvent() , AB2MouseClickedEvent");
             controller.setNeedsRepaint(true);
             if (pickActor != null) {
                 if (!pickActor.equals(userContext.getSelectObject())) {
@@ -314,11 +326,13 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                     }
                     userContext.setSelectObject(pickActor);
                     pickActor.setSelect();
+                    pickActor.processEvent(event); // we also pass the click event
                 } else {
                     // User has clicked on already-selected object, so we reverse and de-select
                     GLSelectable selectObject = userContext.getSelectObject();
                     if (selectObject != null) {
                         selectObject.releaseSelect();
+                        selectObject.processEvent(event); // we still pass the click event
                     }
                     userContext.setSelectObject(null);
                 }
@@ -353,6 +367,11 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 hoverObject.processEvent(event);
                 controller.setNeedsRepaint(true);
             }
+        }
+
+        else if (event instanceof AB2RegionManagerResizeNeededEvent) {
+            getRegionManager().reshape(drawable, 0, 0, controller.getGlWidth(), controller.getGlHeight());
+            controller.setNeedsRepaint(true);
         }
 
         if (controller.needsRepaint()) {
@@ -449,7 +468,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         while (!displayEventQueue.isEmpty()) {
             AB2Event event = displayEventQueue.poll();
             if (event != null) {
-                processDisplayEvent(gl4, event);
+                processDisplayEvent(glAutoDrawable, event);
                 repaint=true;
             }
         }

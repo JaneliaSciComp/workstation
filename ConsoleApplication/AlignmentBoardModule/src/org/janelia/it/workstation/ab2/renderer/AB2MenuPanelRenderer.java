@@ -7,6 +7,7 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.it.workstation.ab2.actor.ColorBox2DActor;
 import org.janelia.it.workstation.ab2.actor.TextLabelActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
+import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
@@ -30,8 +31,8 @@ public class AB2MenuPanelRenderer extends AB2Renderer2D {
     private int screenWidth;
     private int screenHeight;
 
-    public AB2MenuPanelRenderer(int x, int y, int width, int height, int screenWidth, int screenHeight) {
-        super();
+    public AB2MenuPanelRenderer(int x, int y, int width, int height, int screenWidth, int screenHeight, GLRegion parentRegion) {
+        super(parentRegion);
 
         this.x=x;
         this.y=y;

@@ -8,6 +8,7 @@ import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2Sample3DImageLoadedEvent;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
+import org.janelia.it.workstation.ab2.gl.GLRegionManager;
 import org.janelia.it.workstation.ab2.loader.AB2Sample3DImageLoader;
 import org.janelia.it.workstation.ab2.renderer.AB2Main3DRenderer;
 import org.janelia.it.workstation.ab2.view.AB2SampleRegionManager;
@@ -25,13 +26,16 @@ public class AB2SampleBasicMode extends AB2View3DMode {
 
     public AB2SampleBasicMode(AB2Controller controller) {
         super(controller);
-        logger.info("AB2SampleBasicMode() constructor finished");
+        //logger.info("AB2SampleBasicMode() constructor finished");
     }
 
     @Override
     public GLRegion getRegionAtPosition(Point point) {
         return sampleRegionManager.getRegionAtPosition(point);
     }
+
+    @Override
+    public GLRegionManager getRegionManager() { return sampleRegionManager; }
 
 
     @Override
