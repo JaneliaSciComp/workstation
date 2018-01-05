@@ -56,6 +56,7 @@ import com.google.common.base.Stopwatch;
 import Jama.Matrix;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.function.Consumer;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -233,6 +234,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     public TmWorkspace getCurrentWorkspace() {
         return currentWorkspace;
+    }
+    
+    public TmWorkspace getWorkspace(Long workspaceID) throws Exception {
+        return tmDomainMgr.getWorkspace(workspaceID);
+    }
+    
+    public TmSample getSample(Long sampleID) throws Exception {
+        return tmDomainMgr.getSample(sampleID);
     }
     
     public void saveCurrentWorkspace() throws Exception {
@@ -503,6 +512,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * @throws Exception
      */
     public synchronized TmNeuronMetadata createNeuron(String name) throws Exception {
+
         final TmNeuronMetadata neuron = neuronManager.createTiledMicroscopeNeuron(currentWorkspace, name);
 
        /* // Update local workspace
@@ -1701,9 +1711,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         progress.setStatus("Done");
     }
 
-    // TODO: This method seems to be almost exactly the same as the one on the server-side (TiledMicroscopeDAO), except this one
-    // updates the SimpleWorker. These code bases should be factored in a common class in the Shared modules.
-    public synchronized TmNeuronMetadata importBulkSWCData(final File swcFile, TmWorkspace tmWorkspace, Progress progress) throws Exception {
+    public synchronized void importBulkSWCData(final File swcFile, TmWorkspace tmWorkspace) throws Exception {
 
         log.info("Importing neuron from SWC file {}",swcFile);
         
@@ -1714,10 +1722,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     swcFile.getName(), swcData.getInvalidReason()));
         }
 
-        // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
-        //  so he added an OFFSET header and recentered on zero when exporting
-        // therefore, if that header is present, respect it
-        double[] externalOffset = swcData.parseOffset();
+
 
         // create one neuron for the file; take name from the filename (strip extension)
         String neuronName = swcData.parseName();
@@ -1727,10 +1732,30 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         if (neuronName.endsWith(SWCData.STD_SWC_EXTENSION)) {
             neuronName = neuronName.substring(0, neuronName.length() - SWCData.STD_SWC_EXTENSION.length());
         }
-
+        Consumer<Map<String,Object>> callback = this::finishBulkSWCData;
+        Map<String,Object> parameters = new HashMap<String,Object>();
+        parameters.put("swc", swcData);
+        parameters.put("file", swcFile);
+        
         // Must create the neuron up front, because we need the id when adding the linked geometric annotations below.
-        TmNeuronMetadata neuron = neuronManager.createTiledMicroscopeNeuron(tmWorkspace, neuronName);
+        neuronManager.createTiledMicroscopeNeuron(tmWorkspace, neuronName, callback, parameters);
+    }
+        
 
+    public synchronized void finishBulkSWCData(Map<String,Object> neuronData) {
+        TmNeuronMetadata neuron = (TmNeuronMetadata)neuronData.get("neuron");
+        if (neuron==null)
+            return;
+        
+        SWCData swcData = (SWCData)neuronData.get("swc");
+        if (swcData==null)
+            return;
+        
+        File swcFile = (File)neuronData.get("file");
+        // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
+        //  so he added an OFFSET header and recentered on zero when exporting
+        // therefore, if that header is present, respect it
+        double[] externalOffset = swcData.parseOffset();
         // Bulk update in play.
         // and as long as we're doing brute force, we can update progress
         //  granularly (if we have a worker); start with 5% increments (1/20)
@@ -1739,9 +1764,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         if (updateFrequency == 0) {
             updateFrequency = 1;
         }
-        if (progress != null) {
+       /* if (progress != null) {
             progress.setProgress(0L, totalLength);
-        }
+        }*/
 
         Map<Integer, Integer> nodeParentLinkage = new HashMap<>();
 
@@ -1767,9 +1792,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             annotations.put(node.getIndex(), unserializedAnnotation);
             nodeParentLinkage.put(node.getIndex(), node.getParentIndex());
 
-            if (progress != null && (node.getIndex() % updateFrequency) == 0) {
+           /* if (progress != null && (node.getIndex() % updateFrequency) == 0) {
                 progress.setProgress(node.getIndex(), totalLength);
-            }
+            }*/
         }
 
         // Fire off the bulk update.  The "un-serialized" or
@@ -1783,50 +1808,50 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             neuron.setColor(color);
         }
 
-        // need to save neuron now; notes have to be attached to the final
-        //  annotation IDs, not the placeholders that exist before the save
-        neuronManager.saveNeuronData(neuron);
+        try {
+            // need to save neuron now; notes have to be attached to the final
+            //  annotation IDs, not the placeholders that exist before the save
+            neuronManager.saveNeuronData(neuron);
 
-        // check for corresponding notes file; if present, import notes
+            // check for corresponding notes file; if present, import notes
+            // find file; read and parse it
+            File notesFile = findNotesFile(swcFile);
+            if (notesFile.exists()) {
+                // read and parse
+                Map<Vec3, String> notes = parseNotesFile(notesFile);
 
-        // find file; read and parse it
-        File notesFile = findNotesFile(swcFile);
-        if (notesFile.exists()) {
-            // read and parse
-            Map<Vec3, String> notes = parseNotesFile(notesFile);
+                // add notes to neuron; get a fresh copy that has updated ann IDs
+                neuron = neuronManager.getNeuronById(neuron.getId());
+                if (notes.size() > 0) {
+                    ObjectMapper mapper = new ObjectMapper();
 
-            // add notes to neuron; get a fresh copy that has updated ann IDs
-            neuron = neuronManager.getNeuronById(neuron.getId());
-            if (notes.size() > 0) {
-                ObjectMapper mapper = new ObjectMapper();
-
-                // unfortunately, the only way to associate the notes with the nodes
-                //  is through a brute-force search; we need to associate the locations
-                //  with the annotation ID, but those IDs are changed during the save,
-                //  and we can't track the mapping; the spatial index is built later
-                //  and asynchronously, so we don't have access to it now
-                // later testing: added a few random notes to a neuron with 28k nodes;
-                //  import took ~1s with or without notes
-                for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
-                    for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
-                        Vec3 loc = new Vec3(ann.getX(), ann.getY(), ann.getZ());
-                        if (notes.containsKey(loc)) {
-                            // fortunately, we only need the simplest case seen in setNotes():
-                            ObjectNode node = mapper.createObjectNode();
-                            node.put("note", notes.get(loc));
-                            neuronManager.addStructuredTextAnnotation(neuron, ann.getId(), mapper.writeValueAsString(node));
+                    // unfortunately, the only way to associate the notes with the nodes
+                    //  is through a brute-force search; we need to associate the locations
+                    //  with the annotation ID, but those IDs are changed during the save,
+                    //  and we can't track the mapping; the spatial index is built later
+                    //  and asynchronously, so we don't have access to it now
+                    // later testing: added a few random notes to a neuron with 28k nodes;
+                    //  import took ~1s with or without notes
+                    for (TmGeoAnnotation root : neuron.getRootAnnotations()) {
+                        for (TmGeoAnnotation ann : neuron.getSubTreeList(root)) {
+                            Vec3 loc = new Vec3(ann.getX(), ann.getY(), ann.getZ());
+                            if (notes.containsKey(loc)) {
+                                // fortunately, we only need the simplest case seen in setNotes():
+                                ObjectNode node = mapper.createObjectNode();
+                                node.put("note", notes.get(loc));
+                                neuronManager.addStructuredTextAnnotation(neuron, ann.getId(), mapper.writeValueAsString(node));
+                            }
                         }
                     }
+                    // now save again, with the note data
+                    neuronManager.saveNeuronData(neuron);
                 }
-            // now save again, with the note data
-            neuronManager.saveNeuronData(neuron);
             }
+            
+            postWorkspaceUpdate(neuron);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        // add it to the workspace
-        neuronManager.addNeuron(neuron);
-        
-        return neuron;
     }
 
     private File findNotesFile(File swcFile) {

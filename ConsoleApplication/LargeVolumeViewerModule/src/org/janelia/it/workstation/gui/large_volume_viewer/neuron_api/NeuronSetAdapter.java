@@ -555,7 +555,7 @@ implements NeuronSet// , LookupListener
         @Override
         public void neuronModelChanged(TmNeuronMetadata neuron) {
             // Remove all the existing cached vertices for this neuron
-            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+         /*   NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getCachedVertexes()) {
                 log.debug("Removing cached vertex: {}", neuronVertex);
                 spatialIndex.removeFromIndex(neuronVertex);
@@ -568,18 +568,18 @@ implements NeuronSet// , LookupListener
                 log.debug("Re-adding vertex: {}", neuronVertex);
                 spatialIndex.addToIndex(neuronVertex);
             }
-            
-            repaintHorta(neuronModel);
+           */ 
+          //  repaintHorta(neuronModel);
         }
 
         @Override
         public void neuronModelCreated(TmNeuronMetadata neuron) {
-           global.neuronCreated(neuron);
+           //global.neuronCreated(neuron);
         }
 
         @Override
         public void neuronModelDeleted(TmNeuronMetadata neuron) {
-           global.neuronDeleted(neuron);
+           //global.neuronDeleted(neuron);
         }
         
     }
