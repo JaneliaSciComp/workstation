@@ -7,7 +7,6 @@ import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.util.List;
 
-import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -40,7 +39,6 @@ public class LoadedImagePanel extends JPanel {
     protected final List<ImageDecorator> decorators;
     
     protected final JLabel loadingLabel;
-    protected final JLabel errorLabel;
     protected JComponent activeComponent;
     private final DecoratedImage imagePanel;
     
@@ -57,23 +55,8 @@ public class LoadedImagePanel extends JPanel {
         setOpaque(false);
         
         loadingLabel = new JLabel();
-        loadingLabel.getInsets().set(2, 0, 2, 0);
-        loadingLabel.setOpaque(false);
         loadingLabel.setIcon(Icons.getLoadingIcon());
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
-        loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
-        loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
-        errorLabel = new JLabel();
-        errorLabel.setBorder(BorderFactory.createEmptyBorder(5,0,5,0));
-        errorLabel.setOpaque(false);
-        errorLabel.setForeground(Color.red);
-        errorLabel.setIcon(Icons.getIcon("file_error.png"));
-        errorLabel.setVerticalTextPosition(JLabel.BOTTOM);
-        errorLabel.setHorizontalTextPosition(JLabel.CENTER);
-        errorLabel.setVerticalAlignment(SwingConstants.CENTER);
-        errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         if (imageFilename!=null) {
             load();

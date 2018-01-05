@@ -49,14 +49,13 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
         
         this.imageFilename = filepath;
         this.decorators = imageModel.getDecorators(imageObject);
+        this.imagePanel = new DecoratedImage(null, decorators);
         
         this.loadingLabel = new JLabel();
         loadingLabel.setIcon(Icons.getLoadingIcon());
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
         loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
         setMainComponent(loadingLabel);
-
-        this.imagePanel = new DecoratedImage(null, decorators);
     }
 
     public boolean cancelLoad() {
