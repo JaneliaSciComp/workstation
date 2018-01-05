@@ -1,22 +1,18 @@
 package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.model.ImageDecorator;
-import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +31,7 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
     // GUI
     private final JLabel loadingLabel;
-    private final DecoratedImagePanel imagePanel;
+    private final DecoratedImage imagePanel;
     
     // Model
     private final String imageFilename;
@@ -60,7 +56,7 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
         loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
         setMainComponent(loadingLabel);
 
-        this.imagePanel = new DecoratedImagePanel(null, decorators);
+        this.imagePanel = new DecoratedImage(null, decorators);
     }
 
     public boolean cancelLoad() {
@@ -94,27 +90,6 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
         invalidate();
     }
 
-    @Override
-    public void setViewable(boolean viewable) {
-        super.setViewable(viewable);
-        setViewable(viewable, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                // Register our image height
-                if (getMaxSizeImage() != null && imagePanel.getImage() != null) {
-                    int w = imagePanel.getPreferredSize().width;
-                    int h = imagePanel.getPreferredSize().height;
-                    mainPanel.setPreferredSize(new Dimension(w, h));
-                    revalidate();
-                    repaint();
-                    registerAspectRatio(w, h);
-                }
-                return null;
-            }
-
-        });
-    }
-    
     /**
      * Tell the panel if its image should be viewable. When this is set to false, the images can be released from
      * memory to save space. When it's set to true, the image will be reloaded from disk if necessary.
@@ -123,7 +98,9 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
      *
      * @param wantViewable
      */
-    public synchronized void setViewable(final boolean wantViewable, final Callable<?> success) {
+    @Override
+    public void setViewable(boolean wantViewable) {
+        super.setViewable(viewable);
         
         log.trace("setViewable({}->{},{})",viewable,wantViewable,imageFilename);
         
@@ -139,7 +116,7 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
                         protected void hadSuccess() {
 
                             log.trace("Load complete: {}",imageFilename);
-                            
+                                                        
                             if (isCancelled()) {
                                 log.debug("Load was cancelled");
                                 return;
@@ -147,18 +124,19 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
                             setDisplaySize(getNewDisplaySize());
 
-                            BufferedImage image = getNewScaledImage();
-                            if (image == null) {
+                            BufferedImage image = getNewMaxSizeImage();
+                            setMaxSizeImage(image);
+                            registerAspectRatio(image.getWidth(), image.getHeight());
+
+                            BufferedImage scaledImage = getNewScaledImage();
+                            if (scaledImage == null) {
                                 log.warn("Scaled image is null: {}",imageFilename);
                                 return;
                             }
 
-                            setMaxSizeImage(getNewMaxSizeImage());
-                            
-                            imagePanel.setImage(image);
+                            imagePanel.setImage(scaledImage);
                             setMainComponent(imagePanel);
 
-                            ConcurrentUtils.invokeAndHandleExceptions(success);
                             loadWorker = null;
                         }
 
@@ -183,7 +161,6 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
                             imagePanel.setText(errorType, Color.red);
                             setMainComponent(imagePanel);
                             
-                            ConcurrentUtils.invokeAndHandleExceptions(success);
                             loadWorker = null;
                         }
                     };
@@ -205,15 +182,6 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
                     imagePanel.setImage(null);
                     // Show the loading label until the image needs to be loaded again
                     setMainComponent(loadingLabel);
-                }
-                // Call the callback
-                try {
-                    if (success != null) {
-                        success.call();
-                    }
-                }
-                catch (Exception e) {
-                    ConsoleApp.handleException(e);
                 }
             }
         }

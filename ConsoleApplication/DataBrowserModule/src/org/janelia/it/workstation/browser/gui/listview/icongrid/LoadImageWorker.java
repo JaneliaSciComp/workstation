@@ -19,7 +19,6 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * SwingWorker class that loads the image and rescales it to the current imageSizePercent sizing. This
  * thread supports being canceled.
@@ -50,14 +49,14 @@ public abstract class LoadImageWorker extends SimpleWorker {
     }
 
     private final String imageFilename;
-    private final int displaySize;
+    private final Integer displaySize;
     
     private BufferedImage maxSizeImage;
     private BufferedImage scaledImage;
     
     public LoadImageWorker(String imageFilename) {
         this.imageFilename = imageFilename;
-        this.displaySize = 0;
+        this.displaySize = null;
     }
     
     public LoadImageWorker(String imageFilename, int width) {
@@ -101,7 +100,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
     }
 
     private void rescaleToDisplaySize() {
-        if (displaySize>0) {
+        if (displaySize != null) {
             this.scaledImage = Utils.getScaledImageByWidth(maxSizeImage, displaySize);
         }
         else {

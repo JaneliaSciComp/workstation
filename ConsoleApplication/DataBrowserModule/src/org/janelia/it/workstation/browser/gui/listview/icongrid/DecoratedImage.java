@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.ImageIcon;
-import javax.swing.JPanel;
+import javax.swing.JComponent;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
@@ -27,7 +27,7 @@ import org.janelia.it.workstation.browser.model.ImageDecorator;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DecoratedImagePanel extends JPanel {
+public class DecoratedImage extends JComponent {
 
     private static final float ICON_OPACITY = 1.0f;
     
@@ -43,15 +43,15 @@ public class DecoratedImagePanel extends JPanel {
     private String text;
     private Color fontColor;
 
-    public DecoratedImagePanel(BufferedImage image, List<ImageDecorator> decorators) {
+    public DecoratedImage(BufferedImage image, List<ImageDecorator> decorators) {
         this(image, decorators, null, null);
     }
     
-    public DecoratedImagePanel(BufferedImage image, List<ImageDecorator> decorators, String text) {
+    public DecoratedImage(BufferedImage image, List<ImageDecorator> decorators, String text) {
         this(image, decorators, text, null);
     }
     
-    public DecoratedImagePanel(BufferedImage image, List<ImageDecorator> decorators, String text, Color fontColor) {
+    public DecoratedImage(BufferedImage image, List<ImageDecorator> decorators, String text, Color fontColor) {
         setImage(image);
         this.decorators = decorators;
         this.text = text;
