@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.gui.listview;
 
+import org.janelia.it.workstation.browser.gui.listview.card.DomainObjectCardViewer;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.DomainObjectIconGridViewer;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 
@@ -11,6 +12,7 @@ import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableVi
 public enum ListViewerType {
 
     IconViewer("Image View", DomainObjectIconGridViewer.class),
+    CardViewer("Card View", DomainObjectCardViewer.class),
     TableViewer("Table View", DomainObjectTableViewer.class);
 
     private final String name;

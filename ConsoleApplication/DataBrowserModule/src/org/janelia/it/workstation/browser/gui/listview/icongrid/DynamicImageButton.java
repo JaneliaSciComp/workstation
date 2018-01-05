@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.util.List;
@@ -23,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import loci.formats.FormatException;
 
 /**
- * An AnnotatedImageButton with a dynamic image, i.e. one that is loaded
+ * An button containing a dynamic image, i.e. one that is loaded
  * from via the network, not a locally available icon.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
@@ -32,13 +33,13 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
     private static final Logger log = LoggerFactory.getLogger(DynamicImageButton.class);
 
-    // Definition
-    private final String imageFilename;
-    private List<ImageDecorator> decorators;
-    
-    // UI
+    // GUI
     private final JLabel loadingLabel;
     private final DecoratedImagePanel imagePanel;
+    
+    // Model
+    private final String imageFilename;
+    private List<ImageDecorator> decorators;
     
     // State
     private BufferedImage maxSizeImage;
@@ -47,8 +48,8 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
     private LoadImageWorker loadWorker;
     
     
-    public DynamicImageButton(T imageObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, ImagesPanel<T,S> imagesPanel, String filepath) {
-        super(imageObject, imageModel, selectionModel, imagesPanel, filepath);
+    public DynamicImageButton(T imageObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, String filepath) {
+        super(imageObject, imageModel, selectionModel, filepath);
         
         this.imageFilename = filepath;
         this.decorators = imageModel.getDecorators(imageObject);
@@ -103,6 +104,9 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
                 if (getMaxSizeImage() != null && imagePanel.getImage() != null) {
                     int w = imagePanel.getPreferredSize().width;
                     int h = imagePanel.getPreferredSize().height;
+                    mainPanel.setPreferredSize(new Dimension(w, h));
+                    revalidate();
+                    repaint();
                     registerAspectRatio(w, h);
                 }
                 return null;
@@ -110,7 +114,7 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
         });
     }
-
+    
     /**
      * Tell the panel if its image should be viewable. When this is set to false, the images can be released from
      * memory to save space. When it's set to true, the image will be reloaded from disk if necessary.
@@ -237,6 +241,12 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
         }
     }
 
+    /**
+     * Override this method to hear when an aspect ratio is determined.
+     */
+    protected synchronized void registerAspectRatio(int width, int height) {
+    }
+    
     // TODO: in the future, we may want to display titles directly on the image. 
     // Currently disabled, because it will take a bit more work to finish the implementation.
     

@@ -51,26 +51,30 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
 
     private static final Logger log = LoggerFactory.getLogger(AnnotatedImageButton.class);
     
-    private final JLabel titleLabel;
-    private final JLabel subtitleLabel;
-    private final JPanel mainPanel;
-    private final JPanel buttonPanel;
-    private AnnotationView annotationView;
-    private boolean wantViewable = false;
-    private double aspectRatio;
-    private final JCheckBox editMode;
-    private List<Annotation> annotations;
+    // GUI
+    protected final JLabel titleLabel;
+    protected final JLabel subtitleLabel;
+    protected final JPanel mainPanel;
+    protected final JPanel buttonPanel;
+    protected final JCheckBox editMode;
+    protected AnnotationView annotationView;
     
-    protected final T imageObject;
+    // Model
     protected final ImageModel<T,S> imageModel;
     protected final SelectionModel<T,S> selectionModel;
-    protected final ImagesPanel<T,S> imagesPanel;
+    protected T imageObject;
+    protected List<Annotation> annotations;
+
+    // State
+    protected boolean wantViewable = false;
+    protected double aspectRatio;
+    protected boolean titleVisible;
     
     // For drag and drop functionality
-    private DragSource source = new DragSource();
-    private boolean dragEnabled = false;
-    private DomainObjectTransferHandler transferHandler;
-    private DragGestureListener dragGestureListener = new DragGestureListener() {
+    protected DragSource source = new DragSource();
+    protected boolean dragEnabled = false;
+    protected DomainObjectTransferHandler transferHandler;
+    protected DragGestureListener dragGestureListener = new DragGestureListener() {
         @Override
         public void dragGestureRecognized(DragGestureEvent dge) {
             log.info("dragGestureRecognized: {}",dge);
@@ -93,31 +97,11 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         }
     };
 
-    private boolean titleVisible;
-
-    
-    /**
-     * Factory method for creating AnnotatedImageButtons. 
-     */
-    public static <U,S> AnnotatedImageButton<U,S> create(U imageObject, ImageModel<U,S> imageModel, SelectionModel<U,S> selectionModel, ImagesPanel<U,S> imagesPanel) {
-        String filepath = imageModel.getImageFilepath(imageObject);
-        // The filepath is passed through because it's kind of expensive to calculate. 
-        // But it's kind of redundant with the image model, and it doesn't make sense for static icons, 
-        // so we could use some refactoring here to make this cleaner. 
-        if (filepath != null) {
-            return new DynamicImageButton<>(imageObject, imageModel, selectionModel, imagesPanel, filepath);
-        }
-        else {
-            return new StaticImageButton<>(imageObject, imageModel, selectionModel, imagesPanel, filepath);
-        }
-    }
-
     @SuppressWarnings("unchecked")
-    protected AnnotatedImageButton(T imgObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, final ImagesPanel<T,S> imagesPanel, String filepath) {
+    protected AnnotatedImageButton(T imgObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, String filepath) {
         this.imageObject = imgObject;
         this.imageModel = imageModel;
         this.selectionModel = selectionModel;
-        this.imagesPanel = imagesPanel;
         
         Boolean disableImageDrag = (Boolean) FrameworkImplProvider.getModelProperty(OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY);
         if (disableImageDrag == null || disableImageDrag == false) {
@@ -150,7 +134,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         editMode.setVisible(false);
         editMode.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                imagesPanel.updateEditSelectModel(imageObject, editMode.isSelected());
+                updateEditSelectModel(editMode.isSelected());
             }
         });
 
@@ -202,8 +186,6 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         titleLabel.addMouseListener(new MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
         subtitleLabel.addMouseListener(new MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
 
-        imagesPanel.ensureCorrectAnnotationView(this);
-
         // If dragging is enabled, add the gesture recognizer to this panel, and all children where dragging can be initiated
         if (dragEnabled) {
             // TODO: this class should not know about DomainObjects
@@ -215,7 +197,10 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         
         refresh(imageObject);
     }
-
+    
+    /**
+     * Subclasses must call this to add their content.
+     */
     protected void setMainComponent(JComponent component) {
         mainPanel.removeAll();
         mainPanel.add(component, BorderLayout.CENTER);
@@ -232,6 +217,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
     
     public final void refresh(T imageObject) {
 
+        this.imageObject = imageObject;
         String title = null;
         String subtitle = null;
         if (imageModel!=null) {
@@ -312,28 +298,14 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
     }
     
     private void showAnnotations() {
-        annotationView.setAnnotations(annotations);
-        buttonPanel.revalidate();
+        if (annotationView!=null) {
+            annotationView.setAnnotations(annotations);
+            buttonPanel.revalidate();
+        }
     }
 
     public T getUserObject() {
         return imageObject;
-    }
-
-    public void toggleEditMode(boolean mode) {
-        // if hiding edit mode, clear out checkbox
-        if (!mode) {
-            this.setEditModeValue(false);
-        }
-        editMode.setVisible(mode);
-    }
-
-    public void setEditModeValue(boolean selection) {
-        editMode.setSelected(selection);
-    }
-
-    public boolean getEditModeValue() {
-        return editMode.isSelected();
     }
 
     public synchronized void setImageSize(int maxWidth, int maxHeight) {
@@ -364,17 +336,26 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         return wantViewable;
     }
 
-    protected synchronized void registerAspectRatio(int width, int height) {
-        log.trace("registerAspectRatio({}x{})", width, height);
-        mainPanel.setPreferredSize(new Dimension(width, height));
-        revalidate();
-        repaint();
-        double a = (double)width / (double)height;
-        if (a != this.aspectRatio) {
-            this.aspectRatio = a;
-            if (imagesPanel!=null) {
-                imagesPanel.registerAspectRatio(a);
-            }
+    public void toggleEditMode(boolean mode) {
+        // if hiding edit mode, clear out checkbox
+        if (!mode) {
+            this.setEditModeValue(false);
         }
+        editMode.setVisible(mode);
+    }
+
+    public void setEditModeValue(boolean selection) {
+        editMode.setSelected(selection);
+    }
+
+    public boolean getEditModeValue() {
+        return editMode.isSelected();
+    }
+
+    /**
+     * Override this method to take action when the user clicks the edit mode button.
+     * @param select
+     */
+    public void updateEditSelectModel(boolean select) {
     }
 }

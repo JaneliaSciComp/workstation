@@ -46,7 +46,11 @@ public class DecoratedImagePanel extends JPanel {
     public DecoratedImagePanel(BufferedImage image, List<ImageDecorator> decorators) {
         this(image, decorators, null, null);
     }
-
+    
+    public DecoratedImagePanel(BufferedImage image, List<ImageDecorator> decorators, String text) {
+        this(image, decorators, text, null);
+    }
+    
     public DecoratedImagePanel(BufferedImage image, List<ImageDecorator> decorators, String text, Color fontColor) {
         setImage(image);
         this.decorators = decorators;
