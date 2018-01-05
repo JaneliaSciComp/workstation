@@ -63,7 +63,7 @@ public class DomainListViewManager implements ViewerManager<DomainListViewTopCom
     }
 
     @Subscribe
-    public void domainObjectNodeSelected(DomainObjectSelectionEvent event) {
+    public void domainObjectSelected(DomainObjectSelectionEvent event) {
 
         if (!DomainExplorerTopComponent.isNavigateOnClick()) {
             return;

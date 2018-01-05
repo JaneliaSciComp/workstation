@@ -1,38 +1,37 @@
-package org.janelia.it.workstation.browser.components;
+package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.Component;
 
-import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
+import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
+import org.janelia.it.workstation.browser.components.ViewerManager;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.sample.LSMImage;
-import org.janelia.model.domain.sample.NeuronFragment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 
 /**
- * Manages the life cycle of domain viewers based on user generated selected events. This manager
- * either reuses existing viewers, or creates them as needed and docks them in the appropriate place.
+ * Manages the life cycle of the color depth search viewer.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainViewerManager implements ViewerManager<DomainViewerTopComponent>  {
+public class ColorDepthSearchViewerManager implements ViewerManager<ColorDepthSearchTopComponent>  {
 
-    private final static Logger log = LoggerFactory.getLogger(DomainViewerManager.class);
+    private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchViewerManager.class);
     
-    public static DomainViewerManager instance;
+    public static ColorDepthSearchViewerManager instance;
     
-    private DomainViewerManager() {
+    private ColorDepthSearchViewerManager() {
     }
     
-    public static DomainViewerManager getInstance() {
+    public static ColorDepthSearchViewerManager getInstance() {
         if (instance==null) {
-            instance = new DomainViewerManager();
+            instance = new ColorDepthSearchViewerManager();
             Events.getInstance().registerOnEventBus(instance);
         }
         return instance;
@@ -40,28 +39,28 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
 
     /* Manage the active instance of this top component */
     
-    private DomainViewerTopComponent activeInstance;
+    private ColorDepthSearchTopComponent activeInstance;
     @Override
-    public void activate(DomainViewerTopComponent instance) {
+    public void activate(ColorDepthSearchTopComponent instance) {
         activeInstance = instance;
     }
     @Override
-    public boolean isActive(DomainViewerTopComponent instance) {
+    public boolean isActive(ColorDepthSearchTopComponent instance) {
         return activeInstance == instance;
     }
     @Override
-    public DomainViewerTopComponent getActiveViewer() {
+    public ColorDepthSearchTopComponent getActiveViewer() {
         return activeInstance;
     }
 
     @Override
     public String getViewerName() {
-        return "DomainViewerTopComponent";
+        return "ColorDepthSearchTopComponent";
     }
     
     @Override
-    public Class<DomainViewerTopComponent> getViewerClass() {
-        return DomainViewerTopComponent.class;
+    public Class<ColorDepthSearchTopComponent> getViewerClass() {
+        return ColorDepthSearchTopComponent.class;
     }
 
     @Subscribe
@@ -87,29 +86,11 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
 
         log.info("domainObjectSelected({})",Reference.createFor(domainObject));
         
-        DomainViewerTopComponent viewer = DomainViewerManager.getInstance().getActiveViewer();
+        ColorDepthSearchTopComponent viewer = getActiveViewer();
         if (viewer!=null) {
             // If we are reacting to a selection event in another viewer, then this load is not user driven.
             viewer.loadDomainObject(domainObject, false);
         }
     }
 
-    public static DomainObject getObjectToLoad(DomainObject domainObject) throws Exception {
-        if (domainObject instanceof NeuronFragment) {
-            NeuronFragment fragment = (NeuronFragment) domainObject;
-            return DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
-        }
-        else if (domainObject instanceof LSMImage) {
-            LSMImage lsmImage = (LSMImage) domainObject;
-            Reference sampleRef = lsmImage.getSample();
-            if (sampleRef!=null) {
-                return DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
-            }
-            else {
-                return null;
-            }
-        }
-        return domainObject;
-    }
-    
 }

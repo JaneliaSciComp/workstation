@@ -481,6 +481,10 @@ public class DomainModel {
         log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",canonicalObjects.size(),unsatisfiedIds.size());
         return canonicalObjects;
     }
+
+    public <T extends DomainObject> List<T> getAllDomainObjectsByClass(Class<T> clazz) throws Exception {
+        return (List<T>)getAllDomainObjectsByClass(clazz.getName());
+    }
     
     public List<DomainObject> getAllDomainObjectsByClass(String className) throws Exception {
         List<DomainObject> domainObjects = new ArrayList<>();

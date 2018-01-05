@@ -15,8 +15,10 @@ import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SampleAlignmentResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +34,8 @@ public class ColorDepthMaskAction extends AbstractAction {
     private Sample sample;
     private ArtifactDescriptor resultDescriptor;
     private String typeName;
+    private SampleAlignmentResult alignment;
+    private String imagePath;
 
     public ColorDepthMaskAction() {
         super("Create Color Depth Search Mask...");
@@ -54,7 +58,17 @@ public class ColorDepthMaskAction extends AbstractAction {
         HasFiles fileProvider = DescriptorUtils.getResult(sample, resultDescriptor);
         log.debug("fileProvider: "+fileProvider);
         
-        String imagePath = DomainUtils.getFilepath(fileProvider, typeName);
+        if (!(fileProvider instanceof SampleAlignmentResult)) {
+            
+            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                    "Must select an aligned image", 
+                    "Image not aligned", JOptionPane.ERROR_MESSAGE);
+            
+            return;
+        }
+        
+        alignment = (SampleAlignmentResult)fileProvider;
+        imagePath = DomainUtils.getFilepath(alignment, typeName);
         log.debug("imagePath: "+imagePath);
         
         if (imagePath==null) {
@@ -90,12 +104,14 @@ public class ColorDepthMaskAction extends AbstractAction {
     
     private void showMaskDialog(BufferedImage image) {
 
-        MaskCreationDialog dialog = new MaskCreationDialog();
         try {
-            BufferedImage mask = dialog.showForImage(image);
-            log.debug("Got mask: "+mask);
-            
-            
+            MaskCreationDialog maskCreationDialog = new MaskCreationDialog();
+            BufferedImage maskImage = maskCreationDialog.showForImage(image);
+            log.debug("Got mask: "+maskImage);
+
+            AddMaskDialog addMaskDialog = new AddMaskDialog();
+            ColorDepthMask mask = addMaskDialog.showForMask(maskImage, sample, alignment, imagePath);
+            log.debug("Got : "+mask);
             
         }
         catch (Exception e) {
