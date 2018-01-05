@@ -5,9 +5,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,12 +35,11 @@ import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
-import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
-import org.janelia.it.workstation.browser.model.ImageDecorator;
+import org.janelia.it.workstation.browser.model.DomainObjectImageModel;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.model.access.domain.DomainObjectAttribute;
@@ -83,49 +80,34 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private String sortField;
     private boolean ascending = true;
 
-    private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
+    private final DomainObjectImageModel imageModel = new DomainObjectImageModel() {
 
         @Override
-        public Reference getImageUniqueId(DomainObject domainObject) {
-            return Reference.createFor(domainObject);
-        }
-
-        @Override
-        public String getImageFilepath(DomainObject domainObject) {
+        protected ArtifactDescriptor getArtifactDescriptor() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public BufferedImage getStaticIcon(DomainObject imageObject) {
+        protected String getImageTypeName() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public DomainObject getImageByUniqueId(Reference id) throws Exception {
-            return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
-        }
-
-        @Override
-        public String getImageTitle(DomainObject domainObject) {
+        protected String getTitlePattern(Class<? extends DomainObject> clazz) {
             throw new UnsupportedOperationException();
         }
-
+        
         @Override
-        public String getImageSubtitle(DomainObject domainObject) {
+        protected String getSubtitlePattern(Class<? extends DomainObject> clazz) {
             throw new UnsupportedOperationException();
         }
-
+        
         @Override
         public List<Annotation> getAnnotations(DomainObject domainObject) {
             return domainObjectList.getAnnotations(domainObject.getId());
         }
-
-        @Override
-        public List<ImageDecorator> getDecorators(DomainObject imageObject) {
-            return Collections.emptyList();
-        }
     };
-
+    
     public DomainObjectTableViewer() {
         setImageModel(imageModel);
     }

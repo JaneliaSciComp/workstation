@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -13,9 +11,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.AnnotationContextMenu;
 import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
@@ -36,23 +32,19 @@ import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
-import org.janelia.it.workstation.browser.model.ImageDecorator;
+import org.janelia.it.workstation.browser.model.DomainObjectImageModel;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.interfaces.IsParent;
 import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.sample.LSMImage;
-import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,82 +77,31 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private ListViewerActionListener listener;
     private boolean editMode;
     
-    private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
+    private final DomainObjectImageModel imageModel = new DomainObjectImageModel() {
 
         @Override
-        public Reference getImageUniqueId(DomainObject domainObject) {
-            return Reference.createFor(domainObject);
+        protected ArtifactDescriptor getArtifactDescriptor() {
+            return resultButton.getResultDescriptor();
         }
 
         @Override
-        public String getImageFilepath(DomainObject domainObject) {
-            HasFiles result = null;
-            if (domainObject instanceof Sample) {
-                Sample sample = (Sample)domainObject;
-                result = DescriptorUtils.getResult(sample, resultButton.getResultDescriptor());
-            }
-            else if (domainObject instanceof HasFiles) {
-                result = (HasFiles)domainObject;
-            }
-            return result==null? null : DomainUtils.getFilepath(result, typeButton.getImageTypeName());
+        protected String getImageTypeName() {
+            return typeButton.getImageTypeName();
         }
 
         @Override
-        public BufferedImage getStaticIcon(DomainObject imageObject) {
-            String filename = null;
-            DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(imageObject);
-            if (provider!=null) {
-                filename = provider.getLargeIcon(imageObject);
-            }
-            return filename==null?null:Icons.getImage(filename);
-        }
-
-        @Override
-        public DomainObject getImageByUniqueId(Reference id) throws Exception {
-            return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
+        protected String getTitlePattern(Class<? extends DomainObject> clazz) {
+            return config.getDomainClassTitle(clazz.getSimpleName());
         }
         
         @Override
-        public String getImageTitle(DomainObject domainObject) {
-            String titlePattern = config.getDomainClassTitle(domainObject.getClass().getSimpleName());
-            if (StringUtils.isEmpty(titlePattern)) return domainObject.getName();
-            DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
-            return StringUtils.replaceVariablePattern(titlePattern, proxy);
+        protected String getSubtitlePattern(Class<? extends DomainObject> clazz) {
+            return config.getDomainClassSubtitle(clazz.getSimpleName());
         }
-
-        @Override
-        public String getImageSubtitle(DomainObject domainObject) {
-            String subtitlePattern = config.getDomainClassSubtitle(domainObject.getClass().getSimpleName());
-            if (StringUtils.isEmpty(subtitlePattern)) return null;
-            DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
-            return StringUtils.replaceVariablePattern(subtitlePattern, proxy);
-        }
-
+        
         @Override
         public List<Annotation> getAnnotations(DomainObject domainObject) {
             return domainObjectList.getAnnotations(domainObject.getId());
-        }
-        
-        @Override
-        public List<ImageDecorator> getDecorators(DomainObject imageObject) {
-            List<ImageDecorator> decorators = new ArrayList<>();
-            if (imageObject instanceof Sample) {
-                Sample sample = (Sample)imageObject;
-                if (sample.isSamplePurged()) {
-                    decorators.add(ImageDecorator.PURGED);
-                }
-                if (!sample.isSampleSageSynced()) {
-                    decorators.add(ImageDecorator.DESYNC);
-                }   
-            }
-            else if (imageObject instanceof LSMImage) {
-                LSMImage lsm = (LSMImage)imageObject;
-                if (!lsm.isLSMSageSynced()) {
-                    decorators.add(ImageDecorator.DESYNC);
-                }   
-            }
-            
-            return decorators;
         }
     };
 

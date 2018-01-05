@@ -5,13 +5,17 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
+import java.util.List;
 
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
+import org.janelia.it.workstation.browser.gui.listview.icongrid.DecoratedImage;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.LoadImageWorker;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,23 +37,27 @@ public class LoadedImagePanel extends JPanel {
     private static final int DEFAULT_HEIGHT = 20;
     
     protected final String imageFilename;
+    protected final List<ImageDecorator> decorators;
     
     protected final JLabel loadingLabel;
-    protected final JLabel imageLabel;
     protected final JLabel errorLabel;
-    protected JLabel activeLabel;
+    protected JComponent activeComponent;
+    private final DecoratedImage imagePanel;
     
     private LoadImageWorker loadWorker;
     private Double aspectRatio;
     
-    public LoadedImagePanel(String imageFilename) {
+    public LoadedImagePanel(String imageFilename, List<ImageDecorator> decorators) {
         
         this.imageFilename = imageFilename;
+        this.decorators = decorators;
+        this.imagePanel = new DecoratedImage(null, decorators);
         
         setLayout(new BorderLayout());
         setOpaque(false);
         
         loadingLabel = new JLabel();
+        loadingLabel.getInsets().set(2, 0, 2, 0);
         loadingLabel.setOpaque(false);
         loadingLabel.setIcon(Icons.getLoadingIcon());
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -58,6 +66,7 @@ public class LoadedImagePanel extends JPanel {
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         errorLabel = new JLabel();
+        errorLabel.setBorder(BorderFactory.createEmptyBorder(5,0,5,0));
         errorLabel.setOpaque(false);
         errorLabel.setForeground(Color.red);
         errorLabel.setIcon(Icons.getIcon("file_error.png"));
@@ -66,13 +75,6 @@ public class LoadedImagePanel extends JPanel {
         errorLabel.setVerticalAlignment(SwingConstants.CENTER);
         errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        imageLabel = new JLabel();
-        imageLabel.setOpaque(false);
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        imageLabel.setVerticalAlignment(SwingConstants.CENTER);
-        imageLabel.setVerticalAlignment(SwingConstants.CENTER);
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        
         if (imageFilename!=null) {
             load();
         }
@@ -80,7 +82,7 @@ public class LoadedImagePanel extends JPanel {
 
     private void load() {
         
-        setImageLabel(loadingLabel);
+        setImageComponent(loadingLabel);
         loadWorker = new LoadImageWorker(imageFilename) {
 
             @Override
@@ -96,14 +98,13 @@ public class LoadedImagePanel extends JPanel {
                     return;
                 }
 
-                imageLabel.setIcon(new StretchIcon(image));
                 aspectRatio = (double)image.getWidth() / (double)image.getHeight();
-                setImageLabel(imageLabel);
-                                
-                revalidate();
-                repaint();
-                doneLoading();
                 
+                imagePanel.setImage(image);
+                imagePanel.setFillParent(true);
+                setImageComponent(imagePanel);
+                                
+                doneLoading();
                 loadWorker = null;
             }
 
@@ -124,12 +125,13 @@ public class LoadedImagePanel extends JPanel {
                     errorType = "Image could not be loaded";
                 }
                 
-                errorLabel.setText(errorType);
-                setImageLabel(errorLabel);
-                revalidate();
-                repaint();
-                doneLoading();
+                BufferedImage image = Icons.getImage("file_error.png");
                 
+                imagePanel.setImage(image);
+                imagePanel.setText(errorType, Color.red);
+                setImageComponent(imagePanel);
+                
+                doneLoading();
                 loadWorker = null;
             }
         };
@@ -141,29 +143,34 @@ public class LoadedImagePanel extends JPanel {
         
     }
 
-    private void setImageLabel(JLabel label) {
-        this.activeLabel = label;
+    private void setImageComponent(JComponent component) {
+        this.activeComponent = component;
         removeAll();
-        add(label, BorderLayout.CENTER);
+        component.addMouseListener(new MouseForwarder(this, "MainComponent->LoadedImagePanel"));
+        add(component, BorderLayout.CENTER);
+        revalidate();
+        repaint();
     }
 
     public void scaleImage(int w) {
         if (w<0) return;
         int h = DEFAULT_HEIGHT;
         if (aspectRatio==null) {
-            if (activeLabel==loadingLabel) {
+            if (activeComponent==loadingLabel) {
                 h = loadingLabel.getIcon().getIconHeight()+10;
-                return;
             }
-            else if (activeLabel==errorLabel) {
-                h = errorLabel.getIcon().getIconHeight()+40;
-                return;
+            else {
+                Dimension preferredSize = imagePanel.getPreferredSize();
+                if (preferredSize!=null) {
+                    h = preferredSize.height;
+                }
             }
         }
         else {
             h = (int) Math.round(w / aspectRatio);
         }
 
+        
         setPreferredSize(new Dimension(w, h));
     }
 }

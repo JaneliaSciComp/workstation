@@ -40,6 +40,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
@@ -65,6 +66,7 @@ import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
@@ -914,9 +916,12 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 
                 String refMip = DomainUtils.getFilepath(files, FileType.ReferenceMip);
                 
-                imagePanel.add(getImagePanel(signalMip));
-                imagePanel.add(getImagePanel(refMip));
-    
+                List<ImageDecorator> decorators = ClientDomainUtils.getDecorators(result);
+                if (signalMip!=null || refMip!=null) {
+                    imagePanel.add(getImagePanel(signalMip, decorators));
+                    imagePanel.add(getImagePanel(refMip, decorators));
+                }
+                
                 JPanel titlePanel = new JPanel(new BorderLayout());
                 titlePanel.add(label, BorderLayout.PAGE_START);
                 titlePanel.add(subLabel1, BorderLayout.CENTER);
@@ -942,8 +947,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             return resultDescriptor;
         }
     
-        private JPanel getImagePanel(String filepath) {
-            LoadedImagePanel lip = new LoadedImagePanel(filepath) {
+        private JPanel getImagePanel(String filepath, List<ImageDecorator> decorators) {
+            LoadedImagePanel lip = new LoadedImagePanel(filepath, decorators) {
                 @Override
                 protected void doneLoading() {
                     rescaleImage(this);
