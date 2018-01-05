@@ -557,6 +557,17 @@ implements MouseMode, KeyListener
 
                     result.add(null); // separator
                 }
+                
+                AbstractAction neuronHistoryAction = new AbstractAction("View Neuron History") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().showNeuronHistory();
+                    }
+                };
+                neuronHistoryAction.setEnabled(true);
+                result.add(new JMenuItem(neuronHistoryAction));                
+                
+                
                 if (parent != null) {
                     if (parent != hover) {
                         result.add(new JMenuItem(new AbstractAction("Center on current parent anchor") {

@@ -44,6 +44,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.AdminHistoryDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
@@ -220,6 +221,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         NeuronGroupsDialog ngDialog = new NeuronGroupsDialog();
         ngDialog.showDialog();
     }
+    
+    public void showNeuronHistory() {
+        AdminHistoryDialog historyDialog = new AdminHistoryDialog();
+        historyDialog.showDialog();
+    }
+
 
     public void anchorAdded(AnchorSeed seed) {
         addAnnotation(seed.getLocation(), seed.getParentGuid());
@@ -1971,7 +1978,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 for (File swcFile : swcFiles) {
                     setStatus(swcFile.getName());
                     if (swcFile.exists()) {
-                        neuron = annotationModel.importBulkSWCData(swcFile, workspace, null);
+                        annotationModel.importBulkSWCData(swcFile, workspace);
                         activityLog.logImportSWCFile(workspace.getId(), swcFile.getName());
                         imported++;
                     }
@@ -1982,7 +1989,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadSuccess() {
-                annotationModel.postWorkspaceUpdate(neuron);
             }
         };
         importer.executeWithEvents();

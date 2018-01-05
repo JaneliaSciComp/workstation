@@ -135,25 +135,21 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
     public void asyncCreateNeuron(TmNeuronMetadata neuron) throws Exception {
         // make sure the neuron contains the current user's ownerKey;
         neuron.setOwnerKey(AccessManager.getSubjectKey());
-        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
         sendMessage (neuron, MessageType.NEURON_CREATE);
     }
 
     @Override
     public void asyncSaveNeuron(TmNeuronMetadata neuron) throws Exception {
-        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
         sendMessage (neuron, MessageType.NEURON_SAVE_NEURONDATA);
     }
 
     @Override
     public void asyncSaveNeuronMetadata(TmNeuronMetadata neuron) throws Exception {
-        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
         sendMessage (neuron, MessageType.NEURON_SAVE_METADATA);
     }
 
     @Override
     public void asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {
-        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
         sendMessage (neuron, MessageType.NEURON_DELETE);
     }
 }
