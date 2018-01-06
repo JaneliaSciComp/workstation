@@ -175,6 +175,16 @@ public class DomainModel {
     }
 
     /**
+     * Call putOrUpdate(domainObjects, false)
+     *
+     * @param domainObject
+     * @return canonical domain object instance
+     */
+    public <T extends DomainObject> List<T> putOrUpdate(Collection<T> domainObjects) {
+        return putOrUpdate(domainObjects, false);
+    }
+
+    /**
      * Put the object in the cache, or update the cached domain object if there is already a version in the cache.
      * In the latter case, the updated cached instance is returned, and the argument instance can be discarded.
      *
@@ -373,7 +383,7 @@ public class DomainModel {
             if (domainObject!=null) {
                 map.put(ref, domainObject);
             }
-            else {
+            else if (ref!=null) {
                 unsatisfiedRefs.add(ref);
             }
         }
@@ -496,7 +506,7 @@ public class DomainModel {
         
         if (TIMER) w.stop("getAllDomainObjectsByClass()");
         log.debug("getAllDomainObjectsByClass: returning {} objects",domainObjects.size());
-        return domainObjects;
+        return putOrUpdate(domainObjects);
     }
 
     public List<DomainObject> getDomainObjects(ReverseReference reverseReference) throws Exception {
@@ -898,28 +908,28 @@ public class DomainModel {
         notifyDomainObjectRemoved(release);
     }
 
-    public DomainObject save(DomainObject domainObject) throws Exception {
-        DomainObject canonicalObject;
+    public <T extends DomainObject> T save(T domainObject) throws Exception {
+        T canonicalObject;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(domainFacade.save(domainObject));
+            canonicalObject = putOrUpdate((T)domainFacade.save(domainObject));
         }
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
-    public DomainObject updateProperty(DomainObject domainObject, String propName, Object propValue) throws Exception {
-        DomainObject canonicalObject;
+    public <T extends DomainObject> T updateProperty(T domainObject, String propName, Object propValue) throws Exception {
+        T canonicalObject;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(domainFacade.updateProperty(domainObject, propName, propValue));
+            canonicalObject = putOrUpdate((T)domainFacade.updateProperty(domainObject, propName, propValue));
         }
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
-    public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights) throws Exception {
-        DomainObject canonicalObject;
+    public <T extends DomainObject> T changePermissions(T domainObject, String granteeKey, String rights) throws Exception {
+        T canonicalObject;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(domainFacade.setPermissions(domainObject, granteeKey, rights), true);
+            canonicalObject = putOrUpdate((T)domainFacade.setPermissions(domainObject, granteeKey, rights), true);
         }
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;

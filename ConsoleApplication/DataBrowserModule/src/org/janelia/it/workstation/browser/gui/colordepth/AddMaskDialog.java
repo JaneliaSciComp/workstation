@@ -25,11 +25,13 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.sample.Sample;
@@ -163,9 +165,7 @@ public class AddMaskDialog extends ModalDialog {
             @Override
             protected void doStuff() throws Exception {
                 for(ColorDepthSearch search : DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(ColorDepthSearch.class)) {
-                    if (!search.isSearchComplete()) {
-                        searches.add(search);
-                    }
+                    searches.add(search);
                 }
             }
 
@@ -226,9 +226,9 @@ public class AddMaskDialog extends ModalDialog {
         
     private void processAdd() {
 
-        String maskName = maskNameField.getText();
+        String maskNameStr = maskNameField.getText();
         
-        if (StringUtils.isBlank(maskName)) {
+        if (StringUtils.isBlank(maskNameStr)) {
             JOptionPane.showMessageDialog(this, 
                     "You must specify a name for your mask", 
                     "Missing mask name", JOptionPane.ERROR_MESSAGE);
@@ -254,22 +254,32 @@ public class AddMaskDialog extends ModalDialog {
             search.setName(searchName);
         }
          
-        if (!maskName.matches("#\\d+$")) {
-            maskName = ClientDomainUtils.getNextNumberedName(search.getMasks(), maskName, false);
-        }
-        
-        mask = new ColorDepthMask();
-        mask.setFilepath(filepath);
-        mask.setName(maskName);
-        search.addMask(mask);
-        
+        // TODO: ask the user to specify using a thresholding algorithm
+        int maskThreshold = 50;
         final ColorDepthSearch finalSearch = search;
+        
         Utils.setWaitingCursor(this);
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
-                DomainMgr.getDomainMgr().getModel().save(finalSearch);
+
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                
+                String maskName = maskNameStr;
+                if (!maskName.matches("#\\d+$")) {
+                    List<ColorDepthMask> masks = model.getDomainObjectsAs(ColorDepthMask.class, finalSearch.getMasks());
+                    maskName = ClientDomainUtils.getNextNumberedName(masks, maskName, false);
+                }
+                
+                mask = new ColorDepthMask();
+                mask.setFilepath(filepath);
+                mask.setName(maskName);
+                mask.setMaskThreshold(maskThreshold);
+                mask = model.save(mask);
+                                
+                finalSearch.addMask(Reference.createFor(mask));
+                model.save(finalSearch);
             }
 
             @Override

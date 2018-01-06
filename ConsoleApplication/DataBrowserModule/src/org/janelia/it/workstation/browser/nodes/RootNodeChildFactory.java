@@ -2,19 +2,19 @@ package org.janelia.it.workstation.browser.nodes;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 
+import org.janelia.it.jacs.integration.framework.nodes.NodeGenerator;
+import org.janelia.it.jacs.integration.framework.nodes.NodeProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.model.DomainObjectComparator;
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.workspace.Workspace;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
+import org.openide.util.lookup.Lookups;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,49 +23,60 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class RootNodeChildFactory extends ChildFactory<DomainObject> {
+public class RootNodeChildFactory extends ChildFactory<NodeGenerator> {
 
     private static final Logger log = LoggerFactory.getLogger(RootNodeChildFactory.class);
     
-    private final DummyObject RECENTLY_OPENED_ITEMS = new DummyObject();
-    private final RecentOpenedItemsNode RECENTLY_OPENED_ITEMS_NODE = new RecentOpenedItemsNode();
-    
     @Override
-    protected boolean createKeys(List<DomainObject> list) {
+    protected boolean createKeys(List<NodeGenerator> list) {
         try {
-            if (DomainExplorerTopComponent.isShowRecentMenuItems()) {
-                list.add(RECENTLY_OPENED_ITEMS);
+            
+            List<NodeGenerator> allGenerators = new ArrayList<>();
+            for(NodeProvider provider : Lookups.forPath(NodeProvider.LOOKUP_PATH).lookupAll(NodeProvider.class)) {
+                List<NodeGenerator> generators = provider.getNodeGenerators();
+                log.info("Adding {} node generators from provider: {}", generators.size(), provider.getClass().getName());
+                allGenerators.addAll(generators);
             }
+            
+            Collections.sort(allGenerators, new Comparator<NodeGenerator>() {
+                @Override
+                public int compare(NodeGenerator o1, NodeGenerator o2) {
+                    return o1.getIndex().compareTo(o2.getIndex());
+                }
+            });
+            
+            list.addAll(allGenerators);
             
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             List<Workspace> workspaces = new ArrayList<>(model.getWorkspaces());
+            Collections.sort(workspaces, new DomainObjectComparator());
             
             for(Workspace workspace : workspaces) {
-                log.info("Adding workspace: {} ({})", workspace.getName(), workspace.getOwnerKey());
+                log.info("Adding workspace node generator: {} ({})", workspace.getName(), workspace.getOwnerKey());
+                list.add(new NodeGenerator() {
+                    
+                    @Override
+                    public Integer getIndex() {
+                        return -1; // This doesn't matter, we've already sorted everything
+                    }
+                    
+                    @Override
+                    public Node createNode() {
+                        return new WorkspaceNode(workspace);
+                    }
+                });
             }
-            
-            Collections.sort(workspaces, new DomainObjectComparator());
-            list.addAll(workspaces);
         } 
         catch (Exception ex) {
             ConsoleApp.handleException(ex);
-            return false;
         }
         return true;
     }
 
     @Override
-    protected Node createNodeForKey(DomainObject key) {
+    protected Node createNodeForKey(NodeGenerator key) {
         try {
-            if (key.equals(RECENTLY_OPENED_ITEMS)) {
-                return RECENTLY_OPENED_ITEMS_NODE;
-            }
-            if (Workspace.class.isAssignableFrom(key.getClass())) {
-                return new WorkspaceNode((Workspace) key);
-            }
-            else {
-                throw new IllegalStateException("Illegal root node: " + key.getClass().getName());
-            }
+            return key.createNode();
         }
         catch (Exception e) {
             ConsoleApp.handleException(e);
@@ -75,100 +86,5 @@ public class RootNodeChildFactory extends ChildFactory<DomainObject> {
 
     public void refresh() {
         refresh(true);
-    }
-    
-    public RecentOpenedItemsNode getRecentlyOpenedItemsNode() {
-        return RECENTLY_OPENED_ITEMS_NODE;
-    }
-    
-    /**
-     * Object class for creating singleton nodes.
-     */
-    private static class DummyObject implements DomainObject {
-        
-        DummyObject() {
-        }
-        
-        @Override
-        public Long getId() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void setId(Long id) {
-            throw new UnsupportedOperationException();
-            
-        }
-
-        @Override
-        public String getName() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void setName(String name) {
-            throw new UnsupportedOperationException();
-            
-        }
-
-        @Override
-        public String getOwnerKey() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void setOwnerKey(String ownerKey) {
-            throw new UnsupportedOperationException();
-            
-        }
-
-        @Override
-        public Set<String> getReaders() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void setReaders(Set<String> readers) {
-            throw new UnsupportedOperationException();
-            
-        }
-
-        @Override
-        public Set<String> getWriters() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void setWriters(Set<String> writers) {
-            throw new UnsupportedOperationException();
-            
-        }
-
-        @Override
-        public Date getCreationDate() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void setCreationDate(Date creationDate) {
-            throw new UnsupportedOperationException();
-            
-        }
-
-        @Override
-        public Date getUpdatedDate() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void setUpdatedDate(Date updatedDate) {
-            throw new UnsupportedOperationException();
-            
-        }
-
-        @Override
-        public String getType() {
-            throw new UnsupportedOperationException();
-        }
     }
 }

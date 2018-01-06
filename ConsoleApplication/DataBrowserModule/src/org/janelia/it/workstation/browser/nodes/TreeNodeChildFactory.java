@@ -113,7 +113,6 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         }
         catch (Exception ex) {
             log.error("Error creating tree node child keys for "+treeNode,ex);
-            return false;
         }
         return true;
     }

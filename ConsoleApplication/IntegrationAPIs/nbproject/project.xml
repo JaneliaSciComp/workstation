@@ -53,6 +53,7 @@
                 <package>org.janelia.it.jacs.integration.framework.compression</package>
                 <package>org.janelia.it.jacs.integration.framework.domain</package>
                 <package>org.janelia.it.jacs.integration.framework.exceptions</package>
+                <package>org.janelia.it.jacs.integration.framework.nodes</package>
                 <package>org.janelia.it.jacs.integration.framework.system</package>
             </public-packages>
         </data>
