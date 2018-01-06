@@ -16,4 +16,6 @@ public interface GLSelectable extends AB2EventHandler {
 
     public void releaseDrag();
 
+    public boolean isSelectable();
+
 }

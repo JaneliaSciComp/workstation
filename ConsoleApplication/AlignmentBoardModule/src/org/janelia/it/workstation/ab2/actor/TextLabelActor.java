@@ -42,6 +42,8 @@ public class TextLabelActor extends GLAbstractActor {
 
     AB2Renderer2D renderer2d;
 
+    boolean isSelectable=false;
+
     static BufferedImage textResourceImage;
 
     int labelImageWidth;
@@ -94,6 +96,15 @@ public class TextLabelActor extends GLAbstractActor {
         this.textColor=textColor;
         this.backgroundColor=backgroundColor;
         this.orientation=orientation;
+    }
+
+    @Override
+    public boolean isSelectable() {
+        return isSelectable;
+    }
+
+    public void setSelectable(boolean isSelectable) {
+        this.isSelectable=isSelectable;
     }
 
     @Override

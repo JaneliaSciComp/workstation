@@ -15,9 +15,9 @@ public class AB2UserContext {
     private List<Point> positionHistory=new ArrayList<>();
     private boolean mouseIsDragging = false;
 
-    private GLSelectable dragObject;
+    private List<GLSelectable> dragObjects=new ArrayList<>();
     private GLSelectable hoverObject;
-    private GLSelectable selectObject;
+    private List<GLSelectable> selectObjects=new ArrayList<>();
 
     private Map<String,Object> contextMap=new HashMap<>();
 
@@ -45,13 +45,17 @@ public class AB2UserContext {
 
     public void setContextMap(Map<String, Object> contextMap) { this.contextMap=contextMap; }
 
-    public GLSelectable getDragObject() {
-        return dragObject;
+    public List<GLSelectable> getDragObjects() {
+        return dragObjects;
     }
 
-    public void setDragObject(GLSelectable dragObject) {
-        this.dragObject = dragObject;
+    public void addDragObject(GLSelectable dragObject) {
+        dragObjects.add(dragObject);
     }
+
+    public void clearDragObjects() { dragObjects.clear(); }
+
+    public void removeDragObject(Object o) { dragObjects.remove(o); }
 
     public GLSelectable getHoverObject() {
         return hoverObject;
@@ -61,27 +65,31 @@ public class AB2UserContext {
         this.hoverObject = hoverObject;
     }
 
-    public GLSelectable getSelectObject() {
-        return selectObject;
+    public List<GLSelectable> getSelectObjects() {
+        return selectObjects;
     }
 
-    public void setSelectObject(GLSelectable selectObject) {
-        this.selectObject = selectObject;
+    public void addSelectObject(GLSelectable selectObject) {
+        selectObjects.add(selectObject);
     }
+
+    public void clearSelectObjects() { selectObjects.clear(); }
+
+    public void removeSelectObject(Object o) { selectObjects.remove(o); }
 
     public void clearDrag() {
         positionHistory.clear();
         mouseIsDragging=false;
-        dragObject=null;
+        dragObjects.clear();
     }
 
     public void clearAll() {
         positionHistory.clear();
         mouseIsDragging=false;
         contextMap=new HashMap<>();
-        dragObject=null;
+        dragObjects.clear();
         hoverObject=null;
-        selectObject=null;
+        selectObjects.clear();
     }
 
 }

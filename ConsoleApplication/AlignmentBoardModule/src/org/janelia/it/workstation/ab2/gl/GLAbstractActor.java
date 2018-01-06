@@ -38,6 +38,9 @@ public abstract class GLAbstractActor implements GLSelectable {
         actors.put(new Integer(actorId), this);
     }
 
+    @Override
+    public boolean isSelectable() { return false; }
+
     public static GLAbstractActor getActorById(int actorId) { return actors.get(actorId); }
 
     public static void removeActor(GLAbstractActor actor) {

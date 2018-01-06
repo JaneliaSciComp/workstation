@@ -21,6 +21,7 @@ public class OpenCloseActor extends GLAbstractActor {
 
     Vector3 position;
     float size;
+    float pointSize=1.0f; // recomputed with glWindowResize
 
     IntBuffer backgroundVertexArrayId=IntBuffer.allocate(1);
     IntBuffer backgroundVertexBufferId=IntBuffer.allocate(1);
@@ -42,10 +43,15 @@ public class OpenCloseActor extends GLAbstractActor {
 
     AB2Renderer2D renderer2d;
 
-    public OpenCloseActor(AB2Renderer2D renderer, int actorId, Vector3 position, Vector4 foregroundColor,
+    boolean isOpen=false;
+
+    boolean isSelectable=false;
+
+    public OpenCloseActor(AB2Renderer2D renderer, int actorId, float size, Vector3 position, Vector4 foregroundColor,
                            Vector4 backgroundColor, Vector4 hoverColor, Vector4 selectColor) {
         super(renderer, actorId);
         this.renderer2d=renderer;
+        this.size=size;
         this.position=position;
         this.foregroundColor=foregroundColor;
         this.backgroundColor=backgroundColor;
@@ -85,6 +91,30 @@ public class OpenCloseActor extends GLAbstractActor {
         this.selectColor = selectColor;
     }
 
+    @Override
+    public boolean isSelectable() {
+        return isSelectable;
+    }
+
+    public void setSelectable(boolean isSelectable) {
+        this.isSelectable=isSelectable;
+    }
+
+    public void setOpen(boolean isOpen) {
+        this.isOpen=isOpen;
+    }
+
+    @Override
+    protected void glWindowResize(int width, int height) {
+        pointSize=size*width;
+        needsResize=true;
+    }
+
+
+    public void setSize(float size) {
+        this.size=size;
+        needsResize=true;
+    }
 
     public void updatePosition(Vector3 position) {
         this.position=position;
@@ -227,6 +257,32 @@ public class OpenCloseActor extends GLAbstractActor {
             updateVertexBuffers(gl);
             needsResize=false;
         }
+
+        if (shader instanceof AB2Basic2DShader) {
+            AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
+            basic2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
+            if (isSelected) {
+                basic2DShader.setColor(gl, selectColor);
+            } else if (isHovered) {
+                basic2DShader.setColor(gl, hoverColor);
+            } else {
+                basic2DShader.setColor(gl, color);
+            }
+        } else if (shader instanceof AB2PickShader) {
+            AB2PickShader pickShader=(AB2PickShader)shader;
+            pickShader.setMVP(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
+            pickShader.setPickId(gl, actorId);
+        }
+
+
+        // First, we draw background, which is independent of open state
+        gl.glPointSize(pointSize);
+        gl.glBindVertexArray(backgroundVertexArrayId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, backgroundVertexBufferId.get(0));
+        gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
+        gl.glEnableVertexAttribArray(0);
+        gl.glDrawArrays(GL4.GL_POINTS, 0, backgroundVertexFb.capacity() / 3);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
         //todo: finish this
 

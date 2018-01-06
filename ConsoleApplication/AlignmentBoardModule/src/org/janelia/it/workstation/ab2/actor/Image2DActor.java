@@ -36,6 +36,8 @@ public class Image2DActor extends GLAbstractActor {
     float alpha;
     AB2Renderer2D renderer2d;
 
+    boolean isSelectable=false;
+
 
     public Image2DActor(AB2Renderer2D renderer, int actorId, Vector3 v0, Vector3 v1, BufferedImage bufferedImage, float alpha) {
         super(renderer, actorId);
@@ -48,6 +50,15 @@ public class Image2DActor extends GLAbstractActor {
 
     @Override
     public boolean isTwoDimensional() { return true; }
+
+    @Override
+    public boolean isSelectable() {
+        return isSelectable;
+    }
+
+    public void setSelectable(boolean isSelectable) {
+        this.isSelectable=isSelectable;
+    }
 
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {

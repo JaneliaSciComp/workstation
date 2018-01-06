@@ -30,6 +30,9 @@ public abstract class GLRegion implements GLSelectable {
 
     protected List<AB2Renderer> renderers=new ArrayList<>();
 
+    @Override
+    public boolean isSelectable() { return false; }
+
     public void setMinimumDimensions(int mininumWidth, int minimumHeight) {
         this.minimumWidth=mininumWidth;
         this.minimumWHeight=minimumHeight;

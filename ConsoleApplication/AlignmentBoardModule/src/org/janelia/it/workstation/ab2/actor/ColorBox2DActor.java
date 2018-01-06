@@ -42,6 +42,8 @@ public class ColorBox2DActor extends GLAbstractActor {
 
     AB2Renderer2D renderer2d;
 
+    boolean isSelectable=false;
+
     public ColorBox2DActor(AB2Renderer2D renderer, int actorId, Vector3 v0, Vector3 v1,
                            Vector4 color, Vector4 hoverColor, Vector4 selectColor) {
         super(renderer, actorId);
@@ -81,6 +83,15 @@ public class ColorBox2DActor extends GLAbstractActor {
         this.v0=v0;
         this.v1=v1;
         needsResize=true;
+    }
+
+    @Override
+    public boolean isSelectable() {
+        return isSelectable;
+    }
+
+    public void setSelectable(boolean isSelectable) {
+        this.isSelectable = isSelectable;
     }
 
     private float[] computeVertexData() {
