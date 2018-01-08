@@ -459,7 +459,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     private void loadPreferences() {
         if (separation.getId()==null) return;
         try {
-            sortCriteria = (String)FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, "number");
+            sortCriteria = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, "number");
         }
         catch (Exception e) {
             log.error("Could not load sort criteria",e);

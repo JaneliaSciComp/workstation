@@ -164,7 +164,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
         neuronTable.getColumnModel().getColumn(0).setPreferredWidth(175);
         neuronTable.getColumnModel().getColumn(1).setPreferredWidth(50);
-        neuronTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        // the color swatch column should not resize; let the name column have
+        //  all space
+        neuronTable.getColumnModel().getColumn(1).setMaxWidth(50);
 
         neuronTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 

@@ -271,18 +271,17 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             Events.getInstance().unregisterOnEventBus(resultsView);
         }
         this.resultsView = viewer;
+        resultsView.setActionListener(new ListViewerActionListener() {
+            @Override
+            public void visibleObjectsChanged() {
+                updateStatusBar();
+            }
+        });
         Events.getInstance().registerOnEventBus(resultsView);
         resultsView.setSelectionModel(selectionModel);
         resultsView.setSearchProvider(searchProvider);
     }
-
-    private void updatePagingStatus() {
-        startPageButton.setEnabled(numPages>0 && currPage != 0);
-        prevPageButton.setEnabled(numPages>0 && currPage > 0);
-        nextPageButton.setEnabled(numPages>0 && currPage < numPages - 1);
-        endPageButton.setEnabled(numPages>0 && currPage != numPages - 1);
-    }
-    
+        
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
         if (event.getSource()!=resultsView) return;
@@ -377,18 +376,31 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         }
         selectionModel.select(domainObjects, clearAll, true);
     }
+
+    private void updatePagingStatus() {
+        startPageButton.setEnabled(numPages>0 && currPage != 0);
+        prevPageButton.setEnabled(numPages>0 && currPage > 0);
+        nextPageButton.setEnabled(numPages>0 && currPage < numPages - 1);
+        endPageButton.setEnabled(numPages>0 && currPage != numPages - 1);
+    }
     
     private void updateStatusBar() {
-        int s = selectionModel.getSelectedIds().size();
-        if (resultPage==null) {
+        if (resultPage==null || resultsView==null) {
             statusLabel.setText("");
             selectionButtonContainer.setVisible(false);
         }
         else {
             long pn = resultPage.getNumPageResults();
             long tn = resultPage.getNumTotalResults();
-            statusLabel.setText(s + " of " + tn + " selected");
-            selectionButtonContainer.setVisible(s==pn && tn>pn);
+            long numItemsHidden = resultsView.getNumItemsHidden();
+            long numItemsVisible = pn - numItemsHidden;
+            long numItemsSelected = selectionModel.getSelectedIds().size();
+            String status = numItemsSelected + " of " + tn + " selected";
+            if (numItemsHidden > 0) {
+                status += " ("+numItemsHidden+" hidden)";
+            }
+            statusLabel.setText(status);
+            selectionButtonContainer.setVisible(numItemsSelected==numItemsVisible && tn>pn);
         }
     }
 

@@ -4,14 +4,15 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -26,6 +27,7 @@ import javax.swing.UIManager;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.FileUtil;
+import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -145,16 +147,14 @@ public final class DownloadWizardAction implements ActionListener {
                 log.info("Got {} artifact descriptors", elementSet.size());
                 log.info("Finding files");
                 
-                int i = 10;
-                int total = elementSet.size();
-                int inc = total>0 ? (100-i) / total : 1;
+                int startIndex = 2;
+                int progressTotal = startIndex + (downloadItems.size() * elementSet.size());
                 
                 artifactFileCounts = new HashMap<>();
                 for(ArtifactDescriptor artifactDescriptor : elementSet) {
-                    artifactFileCounts.put(artifactDescriptor, getFileTypeCounts(artifactDescriptor));
+                    artifactFileCounts.put(artifactDescriptor, getFileTypeCounts(artifactDescriptor, this, startIndex, progressTotal));
                     if (isCancelled()) return;
-                    setProgress(i);
-                    i += inc;
+                    startIndex += downloadItems.size();
                 }
                 
                 log.info("Found {} objects to export",downloadItems.size());
@@ -230,15 +230,22 @@ public final class DownloadWizardAction implements ActionListener {
         return downloadItems;
     }
 
-    private Multiset<FileType> getFileTypeCounts(ArtifactDescriptor artifactDescriptor) throws Exception {
+    private Multiset<FileType> getFileTypeCounts(ArtifactDescriptor artifactDescriptor, Progress progress, int startIndex, int total) throws Exception {
         
         Multiset<FileType> countedTypeNames = LinkedHashMultiset.create();
         
+        log.info("Getting file sources for {}", artifactDescriptor);
+        
+        int i = 0;
         Set<Object> sources = new LinkedHashSet<>();
         for(DownloadObject downloadObject : downloadItems) {
             DomainObject domainObject = downloadObject.getDomainObject();
             sources.addAll(artifactDescriptor.getFileSources(domainObject));
+            progress.setProgress(startIndex+i, total);
+            i++;
         }
+        
+        log.info("Getting file types for {}", artifactDescriptor);
         
         boolean only2d = false;
         for (Object source : sources) {
@@ -377,99 +384,187 @@ public final class DownloadWizardAction implements ActionListener {
         }
     }
 
+    private int totalToCheck = 0;
+    private Queue<DownloadFileItem> toCheck = new LinkedList<>();
+    private Queue<DownloadFileItem> toDownload = new LinkedList<>();
+    
     private void download(List<DownloadFileItem> downloadItems) {
-
         ActivityLogHelper.logUserAction("DownloadWizardAction.beginDownload");
-        
-        boolean started = false;
-        int remaining = downloadItems.size();
-        
-        for(final DownloadFileItem downloadItem : downloadItems) {
-            if (downloadItem.getSourceFile()!=null) {
-            
-                FileDownloadWorker worker = new FileDownloadWorker(downloadItem, COPY_FILE_LOCK);
-                if (checkForAlreadyDownloadedFiles(worker, remaining>1)) {
-                    worker.startDownload();
-                }
-                
-                started = true;
+
+        for(DownloadFileItem item : downloadItems) {
+            if (item.getSourceFile()!=null) {
+                toCheck.add(item);
             }
-            remaining--;
         }
-
-        if (!started) {
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "There are no downloads to start.", "Nothing to do", JOptionPane.PLAIN_MESSAGE);
-        }
-    }
-
-    private boolean checkForAlreadyDownloadedFiles(FileDownloadWorker worker, boolean showApplyToAll) {
-
-        final DownloadFileItem downloadItem = worker.getDownloadItem();
-        final File targetDir = worker.getTargetDir();
-        final String targetExtension = worker.getTargetExtension();
         
-        boolean continueWithDownload = true;
+        totalToCheck = toCheck.size();
+        continueAlreadyDownloadedChecks();
+    }
+    
+    private void continueAlreadyDownloadedChecks() {
 
+        log.info("continueAlreadyDownloadedChecks({} items to check, {} items to download)", toCheck.size(), toDownload.size());
+        
+        SimpleWorker worker = new SimpleWorker() {
+            
+            private DownloadFileItem downloadItem;
+            private String filename;
+            
+            @Override
+            protected void doStuff() throws Exception {
+                
+                while (!toCheck.isEmpty()) {
+                    downloadItem = toCheck.remove();
+                    setProgress(totalToCheck - toCheck.size(), totalToCheck);
+                    
+                    filename = getAlreadyDownloadedFilename(downloadItem);
+                    if (filename!=null) {
+                        // This file was already download
+                        if (applyToAllChoice != null) {
+                            if (evaluateRedownloadOption(downloadItem, applyToAllChoice)) {
+                                toDownload.add(downloadItem);
+                            }
+                        }
+                        else {
+                            // Break out and finish this worker, so that the user can be prompted
+                            break;
+                        }
+                    }
+                    else {
+                        toDownload.add(downloadItem);
+                    }
+                    
+                    if (applyToAllChoice != null) {
+                        if (applyToAllChoice==1) {
+                            // Just download the rest
+                            toDownload.addAll(toCheck);
+                            toCheck.clear();
+                        }
+                        else if (applyToAllChoice==2) {
+                            // Just ignore the rest
+                            toCheck.clear();
+                        }
+                    }
+                }
+            }
+            
+            @Override
+            protected void hadSuccess() {
+
+                if (filename!=null) {
+                    if (askUserToRedownload(downloadItem, filename, !toCheck.isEmpty())) {
+                        toDownload.add(downloadItem);
+                    }
+                    continueAlreadyDownloadedChecks();
+                }
+                else {
+                    if (!toDownload.isEmpty()) {
+                        FileDownloadWorker worker = new FileDownloadWorker(toDownload, COPY_FILE_LOCK);
+                        worker.startDownload();
+                    }
+                    else {
+                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "There are no downloads to start.", "Nothing to do", JOptionPane.PLAIN_MESSAGE);
+                    }
+                }
+            }
+            
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkImplProvider.handleException(error);
+            }
+            
+        };
+
+        worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Verifying files", "", 0, 100));
+        worker.execute();
+        
+    }
+    
+    private Map<File,File[]> listCache = new HashMap<>();
+
+    private String getAlreadyDownloadedFilename(DownloadFileItem downloadItem) {
+
+        final File targetDir = downloadItem.getTargetFile().getParentFile();
+        
+        File[] files = listCache.get(targetDir);
+        if (files==null) {
+            files = targetDir.listFiles();
+            listCache.put(targetDir, files);
+        }
+
+        if (files==null) {
+            // No files found
+            return null;
+        }
+        
+        final String targetExtension = downloadItem.getTargetExtension();
         final String targetName = downloadItem.getTargetFile().getName();
         final String basename = FileUtil.getBasename(targetName).replaceAll("#","");
 
-        File[] files = targetDir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.startsWith(basename) && name.endsWith(targetExtension);
+        // Find the first matching file
+        for(File file : files) {
+            String name = file.getName();
+            if (name.startsWith(basename) && name.endsWith(targetExtension)) {
+                return name;
             }
-        });
+        }
+        
+        return null;
+    }
+    
+    private boolean askUserToRedownload(DownloadFileItem downloadItem, String fileName, boolean showApplyToAll) {
 
-        if ((files != null) && (files.length > 0)) {
+        Integer chosenOptionIndex = applyToAllChoice;
+        if (chosenOptionIndex==null) {
 
-            Integer chosenOptionIndex = applyToAllChoice;
-            if (chosenOptionIndex==null) {
-
-                String abbrName = StringUtils.abbreviate(files[0].getName(), 40);
-                String msg = "<html>The file " + abbrName + " was previously downloaded.<br>"
-                + "Open the existing download folder or re-run the download anyway?</html>";
-                
-                JCheckBox applyToAll = new JCheckBox("Apply to all");
-                
-                JPanel questionPanel = new JPanel(new BorderLayout());
-                questionPanel.add(new JLabel(msg), BorderLayout.CENTER);
-                
-                if (showApplyToAll) {
-                    questionPanel.add(applyToAll, BorderLayout.SOUTH);
-                }
-                
-                String[] options = { "Open Folder", "Run Download", "Ignore" };
-                chosenOptionIndex = JOptionPane.showOptionDialog(
-                        ConsoleApp.getMainFrame(),
-                        questionPanel,
-                        "File Previously Downloaded",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE,
-                        null,
-                        options,
-                        options[0]);
-                
-                if (applyToAll.isSelected()) {
-                    log.info("Setting apply to all option: {}", chosenOptionIndex);
-                    applyToAllChoice = chosenOptionIndex;
-                }
+            String abbrName = StringUtils.abbreviate(fileName, 40);
+            String msg = "<html>The file " + abbrName + " was previously downloaded.<br>"
+            + "Open the existing download folder or re-run the download anyway?</html>";
+            
+            JCheckBox applyToAll = new JCheckBox("Apply to all");
+            
+            JPanel questionPanel = new JPanel(new BorderLayout());
+            questionPanel.add(new JLabel(msg), BorderLayout.CENTER);
+            
+            if (showApplyToAll) {
+                questionPanel.add(applyToAll, BorderLayout.SOUTH);
             }
-
-            continueWithDownload = (chosenOptionIndex == 1);
-            if (chosenOptionIndex == 0) {
-                if (numBrowseFileAttempts == MAX_BROWSE_FILES) {
-                    log.info("Reached max number of file browses for this download context: {}", numBrowseFileAttempts);
-                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
-                            "Maximum number of folders have been opened. Further folders will not be opened for this file set.", "Open Folder", JOptionPane.WARNING_MESSAGE);
-                }
-                else if (numBrowseFileAttempts < MAX_BROWSE_FILES) {
-                    DesktopApi.browse(targetDir);
-                }
-                numBrowseFileAttempts++;
+            
+            String[] options = { "Open Folder", "Run Download", "Ignore" };
+            chosenOptionIndex = JOptionPane.showOptionDialog(
+                    ConsoleApp.getMainFrame(),
+                    questionPanel,
+                    "File Previously Downloaded",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    options,
+                    options[0]);
+            
+            if (applyToAll.isSelected()) {
+                log.info("Setting apply to all option: {}", chosenOptionIndex);
+                applyToAllChoice = chosenOptionIndex;
             }
         }
 
-        return continueWithDownload;
+        return evaluateRedownloadOption(downloadItem, chosenOptionIndex);
+    }
+    
+    private boolean evaluateRedownloadOption(DownloadFileItem downloadItem, int chosenOptionIndex) {
+
+        if (chosenOptionIndex == 0) {
+            if (numBrowseFileAttempts == MAX_BROWSE_FILES) {
+                log.info("Reached max number of file browses for this download context: {}", numBrowseFileAttempts);
+                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                        "Maximum number of folders have been opened. Further folders will not be opened for this file set.", "Open Folder", JOptionPane.WARNING_MESSAGE);
+            }
+            else if (numBrowseFileAttempts < MAX_BROWSE_FILES) {
+                DesktopApi.browse(downloadItem.getTargetFile().getParentFile());
+            }
+            numBrowseFileAttempts++;
+        }
+        
+        return chosenOptionIndex == 1;
     }
     
 }

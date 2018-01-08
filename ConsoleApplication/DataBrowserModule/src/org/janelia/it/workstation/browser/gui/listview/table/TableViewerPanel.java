@@ -349,6 +349,10 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         }
     }
 
+    protected List<T> getObjects() {
+        return objectList;
+    }
+    
     public synchronized void clear() {
         this.objectList = null;
         removeAll();

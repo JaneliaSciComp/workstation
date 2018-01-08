@@ -166,8 +166,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         });
         
         // register with Message Server to receive async updates
-        RefreshHandler refreshHandler = RefreshHandler.getInstance();
-        refreshHandler.setAnnotationModel(this);
+       // RefreshHandler refreshHandler = RefreshHandler.getInstance();
+        //refreshHandler.setAnnotationModel(this);
     }
 
     public boolean editsAllowed() {
