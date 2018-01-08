@@ -5,7 +5,9 @@ import java.awt.event.MouseEvent;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.media.opengl.GL4;
@@ -374,17 +376,18 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
         else if (event instanceof AB2MouseClickedEvent && ((AB2MouseClickedEvent) event).getMouseEvent().isShiftDown()) {
             //logger.info("processDisplayEvent() , AB2MouseClickedEvent");
-            controller.setNeedsRepaint(true);
             if (pickActor != null) {
                 boolean alreadySelected=userContext.getSelectObjects().contains(pickActor);
                 if (!alreadySelected && pickActor.isSelectable()) {
                     userContext.addSelectObject(pickActor);
                     pickActor.setSelect();
                     pickActor.processEvent(event);
+                    controller.setNeedsRepaint(true);
                 } else {
                     // User has clicked on already-selected object, so we reverse and de-select
                     userContext.removeSelectObject(pickActor);
                     pickActor.releaseSelect();
+                    controller.setNeedsRepaint(true);
                 }
             }
             else {
@@ -396,10 +399,12 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                         userContext.addSelectObject(region);
                         region.setSelect();
                         region.processEvent(event);
+                        controller.setNeedsRepaint(true);
                     } else {
                         // reverse
                         userContext.removeSelectObject(region);
                         region.releaseSelect();
+                        controller.setNeedsRepaint(true);
                     }
                 }
             }
@@ -411,10 +416,29 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
         else if (event instanceof AB2MouseClickedEvent) {
             // Assume shift is not down
-            controller.setNeedsRepaint(true);
-
+            GLSelectable pickObject = pickActor;
+            if (pickObject == null) {
+                GLRegion region = getRegionAtPosition(p1);
+                if (region != null) {
+                    pickObject = region;
+                }
+            }
+            if (pickObject != null) {
+                // no matter what we want to remove all non-matching select objects since shift is up
+                boolean alreadySelected = userContext.getSelectObjects().contains(pickObject);
+                for (GLSelectable object : userContext.getSelectObjects()) {
+                    object.releaseSelect();
+                }
+                userContext.clearSelectObjects();
+                if (!alreadySelected) {
+                    if (pickObject.isSelectable()) {
+                        userContext.getSelectObjects().add(pickObject);
+                        pickObject.setSelect();
+                        controller.setNeedsRepaint(true);
+                    }
+                }
+            }
         }
-
 
         // This design, of using the controller to lookup events based on actor id, is being
         // deprecated in favor of each actor generating their own events by extending
