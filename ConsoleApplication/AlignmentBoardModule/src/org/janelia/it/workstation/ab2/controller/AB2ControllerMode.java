@@ -5,6 +5,7 @@ import java.awt.event.MouseEvent;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.media.opengl.GL4;
@@ -104,9 +105,12 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
         if (event instanceof AB2MouseReleasedEvent) {
             if (userContext.isMouseIsDragging()) {
+                // NOTE: this hover object should only be non-null if the current drag objects are all
+                // acceptable to the actual hover object. Otherwise, the object should not be
+                // registered as the current hover object.
                 GLSelectable releaseObject = userContext.getHoverObject();
-                GLSelectable dragObject = userContext.getDragObject();
-                AB2MouseDropEvent dropEvent = new AB2MouseDropEvent(((AB2MouseReleasedEvent) event).getMouseEvent(), dragObject);
+                List<GLSelectable> dragObjects = userContext.getDragObjects();
+                AB2MouseDropEvent dropEvent = new AB2MouseDropEvent(((AB2MouseReleasedEvent) event).getMouseEvent(), dragObjects);
                 if (releaseObject!=null) {
                     releaseObject.processEvent(dropEvent);
                     releaseObject.releaseHover();
@@ -152,6 +156,19 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
     }
 
+    static public boolean checkDragAcceptability(GLSelectable hoverObject, List<GLSelectable> dragObjects) {
+        if (dragObjects==null || dragObjects.size()<1) {
+            return false;
+        } else {
+            for (GLSelectable dragObject : dragObjects) {
+                if (!hoverObject.acceptsDropType(dragObject)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     private void processDisplayEvent(GLAutoDrawable drawable, AB2Event event) {
         //logger.info("processDisplayEvent() start - type="+event.getClass().getName());
         AB2UserContext userContext=controller.getUserContext();
@@ -163,6 +180,10 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         Point p1=null;
         int pickId=-1;
         GLAbstractActor pickActor=null;
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// General state update
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
 
         if (event instanceof AB2MouseEvent) {
             AB2MouseEvent ab2MouseEvent=(AB2MouseEvent)event;
@@ -188,32 +209,50 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             if (pickActor!=null) {
                 if (!pickActor.equals(userContext.getHoverObject())) {
                     GLSelectable hoverObject = userContext.getHoverObject();
-                    if (hoverObject!=null) {
+                    if (hoverObject != null) {
                         hoverObject.releaseHover();
+                        userContext.setHoverObject(null);
                     }
-                    userContext.setHoverObject(pickActor);
-                    pickActor.setHover(0);
-                    controller.setNeedsRepaint(true);
                 }
+                if (userContext.isMouseIsDragging()) {
+                    boolean dragAcceptable=checkDragAcceptability(pickActor, userContext.getDragObjects());
+                    if (dragAcceptable) {
+                        userContext.setHoverObject(pickActor);
+                        pickActor.setHover();
+                    }
+                } else {
+                    userContext.setHoverObject(pickActor);
+                    pickActor.setHover();
+                }
+                controller.setNeedsRepaint(true);
             } else { // pickActor is null
                 GLRegion region=getRegionAtPosition(p1);
                 if (region!=null) {
-                    GLSelectable hoverObject = userContext.getHoverObject();
-                    if (hoverObject != null) {
-                        if (!userContext.getHoverObject().equals(region)) {
+                    if (!region.equals(userContext.getHoverObject())) {
+                        GLSelectable hoverObject = userContext.getHoverObject();
+                        if (hoverObject != null) {
                             hoverObject.releaseHover();
-                            userContext.setHoverObject(region);
-                            controller.setNeedsRepaint(true);
+                            userContext.setHoverObject(null);
                         }
                     }
-                    else {
+                    if (userContext.isMouseIsDragging()) {
+                        boolean dragAcceptable=checkDragAcceptability(region, userContext.getDragObjects());
+                        if (dragAcceptable) {
+                            userContext.setHoverObject(region);
+                            region.setHover();
+                        }
+                    } else {
                         userContext.setHoverObject(region);
-                        controller.setNeedsRepaint(true);
+                        region.setHover();
                     }
+                    controller.setNeedsRepaint(true);
                 }
             }
-
         }
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// Drag
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
 
         if (event instanceof AB2MouseDraggedEvent) {
             controller.setNeedsRepaint(true);
@@ -221,16 +260,18 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             if (!userContext.isMouseIsDragging()) {
                 //logger.info("DRAG check2");
                 userContext.clearDrag();
-                GLSelectable dragObject = userContext.getSelectObject();
+                List<GLSelectable> dragObjects = userContext.getSelectObjects();
                 userContext.setMouseIsDragging(true);
                 userContext.getPositionHistory().add(p1);
                 // This is redundant wrt setDrag()
                 //AB2MouseBeginDragEvent beginDragEvent = new AB2MouseBeginDragEvent(((AB2MouseDraggedEvent) event).getMouseEvent());
-                if (dragObject != null) {
-                    userContext.setSelectObject(null);
-                    userContext.setDragObject(dragObject);
-                    dragObject.setDrag();
-                    dragObject.releaseSelect();
+                if (dragObjects != null && dragObjects.size()>0) {
+                    userContext.clearSelectObjects();
+                    for (GLSelectable dragObject : dragObjects) {
+                        dragObject.setDrag();
+                        dragObject.releaseSelect();
+                    }
+                    userContext.addDragObjects(dragObjects);
                     // Redundant wrt setDrag()
                     //dragObject.processEvent(beginDragEvent);
                 } else {
@@ -242,8 +283,8 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                             GLRegion region = getRegionAtPosition(p1);
                             if (region != null) {
                                 //logger.info("DRAG check4");
-                                userContext.setHoverObject(region);
-                                region.processEvent(event);
+                                //userContext.setHoverObject(region); this was determined earlier based on acceptability
+                                region.processEvent(event); // we still want this event to be processed either way
                             }
                             else {
                                 //logger.info("DRAG check4.5");
@@ -257,63 +298,75 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             else {
                 // Assume we have an established drag state
                 userContext.getPositionHistory().add(p1);
-                GLSelectable dragObject = userContext.getDragObject();
-                if (dragObject != null) {
-                    dragObject.processEvent(event);
-                }
-                // Need to update hover state
-                if (pickActor!=null) {
-                    //logger.info("DRAG check5");
-                    if (!pickActor.equals(userContext.getHoverObject())) {
-                        GLSelectable hoverObject = userContext.getHoverObject();
-                        if (hoverObject!=null) {
-                            hoverObject.releaseHover();
-                        }
-                        userContext.setHoverObject(pickActor);
-                        if (dragObject!=null && dragObject instanceof GLAbstractActor) {
-                            GLAbstractActor dragActor = (GLAbstractActor) dragObject;
-                            pickActor.setHover(dragActor.getActorId());
-
-                            // Redundant wrt setHover()
-                            //AB2ActorHoverEvent actorHoverEvent=new AB2ActorHoverEvent(dragActor);
-                            //pickActor.processEvent(actorHoverEvent);
-
-                        } else {
-                            pickActor.setHover(0);
-                        }
-                    }
-                } else { // pickActor is null
-                    //logger.info("DRAG check6");
-                    GLRegion region=getRegionAtPosition(p1);
-                    if (region!=null) {
-                        //logger.info("DRAG check7");
-                        GLSelectable hoverObject=userContext.getHoverObject();
-                        if (hoverObject!=null) {
-                            //logger.info("DRAG check8");
-                            if (!userContext.getHoverObject().equals(region)) {
-                                hoverObject.releaseHover();
-                                userContext.setHoverObject(region);
-                                if (dragObject != null && dragObject instanceof GLAbstractActor) {
-                                    GLAbstractActor dragActor = (GLAbstractActor) dragObject;
-                                    region.setHover(dragActor.getActorId());
-                                }
-                                else {
-                                    // We are dragging across the region without a drag object, so
-                                    // pass the event
-                                    region.processEvent(event);
-                                }
-                            } else {
-                                //logger.info("DRAG check9");
-                                // We already have the hover region set correctly
-                                if (dragObject==null || (! (dragObject instanceof GLAbstractActor))) {
-                                    //logger.info("DRAG check10");
-                                    region.processEvent(event);
-                                }
-                            }
-                        }
+                List<GLSelectable> dragObjects = userContext.getDragObjects();
+                if (dragObjects != null) {
+                    for (GLSelectable dragObject : dragObjects) {
+                        dragObject.processEvent(event);
                     }
                 }
+
+                // NOTE: all of this should have been taken care of above
+
+//                // Need to update hover state
+//                if (pickActor!=null) {
+//                    //logger.info("DRAG check5");
+//                    if (!pickActor.equals(userContext.getHoverObject())) {
+//                        GLSelectable hoverObject = userContext.getHoverObject();
+//                        if (hoverObject!=null) {
+//                            hoverObject.releaseHover();
+//                        }
+//                        userContext.setHoverObject(pickActor);
+//                        if (dragObject!=null && dragObject instanceof GLAbstractActor) {
+//                            GLAbstractActor dragActor = (GLAbstractActor) dragObject;
+//                            pickActor.setHover(dragActor.getActorId());
+//
+//                            // Redundant wrt setHover()
+//                            //AB2ActorHoverEvent actorHoverEvent=new AB2ActorHoverEvent(dragActor);
+//                            //pickActor.processEvent(actorHoverEvent);
+//
+//                        } else {
+//                            pickActor.setHover();
+//                        }
+//                    }
+//
+//                } else { // pickActor is null
+//                    //logger.info("DRAG check6");
+//                    GLRegion region=getRegionAtPosition(p1);
+//                    if (region!=null) {
+//                        //logger.info("DRAG check7");
+//                        GLSelectable hoverObject=userContext.getHoverObject();
+//                        if (hoverObject!=null) {
+//                            //logger.info("DRAG check8");
+//                            if (!userContext.getHoverObject().equals(region)) {
+//                                hoverObject.releaseHover();
+//                                userContext.setHoverObject(region);
+//                                if (dragObject != null && dragObject instanceof GLAbstractActor) {
+//                                    GLAbstractActor dragActor = (GLAbstractActor) dragObject;
+//                                    region.setHover(dragActor.getActorId());
+//                                }
+//                                else {
+//                                    // We are dragging across the region without a drag object, so
+//                                    // pass the event
+//                                    region.processEvent(event);
+//                                }
+//                            } else {
+//                                //logger.info("DRAG check9");
+//                                // We already have the hover region set correctly
+//                                if (dragObject==null || (! (dragObject instanceof GLAbstractActor))) {
+//                                    //logger.info("DRAG check10");
+//                                    region.processEvent(event);
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+
+
             }
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// Click
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
 
         } else if (event instanceof AB2MouseClickedEvent) {
             //logger.info("processDisplayEvent() , AB2MouseClickedEvent");
@@ -361,6 +414,10 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 //                }
 //            }
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// Move
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+
         else if (event instanceof AB2MouseMovedEvent) {
             GLSelectable hoverObject=userContext.getHoverObject();
             if (hoverObject!=null) {
@@ -369,10 +426,15 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             }
         }
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// Resize
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+
         else if (event instanceof AB2RegionManagerResizeNeededEvent) {
             getRegionManager().reshape(drawable, 0, 0, controller.getGlWidth(), controller.getGlHeight());
             controller.setNeedsRepaint(true);
         }
+
 
         if (controller.needsRepaint()) {
             controller.repaint();

@@ -33,6 +33,9 @@ public abstract class GLRegion implements GLSelectable {
     @Override
     public boolean isSelectable() { return false; }
 
+    @Override
+    public boolean acceptsDropType(GLSelectable selectable) { return false; }
+
     public void setMinimumDimensions(int mininumWidth, int minimumHeight) {
         this.minimumWidth=mininumWidth;
         this.minimumWHeight=minimumHeight;
@@ -101,7 +104,7 @@ public abstract class GLRegion implements GLSelectable {
 
     public void processEvent(AB2Event event) {}
 
-    public void setHover(int actorId) {}
+    public void setHover() {}
 
     public void releaseHover() {}
 

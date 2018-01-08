@@ -34,6 +34,7 @@ public class BoundingBoxActor extends GLAbstractActor
         this.v1=v1;
     }
 
+    // todo: figure out why we need the extra 3 0f vertices ?
     float[] computeBoundaryData() {
         float[] boundaryData = new float[]{
                 v0.getX(), v0.getY(), v0.getZ(), 0f, 0f, 0f,
@@ -170,6 +171,8 @@ public class BoundingBoxActor extends GLAbstractActor
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, boundaryVertexBufferId.get(0));
             checkGlError(gl, "d2 glBindBuffer error");
 
+            // todo: why are we using a second vertex attribute when the AB2Basic3DShader doesn't even use it?
+
             gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 24, 0);
             checkGlError(gl, "d5 glVertexAttribPointer()");
             gl.glEnableVertexAttribArray(0);
@@ -185,7 +188,7 @@ public class BoundingBoxActor extends GLAbstractActor
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
             checkGlError(gl, "d8 glDrawArrays() error");
 
-            gl.glFlush();
+            //gl.glFlush();
 
 //            logger.info("BoundingBoxActor display() finished");
         }

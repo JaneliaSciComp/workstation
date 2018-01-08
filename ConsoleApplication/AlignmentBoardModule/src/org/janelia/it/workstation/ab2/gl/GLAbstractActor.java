@@ -41,6 +41,9 @@ public abstract class GLAbstractActor implements GLSelectable {
     @Override
     public boolean isSelectable() { return false; }
 
+    @Override
+    public boolean acceptsDropType(GLSelectable selectable) { return false; }
+
     public static GLAbstractActor getActorById(int actorId) { return actors.get(actorId); }
 
     public static void removeActor(GLAbstractActor actor) {
@@ -82,9 +85,7 @@ public abstract class GLAbstractActor implements GLSelectable {
 
     protected boolean isSelected=false;
     protected boolean isHovered=false;
-    protected int hoveringActorId=0;
     protected boolean isDragging=false;
-
 
     public void setup() {}
 
@@ -229,9 +230,9 @@ public abstract class GLAbstractActor implements GLSelectable {
 
     public void releaseSelect() { isSelected=false; }
 
-    public void setHover(int actorId) { this.isHovered=true; this.hoveringActorId=actorId; }
+    public void setHover() { isHovered=true; }
 
-    public void releaseHover() { isHovered=false; hoveringActorId=0; }
+    public void releaseHover() { isHovered=false; }
 
     public void setDrag() { isDragging=true; }
 

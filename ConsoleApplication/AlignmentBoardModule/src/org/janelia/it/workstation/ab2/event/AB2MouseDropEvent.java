@@ -1,14 +1,17 @@
 package org.janelia.it.workstation.ab2.event;
 
 import java.awt.event.MouseEvent;
+import java.util.List;
+
+import org.janelia.it.workstation.ab2.gl.GLSelectable;
 
 public class AB2MouseDropEvent extends AB2MouseEvent {
-    private Object sourceObject;
+    private List<GLSelectable> sourceObjects;
 
-    public AB2MouseDropEvent(MouseEvent e, Object sourceObject) {
+    public AB2MouseDropEvent(MouseEvent e, List<GLSelectable> sourceObjects) {
         this.mouseEvent=e;
-        this.sourceObject=sourceObject;
+        this.sourceObjects=sourceObjects;
     }
 
-    public Object getSourceObject() { return sourceObject; }
+    public List<GLSelectable> getSourceObjects() { return sourceObjects; }
 }

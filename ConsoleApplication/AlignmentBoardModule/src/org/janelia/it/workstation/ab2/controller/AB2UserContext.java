@@ -53,6 +53,8 @@ public class AB2UserContext {
         dragObjects.add(dragObject);
     }
 
+    public void addDragObjects(List<GLSelectable> dragObjects) { this.dragObjects.addAll(dragObjects); }
+
     public void clearDragObjects() { dragObjects.clear(); }
 
     public void removeDragObject(Object o) { dragObjects.remove(o); }
@@ -72,6 +74,8 @@ public class AB2UserContext {
     public void addSelectObject(GLSelectable selectObject) {
         selectObjects.add(selectObject);
     }
+
+    public void addSelectObjects(List<GLSelectable> selectObjects) { selectObjects.addAll(selectObjects); }
 
     public void clearSelectObjects() { selectObjects.clear(); }
 

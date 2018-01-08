@@ -248,10 +248,37 @@ public class OpenCloseActor extends GLAbstractActor {
 
     }
 
+    private void drawBackground(GL4 gl) {
+        gl.glPointSize(pointSize);
+        gl.glBindVertexArray(backgroundVertexArrayId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, backgroundVertexBufferId.get(0));
+        gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
+        gl.glEnableVertexAttribArray(0);
+        gl.glDrawArrays(GL4.GL_POINTS, 0, backgroundVertexFb.capacity() / 3);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+    }
+
+    private void drawOpenForeground(GL4 gl) {
+        gl.glBindVertexArray(openVertexArrayId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, openVertexBufferId.get(0));
+        gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
+        gl.glEnableVertexAttribArray(0);
+        gl.glDrawArrays(GL4.GL_LINES, 0,openVertexFb.capacity() / 3);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+    }
+
+    private void drawClosedForeground(GL4 gl) {
+        gl.glBindVertexArray(closedVertexArrayId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, closedVertexBufferId.get(0));
+        gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
+        gl.glEnableVertexAttribArray(0);
+        gl.glDrawArrays(GL4.GL_LINES, 0,closedVertexFb.capacity() / 3);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+    }
+
+
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
-
-        //logger.info("display() called");
 
         if (needsResize) {
             updateVertexBuffers(gl);
@@ -261,72 +288,45 @@ public class OpenCloseActor extends GLAbstractActor {
         if (shader instanceof AB2Basic2DShader) {
             AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
             basic2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
+
+            // First draw background
             if (isSelected) {
                 basic2DShader.setColor(gl, selectColor);
             } else if (isHovered) {
                 basic2DShader.setColor(gl, hoverColor);
             } else {
-                basic2DShader.setColor(gl, color);
+                basic2DShader.setColor(gl, backgroundColor);
             }
-        } else if (shader instanceof AB2PickShader) {
-            AB2PickShader pickShader=(AB2PickShader)shader;
-            pickShader.setMVP(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
-            pickShader.setPickId(gl, actorId);
-        }
 
+            drawBackground(gl);
 
-        // First, we draw background, which is independent of open state
-        gl.glPointSize(pointSize);
-        gl.glBindVertexArray(backgroundVertexArrayId.get(0));
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, backgroundVertexBufferId.get(0));
-        gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
-        gl.glEnableVertexAttribArray(0);
-        gl.glDrawArrays(GL4.GL_POINTS, 0, backgroundVertexFb.capacity() / 3);
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
-
-        //todo: finish this
-
-        if (shader instanceof AB2Basic2DShader) {
-            AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
-            basic2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
-            if (isSelected) {
-                basic2DShader.setColor(gl, selectColor);
-            } else if (isHovered) {
-                basic2DShader.setColor(gl, hoverColor);
+            // Next, draw foreground
+            basic2DShader.setColor(gl, foregroundColor);
+            if (isOpen) {
+                drawOpenForeground(gl);
             } else {
-                basic2DShader.setColor(gl, color);
+                drawClosedForeground(gl);
             }
+
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
             pickShader.setMVP(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
             pickShader.setPickId(gl, actorId);
+            drawBackground(gl);
         }
-
-        gl.glBindVertexArray(vertexArrayId.get(0));
-        checkGlError(gl, "d3 glBindVertexArray()");
-
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
-        checkGlError(gl, "d4 glBindBuffer()");
-
-        gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
-        checkGlError(gl, "d5 glVertexAttribPointer()");
-
-        gl.glEnableVertexAttribArray(0);
-        checkGlError(gl, "d6 glEnableVertexAttribArray()");
-
-        gl.glDrawArrays(GL4.GL_TRIANGLES, 0, vertexFb.capacity()/2);
-        checkGlError(gl, "d9 glDrawArrays()");
-
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
-        checkGlError(gl, "d10 glBindBuffer()");
 
     }
 
     @Override
     public void dispose(GL4 gl, GLShaderProgram shader) {
         if (shader instanceof AB2Basic2DShader) {
-            gl.glDeleteVertexArrays(1, vertexArrayId);
-            gl.glDeleteBuffers(1, vertexBufferId);
+            gl.glDeleteVertexArrays(1, backgroundVertexArrayId);
+            gl.glDeleteVertexArrays(1, openVertexArrayId);
+            gl.glDeleteVertexArrays(1, closedVertexArrayId);
+
+            gl.glDeleteBuffers(1, backgroundVertexBufferId);
+            gl.glDeleteBuffers(1, openVertexBufferId);
+            gl.glDeleteBuffers(1, closedVertexBufferId);
         }
         super.dispose(gl, shader);
     }

@@ -4,7 +4,7 @@ import org.janelia.it.workstation.ab2.event.AB2EventHandler;
 
 public interface GLSelectable extends AB2EventHandler {
 
-    public void setHover(int hoveringActorId);
+    public void setHover();
 
     public void releaseHover();
 
@@ -17,5 +17,7 @@ public interface GLSelectable extends AB2EventHandler {
     public void releaseDrag();
 
     public boolean isSelectable();
+
+    public boolean acceptsDropType(GLSelectable selectable);
 
 }
