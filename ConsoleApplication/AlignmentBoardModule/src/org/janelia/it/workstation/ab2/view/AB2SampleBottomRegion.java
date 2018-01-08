@@ -5,12 +5,10 @@ import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2Event;
-import org.janelia.it.workstation.ab2.event.AB2MouseClickedEvent;
+import org.janelia.it.workstation.ab2.event.AB2ImageControlRequestCloseEvent;
+import org.janelia.it.workstation.ab2.event.AB2ImageControlRequestOpenEvent;
 import org.janelia.it.workstation.ab2.event.AB2RegionManagerResizeNeededEvent;
-import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.renderer.AB2ImageControlPanelRenderer;
-import org.janelia.it.workstation.ab2.renderer.AB2MenuPanelRenderer;
-import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,12 +41,16 @@ public class AB2SampleBottomRegion extends AB2SideRegion {
     @Override
     public void processEvent(AB2Event event) {
         //logger.info("processEvent() event="+event.getClass().getName());
-        if (event instanceof AB2MouseClickedEvent) {
+        if (event instanceof AB2ImageControlRequestOpenEvent) {
+            if (!isOpen()) {
+                setOpen(true);
+                imageControlPanelRenderer.setOpen(true);
+                AB2Controller.getController().processEvent(new AB2RegionManagerResizeNeededEvent());
+            }
+        } else if (event instanceof AB2ImageControlRequestCloseEvent) {
             if (isOpen()) {
                 setOpen(false);
-                AB2Controller.getController().processEvent(new AB2RegionManagerResizeNeededEvent());
-            } else {
-                setOpen(true);
+                imageControlPanelRenderer.setOpen(false);
                 AB2Controller.getController().processEvent(new AB2RegionManagerResizeNeededEvent());
             }
         }
