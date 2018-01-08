@@ -1,6 +1,7 @@
 // 7.2
 
 Workstation Browser
+* Added "Export Folder Structure" as a right-click option in the Data Explorer
 
 Large Volume Viewer
 * Added neuron ownership column to neuron list

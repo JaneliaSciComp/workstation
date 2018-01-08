@@ -25,7 +25,7 @@ public final class DownloadAction extends NodePresenterAction {
     
     @Override
     public String getName() {
-        return "Download...";
+        return "Download Files...";
     }
 
     @Override
