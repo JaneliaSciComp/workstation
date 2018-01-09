@@ -42,7 +42,7 @@ public class WebDavClientTest {
     @Test
     public void downloadURL() throws Exception {
         String testPath = "/p1/p2/c1/c2";
-        assertEquals(new URL(BASE_WEBDAV_URL + "/path/" + testPath), testWebDavClient.getDownloadFileURL(testPath));
+        assertEquals(new URL(BASE_WEBDAV_URL + "/storage_path/" + testPath), testWebDavClient.getDownloadFileURL(testPath));
     }
 
     @Test
@@ -50,7 +50,7 @@ public class WebDavClientTest {
         String storagePrefix = "/p1/p2";
         PropFindMethod testMethod = Mockito.mock(PropFindMethod.class);
 
-        PowerMockito.whenNew(PropFindMethod.class).withArguments(BASE_WEBDAV_URL + "/storagePrefix/" + storagePrefix, WebDavFile.PROPERTY_NAMES, 0).thenReturn(testMethod);
+        PowerMockito.whenNew(PropFindMethod.class).withArguments(BASE_WEBDAV_URL + "/storage_prefix/" + storagePrefix, WebDavFile.PROPERTY_NAMES, 0).thenReturn(testMethod);
         Mockito.when(httpClient.executeMethod(testMethod)).thenReturn(207);
 
         String returnedUrl = "http://test";
@@ -70,7 +70,7 @@ public class WebDavClientTest {
         String fileName = "/p1/p2/p3";
         PropFindMethod testMethod = Mockito.mock(PropFindMethod.class);
 
-        PowerMockito.whenNew(PropFindMethod.class).withArguments(BASE_WEBDAV_URL + "/dataStoragePath/" + fileName, WebDavFile.PROPERTY_NAMES, 0).thenReturn(testMethod);
+        PowerMockito.whenNew(PropFindMethod.class).withArguments(BASE_WEBDAV_URL + "/data_storage_path/" + fileName, WebDavFile.PROPERTY_NAMES, 0).thenReturn(testMethod);
         Mockito.when(httpClient.executeMethod(testMethod)).thenReturn(207);
 
         String returnedUrl = "http://test";

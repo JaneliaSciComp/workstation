@@ -266,19 +266,22 @@ public class WebDavClient {
         return multiStatusResponses;
     }
 
-    String createStorageFolder(String storageName) {
-        return createStorage(getCreateStorageURL(storageName, "DATA_DIRECTORY"));
+    String createStorageFolder(String storageName, String storageTags) {
+        return createStorage(getCreateStorageURL(storageName, "DATA_DIRECTORY"), storageTags);
     }
 
     private String getCreateStorageURL(String storageName, String storageType) {
         return baseUrl + "/storage/" + storageName + "/format/" + storageType;
     }
 
-    private String createStorage(String resourceURI) {
+    private String createStorage(String resourceURI, String storageTags) {
         MkColMethod method = null;
         Integer responseCode = null;
         try {
             method = new MkColMethod(resourceURI);
+            if (storageTags != null) {
+                method.addRequestHeader("storageTags", storageTags);
+            }
             responseCode = httpClient.executeMethod(method);
             LOG.trace("createDirectory: {} returned for MKCOL {}", resourceURI, responseCode);
 

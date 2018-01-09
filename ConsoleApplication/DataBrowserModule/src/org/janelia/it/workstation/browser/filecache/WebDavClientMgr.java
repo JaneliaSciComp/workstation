@@ -103,8 +103,8 @@ public class WebDavClientMgr {
         return webDavClient.findFile(remoteFileName);
     }
 
-    String createStorageFolder(String storageName) {
-        return masterWebDavInstance.createStorageFolder(storageName);
+    String createStorageFolder(String storageName, String storageTags) {
+        return masterWebDavInstance.createStorageFolder(storageName, storageTags);
     }
 
     String uploadFile(File file, String storageURL, String storageLocation) {

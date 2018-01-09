@@ -47,6 +47,7 @@ import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
@@ -76,6 +77,7 @@ public class ImportDialog extends ModalDialog {
             "Name of the folder in which data should be loaded with the data.";
     private static final String TOOLTIP_INPUT_DIR =
             "Directory of the tree that should be loaded into the database.";
+    private static final String IMPORT_STORAGE_DEFAULT_TAGS = ConsoleProperties.getString("console.importStorage.tags");
 
     private JTextField folderField;
     private TreeNode rootFolder;
@@ -451,9 +453,9 @@ public class ImportDialog extends ModalDialog {
 
         String uploadPath;
         if (selectedChildren == null) {
-            uploadPath = uploader.uploadFile(importTopLevelFolderName, selectedFile);
+            uploadPath = uploader.uploadFile(importTopLevelFolderName, IMPORT_STORAGE_DEFAULT_TAGS, selectedFile);
         } else {
-            uploadPath = uploader.uploadFiles(importTopLevelFolderName, selectedChildren, selectedFile);
+            uploadPath = uploader.uploadFiles(importTopLevelFolderName, IMPORT_STORAGE_DEFAULT_TAGS, selectedChildren, selectedFile);
         }
 
         ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()

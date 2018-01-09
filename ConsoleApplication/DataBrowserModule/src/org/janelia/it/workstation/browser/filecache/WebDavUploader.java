@@ -25,9 +25,6 @@ public class WebDavUploader {
     private static final Logger LOG = LoggerFactory.getLogger(WebDavUploader.class);
 
     private final WebDavClientMgr webDavClientMgr;
-    private String uploadClientHostAddress;
-    private String uploadClientStartTimestamp;
-    private volatile long uploadCount;
 
     /**
      * Constructs an uploader.
@@ -36,18 +33,6 @@ public class WebDavUploader {
      */
     public WebDavUploader(WebDavClientMgr webDavClientMgr) {
         this.webDavClientMgr = webDavClientMgr;
-        InetAddress address;
-        try {
-            address = InetAddress.getLocalHost();
-            this.uploadClientHostAddress = address.getHostAddress();
-        } catch (UnknownHostException e) {
-            this.uploadClientHostAddress = "unknown";
-            LOG.warn("failed to derive client host address, ignoring error", e);
-        }
-        final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS");
-        this.uploadClientStartTimestamp = sdf.format(new Date());
-
-        this.uploadCount = 0;
     }
 
     /**
@@ -61,8 +46,8 @@ public class WebDavUploader {
      * @throws WebDavException
      *   if the file cannot be uploaded.
      */
-    public String uploadFile(String storageName, File file) throws WebDavException {
-        String storageURL = webDavClientMgr.createStorageFolder(storageName);
+    public String uploadFile(String storageName, String storageTags, File file) throws WebDavException {
+        String storageURL = webDavClientMgr.createStorageFolder(storageName, storageTags);
         String uploadedFileURL = webDavClientMgr.uploadFile(file, storageURL, webDavClientMgr.urlEncodeComp(file.getName()));
         LOG.info("uploaded {} to {} - {}", file, storageURL, uploadedFileURL);
         return storageURL;
@@ -91,10 +76,10 @@ public class WebDavUploader {
      * @throws WebDavException
      *   if the files cannot be uploaded.
      */
-    public String uploadFiles(String storageName, List<File> fileList, File localRootDirectory)
+    public String uploadFiles(String storageName, String storageTags, List<File> fileList, File localRootDirectory)
             throws IllegalArgumentException, WebDavException {
 
-        String storageURL = webDavClientMgr.createStorageFolder(storageName);
+        String storageURL = webDavClientMgr.createStorageFolder(storageName, storageTags);
 
         // need to go through the entire fileList and create the directory hierarchy
         // and then upload the file content

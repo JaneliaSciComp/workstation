@@ -71,33 +71,37 @@ public class WebDavUploaderTest {
     @Test
     public void uploadASingleFile() throws Exception {
         String testStorageName = "f1";
+        String testStorageTags = "t1, t2";
         String testStorageUrl = "http://teststorage/" + testStorageName;
         File testFile = testFiles.get(0);
         
-        Mockito.when(webDavClientMgr.createStorageFolder(testStorageName))
+        Mockito.when(webDavClientMgr.createStorageFolder(testStorageName, testStorageTags))
                 .thenReturn(testStorageUrl);
-        Mockito.when(webDavClientMgr.uploadFile(testFile, testStorageUrl, ""))
-                .thenReturn(testStorageUrl + "/" + testFile.getName());
-        
-        String remoteUrl = uploader.uploadFile(testStorageName, testFile);
+        Mockito.when(webDavClientMgr.urlEncodeComp(ArgumentMatchers.anyString()))
+                .thenCallRealMethod();
+        Mockito.when(webDavClientMgr.uploadFile(testFile, testStorageUrl, testFile.getName()))
+                .thenReturn(testStorageUrl + "/file/" + testFile.getName());
+
+        String remoteUrl = uploader.uploadFile(testStorageName, testStorageTags, testFile);
         assertNotNull("null path returned for file upload", remoteUrl);
-        assertEquals(testStorageUrl + "/" + testFile.getName(), remoteUrl);
+        assertEquals(testStorageUrl, remoteUrl);
     }
 
     @Test
     public void uploadMultipleFiles() throws Exception {
         String testStorageName = "f1";
+        String testStorageTags = "t1, t2";
         String testStorageUrl = "http://teststorage/" + testStorageName;
-        Mockito.when(webDavClientMgr.createStorageFolder(testStorageName))
+        Mockito.when(webDavClientMgr.createStorageFolder(testStorageName, testStorageTags))
                 .thenReturn(testStorageUrl);
-
         Mockito.when(webDavClientMgr.urlEncodeComp(ArgumentMatchers.anyString()))
-                .then(invocation -> invocation.getArgument(0));
+                .thenCallRealMethod();
         Mockito.when(webDavClientMgr.urlEncodeComps(ArgumentMatchers.anyString()))
-                .then(invocation -> invocation.getArgument(0));
+                .thenCallRealMethod();
 
         String remoteUrl = uploader.uploadFiles(
-                testStorageName, 
+                testStorageName,
+                testStorageTags,
                 testFiles,
                 testRootParentDirectory);
 
@@ -106,8 +110,8 @@ public class WebDavUploaderTest {
 
         Mockito.verify(webDavClientMgr).createDirectory(testStorageUrl, testNestedDirectory.getName());
         for (File f : testFiles) {
-            Mockito.verify(webDavClientMgr).uploadFile(f, testStorageUrl,
-                    testRootParentDirectory.toPath().relativize(f.toPath()).toString());
+            String encodedUrl = webDavClientMgr.urlEncodeComps(testRootParentDirectory.toPath().relativize(f.toPath()).toString());
+            Mockito.verify(webDavClientMgr).uploadFile(f, testStorageUrl, encodedUrl);
         }   
     }
 
