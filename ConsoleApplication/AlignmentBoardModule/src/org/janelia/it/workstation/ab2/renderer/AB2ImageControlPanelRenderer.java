@@ -148,6 +148,9 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
     }
 
     private void createOpenCloseActor() {
+
+        // todo: convert to constant pixels rather than percentage of screen
+
         int cornerOffsetPixels=(int)(AB2Properties.IMAGE_CONTROL_OPENCLOSE_SIZE*screenHeight*0.7f);
         Vector3 normedPosition=getNormedCenterPositionFromScreenCoordinates((x+width)-cornerOffsetPixels, (y+height)-cornerOffsetPixels, screenWidth, screenHeight,
                 AB2Properties.IMAGE_CONTROL_OPENCLOSE_Z);
