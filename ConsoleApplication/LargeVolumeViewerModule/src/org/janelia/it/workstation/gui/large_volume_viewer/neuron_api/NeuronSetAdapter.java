@@ -555,7 +555,7 @@ implements NeuronSet// , LookupListener
         @Override
         public void neuronModelChanged(TmNeuronMetadata neuron) {
             // Remove all the existing cached vertices for this neuron
-         /*   NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getCachedVertexes()) {
                 log.debug("Removing cached vertex: {}", neuronVertex);
                 spatialIndex.removeFromIndex(neuronVertex);
@@ -568,18 +568,40 @@ implements NeuronSet// , LookupListener
                 log.debug("Re-adding vertex: {}", neuronVertex);
                 spatialIndex.addToIndex(neuronVertex);
             }
-           */ 
+            
           //  repaintHorta(neuronModel);
         }
 
         @Override
         public void neuronModelCreated(TmNeuronMetadata neuron) {
-           //global.neuronCreated(neuron);
+           NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                log.debug("Adding vertex: {}", neuronVertex);
+                spatialIndex.addToIndex(neuronVertex);
+            }
+            neuronModel.getGeometryChangeObservable().setChanged();
+            getMembershipChangeObservable().setChanged();
+            getMembershipChangeObservable().notifyObservers(neuronModel);
         }
 
         @Override
         public void neuronModelDeleted(TmNeuronMetadata neuron) {
-           //global.neuronDeleted(neuron);
+            log.info("Neuron deleted: {}", neuron);
+            Collection<NeuronVertex> deletedVertices = new ArrayList<>();
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                log.debug("Removing vertex: {}", neuronVertex);
+                spatialIndex.removeFromIndex(neuronVertex);
+                deletedVertices.add(neuronVertex);
+            }
+            neuronModel.getVertexesRemovedObservable().setChanged();
+            neuronModel.getVertexesRemovedObservable().notifyObservers(
+                    new VertexCollectionWithNeuron(deletedVertices, neuronModel));
+            
+            neuronModel.getGeometryChangeObservable().setChanged();
+            innerList.removeFromCache(neuron.getId());
+            getMembershipChangeObservable().setChanged();
+            getMembershipChangeObservable().notifyObservers(neuronModel);
         }
         
     }
