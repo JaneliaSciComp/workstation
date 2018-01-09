@@ -151,6 +151,13 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
 
         // todo: convert to constant pixels rather than percentage of screen
 
+        /*
+        What we need to do here is specify the pixel dimensions in the AB2Properties file, and then use utilities to figure
+        out what the corresponding dimensions are.
+         */
+
+        float widthFraction = (float)(AB2Properties.IMAGE_CONTROL_OPENCLOSE_PIXEL_SIZE * 1.0 / (1.0 * screenWidth));
+
         int cornerOffsetPixels=(int)(AB2Properties.IMAGE_CONTROL_OPENCLOSE_SIZE*screenHeight*0.7f);
         Vector3 normedPosition=getNormedCenterPositionFromScreenCoordinates((x+width)-cornerOffsetPixels, (y+height)-cornerOffsetPixels, screenWidth, screenHeight,
                 AB2Properties.IMAGE_CONTROL_OPENCLOSE_Z);
