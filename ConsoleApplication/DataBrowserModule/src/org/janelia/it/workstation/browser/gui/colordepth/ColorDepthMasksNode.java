@@ -11,6 +11,10 @@ import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.model.DomainObjectCreateEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.interfaces.HasIdentifier;
@@ -20,6 +24,8 @@ import org.openide.nodes.Children;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * A node which shows all of the color depth masks that a user has created.
@@ -40,6 +46,29 @@ public class ColorDepthMasksNode extends AbstractNode implements HasIdentifier {
     
     public static Set<ColorDepthMasksNode> getInstances() {
         return Collections.unmodifiableSet(instances);
+    }
+
+    static {
+        Events.getInstance().registerOnEventBus(new Object() {
+
+            @Subscribe
+            public void objectCreated(DomainObjectCreateEvent event) {
+                updateNodes(event);
+            }
+            
+            @Subscribe
+            public void objectRemoved(DomainObjectRemoveEvent event) {
+                updateNodes(event);
+            }
+        });
+    }
+
+    private static void updateNodes(DomainObjectEvent event) {
+        if (event.getDomainObject() instanceof ColorDepthMask) {
+            for (ColorDepthMasksNode colorDepthMasksNode : ColorDepthMasksNode.getInstances()) {
+                colorDepthMasksNode.refreshChildren();
+            }
+        }
     }
     
     private final DomainObjectNodeChildFactory childFactory;
@@ -78,7 +107,7 @@ public class ColorDepthMasksNode extends AbstractNode implements HasIdentifier {
     
     @Override
     public Image getIcon(int type) {
-        return Icons.getIcon("drop-folder-white-icon.png").getImage();
+        return Icons.getIcon("folder_image.png").getImage();
     }
 
     @Override

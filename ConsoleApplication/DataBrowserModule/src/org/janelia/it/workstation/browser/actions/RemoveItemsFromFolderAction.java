@@ -2,7 +2,6 @@ package org.janelia.it.workstation.browser.actions;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -45,6 +44,9 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
     }
 
     public static final String getName(TreeNode treeNode, Collection<DomainObject> domainObjects) {
+        if (treeNode==null) {
+            return domainObjects.size() > 1 ? "Delete " + domainObjects.size() + " Items" : "Delete This Item";
+        }
         return domainObjects.size() > 1 ? "Remove " + domainObjects.size() + " Items From Folder '"+treeNode.getName()+"'" : "Remove This Item From Folder '"+treeNode.getName()+"'";
     }
 
@@ -61,21 +63,28 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
 
             DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
             if (provider!=null && provider.supportsRemoval(domainObject)) {
-                // first check to make sure this Object only has one ancestor references; if it does pop up a dialog before removal
-                List<Reference> refList = model.getContainerReferences(domainObject);
-                if (refList==null || refList.size()<=1) {
+                if (treeNode==null) {
                     listToDelete.add(domainObject);
                 }
                 else {
-                    log.info("{} has multiple references: {}", domainObject, refList);
+                    // first check to make sure this Object only has one ancestor references; if it does pop up a dialog before removal
+                    List<Reference> refList = model.getContainerReferences(domainObject);
+                    if (refList==null || refList.size()<=1) {
+                        listToDelete.add(domainObject);
+                    }
+                    else {
+                        log.info("{} has multiple references: {}", domainObject, refList);
+                    }
                 }
             }
             else {
                 log.trace("Removal not supported for {}", domainObject);
             }
 
-            log.info("Will removing {} from {}", domainObject, treeNode);
-            removeFromFolders.put(treeNode,domainObject);
+            if (treeNode!=null) {
+                log.info("Will removing {} from {}", domainObject, treeNode);
+                removeFromFolders.put(treeNode,domainObject);
+            }
         }
         
         if (!listToDelete.isEmpty()) {

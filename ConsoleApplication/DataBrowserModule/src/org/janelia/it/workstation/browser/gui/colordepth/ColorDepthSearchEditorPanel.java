@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -14,7 +16,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -72,7 +73,10 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchEditorPanel.class);
 
     // Constants
-    private final static String PREFERENCE_KEY = "ColorDepthSearchEditor";
+    private static final String PREFERENCE_KEY = "ColorDepthSearchEditor";
+    private static final String THRESHOLD_LABEL_PREFIX = "Data Threshold: ";
+    private static final int DEFAULT_THRESHOLD_VALUE = 100;
+    private static final NumberFormat PX_FORMATTER = new DecimalFormat("#0.00");
 
     // Utilities
     private final Debouncer debouncer = new Debouncer();
@@ -99,7 +103,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private List<ColorDepthResult> results;
     private String sortCriteria;
 
+    private JSlider thresholdSlider;
 
+    private JTextField pctPxField;
+
+    private JLabel thresholdLabel;
+    
     public ColorDepthSearchEditorPanel() {
 
         setBorder(BorderFactory.createEmptyBorder());
@@ -113,19 +122,19 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
         };
         
-        String thresholdLabelPrefix = "Data Threshold: ";
-        JLabel thresholdLabel = new JLabel(thresholdLabelPrefix);
-        JSlider thresholdSlider = new JSlider(0, 255, 100);
+        thresholdLabel = new JLabel();
+        thresholdSlider = new JSlider(0, 255);
         thresholdSlider.putClientProperty("Slider.paintThumbArrowShape", Boolean.TRUE);
         thresholdSlider.setMaximumSize(new Dimension(120, Integer.MAX_VALUE));
+        setThreshold(DEFAULT_THRESHOLD_VALUE);
         thresholdSlider.addChangeListener((ChangeEvent e) -> {
-            thresholdLabel.setText(thresholdLabelPrefix+thresholdSlider.getValue());
+            setThreshold(thresholdSlider.getValue());
         });
         thresholdPanel = new JPanel(new BorderLayout());
         thresholdPanel.add(thresholdLabel, BorderLayout.NORTH);
         thresholdPanel.add(thresholdSlider, BorderLayout.CENTER);
         
-        JTextField pctPxField = new JTextField("10.00");
+        pctPxField = new JTextField("10.00");
         pctPxPanel = new JPanel(new BorderLayout());
         pctPxPanel.add(new JLabel("% of Positive PX Threshold"), BorderLayout.NORTH);
         pctPxPanel.add(pctPxField, BorderLayout.CENTER);
@@ -313,7 +322,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     public void loadDomainObjectNode(AbstractDomainObjectNode<ColorDepthSearch> domainObjectNode, boolean isUserDriven, Callable<Void> success) {
         loadDomainObject(domainObjectNode.getDomainObject(), isUserDriven, success);
     }
-    
+
     @Override
     public void loadDomainObject(final ColorDepthSearch colorDepthSearch, final boolean isUserDriven, final Callable<Void> success) {
 
@@ -328,6 +337,14 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         final StopWatch w = new StopWatch();
 
         configPanel.setTitle(colorDepthSearch.getName()+" ("+colorDepthSearch.getAlignmentSpace()+")");
+        
+        if (colorDepthSearch.getDataThreshold()!=null) {
+            setThreshold(colorDepthSearch.getDataThreshold());
+        }
+        
+        if (colorDepthSearch.getPctPositivePixels()!=null) {
+            pctPxField.setText(PX_FORMATTER.format(colorDepthSearch.getPctPositivePixels()));
+        }
         
         selectionModel.setParentObject(colorDepthSearch);
         
@@ -462,6 +479,10 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             return;
         }
         image.scaleImage((int)Math.ceil(width));
+    }
+
+    private void setThreshold(int threshold) {
+        thresholdLabel.setText(THRESHOLD_LABEL_PREFIX+threshold);
     }
     
     @Override

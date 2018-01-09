@@ -76,6 +76,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
+import com.sun.javafx.scene.shape.PathUtils;
 
 
 /**
@@ -486,23 +487,20 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     
                     if (pathsToExpand!=null) {
                         log.info("Restoring serialized expanded state");
+                        for (Long[] path : pathsToExpand) {
+                            log.info("pathToExpand: "+NodeUtils.createPathString(path));
+                        }
                         beanTreeView.expand(pathsToExpand);
                         pathsToExpand = null;
                     }
                     else {
-                        int numExpanded = 0;
                         if (restoreState) {
-                            numExpanded = beanTreeView.expand(expanded);
-                            beanTreeView.selectPaths(selected);
-                        }
-                        if (numExpanded==0) {
-                            log.info("Expanding first node");
-                            for(Node node : root.getChildren().getNodes()) {
-                                beanTreeView.expandNode(node);
-                                if (node instanceof WorkspaceNode) {
-                                    break; // Expand everything up to and including the first Home
-                                }
+                            log.info("Restoring expanded state");
+                            for (Long[] path : expanded) {
+                                log.info("pathToExpand: "+NodeUtils.createPathString(path));
                             }
+                            beanTreeView.expand(expanded);
+                            beanTreeView.selectPaths(selected);
                         }
                     }
                     

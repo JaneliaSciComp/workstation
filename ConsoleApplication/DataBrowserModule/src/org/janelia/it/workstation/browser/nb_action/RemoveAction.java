@@ -75,7 +75,7 @@ public final class RemoveAction extends NodeAction {
                 }
             }
             else {
-                included = false;
+                included = true;
             }
             
             if (node instanceof AbstractDomainObjectNode) {

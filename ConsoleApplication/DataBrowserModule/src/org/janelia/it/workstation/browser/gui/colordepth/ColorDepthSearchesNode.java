@@ -11,6 +11,10 @@ import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.model.DomainObjectCreateEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.interfaces.HasIdentifier;
@@ -21,6 +25,8 @@ import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.Subscribe;
+
 /**
  * A node which shows all of the color depth searches that a user has created.
  * 
@@ -30,16 +36,39 @@ public class ColorDepthSearchesNode extends AbstractNode implements HasIdentifie
         
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchesNode.class);
     
-    private static final long COLOR_DEPTH_SEARCHES_ID = 3L; // This magic number means nothing, it just needs to be unique and different from GUID space.
+    private static final long COLOR_DEPTH_SEARCHES_ID = 4L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private static Set<ColorDepthSearchesNode> instances = Collections.newSetFromMap(new WeakHashMap<ColorDepthSearchesNode, Boolean>());
-    
+
     private void register(ColorDepthSearchesNode instance) {
         instances.add(instance);
     }
     
     public static Set<ColorDepthSearchesNode> getInstances() {
         return Collections.unmodifiableSet(instances);
+    }
+    
+    static {
+        Events.getInstance().registerOnEventBus(new Object() {
+
+            @Subscribe
+            public void objectCreated(DomainObjectCreateEvent event) {
+                updateNodes(event);
+            }
+            
+            @Subscribe
+            public void objectRemoved(DomainObjectRemoveEvent event) {
+                updateNodes(event);
+            }
+        });
+    }
+
+    private static void updateNodes(DomainObjectEvent event) {
+        if (event.getDomainObject() instanceof ColorDepthSearch) {
+            for (ColorDepthSearchesNode colorDepthSearchesNode : ColorDepthSearchesNode.getInstances()) {
+                colorDepthSearchesNode.refreshChildren();
+            }
+        }
     }
     
     private final DomainObjectNodeChildFactory childFactory;
@@ -78,7 +107,7 @@ public class ColorDepthSearchesNode extends AbstractNode implements HasIdentifie
     
     @Override
     public Image getIcon(int type) {
-        return Icons.getIcon("drop-folder-white-icon.png").getImage();
+        return Icons.getIcon("folder_explore.png").getImage();
     }
 
     @Override

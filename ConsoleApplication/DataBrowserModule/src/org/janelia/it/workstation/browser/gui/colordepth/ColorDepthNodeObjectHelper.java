@@ -52,7 +52,7 @@ public class ColorDepthNodeObjectHelper implements DomainObjectHelper {
     @Override
     public String getLargeIcon(DomainObject domainObject) {
         if (domainObject instanceof ColorDepthMask) {
-            return "folder_large.png";
+            return "question_block_large.png";
         }
         else if (domainObject instanceof ColorDepthSearch) {
             return "search_large.png";
@@ -65,10 +65,10 @@ public class ColorDepthNodeObjectHelper implements DomainObjectHelper {
     @Override
     public boolean supportsRemoval(DomainObject domainObject) {
         if (ColorDepthMask.class.isAssignableFrom(domainObject.getClass())) {
-            return false;
+            return true;
         }
         else if (ColorDepthSearch.class.isAssignableFrom(domainObject.getClass())) {
-            return false;
+            return true;
         }
         else {
             return false;
