@@ -35,7 +35,7 @@ import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.events.prefs.LocalPreferenceChanged;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectNodeSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.IdentifiableNodeSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
@@ -122,7 +122,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     private final FindToolbar findToolbar;
     
     private final ExplorerManager mgr = new ExplorerManager();
-    private final DomainObjectNodeSelectionModel selectionModel = new DomainObjectNodeSelectionModel();
+    private final IdentifiableNodeSelectionModel selectionModel = new IdentifiableNodeSelectionModel();
     private final Debouncer debouncer = new Debouncer();
 
     private Lookup.Result<AbstractNode> result = null;
@@ -547,7 +547,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         return mgr;
     }
     
-    public DomainObjectNodeSelectionModel getSelectionModel() {
+    public IdentifiableNodeSelectionModel getSelectionModel() {
         return selectionModel;
     }
 

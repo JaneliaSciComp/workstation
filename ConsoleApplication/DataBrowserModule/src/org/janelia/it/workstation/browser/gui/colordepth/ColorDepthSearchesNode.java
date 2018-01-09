@@ -16,9 +16,8 @@ import org.janelia.it.workstation.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.nodes.IdentifiableNode;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
-import org.janelia.model.domain.interfaces.HasIdentifier;
-import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
@@ -32,7 +31,7 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ColorDepthSearchesNode extends AbstractNode implements HasIdentifier {
+public class ColorDepthSearchesNode extends IdentifiableNode {
         
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchesNode.class);
     
