@@ -141,10 +141,15 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
                 AB2Properties.IMAGE_CONTROL_PANEL_BACKGROUND_Z);
         backgroundPanel.updateVertices(normed2dPositions[0], normed2dPositions[1]);
 
+        int cornerOffsetPixels=(int)(AB2Properties.IMAGE_CONTROL_OPENCLOSE_SIZE*screenHeight*0.7f);
+        Vector3 normedOpenClosePosition=getNormedCenterPositionFromScreenCoordinates((x+width)-cornerOffsetPixels, (y+height)-cornerOffsetPixels,
+                screenWidth, screenHeight, AB2Properties.IMAGE_CONTROL_OPENCLOSE_Z);
+        openCloseActor.updatePosition(normedOpenClosePosition);
     }
 
     private void createOpenCloseActor() {
-        Vector3 normedPosition=getNormedCenterPositionFromScreenCoordinates((x+width)-20, (y+height)-10, screenWidth, screenHeight,
+        int cornerOffsetPixels=(int)(AB2Properties.IMAGE_CONTROL_OPENCLOSE_SIZE*screenHeight*0.7f);
+        Vector3 normedPosition=getNormedCenterPositionFromScreenCoordinates((x+width)-cornerOffsetPixels, (y+height)-cornerOffsetPixels, screenWidth, screenHeight,
                 AB2Properties.IMAGE_CONTROL_OPENCLOSE_Z);
         openCloseActor=new ImageControlOpenCloseActor(this, AB2Controller.getController().getNextPickIndex(), normedPosition,
                 AB2Properties.IMAGE_CONTROL_OPENCLOSE_SIZE, AB2Properties.IMAGE_CONTROL_OPENCLOSE_FOREGROUND_COLOR,
