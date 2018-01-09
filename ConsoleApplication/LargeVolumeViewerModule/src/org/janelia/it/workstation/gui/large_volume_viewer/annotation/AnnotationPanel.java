@@ -327,13 +327,20 @@ public class AnnotationPanel extends JPanel
         neuronToolMenu.add(new JSeparator());
                         
         sortSubmenu = new JMenu("Sort");
-        JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical") {
+        JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical by name") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 workspaceNeuronList.sortOrderChanged(WorkspaceNeuronList.NeuronSortOrder.ALPHABETICAL);
             }
             });
         sortSubmenu.add(alphaSortButton);
+        JRadioButtonMenuItem ownerSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical by owner") {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                workspaceNeuronList.sortOrderChanged(WorkspaceNeuronList.NeuronSortOrder.OWNER);
+            }
+            });
+        sortSubmenu.add(ownerSortButton);
         JRadioButtonMenuItem creationSortButton = new JRadioButtonMenuItem(new AbstractAction("Creation date") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -343,6 +350,7 @@ public class AnnotationPanel extends JPanel
         sortSubmenu.add(creationSortButton);
         ButtonGroup neuronSortGroup = new ButtonGroup();
         neuronSortGroup.add(alphaSortButton);
+        neuronSortGroup.add(ownerSortButton);
         neuronSortGroup.add(creationSortButton);
         neuronToolMenu.add(sortSubmenu);
 
