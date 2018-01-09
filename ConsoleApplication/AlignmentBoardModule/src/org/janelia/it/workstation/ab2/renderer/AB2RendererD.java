@@ -218,9 +218,11 @@ public abstract class AB2RendererD extends AB2Renderer {
         gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, mode.getPickFramebufferId());
         gl.glDrawBuffers(1, mode.getDrawBufferColorAttachment0());
 
+        //logger.info("Start pickShaderList================");
         for (GLShaderActionSequence shaderActionSequence : pickShaderList) {
             shaderActionSequence.display(gl);
         }
+        //logger.info("End pickShaderList================");
 
         gl.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
 

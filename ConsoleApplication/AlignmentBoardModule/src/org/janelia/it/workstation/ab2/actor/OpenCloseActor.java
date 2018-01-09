@@ -144,17 +144,17 @@ public class OpenCloseActor extends GLAbstractActor {
         float cz=position.get(2);
 
         float[] vertexData = {
-                cx-sl, cy-sl, cz, // lower left
-                cx-sl, cy+sl, cz, // upper left
+                cx-sl, cy-sl, cz-0.01f, // lower left
+                cx-sl, cy+sl, cz-0.01f, // upper left
 
-                cx-sl, cy+sl, cz, // upper left
-                cx+sl, cy+sl, cz, // upper right
+                cx-sl, cy+sl, cz-0.01f, // upper left
+                cx+sl, cy+sl, cz-0.01f, // upper right
 
-                cx+sl, cy+sl, cz, // upper right
-                cx+sl, cy-sl, cz, // lower right
+                cx+sl, cy+sl, cz-0.01f, // upper right
+                cx+sl, cy-sl, cz-0.01f, // lower right
 
-                cx+sl, cy-sl, cz, // lower right
-                cx-sl, cy-sl, cz, // lower left
+                cx+sl, cy-sl, cz-0.01f, // lower right
+                cx-sl, cy-sl, cz-0.01f, // lower left
         };
 
         return vertexData;
@@ -171,8 +171,8 @@ public class OpenCloseActor extends GLAbstractActor {
         float cz=position.get(2);
 
         float[] vertexData = {
-                cx-sl, cy, cz,
-                cx+sl, cy, cz
+                cx-sl, cy, cz-0.01f,
+                cx+sl, cy, cz-0.01f
         };
 
         return vertexData;

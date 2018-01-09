@@ -387,19 +387,27 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         /////////////////////////////////////////////////////////////////////////////////////////////////////
 
         else if (event instanceof AB2MouseClickedEvent) {
+            logger.info("Clicked check 1");
             // Assume shift is not down
             if (pickObject != null) {
+                logger.info("Clicked check 2, pickObject="+pickObject.getClass().getName());
                 // no matter what we want to remove all non-matching select objects since shift is up
                 boolean alreadySelected = userContext.getSelectObjects().contains(pickObject);
                 for (GLSelectable object : userContext.getSelectObjects()) {
                     object.releaseSelect();
                 }
+                logger.info("Clicked check 3");
                 userContext.clearSelectObjects();
+                logger.info("Clicked check 4");
                 if (!alreadySelected) {
+                    logger.info("Clicked check 5");
                     if (pickObject.isSelectable()) {
+                        logger.info("Clicked check 6");
                         userContext.getSelectObjects().add(pickObject);
                         pickObject.setSelect();
+                        pickObject.processEvent(event);
                         controller.setNeedsRepaint(true);
+                        logger.info("Clicked check 7");
                     }
                 }
             }

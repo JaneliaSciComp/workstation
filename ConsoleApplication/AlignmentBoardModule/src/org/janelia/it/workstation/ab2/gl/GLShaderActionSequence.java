@@ -85,6 +85,7 @@ public class GLShaderActionSequence {
 //        gl.glDepthFunc(GL4.GL_LEQUAL);
 
         for (GLAbstractActor actor: actorSequence) {
+            //logger.info("actor.dislay() actor="+actor.getClass().getName());
             actor.display(gl, shader);
         }
 

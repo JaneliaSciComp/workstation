@@ -112,10 +112,14 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
     public void setOpen(boolean isOpen) {
         if (isOpen) {
             backgroundPanel.setHoverColor(AB2Properties.IMAGE_CONTROL_PANEL_COLOR);
+            backgroundPanel.setSelectable(false);
             openCloseActor.setOpen(true);
+            openCloseActor.setSelectable(true);
         } else {
             backgroundPanel.setHoverColor(AB2Properties.IMAGE_CONTROL_PANEL_HOVER_COLOR);
+            backgroundPanel.setSelectable(true);
             openCloseActor.setOpen(false);
+            openCloseActor.setSelectable(false);
         }
         this.isOpen=isOpen;
     }
@@ -143,7 +147,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         openCloseActor=new ImageControlOpenCloseActor(this, AB2Controller.getController().getNextPickIndex(), normedPosition,
                 AB2Properties.IMAGE_CONTROL_OPENCLOSE_SIZE, AB2Properties.IMAGE_CONTROL_OPENCLOSE_FOREGROUND_COLOR,
                 AB2Properties.IMAGE_CONTROL_OPENCLOSE_BACKGROUND_COLOR,
-                AB2Properties.IMAGE_CONTROL_PANEL_HOVER_COLOR, AB2Properties.IMAGE_CONTROL_OPENCLOSE_SELECT_COLOR);
+                AB2Properties.IMAGE_CONTROL_OPENCLOSE_HOVER_COLOR, AB2Properties.IMAGE_CONTROL_OPENCLOSE_SELECT_COLOR);
         panelDrawSequence.getActorSequence().add(openCloseActor);
         panelPickSequence.getActorSequence().add(openCloseActor);
         }
