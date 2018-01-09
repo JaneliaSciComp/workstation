@@ -182,6 +182,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         Point p1=null;
         int pickId=-1;
         GLAbstractActor pickActor=null;
+        GLSelectable pickObject=null;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////
         /// General state update
@@ -208,8 +209,16 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             }
 
             // Need to update hover state
-            if (pickActor!=null) {
-                if (!pickActor.equals(userContext.getHoverObject())) {
+            pickObject = pickActor;
+            if (pickObject == null) {
+                GLRegion region = getRegionAtPosition(p1);
+                if (region != null) {
+                    pickObject = region;
+                }
+            }
+
+            if (pickObject!=null) {
+                if (!pickObject.equals(userContext.getHoverObject())) {
                     GLSelectable hoverObject = userContext.getHoverObject();
                     if (hoverObject != null) {
                         hoverObject.releaseHover();
@@ -219,36 +228,14 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 if (userContext.isMouseIsDragging()) {
                     boolean dragAcceptable=checkDragAcceptability(pickActor, userContext.getDragObjects());
                     if (dragAcceptable) {
-                        userContext.setHoverObject(pickActor);
-                        pickActor.setHover();
+                        userContext.setHoverObject(pickObject);
+                        pickObject.setHover();
                     }
                 } else {
-                    userContext.setHoverObject(pickActor);
-                    pickActor.setHover();
+                    userContext.setHoverObject(pickObject);
+                    pickObject.setHover();
                 }
                 controller.setNeedsRepaint(true);
-            } else { // pickActor is null
-                GLRegion region=getRegionAtPosition(p1);
-                if (region!=null) {
-                    if (!region.equals(userContext.getHoverObject())) {
-                        GLSelectable hoverObject = userContext.getHoverObject();
-                        if (hoverObject != null) {
-                            hoverObject.releaseHover();
-                            userContext.setHoverObject(null);
-                        }
-                    }
-                    if (userContext.isMouseIsDragging()) {
-                        boolean dragAcceptable=checkDragAcceptability(region, userContext.getDragObjects());
-                        if (dragAcceptable) {
-                            userContext.setHoverObject(region);
-                            region.setHover();
-                        }
-                    } else {
-                        userContext.setHoverObject(region);
-                        region.setHover();
-                    }
-                    controller.setNeedsRepaint(true);
-                }
             }
         }
 
@@ -308,6 +295,9 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                     for (GLSelectable dragObject : dragObjects) {
                         dragObject.processEvent(event);
                     }
+                }
+                if (pickObject!=null) {
+                    pickObject.processEvent(event);
                 }
 
                 // NOTE: all of this should have been taken care of above
@@ -376,36 +366,18 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
         else if (event instanceof AB2MouseClickedEvent && ((AB2MouseClickedEvent) event).getMouseEvent().isShiftDown()) {
             //logger.info("processDisplayEvent() , AB2MouseClickedEvent");
-            if (pickActor != null) {
-                boolean alreadySelected=userContext.getSelectObjects().contains(pickActor);
-                if (!alreadySelected && pickActor.isSelectable()) {
-                    userContext.addSelectObject(pickActor);
-                    pickActor.setSelect();
-                    pickActor.processEvent(event);
+            if (pickObject != null) {
+                boolean alreadySelected=userContext.getSelectObjects().contains(pickObject);
+                if (!alreadySelected && pickObject.isSelectable()) {
+                    userContext.addSelectObject(pickObject);
+                    pickObject.setSelect();
+                    pickObject.processEvent(event);
                     controller.setNeedsRepaint(true);
                 } else {
                     // User has clicked on already-selected object, so we reverse and de-select
-                    userContext.removeSelectObject(pickActor);
-                    pickActor.releaseSelect();
+                    userContext.removeSelectObject(pickObject);
+                    pickObject.releaseSelect();
                     controller.setNeedsRepaint(true);
-                }
-            }
-            else {
-                // This implies region, to which we hand off the event
-                GLRegion region=getRegionAtPosition(p1);
-                if (region!=null) {
-                    boolean alreadySelected=userContext.getSelectObjects().contains(region);
-                    if (!alreadySelected && region.isSelectable()) {
-                        userContext.addSelectObject(region);
-                        region.setSelect();
-                        region.processEvent(event);
-                        controller.setNeedsRepaint(true);
-                    } else {
-                        // reverse
-                        userContext.removeSelectObject(region);
-                        region.releaseSelect();
-                        controller.setNeedsRepaint(true);
-                    }
                 }
             }
         }
@@ -416,13 +388,6 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
         else if (event instanceof AB2MouseClickedEvent) {
             // Assume shift is not down
-            GLSelectable pickObject = pickActor;
-            if (pickObject == null) {
-                GLRegion region = getRegionAtPosition(p1);
-                if (region != null) {
-                    pickObject = region;
-                }
-            }
             if (pickObject != null) {
                 // no matter what we want to remove all non-matching select objects since shift is up
                 boolean alreadySelected = userContext.getSelectObjects().contains(pickObject);
