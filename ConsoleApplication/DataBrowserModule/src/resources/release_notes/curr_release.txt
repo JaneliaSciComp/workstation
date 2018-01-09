@@ -1,17 +1,8 @@
-// 7.1
+// 7.2
 
 Workstation Browser
-* Added "Apply Publishing Names" right-click option to automatically populate publishing names 
-* Changed "Open in Fiji" right-click option so that it works even when displaying post processed results
-* Granting write privilege on annotations now confers the ability to delete them 
-* Added Polarity Case 5 pipeline
-* Fixed issue with "Select All" button not appearing when "Show only items with selected imagery" was checked
-* Fixed issue with LSMs not appearing when "Show only items with selected imagery" was checked
-* Downloading thousands of files at once no longer hangs the application
+* Added "Export Folder Structure" as a right-click option in the Data Explorer
 
 Large Volume Viewer
-* Fixed issue with exporting multiple neurons to file without .swc extension
-* Improved point review workflow
-* LVV size panel components now resize correctly when stretched
-* Increased gateway timeout values to allow long running operations (e.g. workspace copy)
-* Added neuron length to workspace info dialog
+* Added neuron ownership column to neuron list
+* Added neuron visibility column to neuron list; click to toggle visibility
