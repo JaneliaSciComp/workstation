@@ -1,7 +1,10 @@
 package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.Image;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
@@ -28,6 +31,16 @@ public class ColorDepthSearchesNode extends AbstractNode implements HasIdentifie
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchesNode.class);
     
     private static final long COLOR_DEPTH_SEARCHES_ID = 3L; // This magic number means nothing, it just needs to be unique and different from GUID space.
+
+    private static Set<ColorDepthSearchesNode> instances = Collections.newSetFromMap(new WeakHashMap<ColorDepthSearchesNode, Boolean>());
+    
+    private void register(ColorDepthSearchesNode instance) {
+        instances.add(instance);
+    }
+    
+    public static Set<ColorDepthSearchesNode> getInstances() {
+        return Collections.unmodifiableSet(instances);
+    }
     
     private final DomainObjectNodeChildFactory childFactory;
 
@@ -38,6 +51,7 @@ public class ColorDepthSearchesNode extends AbstractNode implements HasIdentifie
     private ColorDepthSearchesNode(DomainObjectNodeChildFactory childFactory) {
         super(Children.create(childFactory, false));
         this.childFactory = childFactory;
+        register(this);
     }
 
     @Override

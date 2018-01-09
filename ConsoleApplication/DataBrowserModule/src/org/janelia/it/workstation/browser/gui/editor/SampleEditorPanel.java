@@ -1,19 +1,12 @@
 package org.janelia.it.workstation.browser.gui.editor;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,7 +18,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -33,7 +25,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
-import javax.swing.Scrollable;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -53,7 +44,6 @@ import org.janelia.it.workstation.browser.events.selection.DomainObjectSelection
 import org.janelia.it.workstation.browser.events.selection.PipelineErrorSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
-import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
@@ -61,9 +51,9 @@ import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
+import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.ImageDecorator;
@@ -93,7 +83,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 
-
 /**
  * Specialized component for viewing information about Samples, including their LSMs and processing results.  
  *
@@ -118,12 +107,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private final DropDownButton objectiveButton;
     private final DropDownButton areaButton;
     private final Map<String,DropDownButton> historyButtonMap = new HashMap<>();
-    private final JPanel mainPanel;
-    private final PaginatedResultsPanel lsmPanel;
+    private final SelectablePanelListPanel mainPanel;
     private final JScrollPane scrollPane;
-    private final JPanel dataPanel;
-    private final List<SelectablePanel> resultPanels = new ArrayList<>();
     private final Set<LoadedImagePanel> lips = new HashSet<>();
+    private final PaginatedResultsPanel lsmPanel;
     
     // Results
     private SearchResults lsmSearchResults;
@@ -138,124 +125,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private String currMode = MODE_RESULTS;
     private String currObjective = ALL_VALUE;
     private String currArea = ALL_VALUE;
-    private int currResultIndex = -1;
-
-    // Listen for key strokes and execute the appropriate key bindings
-    protected KeyListener keyListener = new KeyAdapter() {
-        @Override
-        public void keyPressed(KeyEvent e) {
-
-            if (KeymapUtil.isModifier(e)) {
-                return;
-            }
-            if (e.getID() != KeyEvent.KEY_PRESSED) {
-                return;
-            }
-            
-            // No keybinds matched, use the default behavior
-            if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                updateHud(true);
-                e.consume();
-                return;
-            }
-            else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                enterKeyPressed();
-                return;
-            }
-            else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-                deleteKeyPressed();
-                e.consume();
-                return;
-            }
-
-            SelectablePanel object = null;
-            if (e.getKeyCode() == KeyEvent.VK_TAB) {
-                if (e.isShiftDown()) {
-                    object = getPreviousObject();
-                }
-                else {
-                    object = getNextObject();
-                }
-            }
-            else {
-                if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                    object = getPreviousObject();
-                }
-                else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                    object = getNextObject();
-                }
-            }
-
-            if (object != null) {
-                panelSelection(object, true);
-                updateHud(false);
-            }
-
-            revalidate();
-            repaint();
-        }
-    };
-
-    protected void enterKeyPressed() {}
-    
-    protected void deleteKeyPressed() {}
-    
-    // Listener for clicking on result panels
-    protected MouseListener resultMouseListener = new MouseHandler() {
-
-        @Override
-        protected void popupTriggered(MouseEvent e) {
-            if (e.isConsumed()) {
-                return;
-            }
-            SelectablePanel resultPanel = getSelectablePanelAncestor(e.getComponent());
-            // Select the button first
-            panelSelection(resultPanel, true);
-            if (resultPanel instanceof PipelineResultPanel) {
-                SampleResultContextMenu popupMenu = new SampleResultContextMenu(((PipelineResultPanel)resultPanel).getResult());
-                popupMenu.addMenuItems();
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
-            }
-            else if (resultPanel instanceof PipelineErrorPanel) {
-                SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
-                popupMenu.addMenuItems();
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
-            }
-            e.consume();
-        }
-
-        @Override
-        protected void doubleLeftClicked(MouseEvent e) {
-            if (e.isConsumed()) {
-                return;
-            }
-            SelectablePanel resultPanel = getSelectablePanelAncestor(e.getComponent());
-            // Select the button first
-            panelSelection(resultPanel, true);
-            if (resultPanel instanceof PipelineResultPanel) {
-                SampleResultContextMenu popupMenu = new SampleResultContextMenu(((PipelineResultPanel)resultPanel).getResult());
-                popupMenu.runDefaultAction();
-            }
-            else if (resultPanel instanceof PipelineErrorPanel) {
-                SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
-                popupMenu.runDefaultAction();
-            }
-            e.consume();
-        }
-        
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            super.mouseReleased(e);
-            if (e.isConsumed()) {
-                return;
-            }
-            SelectablePanel resultPanel = getSelectablePanelAncestor(e.getComponent());
-            if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
-                return;
-            }
-            panelSelection(resultPanel, true);
-        }
-    };
     
     public SampleEditorPanel() {
 
@@ -283,18 +152,66 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             }
         };
 
-        dataPanel = new JPanel();
-        dataPanel.setLayout(new BoxLayout(dataPanel, BoxLayout.PAGE_AXIS));
+        mainPanel = new SelectablePanelListPanel() {
 
-        mainPanel = new ScrollablePanel();
-        mainPanel.add(dataPanel, BorderLayout.CENTER);
+            @Override
+            protected void panelSelected(SelectablePanel resultPanel, boolean isUserDriven) {
+                if (resultPanel instanceof PipelineResultPanel) {
+                    PipelineResultPanel resultPanel2 = (PipelineResultPanel)resultPanel;
+                    Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, resultPanel2.getResult(), isUserDriven));
+                }
+                else if (resultPanel instanceof PipelineErrorPanel) {
+                    PipelineErrorPanel resultPanel2 = (PipelineErrorPanel)resultPanel;
+                    Events.getInstance().postOnEventBus(new PipelineErrorSelectionEvent(this, resultPanel2.getError(), isUserDriven));
+                }
+            }
+            
+            @Override
+            protected void updateHud(SelectablePanel resultPanel, boolean toggle) {
+                if (resultPanel instanceof PipelineResultPanel) {
+                    ArtifactDescriptor resultDescriptor = ((PipelineResultPanel)resultPanel).getResultDescriptor();
+                    Hud hud = Hud.getSingletonInstance();
+                    if (toggle) {
+                        hud.setObjectAndToggleDialog(sample, resultDescriptor, null);
+                    }
+                    else {
+                        hud.setObject(sample, resultDescriptor, null, true);
+                    }
+                }
+            }
+            
+            @Override
+            protected void popupTriggered(MouseEvent e, SelectablePanel resultPanel) {
+                if (resultPanel instanceof PipelineResultPanel) {
+                    SampleResultContextMenu popupMenu = new SampleResultContextMenu(((PipelineResultPanel)resultPanel).getResult());
+                    popupMenu.addMenuItems();
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+                else if (resultPanel instanceof PipelineErrorPanel) {
+                    SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
+                    popupMenu.addMenuItems();
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+            
+            @Override
+            protected void doubleLeftClicked(MouseEvent e, SelectablePanel resultPanel) {
+                if (resultPanel instanceof PipelineResultPanel) {
+                    SampleResultContextMenu popupMenu = new SampleResultContextMenu(((PipelineResultPanel)resultPanel).getResult());
+                    popupMenu.runDefaultAction();
+                }
+                else if (resultPanel instanceof PipelineErrorPanel) {
+                    SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
+                    popupMenu.runDefaultAction();
+                }
+            }
+            
+        };
 
         scrollPane = new JScrollPane();
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.setViewportView(mainPanel);
 
-        addKeyListener(keyListener);
-        
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -306,69 +223,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         });
     }
     
-    private void panelSelection(SelectablePanel resultPanel, boolean isUserDriven) {
-        if (resultPanel==null) return;
-        for(SelectablePanel otherResultPanel : resultPanels) {
-            if (resultPanel != otherResultPanel) {
-                otherResultPanel.setSelected(false);
-            }
-        }
-        currResultIndex = resultPanels.indexOf(resultPanel);
-        resultPanel.setSelected(true);
-
-        if (resultPanel instanceof PipelineResultPanel) {
-            PipelineResultPanel resultPanel2 = (PipelineResultPanel)resultPanel;
-            Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, resultPanel2.getResult(), isUserDriven));
-        }
-        else if (resultPanel instanceof PipelineErrorPanel) {
-            PipelineErrorPanel resultPanel2 = (PipelineErrorPanel)resultPanel;
-            Events.getInstance().postOnEventBus(new PipelineErrorSelectionEvent(this, resultPanel2.getError(), isUserDriven));
-        }
-        
-        if (isUserDriven) {
-            // Only make this the focused component if the user actually clicked on it. The main thing this does is change the 
-            // active key listener, which we don't want to do if the selection is the result of some selection cascade. 
-            resultPanel.requestFocus();
-            // Update the lightbox if necessary
-            updateHud(false);
-        }
-    }
-    
-    private SelectablePanel getSelectablePanelAncestor(Component component) {
-        Component c = component;
-        while (c!=null) {
-            if (c instanceof SelectablePanel) {
-                return (SelectablePanel)c;
-            }
-            c = c.getParent();
-        }
-        return null;
-    }
-
-    public SelectablePanel getPreviousObject() {
-        if (resultPanels == null) {
-            return null;
-        }
-        int i = currResultIndex;
-        if (i < 1) {
-            // Already at the beginning
-            return null;
-        }
-        return resultPanels.get(i - 1);
-    }
-
-    public SelectablePanel getNextObject() {
-        if (resultPanels == null) {
-            return null;
-        }
-        int i = currResultIndex;
-        if (i > resultPanels.size() - 2) {
-            // Already at the end
-            return null;
-        }
-        return resultPanels.get(i + 1);
-    }
-
     @Override
     public String getSortField() {
         return sortCriteria;
@@ -456,27 +310,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     @Override
     public void deactivate() {
     }
-    
-    protected void updateHud(boolean toggle) {
-
-        if (!toggle && !Hud.isInitialized()) return;
-        
-        Hud hud = Hud.getSingletonInstance();
-        hud.setKeyListener(keyListener);
-                
-        SelectablePanel pipelineResultPanel = resultPanels.get(currResultIndex);
-        
-        if (pipelineResultPanel instanceof PipelineResultPanel) {
-            ArtifactDescriptor resultDescriptor = ((PipelineResultPanel)pipelineResultPanel).getResultDescriptor();
-            
-            if (toggle) {
-                hud.setObjectAndToggleDialog(sample, resultDescriptor, null);
-            }
-            else {
-                hud.setObject(sample, resultDescriptor, null, true);
-            }
-        }
-    }
 
     @Override
     public void loadDomainObject(final Sample sample, final boolean isUserDriven, final Callable<Void> success) {
@@ -522,9 +355,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 showResults(isUserDriven);
                 
                 if (MODE_RESULTS.equals(currMode))  {
-                    if (!resultPanels.isEmpty()) {
-                        panelSelection(resultPanels.get(0), isUserDriven);
-                    }
+                    mainPanel.selectFirst(isUserDriven);
                 }
                 else {
                     lsmPanel.getViewer().restoreState(viewerState);
@@ -626,8 +457,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private void showResultView(boolean isUserDriven) {
 
         lips.clear();
-        resultPanels.clear();
-        dataPanel.removeAll();
+        mainPanel.clearPanels();
         configPanel.removeAllConfigComponents();
         configPanel.addConfigComponent(objectiveButton);
         configPanel.addConfigComponent(areaButton);
@@ -712,15 +542,11 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                         continue;
                     }
                     
-                    PipelineResultPanel resultPanel = new PipelineResultPanel(result);
-                    resultPanels.add(resultPanel);
-                    dataPanel.add(resultPanel);
+                    mainPanel.addPanel(new PipelineResultPanel(result));
                 }
                 
                 if (run.hasError()) {
-                    PipelineErrorPanel resultPanel = new PipelineErrorPanel(run);
-                    resultPanels.add(resultPanel);
-                    dataPanel.add(resultPanel);
+                    mainPanel.addPanel(new PipelineErrorPanel(run));
                 }
                 
             }
@@ -839,39 +665,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         }
         image.scaleImage((int)Math.ceil(width/2));
     }
-    
-    private class ScrollablePanel extends JPanel implements Scrollable {
-
-        public ScrollablePanel() {
-            setLayout(new BorderLayout());
-            setOpaque(false);
-        }
-
-        @Override
-        public Dimension getPreferredScrollableViewportSize() {
-            return getPreferredSize();
-        }
-
-        @Override
-        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
-            return 30;
-        }
-
-        @Override
-        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
-            return 300;
-        }
-
-        @Override
-        public boolean getScrollableTracksViewportWidth() {
-            return true;
-        }
-
-        @Override
-        public boolean getScrollableTracksViewportHeight() {
-            return false;
-        }
-    }
 
     private class PipelineResultPanel extends SelectablePanel {
         
@@ -901,11 +694,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
                 
                 HasFiles files = result;
-                // This is technically correct, but the resulting UI is less usable because the montages are not very useful. 
-//                if (result instanceof LSMSummaryResult) {
-//                    files = ((LSMSummaryResult) result).getGroup("montage");
-//                }
                 
+                // Attempt to find a signal MIP to display
                 String signalMip = DomainUtils.getFilepath(files, FileType.SignalMip);
                 if (signalMip==null) {
                     signalMip = DomainUtils.getFilepath(files, FileType.AllMip);
@@ -931,8 +721,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 add(imagePanel, BorderLayout.CENTER);
 
                 setFocusTraversalKeysEnabled(false);
-                addKeyListener(keyListener);
-                addMouseListener(resultMouseListener);
             }
             else {
                 this.resultDescriptor = null;
@@ -1013,8 +801,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             add(imagePanel, BorderLayout.CENTER);
 
             setFocusTraversalKeysEnabled(false);
-            addKeyListener(keyListener);
-            addMouseListener(resultMouseListener);
         }
 
         public SamplePipelineRun getRun() {

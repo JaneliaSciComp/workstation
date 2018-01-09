@@ -608,6 +608,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
             selectionModel.select((AbstractDomainObjectNode<?>)node, true, true);
         }
+        else {
+            
+        }
     }
 
     @Override

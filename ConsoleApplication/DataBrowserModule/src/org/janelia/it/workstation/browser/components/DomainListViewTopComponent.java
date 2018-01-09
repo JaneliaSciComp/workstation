@@ -13,6 +13,7 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
+import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthSearchEditorPanel;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.editor.FilterEditorPanel;
@@ -24,6 +25,7 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -216,7 +218,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             @Override
             protected void doStuff() throws Exception {
                 state = DomainObjectEditorState.deserialize(stateToLoad);
-                if (state.getDomainObject().getId()!=null) {
+                if (state!=null && state.getDomainObject()!=null && state.getDomainObject().getId()!=null) {
                     // Refresh the object, if it's coming from the database
                     domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(state.getDomainObject());
                     if (domainObject!=null) {
@@ -377,6 +379,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     public void loadState(DomainObjectEditorState<?> state) {
 
         log.trace("loadState({})", state);
+        if (state==null) return;
         
         if (!prepareForLoad(state.getDomainObject())) return;
         editor.restoreState(state);
@@ -392,6 +395,9 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         }
         else if (Filtering.class.isAssignableFrom(domainObject.getClass())) {
             return FilterEditorPanel.class;
+        }
+        else if (ColorDepthSearch.class.isAssignableFrom(domainObject.getClass())) {
+            return ColorDepthSearchEditorPanel.class;
         }
         return null;
     }

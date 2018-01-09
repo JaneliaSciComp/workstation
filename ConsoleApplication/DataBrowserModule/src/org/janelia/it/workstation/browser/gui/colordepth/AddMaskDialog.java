@@ -171,9 +171,13 @@ public class AddMaskDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
+                
+                String searchName = ClientDomainUtils.getNextNumberedName(searches, "Mask Search", true);
+                searchNameField.setText(searchName);
+                
                 searchComboPanel.removeAll();
                 searchComboPanel.add(searchComboBox);
-                                
+                
                 if (searches.isEmpty()) {
                     newSearchRadioButton.setSelected(true);
                     existingSearchRadioButton.setEnabled(false);
@@ -211,9 +215,10 @@ public class AddMaskDialog extends ModalDialog {
         this.alignment = alignment;
         this.filepath = filepath;
         
-        maskNameField.setText("Mask derived from "+sample.getName());
         alignmentSpaceLabel.setText(alignment.getAlignmentSpace());
-
+        maskNameField.setText("Mask derived from "+sample.getLine());
+        searchNameField.setText("Mask Search");
+        
         load();
         packAndShow();
         
@@ -273,6 +278,7 @@ public class AddMaskDialog extends ModalDialog {
                 }
                 
                 mask = new ColorDepthMask();
+                mask.setSample(Reference.createFor(sample));
                 mask.setFilepath(filepath);
                 mask.setName(maskName);
                 mask.setMaskThreshold(maskThreshold);

@@ -2,40 +2,61 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Rectangle;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.Scrollable;
+import javax.swing.JSlider;
+import javax.swing.JSplitPane;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.editor.ConfigPanel;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditor;
+import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
+import org.janelia.it.workstation.browser.gui.editor.DomainObjectNodeSelectionEditor;
+import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.LoadedImagePanel;
+import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
-import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
+import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
+import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
+import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
-import org.janelia.model.domain.sample.SamplePipelineRun;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +67,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectEditor<ColorDepthSearch>, SearchProvider {
+public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectEditor<ColorDepthSearch>, DomainObjectNodeSelectionEditor<ColorDepthSearch>, SearchProvider {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchEditorPanel.class);
 
@@ -58,17 +79,26 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     
     // UI Components
     private final ConfigPanel configPanel;
-    private final JPanel mainPanel;
+    private final JSplitPane splitPane;
+    private final JPanel dataSetPanel;
+    private final JPanel pctPxPanel;
+    private final JPanel thresholdPanel;
+    private final JButton searchButton;
+    private final SelectablePanelListPanel maskPanel;
+    private final JScrollPane maskScrollPane;
+    private final Set<LoadedImagePanel> lips = new HashSet<>();
     private final PaginatedResultsPanel resultPanel;
-    private final JScrollPane scrollPane;
-    private final JPanel dataPanel;
     
     // Results
+    private SearchResults searchResults;
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     
     // State
     private ColorDepthSearch search;
+    private List<ColorDepthMask> masks;
+    private List<ColorDepthResult> results;
     private String sortCriteria;
+
 
     public ColorDepthSearchEditorPanel() {
 
@@ -76,13 +106,36 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         setLayout(new BorderLayout());
         setFocusable(true);
 
-        configPanel = new ConfigPanel(true) {
+        configPanel = new ConfigPanel(true, 15, 10) {
             @Override
             protected void titleClicked(MouseEvent e) {
                 Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(search), true, true, true));
             }
         };
-//        configPanel.addTitleComponent(viewButton, true, true);
+        
+        String thresholdLabelPrefix = "Data Threshold: ";
+        JLabel thresholdLabel = new JLabel(thresholdLabelPrefix);
+        JSlider thresholdSlider = new JSlider(0, 255, 100);
+        thresholdSlider.putClientProperty("Slider.paintThumbArrowShape", Boolean.TRUE);
+        thresholdSlider.setMaximumSize(new Dimension(120, Integer.MAX_VALUE));
+        thresholdSlider.addChangeListener((ChangeEvent e) -> {
+            thresholdLabel.setText(thresholdLabelPrefix+thresholdSlider.getValue());
+        });
+        thresholdPanel = new JPanel(new BorderLayout());
+        thresholdPanel.add(thresholdLabel, BorderLayout.NORTH);
+        thresholdPanel.add(thresholdSlider, BorderLayout.CENTER);
+        
+        JTextField pctPxField = new JTextField("10.00");
+        pctPxPanel = new JPanel(new BorderLayout());
+        pctPxPanel.add(new JLabel("% of Positive PX Threshold"), BorderLayout.NORTH);
+        pctPxPanel.add(pctPxField, BorderLayout.CENTER);
+        
+        JLabel dataSets = new JLabel("DATA SETS");
+        dataSetPanel = new JPanel(new BorderLayout());
+        dataSetPanel.add(new JLabel("Data sets to search:"), BorderLayout.NORTH);
+        dataSetPanel.add(dataSets, BorderLayout.CENTER);
+
+        searchButton = new JButton("Run Search");
         
         resultPanel = new PaginatedResultsPanel(selectionModel, this) {
             @Override
@@ -91,23 +144,79 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
         };
 
-        dataPanel = new JPanel();
-        dataPanel.setLayout(new BoxLayout(dataPanel, BoxLayout.PAGE_AXIS));
+        maskPanel = new SelectablePanelListPanel() {
 
-        mainPanel = new ScrollablePanel();
-        mainPanel.add(dataPanel, BorderLayout.CENTER);
+            @Override
+            protected void panelSelected(SelectablePanel resultPanel, boolean isUserDriven) {
+                if (resultPanel instanceof MaskPanel) {
+                    ColorDepthMask mask = ((MaskPanel)resultPanel).getMask();
+                    loadMaskResults(mask, true);
+                }
+            }
+            
+            @Override
+            protected void updateHud(SelectablePanel resultPanel, boolean toggle) {
+                if (resultPanel instanceof MaskPanel) {
+                    ColorDepthMask mask = ((MaskPanel)resultPanel).getMask();
+                    Hud hud = Hud.getSingletonInstance();
+                    if (toggle) {
+                        hud.setObjectAndToggleDialog(mask, null, null);
+                    }
+                    else {
+                        hud.setObject(mask, null, null, true);
+                    }
+                }
+            }
+//            
+//            @Override
+//            protected void popupTriggered(MouseEvent e, SelectablePanel resultPanel) {
+//                if (resultPanel instanceof PipelineResultPanel) {
+//                    SampleResultContextMenu popupMenu = new SampleResultContextMenu(((PipelineResultPanel)resultPanel).getResult());
+//                    popupMenu.addMenuItems();
+//                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+//                }
+//                else if (resultPanel instanceof PipelineErrorPanel) {
+//                    SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
+//                    popupMenu.addMenuItems();
+//                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+//                }
+//            }
+//            
+//            @Override
+//            protected void doubleLeftClicked(MouseEvent e, SelectablePanel resultPanel) {
+//                if (resultPanel instanceof PipelineResultPanel) {
+//                    SampleResultContextMenu popupMenu = new SampleResultContextMenu(((PipelineResultPanel)resultPanel).getResult());
+//                    popupMenu.runDefaultAction();
+//                }
+//                else if (resultPanel instanceof PipelineErrorPanel) {
+//                    SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
+//                    popupMenu.runDefaultAction();
+//                }
+//            }
+            
+        };
 
-        scrollPane = new JScrollPane();
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.setViewportView(mainPanel);
+        maskScrollPane = new JScrollPane();
+        maskScrollPane.setBorder(BorderFactory.createEmptyBorder());
+        maskScrollPane.setViewportView(maskPanel);
+        maskScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        maskScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
         
-        this.addComponentListener(new ComponentAdapter() {
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, maskScrollPane, resultPanel);
+        splitPane.setDividerLocation(0.25);
+        splitPane.setBorder(BorderFactory.createEmptyBorder());
+        
+        Dimension minimumSize = new Dimension(200, 0);
+        maskScrollPane.setMinimumSize(minimumSize);
+        resultPanel.setMinimumSize(minimumSize);
+        
+        maskScrollPane.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-//                for(LoadedImagePanel image : lips) {
-//                    rescaleImage(image);
-//                    image.invalidate();
-//                }
+                for(LoadedImagePanel image : lips) {
+                    rescaleImage(image);
+                    image.invalidate();
+                }
             }
         });
     }
@@ -126,27 +235,27 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     @Override
     public void search() {
 
-        SimpleWorker worker = new SimpleWorker() {
-
-            @Override
-            protected void doStuff() throws Exception {
-                loadPreferences();
+//        SimpleWorker worker = new SimpleWorker() {
+//
+//            @Override
+//            protected void doStuff() throws Exception {
+//                loadPreferences();
 //                prepareLsmResults();
-            }
-
-            @Override
-            protected void hadSuccess() {
-                showResults(true);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                showNothing();
-                ConsoleApp.handleException(error);
-            }
-        };
-
-        worker.execute();
+//            }
+//
+//            @Override
+//            protected void hadSuccess() {
+//                showResults(true);
+//            }
+//
+//            @Override
+//            protected void hadError(Throwable error) {
+//                showNothing();
+//                ConsoleApp.handleException(error);
+//            }
+//        };
+//
+//        worker.execute();
     }
     
     @Override
@@ -184,7 +293,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         if (search==null) {
             return "Color Depth Search";
         }
-        return "Search: "+StringUtils.abbreviate(search.getName(), 15);
+        return StringUtils.abbreviate(search.getName(), 15);
     }
     
     @Override
@@ -198,6 +307,11 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
     @Override
     public void deactivate() {
+    }
+
+    @Override
+    public void loadDomainObjectNode(AbstractDomainObjectNode<ColorDepthSearch> domainObjectNode, boolean isUserDriven, Callable<Void> success) {
+        loadDomainObject(domainObjectNode.getDomainObject(), isUserDriven, success);
     }
     
     @Override
@@ -213,7 +327,8 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         log.info("loadDomainObject({},isUserDriven={})",colorDepthSearch.getName(),isUserDriven);
         final StopWatch w = new StopWatch();
 
-        configPanel.setTitle(colorDepthSearch.getName());
+        configPanel.setTitle(colorDepthSearch.getName()+" ("+colorDepthSearch.getAlignmentSpace()+")");
+        
         selectionModel.setParentObject(colorDepthSearch);
         
         this.search = colorDepthSearch;
@@ -222,13 +337,16 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
             @Override
             protected void doStuff() throws Exception {
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                masks = model.getDomainObjectsAs(ColorDepthMask.class, colorDepthSearch.getMasks());
+                results = model.getDomainObjectsAs(ColorDepthResult.class, colorDepthSearch.getResults());
                 loadPreferences();
-//                prepareLsmResults();
+//                prepareResults();
             }
             
             @Override
             protected void hadSuccess() {
-                showResults(isUserDriven);
+                showMasks(isUserDriven);
                 
                 
                 ConcurrentUtils.invokeAndHandleExceptions(success);
@@ -251,36 +369,24 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         updateUI();
     }
     
-    public void showResults(boolean isUserDriven) {
-        showResultView(isUserDriven);
+    public void showMasks(boolean isUserDriven) {
+        showSearchView(isUserDriven);
         updateUI();
     }
+    
+    private void loadMaskResults(ColorDepthMask mask, boolean isUserDriven) {
+    
+        // results.get(0);
+        
+        List<DomainObject> filteredMatches = new ArrayList<>();
 
-//    private void prepareLsmResults() {
-//
-//        if (lsms==null) return;
-//        
-//        List<LSMImage> filteredLsms = new ArrayList<>();
-//        for(LSMImage lsm : lsms) {
-//
-//            boolean display = true;
-//
-//            if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !areEqualOrEmpty(currObjective, lsm.getObjective())) {
-//                display = false;
-//            }
-//
-//            if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, lsm.getAnatomicalArea())) {
-//                display = false;
-//            }
-//
-//            if (display) {
-//                filteredLsms.add(lsm);
-//            }
-//        }
-//
-//        DomainUtils.sortDomainObjects(filteredLsms, sortCriteria);
-//        lsmSearchResults = SearchResults.paginate(filteredLsms, lsmAnnotations);
-//    }
+        DomainUtils.sortDomainObjects(filteredMatches, sortCriteria);
+        searchResults = SearchResults.paginate(filteredMatches, Collections.emptyList());
+        
+        resultPanel.showSearchResults(searchResults, isUserDriven, null);
+        
+    }
+    
 //
 //    private void showLsmView(boolean isUserDriven) {
 //
@@ -319,171 +425,63 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 //        add(lsmPanel, BorderLayout.CENTER);
 //    }
 //
-    private void showResultView(boolean isUserDriven) {
+    private void showSearchView(boolean isUserDriven) {
 
-        dataPanel.removeAll();
+        lips.clear();
+        maskPanel.clearPanels();
         configPanel.removeAllConfigComponents();
-//        configPanel.addConfigComponent(objectiveButton);
+        configPanel.addConfigComponent(thresholdPanel);
+        configPanel.addConfigComponent(pctPxPanel);
+        configPanel.addConfigComponent(dataSetPanel);
+        configPanel.addConfigComponent(searchButton);
         
-//        
-//        if (sample!=null) {
-//            Set<String> objectiveSet = new LinkedHashSet<>(sample.getObjectives());
-//            Set<String> areaSet = new LinkedHashSet<>();
-//            
-//            // Populate currRunMap
-//            for(String objective : objectiveSet) {
-//                
-//                ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
-//                if (objectiveSample==null) continue;
-//                
-//                // Is there a run already selected?
-//                SamplePipelineRun run = currRunMap.get(objective);
-//                
-//                if (run==null) {
-//                	// If not, pick one as the default
-//                    run = objectiveSample.getLatestRun();
-//                	if (run!=null) {
-//                		currRunMap.put(objective, run);
-//                	}
-//                }
-//            }
-//            
-//            // Populate drop down buttons
-//            for(String objective : objectiveSet) {
-//                
-//                ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
-//                if (objectiveSample==null) continue;
-//                SamplePipelineRun run = currRunMap.get(objective);
-//                if (run==null || run.getResults()==null) continue;
-//    
-//                for(PipelineResult result : run.getResults()) {
-//                    String area = null;
-//                    if (result instanceof HasAnatomicalArea) {
-//                        area = ((HasAnatomicalArea)result).getAnatomicalArea();
-//                    }
-//                    if (area==null) {
-//                        area = "Unknown";
-//                    }
-//                	areaSet.add(area);
-//                }
-//                
-//                DropDownButton historyButton = new DropDownButton(objective+": "+getLabel(run));
-//                populateHistoryButton(historyButton, objectiveSample);
-//                historyButtonMap.put(objective, historyButton);
-//                configPanel.addConfigComponent(historyButton);
-//            }
-//    
-//        	List<String> objectives = new ArrayList<>(objectiveSet);
-//            objectives.add(0, ALL_VALUE);
-//            populateObjectiveButton(objectives);
-//            
-//            List<String> areas = new ArrayList<>(areaSet);
-//            areas.add(0, ALL_VALUE);
-//            populateAreaButton(areas);
-//            
-//            for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
-//                
-//                String objective = objectiveSample.getObjective();
-//                if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !StringUtils.areEqual(currObjective, objective)) {
-//                    continue;
-//                }
-//    
-//                SamplePipelineRun run = currRunMap.get(objective);
-//                if (run==null || run.getResults()==null) continue;
-//                
-//                for(PipelineResult result : run.getResults()) {
-//    
-//                    String area = null;
-//                    if (result instanceof HasAnatomicalArea) {
-//                        area = ((HasAnatomicalArea)result).getAnatomicalArea();
-//                    }
-//                    
-//                    if (area==null) {
-//                        area = "Unknown";
-//                    }
-//                    
-//                    if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
-//                        continue;
-//                    }
-//                    
-//                    PipelineResultPanel resultPanel = new PipelineResultPanel(result);
-//                    resultPanels.add(resultPanel);
-//                    dataPanel.add(resultPanel);
-//                }
-//                
-//                if (run.hasError()) {
-//                    PipelineErrorPanel resultPanel = new PipelineErrorPanel(run);
-//                    resultPanels.add(resultPanel);
-//                    dataPanel.add(resultPanel);
-//                }
-//                
-//            }
-//        }
-//        
+        JLabel titleLabel = new JLabel("Search Masks:");
+        titleLabel.setHorizontalTextPosition(SwingConstants.LEFT);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 5, 5, 5));
+     
+        JPanel titlePanel = new JPanel(new BorderLayout());
+        titlePanel.add(titleLabel, BorderLayout.CENTER);
+        maskPanel.add(titlePanel);
+        
+        for(ColorDepthMask mask : masks) {
+            maskPanel.addPanel(new MaskPanel(mask));
+        }
+        
         removeAll();
         add(configPanel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
+        add(splitPane, BorderLayout.CENTER);
     }
 
-	private String getLabel(SamplePipelineRun run) {
-	    if (run==null) return "";
-	    return DomainModelViewUtils.getDateString(run.getCreationDate());
-	}	
-	    
-    private boolean areEqualOrEmpty(String value1, String value2) {
-        if (value1==null || value1.equals("")) {
-            return value2==null || value2.equals("");
-        }
-        if (value2==null || value2.equals("")) {
-            return false;
-        }
-        return value1.equals(value2);
-    }
-    
     private void rescaleImage(LoadedImagePanel image) {
-        double width = image.getParent()==null?0:image.getParent().getSize().getWidth();
+        double width = image.getParent()==null?0:image.getParent().getSize().getWidth()-18;
         if (width==0) {
-            width = scrollPane.getViewport().getSize().getWidth() - 20;
+            width = maskScrollPane.getViewport().getSize().getWidth()-18;
         }
         if (width==0) {
             log.warn("Could not get width from parent or viewport");
             return;
         }
-        image.scaleImage((int)Math.ceil(width/2));
+        image.scaleImage((int)Math.ceil(width));
     }
     
-    private class ScrollablePanel extends JPanel implements Scrollable {
-
-        public ScrollablePanel() {
-            setLayout(new BorderLayout());
-            setOpaque(false);
-        }
-
-        @Override
-        public Dimension getPreferredScrollableViewportSize() {
-            return getPreferredSize();
-        }
-
-        @Override
-        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
-            return 30;
-        }
-
-        @Override
-        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
-            return 300;
-        }
-
-        @Override
-        public boolean getScrollableTracksViewportWidth() {
-            return true;
-        }
-
-        @Override
-        public boolean getScrollableTracksViewportHeight() {
-            return false;
-        }
+    @Override
+    public DomainObjectSelectionModel getSelectionModel() {
+        return selectionModel;
     }
+
+    @Override
+    public void resetState() {
+    }
+
+    @Override
+    public DomainObjectEditorState<ColorDepthSearch> saveState() {
+        return null;
+    }
+
+    @Override
+    public void restoreState(DomainObjectEditorState<ColorDepthSearch> state) {
+    }
+
 
 //    @Subscribe
 //    public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
@@ -560,4 +558,47 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 //            lsmPanel.annotationsChanged(event);
 //        }
 //    }
+    
+
+    private class MaskPanel extends SelectablePanel {
+        
+        private final ColorDepthMask mask;
+        
+        private MaskPanel(ColorDepthMask mask) {
+            
+            this.mask = mask;
+            
+            int b = SelectablePanel.BORDER_WIDTH;
+            setBorder(BorderFactory.createEmptyBorder(b, b, b, b));
+            setLayout(new BorderLayout());
+            
+            JLabel label = new JLabel();
+            label.setText(mask.getName());
+            label.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 4));
+            add(label, BorderLayout.NORTH);
+            
+            add(getImagePanel(mask.getFilepath()), BorderLayout.CENTER);
+
+            setFocusTraversalKeysEnabled(false);
+        }
+
+        public ColorDepthMask getMask() {
+            return mask;
+        }
+        
+        private JPanel getImagePanel(String filepath) {
+            LoadedImagePanel lip = new LoadedImagePanel(filepath) {
+                @Override
+                protected void doneLoading() {
+                    rescaleImage(this);
+                    revalidate();
+                    repaint();
+                }
+            };
+            rescaleImage(lip);
+            lip.addMouseListener(new MouseForwarder(this, "LoadedImagePanel->PipelineResultPanel"));
+            lips.add(lip);
+            return lip;
+        }
+    }
 }

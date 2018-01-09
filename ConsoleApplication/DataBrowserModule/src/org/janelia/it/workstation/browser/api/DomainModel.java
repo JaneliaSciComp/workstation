@@ -913,7 +913,13 @@ public class DomainModel {
         synchronized (modelLock) {
             canonicalObject = putOrUpdate((T)domainFacade.save(domainObject));
         }
-        notifyDomainObjectChanged(canonicalObject);
+        if (domainObject.getId()==null) {
+            notifyDomainObjectCreated(canonicalObject);
+            notifyDomainObjectChanged(canonicalObject); // Backwards compatibility until we can change everything to respond to creation events
+        }
+        else {
+            notifyDomainObjectChanged(canonicalObject);
+        }
         return canonicalObject;
     }
 

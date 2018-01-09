@@ -220,7 +220,7 @@ public class Hud extends ModalDialog {
         ArtifactDescriptor currResult = (overrideSettings && resultDescriptor!=null) ? resultDescriptor : resultButton.getResultDescriptor();
         String currImageType  = (overrideSettings && typeName!=null) ? typeName : typeButton.getImageTypeName();
 
-        log.debug("setObjectAndToggleDialog - name:{}, toggle:{}, currResult:{}, currImageType:{}",domainObject.getName(),toggle,currResult,currImageType);
+        log.info("setObjectAndToggleDialog - name:{}, toggle:{}, currResult:{}, currImageType:{}",domainObject.getName(),toggle,currResult,currImageType);
         
         if (currResult==null) {
             currResult = ArtifactDescriptor.LATEST;
@@ -244,6 +244,8 @@ public class Hud extends ModalDialog {
         else if (domainObject instanceof HasFiles) {
             fileProvider = (HasFiles)domainObject;
         }
+
+        log.info("Using file provider: {}", fileProvider);
         
         final String imagePath = DomainUtils.getFilepath(fileProvider, typeButton.getImageTypeName());
         if (imagePath == null) {

@@ -44,6 +44,10 @@ public class LoadedImagePanel extends JPanel {
     
     private LoadImageWorker loadWorker;
     private Double aspectRatio;
+
+    public LoadedImagePanel(String imageFilename) {
+        this(imageFilename, null);
+    }
     
     public LoadedImagePanel(String imageFilename, List<ImageDecorator> decorators) {
         
@@ -152,7 +156,6 @@ public class LoadedImagePanel extends JPanel {
         else {
             h = (int) Math.round(w / aspectRatio);
         }
-
         
         setPreferredSize(new Dimension(w, h));
     }

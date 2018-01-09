@@ -1,7 +1,10 @@
 package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.Image;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
@@ -29,6 +32,16 @@ public class ColorDepthMasksNode extends AbstractNode implements HasIdentifier {
     
     private static final long COLOR_DEPTH_MASKS_ID = 3L; // This magic number means nothing, it just needs to be unique and different from GUID space.
     
+    private static Set<ColorDepthMasksNode> instances = Collections.newSetFromMap(new WeakHashMap<ColorDepthMasksNode, Boolean>());
+    
+    private void register(ColorDepthMasksNode instance) {
+        instances.add(instance);
+    }
+    
+    public static Set<ColorDepthMasksNode> getInstances() {
+        return Collections.unmodifiableSet(instances);
+    }
+    
     private final DomainObjectNodeChildFactory childFactory;
 
     public ColorDepthMasksNode() {
@@ -38,6 +51,7 @@ public class ColorDepthMasksNode extends AbstractNode implements HasIdentifier {
     private ColorDepthMasksNode(DomainObjectNodeChildFactory childFactory) {
         super(Children.create(childFactory, false));
         this.childFactory = childFactory;
+        register(this);
     }
 
     @Override
