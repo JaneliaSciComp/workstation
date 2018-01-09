@@ -86,7 +86,9 @@ public class GLShaderActionSequence {
 
         for (GLAbstractActor actor: actorSequence) {
             //logger.info("actor.dislay() actor="+actor.getClass().getName());
-            actor.display(gl, shader);
+            if (actor.getDisplay()) {
+                actor.display(gl, shader);
+            }
         }
 
         if (applyMemoryBarrier) {

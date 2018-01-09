@@ -87,6 +87,12 @@ public abstract class GLAbstractActor implements GLSelectable {
     protected boolean isHovered=false;
     protected boolean isDragging=false;
 
+    protected boolean display=true;
+
+    public void setDisplay(boolean display) { this.display=display; }
+
+    public boolean getDisplay() { return display; }
+
     public void setup() {}
 
     public void dispose(GL4 gl, GLShaderProgram shader) {

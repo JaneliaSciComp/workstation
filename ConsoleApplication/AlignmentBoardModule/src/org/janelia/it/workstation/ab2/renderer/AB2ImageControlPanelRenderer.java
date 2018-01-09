@@ -113,12 +113,14 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         if (isOpen) {
             backgroundPanel.setHoverColor(AB2Properties.IMAGE_CONTROL_PANEL_COLOR);
             backgroundPanel.setSelectable(false);
-            openCloseActor.setOpen(true);
+            openCloseActor.setDisplay(true);
+            openCloseActor.setOpen(false);
             openCloseActor.setSelectable(true);
         } else {
             backgroundPanel.setHoverColor(AB2Properties.IMAGE_CONTROL_PANEL_HOVER_COLOR);
             backgroundPanel.setSelectable(true);
-            openCloseActor.setOpen(false);
+            openCloseActor.setDisplay(false);
+            openCloseActor.setOpen(true);
             openCloseActor.setSelectable(false);
         }
         this.isOpen=isOpen;
