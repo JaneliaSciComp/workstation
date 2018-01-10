@@ -32,6 +32,8 @@ import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ReverseReference;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
+import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
@@ -961,6 +963,42 @@ public class DomainModel {
     public String dispatchSamples(List<Reference> sampleRefs, String reprocessPurpose, boolean reuse) throws Exception {
         return sampleFacade.dispatchSamples(sampleRefs, reprocessPurpose, reuse);
     }
+    
+    public ColorDepthSearch createColorDepthSearch(String name, String alignmentSpace) throws Exception {
+        ColorDepthSearch search = new ColorDepthSearch();
+        search.setName(name);
+        search.setAlignmentSpace(alignmentSpace);
+        search = save(search);        
+
+        TreeNode searchesFolder = getDefaultWorkspaceFolder("Color Depth Searches", true);
+        addChild(searchesFolder, search);
+        
+        return search;
+    }
+    
+    public ColorDepthMask createColorDepthMask(String maskName, String filepath, Integer maskThreshold, Sample sample) throws Exception {
+        
+        ColorDepthMask mask = new ColorDepthMask();
+        mask.setFilepath(filepath);
+        mask.setName(maskName);
+        mask.setMaskThreshold(maskThreshold);
+        if (sample != null) {
+            mask.setSample(Reference.createFor(sample));
+        }
+        mask = save(mask);
+        
+        // Add it to the mask folder
+        TreeNode masksFolder = getDefaultWorkspaceFolder("Color Depth Masks", true);
+        addChild(masksFolder, mask);
+        
+        return mask;
+    }
+    
+    public ColorDepthSearch addMaskToSearch(ColorDepthSearch search, ColorDepthMask mask) throws Exception {
+        search.addMask(Reference.createFor(mask));
+        return save(search);
+    }
+    
 
     // EVENT HANDLING 
     // Important: never call these methods from within a synchronized. That can lead to deadlocks because

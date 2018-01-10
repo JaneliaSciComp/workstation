@@ -253,12 +253,6 @@ public class AddMaskDialog extends ModalDialog {
             }
             search = wrapper.search;
         }
-        else {
-            String searchName = searchNameField.getText();
-            search = new ColorDepthSearch();
-            search.setAlignmentSpace(alignment.getAlignmentSpace());
-            search.setName(searchName);
-        }
          
         // TODO: ask the user to specify using a thresholding algorithm
         int maskThreshold = 50;
@@ -266,33 +260,28 @@ public class AddMaskDialog extends ModalDialog {
         
         Utils.setWaitingCursor(this);
         SimpleWorker worker = new SimpleWorker() {
-
+            
+            ColorDepthSearch colorDepthSearch = finalSearch;
+            
             @Override
             protected void doStuff() throws Exception {
 
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 
+                if (colorDepthSearch==null) {
+                    colorDepthSearch = model.createColorDepthSearch(searchNameField.getText(), alignment.getAlignmentSpace());
+                }
+                
                 String maskName = maskNameStr;
                 if (!maskName.matches("#\\d+$")) {
-                    List<ColorDepthMask> masks = model.getDomainObjectsAs(ColorDepthMask.class, finalSearch.getMasks());
+                    List<ColorDepthMask> masks = model.getDomainObjectsAs(ColorDepthMask.class, colorDepthSearch.getMasks());
                     maskName = ClientDomainUtils.getNextNumberedName(masks, maskName, false);
                 }
                 
-                mask = new ColorDepthMask();
-                mask.setSample(Reference.createFor(sample));
-                mask.setFilepath(filepath);
-                mask.setName(maskName);
-                mask.setMaskThreshold(maskThreshold);
-                mask = model.save(mask);
-                                
-                TreeNode masksFolder = model.getDefaultWorkspaceFolder("Color Depth Masks", true);
-                model.addChild(masksFolder, mask);
+                mask = model.createColorDepthMask(maskName, filepath, maskThreshold, sample);
                 
-                finalSearch.addMask(Reference.createFor(mask));
-                ColorDepthSearch savedSearch = model.save(finalSearch);
-
-                TreeNode searchesFolder = model.getDefaultWorkspaceFolder("Color Depth Searches", true);
-                model.addChild(searchesFolder, savedSearch);
+                model.addMaskToSearch(colorDepthSearch, mask);
+                
             }
 
             @Override

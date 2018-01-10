@@ -1,7 +1,11 @@
 package org.janelia.it.workstation.browser.gui.colordepth;
 
+import static org.janelia.it.workstation.browser.api.DomainMgr.getDomainMgr;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
@@ -20,6 +24,7 @@ import java.util.stream.Collectors;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -82,11 +87,18 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private static final int DEFAULT_THRESHOLD_VALUE = 100;
     private static final NumberFormat PX_FORMATTER = new DecimalFormat("#0.00");
 
+    private static final String PCT_POSITIVE_THRESHOLD = "% of Positive PX Threshold";
+
+    private static final String DEFAULT_PCT_PC = "10.00";
+
     // Utilities
     private final Debouncer debouncer = new Debouncer();
     
     // UI Components
     private final ConfigPanel configPanel;
+    // TODO: IMPLEMENT THESE FEATURES
+//    private final JButton saveButton;
+//    private final JButton saveAsButton;
     private final JSplitPane splitPane;
     private final JPanel dataSetPanel;
     private final JPanel pctPxPanel;
@@ -130,7 +142,6 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         thresholdSlider = new JSlider(0, 255);
         thresholdSlider.putClientProperty("Slider.paintThumbArrowShape", Boolean.TRUE);
         thresholdSlider.setMaximumSize(new Dimension(120, Integer.MAX_VALUE));
-        setThreshold(DEFAULT_THRESHOLD_VALUE);
         thresholdSlider.addChangeListener((ChangeEvent e) -> {
             setThreshold(thresholdSlider.getValue());
         });
@@ -138,9 +149,9 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         thresholdPanel.add(thresholdLabel, BorderLayout.NORTH);
         thresholdPanel.add(thresholdSlider, BorderLayout.CENTER);
         
-        pctPxField = new JTextField("10.00");
+        pctPxField = new JTextField(DEFAULT_PCT_PC);
         pctPxPanel = new JPanel(new BorderLayout());
-        pctPxPanel.add(new JLabel("% of Positive PX Threshold"), BorderLayout.NORTH);
+        pctPxPanel.add(new JLabel(PCT_POSITIVE_THRESHOLD), BorderLayout.NORTH);
         pctPxPanel.add(pctPxField, BorderLayout.CENTER);
 
         dataSetButton = new SelectionButton<DataSet>("Data Sets") {
@@ -183,7 +194,42 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         dataSetPanel.add(new JLabel("Data sets to search:"), BorderLayout.NORTH);
         dataSetPanel.add(dataSetButton, BorderLayout.CENTER);
 
-        searchButton = new JButton("Run Search");
+        searchButton = new JButton("Execute Search");
+        searchButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                
+                int result = JOptionPane.showConfirmDialog(ColorDepthSearchEditorPanel.this, 
+                        "Are you sure you want to queue this search to run on the compute cluster?");
+                if (result != 0) return;
+                
+                SimpleWorker worker = new SimpleWorker() {
+                        
+                    @Override
+                    protected void doStuff() throws Exception {
+                        populateSearchFromForm();
+                        DomainModel model = getDomainMgr().getModel();
+                        search = model.save(search);
+                        
+                        // TODO: execute on JACSv2
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        ConsoleApp.handleException(error);
+                    }
+                };
+
+                worker.execute();
+                
+            }
+        });
+        
         
         resultPanel = new PaginatedResultsPanel(selectionModel, this) {
             @Override
@@ -254,7 +300,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         splitPane.setDividerLocation(0.25);
         splitPane.setBorder(BorderFactory.createEmptyBorder());
         
-        Dimension minimumSize = new Dimension(200, 0);
+        Dimension minimumSize = new Dimension(100, 0);
         maskScrollPane.setMinimumSize(minimumSize);
         resultPanel.setMinimumSize(minimumSize);
         
@@ -267,6 +313,27 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 }
             }
         });
+    }
+    
+    private void populateSearchFromForm() {
+
+        Double pctPositivePixels;
+        try {
+            pctPositivePixels = new Double(pctPxField.getText());
+            if (pctPositivePixels<1 || pctPositivePixels>100) {
+                throw new NumberFormatException();
+            }
+            search.setPctPositivePixels(pctPositivePixels);
+        }
+        catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(
+                    ColorDepthSearchEditorPanel.this,
+                    PCT_POSITIVE_THRESHOLD+" must be a percentage between 1 and 100",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+        
+        search.setDataThreshold(thresholdSlider.getValue());
     }
     
     @Override
@@ -380,9 +447,15 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         if (colorDepthSearch.getDataThreshold()!=null) {
             setThreshold(colorDepthSearch.getDataThreshold());
         }
+        else {
+            setThreshold(DEFAULT_THRESHOLD_VALUE);
+        }
         
         if (colorDepthSearch.getPctPositivePixels()!=null) {
             pctPxField.setText(PX_FORMATTER.format(colorDepthSearch.getPctPositivePixels()));
+        }
+        else {
+            pctPxField.setText(DEFAULT_PCT_PC);
         }
         
         selectionModel.setParentObject(colorDepthSearch);
@@ -524,6 +597,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     }
 
     private void setThreshold(int threshold) {
+        thresholdSlider.setValue(threshold);
         thresholdLabel.setText(THRESHOLD_LABEL_PREFIX+threshold);
     }
     
