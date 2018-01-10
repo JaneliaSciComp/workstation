@@ -239,9 +239,18 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             }
 
             // DEBUG
+            boolean isSelected=userContext.getSelectObjects().contains(pickObject);
+            boolean isHovered=userContext.getSelectObjects().contains(pickObject);
+            boolean isDragging=userContext.getSelectObjects().contains(pickObject);
+
             logger.info("PICK OBJECT="+pickObject.getClass().getName());
             logger.info("   - isSelectable()="+pickObject.isSelectable());
-            logger.info("   - isSelected()="+pickObject.)
+            logger.info("     - isSelected()="+isSelected);
+            logger.info("     - isHovered()="+isHovered);
+            logger.info("     - isDragging()="+isDragging);
+            if (pickObject instanceof GLAbstractActor) {
+                logger.info("     -isDisplay()="+((GLAbstractActor)pickObject).getDisplay());
+            }
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////
