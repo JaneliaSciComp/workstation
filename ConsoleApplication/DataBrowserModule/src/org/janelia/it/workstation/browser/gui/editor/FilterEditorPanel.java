@@ -10,20 +10,16 @@ import java.awt.event.KeyEvent;
 import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.AbstractAction;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -67,7 +63,6 @@ import org.janelia.model.access.domain.DomainObjectAttribute;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Preference;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;
@@ -102,7 +97,6 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     public static final String DEFAULT_FILTER_NAME = "Unsaved Filter";
     public static final Class<?> DEFAULT_SEARCH_CLASS = Sample.class;
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
-    private static final int MAX_VALUES_STRING_LENGTH = 20;
     
     // Utilities
     private final Debouncer debouncer = new Debouncer();
@@ -473,17 +467,51 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         for(DomainObjectAttribute attr : searchConfig.getDomainObjectAttributes()) {
             if (attr.getFacetKey()!=null) {
                 log.trace("Adding facet: {}",attr.getLabel());
-                StringBuilder label = new StringBuilder();
-                label.append(attr.getLabel());
-                List<String> values = new ArrayList<>(getSelectedFacetValues(attr.getName()));
-                Collections.sort(values);
-                if (!values.isEmpty()) {
-                    label.append(" (");
-                    label.append(StringUtils.getCommaDelimited(values, MAX_VALUES_STRING_LENGTH));
-                    label.append(")");
-                }
-                DropDownButton facetButton = new DropDownButton(label.toString());
-                populateFacetMenu(attr, facetButton);
+                
+                SelectionButton<FacetValue> facetButton = new SelectionButton<FacetValue>(attr.getLabel()) {
+
+                    @Override
+                    protected Collection<FacetValue> getValues() {
+                        return searchConfig.getFacetValues(attr.getFacetKey());
+                    }
+
+                    @Override
+                    protected Set<String> getSelectedValueNames() {
+                        return getSelectedFacetValues(attr.getName());
+                    }
+
+                    @Override
+                    protected String getName(FacetValue value) {
+                        return value.getValue();
+                    }
+
+                    @Override
+                    protected String getLabel(FacetValue value) {
+                        return value.getValue()+" ("+value.getCount()+" items)";
+                    }
+
+                    @Override
+                    protected boolean isHidden(FacetValue value) {
+                        return value.getCount()==0;
+                    }
+
+                    @Override
+                    protected void clearSelected() {
+                        updateFacet(attr.getName(), null, false);
+                        dirty = true;
+                        refreshSearchResults(true);
+                    }
+
+                    @Override
+                    protected void updateSelection(FacetValue value, boolean selected) {
+                        updateFacet(attr.getName(), value.getValue(), selected);
+                        dirty = true;
+                        refreshSearchResults(true);
+                    }
+                    
+                };
+                
+                facetButton.update();
                 configPanel.addConfigComponent(facetButton);
             }
         }
@@ -609,50 +637,6 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         
         return facetButton;
     }
-    
-    private void populateFacetMenu(final DomainObjectAttribute attr, DropDownButton button) {
-
-        Set<String> selectedValues = getSelectedFacetValues(attr.getName());
-
-        if (!selectedValues.isEmpty()) {
-            final JMenuItem menuItem = new JMenuItem("Clear selected");
-            menuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    updateFacet(attr.getName(), null, false);
-                    dirty = true;
-                    refreshSearchResults(true);
-                }
-            });
-            button.addMenuItem(menuItem);
-        }
-        
-        Collection<FacetValue> attrFacetValues = searchConfig.getFacetValues(attr.getFacetKey());
-                
-        if (attrFacetValues!=null) {
-            for (final FacetValue facetValue : attrFacetValues) {
-                boolean selected = selectedValues.contains(facetValue.getValue());
-                if (facetValue.getCount()==0 && !selected) {
-                    // Skip anything that is not selected, and which doesn't have results. Clicking it would be futile.
-                    continue;
-                }
-                String label = facetValue.getValue()+" ("+facetValue.getCount()+" items)";
-                final JMenuItem menuItem = new JCheckBoxMenuItem(label, selected);
-                menuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (menuItem.isSelected()) {
-                            updateFacet(attr.getName(), facetValue.getValue(), true);
-                        }
-                        else {
-                            updateFacet(attr.getName(), facetValue.getValue(), false);
-                        }
-                        dirty = true;
-                        refreshSearchResults(true);
-                    }
-                });
-                button.addMenuItem(menuItem);
-            }
-        }
-    }
 
     private void removeTreeNodeCriteria(String treeNodeName) {
         if (filter.hasCriteria()) {
@@ -682,6 +666,19 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                 }
             }
         }
+    }
+
+    private Set<String> getSelectedFacetValues(String attrName) {
+        if (filter==null || !filter.hasCriteria()) return new HashSet<>();
+        for (Criteria criteria : filter.getCriteriaList()) {
+            if (criteria instanceof FacetCriteria) {
+                FacetCriteria fc = (FacetCriteria) criteria;
+                if (fc.getAttributeName().equals(attrName)) {
+                    return fc.getValues();
+                }
+            }
+        }
+        return new HashSet<>();
     }
     
     private void updateFacet(String attrName, String value, boolean addValue) {
@@ -722,19 +719,6 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         }
     }
     
-    private Set<String> getSelectedFacetValues(String attrName) {
-        if (filter==null || !filter.hasCriteria()) return new HashSet<>();
-        for (Criteria criteria : filter.getCriteriaList()) {
-            if (criteria instanceof FacetCriteria) {
-                FacetCriteria fc = (FacetCriteria) criteria;
-                if (fc.getAttributeName().equals(attrName)) {
-                    return fc.getValues();
-                }
-            }
-        }
-        return new HashSet<>();
-    }
-
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         try {

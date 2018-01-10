@@ -5,13 +5,9 @@ import java.util.Date;
 import java.util.List;
 
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.enums.PipelineStatus;
-import org.janelia.model.domain.orders.IntakeOrder;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.LineRelease;
-import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.sample.StatusTransition;
 
 /**
  * Implementations provide access to Samples, Data Sets, and related concepts. 
@@ -96,5 +92,11 @@ public interface SampleFacade {
      * @throws Exception
      */
     public String dispatchSamples(List<Reference> sampleRefs, String reprocessPurpose, boolean reuse) throws Exception;
-    
+
+    /**
+     * Returns the list of data sets available for color depth search in a given alignment space.
+     * @return
+     * @throws Exception
+     */
+    public Collection<DataSet> getColorDepthDataSets(String alignmentSpace) throws Exception;
 }

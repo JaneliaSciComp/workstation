@@ -9,11 +9,13 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -39,6 +41,7 @@ import org.janelia.it.workstation.browser.gui.editor.ConfigPanel;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectNodeSelectionEditor;
+import org.janelia.it.workstation.browser.gui.editor.SelectionButton;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
@@ -58,6 +61,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.sample.DataSet;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +91,10 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private final JPanel dataSetPanel;
     private final JPanel pctPxPanel;
     private final JPanel thresholdPanel;
+    private final JSlider thresholdSlider;
+    private final JTextField pctPxField;
+    private final JLabel thresholdLabel;
+    private final SelectionButton<DataSet> dataSetButton;
     private final JButton searchButton;
     private final SelectablePanelListPanel maskPanel;
     private final JScrollPane maskScrollPane;
@@ -98,16 +106,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     
     // State
+    private boolean dirty = false;
     private ColorDepthSearch search;
     private List<ColorDepthMask> masks;
     private List<ColorDepthResult> results;
+    private List<DataSet> dataSets;
     private String sortCriteria;
-
-    private JSlider thresholdSlider;
-
-    private JTextField pctPxField;
-
-    private JLabel thresholdLabel;
     
     public ColorDepthSearchEditorPanel() {
 
@@ -138,11 +142,46 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         pctPxPanel = new JPanel(new BorderLayout());
         pctPxPanel.add(new JLabel("% of Positive PX Threshold"), BorderLayout.NORTH);
         pctPxPanel.add(pctPxField, BorderLayout.CENTER);
+
+        dataSetButton = new SelectionButton<DataSet>("Data Sets") {
+
+            @Override
+            protected Collection<DataSet> getValues() {
+                return dataSets.stream().collect(Collectors.toSet());
+            }
+
+            @Override
+            protected Set<String> getSelectedValueNames() {
+                return search.getDataSets().stream().collect(Collectors.toSet());
+            }
+
+            @Override
+            protected String getName(DataSet value) {
+                return value.getIdentifier();
+            }
+
+            @Override
+            protected void clearSelected() {
+                search.getDataSets().clear();
+                dirty = true;
+            }
+
+            @Override
+            protected void updateSelection(DataSet dataSet, boolean selected) {
+                if (selected) {
+                    search.getDataSets().add(dataSet.getIdentifier());
+                }
+                else {
+                    search.getDataSets().remove(dataSet.getIdentifier());
+                }
+                dirty = true;
+            }
+            
+        };
         
-        JLabel dataSets = new JLabel("DATA SETS");
         dataSetPanel = new JPanel(new BorderLayout());
         dataSetPanel.add(new JLabel("Data sets to search:"), BorderLayout.NORTH);
-        dataSetPanel.add(dataSets, BorderLayout.CENTER);
+        dataSetPanel.add(dataSetButton, BorderLayout.CENTER);
 
         searchButton = new JButton("Run Search");
         
@@ -347,6 +386,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         }
         
         selectionModel.setParentObject(colorDepthSearch);
+        this.dirty = false;
         
         this.search = colorDepthSearch;
         
@@ -357,15 +397,14 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 masks = model.getDomainObjectsAs(ColorDepthMask.class, colorDepthSearch.getMasks());
                 results = model.getDomainObjectsAs(ColorDepthResult.class, colorDepthSearch.getResults());
+                dataSets = model.getColorDepthDataSets(colorDepthSearch.getAlignmentSpace());
                 loadPreferences();
 //                prepareResults();
             }
             
             @Override
             protected void hadSuccess() {
-                showMasks(isUserDriven);
-                
-                
+                showUI(isUserDriven);
                 ConcurrentUtils.invokeAndHandleExceptions(success);
                 debouncer.success();
                 ActivityLogHelper.logElapsed("ColorDepthSearchEditorPanel.loadDomainObject", search, w);
@@ -386,7 +425,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         updateUI();
     }
     
-    public void showMasks(boolean isUserDriven) {
+    public void showUI(boolean isUserDriven) {
         showSearchView(isUserDriven);
         updateUI();
     }
@@ -442,8 +481,11 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 //        add(lsmPanel, BorderLayout.CENTER);
 //    }
 //
+        
     private void showSearchView(boolean isUserDriven) {
-
+        
+        dataSetButton.update();
+        
         lips.clear();
         maskPanel.clearPanels();
         configPanel.removeAllConfigComponents();

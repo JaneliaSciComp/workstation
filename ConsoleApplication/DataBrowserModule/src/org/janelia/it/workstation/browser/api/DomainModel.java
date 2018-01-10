@@ -580,6 +580,15 @@ public class DomainModel {
         if (TIMER) w.stop("getDataSets");
         return canonicalDataSets;
     }
+
+    public List<DataSet> getColorDepthDataSets(String alignmentSpace) throws Exception {
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        List<DataSet> dataSets = new ArrayList<>(sampleFacade.getColorDepthDataSets(alignmentSpace));
+        List<DataSet> canonicalDataSets = putOrUpdate(dataSets, false);
+        Collections.sort(canonicalDataSets, new DomainObjectComparator());
+        if (TIMER) w.stop("getColorDepthDataSets");
+        return canonicalDataSets;
+    }
     
     public List<LSMImage> getLsmsForSample(Sample sample) throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
