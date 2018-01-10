@@ -248,8 +248,12 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             //logger.info("DRAG check1");
             if (!userContext.isMouseIsDragging()) {
                 //logger.info("DRAG check2");
-                userContext.clearDrag();
+                logger.info("Start of drag, selected objects=");
                 List<GLSelectable> dragObjects = userContext.getSelectObjects();
+                for (GLSelectable s : dragObjects) {
+                    logger.info("  >object="+s.getClass().getName());
+                }
+                userContext.clearDrag();
                 userContext.setMouseIsDragging(true);
                 userContext.getPositionHistory().add(p1);
                 // This is redundant wrt setDrag()
