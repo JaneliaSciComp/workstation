@@ -60,9 +60,9 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
 
     private class ImageControlOpenCloseActor extends OpenCloseActor {
 
-        public ImageControlOpenCloseActor(AB2ImageControlPanelRenderer renderer, int actorId, Vector3 position, float size,
+        public ImageControlOpenCloseActor(AB2ImageControlPanelRenderer renderer, int actorId, Vector3 v0, Vector3 v1,
                                           Vector4 foregroundColor, Vector4 backgroundColor, Vector4 hoverColor, Vector4 selectColor) {
-            super(renderer, actorId, size, position, foregroundColor, backgroundColor, hoverColor, selectColor);
+            super(renderer, actorId, v0, v1, foregroundColor, backgroundColor, hoverColor, selectColor);
         }
 
         @Override
@@ -71,9 +71,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
             AB2ImageControlPanelRenderer imageControlPanelRenderer=(AB2ImageControlPanelRenderer)renderer;
             super.processEvent(event);
             if (event instanceof AB2MouseClickedEvent) {
-                if (!imageControlPanelRenderer.isOpen()) {
-                    renderer.processEvent(new AB2ImageControlRequestOpenEvent());
-                } else {
+                if (imageControlPanelRenderer.isOpen()) {
                     renderer.processEvent(new AB2ImageControlRequestCloseEvent());
                 }
             }
@@ -111,12 +109,15 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
 
     public void setOpen(boolean isOpen) {
         if (isOpen) {
+            backgroundPanel.setColor(AB2Properties.IMAGE_CONTROL_PANEL_COLOR);
+            //backgroundPanel.setColor(new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
             backgroundPanel.setHoverColor(AB2Properties.IMAGE_CONTROL_PANEL_COLOR);
             backgroundPanel.setSelectable(false);
             openCloseActor.setDisplay(true);
             openCloseActor.setOpen(false);
             openCloseActor.setSelectable(true);
         } else {
+            backgroundPanel.setColor(AB2Properties.IMAGE_CONTROL_PANEL_COLOR);
             backgroundPanel.setHoverColor(AB2Properties.IMAGE_CONTROL_PANEL_HOVER_COLOR);
             backgroundPanel.setSelectable(true);
             openCloseActor.setDisplay(false);
@@ -137,32 +138,39 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         this.screenWidth=screenWidth;
         this.screenHeight=screenHeight;
 
+        // backgroundPanel
         Vector3[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(x, y, width, height, screenWidth, screenHeight,
                 AB2Properties.IMAGE_CONTROL_PANEL_BACKGROUND_Z);
         backgroundPanel.updateVertices(normed2dPositions[0], normed2dPositions[1]);
 
-        int cornerOffsetPixels=(int)(AB2Properties.IMAGE_CONTROL_OPENCLOSE_SIZE*screenHeight*0.7f);
-        Vector3 normedOpenClosePosition=getNormedCenterPositionFromScreenCoordinates((x+width)-cornerOffsetPixels, (y+height)-cornerOffsetPixels,
-                screenWidth, screenHeight, AB2Properties.IMAGE_CONTROL_OPENCLOSE_Z);
-        openCloseActor.updatePosition(normedOpenClosePosition);
+        Vector3[] openCloseVertices=getOpenCloseVertices(x, y, width, height, screenWidth, screenHeight);
+        openCloseActor.updatePosition(openCloseVertices[0], openCloseVertices[1]);
+    }
+
+    private Vector3[] getOpenCloseVertices(int x, int y, int width, int height, int screenWidth, int screenHeight) {
+        Vector3[] result=new Vector3[2];
+
+        float widthFraction = (float)(AB2Properties.IMAGE_CONTROL_OPENCLOSE_PIXEL_SIZE * 1.0 / (1.0 * screenWidth));
+        float heightFraction = (float)(AB2Properties.IMAGE_CONTROL_OPENCLOSE_PIXEL_SIZE * 1.0 / (1.0 * screenHeight));
+
+        Vector3 v0=new Vector3( ((x+width)*1.0f)/(1.0f*screenWidth) - widthFraction, ((y+height)*1.0f)/(1.0f*screenHeight) - heightFraction,
+                AB2Properties.IMAGE_CONTROL_OPENCLOSE_Z);
+        Vector3 v1=new Vector3( ((x+width)*1.0f)/(1.0f*screenWidth), ((y+height)*1.0f)/(1.0f*screenHeight), AB2Properties.IMAGE_CONTROL_OPENCLOSE_Z);
+
+        //logger.info("getOpenCloseVertices() v0="+v0.getX()+" "+v0.getY()+" "+v0.getZ()+", v1="+v1.getX()+" "+v1.getY()+" "+v1.getZ());
+
+        result[0]=v0;
+        result[1]=v1;
+
+        return result;
     }
 
     private void createOpenCloseActor() {
 
-        // todo: convert to constant pixels rather than percentage of screen
+        Vector3[] openCloseVertices=getOpenCloseVertices(x, y, width, height, screenWidth, screenHeight);
 
-        /*
-        What we need to do here is specify the pixel dimensions in the AB2Properties file, and then use utilities to figure
-        out what the corresponding dimensions are.
-         */
-
-        float widthFraction = (float)(AB2Properties.IMAGE_CONTROL_OPENCLOSE_PIXEL_SIZE * 1.0 / (1.0 * screenWidth));
-
-        int cornerOffsetPixels=(int)(AB2Properties.IMAGE_CONTROL_OPENCLOSE_SIZE*screenHeight*0.7f);
-        Vector3 normedPosition=getNormedCenterPositionFromScreenCoordinates((x+width)-cornerOffsetPixels, (y+height)-cornerOffsetPixels, screenWidth, screenHeight,
-                AB2Properties.IMAGE_CONTROL_OPENCLOSE_Z);
-        openCloseActor=new ImageControlOpenCloseActor(this, AB2Controller.getController().getNextPickIndex(), normedPosition,
-                AB2Properties.IMAGE_CONTROL_OPENCLOSE_SIZE, AB2Properties.IMAGE_CONTROL_OPENCLOSE_FOREGROUND_COLOR,
+        openCloseActor=new ImageControlOpenCloseActor(this, AB2Controller.getController().getNextPickIndex(), openCloseVertices[0],
+                openCloseVertices[1], AB2Properties.IMAGE_CONTROL_OPENCLOSE_FOREGROUND_COLOR,
                 AB2Properties.IMAGE_CONTROL_OPENCLOSE_BACKGROUND_COLOR,
                 AB2Properties.IMAGE_CONTROL_OPENCLOSE_HOVER_COLOR, AB2Properties.IMAGE_CONTROL_OPENCLOSE_SELECT_COLOR);
         panelDrawSequence.getActorSequence().add(openCloseActor);
@@ -172,9 +180,6 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
     private void createBackgroundPanel(int x, int y, int width, int height, int screenWidth, int screenHeight) {
         Vector3[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(x, y, width, height, screenWidth, screenHeight,
                 AB2Properties.IMAGE_CONTROL_PANEL_BACKGROUND_Z);
-
-        //logger.info("backgroundPanel v0="+normed2dPositions[0].get(0)+" "+normed2dPositions[0].get(1)+" v1="+
-        //        normed2dPositions[1].get(0)+" "+normed2dPositions[1].get(1));
 
         backgroundPanel=new ImageControlBackgroundColorBoxActor(this, AB2Controller.getController().getNextPickIndex(),
                 normed2dPositions[0], normed2dPositions[1], AB2Properties.IMAGE_CONTROL_PANEL_COLOR,

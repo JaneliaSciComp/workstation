@@ -19,9 +19,8 @@ public class OpenCloseActor extends GLAbstractActor {
 
     private final Logger logger = LoggerFactory.getLogger(OpenCloseActor.class);
 
-    Vector3 position;
-    float size;
-    float pointSize=1.0f; // recomputed with glWindowResize
+    Vector3 v0;
+    Vector3 v1;
 
     IntBuffer backgroundVertexArrayId=IntBuffer.allocate(1);
     IntBuffer backgroundVertexBufferId=IntBuffer.allocate(1);
@@ -47,12 +46,12 @@ public class OpenCloseActor extends GLAbstractActor {
 
     boolean isSelectable=false;
 
-    public OpenCloseActor(AB2Renderer2D renderer, int actorId, float size, Vector3 position, Vector4 foregroundColor,
+    public OpenCloseActor(AB2Renderer2D renderer, int actorId, Vector3 v0, Vector3 v1, Vector4 foregroundColor,
                            Vector4 backgroundColor, Vector4 hoverColor, Vector4 selectColor) {
         super(renderer, actorId);
         this.renderer2d=renderer;
-        this.size=size;
-        this.position=position;
+        this.v0=v0;
+        this.v1=v1;
         this.foregroundColor=foregroundColor;
         this.backgroundColor=backgroundColor;
         this.hoverColor=hoverColor;
@@ -106,18 +105,12 @@ public class OpenCloseActor extends GLAbstractActor {
 
     @Override
     protected void glWindowResize(int width, int height) {
-        pointSize=size*width;
         needsResize=true;
     }
 
-
-    public void setSize(float size) {
-        this.size=size;
-        needsResize=true;
-    }
-
-    public void updatePosition(Vector3 position) {
-        this.position=position;
+    public void updatePosition(Vector3 v0, Vector3 v1) {
+        this.v0=v0;
+        this.v1=v1;
         needsResize=true;
     }
 
@@ -127,7 +120,14 @@ public class OpenCloseActor extends GLAbstractActor {
     private float[] computeBackgroundVertexData() {
 
         float[] vertexData = {
-                position.get(0), position.get(1), position.get(2)
+
+                v0.get(0), v0.get(1), v0.get(2),    // lower left
+                v1.get(0), v0.get(1), v0.get(2),    // lower right
+                v0.get(0), v1.get(1), v0.get(2),    // upper left
+
+                v1.get(0), v0.get(1), v1.get(2),    // lower right
+                v1.get(0), v1.get(1), v1.get(2),    // upper right
+                v0.get(0), v1.get(1), v1.get(2)     // upper left
         };
 
         return vertexData;
@@ -137,24 +137,24 @@ public class OpenCloseActor extends GLAbstractActor {
 
     private float[] computeForegroundOpenVertexData() {
 
-        float sl=(this.size*0.8f)/2.0f;
+        float width=v1.getX()-v0.getX();
+        float height=v1.getY()-v0.getY();
 
-        float cx=position.get(0);
-        float cy=position.get(1);
-        float cz=position.get(2);
+        float w0=width*0.1f;
+        float h0=height*0.1f;
 
         float[] vertexData = {
-                cx-sl, cy-sl, cz-0.01f, // lower left
-                cx-sl, cy+sl, cz-0.01f, // upper left
+                v0.getX()+w0, v0.getY()+h0, v0.getZ()-0.01f, // lower left
+                v0.getX()+w0, v1.getY()+h0, v0.getZ()-0.01f, // upper left
 
-                cx-sl, cy+sl, cz-0.01f, // upper left
-                cx+sl, cy+sl, cz-0.01f, // upper right
+                v0.getX()+w0, v1.getY()+h0, v0.getZ()-0.01f, // upper left
+                v1.getX()-w0, v1.getY()-h0, v0.getZ()-0.01f, // upper right
 
-                cx+sl, cy+sl, cz-0.01f, // upper right
-                cx+sl, cy-sl, cz-0.01f, // lower right
+                v1.getX()-w0, v1.getY()-h0, v0.getZ()-0.01f, // upper right
+                v1.getX()-w0, v0.getY()+h0, v0.getZ()-0.01f, // lower right
 
-                cx+sl, cy-sl, cz-0.01f, // lower right
-                cx-sl, cy-sl, cz-0.01f, // lower left
+                v1.getX()-w0, v0.getY()+h0, v0.getZ()-0.01f, // lower right
+                v0.getX()+w0, v0.getY()+h0, v0.getZ()-0.01f  // lower left
         };
 
         return vertexData;
@@ -164,15 +164,15 @@ public class OpenCloseActor extends GLAbstractActor {
 
     private float[] computeForegroundClosedVertexData() {
 
-        float sl=(this.size*0.8f)/2.0f;
+        float width=v1.getX()-v0.getX();
+        float height=v1.getY()-v0.getY();
 
-        float cx=position.get(0);
-        float cy=position.get(1);
-        float cz=position.get(2);
+        float w0=width*0.1f;
+        float h0=height*0.5f;
 
         float[] vertexData = {
-                cx-sl, cy, cz-0.01f,
-                cx+sl, cy, cz-0.01f
+                v0.getX()+w0, v0.getY()+h0, v0.getZ()-0.01f,
+                v1.getX()-w0, v0.getY()+h0, v0.getZ()-0.01f
         };
 
         return vertexData;
@@ -249,12 +249,11 @@ public class OpenCloseActor extends GLAbstractActor {
     }
 
     private void drawBackground(GL4 gl) {
-        gl.glPointSize(pointSize);
         gl.glBindVertexArray(backgroundVertexArrayId.get(0));
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, backgroundVertexBufferId.get(0));
         gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
         gl.glEnableVertexAttribArray(0);
-        gl.glDrawArrays(GL4.GL_POINTS, 0, backgroundVertexFb.capacity() / 3);
+        gl.glDrawArrays(GL4.GL_TRIANGLES, 0, backgroundVertexFb.capacity()/2);
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
     }
 
@@ -290,10 +289,16 @@ public class OpenCloseActor extends GLAbstractActor {
             basic2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
 
             // First draw background
-            if (isSelected) {
-                basic2DShader.setColor(gl, selectColor);
-            } else if (isHovered) {
-                basic2DShader.setColor(gl, hoverColor);
+            if (isSelectable()) {
+                if (isSelected) {
+                    basic2DShader.setColor(gl, selectColor);
+                }
+                else if (isHovered) {
+                    basic2DShader.setColor(gl, hoverColor);
+                }
+                else {
+                    basic2DShader.setColor(gl, backgroundColor);
+                }
             } else {
                 basic2DShader.setColor(gl, backgroundColor);
             }
