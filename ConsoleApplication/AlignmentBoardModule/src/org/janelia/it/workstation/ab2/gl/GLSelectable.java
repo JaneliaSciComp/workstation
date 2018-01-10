@@ -20,4 +20,9 @@ public interface GLSelectable extends AB2EventHandler {
 
     public boolean acceptsDropType(GLSelectable selectable);
 
+    // Still under review for implementation
+//    public boolean isHovered();
+//    public boolean isSelected();
+//    public boolean isDragging();
+
 }

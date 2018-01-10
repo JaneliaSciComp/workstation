@@ -237,6 +237,11 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 }
                 controller.setNeedsRepaint(true);
             }
+
+            // DEBUG
+            logger.info("PICK OBJECT="+pickObject.getClass().getName());
+            logger.info("   - isSelectable()="+pickObject.isSelectable());
+            logger.info("   - isSelected()="+pickObject.)
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -259,9 +259,9 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
         voxel3DxyBounds[3]=y1;
         if (voxel3DActor!=null) {
             voxel3DActor.setXYBounds(voxel3DxyBounds[0], voxel3DxyBounds[1], voxel3DxyBounds[2], voxel3DxyBounds[3]);
-            logger.info("voxel3DActor - xy bounds set");
+            //logger.info("voxel3DActor - xy bounds set");
         } else {
-            logger.info("voxel3DActor is null - xy bounds not set");
+            //logger.info("voxel3DActor is null - xy bounds not set");
         }
     }
 
@@ -277,9 +277,9 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
     }
 
     private void setSizeParameters(int x, int y, int width, int height, int screenWidth, int screenHeight) {
-        logger.info("setSizeParameters() x="+x+" y="+y+" width="+width+" height="+height+" screenWidth="+screenWidth+" screenHeight="+screenHeight);
+        //logger.info("setSizeParameters() x="+x+" y="+y+" width="+width+" height="+height+" screenWidth="+screenWidth+" screenHeight="+screenHeight);
         float[] parameters = computeOffsetParameters(x, y, width, height, screenWidth, screenHeight);
-        logger.info("setSizeParameters() xtrans="+parameters[0]+" ytrans="+parameters[1]+" scale="+parameters[2]);
+        //logger.info("setSizeParameters() xtrans="+parameters[0]+" ytrans="+parameters[1]+" scale="+parameters[2]);
         setVoxel3DActorPostProjectionMatrix(getOffsetPostProjectionMatrix(parameters[0], parameters[1], parameters[2]));
         int[] xyBounds = getXYBounds(x, y, width, height);
         setVoxel3DxyBounds(xyBounds[0], xyBounds[1], xyBounds[2], xyBounds[3]);
