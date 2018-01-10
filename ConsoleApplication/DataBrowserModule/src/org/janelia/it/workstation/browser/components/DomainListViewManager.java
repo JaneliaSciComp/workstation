@@ -5,13 +5,11 @@ import java.awt.Component;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.NodeSelectionEvent;
-import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthMasksNode;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.IdentifiableNode;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.workspace.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

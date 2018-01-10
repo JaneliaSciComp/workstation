@@ -36,6 +36,7 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleAlignmentResult;
+import org.janelia.model.domain.workspace.TreeNode;
 
 /**
  * Add a newly created mask to a ColorDepthSearch.
@@ -172,7 +173,7 @@ public class AddMaskDialog extends ModalDialog {
             @Override
             protected void hadSuccess() {
                 
-                String searchName = ClientDomainUtils.getNextNumberedName(searches, "Mask Search", true);
+                String searchName = ClientDomainUtils.getNextNumberedName(searches, alignment.getAlignmentSpace()+" Search", true);
                 searchNameField.setText(searchName);
                 
                 searchComboPanel.removeAll();
@@ -284,8 +285,14 @@ public class AddMaskDialog extends ModalDialog {
                 mask.setMaskThreshold(maskThreshold);
                 mask = model.save(mask);
                                 
+                TreeNode masksFolder = model.getDefaultWorkspaceFolder("Color Depth Masks", true);
+                model.addChild(masksFolder, mask);
+                
                 finalSearch.addMask(Reference.createFor(mask));
-                model.save(finalSearch);
+                ColorDepthSearch savedSearch = model.save(finalSearch);
+
+                TreeNode searchesFolder = model.getDefaultWorkspaceFolder("Color Depth Searches", true);
+                model.addChild(searchesFolder, savedSearch);
             }
 
             @Override
