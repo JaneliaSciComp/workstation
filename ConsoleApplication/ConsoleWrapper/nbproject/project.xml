@@ -2053,10 +2053,6 @@
                 <binary-origin>release/modules/ext/jacs-model.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/javassist-3.16.1-GA.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/javassist-3.16.1-GA.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/saaj-impl-1.3.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/saaj-impl-1.3.2.jar</binary-origin>
             </class-path-extension>
