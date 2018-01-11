@@ -50,7 +50,7 @@ public class WebDavClientTest {
         String storagePrefix = "/p1/p2";
         PropFindMethod testMethod = Mockito.mock(PropFindMethod.class);
 
-        PowerMockito.whenNew(PropFindMethod.class).withArguments(BASE_WEBDAV_URL + "/storage_prefix/" + storagePrefix, WebDavFile.PROPERTY_NAMES, 0).thenReturn(testMethod);
+        PowerMockito.whenNew(PropFindMethod.class).withArguments(BASE_WEBDAV_URL + "/data_storage_path/" + storagePrefix, WebDavFile.PROPERTY_NAMES, 0).thenReturn(testMethod);
         Mockito.when(httpClient.executeMethod(testMethod)).thenReturn(207);
 
         String returnedUrl = "http://test";

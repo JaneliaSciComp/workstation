@@ -60,22 +60,22 @@ public class WebDavClient {
     /**
      * Finds information about the storage using the storage path prefix
      *
-     * @param  storagePathPrefix storage key
+     * @param  storagePath storage key
      *
      * @return WebDAV information for the storage.
      *
      * @throws WebDavException
      *   if the storage information cannot be retrieved.
      */
-    public WebDavFile findStorage(String storagePathPrefix)
+    public WebDavFile findStorage(String storagePath)
             throws WebDavException {
-        String href = getWebdavFindUrl(storagePathPrefix, "storage_prefix");
+        String href = getWebdavFindUrl(storagePath, "data_storage_path");
 
         MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0, 0);
         if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
-            throw new WebDavException("empty response returned for " + storagePathPrefix);
+            throw new WebDavException("empty response returned for " + storagePath);
         }
-        return new WebDavFile(storagePathPrefix, multiStatusResponses[0]);
+        return new WebDavFile(storagePath, multiStatusResponses[0]);
     }
 
     /**

@@ -198,7 +198,7 @@ public class LocalFileCacheTest {
                      singleFileBytes, localFile.length());
 
         // give removal a chance to complete
-        Thread.sleep(1000);
+        Thread.sleep(1500);
 
         assertEquals("invalid number of files in cache after max capacity reached",
                      maxNumberOfCachedFiles, cache.getNumberOfFiles());
@@ -269,7 +269,7 @@ public class LocalFileCacheTest {
         assertEquals("should not be any cached files immediately after first call", 0, numberOfFiles);
 
         // give async load a chance to complete
-        Thread.sleep(1000);
+        Thread.sleep(1500);
 
         effectiveUrl = cache.getEffectiveUrl(remoteFile.getAbsolutePath(), false);
 
@@ -345,7 +345,7 @@ public class LocalFileCacheTest {
         cache.setKilobyteCapacity(cache.getKilobyteCapacity() * 2);
 
         // give async reload a chance to complete
-        Thread.sleep(500);
+        Thread.sleep(1500);
 
         // ---------------------------------------
         // verify results ...
