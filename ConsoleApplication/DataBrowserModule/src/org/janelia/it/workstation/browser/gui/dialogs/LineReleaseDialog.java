@@ -255,10 +255,8 @@ public class LineReleaseDialog extends ModalDialog {
             protected void doStuff() throws Exception {
 
                 for (DataSet dataSet : DomainMgr.getDomainMgr().getModel().getDataSets()) {
-                    if (!ClientDomainUtils.isOwner(dataSet)) continue;
-                    dataSets.add(dataSet);
-                    String identifier = dataSet.getIdentifier();
-                    dataSetMap.put(identifier, dataSet);
+                    dataSetMap.put(dataSet.getIdentifier(), dataSet);
+                    dataSets.add(dataSet);    
                 }
 
                 for (Subject subject : DomainMgr.getDomainMgr().getSubjects()) {
@@ -269,7 +267,7 @@ public class LineReleaseDialog extends ModalDialog {
                 Collections.sort(dataSets, new Comparator<DataSet>() {
                     @Override
                     public int compare(DataSet o1, DataSet o2) {
-                        return o1.getName().compareTo(o2.getName());
+                        return o1.getIdentifier().compareTo(o2.getIdentifier());
                     }
                 });
 
