@@ -56,6 +56,10 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
                 }
             }
         }
+
+        @Override
+        public void setSelect() { } // do nothing
+
     }
 
     private class ImageControlOpenCloseActor extends OpenCloseActor {
@@ -76,6 +80,9 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
                 }
             }
         }
+
+        @Override
+        public void setSelect() { } // do nothing
 
     }
 
@@ -108,21 +115,21 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
     }
 
     public void setOpen(boolean isOpen) {
+        logger.info("setOpen()="+isOpen);
         if (isOpen) {
+            logger.info("  -- opening, background hoverable=false");
             backgroundPanel.setColor(AB2Properties.IMAGE_CONTROL_PANEL_COLOR);
-            //backgroundPanel.setColor(new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
             backgroundPanel.setHoverColor(AB2Properties.IMAGE_CONTROL_PANEL_COLOR);
-            backgroundPanel.setSelectable(false);
+            backgroundPanel.setHoverable(false);
             openCloseActor.setDisplay(true);
             openCloseActor.setOpen(false);
-            openCloseActor.setSelectable(true);
         } else {
+            logger.info("  -- closing, background hoverable=true");
             backgroundPanel.setColor(AB2Properties.IMAGE_CONTROL_PANEL_COLOR);
             backgroundPanel.setHoverColor(AB2Properties.IMAGE_CONTROL_PANEL_HOVER_COLOR);
-            backgroundPanel.setSelectable(true);
+            backgroundPanel.setHoverable(true);
             openCloseActor.setDisplay(false);
             openCloseActor.setOpen(true);
-            openCloseActor.setSelectable(false);
         }
         this.isOpen=isOpen;
     }

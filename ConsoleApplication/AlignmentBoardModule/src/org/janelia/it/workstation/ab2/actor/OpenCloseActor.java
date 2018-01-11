@@ -90,15 +90,6 @@ public class OpenCloseActor extends GLAbstractActor {
         this.selectColor = selectColor;
     }
 
-    @Override
-    public boolean isSelectable() {
-        return isSelectable;
-    }
-
-    public void setSelectable(boolean isSelectable) {
-        this.isSelectable=isSelectable;
-    }
-
     public void setOpen(boolean isOpen) {
         this.isOpen=isOpen;
     }

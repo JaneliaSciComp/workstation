@@ -96,8 +96,6 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
      */
 
-    // todo: add support for multi-object select
-
     // NOTE: if an even needs access to the pick framebuffer, it should be forwarded to the display event queue.
 
     public void processEvent(AB2Event event) {
@@ -113,7 +111,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 GLSelectable releaseObject = userContext.getHoverObject();
                 List<GLSelectable> dragObjects = userContext.getDragObjects();
                 AB2MouseDropEvent dropEvent = new AB2MouseDropEvent(((AB2MouseReleasedEvent) event).getMouseEvent(), dragObjects);
-                if (releaseObject!=null) {
+                if (releaseObject!=null && dragObjects.size()>0) {
                     releaseObject.processEvent(dropEvent);
                     releaseObject.releaseHover();
                 }
@@ -153,7 +151,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         ////////////////////////////////////////////////////////////////////////////////////////
 
         if (repaint) {
-            controller.repaint();
+            controller.setNeedsRepaint(true);
         }
 
     }
@@ -218,7 +216,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             }
 
             if (pickObject!=null) {
-                if (!pickObject.equals(userContext.getHoverObject())) {
+                if (!(pickObject==userContext.getHoverObject())) {
                     GLSelectable hoverObject = userContext.getHoverObject();
                     if (hoverObject != null) {
                         hoverObject.releaseHover();
@@ -226,25 +224,31 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                     }
                 }
                 if (userContext.isMouseIsDragging()) {
-                    boolean dragAcceptable=checkDragAcceptability(pickActor, userContext.getDragObjects());
-                    if (dragAcceptable) {
+                    if (pickObject.isHoverable()) {
+                        boolean dragAcceptable = checkDragAcceptability(pickObject, userContext.getDragObjects());
+                        if (dragAcceptable) {
+                            userContext.setHoverObject(pickObject);
+                            pickObject.setHover();
+                        }
+                    }
+                } else {
+                    if (pickObject.isHoverable()) {
                         userContext.setHoverObject(pickObject);
                         pickObject.setHover();
                     }
-                } else {
-                    userContext.setHoverObject(pickObject);
-                    pickObject.setHover();
                 }
                 controller.setNeedsRepaint(true);
             }
 
             // DEBUG
             boolean isSelected=userContext.getSelectObjects().contains(pickObject);
-            boolean isHovered=userContext.getSelectObjects().contains(pickObject);
-            boolean isDragging=userContext.getSelectObjects().contains(pickObject);
+            boolean isHovered=userContext.getHoverObject()==pickObject;
+            boolean isDragging=userContext.getDragObjects().contains(pickObject);
 
             logger.info("PICK OBJECT="+pickObject.getClass().getName());
             logger.info("   - isSelectable()="+pickObject.isSelectable());
+            logger.info("   - isHoverable()="+pickObject.isHoverable());
+            logger.info("   - isDraggable()="+pickObject.isDraggable());
             logger.info("     - isSelected()="+isSelected);
             logger.info("     - isHovered()="+isHovered);
             logger.info("     - isDragging()="+isDragging);
@@ -469,9 +473,9 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         }
 
 
-        if (controller.needsRepaint()) {
-            controller.repaint();
-        }
+//        if (controller.needsRepaint()) {
+//            controller.repaint();
+//        }
 
     }
 
@@ -568,7 +572,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             }
         }
         if (repaint) {
-            controller.repaint();
+            controller.setNeedsRepaint(true);
         }
     }
 

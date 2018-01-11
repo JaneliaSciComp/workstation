@@ -28,10 +28,15 @@ public abstract class GLRegion implements GLSelectable {
     protected int minimumWidth=0;
     protected int minimumWHeight=0;
 
-    protected List<AB2Renderer> renderers=new ArrayList<>();
+    protected boolean isSelectable=false;
+    protected boolean isHoverable=false;
+    protected boolean isDraggable=false;
 
-    @Override
-    public boolean isSelectable() { return false; }
+    protected boolean isSelected=false;
+    protected boolean isHovered=false;
+    protected boolean isDragging=false;
+
+    protected List<AB2Renderer> renderers=new ArrayList<>();
 
     @Override
     public boolean acceptsDropType(GLSelectable selectable) { return false; }
@@ -104,16 +109,55 @@ public abstract class GLRegion implements GLSelectable {
 
     public void processEvent(AB2Event event) {}
 
-    public void setHover() {}
+    // SELECT
 
-    public void releaseHover() {}
+    @Override
+    public boolean isSelectable() { return isSelectable; }
 
-    public void setSelect() {}
+    @Override
+    public void setSelectable(boolean isSelectable) { this.isSelectable=isSelectable; }
 
-    public void releaseSelect() {}
+    @Override
+    public void setSelect() { isSelected=true; }
 
-    public void setDrag() {}
+    @Override
+    public boolean isSelected() { return isSelected; }
 
-    public void releaseDrag() {}
+    @Override
+    public void releaseSelect() { isSelected=false; }
+
+    // HOVER
+
+    @Override
+    public boolean isHoverable() { return isHoverable; }
+
+    @Override
+    public void setHoverable(boolean isHoverable) { this.isHoverable=isHoverable; }
+
+    @Override
+    public void setHover() { isHovered=true; }
+
+    @Override
+    public boolean isHovered() { return isHovered; }
+
+    @Override
+    public void releaseHover() { isHovered=false; }
+
+    // DRAG
+
+    @Override
+    public boolean isDraggable() { return isDraggable; }
+
+    @Override
+    public void setDraggable(boolean isDraggable) { this.isDraggable=isDraggable; }
+
+    @Override
+    public void setDrag() { isDragging=true; }
+
+    @Override
+    public boolean isDragging() { return isDragging; }
+
+    @Override
+    public void releaseDrag() { isDragging=false; }
 
 }

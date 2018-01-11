@@ -52,6 +52,7 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
     private int pickCounter=0;
     private AB2UserContext userContext=new AB2UserContext();
     private boolean needsRepaint=false;
+    //private boolean startDelayComplete=false;
 
     //private int glWidth;
     //private int glHeight;
@@ -121,7 +122,7 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
         return gljPanel;
     }
 
-    public void repaint() {
+    private void repaint() {
         gljPanel.repaint();
         needsRepaint=false;
     }
@@ -185,6 +186,10 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
 
     @Override
     public void display(GLAutoDrawable glAutoDrawable) {
+//        if (!startDelayComplete) {
+//            try { Thread.sleep(500); } catch (Exception ex) {}
+//            startDelayComplete=true;
+//        }
         if (currentMode!=null) {
             currentMode.display(glAutoDrawable);
         }
@@ -235,6 +240,9 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
                         currentMode.processEvent(event);
                     }
                 }
+            }
+            if (needsRepaint) {
+                repaint();
             }
         }
 

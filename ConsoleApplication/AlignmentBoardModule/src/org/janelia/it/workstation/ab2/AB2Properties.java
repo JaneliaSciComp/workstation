@@ -21,7 +21,7 @@ public class AB2Properties {
 
     public static Vector4 IMAGE_CONTROL_PANEL_COLOR = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
     public static Vector4 IMAGE_CONTROL_PANEL_HOVER_COLOR = new Vector4(0.20f, 0.20f, 0.20f, 1.0f);
-    public static Vector4 IMAGE_CONTROL_PANEL_SELECT_COLOR = new Vector4(0.20f, 0.20f, 0.20f, 1.0f);
+    public static Vector4 IMAGE_CONTROL_PANEL_SELECT_COLOR = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
     public static float   IMAGE_CONTROL_PANEL_BACKGROUND_Z=0.9f;
 
     public static int     IMAGE_CONTROL_OPENCLOSE_PIXEL_SIZE=16;

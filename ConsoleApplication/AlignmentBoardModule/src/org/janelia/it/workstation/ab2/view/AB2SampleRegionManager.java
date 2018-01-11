@@ -98,11 +98,6 @@ public class AB2SampleRegionManager extends GLRegionManager {
             topHeight=AB2Properties.TOP_MENU_OPEN_HEIGHT;
         }
 
-//        int bottomHeight=AB2SampleBottomRegion.CLOSED_HEIGHT;
-//        if (bottomRegion.isOpen()) {
-//            bottomHeight=AB2SampleBottomRegion.OPEN_HEIGHT;
-//        }
-
         int bottomHeight=AB2Properties.IMAGE_CONTROL_PANEL_CLOSED_HEIGHT;
         if (bottomRegion.isOpen()) {
             bottomHeight=AB2Properties.IMAGE_CONTROL_PANEL_OPEN_HEIGHT;

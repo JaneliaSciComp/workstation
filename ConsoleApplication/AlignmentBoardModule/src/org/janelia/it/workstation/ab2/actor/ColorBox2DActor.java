@@ -85,15 +85,6 @@ public class ColorBox2DActor extends GLAbstractActor {
         needsResize=true;
     }
 
-    @Override
-    public boolean isSelectable() {
-        return isSelectable;
-    }
-
-    public void setSelectable(boolean isSelectable) {
-        this.isSelectable = isSelectable;
-    }
-
     private float[] computeVertexData() {
         float[] vertexData = {
 
@@ -155,17 +146,24 @@ public class ColorBox2DActor extends GLAbstractActor {
         if (shader instanceof AB2Basic2DShader) {
             AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
             basic2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
+            logger.info("display() actorId="+actorId);
             if (isSelectable()) {
+                logger.info("  -- selectable");
                 if (isSelected) {
+                    logger.info("  -- selected");
                     basic2DShader.setColor(gl, selectColor);
                 }
                 else if (isHovered) {
+                    logger.info("  -- hovered");
                     basic2DShader.setColor(gl, hoverColor);
                 }
                 else {
+                    logger.info("  -- basic color");
                     basic2DShader.setColor(gl, color);
                 }
+                logger.info(" end selectable");
             } else {
+                logger.info(" -- NOT selectable, just using basic color");
                 basic2DShader.setColor(gl, color);
             }
         } else if (shader instanceof AB2PickShader) {

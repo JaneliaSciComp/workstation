@@ -39,9 +39,6 @@ public abstract class GLAbstractActor implements GLSelectable {
     }
 
     @Override
-    public boolean isSelectable() { return false; }
-
-    @Override
     public boolean acceptsDropType(GLSelectable selectable) { return false; }
 
     public static GLAbstractActor getActorById(int actorId) { return actors.get(actorId); }
@@ -82,6 +79,10 @@ public abstract class GLAbstractActor implements GLSelectable {
     protected Matrix4 postProjectionMatrix;
 
     protected int actorId=0;
+
+    protected boolean isSelectable=false;
+    protected boolean isHoverable=false;
+    protected boolean isDraggable=false;
 
     protected boolean isSelected=false;
     protected boolean isHovered=false;
@@ -230,18 +231,55 @@ public abstract class GLAbstractActor implements GLSelectable {
 
     public void processEvent(AB2Event event) {}
 
+    // SELECT
+
+    @Override
+    public boolean isSelectable() { return isSelectable; }
+
+    @Override
+    public void setSelectable(boolean isSelectable) { this.isSelectable=isSelectable; }
+
+    @Override
     public void setSelect() { isSelected=true; }
 
+    @Override
     public boolean isSelected() { return isSelected; }
 
+    @Override
     public void releaseSelect() { isSelected=false; }
 
+    // HOVER
+
+    @Override
+    public boolean isHoverable() { return isHoverable; }
+
+    @Override
+    public void setHoverable(boolean isHoverable) { this.isHoverable=isHoverable; }
+
+    @Override
     public void setHover() { isHovered=true; }
 
+    @Override
+    public boolean isHovered() { return isHovered; }
+
+    @Override
     public void releaseHover() { isHovered=false; }
 
+    // DRAG
+
+    @Override
+    public boolean isDraggable() { return isDraggable; }
+
+    @Override
+    public void setDraggable(boolean isDraggable) { this.isDraggable=isDraggable; }
+
+    @Override
     public void setDrag() { isDragging=true; }
 
+    @Override
+    public boolean isDragging() { return isDragging; }
+
+    @Override
     public void releaseDrag() { isDragging=false; }
 
 

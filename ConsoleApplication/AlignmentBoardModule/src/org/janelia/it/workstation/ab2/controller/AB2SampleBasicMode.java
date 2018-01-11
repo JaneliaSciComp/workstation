@@ -80,7 +80,7 @@ public class AB2SampleBasicMode extends AB2View3DMode {
             sampleRenderer.addSample3DImage(sample3DImageLoadedEvent.getData());
             sample3DImageLoadedEvent.clearData();
             logger.info("calling controller.repaint after sampleRenderer.addSample3DImage");
-            controller.repaint();
+            controller.setNeedsRepaint(true);
         }
     }
 
