@@ -27,6 +27,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
@@ -40,10 +42,14 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
+import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
+import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
@@ -71,6 +77,7 @@ public class ImportDialog extends ModalDialog {
             "Name of the folder in which data should be loaded with the data.";
     private static final String TOOLTIP_INPUT_DIR =
             "Directory of the tree that should be loaded into the database.";
+    private static final String IMPORT_STORAGE_DEFAULT_TAGS = ConsoleProperties.getString("console.importStorage.tags");
 
     private JTextField folderField;
     private TreeNode rootFolder;
@@ -336,9 +343,8 @@ public class ImportDialog extends ModalDialog {
                            final List<File> selectedChildren,
                            final String importFolderName,
                            final Long importFolderId) {
-
-        try {            
-            BackgroundWorker executeWorker = new TaskMonitoringWorker() {
+        try {
+            BackgroundWorker executeWorker = new AsyncServiceMonitoringWorker(FileMgr.getFileMgr().getSubjectKey()) {
     
                 @Override
                 public String getName() {
@@ -351,11 +357,11 @@ public class ImportDialog extends ModalDialog {
                     setStatus("Submitting task");
                     
                     Long taskId = startImportFilesTask(selectedFile,
-                                selectedChildren,
-                                importFolderName,
-                                importFolderId);
+                            selectedChildren,
+                            importFolderName,
+                            importFolderId);
                     
-                    setTaskId(taskId);
+                    setServiceId(taskId);
                     
                     setStatus("Grid execution");
                     
@@ -434,39 +440,35 @@ public class ImportDialog extends ModalDialog {
         catch (Exception e) {
             ConsoleApp.handleException(e);
         }
-        
     }
 
-    private long startImportFilesTask(File selectedFile,
-                             List<File> selectedChildren,
-                             String importTopLevelFolderName,
-                             Long importTopLevelFolderId) throws Exception {
+    private Long startImportFilesTask(File selectedFile,
+                                      List<File> selectedChildren,
+                                      String importTopLevelFolderName,
+                                      Long importTopLevelFolderId) throws Exception {
 
-        final WebDavUploader uploader = new WebDavUploader(FileMgr.getFileMgr().getWebDavClient());
+        AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
+
+        final WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
 
         String uploadPath;
         if (selectedChildren == null) {
-            uploadPath = uploader.uploadFile(selectedFile);
+            uploadPath = uploader.uploadFile(importTopLevelFolderName, IMPORT_STORAGE_DEFAULT_TAGS, selectedFile);
         } else {
-            uploadPath = uploader.uploadFiles(selectedChildren, selectedFile);
+            uploadPath = uploader.uploadFiles(importTopLevelFolderName, IMPORT_STORAGE_DEFAULT_TAGS, selectedChildren, selectedFile);
         }
 
-        final String process = "FileTreeLoader";
-        final boolean filesUploadedFlag = false;
-        Task task = new FileTreeLoaderPipelineTask(new HashSet<Node>(),
-                                                   AccessManager.getSubjectKey(),
-                                                   new ArrayList<Event>(),
-                                                   new HashSet<TaskParameter>(),
-                                                   uploadPath,
-                                                   importTopLevelFolderName,
-                                                   filesUploadedFlag,
-                                                   importTopLevelFolderId);
-        task.setJobName("Import Files Task");
-        task = StateMgr.getStateMgr().saveOrUpdateTask(task);
-
-        // Submit the job
-        StateMgr.getStateMgr().submitJob(process, task);
-        
-        return task.getObjectId();
+        ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
+                .add("-folderName", importTopLevelFolderName);
+        if (importTopLevelFolderId != null) {
+            serviceArgsBuilder.add("-parentFolderId", importTopLevelFolderId.toString());
+        }
+        serviceArgsBuilder.add("-storageLocation", uploadPath);
+        return asyncServiceClient.invokeService("dataTreeLoad",
+                serviceArgsBuilder.build(),
+                FileMgr.getFileMgr().getSubjectKey(),
+                null,
+                ImmutableMap.of()
+        );
     }
 }

@@ -3,15 +3,24 @@ package org.janelia.it.workstation.browser.api;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableList;
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.commons.httpclient.auth.AuthPolicy;
+import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.filecache.LocalFileCache;
-import org.janelia.it.workstation.browser.filecache.WebDavClient;
+import org.janelia.it.workstation.browser.filecache.WebDavClientMgr;
+import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.model.security.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,9 +32,13 @@ import org.slf4j.LoggerFactory;
 public class FileMgr {
 
     private static final Logger log = LoggerFactory.getLogger(FileMgr.class);
-    
-    private static final String webdavBaseUrl = ConsoleProperties.getString("console.webDavClient.baseUrl", WebDavClient.JACS_WEBDAV_BASE_URL);
-    
+    private static final String JACS_WEBDAV_BASE_URL = "http://jacs-webdav.int.janelia.org/Webdav";
+
+    private static final String CONSOLE_PREFS_DIR = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
+    private static final String WEBDAV_BASE_URL = ConsoleProperties.getString("console.webDavClient.baseUrl", JACS_WEBDAV_BASE_URL);
+    private static final int WEBDAV_MAX_CONNS_PER_HOST = ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100);
+    private static final int WEBDAV_MAX_TOTAL_CONNECTIONS = ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100);
+
     // Singleton
     private static FileMgr instance;
     public static synchronized FileMgr getFileMgr() {
@@ -35,37 +48,41 @@ public class FileMgr {
         return instance;
     }
     
-    private final String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
-    
+
     public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 10;
     public static final int DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY = 50;
     public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
-    
-    private final WebDavClient webDavClient;
-    private LocalFileCache localFileCache; 
+
+    private final HttpClient httpClient;
+    private final WebDavClientMgr webDavClientMgr;
+    private LocalFileCache localFileCache;
+    private Subject currentSubject;
 
     private FileMgr() {
         
         log.info("Initializing File Manager");
 
-        log.info("Using WebDAV server: {}",webdavBaseUrl);
-        // TODO: most of this initialization should be done in a background thread, to improve start-up time for the Workstation
-        this.webDavClient = new WebDavClient(
-                webdavBaseUrl,
-                ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100),
-                ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100));
-        
-        setFileCacheGigabyteCapacity((Integer) 
+        log.info("Using WebDAV server: {}", WEBDAV_BASE_URL);
+
+        MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
+        HttpConnectionManagerParams managerParams = mgr.getParams();
+        managerParams.setDefaultMaxConnectionsPerHost(WEBDAV_MAX_CONNS_PER_HOST);
+        managerParams.setMaxTotalConnections(WEBDAV_MAX_TOTAL_CONNECTIONS);
+        httpClient = new HttpClient(mgr);
+        webDavClientMgr = new WebDavClientMgr(WEBDAV_BASE_URL, httpClient);
+
+        setFileCacheGigabyteCapacity((Integer)
                 LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
         setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(
                 LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));
     }
 
-    /**
-     * @return the session client for issuing WebDAV requests.
-     */
-    public WebDavClient getWebDavClient() {
-        return webDavClient;
+    public HttpClient getHttpClient() {
+        return httpClient;
+    }
+
+    public WebDavUploader getFileUploader() {
+        return new WebDavUploader(webDavClientMgr);
     }
 
     /**
@@ -83,37 +100,23 @@ public class FileMgr {
      * otherwise cache will be enabled.
      */
     public final void setFileCacheDisabled(boolean isDisabled) {
-
         LocalPreferenceMgr.getInstance().setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
 
         if (isDisabled) {
             log.warn("disabling local cache");
             localFileCache = null;
-        }
-        else {
+        } else {
             try {
-                final String localCacheRoot
-                        = ConsoleProperties.getString("console.localCache.rootDirectory",
-                                prefsDir);
+                final String localCacheRoot = ConsoleProperties.getString("console.localCache.rootDirectory", CONSOLE_PREFS_DIR);
                 final long kilobyteCapacity = getFileCacheGigabyteCapacity() * 1024 * 1024;
 
-                localFileCache = new LocalFileCache(new File(localCacheRoot),
-                        kilobyteCapacity,
-                        webDavClient,
-                        null);
+                localFileCache = new LocalFileCache(new File(localCacheRoot), kilobyteCapacity, null, httpClient, webDavClientMgr);
             }
             catch (IllegalStateException e) {
                 localFileCache = null;
                 log.error("disabling local cache after initialization failure", e);
             }
         }
-    }
-
-    /**
-     * @return the session local file cache instance or null if a cache is not available.
-     */
-    public LocalFileCache getFileCache() {
-        return localFileCache;
     }
 
     /**
@@ -187,35 +190,23 @@ public class FileMgr {
      * @return an accessible file for the specified path or
      * null if caching is disabled or the file cannot be cached.
      */
-    public static File getCachedFile(String standardPath,
-            boolean forceRefresh) {
-
-        FileMgr mgr = getFileMgr();
-
+    public File getFile(String standardPath, boolean forceRefresh) {
         File file = null;
-        if (mgr.isFileCacheAvailable()) {
-            final LocalFileCache cache = mgr.getFileCache();
-            final WebDavClient client = mgr.getWebDavClient();
+        if (isFileCacheAvailable()) {
             try {
-                final URL url = client.getWebDavUrl(standardPath);
-                file = cache.getFile(url, forceRefresh);
-            }
-            catch (FileNotFoundException e) {
+                file = localFileCache.getFile(standardPath, forceRefresh);
+            } catch (FileNotFoundException e) {
                 log.warn("File does not exist: " + standardPath, e);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 if ("No space left on device".equals(e.getMessage())) {
                     FrameworkImplProvider.handleExceptionQuietly("No space left on disk", e);
-                }
-                else {
+                } else {
                     log.error("Failed to retrieve " + standardPath + " from local cache", e);
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 log.error("Failed to retrieve " + standardPath + " from local cache", e);
             }
-        }
-        else {
+        } else {
             log.warn("Local file cache is not available");
         }
 
@@ -227,25 +218,43 @@ public class FileMgr {
      * been cached, or a remote URL on the WebDAV server. It might even be a
      * mounted location, if WebDAV is disabled.
      *
-     * @param standardPath
+     * @param standardPathName
      *            a standard system path
+     * @param cacheAsync flag to cache the file if caching is available
+     *
      * @return an accessible URL for the specified path
      */
-    public static URL getURL(String standardPath) {
-        return getURL(standardPath, true);
+    public URL getURL(String standardPathName, boolean cacheAsync) {
+        return isFileCacheAvailable()
+                ? localFileCache.getEffectiveUrl(standardPathName, cacheAsync)
+                : webDavClientMgr.getDownloadFileURL(standardPathName);
     }
 
-    public static URL getURL(String standardPath, boolean cacheAsync) {
-        try {
-            FileMgr mgr = getFileMgr();
-            WebDavClient client = mgr.getWebDavClient();
-            URL remoteFileUrl = client.getWebDavUrl(standardPath);
-            LocalFileCache cache = mgr.getFileCache();
-            return mgr.isFileCacheAvailable() ? cache.getEffectiveUrl(remoteFileUrl, cacheAsync) : remoteFileUrl;
+    public String getSubjectKey() {
+        return currentSubject == null ? null : currentSubject.getKey();
+    }
+
+    void setSubjectProxy(Subject proxy) {
+        currentSubject = proxy;
+        addDefaultHeader("JacsSubject", getSubjectKey());
+        addDefaultHeader("username", getSubjectKey());
+    }
+
+    void setAuthToken(String authToken) {
+        // I prefer this method to the AuthState approach because it's more convenient
+        // with the AuthState I have to set authentication required for every HttpMethod instance that requires authentication
+        // and I also have to set the scheme
+        addDefaultHeader("Authorization", StringUtils.isBlank(authToken) ? null : "Bearer " + authToken);
+    }
+
+    private void addDefaultHeader(String headerName, String headerValue) {
+        List<Header> defaultHeaders = (List<Header>) httpClient.getParams().getDefaults().getParameter("http.default-headers");
+        ImmutableList.Builder<Header> defaultHeadersBuilder = ImmutableList.builder();
+        if (defaultHeaders != null) {
+            defaultHeadersBuilder.addAll(defaultHeaders.stream().filter(h -> !h.getName().equalsIgnoreCase(headerName)).collect(Collectors.toList()));
         }
-        catch (MalformedURLException e) {
-            ConsoleApp.handleException(e);
-            return null;
-        }
+        if (headerValue != null) defaultHeadersBuilder.add(new Header(headerName, headerValue));
+        defaultHeaders = defaultHeadersBuilder.build();
+        httpClient.getParams().getDefaults().setParameter("http.default-headers", defaultHeaders);
     }
 }

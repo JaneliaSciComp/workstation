@@ -80,7 +80,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
         if (useCacheBehind) {
             // Async cache-behind
             log.trace("Async cache-behind loading: {}",imageFilename);
-            URL imageFileURL = FileMgr.getURL(imageFilename);
+            URL imageFileURL = FileMgr.getFileMgr().getURL(imageFilename, true);
             maxSizeImage = Utils.readImage(imageFileURL);
             if (maxSizeImage != null && imageCache != null) {
                 imageCache.put(imageFilename, maxSizeImage);
@@ -89,7 +89,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
         else {
             // Sync cache-ahead
             log.trace("Cache-ahead loading: {}",imageFilename);
-            File imageFile = FileMgr.getCachedFile(imageFilename, false);
+            File imageFile = FileMgr.getFileMgr().getFile(imageFilename, false);
             maxSizeImage = Utils.readImage(imageFile.toURI().toURL());
         }
 

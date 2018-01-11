@@ -2,7 +2,7 @@
 package org.janelia.it.workstation.browser;
 
 
-import org.janelia.it.workstation.browser.filecache.CachedFileTest;
+import org.janelia.it.workstation.browser.filecache.RemoteFileCacheLoaderTest;
 import org.janelia.it.workstation.browser.filecache.LocalFileCacheTest;
 import org.janelia.it.workstation.browser.filecache.WebDavClientTest;
 import org.janelia.it.workstation.browser.filecache.WebDavUploaderTest;
@@ -14,7 +14,7 @@ import org.junit.runners.Suite;
 @RunWith(Categories.class)
 @Categories.IncludeCategory(TestCategories.FastTests.class)
 @Suite.SuiteClasses({
-        CachedFileTest.class,
+        RemoteFileCacheLoaderTest.class,
         LocalFileCacheTest.class,
         WebDavClientTest.class,
         WebDavUploaderTest.class

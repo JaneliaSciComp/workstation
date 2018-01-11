@@ -2409,8 +2409,16 @@
                 <binary-origin>release/modules/ext/axis2-spring-1.5.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/javassist.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/javassist.jar</binary-origin>
+                <runtime-relative-path>ext/metakit.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/metakit.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/wstx-asl-3.2.9.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/wstx-asl-3.2.9.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/platform.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/platform.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jaxen-1.1.1.jar</runtime-relative-path>
@@ -2419,6 +2427,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/commons-compress-1.8.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/commons-compress-1.8.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/javassist-3.21.0-GA.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/javassist-3.21.0-GA.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/joda-time-2.8.1.jar</runtime-relative-path>

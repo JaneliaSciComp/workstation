@@ -1,0 +1,160 @@
+package org.janelia.it.workstation.browser.filecache;
+
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.StreamSupport;
+
+import com.google.common.base.Splitter;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import org.apache.commons.httpclient.HttpClient;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * {@link WebDavClient} manager.
+ */
+public class WebDavClientMgr {
+
+    private static final int STORAGE_PATH_SUFFIX_COMPS_COUNT = 4;
+    private static final int STORAGE_PATH_PREFIX_COMPS_COUNT = 2;
+
+    private static final Cache<String, WebDavClient> WEBDAV_AGENTS_CACHE = CacheBuilder.newBuilder()
+            .maximumSize(10)
+            .build();
+
+    private final HttpClient httpClient;
+    private final WebDavClient masterWebDavInstance;
+
+    /**
+     * Constructs a client with default authentication credentials.
+     *
+     * @param  httpClient             httpClient
+     *                                (e.g. /groups/...) to WebDAV URLs.
+     * @throws IllegalArgumentException
+     *   if the baseUrl cannot be parsed.
+     */
+    public WebDavClientMgr(String baseUrl, HttpClient httpClient) {
+        this.httpClient = httpClient;
+        this.masterWebDavInstance = new WebDavClient(validateUrl(baseUrl), httpClient);
+    }
+
+    private String validateUrl(String urlString) {
+        try {
+            final URL url = new URL(urlString);
+            return urlString;
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("failed to parse URL: " + urlString, e);
+        }
+    }
+
+    public URL getDownloadFileURL(String standardPathName) {
+        WebDavClient webDavClient = getWebDavClientForStandardPath(standardPathName);
+        return webDavClient.getDownloadFileURL(standardPathName);
+    }
+
+    private WebDavClient getWebDavClientForStandardPath(String standardPathName) {
+        Path standardPath = Paths.get(standardPathName);
+        int nPathComponents = standardPath.getNameCount();
+        Path storagePathPrefix;
+        // This is just a very convoluted way to determine the storage prefix for mostly for caching purposes.
+        // The algorithm is to drop last 4 path components if the path is long enough or only consider the first 2 path components
+        if (nPathComponents <= STORAGE_PATH_SUFFIX_COMPS_COUNT) {
+            if (nPathComponents < STORAGE_PATH_PREFIX_COMPS_COUNT) {
+                storagePathPrefix = standardPath;
+            } else {
+                if (standardPath.getRoot() == null) {
+                    storagePathPrefix = standardPath.subpath(0, STORAGE_PATH_PREFIX_COMPS_COUNT);
+                } else {
+                    storagePathPrefix = standardPath.getRoot().resolve(standardPath.subpath(0, STORAGE_PATH_PREFIX_COMPS_COUNT));
+                }
+            }
+        } else {
+            if (standardPath.getRoot() == null) {
+                storagePathPrefix = standardPath.subpath(0, nPathComponents - STORAGE_PATH_SUFFIX_COMPS_COUNT);
+            } else {
+                storagePathPrefix = standardPath.getRoot().resolve(standardPath.subpath(0, nPathComponents - STORAGE_PATH_SUFFIX_COMPS_COUNT));
+            }
+        }
+        try {
+            String storageKey = storagePathPrefix.toString();
+            return WEBDAV_AGENTS_CACHE.get(storageKey, () -> {
+                WebDavFile webDavFile = findWebDavFileStorage(storageKey);
+                return new WebDavClient(webDavFile.getRemoteFileUrl().toString(), httpClient);
+            });
+        } catch (ExecutionException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private WebDavFile findWebDavFileStorage(String storagePath) throws WebDavException {
+        return masterWebDavInstance.findStorage(storagePath);
+    }
+
+    /**
+     * Finds information about the specified file.
+     *
+     * @param  remoteFileName  file's remote reference name.
+     *
+     * @return WebDAV information for the specified file.
+     *
+     * @throws WebDavException
+     *   if the file information cannot be retrieved.
+     */
+    WebDavFile findFile(String remoteFileName)
+            throws WebDavException {
+        WebDavClient webDavClient = getWebDavClientForStandardPath(remoteFileName);
+        return webDavClient.findFile(remoteFileName);
+    }
+
+    String createStorageFolder(String storageName, String storageTags) {
+        return masterWebDavInstance.createStorageFolder(storageName, storageTags);
+    }
+
+    String uploadFile(File file, String storageURL, String storageLocation) {
+        try {
+            String uploadFileUrl = storageURL + "/file/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation);
+            String uploadedFileUrl = masterWebDavInstance.saveFile(new URL(uploadFileUrl), file);
+            return uploadedFileUrl == null ? storageURL : uploadedFileUrl;
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    String createDirectory(String storageURL, String storageLocation) {
+        try {
+            String createDirUrl = storageURL + "/directory/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation);
+            String createdDirUrl = masterWebDavInstance.createDirectory(new URL(createDirUrl));
+            return createdDirUrl == null ? storageURL : createdDirUrl;
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    String urlEncodeComp(String pathComp) {
+        if (StringUtils.isBlank(pathComp)) {
+            return "";
+        } else {
+            try {
+                return URLEncoder.encode(pathComp, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+    }
+
+    String urlEncodeComps(String pathComps) {
+        return StringUtils.isBlank(pathComps)
+                ? ""
+                : StreamSupport.stream(Splitter.on(File.separatorChar).split(pathComps).spliterator(), false)
+                    .map(pc -> urlEncodeComp(pc))
+                    .reduce(null, (c1, c2) -> c1 == null ? c2 : c1 + File.separatorChar + c2);
+    }
+}
