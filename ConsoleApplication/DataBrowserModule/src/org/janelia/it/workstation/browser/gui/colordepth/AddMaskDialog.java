@@ -26,17 +26,16 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleAlignmentResult;
-import org.janelia.model.domain.workspace.TreeNode;
 
 /**
  * Add a newly created mask to a ColorDepthSearch.
@@ -58,6 +57,7 @@ public class AddMaskDialog extends ModalDialog {
     private final JTextField searchNameField;
     
     private BufferedImage imageMask;
+    private int maskThreshold;
     private Sample sample;
     private SampleAlignmentResult alignment;
     private String filepath;
@@ -209,12 +209,13 @@ public class AddMaskDialog extends ModalDialog {
         worker.execute();
     }
     
-    public ColorDepthMask showForMask(BufferedImage imageMask, Sample sample, SampleAlignmentResult alignment, String filepath) {
+    public ColorDepthMask showForMask(BufferedImage imageMask, SampleAlignmentResult alignment, String filepath, int maskThreshold, Sample sample) {
         
         this.imageMask = imageMask;
-        this.sample = sample;
         this.alignment = alignment;
         this.filepath = filepath;
+        this.maskThreshold = maskThreshold;
+        this.sample = sample;
         
         alignmentSpaceLabel.setText(alignment.getAlignmentSpace());
         maskNameField.setText("Mask derived from "+sample.getLine());
@@ -254,8 +255,6 @@ public class AddMaskDialog extends ModalDialog {
             search = wrapper.search;
         }
          
-        // TODO: ask the user to specify using a thresholding algorithm
-        int maskThreshold = 50;
         final ColorDepthSearch finalSearch = search;
         
         Utils.setWaitingCursor(this);
@@ -280,14 +279,14 @@ public class AddMaskDialog extends ModalDialog {
                 
                 mask = model.createColorDepthMask(maskName, filepath, maskThreshold, sample);
                 
-                model.addMaskToSearch(colorDepthSearch, mask);
-                
+                model.addMaskToSearch(colorDepthSearch, mask);   
             }
 
             @Override
             protected void hadSuccess() {
                 Utils.setDefaultCursor(AddMaskDialog.this);
                 setVisible(false);
+                DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(colorDepthSearch.getId());
             }
 
             @Override

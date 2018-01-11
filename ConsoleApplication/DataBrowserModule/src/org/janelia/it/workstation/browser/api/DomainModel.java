@@ -970,7 +970,7 @@ public class DomainModel {
         search.setAlignmentSpace(alignmentSpace);
         search = save(search);        
 
-        TreeNode searchesFolder = getDefaultWorkspaceFolder("Color Depth Searches", true);
+        TreeNode searchesFolder = getDefaultWorkspaceFolder(DomainConstants.NAME_COLOR_DEPTH_SEARCHES, true);
         addChild(searchesFolder, search);
         
         return search;
@@ -988,15 +988,26 @@ public class DomainModel {
         mask = save(mask);
         
         // Add it to the mask folder
-        TreeNode masksFolder = getDefaultWorkspaceFolder("Color Depth Masks", true);
+        TreeNode masksFolder = getDefaultWorkspaceFolder(DomainConstants.NAME_COLOR_DEPTH_MASKS, true);
         addChild(masksFolder, mask);
         
         return mask;
     }
     
     public ColorDepthSearch addMaskToSearch(ColorDepthSearch search, ColorDepthMask mask) throws Exception {
-        search.addMask(Reference.createFor(mask));
+        Reference ref = Reference.createFor(mask);
+        if (search.getMasks().contains(ref)) return search;
+        search.addMask(ref);
         return save(search);
+    }
+
+    public ColorDepthSearch removeMaskFromSearch(ColorDepthSearch search, ColorDepthMask mask) throws Exception {
+        Reference ref = Reference.createFor(mask);
+        if (search.getMasks().contains(ref)) {
+            search.getMasks().remove(ref);
+            return save(search);
+        }
+        throw new IllegalArgumentException(mask+" was not found within "+search);
     }
     
 

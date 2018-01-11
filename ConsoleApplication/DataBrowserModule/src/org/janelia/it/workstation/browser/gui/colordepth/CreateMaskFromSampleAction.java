@@ -23,13 +23,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Allows the user to create a mask for color depth search.
+ * Allows the user to create a mask for color depth search from an existing color depth MIP on a sample.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ColorDepthMaskAction extends AbstractAction {
+public class CreateMaskFromSampleAction extends AbstractAction {
 
-    private static final Logger log = LoggerFactory.getLogger(ColorDepthMaskAction.class);
+    private static final Logger log = LoggerFactory.getLogger(CreateMaskFromSampleAction.class);
     
     private Sample sample;
     private ArtifactDescriptor resultDescriptor;
@@ -37,11 +37,11 @@ public class ColorDepthMaskAction extends AbstractAction {
     private SampleAlignmentResult alignment;
     private String imagePath;
 
-    public ColorDepthMaskAction() {
+    public CreateMaskFromSampleAction() {
         super("Create Color Depth Search Mask...");
     }
     
-    public ColorDepthMaskAction(Sample sample, ArtifactDescriptor resultDescriptor, String typeName) {
+    public CreateMaskFromSampleAction(Sample sample, ArtifactDescriptor resultDescriptor, String typeName) {
         this();
         this.sample = sample;
         this.resultDescriptor = resultDescriptor;
@@ -109,8 +109,11 @@ public class ColorDepthMaskAction extends AbstractAction {
             BufferedImage maskImage = maskCreationDialog.showForImage(image);
             log.debug("Got mask: "+maskImage);
 
+            // TODO: ask the user to specify using a thresholding algorithm
+            int maskThreshold = 50;
+            
             AddMaskDialog addMaskDialog = new AddMaskDialog();
-            ColorDepthMask mask = addMaskDialog.showForMask(maskImage, sample, alignment, imagePath);
+            ColorDepthMask mask = addMaskDialog.showForMask(maskImage, alignment, imagePath, maskThreshold, sample);
             log.debug("Got : "+mask);
             
         }

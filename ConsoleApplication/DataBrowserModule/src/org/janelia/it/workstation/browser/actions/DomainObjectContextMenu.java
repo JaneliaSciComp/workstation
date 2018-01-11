@@ -43,7 +43,7 @@ import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
-import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthMaskAction;
+import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SpecialAnnotationChooserDialog;
@@ -637,7 +637,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                 
         if (!resultDescriptor.isAligned()) return null;
         
-        return getNamedActionItem(new ColorDepthMaskAction(samples.get(0), resultDescriptor, typeName));
+        return getNamedActionItem(new CreateMaskFromSampleAction(samples.get(0), resultDescriptor, typeName));
     }
     
     protected JMenuItem getSetPublishingNameItem() {

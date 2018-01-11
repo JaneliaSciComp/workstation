@@ -19,7 +19,8 @@ import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 
 public class ColorDepthMaskNode extends AbstractDomainObjectNode<ColorDepthMask> {
-        
+
+    
     public ColorDepthMaskNode(ChildFactory<?> parentChildFactory, ColorDepthMask mask) throws Exception {
         super(parentChildFactory, Children.LEAF, mask);
     }
@@ -66,4 +67,5 @@ public class ColorDepthMaskNode extends AbstractDomainObjectNode<ColorDepthMask>
         actions.add(RemoveAction.get());
         return actions.toArray(new Action[actions.size()]);
     }
+
 }

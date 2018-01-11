@@ -40,6 +40,9 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.editor.ConfigPanel;
@@ -70,6 +73,8 @@ import org.janelia.model.domain.sample.DataSet;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 
 /**
@@ -139,7 +144,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         };
         
         thresholdLabel = new JLabel();
-        thresholdSlider = new JSlider(0, 255);
+        thresholdSlider = new JSlider(1, 255);
         thresholdSlider.putClientProperty("Slider.paintThumbArrowShape", Boolean.TRUE);
         thresholdSlider.setMaximumSize(new Dimension(120, Integer.MAX_VALUE));
         thresholdSlider.addChangeListener((ChangeEvent e) -> {
@@ -198,6 +203,16 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         searchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                
+                if (search.getMasks().isEmpty()) {
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "You need to select some masks to search on.");
+                    return;
+                }
+                
+                if (search.getDataSets().isEmpty()) {
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "You need to select some data sets to search against.");
+                    return;
+                }
                 
                 int result = JOptionPane.showConfirmDialog(ColorDepthSearchEditorPanel.this, 
                         "Are you sure you want to queue this search to run on the compute cluster?");
@@ -261,32 +276,13 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                     }
                 }
             }
-//            
-//            @Override
-//            protected void popupTriggered(MouseEvent e, SelectablePanel resultPanel) {
-//                if (resultPanel instanceof PipelineResultPanel) {
-//                    SampleResultContextMenu popupMenu = new SampleResultContextMenu(((PipelineResultPanel)resultPanel).getResult());
-//                    popupMenu.addMenuItems();
-//                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
-//                }
-//                else if (resultPanel instanceof PipelineErrorPanel) {
-//                    SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
-//                    popupMenu.addMenuItems();
-//                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
-//                }
-//            }
-//            
-//            @Override
-//            protected void doubleLeftClicked(MouseEvent e, SelectablePanel resultPanel) {
-//                if (resultPanel instanceof PipelineResultPanel) {
-//                    SampleResultContextMenu popupMenu = new SampleResultContextMenu(((PipelineResultPanel)resultPanel).getResult());
-//                    popupMenu.runDefaultAction();
-//                }
-//                else if (resultPanel instanceof PipelineErrorPanel) {
-//                    SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
-//                    popupMenu.runDefaultAction();
-//                }
-//            }
+            
+            @Override
+            protected void popupTriggered(MouseEvent e, SelectablePanel resultPanel) {
+                MaskContextMenu popupMenu = new MaskContextMenu(search, ((MaskPanel)resultPanel).getMask());
+                popupMenu.addMenuItems();
+                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+            }
             
         };
 
@@ -297,7 +293,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         maskScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
         
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, maskScrollPane, resultPanel);
-        splitPane.setDividerLocation(0.25);
+        splitPane.setDividerLocation(0.30);
         splitPane.setBorder(BorderFactory.createEmptyBorder());
         
         Dimension minimumSize = new Dimension(100, 0);
@@ -400,6 +396,29 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         }
         catch (Exception e) {
             log.error("Could not save sort criteria",e);
+        }
+    }
+
+    private void reload() throws Exception {
+        
+        if (search==null) {
+            // Nothing to reload
+            return;
+        }
+        
+        ColorDepthSearch updatedSearch = DomainMgr.getDomainMgr().getModel().getDomainObject(search.getClass(), search.getId());
+        if (updatedSearch!=null) {
+//            if (treeNodeNode!=null && !treeNodeNode.getTreeNode().equals(updatedTreeNode)) {
+//                treeNodeNode.update(updatedTreeNode);
+//            }
+//            this.treeNode = updatedTreeNode;
+//            restoreState(saveState());
+            loadDomainObject(updatedSearch, false, null);
+        }
+        else {
+            // The folder no longer exists, or we no longer have access to it (perhaps running as a different user?) 
+            // Either way, there's nothing to show. 
+            showNothing();
         }
     }
     
@@ -617,60 +636,98 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
     @Override
     public void restoreState(DomainObjectEditorState<ColorDepthSearch> state) {
+        if (state==null) {
+            log.warn("Cannot restore null state");
+            return;
+        }
+        
+        log.info("Restoring state: {}", state);
+//        if (state.getListViewerState()!=null) {
+//            getResultsPanel().setViewerType(state.getListViewerState().getType());
+//        }
+
+        // Prepare to restore the selection
+//        List<Reference> selected = getResultsPanel().getViewer().getSelectionModel().getSelectedIds();
+//        selected.clear();
+//        selected.addAll(state.getSelectedIds());
+        
+        // Prepare to restore the page
+//        getResultsPanel().setCurrPage(state.getPage());
+//
+//        getResultsPanel().getViewer().restoreState(state.getListViewerState());
+        
+        // Prepare to restore viewer state, after the reload
+        Callable<Void> success = new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+//                if (state.getListViewerState()!=null) {
+//                    log.info("State load completed, restoring viewer state {}", state.getListViewerState());
+////                    getResultsPanel().getViewer().restoreState(state.getListViewerState());
+//                }
+                return null;
+            }
+        };
+                
+        if (state.getDomainObjectNode()==null) {
+            loadDomainObject(state.getDomainObject(), true, success);
+        }
+        else {
+            loadDomainObjectNode(state.getDomainObjectNode(), true, success);
+        }
     }
 
 
-//    @Subscribe
-//    public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-//        try {
-//		    if (sample==null) return;
-//            if (event.isTotalInvalidation()) {
-//                log.info("total invalidation, reloading...");
-//                Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-//                if (updatedSample!=null) {
-//                    loadDomainObject(updatedSample, false, null);
-//                }
-//            }
-//            else {
-//                for (DomainObject domainObject : event.getDomainObjects()) {
-//                    if (StringUtils.areEqual(domainObject.getId(), sample.getId())) {
-//                        log.info("Sample invalidated, reloading...");
-//                        Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-//                        if (updatedSample!=null) {
-//                            loadDomainObject(updatedSample, false, null);
-//                        }
-//                        break;
-//                    }
-//                    else if (lsms!=null) {
-//                        for(LSMImage lsm : lsms) {
-//                            if (StringUtils.areEqual(domainObject.getId(), lsm.getId())) {
-//                                log.info("LSM invalidated, reloading...");
-//                                Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-//                                if (updatedSample!=null) {
-//                                    loadDomainObject(updatedSample, false, null);
-//                                }
-//                                break;
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }  catch (Exception e) {
-//            ConsoleApp.handleException(e);
-//        }
-//    }
+    @Subscribe
+    public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
+        try {
+		    if (search==null) return;
+		    boolean affected = false;
+            if (event.isTotalInvalidation()) {
+                log.info("total invalidation, reloading...");
+                affected = true;
+            }
+            else {
+                for (DomainObject domainObject : event.getDomainObjects()) {
+                    if (StringUtils.areEqual(domainObject.getId(), search.getId())) {
+                        log.info("Search invalidated, reloading...");
+                        affected = true;
+                        break;
+                    }
+                    else if (masks!=null) {
+                        for(ColorDepthMask mask : masks) {
+                            if (StringUtils.areEqual(domainObject.getId(), mask.getId())) {
+                                log.info("Mask invalidated, reloading...");
+                                affected = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        
+            if (affected) reload();
+        }  
+        catch (Exception e) {
+            ConsoleApp.handleException(e);
+        }
+    }
 
-//    @Subscribe
-//    public void domainObjectRemoved(DomainObjectRemoveEvent event) {
-//        if (sample==null) return;
-//        if (StringUtils.areEqual(event.getDomainObject().getId(), sample.getId())) {
-//            this.sample = null;
-//            if (currRunMap!=null) currRunMap.clear();
-//            if (lsms!=null) lsms.clear();
-//            if (lsmAnnotations!=null) lsmAnnotations.clear();
-//            showNothing();
-//        }
-//    }
+    @Subscribe
+    public void domainObjectRemoved(DomainObjectRemoveEvent event) {
+        if (search==null) return;
+        if (StringUtils.areEqual(event.getDomainObject().getId(), search.getId())) {
+            this.search = null;
+            showNothing();
+        }
+        else {
+            for (ColorDepthMask colorDepthMask : masks) {
+                if (StringUtils.areEqual(event.getDomainObject().getId(), search.getId())) {
+                    // Refresh
+                    loadDomainObject(search, false, null);
+                }
+            }
+        }
+    }
 //        
 //    @Subscribe
 //    public void domainObjectSelected(DomainObjectSelectionEvent event) {
@@ -680,13 +737,19 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 //        }
 //    }
 //
-//    @Subscribe
-//    public void domainObjectChanged(DomainObjectChangeEvent event) {
-//        // Forward to LSM panel
-//        if (lsmPanel!=null) {
-//            lsmPanel.domainObjectChanged(event);
-//        }
-//    }
+    @Subscribe
+    public void domainObjectChanged(DomainObjectChangeEvent event) {
+        if (search==null) return;
+        try {
+            if (event.getDomainObject().getId().equals(search)) {
+                // Refresh
+                reload();
+            }
+        }  
+        catch (Exception e) {
+            ConsoleApp.handleException(e);
+        }
+    }
 //    
 //    @Subscribe
 //    public void annotationsChanged(DomainObjectAnnotationChangeEvent event) {
