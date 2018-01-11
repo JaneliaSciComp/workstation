@@ -54,6 +54,11 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
     public AsyncServiceMonitoringWorker(String subjectKey) {
         this.subjectKey = subjectKey;
     }
+
+    public AsyncServiceMonitoringWorker(String subjectKey, Long serviceId) {
+        this.subjectKey = subjectKey;
+        this.serviceId = serviceId;
+    }
     
     @Override
     protected void doStuff() throws Exception {

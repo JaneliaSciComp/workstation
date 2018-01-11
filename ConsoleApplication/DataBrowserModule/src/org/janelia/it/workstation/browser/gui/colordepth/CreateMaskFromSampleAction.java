@@ -2,17 +2,23 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.net.URL;
 
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
+import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
+import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
@@ -30,6 +36,8 @@ import org.slf4j.LoggerFactory;
 public class CreateMaskFromSampleAction extends AbstractAction {
 
     private static final Logger log = LoggerFactory.getLogger(CreateMaskFromSampleAction.class);
+
+    private static final String IMPORT_STORAGE_DEFAULT_TAGS = ConsoleProperties.getString("console.importStorage.tags");
     
     private Sample sample;
     private ArtifactDescriptor resultDescriptor;
@@ -84,7 +92,7 @@ public class CreateMaskFromSampleAction extends AbstractAction {
             
             @Override
             protected void doStuff() throws Exception {
-                URL imageFileURL = FileMgr.getURL(imagePath);
+                URL imageFileURL = FileMgr.getFileMgr().getURL(imagePath, true);
                 this.image = Utils.readImage(imageFileURL);
             }
 
@@ -109,13 +117,44 @@ public class CreateMaskFromSampleAction extends AbstractAction {
             BufferedImage maskImage = maskCreationDialog.showForImage(image);
             log.debug("Got mask: "+maskImage);
 
-            // TODO: ask the user to specify using a thresholding algorithm
-            int maskThreshold = 50;
-            
-            AddMaskDialog addMaskDialog = new AddMaskDialog();
-            ColorDepthMask mask = addMaskDialog.showForMask(maskImage, alignment, imagePath, maskThreshold, sample);
-            log.debug("Got : "+mask);
-            
+            SimpleWorker worker = new SimpleWorker()     {
+
+                private String uploadPath;
+                
+                @Override
+                protected void doStuff() throws Exception {
+
+                    // Write the mask to disk temporarily
+                    // TODO: in the future, the uploader should support byte stream input
+                    File tempFile = File.createTempFile("mask", ".png");
+                    tempFile.deleteOnExit();
+                    ImageIO.write(maskImage, "png", tempFile);
+                    log.info("Wrote mask to temporary file: "+tempFile);
+                    
+                    // Upload the mask
+                    WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
+                    uploadPath = uploader.uploadFile("UserGeneratedMask", IMPORT_STORAGE_DEFAULT_TAGS, tempFile);
+                    log.debug("Uploaded mask to: "+uploadPath);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // TODO: ask the user to specify threshold in the mask creation step
+                    int maskThreshold = 50;
+                    
+                    AddMaskDialog addMaskDialog = new AddMaskDialog();
+                    ColorDepthMask mask = addMaskDialog.showForMask(maskImage, alignment, uploadPath, maskThreshold, sample);
+                    log.info("Got : "+mask);
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    ConsoleApp.handleException(error);
+                }
+            };
+
+            worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Uploading mask", ""));
+            worker.execute();
         }
         catch (Exception e) {
             FrameworkImplProvider.handleException(e);
