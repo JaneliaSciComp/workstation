@@ -40,8 +40,16 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
 
     boolean isSelectable=false;
 
-    public HorizontalDualSliderActor(AB2Renderer2D renderer, int actorId, Vector3 v0, Vector3 v1,
-                           Vector4 color, Vector4 hoverColor, Vector4 selectColor) {
+    public HorizontalDualSliderActor(AB2Renderer2D renderer,
+                                     int actorId,
+                                     int slider1Id,
+                                     int slider2id,
+                                     Vector3 v0,
+                                     Vector3 v1,
+                                     Vector4 backgroundColor,
+                                     Vector4 guideColor,
+                                     Vector4 sliderColor,
+                                     Vector4 sliderHoverColor) {
         super(renderer, actorId);
         this.renderer2d=renderer;
         this.v0=v0;
