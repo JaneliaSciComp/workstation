@@ -50,6 +50,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
@@ -1233,7 +1234,8 @@ public class TracingInteractor extends MouseAdapter
             if (future==null) 
                 return false;
             try {
-                Boolean ownershipDecision = future.get();
+                Boolean ownershipDecision = future.get(2, TimeUnit.SECONDS);
+                return ownershipDecision.booleanValue();
             } catch (Exception e) {
                 String errorMessage = "Problems handling roundtrip request for ownership of System-owned neuron";
                 log.error(errorMessage);
@@ -1244,7 +1246,7 @@ public class TracingInteractor extends MouseAdapter
                         "Failed to request neuron ownership",
                         JOptionPane.WARNING_MESSAGE);
             }
-            return true;
+            return false;
         }
         if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
             JOptionPane.showMessageDialog(
