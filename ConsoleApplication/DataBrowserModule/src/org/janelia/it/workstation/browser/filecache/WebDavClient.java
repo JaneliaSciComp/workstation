@@ -6,9 +6,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Paths;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
@@ -34,6 +37,7 @@ public class WebDavClient {
 
     private final String baseUrl;
     private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructs a client with default authentication credentials.
@@ -43,9 +47,10 @@ public class WebDavClient {
      * @throws IllegalArgumentException
      *   if the baseUrl cannot be parsed.
      */
-    public WebDavClient(String baseUrl, HttpClient httpClient) {
+    public WebDavClient(String baseUrl, HttpClient httpClient, ObjectMapper objectMapper) {
         this.baseUrl = validateUrl(baseUrl);
         this.httpClient = httpClient;
+        this.objectMapper = objectMapper;
     }
 
     private String validateUrl(String urlString) {
@@ -107,7 +112,7 @@ public class WebDavClient {
      * @throws WebDavException
      *   if the directory cannot be created or it already exists.
      */
-    String createDirectory(URL directoryUrl)
+    RemoteLocation createDirectory(URL directoryUrl)
             throws WebDavException {
         PutMethod method = null;
         Integer responseCode = null;
@@ -120,16 +125,14 @@ public class WebDavClient {
             if (responseCode != HttpServletResponse.SC_CREATED) {
                 throw new WebDavException(responseCode + " returned for PUT " + directoryUrl, responseCode);
             }
+            JsonNode jsonResponse = objectMapper.readTree(method.getResponseBodyAsStream());
             final Header locationHeader = method.getResponseHeader("Location");
-            if (locationHeader == null) {
-                return null;
+            String location = null;
+            if (locationHeader != null) {
+                location = locationHeader.getValue();
             }
-            String location = locationHeader.getValue();
-            if (StringUtils.isBlank(location)) {
-                return null;
-            } else {
-                return location;
-            }
+            String remoteFilePath = Paths.get(jsonResponse.get("rootPrefix").asText(), jsonResponse.get("nodeRelativePath").asText()).toString();
+            return new RemoteLocation(remoteFilePath, location);
         } catch (WebDavException e) {
             throw e;
         } catch (Exception e) {
@@ -153,7 +156,7 @@ public class WebDavClient {
      * @throws WebDavException
      *   if the save fails for any other reason.
      */
-    String saveFile(URL url, File file)
+    RemoteLocation saveFile(URL url, File file)
             throws IllegalArgumentException, WebDavException {
         InputStream fileStream;
         if (file == null) {
@@ -187,7 +190,7 @@ public class WebDavClient {
      * @throws WebDavException
      *   if the save fails for any reason.
      */
-    private String saveFile(URL url, InputStream fileStream)
+    private RemoteLocation saveFile(URL url, InputStream fileStream)
             throws WebDavException {
 
         PutMethod method = null;
@@ -204,16 +207,14 @@ public class WebDavClient {
                 throw new WebDavException(responseCode + " returned for PUT " + url,
                         responseCode);
             }
+            JsonNode jsonResponse = objectMapper.readTree(method.getResponseBodyAsStream());
             final Header locationHeader = method.getResponseHeader("Location");
-            if (locationHeader == null) {
-                return null;
+            String location = null;
+            if (locationHeader != null) {
+                location = locationHeader.getValue();
             }
-            String location = locationHeader.getValue();
-            if (StringUtils.isBlank(location)) {
-                return null;
-            } else {
-                return location;
-            }
+            String remoteFilePath = Paths.get(jsonResponse.get("rootPrefix").asText(), jsonResponse.get("nodeRelativePath").asText()).toString();
+            return new RemoteLocation(remoteFilePath, location);
         } catch (WebDavException e) {
             throw e;
         } catch (Exception e) {
@@ -266,15 +267,15 @@ public class WebDavClient {
         return multiStatusResponses;
     }
 
-    String createStorageFolder(String storageName, String storageTags) {
-        return createStorage(getCreateStorageURL(storageName, "DATA_DIRECTORY"), storageTags);
+    String createStorage(String storageName, String storageTags) {
+        return createStorageForResource(getCreateStorageURL(storageName, "DATA_DIRECTORY"), storageTags);
     }
 
     private String getCreateStorageURL(String storageName, String storageType) {
         return baseUrl + "/storage/" + storageName + "/format/" + storageType;
     }
 
-    private String createStorage(String resourceURI, String storageTags) {
+    private String createStorageForResource(String resourceURI, String storageTags) {
         MkColMethod method = null;
         Integer responseCode = null;
         try {

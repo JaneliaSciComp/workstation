@@ -45,6 +45,7 @@ import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
 import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.browser.filecache.RemoteLocation;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
@@ -453,9 +454,12 @@ public class ImportDialog extends ModalDialog {
 
         String uploadPath;
         if (selectedChildren == null) {
-            uploadPath = uploader.uploadFile(importTopLevelFolderName, IMPORT_STORAGE_DEFAULT_TAGS, selectedFile);
+            RemoteLocation uploadedFile = uploader.uploadFile(importTopLevelFolderName, IMPORT_STORAGE_DEFAULT_TAGS, selectedFile);
+            uploadPath = uploadedFile.getRemoteStorageURL();
         } else {
-            uploadPath = uploader.uploadFiles(importTopLevelFolderName, IMPORT_STORAGE_DEFAULT_TAGS, selectedChildren, selectedFile);
+            List<RemoteLocation> uploadedFiles = uploader.uploadFiles(importTopLevelFolderName, IMPORT_STORAGE_DEFAULT_TAGS, selectedChildren, selectedFile);
+            // all files should be uploaded to the same storage
+            uploadPath = uploadedFiles.stream().findFirst().map(rl -> rl.getRemoteStorageURL()).orElseThrow(() -> new IllegalStateException("Invalid upload state " + uploadedFiles));
         }
 
         ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
