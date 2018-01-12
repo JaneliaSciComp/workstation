@@ -128,6 +128,11 @@ public class AdminHistoryDialog extends ModalDialog implements BackgroundAnnotat
     public void neuronModelDeleted(TmNeuronMetadata neuron) {
        updateTable (neuron, MessageType.NEURON_DELETE);
     }
+
+    @Override
+    public void neuronOwnerChanged(TmNeuronMetadata neuron) {
+       updateTable (neuron, MessageType.NEURON_OWNERSHIP_DECISION);
+    }
     
     class NeuronHistoryTableModel extends AbstractTableModel {
         String[] columnNames = {"Sample",

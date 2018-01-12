@@ -2143,6 +2143,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
     
+    public void fireBackgroundNeuronOwnershipChanged(TmNeuronMetadata neuron) {
+        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
+            b.neuronOwnerChanged(neuron);
+        }
+    }
+    
     void fireNeuronCreated(TmNeuronMetadata neuron) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronCreated(neuron);

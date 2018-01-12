@@ -49,6 +49,7 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
@@ -1111,14 +1112,6 @@ public class TracingInteractor extends MouseAdapter
                 return false;
             }   
             
-            
-            if (!checkOwnership(defaultWorkspace.getNeuronForAnchor(hoveredVertex))) {
-                return false;
-            }
-            if (!checkOwnership(defaultWorkspace.getNeuronForAnchor(parentVertex))) {
-                return false;
-            }
-            
             final boolean doConfirmMerge = false;
             if (doConfirmMerge) {
                 Object[] options = {"Merge", "Cancel"};
@@ -1234,6 +1227,25 @@ public class TracingInteractor extends MouseAdapter
     }
     
      public boolean checkOwnership(NeuronModel neuron) {
+        // create a future to hopefully 
+        if (neuron.getOwnerKey().equals("group:mouselight")) {
+            CompletableFuture<Boolean> future = defaultWorkspace.changeNeuronOwnership(neuron.getNeuronId());
+            if (future==null) 
+                return false;
+            try {
+                Boolean ownershipDecision = future.get();
+            } catch (Exception e) {
+                String errorMessage = "Problems handling roundtrip request for ownership of System-owned neuron";
+                log.error(errorMessage);
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(
+                        volumeProjection.getMouseableComponent(),
+                        errorMessage,
+                        "Failed to request neuron ownership",
+                        JOptionPane.WARNING_MESSAGE);
+            }
+            return true;
+        }
         if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
             JOptionPane.showMessageDialog(
                     volumeProjection.getMouseableComponent(),

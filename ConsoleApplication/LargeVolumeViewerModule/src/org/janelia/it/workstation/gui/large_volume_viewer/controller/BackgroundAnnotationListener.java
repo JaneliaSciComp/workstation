@@ -11,5 +11,6 @@ public interface BackgroundAnnotationListener {
     void neuronModelChanged(TmNeuronMetadata neuron);
     void neuronModelCreated(TmNeuronMetadata neuron);
     void neuronModelDeleted(TmNeuronMetadata neuron);
+    public void neuronOwnerChanged(TmNeuronMetadata neuron);
 }
 

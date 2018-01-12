@@ -389,5 +389,10 @@ public class BasicNeuronModel implements NeuronModel
     public void setOwnerKey(String ownerKey) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public Long getNeuronId() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }

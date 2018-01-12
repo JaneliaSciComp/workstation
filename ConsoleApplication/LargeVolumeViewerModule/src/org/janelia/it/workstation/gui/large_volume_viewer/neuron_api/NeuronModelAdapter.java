@@ -610,6 +610,11 @@ public class NeuronModelAdapter implements NeuronModel
         this.ownerKey = ownerKey;
     }
 
+    @Override
+    public Long getNeuronId() {
+        return neuronId;
+    }
+
     // TODO: - implement Edges correctly
     private static class EdgeList 
     implements Collection<NeuronEdge>

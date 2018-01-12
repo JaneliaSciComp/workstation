@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
@@ -132,6 +133,17 @@ implements NeuronSet// , LookupListener
     @Override
     public void changeNeuronUserProperties (List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle) {
         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggle);
+    }
+    
+    @Override
+    public CompletableFuture<Boolean> changeNeuronOwnership (Long neuronId) {
+        try {
+            TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
+            return LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().getNeuronManager().requestOwnershipChange(neuron);
+        } catch (Exception error) {
+            ConsoleApp.handleException(error);
+        }
+        return null;
     }
     
     private void updateVoxToMicronMatrices(TmSample sample)
@@ -602,6 +614,11 @@ implements NeuronSet// , LookupListener
             innerList.removeFromCache(neuron.getId());
             getMembershipChangeObservable().setChanged();
             getMembershipChangeObservable().notifyObservers(neuronModel);
+        }
+
+        @Override
+        public void neuronOwnerChanged(TmNeuronMetadata neuron) {
+         
         }
         
     }

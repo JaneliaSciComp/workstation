@@ -277,5 +277,10 @@ public class PanelController {
         public void neuronModelDeleted(TmNeuronMetadata neuron) {
             wsNeuronList.deleteFromModel(neuron);
         }
+
+        @Override
+        public void neuronOwnerChanged(TmNeuronMetadata neuron) {
+          
+        }
     }
 }

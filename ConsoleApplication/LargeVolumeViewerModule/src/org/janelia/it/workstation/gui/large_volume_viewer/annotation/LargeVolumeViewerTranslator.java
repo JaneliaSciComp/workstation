@@ -665,4 +665,9 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         neuronDeleted(neuron);
     }
 
+    @Override
+    public void neuronOwnerChanged(TmNeuronMetadata neuron) {
+       
+    }
+
 }
