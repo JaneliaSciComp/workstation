@@ -2,40 +2,23 @@ package org.janelia.it.workstation.ab2.renderer;
 
 import java.awt.Point;
 import java.awt.event.MouseEvent;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedDeque;
 
-import javax.media.opengl.GL4;
 import javax.swing.SwingUtilities;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.OrthographicCamera;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Rotation;
-import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
-import org.janelia.geometry3d.Vector4;
-import org.janelia.geometry3d.Viewport;
 import org.janelia.geometry3d.camera.ConstRotation;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.controller.AB2UserContext;
 import org.janelia.it.workstation.ab2.controller.AB2View3DMode;
 import org.janelia.it.workstation.ab2.event.AB2Event;
-import org.janelia.it.workstation.ab2.event.AB2MouseDraggedEvent;
+import org.janelia.it.workstation.ab2.event.AB2MouseDragEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseWheelEvent;
-import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
-import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
-import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -247,8 +230,8 @@ public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3
     public void processEvent(AB2Event event) {
         super.processEvent(event);
         AB2UserContext userContext=controller.getUserContext();
-        if (event instanceof AB2MouseDraggedEvent) {
-            MouseEvent mouseEvent=((AB2MouseDraggedEvent) event).getMouseEvent();
+        if (event instanceof AB2MouseDragEvent) {
+            MouseEvent mouseEvent=((AB2MouseDragEvent) event).getMouseEvent();
             List<Point> points=userContext.getPositionHistory();
             if (points.size()>4) {
                 getFilteredStartEnd(points, 5);

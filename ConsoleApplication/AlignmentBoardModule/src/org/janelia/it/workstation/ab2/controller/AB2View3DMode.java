@@ -1,14 +1,6 @@
 package org.janelia.it.workstation.ab2.controller;
 
-import java.awt.Point;
-import java.awt.event.MouseEvent;
-
-import org.janelia.it.workstation.ab2.event.AB2MouseBeginDragEvent;
-import org.janelia.it.workstation.ab2.event.AB2MouseWheelEvent;
 import org.janelia.it.workstation.ab2.event.AB2Event;
-import org.janelia.it.workstation.ab2.event.AB2MouseDraggedEvent;
-import org.janelia.it.workstation.ab2.event.AB2MouseReleasedEvent;
-import org.janelia.it.workstation.ab2.renderer.AB2Renderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

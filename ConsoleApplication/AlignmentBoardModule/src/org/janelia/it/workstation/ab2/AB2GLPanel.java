@@ -16,7 +16,7 @@ import javax.media.opengl.awt.GLJPanel;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2AwtActionEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseClickedEvent;
-import org.janelia.it.workstation.ab2.event.AB2MouseDraggedEvent;
+import org.janelia.it.workstation.ab2.event.AB2MouseDragEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseEnteredEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseExitedEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseMovedEvent;
@@ -93,7 +93,7 @@ public class AB2GLPanel extends GLJPanel
 
     @Override
     public void mouseDragged(MouseEvent event) {
-        controller.processEvent(new AB2MouseDraggedEvent(event));
+        controller.processEvent(new AB2MouseDragEvent(event));
     }
 
     @Override
