@@ -10,13 +10,13 @@ import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.StreamSupport;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.commons.httpclient.HttpClient;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * {@link WebDavClient} manager.
@@ -31,18 +31,22 @@ public class WebDavClientMgr {
 
     private final HttpClient httpClient;
     private final WebDavClient masterWebDavInstance;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructs a client with default authentication credentials.
      *
-     * @param  httpClient             httpClient
-     *                                (e.g. /groups/...) to WebDAV URLs.
+     * @param  baseUrl base URL
+     * @param  httpClient http client
+     *
      * @throws IllegalArgumentException
      *   if the baseUrl cannot be parsed.
      */
     public WebDavClientMgr(String baseUrl, HttpClient httpClient) {
         this.httpClient = httpClient;
-        this.masterWebDavInstance = new WebDavClient(validateUrl(baseUrl), httpClient);
+        this.objectMapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.masterWebDavInstance = new WebDavClient(validateUrl(baseUrl), httpClient, objectMapper);
     }
 
     private String validateUrl(String urlString) {
@@ -76,7 +80,7 @@ public class WebDavClientMgr {
             String storageKey = storagePathPrefix.toString();
             return WEBDAV_AGENTS_CACHE.get(storageKey, () -> {
                 WebDavFile webDavFile = findWebDavFileStorage(storageKey);
-                return new WebDavClient(webDavFile.getRemoteFileUrl().toString(), httpClient);
+                return new WebDavClient(webDavFile.getRemoteFileUrl().toString(), httpClient, objectMapper);
             });
         } catch (ExecutionException e) {
             throw new IllegalStateException(e);
@@ -103,25 +107,27 @@ public class WebDavClientMgr {
         return webDavClient.findFile(remoteFileName);
     }
 
-    String createStorageFolder(String storageName, String storageTags) {
-        return masterWebDavInstance.createStorageFolder(storageName, storageTags);
+    String createStorage(String storageName, String storageTags) {
+        return masterWebDavInstance.createStorage(storageName, storageTags);
     }
 
-    String uploadFile(File file, String storageURL, String storageLocation) {
+    RemoteLocation uploadFile(File file, String storageURL, String storageLocation) {
         try {
             String uploadFileUrl = storageURL + "/file/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation);
-            String uploadedFileUrl = masterWebDavInstance.saveFile(new URL(uploadFileUrl), file);
-            return uploadedFileUrl == null ? storageURL : uploadedFileUrl;
+            RemoteLocation remoteFile = masterWebDavInstance.saveFile(new URL(uploadFileUrl), file);
+            remoteFile.setRemoteStorageURL(storageURL);
+            return remoteFile;
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }
     }
 
-    String createDirectory(String storageURL, String storageLocation) {
+    RemoteLocation createDirectory(String storageURL, String storageLocation) {
         try {
             String createDirUrl = storageURL + "/directory/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation);
-            String createdDirUrl = masterWebDavInstance.createDirectory(new URL(createDirUrl));
-            return createdDirUrl == null ? storageURL : createdDirUrl;
+            RemoteLocation remoteDirectory = masterWebDavInstance.createDirectory(new URL(createDirUrl));
+            remoteDirectory.setRemoteStorageURL(storageURL);
+            return remoteDirectory;
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }

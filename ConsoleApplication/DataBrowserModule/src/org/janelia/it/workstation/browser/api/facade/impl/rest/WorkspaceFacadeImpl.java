@@ -75,7 +75,6 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
         return response.readEntity(new GenericType<List<Workspace>>() {});
     }
 
-
     @Override
     public TreeNode create(TreeNode treeNode) throws Exception {
         DomainQuery query = new DomainQuery();

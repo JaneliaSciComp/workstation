@@ -46,11 +46,11 @@ public class WebDavUploader {
      * @throws WebDavException
      *   if the file cannot be uploaded.
      */
-    public String uploadFile(String storageName, String storageTags, File file) throws WebDavException {
-        String storageURL = webDavClientMgr.createStorageFolder(storageName, storageTags);
-        String uploadedFileURL = webDavClientMgr.uploadFile(file, storageURL, webDavClientMgr.urlEncodeComp(file.getName()));
-        LOG.info("uploaded {} to {} - {}", file, storageURL, uploadedFileURL);
-        return storageURL;
+    public RemoteLocation uploadFile(String storageName, String storageTags, File file) throws WebDavException {
+        String storageURL = webDavClientMgr.createStorage(storageName, storageTags);
+        RemoteLocation remoteFile = webDavClientMgr.uploadFile(file, storageURL, webDavClientMgr.urlEncodeComp(file.getName()));
+        LOG.info("uploaded {} to {} - {}", file, storageURL, remoteFile);
+        return remoteFile;
     }
 
     /**
@@ -68,7 +68,7 @@ public class WebDavUploader {
      *                             Specifiy null if the relative paths are not important AND
      *                             all file names are unique.
      *
-     * @return the server path for the parent directory of all uploaded files.
+     * @return the list of uploaded files.
      *
      * @throws IllegalArgumentException
      *   if the server paths cannot be derived or are not unique.
@@ -76,10 +76,10 @@ public class WebDavUploader {
      * @throws WebDavException
      *   if the files cannot be uploaded.
      */
-    public String uploadFiles(String storageName, String storageTags, List<File> fileList, File localRootDirectory)
+    public List<RemoteLocation> uploadFiles(String storageName, String storageTags, List<File> fileList, File localRootDirectory)
             throws IllegalArgumentException, WebDavException {
 
-        String storageURL = webDavClientMgr.createStorageFolder(storageName, storageTags);
+        String storageURL = webDavClientMgr.createStorage(storageName, storageTags);
 
         // need to go through the entire fileList and create the directory hierarchy
         // and then upload the file content
@@ -138,12 +138,13 @@ public class WebDavUploader {
                 .collect(Collectors.toSet());
 
         filePathHierarchy.forEach(fp -> webDavClientMgr.createDirectory(storageURL, localRootPath.relativize(fp).toString()));
-        fileList.stream()
+        List<RemoteLocation> remoteFileList = fileList.stream()
                 .filter(f -> f.isFile())
-                .forEach(f -> webDavClientMgr.uploadFile(f, storageURL, webDavClientMgr.urlEncodeComps(localRootPath.relativize(f.toPath()).toString())));
+                .map(f -> webDavClientMgr.uploadFile(f, storageURL, webDavClientMgr.urlEncodeComps(localRootPath.relativize(f.toPath()).toString())))
+                .collect(Collectors.toList());
 
         LOG.info("uploaded {} files to {}", fileList.size(), storageURL);
-        return storageURL;
+        return remoteFileList;
     }
 
 }
