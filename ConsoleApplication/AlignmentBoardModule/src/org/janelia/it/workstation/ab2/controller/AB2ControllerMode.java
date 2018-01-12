@@ -319,14 +319,14 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 if (!alreadySelected && pickObject.isSelectable()) {
                     userContext.addSelectObject(pickObject);
                     pickObject.setSelect();
-                    pickObject.processEvent(event);
                     controller.setNeedsRepaint(true);
-                } else {
+                } else if (alreadySelected){
                     // User has clicked on already-selected object, so we reverse and de-select
                     userContext.removeSelectObject(pickObject);
                     pickObject.releaseSelect();
                     controller.setNeedsRepaint(true);
                 }
+                pickObject.processEvent(event);
             }
         }
 
@@ -353,29 +353,13 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                         logger.info("Clicked check 6");
                         userContext.getSelectObjects().add(pickObject);
                         pickObject.setSelect();
-                        pickObject.processEvent(event);
-                        controller.setNeedsRepaint(true);
                         logger.info("Clicked check 7");
                     }
                 }
+                pickObject.processEvent(event);
+                controller.setNeedsRepaint(true);
             }
         }
-
-        // This design, of using the controller to lookup events based on actor id, is being
-        // deprecated in favor of each actor generating their own events by extending
-        // the setSelect() and setHover() methods, etc.
-
-//            logger.info("Pick at x="+mouseClickEvent.x+" y="+mouseClickEvent.y);
-//            int pickId=getPickIdAtXY(gl,mouseClickEvent.x, mouseClickEvent.y, true, true);
-//            logger.info("Pick id at x="+mouseClickEvent.x+" y="+mouseClickEvent.y+" is="+pickId);
-//            // Lookup event
-//            if (pickId>0) {
-//                AB2Event pickEvent = AB2Controller.getController().getPickEvent(pickId);
-//                if (pickEvent!=null) {
-//                    logger.info("Adding pickEvent type="+pickEvent.getClass().getName()+" to AB2Controller addEvent()");
-//                    AB2Controller.getController().processEvent(pickEvent);
-//                }
-//            }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////
         /// Move
@@ -397,11 +381,6 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             getRegionManager().reshape(drawable, 0, 0, controller.getGlWidth(), controller.getGlHeight());
             controller.setNeedsRepaint(true);
         }
-
-
-//        if (controller.needsRepaint()) {
-//            controller.repaint();
-//        }
 
     }
 

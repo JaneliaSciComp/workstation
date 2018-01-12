@@ -52,7 +52,10 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
             super.processEvent(event);
             if (event instanceof AB2MouseClickedEvent) {
                 if (!imageControlPanelRenderer.isOpen()) {
+                    logger.info("imageControlPanelRenderer is NOT open, therefore, sending event AB2ImageControlRequestOpenEvent");
                     renderer.processEvent(new AB2ImageControlRequestOpenEvent());
+                } else {
+                    logger.info("imageControlPanelRenderer is open, therefore disregarding click event on ImageControlBackground");
                 }
             }
         }
@@ -67,6 +70,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         public ImageControlOpenCloseActor(AB2ImageControlPanelRenderer renderer, int actorId, Vector3 v0, Vector3 v1,
                                           Vector4 foregroundColor, Vector4 backgroundColor, Vector4 hoverColor, Vector4 selectColor) {
             super(renderer, actorId, v0, v1, foregroundColor, backgroundColor, hoverColor, selectColor);
+            isHoverable=true;
         }
 
         @Override
