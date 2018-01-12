@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
  */
 public class WebDavClientMgr {
 
-    private static final int STORAGE_PATH_SUFFIX_COMPS_COUNT = 4;
     private static final int STORAGE_PATH_PREFIX_COMPS_COUNT = 2;
 
     private static final Cache<String, WebDavClient> WEBDAV_AGENTS_CACHE = CacheBuilder.newBuilder()
@@ -64,23 +63,13 @@ public class WebDavClientMgr {
         Path standardPath = Paths.get(standardPathName);
         int nPathComponents = standardPath.getNameCount();
         Path storagePathPrefix;
-        // This is just a very convoluted way to determine the storage prefix for mostly for caching purposes.
-        // The algorithm is to drop last 4 path components if the path is long enough or only consider the first 2 path components
-        if (nPathComponents <= STORAGE_PATH_SUFFIX_COMPS_COUNT) {
-            if (nPathComponents < STORAGE_PATH_PREFIX_COMPS_COUNT) {
-                storagePathPrefix = standardPath;
-            } else {
-                if (standardPath.getRoot() == null) {
-                    storagePathPrefix = standardPath.subpath(0, STORAGE_PATH_PREFIX_COMPS_COUNT);
-                } else {
-                    storagePathPrefix = standardPath.getRoot().resolve(standardPath.subpath(0, STORAGE_PATH_PREFIX_COMPS_COUNT));
-                }
-            }
+        if (nPathComponents < STORAGE_PATH_PREFIX_COMPS_COUNT) {
+            storagePathPrefix = standardPath;
         } else {
             if (standardPath.getRoot() == null) {
-                storagePathPrefix = standardPath.subpath(0, nPathComponents - STORAGE_PATH_SUFFIX_COMPS_COUNT);
+                storagePathPrefix = standardPath.subpath(0, STORAGE_PATH_PREFIX_COMPS_COUNT);
             } else {
-                storagePathPrefix = standardPath.getRoot().resolve(standardPath.subpath(0, nPathComponents - STORAGE_PATH_SUFFIX_COMPS_COUNT));
+                storagePathPrefix = standardPath.getRoot().resolve(standardPath.subpath(0, STORAGE_PATH_PREFIX_COMPS_COUNT));
             }
         }
         try {
