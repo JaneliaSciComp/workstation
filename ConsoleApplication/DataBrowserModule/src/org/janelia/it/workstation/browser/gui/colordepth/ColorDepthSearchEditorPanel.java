@@ -19,7 +19,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
 import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
@@ -32,7 +31,6 @@ import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
@@ -43,7 +41,6 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
-import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
@@ -66,7 +63,6 @@ import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
-import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
@@ -74,12 +70,10 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.sample.DataSet;
-import org.janelia.model.domain.workspace.TreeNode;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -639,26 +633,8 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
     private void executeSearch() {
 
-        StringBuilder maskFilepaths = new StringBuilder();
-        for (ColorDepthMask colorDepthMask : masks) {
-            if (maskFilepaths.length()>0) maskFilepaths.append(',');
-            maskFilepaths.append(colorDepthMask.getFilepath());
-        }
-        
-        StringBuilder searchDirs = new StringBuilder();
-        for (String dataSetIdentifier : search.getDataSets()) {
-            // TODO: search should take care of this
-            String filepath = "/nrs/jacs/jacsData/filestore/system/ColorDepthMIPs/"+search.getAlignmentSpace()+"/"+dataSetIdentifier;
-            if (searchDirs.length()>0) searchDirs.append(',');
-            searchDirs.append(filepath);
-        }
-        
-        ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
-                .add("-inputFiles", maskFilepaths.toString())
-                .add("-searchDirs", searchDirs.toString());
-        
-        Long serviceId = asyncServiceClient.invokeService("colorDepthSearch",
-                serviceArgsBuilder.build(),
+        Long serviceId = asyncServiceClient.invokeService("colorDepthObjectSearch",
+                ImmutableList.of("-searchId", search.getId().toString()),
                 FileMgr.getFileMgr().getSubjectKey(),
                 null,
                 ImmutableMap.of());
@@ -675,6 +651,9 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 return new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
+                        // Refresh and load the search which is completed
+                        ColorDepthSearch updatedSearch = DomainMgr.getDomainMgr().getModel().getDomainObject(search.getClass(), search.getId());
+                        loadDomainObject(updatedSearch, true, null);
                         return null;
                     }
                 };
