@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -31,6 +32,8 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
     protected IntBuffer pickFramebufferId;
     protected IntBuffer pickColorTextureId;
     protected IntBuffer pickDepthTextureId;
+
+    protected long mouseReleaseTimestampMs=0L;
 
     int[] drawBuffersTargets = new int[]{
             GL4.GL_COLOR_ATTACHMENT0
@@ -103,19 +106,28 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         boolean repaint=false;
 
         if (event instanceof AB2MouseReleasedEvent) {
+            //logger.info(">>> AB2MouseReleasedEvent");
+            mouseReleaseTimestampMs=new Date().getTime();
             if (userContext.isMouseIsDragging()) {
+                //logger.info(">>>   c1");
                 // NOTE: this hover object should only be non-null if the current drag objects are all
                 // acceptable to the actual hover object. Otherwise, the object should not be
                 // registered as the current hover object.
                 GLSelectable releaseObject = userContext.getHoverObject();
+                //logger.info(">>>   c2");
                 List<GLSelectable> dragObjects = userContext.getDragObjects();
+                //logger.info(">>>   c3");
                 AB2MouseDropEvent dropEvent = new AB2MouseDropEvent(((AB2MouseReleasedEvent) event).getMouseEvent(), dragObjects);
+                //logger.info(">>>   c4");
                 if (releaseObject!=null && dragObjects.size()>0) {
+                    //logger.info(">>>   c5");
                     releaseObject.processEvent(dropEvent);
-                    releaseObject.releaseHover();
                 }
+                //logger.info(">>>   c6");
                 userContext.clearDrag();
+                //logger.info(">>>   c7 - userContext isDragging()="+userContext.isMouseIsDragging());
             }
+            //logger.info(">>>   c8");
             repaint=true;
         }
         else if (event instanceof AB2MouseWheelEvent) {
@@ -185,6 +197,14 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         /// General state update
         /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        if (event instanceof AB2MouseDragEvent) {
+            long msSinceLastRelease=new Date().getTime()-mouseReleaseTimestampMs;
+            if (msSinceLastRelease<100) {
+                //logger.info(">>>>>>>>>>>>> DISREGARDING DRAG EVENT");
+                return;
+            }
+        }
+
         if (event instanceof AB2MouseEvent) {
             AB2MouseEvent ab2MouseEvent=(AB2MouseEvent)event;
             mouseEvent=ab2MouseEvent.getMouseEvent();
@@ -215,27 +235,35 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             }
 
             if (pickObject!=null) {
+                //logger.info("* 1");
                 if (!(pickObject==userContext.getHoverObject())) {
+                    //logger.info("* 2");
                     GLSelectable hoverObject = userContext.getHoverObject();
                     if (hoverObject != null) {
+                        //logger.info("* 3");
                         hoverObject.releaseHover();
                         userContext.setHoverObject(null);
                     }
                 }
+
+                boolean dragAcceptable=true;
+                //logger.info("* 4");
                 if (userContext.isMouseIsDragging()) {
+                    //logger.info("* 5");
                     if (pickObject.isHoverable()) {
-                        boolean dragAcceptable = checkDragAcceptability(pickObject, userContext.getDragObjects());
-                        if (dragAcceptable) {
-                            userContext.setHoverObject(pickObject);
-                            pickObject.setHover();
-                        }
-                    }
-                } else {
-                    if (pickObject.isHoverable()) {
-                        userContext.setHoverObject(pickObject);
-                        pickObject.setHover();
+                        //logger.info("* 6");
+                        dragAcceptable = checkDragAcceptability(pickObject, userContext.getDragObjects());
                     }
                 }
+                //logger.info("* 7");
+
+                if (dragAcceptable && pickObject.isHoverable()) {
+                    //logger.info("* 8");
+                    userContext.setHoverObject(pickObject);
+                    pickObject.setHover();
+                }
+                //logger.info("* 9");
+
                 controller.setNeedsRepaint(true);
             }
 
@@ -244,18 +272,18 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             boolean isHovered=userContext.getHoverObject()==pickObject;
             boolean isDragging=userContext.getDragObjects().contains(pickObject);
 
-            if (pickObject!=null) {
-                logger.info("PICK OBJECT=" + pickObject.getClass().getName());
-                logger.info("   - isSelectable()=" + pickObject.isSelectable());
-                logger.info("   - isHoverable()=" + pickObject.isHoverable());
-                logger.info("   - isDraggable()=" + pickObject.isDraggable());
-                logger.info("     - isSelected()=" + isSelected);
-                logger.info("     - isHovered()=" + isHovered);
-                logger.info("     - isDragging()=" + isDragging);
-                if (pickObject instanceof GLAbstractActor) {
-                    logger.info("     -isDisplay()=" + ((GLAbstractActor) pickObject).getDisplay());
-                }
-            }
+//            if (pickObject!=null) {
+//                logger.info("PICK OBJECT=" + pickObject.getClass().getName());
+//                logger.info("   - isSelectable()=" + pickObject.isSelectable());
+//                logger.info("   - isHoverable()=" + pickObject.isHoverable());
+//                logger.info("   - isDraggable()=" + pickObject.isDraggable());
+//                logger.info("     - isSelected()=" + isSelected);
+//                logger.info("     - isHovered()=" + isHovered);
+//                logger.info("     - isDragging()=" + isDragging);
+//                if (pickObject instanceof GLAbstractActor) {
+//                    logger.info("     -isDisplay()=" + ((GLAbstractActor) pickObject).getDisplay());
+//                }
+//            }
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -267,11 +295,11 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             //logger.info("DRAG check1");
             if (!userContext.isMouseIsDragging()) {
                 //logger.info("DRAG check2");
-                logger.info("Start of drag, selected objects=");
+                //logger.info("Start of drag, selected objects=");
                 List<GLSelectable> dragObjects = userContext.getSelectObjects();
-                for (GLSelectable s : dragObjects) {
-                    logger.info("  >object="+s.getClass().getName());
-                }
+//                for (GLSelectable s : dragObjects) {
+//                    logger.info("  >object="+s.getClass().getName());
+//                }
                 userContext.clearDrag();
                 userContext.setMouseIsDragging(true);
                 userContext.getPositionHistory().add(p1);
@@ -335,25 +363,25 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         /////////////////////////////////////////////////////////////////////////////////////////////////////
 
         else if (event instanceof AB2MouseClickedEvent) {
-            logger.info("Clicked check 1");
+            //logger.info("Clicked check 1");
             // Assume shift is not down
             if (pickObject != null) {
-                logger.info("Clicked check 2, pickObject="+pickObject.getClass().getName());
+                //logger.info("Clicked check 2, pickObject="+pickObject.getClass().getName());
                 // no matter what we want to remove all non-matching select objects since shift is up
                 boolean alreadySelected = userContext.getSelectObjects().contains(pickObject);
                 for (GLSelectable object : userContext.getSelectObjects()) {
                     object.releaseSelect();
                 }
-                logger.info("Clicked check 3");
+                //logger.info("Clicked check 3");
                 userContext.clearSelectObjects();
-                logger.info("Clicked check 4");
+                //logger.info("Clicked check 4");
                 if (!alreadySelected) {
-                    logger.info("Clicked check 5");
+                    //logger.info("Clicked check 5");
                     if (pickObject.isSelectable()) {
-                        logger.info("Clicked check 6");
+                        //logger.info("Clicked check 6");
                         userContext.getSelectObjects().add(pickObject);
                         pickObject.setSelect();
-                        logger.info("Clicked check 7");
+                        //logger.info("Clicked check 7");
                     }
                 }
                 pickObject.processEvent(event);

@@ -43,6 +43,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         public ImageControlBackgroundColorBoxActor(AB2ImageControlPanelRenderer renderer, int actorId, Vector3 v0, Vector3 v1,
                                                    Vector4 color, Vector4 hoverColor, Vector4 selectColor) {
             super(renderer, actorId, v0, v1, color, hoverColor, selectColor);
+            isHoverable=true;
         }
 
         @Override
@@ -52,16 +53,25 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
             super.processEvent(event);
             if (event instanceof AB2MouseClickedEvent) {
                 if (!imageControlPanelRenderer.isOpen()) {
-                    logger.info("imageControlPanelRenderer is NOT open, therefore, sending event AB2ImageControlRequestOpenEvent");
                     renderer.processEvent(new AB2ImageControlRequestOpenEvent());
-                } else {
-                    logger.info("imageControlPanelRenderer is open, therefore disregarding click event on ImageControlBackground");
                 }
             }
         }
 
         @Override
         public void setSelect() { } // do nothing
+
+        @Override
+        public void releaseHover() {
+            //logger.info(">>> RELEASE HOVER");
+            super.releaseHover();
+        }
+
+        @Override
+        public void setHover() {
+            //logger.info(">>> SET HOVER");
+            super.setHover();
+        }
 
     }
 
@@ -119,16 +129,16 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
     }
 
     public void setOpen(boolean isOpen) {
-        logger.info("setOpen()="+isOpen);
+        //logger.info("setOpen()="+isOpen);
         if (isOpen) {
-            logger.info("  -- opening, background hoverable=false");
+            //logger.info("  -- opening, background hoverable=false");
             backgroundPanel.setColor(AB2Properties.IMAGE_CONTROL_PANEL_COLOR);
             backgroundPanel.setHoverColor(AB2Properties.IMAGE_CONTROL_PANEL_COLOR);
             backgroundPanel.setHoverable(false);
             openCloseActor.setDisplay(true);
             openCloseActor.setOpen(false);
         } else {
-            logger.info("  -- closing, background hoverable=true");
+            //logger.info("  -- closing, background hoverable=true");
             backgroundPanel.setColor(AB2Properties.IMAGE_CONTROL_PANEL_COLOR);
             backgroundPanel.setHoverColor(AB2Properties.IMAGE_CONTROL_PANEL_HOVER_COLOR);
             backgroundPanel.setHoverable(true);

@@ -59,7 +59,9 @@ public class AB2SampleBottomRegion extends AB2SideRegion {
 
     @Override
     public void display(GLAutoDrawable drawable) {
-        imageControlPanelRenderer.setOpen(isOpen());
+        if (isOpen()!=imageControlPanelRenderer.isOpen()) {
+            imageControlPanelRenderer.setOpen(isOpen());
+        }
         super.display(drawable);
     }
 
