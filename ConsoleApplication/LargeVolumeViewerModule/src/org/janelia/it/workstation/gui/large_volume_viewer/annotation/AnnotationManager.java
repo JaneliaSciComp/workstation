@@ -31,6 +31,7 @@ import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleListenableFuture;
@@ -111,6 +112,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     //  at what seemed like a reasonable zoom level, and I experimented
     //  until the distance threshold seemed right
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
+    private static final String SYSTEM_OWNER = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
 
     public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi,
         LargeVolumeViewerTranslator lvvTranslator, TileServer tileServer) {
@@ -232,8 +234,18 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         addAnnotation(seed.getLocation(), seed.getParentGuid());
     }
     
-    public boolean checkOwnership(TmNeuronMetadata neuron) {
+    public boolean checkOwnership(TmNeuronMetadata neuron)  {
         if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
+            
+            // change owner asynchronously behind the scenes for now
+            if (neuron.getOwnerKey().equals(SYSTEM_OWNER)) {
+                try {
+                    annotationModel.getNeuronManager().requestOwnershipChange(neuron);
+                } catch (Exception error) {
+                    ConsoleApp.handleException(error);
+                }
+                return true;
+            }
             handleOwnershipChange(neuron);
             return false;
         }

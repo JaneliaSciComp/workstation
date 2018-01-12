@@ -48,6 +48,8 @@ extends Hideable, NonInteractable, UserVisible, UserToggleRadius
     Color getColor();
     void setColor(Color color);
     
+    Long getNeuronId();
+    
     String getOwnerKey();
     void setOwnerKey(String ownerKey);
     

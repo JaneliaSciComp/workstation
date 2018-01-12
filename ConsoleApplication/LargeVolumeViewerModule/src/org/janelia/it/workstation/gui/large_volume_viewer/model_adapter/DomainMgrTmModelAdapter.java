@@ -23,6 +23,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.rabbitmq.client.Channel;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
 import org.janelia.messaging.broker.sharedworkspace.MessageType;
 import org.janelia.messaging.client.ConnectionManager;
@@ -151,5 +152,11 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
     @Override
     public void asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {
         sendMessage (neuron, MessageType.NEURON_DELETE);
+    }
+    
+    @Override
+    public CompletableFuture<Boolean> requestOwnership(TmNeuronMetadata neuron) throws Exception {
+        sendMessage (neuron, MessageType.REQUEST_NEURON_OWNERSHIP);
+        return new CompletableFuture<Boolean>();
     }
 }
