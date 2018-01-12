@@ -9,7 +9,9 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.media.opengl.GL4;
@@ -43,8 +45,26 @@ public abstract class GLAbstractActor implements GLSelectable {
 
     public static GLAbstractActor getActorById(int actorId) { return actors.get(actorId); }
 
+    public static void registerAlternateIdForActor(GLAbstractActor actor, int alternateId) {
+        actors.put(alternateId, actor);
+    }
+
+    public static List<Integer> getAllIdsForActor(GLAbstractActor actor) {
+        List<Integer> keyList=new ArrayList<>();
+        for (Integer key : actors.keySet()) {
+            GLAbstractActor a=actors.get(key);
+            if (a==actor) {
+                keyList.add(key);
+            }
+        }
+        return keyList;
+    }
+
     public static void removeActor(GLAbstractActor actor) {
-        actors.remove(actor);
+        List<Integer> keyList=getAllIdsForActor(actor);
+        for (Integer k : keyList) {
+            actors.remove(k);
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////

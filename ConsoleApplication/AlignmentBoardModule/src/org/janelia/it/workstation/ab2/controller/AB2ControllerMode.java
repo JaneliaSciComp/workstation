@@ -223,6 +223,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             pickId=getPickIdAtXY(gl, x, y, true, true);
             if (pickId>0) {
                 pickActor = GLAbstractActor.getActorById(pickId);
+                event.setActorPickId(pickId);
             }
 
             // Need to update hover state
