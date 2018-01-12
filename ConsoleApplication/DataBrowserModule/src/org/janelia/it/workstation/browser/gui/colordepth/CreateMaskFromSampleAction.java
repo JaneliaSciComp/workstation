@@ -133,7 +133,7 @@ public class CreateMaskFromSampleAction extends AbstractAction {
                     
                     // Upload the mask
                     WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
-                    uploadPath = uploader.uploadFile("UserGeneratedMask", IMPORT_STORAGE_DEFAULT_TAGS, tempFile);
+                    uploadPath = uploader.uploadFile("UserGeneratedMask", IMPORT_STORAGE_DEFAULT_TAGS, tempFile).getRemoteFilePath();
                     log.debug("Uploaded mask to: "+uploadPath);
                 }
 
