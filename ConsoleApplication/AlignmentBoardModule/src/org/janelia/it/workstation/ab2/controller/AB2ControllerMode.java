@@ -245,15 +245,17 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             boolean isHovered=userContext.getHoverObject()==pickObject;
             boolean isDragging=userContext.getDragObjects().contains(pickObject);
 
-            logger.info("PICK OBJECT="+pickObject.getClass().getName());
-            logger.info("   - isSelectable()="+pickObject.isSelectable());
-            logger.info("   - isHoverable()="+pickObject.isHoverable());
-            logger.info("   - isDraggable()="+pickObject.isDraggable());
-            logger.info("     - isSelected()="+isSelected);
-            logger.info("     - isHovered()="+isHovered);
-            logger.info("     - isDragging()="+isDragging);
-            if (pickObject instanceof GLAbstractActor) {
-                logger.info("     -isDisplay()="+((GLAbstractActor)pickObject).getDisplay());
+            if (pickObject!=null) {
+                logger.info("PICK OBJECT=" + pickObject.getClass().getName());
+                logger.info("   - isSelectable()=" + pickObject.isSelectable());
+                logger.info("   - isHoverable()=" + pickObject.isHoverable());
+                logger.info("   - isDraggable()=" + pickObject.isDraggable());
+                logger.info("     - isSelected()=" + isSelected);
+                logger.info("     - isHovered()=" + isHovered);
+                logger.info("     - isDragging()=" + isDragging);
+                if (pickObject instanceof GLAbstractActor) {
+                    logger.info("     -isDisplay()=" + ((GLAbstractActor) pickObject).getDisplay());
+                }
             }
         }
 
