@@ -42,8 +42,6 @@ public class ColorBox2DActor extends GLAbstractActor {
 
     AB2Renderer2D renderer2d;
 
-    boolean isSelectable=false;
-
     public ColorBox2DActor(AB2Renderer2D renderer, int actorId, Vector3 v0, Vector3 v1,
                            Vector4 color, Vector4 hoverColor, Vector4 selectColor) {
         super(renderer, actorId);

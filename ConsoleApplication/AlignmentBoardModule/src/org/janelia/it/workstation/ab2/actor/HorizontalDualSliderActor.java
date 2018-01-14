@@ -7,6 +7,7 @@ import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
+import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer2D;
@@ -21,29 +22,47 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
 
     private final Logger logger = LoggerFactory.getLogger(HorizontalDualSliderActor.class);
 
+    private enum SliderSide { Left, Right };
+
+    int glWidth=1000;
+    int glHeight=1000;
+
     Vector3 v0;
     Vector3 v1;
 
-    IntBuffer vertexArrayId=IntBuffer.allocate(1);
-    IntBuffer vertexBufferId=IntBuffer.allocate(1);
-    FloatBuffer vertexFb;
+    int slider1Id=0;
+    int slider2Id=0;
 
-//    IntBuffer imageTextureId=IntBuffer.allocate(1);
-//    BufferedImage bufferedImage;
-//    float alpha;
+    Vector4 backgroundColor;
+    Vector4 guideColor;
+    Vector4 sliderColor;
+    Vector4 sliderHoverColor;
 
-    Vector4 color;
-    Vector4 hoverColor;
-    Vector4 selectColor;
+    float slider1Position=0.0f;
+    float slider2Position=1.0f;
+
+    IntBuffer backgroundVertexArrayId=IntBuffer.allocate(1);
+    IntBuffer backgroundVertexBufferId=IntBuffer.allocate(1);
+    FloatBuffer backgroundVertexFb;
+
+    IntBuffer guideVertexArrayId=IntBuffer.allocate(1);
+    IntBuffer guideVertexBufferId=IntBuffer.allocate(1);
+    FloatBuffer guideVertexFb;
+
+    IntBuffer slider1VertexArrayId=IntBuffer.allocate(1);
+    IntBuffer slider1VertexBufferId=IntBuffer.allocate(1);
+    FloatBuffer slider1VertexFb;
+
+    IntBuffer slider2VertexArrayId=IntBuffer.allocate(1);
+    IntBuffer slider2VertexBufferId=IntBuffer.allocate(1);
+    FloatBuffer slider2VertexFb;
 
     AB2Renderer2D renderer2d;
-
-    boolean isSelectable=false;
 
     public HorizontalDualSliderActor(AB2Renderer2D renderer,
                                      int actorId,
                                      int slider1Id,
-                                     int slider2id,
+                                     int slider2Id,
                                      Vector3 v0,
                                      Vector3 v1,
                                      Vector4 backgroundColor,
@@ -52,35 +71,24 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
                                      Vector4 sliderHoverColor) {
         super(renderer, actorId);
         this.renderer2d=renderer;
+        this.slider1Id=slider1Id;
+        this.slider2Id=slider2Id;
         this.v0=v0;
         this.v1=v1;
-        this.color=color;
-        this.hoverColor=hoverColor;
-        this.selectColor=selectColor;
+        this.backgroundColor=backgroundColor;
+        this.guideColor=guideColor;
+        this.sliderColor=sliderColor;
+        this.sliderHoverColor=sliderHoverColor;
+
+        registerAlternateIdForActor(this, slider1Id);
+        registerAlternateIdForActor(this, slider2Id);
     }
 
-    public Vector4 getColor() {
-        return color;
-    }
-
-    public void setColor(Vector4 color) {
-        this.color = color;
-    }
-
-    public Vector4 getHoverColor() {
-        return hoverColor;
-    }
-
-    public void setHoverColor(Vector4 hoverColor) {
-        this.hoverColor = hoverColor;
-    }
-
-    public Vector4 getSelectColor() {
-        return selectColor;
-    }
-
-    public void setSelectColor(Vector4 selectColor) {
-        this.selectColor = selectColor;
+    @Override
+    protected void glWindowResize(int width, int height) {
+        this.glWidth=width;
+        this.glHeight=height;
+        needsResize=true;
     }
 
     public void updateVertices(Vector3 v0, Vector3 v1) {
@@ -89,7 +97,36 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
         needsResize=true;
     }
 
-    private float[] computeVertexData() {
+    public void setSlider1Position(float p) {
+        if (p<0.0f) {
+            p=0.0f;
+        } else if (p>1.0f-0.0001f) {
+            p=1.0f-0.0001f;
+        }
+        if (p<slider2Position) {
+            slider1Position=p;
+        } else {
+            slider1Position=slider2Position-0.0001f;
+        }
+        needsResize=true;
+    }
+
+    public void setSlider2Position(float p) {
+        if (p<0.0001f) {
+            p=0.000f;
+        } else if (p>1.0f) {
+            p=1.0f;
+        }
+        if (p>slider1Position) {
+            slider2Position=p;
+        } else {
+            slider2Position=slider1Position+0.0001f;
+        }
+        needsResize=true;
+    }
+
+
+    private float[] computeBackgroundVertexData() {
         float[] vertexData = {
 
                 v0.get(0), v0.get(1), v0.get(2),    // lower left
@@ -103,96 +140,223 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
         return vertexData;
     }
 
+    private float[] computeGuideVertexData() {
+
+        float gh=(float)(1.0/(1.0*glHeight));
+        float gw=(float)((0.9*(v1.getX()-v0.getX()))/2.0);
+        float xC=(v1.getX()-v0.getX())/2.0f;
+        float yC=(v1.getY()-v0.getY())/2.0f;
+        float z=v0.get(2)+0.05f;
+
+        float[] vertexData = {
+
+                xC-gw, yC-gh, z,
+                xC+gw, yC-gh, z,
+                xC-gw, yC+gh, z,
+
+                xC+gw, yC-gh, z,
+                xC+gw, yC+gh, z,
+                xC-gw, yC+gh, z
+        };
+        return vertexData;
+    }
+
+    private float[] computeSliderVertexData(float p, SliderSide sliderSide) {
+
+        float sw=(float)(3.0/(1.0*glWidth));
+        float sh=(float)((0.9*(v1.getY()-v0.getY()))/2.0);
+        float xC=((v1.getX()-v0.getX())*p)+v0.getX();
+        float yC=(v1.getY()-v0.getY())/2.0f;
+        float z=v0.get(2)+0.1f;
+
+        if (sliderSide.equals(SliderSide.Left)) {
+            xC=xC-sw;
+        } else {
+            xC=xC+sw;
+        }
+
+        float[] vertexData = {
+
+                xC-sw, yC-sh, z,
+                xC+sw, yC-sh, z,
+                xC-sw, yC+sh, z,
+
+                xC+sw, yC-sh, z,
+                xC+sw, yC+sh, z,
+                xC-sw, yC+sh, z
+        };
+        return vertexData;
+    }
+
+
     @Override
     public boolean isTwoDimensional() { return true; }
 
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
 
-        //logger.info("init() called");
-
         if (shader instanceof AB2Basic2DShader) {
 
             AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
 
-            // This combines positional vertices interleaved with 2D texture coordinates. Note: z not used
-            // but necessary for shader compatibility.
-            float[] vertexData=computeVertexData();
+            float[] backgroundVertexData=computeBackgroundVertexData();
+            backgroundVertexFb=createGLFloatBuffer(backgroundVertexData);
+            gl.glGenVertexArrays(1, backgroundVertexArrayId);
+            gl.glBindVertexArray(backgroundVertexArrayId.get(0));
+            gl.glGenBuffers(1, backgroundVertexBufferId);
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, backgroundVertexBufferId.get(0));
+            gl.glBufferData(GL4.GL_ARRAY_BUFFER, backgroundVertexFb.capacity() * 4, backgroundVertexFb, GL4.GL_STATIC_DRAW);
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-            vertexFb=createGLFloatBuffer(vertexData);
+            float[] guideVertexData=computeBackgroundVertexData();
+            guideVertexFb=createGLFloatBuffer(guideVertexData);
+            gl.glGenVertexArrays(1, guideVertexArrayId);
+            gl.glBindVertexArray(guideVertexArrayId.get(0));
+            gl.glGenBuffers(1, guideVertexBufferId);
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, guideVertexBufferId.get(0));
+            gl.glBufferData(GL4.GL_ARRAY_BUFFER, guideVertexFb.capacity() * 4, guideVertexFb, GL4.GL_STATIC_DRAW);
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-            gl.glGenVertexArrays(1, vertexArrayId);
-            gl.glBindVertexArray(vertexArrayId.get(0));
-            gl.glGenBuffers(1, vertexBufferId);
-            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
-            gl.glBufferData(GL4.GL_ARRAY_BUFFER, vertexFb.capacity() * 4, vertexFb, GL4.GL_STATIC_DRAW);
+            float[] slider1VertexData=computeSliderVertexData(slider1Position, SliderSide.Left);
+            slider1VertexFb=createGLFloatBuffer(slider1VertexData);
+            gl.glGenVertexArrays(1, slider1VertexArrayId);
+            gl.glBindVertexArray(slider1VertexArrayId.get(0));
+            gl.glGenBuffers(1, slider1VertexBufferId);
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, slider1VertexBufferId.get(0));
+            gl.glBufferData(GL4.GL_ARRAY_BUFFER, slider1VertexFb.capacity() * 4, slider1VertexFb, GL4.GL_STATIC_DRAW);
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+
+            float[] slider2VertexData=computeSliderVertexData(slider2Position, SliderSide.Left);
+            slider2VertexFb=createGLFloatBuffer(slider2VertexData);
+            gl.glGenVertexArrays(1, slider2VertexArrayId);
+            gl.glBindVertexArray(slider2VertexArrayId.get(0));
+            gl.glGenBuffers(1, slider2VertexBufferId);
+            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, slider2VertexBufferId.get(0));
+            gl.glBufferData(GL4.GL_ARRAY_BUFFER, slider2VertexFb.capacity() * 4, slider2VertexFb, GL4.GL_STATIC_DRAW);
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
         }
 
     }
 
+    private void updateVertexBuffers(GL4 gl) {
+        float[] backgroundVertexData=computeBackgroundVertexData();
+        backgroundVertexFb=createGLFloatBuffer(backgroundVertexData);
+        gl.glBindVertexArray(backgroundVertexArrayId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, backgroundVertexBufferId.get(0));
+        gl.glBufferSubData(GL4.GL_ARRAY_BUFFER, 0, backgroundVertexFb.capacity() * 4, backgroundVertexFb);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+
+        float[] guideVertexData=computeBackgroundVertexData();
+        guideVertexFb=createGLFloatBuffer(guideVertexData);
+        gl.glBindVertexArray(guideVertexArrayId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, guideVertexBufferId.get(0));
+        gl.glBufferSubData(GL4.GL_ARRAY_BUFFER,0, guideVertexFb.capacity() * 4, guideVertexFb);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+
+        float[] slider1VertexData=computeSliderVertexData(slider1Position, SliderSide.Left);
+        slider1VertexFb=createGLFloatBuffer(slider1VertexData);
+        gl.glBindVertexArray(slider1VertexArrayId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, slider1VertexBufferId.get(0));
+        gl.glBufferSubData(GL4.GL_ARRAY_BUFFER,0, slider1VertexFb.capacity() * 4, slider1VertexFb);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+
+        float[] slider2VertexData=computeSliderVertexData(slider2Position, SliderSide.Left);
+        slider2VertexFb=createGLFloatBuffer(slider2VertexData);
+        gl.glBindVertexArray(slider2VertexArrayId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, slider2VertexBufferId.get(0));
+        gl.glBufferSubData(GL4.GL_ARRAY_BUFFER,0, slider2VertexFb.capacity() * 4, slider2VertexFb);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+    }
+
+    private void drawBackground(GL4 gl, AB2Basic2DShader shader) {
+        shader.setColor(gl, backgroundColor);
+        gl.glBindVertexArray(backgroundVertexArrayId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, backgroundVertexBufferId.get(0));
+        gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
+        gl.glEnableVertexAttribArray(0);
+        gl.glDrawArrays(GL4.GL_TRIANGLES, 0, backgroundVertexFb.capacity()/2);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+    }
+
+    private void drawGuide(GL4 gl, AB2Basic2DShader shader) {
+        shader.setColor(gl, guideColor);
+        gl.glBindVertexArray(guideVertexArrayId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, guideVertexBufferId.get(0));
+        gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
+        gl.glEnableVertexAttribArray(0);
+        gl.glDrawArrays(GL4.GL_TRIANGLES, 0, guideVertexFb.capacity()/2);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+    }
+
+    private void drawLeftSlider(GL4 gl, AB2Basic2DShader shader) {
+        shader.setColor(gl, sliderColor);
+        gl.glBindVertexArray(slider1VertexArrayId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, slider1VertexBufferId.get(0));
+        gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
+        gl.glEnableVertexAttribArray(0);
+        gl.glDrawArrays(GL4.GL_TRIANGLES, 0, slider1VertexFb.capacity()/2);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+    }
+
+    private void drawRightSlider(GL4 gl, AB2Basic2DShader shader) {
+        shader.setColor(gl, sliderColor);
+        gl.glBindVertexArray(slider2VertexArrayId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, slider2VertexBufferId.get(0));
+        gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
+        gl.glEnableVertexAttribArray(0);
+        gl.glDrawArrays(GL4.GL_TRIANGLES, 0, slider2VertexFb.capacity()/2);
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+    }
+
+
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
 
-        //logger.info("display() called");
-
         if (needsResize) {
-            float[] vertexData=computeVertexData();
-            vertexFb=createGLFloatBuffer(vertexData);
-            gl.glBindVertexArray(vertexArrayId.get(0));
-            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
-            gl.glBufferSubData(GL4.GL_ARRAY_BUFFER, 0, vertexFb.capacity() * 4, vertexFb);
-            gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+            updateVertexBuffers(gl);
             needsResize=false;
         }
 
         if (shader instanceof AB2Basic2DShader) {
             AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
             basic2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
-            //logger.info("display() actorId="+actorId);
-            if (isSelectable() && isSelected) {
-                basic2DShader.setColor(gl, selectColor);
-            }
-            else if (isHoverable() && isHovered) {
-                basic2DShader.setColor(gl, hoverColor);
-            }
-            else {
-                basic2DShader.setColor(gl, color);
-            }
+            drawBackground(gl, basic2DShader);
+            drawGuide(gl, basic2DShader);
+            drawLeftSlider(gl, basic2DShader);
+            drawRightSlider(gl, basic2DShader);
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
             pickShader.setMVP(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
-            pickShader.setPickId(gl, actorId);
+            pickBackground(gl, pickShader);
+            pickLeftSlider(gl, pickShader);
+            pickRightSlider(gl, pickShader);
         }
-
-        gl.glBindVertexArray(vertexArrayId.get(0));
-        checkGlError(gl, "d3 glBindVertexArray()");
-
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
-        checkGlError(gl, "d4 glBindBuffer()");
-
-        gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
-        checkGlError(gl, "d5 glVertexAttribPointer()");
-
-        gl.glEnableVertexAttribArray(0);
-        checkGlError(gl, "d6 glEnableVertexAttribArray()");
-
-        gl.glDrawArrays(GL4.GL_TRIANGLES, 0, vertexFb.capacity()/2);
-        checkGlError(gl, "d9 glDrawArrays()");
-
-        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
-        checkGlError(gl, "d10 glBindBuffer()");
-
     }
 
     @Override
     public void dispose(GL4 gl, GLShaderProgram shader) {
         if (shader instanceof AB2Basic2DShader) {
-            gl.glDeleteVertexArrays(1, vertexArrayId);
-            gl.glDeleteBuffers(1, vertexBufferId);
+            gl.glDeleteVertexArrays(1, backgroundVertexArrayId);
+            gl.glDeleteBuffers(1, backgroundVertexBufferId);
+
+            gl.glDeleteVertexArrays(1, guideVertexArrayId);
+            gl.glDeleteBuffers(1, guideVertexBufferId);
+
+            gl.glDeleteVertexArrays(1, slider1VertexArrayId);
+            gl.glDeleteBuffers(1, slider1VertexBufferId);
+
+            gl.glDeleteVertexArrays(1, slider2VertexArrayId);
+            gl.glDeleteBuffers(1, slider2VertexBufferId);
         }
         super.dispose(gl, shader);
     }
+
+    @Override
+    public void processEvent(AB2Event event) {
+        int pickId=event.getActorPickId();
+
+    }
+
 
 }

@@ -44,8 +44,6 @@ public class OpenCloseActor extends GLAbstractActor {
 
     boolean isOpen=false;
 
-    boolean isSelectable=false;
-
     public OpenCloseActor(AB2Renderer2D renderer, int actorId, Vector3 v0, Vector3 v1, Vector4 foregroundColor,
                            Vector4 backgroundColor, Vector4 hoverColor, Vector4 selectColor) {
         super(renderer, actorId);
