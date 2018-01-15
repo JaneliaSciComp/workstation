@@ -15,7 +15,7 @@ import org.janelia.it.workstation.ab2.view.AB2SampleMainRegion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class GLRegion implements GLSelectable {
+public abstract class GLRegion extends GLSelectable {
     Logger logger = LoggerFactory.getLogger(GLRegion.class);
 
     protected int x;
@@ -27,14 +27,6 @@ public abstract class GLRegion implements GLSelectable {
 
     protected int minimumWidth=0;
     protected int minimumWHeight=0;
-
-    protected boolean isSelectable=false;
-    protected boolean isHoverable=false;
-    protected boolean isDraggable=false;
-
-    protected boolean isSelected=false;
-    protected boolean isHovered=false;
-    protected boolean isDragging=false;
 
     protected List<AB2Renderer> renderers=new ArrayList<>();
 
@@ -108,56 +100,5 @@ public abstract class GLRegion implements GLSelectable {
     protected abstract void reshape(GLAutoDrawable drawable);
 
     public void processEvent(AB2Event event) {}
-
-    // SELECT
-
-    @Override
-    public boolean isSelectable() { return isSelectable; }
-
-    @Override
-    public void setSelectable(boolean isSelectable) { this.isSelectable=isSelectable; }
-
-    @Override
-    public void setSelect() { isSelected=true; }
-
-    @Override
-    public boolean isSelected() { return isSelected; }
-
-    @Override
-    public void releaseSelect() { isSelected=false; }
-
-    // HOVER
-
-    @Override
-    public boolean isHoverable() { return isHoverable; }
-
-    @Override
-    public void setHoverable(boolean isHoverable) { this.isHoverable=isHoverable; }
-
-    @Override
-    public void setHover() { isHovered=true; }
-
-    @Override
-    public boolean isHovered() { return isHovered; }
-
-    @Override
-    public void releaseHover() { isHovered=false; }
-
-    // DRAG
-
-    @Override
-    public boolean isDraggable() { return isDraggable; }
-
-    @Override
-    public void setDraggable(boolean isDraggable) { this.isDraggable=isDraggable; }
-
-    @Override
-    public void setDrag() { isDragging=true; }
-
-    @Override
-    public boolean isDragging() { return isDragging; }
-
-    @Override
-    public void releaseDrag() { isDragging=false; }
 
 }

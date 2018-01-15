@@ -1,13 +1,18 @@
 package org.janelia.it.workstation.ab2.actor;
 
+import java.awt.Point;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.List;
 
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
+import org.janelia.it.workstation.ab2.controller.AB2Controller;
+import org.janelia.it.workstation.ab2.controller.AB2UserContext;
 import org.janelia.it.workstation.ab2.event.AB2Event;
+import org.janelia.it.workstation.ab2.event.AB2MouseDragEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer2D;
@@ -269,8 +274,7 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
     }
 
-    private void drawBackground(GL4 gl, AB2Basic2DShader shader) {
-        shader.setColor(gl, backgroundColor);
+    private void drawBackground(GL4 gl) {
         gl.glBindVertexArray(backgroundVertexArrayId.get(0));
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, backgroundVertexBufferId.get(0));
         gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
@@ -279,8 +283,7 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
     }
 
-    private void drawGuide(GL4 gl, AB2Basic2DShader shader) {
-        shader.setColor(gl, guideColor);
+    private void drawGuide(GL4 gl) {
         gl.glBindVertexArray(guideVertexArrayId.get(0));
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, guideVertexBufferId.get(0));
         gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
@@ -289,8 +292,7 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
     }
 
-    private void drawLeftSlider(GL4 gl, AB2Basic2DShader shader) {
-        shader.setColor(gl, sliderColor);
+    private void drawLeftSlider(GL4 gl) {
         gl.glBindVertexArray(slider1VertexArrayId.get(0));
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, slider1VertexBufferId.get(0));
         gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
@@ -299,14 +301,26 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
     }
 
-    private void drawRightSlider(GL4 gl, AB2Basic2DShader shader) {
-        shader.setColor(gl, sliderColor);
+    private void drawRightSlider(GL4 gl) {
         gl.glBindVertexArray(slider2VertexArrayId.get(0));
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, slider2VertexBufferId.get(0));
         gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
         gl.glEnableVertexAttribArray(0);
         gl.glDrawArrays(GL4.GL_TRIANGLES, 0, slider2VertexFb.capacity()/2);
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+    }
+
+    private void pickBackground(GL4 gl, AB2PickShader shader) {
+        shader.setPickId(gl, actorId);
+        drawBackground(gl);
+    }
+
+    private void pickLeftSlider(GL4 gl, AB2PickShader shader) {
+        shader.setPickId(gl, slider1Id);
+    }
+
+    private void pickRightSlider(GL4 gl, AB2PickShader shader) {
+        shader.setPickId(gl, slider2Id);
     }
 
 
@@ -321,10 +335,27 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
         if (shader instanceof AB2Basic2DShader) {
             AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
             basic2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
-            drawBackground(gl, basic2DShader);
-            drawGuide(gl, basic2DShader);
-            drawLeftSlider(gl, basic2DShader);
-            drawRightSlider(gl, basic2DShader);
+
+            basic2DShader.setColor(gl, backgroundColor);
+            drawBackground(gl);
+
+            basic2DShader.setColor(gl, guideColor);
+            drawGuide(gl);
+
+            if (hoveredIds.contains(slider1Id) || draggingIds.contains(slider1Id)) {
+                basic2DShader.setColor(gl, sliderHoverColor);
+            } else {
+                basic2DShader.setColor(gl, sliderColor);
+            }
+            drawLeftSlider(gl);
+
+            if (hoveredIds.contains(slider2Id) || draggingIds.contains(slider2Id)) {
+                basic2DShader.setColor(gl, sliderHoverColor);
+            } else {
+                basic2DShader.setColor(gl, sliderColor);
+            }
+            drawRightSlider(gl);
+
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
             pickShader.setMVP(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
@@ -354,9 +385,31 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
 
     @Override
     public void processEvent(AB2Event event) {
-        int pickId=event.getActorPickId();
-
+        if (event instanceof AB2MouseDragEvent) {
+            AB2UserContext userContext=AB2Controller.getController().getUserContext();
+            List<Point> points=userContext.getPositionHistory();
+            if (points.size()>1) {
+                int maxIndex=points.size()-1;
+                Point p1=points.get(maxIndex);
+                Point p0=points.get(maxIndex-1);
+                if (draggingIds.contains(slider1Id)) {
+                    int xdiff=p1.x-p0.x;
+                    if (xdiff>0) {
+                        setSlider1Position(slider1Position+0.001f);
+                    } else {
+                        setSlider1Position(slider1Position-0.001f);
+                    }
+                }
+                else if (draggingIds.contains(slider2Id)) {
+                    int xdiff=p1.x-p0.x;
+                    if (xdiff>0) {
+                        setSlider2Position(slider2Position+0.001f);
+                    } else {
+                        setSlider2Position(slider2Position-0.001f);
+                    }
+                }
+            }
+        }
     }
-
 
 }
