@@ -123,6 +123,9 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                     //logger.info(">>>   c5");
                     releaseObject.processEvent(dropEvent);
                 }
+                for (GLSelectable dragObject : dragObjects) {
+                    dragObject.releaseAllDrag();
+                }
                 //logger.info(">>>   c6");
                 userContext.clearDrag();
                 //logger.info(">>>   c7 - userContext isDragging()="+userContext.isMouseIsDragging());
@@ -242,7 +245,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                     GLSelectable hoverObject = userContext.getHoverObject();
                     if (hoverObject != null) {
                         //logger.info("* 3");
-                        hoverObject.releaseHover();
+                        hoverObject.releaseAllHover();
                         userContext.setHoverObject(null);
                     }
                 }
@@ -261,7 +264,11 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 if (dragAcceptable && pickObject.isHoverable()) {
                     //logger.info("* 8");
                     userContext.setHoverObject(pickObject);
-                    pickObject.setHover();
+                    if (pickActor!=null) {
+                        pickObject.setHover(pickId);
+                    } else {
+                        pickObject.setHover();
+                    }
                 }
                 //logger.info("* 9");
 
@@ -306,15 +313,22 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 userContext.getPositionHistory().add(p1);
                 if (dragObjects != null && dragObjects.size() > 0) {
                     userContext.clearSelectObjects();
-                    List<GLSelectable> permittedDragObject=new ArrayList<>();
+                    List<GLSelectable> permittedDragObjects=new ArrayList<>();
                     for (GLSelectable dragObject : dragObjects) {
-                        dragObject.releaseSelect();
                         if (dragObject.isDraggable()) {
-                            dragObject.setDrag();
-                            permittedDragObject.add(dragObject);
+                            List<Integer> selectIds=dragObject.getSelectedIds();
+                            if (selectIds.size()>0) {
+                                List<Integer> draggingIds=dragObject.getDraggingIds();
+                                draggingIds.addAll(selectIds);
+                                selectIds.clear();
+                            } else {
+                                dragObject.setDrag();
+                                dragObject.releaseSelect();
+                            }
+                            permittedDragObjects.add(dragObject);
                         }
                     }
-                    userContext.addDragObjects(permittedDragObject);
+                    userContext.addDragObjects(permittedDragObjects);
                 }
                 else {
                     if (pickObject!=null) {
@@ -344,16 +358,29 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         else if (event instanceof AB2MouseClickedEvent && ((AB2MouseClickedEvent) event).getMouseEvent().isShiftDown()) {
             //logger.info("processDisplayEvent() , AB2MouseClickedEvent");
             if (pickObject != null) {
+
                 boolean alreadySelected=userContext.getSelectObjects().contains(pickObject);
-                if (!alreadySelected && pickObject.isSelectable()) {
-                    userContext.addSelectObject(pickObject);
-                    pickObject.setSelect();
-                    controller.setNeedsRepaint(true);
-                } else if (alreadySelected){
-                    // User has clicked on already-selected object, so we reverse and de-select
-                    userContext.removeSelectObject(pickObject);
-                    pickObject.releaseSelect();
-                    controller.setNeedsRepaint(true);
+                List<Integer> selectedIds=pickObject.getSelectedIds();
+
+                if (selectedIds.size()==0) {
+
+                    if (!alreadySelected && pickObject.isSelectable()) {
+                        userContext.addSelectObject(pickObject);
+                        pickObject.setSelect();
+                        controller.setNeedsRepaint(true);
+                    }
+                    else if (alreadySelected) {
+                        // User has clicked on already-selected object, so we reverse and de-select
+                        userContext.removeSelectObject(pickObject);
+                        pickObject.releaseSelect();
+                        controller.setNeedsRepaint(true);
+                    }
+
+                } else {
+
+
+
+
                 }
                 pickObject.processEvent(event);
             }
