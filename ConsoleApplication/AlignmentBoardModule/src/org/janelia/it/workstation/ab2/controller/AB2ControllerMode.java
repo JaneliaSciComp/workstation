@@ -254,7 +254,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 //logger.info("* 4");
                 if (userContext.isMouseIsDragging()) {
                     //logger.info("* 5");
-                    if (pickObject.isHoverable()) {
+                    if (pickObject.isHoverable(pickId)) {
                         //logger.info("* 6");
                         dragAcceptable = checkDragAcceptability(pickObject, userContext.getDragObjects());
                     }
@@ -315,17 +315,25 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                     userContext.clearSelectObjects();
                     List<GLSelectable> permittedDragObjects=new ArrayList<>();
                     for (GLSelectable dragObject : dragObjects) {
-                        if (dragObject.isDraggable()) {
-                            List<Integer> selectIds=dragObject.getSelectedIds();
-                            if (selectIds.size()>0) {
-                                List<Integer> draggingIds=dragObject.getDraggingIds();
-                                draggingIds.addAll(selectIds);
-                                selectIds.clear();
-                            } else {
+                        if (dragObject instanceof GLRegion) {
+                            if (dragObject.isDraggable()) {
                                 dragObject.setDrag();
                                 dragObject.releaseSelect();
+                                permittedDragObjects.add(dragObject);
                             }
-                            permittedDragObjects.add(dragObject);
+                        } else if (dragObject instanceof GLAbstractActor) {
+                            if (dragObject.getSelectedIds().size() > 0) {
+                                List<Integer> selectIds = dragObject.getSelectedIds();
+                                for (Integer selectId : selectIds) {
+                                    if (dragObject.isDraggable(selectId)) {
+                                        dragObject.setDrag(selectId);
+                                        dragObject.releaseSelect(selectId);
+                                    }
+                                }
+                            }
+                            if (dragObject.getDraggingIds().size()>0) {
+                                permittedDragObjects.add(dragObject);
+                            }
                         }
                     }
                     userContext.addDragObjects(permittedDragObjects);
@@ -360,29 +368,39 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             if (pickObject != null) {
 
                 boolean alreadySelected=userContext.getSelectObjects().contains(pickObject);
-                List<Integer> selectedIds=pickObject.getSelectedIds();
 
-                if (selectedIds.size()==0) {
+                if (pickObject instanceof GLRegion) {
 
-                    if (!alreadySelected && pickObject.isSelectable()) {
-                        userContext.addSelectObject(pickObject);
-                        pickObject.setSelect();
-                        controller.setNeedsRepaint(true);
-                    }
-                    else if (alreadySelected) {
-                        // User has clicked on already-selected object, so we reverse and de-select
+                    if (alreadySelected) {
                         userContext.removeSelectObject(pickObject);
                         pickObject.releaseSelect();
-                        controller.setNeedsRepaint(true);
+                    } else {
+                        userContext.addSelectObject(pickObject);
+                        pickObject.setSelect();
                     }
 
-                } else {
+                } else if (pickObject instanceof GLAbstractActor) {
 
+                    List<Integer> selectedIds = pickObject.getSelectedIds();
 
+                    if (selectedIds.contains(pickId)) {
+                        // already selected
+                        pickObject.releaseSelect(pickId);
+                        if (pickObject.getSelectedIds().size()==0) {
+                            userContext.removeSelectObject(pickObject);
+                        }
 
+                    } else {
+                        // not selected yet
+                        pickObject.setSelect(pickId);
+                        if (!alreadySelected) {
+                            userContext.addSelectObject(pickObject);
+                        }
+                    }
 
                 }
                 pickObject.processEvent(event);
+                controller.setNeedsRepaint(true);
             }
         }
 
@@ -391,26 +409,40 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
         /////////////////////////////////////////////////////////////////////////////////////////////////////
 
         else if (event instanceof AB2MouseClickedEvent) {
-            //logger.info("Clicked check 1");
-            // Assume shift is not down
+            //logger.info("processDisplayEvent() , AB2MouseClickedEvent");
             if (pickObject != null) {
-                //logger.info("Clicked check 2, pickObject="+pickObject.getClass().getName());
-                // no matter what we want to remove all non-matching select objects since shift is up
-                boolean alreadySelected = userContext.getSelectObjects().contains(pickObject);
-                for (GLSelectable object : userContext.getSelectObjects()) {
-                    object.releaseSelect();
-                }
-                //logger.info("Clicked check 3");
-                userContext.clearSelectObjects();
-                //logger.info("Clicked check 4");
-                if (!alreadySelected) {
-                    //logger.info("Clicked check 5");
-                    if (pickObject.isSelectable()) {
-                        //logger.info("Clicked check 6");
-                        userContext.getSelectObjects().add(pickObject);
+
+                boolean alreadySelected=userContext.getSelectObjects().contains(pickObject);
+
+                if (pickObject instanceof GLRegion) {
+
+                    pickObject.releaseAllSelect();
+
+                    if (!alreadySelected) {
+                        userContext.addSelectObject(pickObject);
                         pickObject.setSelect();
-                        //logger.info("Clicked check 7");
                     }
+
+                } else if (pickObject instanceof GLAbstractActor) {
+
+                    List<Integer> selectedIds = pickObject.getSelectedIds();
+
+                    boolean pickIdAlreadySelected=false;
+
+                    if (selectedIds.contains(pickId)) {
+                        pickIdAlreadySelected=true;
+                    }
+
+                    pickObject.releaseAllSelect();
+
+                    if (!pickIdAlreadySelected) {
+                        pickObject.setSelect(pickId);
+                    }
+
+                    if (!alreadySelected) {
+                        userContext.addSelectObject(pickObject);
+                    }
+
                 }
                 pickObject.processEvent(event);
                 controller.setNeedsRepaint(true);

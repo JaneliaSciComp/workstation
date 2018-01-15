@@ -30,13 +30,13 @@ again the same for setHoverable() and setDraggable().
 
 public abstract class GLSelectable implements AB2EventHandler {
 
-    protected boolean isSelectable=false;
-    protected boolean isHoverable=false;
-    protected boolean isDraggable=false;
+    private boolean isSelectable=false;
+    private boolean isHoverable=false;
+    private boolean isDraggable=false;
 
-    protected boolean isSelected=false;
-    protected boolean isHovered=false;
-    protected boolean isDragging=false;
+    private boolean isSelected=false;
+    private boolean isHovered=false;
+    private boolean isDragging=false;
 
     protected List<Integer> selectableIds=new ArrayList<>();
     protected List<Integer> selectedIds=new ArrayList<>();
@@ -51,9 +51,11 @@ public abstract class GLSelectable implements AB2EventHandler {
 
     public boolean isSelectable() { return isSelectable; }
 
-    public boolean isSelectable(int pickId) { return isSelectable; }
+    public boolean isSelectable(int pickId) { return selectableIds.contains(new Integer(pickId)); }
 
     public void setSelectable(boolean isSelectable) { this.isSelectable=isSelectable; }
+
+    public void setSelectable(int pickId) { this.selectableIds.add(pickId); }
 
     public void setSelect() { isSelected=true; }
 
@@ -73,7 +75,11 @@ public abstract class GLSelectable implements AB2EventHandler {
 
     public boolean isHoverable() { return isHoverable; }
 
+    public boolean isHoverable(int pickId) { return hoverableIds.contains(new Integer(pickId)); }
+
     public void setHoverable(boolean isHoverable) { this.isHoverable=isHoverable; }
+
+    public void setHoverable(int pickId) { this.hoverableIds.add(pickId); }
 
     public void setHover() { isHovered=true; }
 
@@ -93,7 +99,11 @@ public abstract class GLSelectable implements AB2EventHandler {
 
     public boolean isDraggable() { return isDraggable; }
 
+    public boolean isDraggable(int pickId) { return draggableIds.contains(new Integer(pickId)); }
+
     public void setDraggable(boolean isDraggable) { this.isDraggable=isDraggable; }
+
+    public void setDraggable(int pickId) { draggableIds.add(new Integer(pickId)); }
 
     public void setDrag() { isDragging=true; }
 

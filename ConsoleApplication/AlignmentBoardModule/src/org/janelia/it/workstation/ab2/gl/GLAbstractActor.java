@@ -243,6 +243,81 @@ public abstract class GLAbstractActor extends GLSelectable {
 
     public void processEvent(AB2Event event) {}
 
+    // SELECT
+
+    @Override
+    public boolean isSelectable() { return selectableIds.contains(actorId); }
+
+    @Override
+    public void setSelectable(boolean selectable) {
+        if (selectable) {
+            if (!selectableIds.contains(actorId)) { selectableIds.add(actorId); }
+        } else {
+            selectableIds.remove(new Integer(actorId));
+        }
+    }
+
+    @Override
+    public void setSelect() { if (!selectedIds.contains(actorId)) { selectedIds.add(actorId); } }
+
+    @Override
+    public boolean isSelected() {
+        return selectedIds.contains(new Integer(actorId));
+    }
+
+    @Override
+    public void releaseSelect() { selectedIds.remove(new Integer(actorId)); }
+
+    // HOVER
+
+    @Override
+    public boolean isHoverable() { return hoverableIds.contains(actorId); }
+
+    @Override
+    public void setHoverable(boolean hoverable) {
+        if (hoverable) {
+            if (!hoverableIds.contains(actorId)) { hoverableIds.add(actorId); }
+        } else {
+            hoverableIds.remove(new Integer(actorId));
+        }
+    }
+
+    @Override
+    public void setHover() { hoverId=actorId; }
+
+    @Override
+    public boolean isHovered() {
+        return hoverId==actorId;
+    }
+
+    @Override
+    public void releaseHover() { hoverId=0; }
+
+    // DRAG
+
+    @Override
+    public boolean isDraggable() { return draggableIds.contains(actorId); }
+
+    @Override
+    public void setDraggable(boolean draggable) {
+        if (draggable) {
+            if (!draggableIds.contains(actorId)) { draggableIds.add(actorId); }
+        } else {
+            draggableIds.remove(new Integer(actorId));
+        }
+    }
+
+    @Override
+    public void setDrag() { if (!draggingIds.contains(actorId)) { draggingIds.add(actorId); } }
+
+    @Override
+    public boolean isDragging() {
+        return draggingIds.contains(new Integer(actorId));
+    }
+
+    @Override
+    public void releaseDrag() { draggingIds.remove(new Integer(actorId)); }
+
 
 
 }

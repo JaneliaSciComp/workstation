@@ -278,10 +278,10 @@ public class OpenCloseActor extends GLAbstractActor {
             basic2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
 
             // First draw background
-            if (isSelectable() && isSelected) {
+            if (isSelectable() && isSelected()) {
                 basic2DShader.setColor(gl, selectColor);
             }
-            else if (isHoverable() && isHovered) {
+            else if (isHoverable() && isHovered()) {
                 basic2DShader.setColor(gl, hoverColor);
             }
             else {

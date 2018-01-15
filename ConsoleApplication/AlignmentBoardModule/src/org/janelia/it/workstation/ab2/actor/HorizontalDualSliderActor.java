@@ -342,14 +342,14 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
             basic2DShader.setColor(gl, guideColor);
             drawGuide(gl);
 
-            if (hoveredIds.contains(slider1Id) || draggingIds.contains(slider1Id)) {
+            if (hoverId==slider1Id || draggingIds.contains(slider1Id)) {
                 basic2DShader.setColor(gl, sliderHoverColor);
             } else {
                 basic2DShader.setColor(gl, sliderColor);
             }
             drawLeftSlider(gl);
 
-            if (hoveredIds.contains(slider2Id) || draggingIds.contains(slider2Id)) {
+            if (hoverId==slider2Id || draggingIds.contains(slider2Id)) {
                 basic2DShader.setColor(gl, sliderHoverColor);
             } else {
                 basic2DShader.setColor(gl, sliderColor);
