@@ -21,6 +21,8 @@ import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLRegionManager;
 import org.janelia.it.workstation.ab2.gl.GLSelectable;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
+import org.janelia.it.workstation.ab2.view.AB2SampleMainRegion;
+import org.janelia.it.workstation.ab2.view.AB2SampleRegionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -165,13 +167,6 @@ s at an unmarked pick location, then the drop coordinates are passed to the
         else if (event instanceof AB2RegionManagerResizeNeededEvent) {
             displayEventQueue.add(event);
             repaint=true;
-        } else {
-            // DEFAULT
-            GLSelectable hoverObject = userContext.getHoverObject();
-            if (hoverObject!=null) {
-                hoverObject.processEvent(event);
-                repaint = true;
-            }
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////

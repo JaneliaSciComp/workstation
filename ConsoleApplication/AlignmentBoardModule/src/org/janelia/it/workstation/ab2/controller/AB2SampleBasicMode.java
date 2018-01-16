@@ -5,12 +5,14 @@ import java.awt.Point;
 import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.workstation.ab2.event.AB2Event;
+import org.janelia.it.workstation.ab2.event.AB2Main3DRendererSetRangeEvent;
 import org.janelia.it.workstation.ab2.event.AB2Sample3DImageLoadedEvent;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLRegionManager;
 import org.janelia.it.workstation.ab2.loader.AB2Sample3DImageLoader;
 import org.janelia.it.workstation.ab2.renderer.AB2Main3DRenderer;
+import org.janelia.it.workstation.ab2.view.AB2SampleMainRegion;
 import org.janelia.it.workstation.ab2.view.AB2SampleRegionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +82,11 @@ public class AB2SampleBasicMode extends AB2View3DMode {
             sampleRenderer.addSample3DImage(sample3DImageLoadedEvent.getData());
             sample3DImageLoadedEvent.clearData();
             logger.info("calling controller.repaint after sampleRenderer.addSample3DImage");
+            controller.setNeedsRepaint(true);
+        } else if (event instanceof AB2Main3DRendererSetRangeEvent) {
+            AB2SampleRegionManager regionManager=(AB2SampleRegionManager)getRegionManager();
+            AB2SampleMainRegion mainRegion=regionManager.getMainRegion();
+            mainRegion.processEvent(event);
             controller.setNeedsRepaint(true);
         }
     }

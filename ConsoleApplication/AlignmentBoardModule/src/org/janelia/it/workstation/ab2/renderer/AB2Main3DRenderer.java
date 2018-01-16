@@ -164,7 +164,7 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
 
         clearVoxel3DActor();
         resetView();
-        Voxel3DActor v=new Voxel3DActor(this, getNextActorIndex(), 0.05f, data, true);
+        Voxel3DActor v=new Voxel3DActor(this, getNextActorIndex(), 0.02f, data, true);
         addVoxel3DActor(v);
     }
 
@@ -294,7 +294,10 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
         super.processEvent(event);
         if (event instanceof AB2Main3DRendererSetRangeEvent) {
             AB2Main3DRendererSetRangeEvent rangeEvent = (AB2Main3DRendererSetRangeEvent) event;
-            voxel3DActor.setIntensityRange(rangeEvent.getR0(), rangeEvent.getR1());
+            logger.info("voxel3DActor.setIntensityRange r0="+rangeEvent.getR0()+" r1="+rangeEvent.getR1());
+            if (voxel3DActor!=null) {
+                voxel3DActor.setIntensityRange(rangeEvent.getR0(), rangeEvent.getR1());
+            }
         }
     }
 

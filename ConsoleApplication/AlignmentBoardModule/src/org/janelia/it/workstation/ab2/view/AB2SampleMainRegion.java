@@ -43,6 +43,7 @@ public class AB2SampleMainRegion extends GLRegion {
 
     @Override
     public void processEvent(AB2Event event) {
+        //logger.info("received event type="+event.getClass().getName());
         main3DRenderer.processEvent(event);
     }
 

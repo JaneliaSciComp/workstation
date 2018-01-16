@@ -42,7 +42,7 @@ public class Voxel3DActor extends GLAbstractActor {
     float intensityRange1=1.0f;
 
     public void setIntensityRange(float intensityRange0, float intensityRange1) {
-        logger.info("setIntensityRange r0="+intensityRange0+" r1="+intensityRange1);
+        //logger.info("setIntensityRange r0="+intensityRange0+" r1="+intensityRange1);
         this.intensityRange0 = intensityRange0;
         this.intensityRange1 = intensityRange1;
     }
@@ -247,7 +247,7 @@ public class Voxel3DActor extends GLAbstractActor {
             }
             voxel3DShader.setDimXYZ(gl, dimX, dimY, dimZ);
             voxel3DShader.setGLBoundsXY(gl, xyBounds[0], xyBounds[1], xyBounds[2], xyBounds[3]);
-            logger.info("display() r0="+intensityRange0+" , r1="+intensityRange1);
+            //logger.info("display() r0="+intensityRange0+" , r1="+intensityRange1);
             voxel3DShader.setIntensityRange(gl, new Vector2(intensityRange0, intensityRange1));
             int dimMax=getMaxDim();
             float voxelUnitSize=1f/(1f*dimMax);

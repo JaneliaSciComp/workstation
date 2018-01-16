@@ -15,6 +15,7 @@ import org.janelia.it.workstation.ab2.event.AB2ImageControlRequestCloseEvent;
 import org.janelia.it.workstation.ab2.event.AB2ImageControlRequestOpenEvent;
 import org.janelia.it.workstation.ab2.event.AB2Main3DRendererSetRangeEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseClickedEvent;
+import org.janelia.it.workstation.ab2.event.AB2MouseDragEvent;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
@@ -123,8 +124,13 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
 
         @Override
         public void processEvent(AB2Event event) {
+            //logger.info("ImageControlRangeSlider processEvent() start");
             super.processEvent(event);
-            AB2Controller.getController().processEvent(new AB2Main3DRendererSetRangeEvent(getSlider1Position(), getSlider2Position()));
+            //logger.info("ImageControlRangeSlider processEvent() check1");
+            if (event instanceof AB2MouseDragEvent) {
+                AB2Controller.getController().processEvent(new AB2Main3DRendererSetRangeEvent(getSlider1Position(), getSlider2Position()));
+            }
+            //logger.info("ImageControlRangeSlider processEvent() check2");
         }
 
     }
