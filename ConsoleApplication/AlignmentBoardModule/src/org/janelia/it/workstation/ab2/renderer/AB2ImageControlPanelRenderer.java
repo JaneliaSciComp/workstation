@@ -47,6 +47,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
                                                    Vector4 color, Vector4 hoverColor, Vector4 selectColor) {
             super(renderer, actorId, v0, v1, color, hoverColor, selectColor);
             setHoverable(true);
+            logger.info(" --*-- actorId="+actorId);
         }
 
         @Override

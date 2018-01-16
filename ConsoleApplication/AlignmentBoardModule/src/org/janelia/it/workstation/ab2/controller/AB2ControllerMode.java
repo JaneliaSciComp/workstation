@@ -101,7 +101,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
     // NOTE: if an even needs access to the pick framebuffer, it should be forwarded to the display event queue.
 
     public void processEvent(AB2Event event) {
-        //logger.info("processEvent() entry, type="+event.getClass().getName());
+        logger.info("processEvent() entry, type="+event.getClass().getName());
         AB2UserContext userContext = AB2Controller.getController().getUserContext();
         boolean repaint=false;
 
@@ -318,6 +318,19 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 //logger.info("DRAG check2");
                 //logger.info("Start of drag, selected objects=");
                 List<GLSelectable> dragObjects = userContext.getSelectObjects();
+                if (!dragObjects.contains(userContext.getHoverObject())) {
+                    GLSelectable hoverObject=userContext.getHoverObject();
+                    if (hoverObject instanceof GLRegion) {
+                        if (hoverObject.isDraggable()) {
+                            dragObjects.add(hoverObject);
+                        }
+                    } else if (hoverObject instanceof GLAbstractActor) {
+                        if (hoverObject.isDraggable(pickId)) {
+                            hoverObject.setDrag(pickId);
+                            dragObjects.add(hoverObject);
+                        }
+                    }
+                }
 //                for (GLSelectable s : dragObjects) {
 //                    logger.info("  >object="+s.getClass().getName());
 //                }
@@ -440,25 +453,42 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
                     List<Integer> selectedIds = pickObject.getSelectedIds();
 
+                    logger.info("considering adding click id="+pickId);
+
                     boolean pickIdAlreadySelected=false;
 
                     if (selectedIds.contains(pickId)) {
+                        logger.info(">>> check1");
                         pickIdAlreadySelected=true;
                     }
 
+                    logger.info(">>> check2");
+
                     if (pickObject.isSelectable(pickId)) {
+
+                        logger.info(">>> check3");
 
                         pickObject.releaseAllSelect();
 
                         if (!pickIdAlreadySelected) {
+
+                            logger.info(">>> check4");
+
                             pickObject.setSelect(pickId);
                         }
 
                         if (!alreadySelected) {
+
+                            logger.info(">>> check5");
+
                             userContext.addSelectObject(pickObject);
                         }
 
+                        logger.info(">>> check6");
+
                     }
+
+                    logger.info(">>> check7");
 
                 }
                 pickObject.processEvent(event);

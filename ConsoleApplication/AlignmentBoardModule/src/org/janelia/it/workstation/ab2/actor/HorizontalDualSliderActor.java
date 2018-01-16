@@ -86,6 +86,8 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
         this.sliderColor=sliderColor;
         this.sliderHoverColor=sliderHoverColor;
 
+        logger.info("-- actorId="+actorId+" slider1="+slider1Id+" slider2="+slider2Id);
+
         registerAlternateIdForActor(this, slider1Id);
         registerAlternateIdForActor(this, slider2Id);
     }
@@ -173,7 +175,7 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
 
     private float[] computeSliderVertexData(float p, SliderSide sliderSide) {
 
-        float sw=(float)(3.0/(1.0*glWidth));
+        float sw=(float)(10.0/(1.0*glWidth));
         float sh=(float)((0.9*(v1.getY()-v0.getY()))/2.0);
         float xC=((v1.getX()-v0.getX())*p*0.9f)+v0.getX()+(v1.getX()-v0.getX())*0.05f;
         float yC=(v1.getY()+v0.getY())/2.0f;
@@ -393,13 +395,17 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
     @Override
     public void processEvent(AB2Event event) {
         if (event instanceof AB2MouseDragEvent) {
+            logger.info("processEvent() received event="+event.getClass().getName());
             AB2UserContext userContext=AB2Controller.getController().getUserContext();
             List<Point> points=userContext.getPositionHistory();
             if (points.size()>1) {
+                logger.info("check 0.5");
                 int maxIndex=points.size()-1;
                 Point p1=points.get(maxIndex);
                 Point p0=points.get(maxIndex-1);
+                logger.info("check 0.55");
                 if (draggingIds.contains(slider1Id)) {
+                    logger.info("check1");
                     int xdiff=p1.x-p0.x;
                     if (xdiff>0) {
                         setSlider1Position(slider1Position+0.001f);
@@ -408,6 +414,7 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
                     }
                 }
                 else if (draggingIds.contains(slider2Id)) {
+                    logger.info("check2");
                     int xdiff=p1.x-p0.x;
                     if (xdiff>0) {
                         setSlider2Position(slider2Position+0.001f);
@@ -415,6 +422,8 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
                         setSlider2Position(slider2Position-0.001f);
                     }
                 }
+            } else {
+                logger.info("check 0.6");
             }
         }
     }
