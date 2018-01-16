@@ -165,6 +165,13 @@ s at an unmarked pick location, then the drop coordinates are passed to the
         else if (event instanceof AB2RegionManagerResizeNeededEvent) {
             displayEventQueue.add(event);
             repaint=true;
+        } else {
+            // DEFAULT
+            GLSelectable hoverObject = userContext.getHoverObject();
+            if (hoverObject!=null) {
+                hoverObject.processEvent(event);
+                repaint = true;
+            }
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////

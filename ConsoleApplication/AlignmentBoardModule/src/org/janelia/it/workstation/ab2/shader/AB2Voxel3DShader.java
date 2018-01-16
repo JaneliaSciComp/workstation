@@ -3,6 +3,7 @@ package org.janelia.it.workstation.ab2.shader;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Vector2;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
@@ -43,5 +44,11 @@ public class AB2Voxel3DShader extends GLShaderProgram {
         setUniform4i(gl, "xyBounds", x0, y0, x1, y1);
         checkGlError(gl, "AB2Voxel3DShader setGLBoundsXY() error");
     }
+
+    public void setIntensityRange(GL4 gl, Vector2 range) {
+        setUniform2fv(gl, "irange", 1, range.toArray());
+        checkGlError(gl, "AB2Voxel3DShader setIntensityRange() error");
+    }
+
 }
 

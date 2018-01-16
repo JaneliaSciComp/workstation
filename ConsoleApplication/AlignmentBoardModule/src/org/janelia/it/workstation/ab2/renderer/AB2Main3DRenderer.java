@@ -20,6 +20,10 @@ import org.janelia.it.workstation.ab2.actor.Image3DActor;
 import org.janelia.it.workstation.ab2.actor.PointSetActor;
 import org.janelia.it.workstation.ab2.actor.Voxel3DActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
+import org.janelia.it.workstation.ab2.controller.AB2UserContext;
+import org.janelia.it.workstation.ab2.event.AB2Event;
+import org.janelia.it.workstation.ab2.event.AB2Main3DRendererSetRangeEvent;
+import org.janelia.it.workstation.ab2.event.AB2MouseDragEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
@@ -283,6 +287,15 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
         setVoxel3DActorPostProjectionMatrix(getOffsetPostProjectionMatrix(parameters[0], parameters[1], parameters[2]));
         int[] xyBounds = getXYBounds(x, y, width, height);
         setVoxel3DxyBounds(xyBounds[0], xyBounds[1], xyBounds[2], xyBounds[3]);
+    }
+
+    @Override
+    public void processEvent(AB2Event event) {
+        super.processEvent(event);
+        if (event instanceof AB2Main3DRendererSetRangeEvent) {
+            AB2Main3DRendererSetRangeEvent rangeEvent = (AB2Main3DRendererSetRangeEvent) event;
+            voxel3DActor.setIntensityRange(rangeEvent.getR0(), rangeEvent.getR1());
+        }
     }
 
 }

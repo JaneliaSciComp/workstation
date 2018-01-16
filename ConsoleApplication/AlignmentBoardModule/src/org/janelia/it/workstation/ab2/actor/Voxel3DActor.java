@@ -9,6 +9,7 @@ import java.util.List;
 import javax.media.opengl.GL4;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Vector2;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
@@ -36,6 +37,15 @@ public class Voxel3DActor extends GLAbstractActor {
 
     ShortBuffer vertexFb;
     ByteBuffer colorFb;
+
+    float intensityRange0=0.0f;
+    float intensityRange1=1.0f;
+
+    public void setIntensityRange(float intensityRange0, float intensityRange1) {
+        logger.info("setIntensityRange r0="+intensityRange0+" r1="+intensityRange1);
+        this.intensityRange0 = intensityRange0;
+        this.intensityRange1 = intensityRange1;
+    }
 
     public void setXYBounds(int x0, int y0, int x1, int y1) {
         xyBounds[0]=x0;
@@ -205,6 +215,10 @@ public class Voxel3DActor extends GLAbstractActor {
 
     }
 
+    private void resetIntensityRange() {
+
+    }
+
     @Override
     public void display(GL4 gl, GLShaderProgram shader) {
 
@@ -233,6 +247,8 @@ public class Voxel3DActor extends GLAbstractActor {
             }
             voxel3DShader.setDimXYZ(gl, dimX, dimY, dimZ);
             voxel3DShader.setGLBoundsXY(gl, xyBounds[0], xyBounds[1], xyBounds[2], xyBounds[3]);
+            logger.info("display() r0="+intensityRange0+" , r1="+intensityRange1);
+            voxel3DShader.setIntensityRange(gl, new Vector2(intensityRange0, intensityRange1));
             int dimMax=getMaxDim();
             float voxelUnitSize=1f/(1f*dimMax);
             voxel3DShader.setVoxelSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));

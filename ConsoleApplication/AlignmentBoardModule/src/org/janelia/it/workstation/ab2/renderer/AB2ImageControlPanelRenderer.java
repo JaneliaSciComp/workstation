@@ -13,6 +13,7 @@ import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2ImageControlRequestCloseEvent;
 import org.janelia.it.workstation.ab2.event.AB2ImageControlRequestOpenEvent;
+import org.janelia.it.workstation.ab2.event.AB2Main3DRendererSetRangeEvent;
 import org.janelia.it.workstation.ab2.event.AB2MouseClickedEvent;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
@@ -27,7 +28,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
 
     private ImageControlBackgroundColorBoxActor backgroundPanel;
     private OpenCloseActor openCloseActor;
-    private HorizontalDualSliderActor rangeSlider;
+    private ImageControlRangeSlider rangeSlider;
 
     private GLShaderActionSequence panelDrawSequence;
     private GLShaderActionSequence panelPickSequence;
@@ -102,6 +103,29 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
 
         @Override
         public void setSelect() { } // do nothing
+
+    }
+
+    private class ImageControlRangeSlider extends HorizontalDualSliderActor {
+
+        public ImageControlRangeSlider(AB2Renderer2D renderer,
+                                       int actorId,
+                                       int slider1Id,
+                                       int slider2Id,
+                                       Vector3 v0,
+                                       Vector3 v1,
+                                       Vector4 backgroundColor,
+                                       Vector4 guideColor,
+                                       Vector4 sliderColor,
+                                       Vector4 sliderHoverColor) {
+            super(renderer, actorId, slider1Id, slider2Id, v0, v1, backgroundColor, guideColor, sliderColor, sliderHoverColor);
+        }
+
+        @Override
+        public void processEvent(AB2Event event) {
+            super.processEvent(event);
+            AB2Controller.getController().processEvent(new AB2Main3DRendererSetRangeEvent(getSlider1Position(), getSlider2Position()));
+        }
 
     }
 
@@ -224,7 +248,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         Vector3[] rangeSliderVertices=getRangeSliderVertices(x, y, width, height, screenWidth, screenHeight);
 
         AB2Controller controller=AB2Controller.getController();
-        rangeSlider = new HorizontalDualSliderActor(this, controller.getNextPickIndex(), controller.getNextPickIndex(),
+        rangeSlider = new ImageControlRangeSlider(this, controller.getNextPickIndex(), controller.getNextPickIndex(),
                 controller.getNextPickIndex(), rangeSliderVertices[0], rangeSliderVertices[1], AB2Properties.IMAGE_CONTROL_RANGE_SLIDER_BACKGROUND_COLOR,
                 AB2Properties.IMAGE_CONTROL_RANGE_SLIDER_GUIDE_COLOR, AB2Properties.IMAGE_CONTROL_RANGE_SLIDER_SLIDER_COLOR,
                 AB2Properties.IMAGE_CONTROL_RANGE_SLIDER_SLIDER_HOVER_COLOR);

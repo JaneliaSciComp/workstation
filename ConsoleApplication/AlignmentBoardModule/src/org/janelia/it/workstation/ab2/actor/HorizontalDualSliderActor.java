@@ -96,6 +96,10 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
 
     public int getSlider2Id() { return slider2Id; }
 
+    public float getSlider1Position() { return slider1Position; }
+
+    public float getSlider2Position() { return slider2Position; }
+
     @Override
     protected void glWindowResize(int width, int height) {
         this.glWidth=width;
