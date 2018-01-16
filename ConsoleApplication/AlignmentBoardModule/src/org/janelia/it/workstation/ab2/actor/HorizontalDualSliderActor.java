@@ -407,20 +407,12 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
                 if (draggingIds.contains(slider1Id)) {
                     //logger.info("check1");
                     int xdiff=p1.x-p0.x;
-                    if (xdiff>0) {
-                        setSlider1Position(slider1Position+0.001f);
-                    } else {
-                        setSlider1Position(slider1Position-0.001f);
-                    }
+                    setSlider1Position(slider1Position+0.001f*xdiff);
                 }
                 else if (draggingIds.contains(slider2Id)) {
                     //logger.info("check2");
                     int xdiff=p1.x-p0.x;
-                    if (xdiff>0) {
-                        setSlider2Position(slider2Position+0.001f);
-                    } else {
-                        setSlider2Position(slider2Position-0.001f);
-                    }
+                    setSlider2Position(slider2Position+0.001f*xdiff);
                 }
             } else {
                 //logger.info("check 0.6");
