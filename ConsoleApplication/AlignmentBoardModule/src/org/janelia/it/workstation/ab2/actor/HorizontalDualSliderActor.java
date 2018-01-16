@@ -14,6 +14,7 @@ import org.janelia.it.workstation.ab2.controller.AB2UserContext;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2MouseDragEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
+import org.janelia.it.workstation.ab2.gl.GLSelectable;
 import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.renderer.AB2Renderer2D;
 import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
@@ -417,5 +418,14 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
             }
         }
     }
+
+    @Override
+    public boolean acceptsDropType(GLSelectable selectable) {
+        if (selectable instanceof HorizontalDualSliderActor) {
+            return true;
+        }
+        return false;
+    }
+
 
 }

@@ -239,38 +239,51 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             }
 
             if (pickObject!=null) {
-                //logger.info("* 1");
-                if (!(pickObject==userContext.getHoverObject())) {
-                    //logger.info("* 2");
-                    GLSelectable hoverObject = userContext.getHoverObject();
-                    if (hoverObject != null) {
-                        //logger.info("* 3");
-                        hoverObject.releaseAllHover();
-                        userContext.setHoverObject(null);
-                    }
-                }
+                GLSelectable hoverObject = userContext.getHoverObject();
 
-                boolean dragAcceptable=true;
-                //logger.info("* 4");
-                if (userContext.isMouseIsDragging()) {
-                    //logger.info("* 5");
-                    if (pickObject.isHoverable(pickId)) {
-                        //logger.info("* 6");
-                        dragAcceptable = checkDragAcceptability(pickObject, userContext.getDragObjects());
-                    }
-                }
-                //logger.info("* 7");
+                if (pickObject instanceof GLRegion) {
 
-                if (dragAcceptable && pickObject.isHoverable()) {
-                    //logger.info("* 8");
-                    userContext.setHoverObject(pickObject);
-                    if (pickActor!=null) {
-                        pickObject.setHover(pickId);
-                    } else {
+                    if (!(pickObject==hoverObject)) {
+                        if (hoverObject!=null) {
+                            hoverObject.releaseAllHover();
+                            userContext.setHoverObject(null);
+                        }
+                    }
+
+                    boolean dragAcceptable = true;
+                    if (userContext.isMouseIsDragging()) {
+                        if (pickObject.isHoverable()) {
+                            dragAcceptable = checkDragAcceptability(pickObject, userContext.getDragObjects());
+                        }
+                    }
+
+                    if (dragAcceptable && pickObject.isHoverable()) {
+                        userContext.setHoverObject(pickObject);
                         pickObject.setHover();
                     }
+
+                } else if (pickObject instanceof GLAbstractActor) {
+
+                    if (!(hoverObject!=null && hoverObject.getHoverId().equals(pickId))) {
+                        if (hoverObject!=null) {
+                            hoverObject.releaseAllHover();
+                            userContext.setHoverObject(null);
+                        }
+                    }
+
+                    boolean dragAcceptable = true;
+                    if (userContext.isMouseIsDragging()) {
+                        if (pickObject.isHoverable(pickId)) {
+                            dragAcceptable = checkDragAcceptability(pickObject, userContext.getDragObjects());
+                        }
+                    }
+
+                    if (dragAcceptable && pickObject.isHoverable(pickId)) {
+                        userContext.setHoverObject(pickObject);
+                        pickObject.setHover(pickId);
+                    }
+
                 }
-                //logger.info("* 9");
 
                 controller.setNeedsRepaint(true);
             }
