@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.filecache;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -94,7 +95,7 @@ public class LocalFileCacheTest {
         // adding last file should force removal of first file
         final int cacheKilobytes =
                 (singleFileKilobytes + 1) * maxNumberOfCachedFiles;
-        PowerMockito.whenNew(WebDavClient.class).withArguments(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpClient.class)).thenReturn(webDavClient);
+        PowerMockito.whenNew(WebDavClient.class).withArguments(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpClient.class), ArgumentMatchers.any(ObjectMapper.class)).thenReturn(webDavClient);
 
         Mockito.when(webDavClient.findStorage(ArgumentMatchers.anyString()))
                 .then(invocation -> {

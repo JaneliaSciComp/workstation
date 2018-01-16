@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.filecache;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.httpclient.HttpClient;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -32,11 +33,13 @@ public class WebDavClientTest {
 
     private HttpClient httpClient;
     private WebDavClient testWebDavClient;
+    private ObjectMapper objectMapper;
 
     @Before
     public void setUp() {
         httpClient = Mockito.mock(HttpClient.class);
-        testWebDavClient = new WebDavClient(BASE_WEBDAV_URL, httpClient);
+        objectMapper = new ObjectMapper();
+        testWebDavClient = new WebDavClient(BASE_WEBDAV_URL, httpClient, objectMapper);
     }
 
     @Test
