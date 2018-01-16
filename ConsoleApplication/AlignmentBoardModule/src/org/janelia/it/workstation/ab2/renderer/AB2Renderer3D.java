@@ -228,6 +228,7 @@ public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3
 
     @Override
     public void processEvent(AB2Event event) {
+        //logger.info("processEvent() type="+event.getClass().getName());
         super.processEvent(event);
         AB2UserContext userContext=controller.getUserContext();
         if (event instanceof AB2MouseDragEvent) {
@@ -267,8 +268,10 @@ public abstract class AB2Renderer3D extends AB2RendererD implements AB2Renderer3
                 }
             }
         } else if (event instanceof AB2MouseWheelEvent) {
+            //logger.info("Received AB2MouseWheelEvent");
             int notches = ((AB2MouseWheelEvent) event).getMouseWheelEvent().getWheelRotation();
             double zoomRatio = Math.pow(2.0, notches/50.0);
+            //logger.info("calling zoom with zoomRatio="+zoomRatio);
             zoom(zoomRatio);
         }
     }

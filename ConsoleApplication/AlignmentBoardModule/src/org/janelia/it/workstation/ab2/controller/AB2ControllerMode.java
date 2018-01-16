@@ -141,13 +141,12 @@ s at an unmarked pick location, then the drop coordinates are passed to the
             repaint=true;
         }
         else if (event instanceof AB2MouseWheelEvent) {
+            //logger.info("start AB2MouseWheelEvent");
             GLSelectable hoverObject = userContext.getHoverObject();
             if (hoverObject!=null) {
                 //logger.info("Handing AB2MouseWheelEvent to hoverObject type="+hoverObject.getClass().getName());
                 hoverObject.processEvent(event);
                 repaint=true;
-            } else {
-                //logger.info("hoverObject is null - nothing to hand off AB2MouseWheelEvent");
             }
         }
         else if (event instanceof AB2MouseClickedEvent) {

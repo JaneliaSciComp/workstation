@@ -134,11 +134,11 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
             this.voxel3DActor=null;
         }
         if (this.prMatrix!=null) {
-            logger.info("addVoxel3DActor - setting pr matrix");
+            //logger.info("addVoxel3DActor - setting pr matrix");
             voxel3DActor.setPostProjectionMatrix(this.prMatrix);
         }
         if (this.voxel3DxyBounds!=null) {
-            logger.info("addVoxel3DActor - setting xy bounds");
+            //logger.info("addVoxel3DActor - setting xy bounds");
             voxel3DActor.setXYBounds(voxel3DxyBounds[0], voxel3DxyBounds[1], voxel3DxyBounds[2], voxel3DxyBounds[3]);
         }
         this.voxel3DActor=voxel3DActor;
@@ -291,10 +291,11 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
 
     @Override
     public void processEvent(AB2Event event) {
+        //logger.info("processEvent() type="+event.getClass().getName());
         super.processEvent(event);
         if (event instanceof AB2Main3DRendererSetRangeEvent) {
             AB2Main3DRendererSetRangeEvent rangeEvent = (AB2Main3DRendererSetRangeEvent) event;
-            logger.info("voxel3DActor.setIntensityRange r0="+rangeEvent.getR0()+" r1="+rangeEvent.getR1());
+            //logger.info("voxel3DActor.setIntensityRange r0="+rangeEvent.getR0()+" r1="+rangeEvent.getR1());
             if (voxel3DActor!=null) {
                 voxel3DActor.setIntensityRange(rangeEvent.getR0(), rangeEvent.getR1());
             }

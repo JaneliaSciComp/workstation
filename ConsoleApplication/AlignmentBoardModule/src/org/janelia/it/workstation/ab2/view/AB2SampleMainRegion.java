@@ -26,6 +26,8 @@ public class AB2SampleMainRegion extends GLRegion {
         this.screenWidth=screenWidth;
         this.screenHeight=screenHeight;
 
+        setHoverable(true);
+
         main3DRenderer=new AB2Main3DRenderer(x, y, width, height, screenWidth, screenHeight, this);
 
         renderers.add(main3DRenderer);
@@ -43,7 +45,7 @@ public class AB2SampleMainRegion extends GLRegion {
 
     @Override
     public void processEvent(AB2Event event) {
-        //logger.info("received event type="+event.getClass().getName());
+        //logger.info("processEvent() received event type="+event.getClass().getName());
         main3DRenderer.processEvent(event);
     }
 

@@ -67,6 +67,7 @@ public class Voxel3DActor extends GLAbstractActor {
 
     public Voxel3DActor(AB2Renderer3D renderer, int actorId, float threshold, byte[] dataXYZRGBA, boolean flipY) {
         super(renderer, actorId);
+        setHoverable(true);
         this.actorId=actorId;
         voxels=new ArrayList<>();
         colors=new ArrayList<>();
