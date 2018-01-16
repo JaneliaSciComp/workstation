@@ -7,7 +7,9 @@ import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.media.opengl.GL4;
@@ -58,6 +60,8 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
     public abstract GLRegionManager getRegionManager();
 
+    public int getWaitingDisplayEventCount() { return displayEventQueue.size(); }
+
     /*
 
     Discussion of Mouse-related Event Handling
@@ -80,7 +84,8 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
      One important concept is "drop-handling seniority". If a drag-and-drop occurs on a hovered actor, that actor
      receives the drop, which it may then escalate to its associated renderer. Thus, the "bottom up" approach is first.
-     On the other hand, if a drop occurs at an unmarked pick location, then the drop coordinates are passed to the
+     On the other hand, if a drop occur        AB2UserContext userContext = AB2Controller.getController().getUserContext();
+s at an unmarked pick location, then the drop coordinates are passed to the
      RegionManager, which then determines the region in which it occured, and then the drop is handed to the
      Region for handling.
 
@@ -101,12 +106,11 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
     // NOTE: if an even needs access to the pick framebuffer, it should be forwarded to the display event queue.
 
     public void processEvent(AB2Event event) {
-        logger.info("processEvent() entry, type="+event.getClass().getName());
         AB2UserContext userContext = AB2Controller.getController().getUserContext();
+        //logger.info("processEvent() entry, type="+event.getClass().getName()+" dragCount="+userContext.getDragObjects().size());
         boolean repaint=false;
 
         if (event instanceof AB2MouseReleasedEvent) {
-            //logger.info(">>> AB2MouseReleasedEvent");
             mouseReleaseTimestampMs=new Date().getTime();
             if (userContext.isMouseIsDragging()) {
                 //logger.info(">>>   c1");
@@ -124,6 +128,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                     releaseObject.processEvent(dropEvent);
                 }
                 for (GLSelectable dragObject : dragObjects) {
+                    //logger.info(">>> c5.5");
                     dragObject.releaseAllDrag();
                 }
                 //logger.info(">>>   c6");
@@ -317,17 +322,17 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             if (!userContext.isMouseIsDragging()) {
                 //logger.info("DRAG check2");
                 //logger.info("Start of drag, selected objects=");
-                List<GLSelectable> dragObjects = userContext.getSelectObjects();
-                if (!dragObjects.contains(userContext.getHoverObject())) {
+                List<GLSelectable> selectedObjects = userContext.getSelectObjects();
+                if (!selectedObjects.contains(userContext.getHoverObject())) {
                     GLSelectable hoverObject=userContext.getHoverObject();
                     if (hoverObject instanceof GLRegion) {
                         if (hoverObject.isDraggable()) {
-                            dragObjects.add(hoverObject);
+                            selectedObjects.add(hoverObject);
                         }
                     } else if (hoverObject instanceof GLAbstractActor) {
                         if (hoverObject.isDraggable(pickId)) {
-                            hoverObject.setDrag(pickId);
-                            dragObjects.add(hoverObject);
+                            hoverObject.setSelect(pickId);
+                            selectedObjects.add(hoverObject);
                         }
                     }
                 }
@@ -337,31 +342,35 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                 userContext.clearDrag();
                 userContext.setMouseIsDragging(true);
                 userContext.getPositionHistory().add(p1);
-                if (dragObjects != null && dragObjects.size() > 0) {
-                    userContext.clearSelectObjects();
+                if (selectedObjects != null && selectedObjects.size() > 0) {
                     List<GLSelectable> permittedDragObjects=new ArrayList<>();
-                    for (GLSelectable dragObject : dragObjects) {
-                        if (dragObject instanceof GLRegion) {
-                            if (dragObject.isDraggable()) {
-                                dragObject.setDrag();
-                                dragObject.releaseSelect();
-                                permittedDragObjects.add(dragObject);
+                    for (GLSelectable selectedObject : selectedObjects) {
+                        if (selectedObject instanceof GLRegion) {
+                            if (selectedObject.isDraggable()) {
+                                selectedObject.setDrag();
+                                selectedObject.releaseSelect();
+                                permittedDragObjects.add(selectedObject);
                             }
-                        } else if (dragObject instanceof GLAbstractActor) {
-                            if (dragObject.getSelectedIds().size() > 0) {
-                                List<Integer> selectIds = dragObject.getSelectedIds();
+                        } else if (selectedObject instanceof GLAbstractActor) {
+                            if (selectedObject.getSelectedIds().size() > 0) {
+                                List<Integer> selectIds = selectedObject.getSelectedIds();
+                                Set<Integer> deselectSet=new HashSet<>();
                                 for (Integer selectId : selectIds) {
-                                    if (dragObject.isDraggable(selectId)) {
-                                        dragObject.setDrag(selectId);
-                                        dragObject.releaseSelect(selectId);
+                                    if (selectedObject.isDraggable(selectId)) {
+                                        selectedObject.setDrag(selectId);
+                                        deselectSet.add(selectId);
                                     }
                                 }
+                                for (Integer deselectId : deselectSet) {
+                                    selectedObject.releaseSelect(deselectId);
+                                }
                             }
-                            if (dragObject.getDraggingIds().size()>0) {
-                                permittedDragObjects.add(dragObject);
+                            if (selectedObject.getDraggingIds().size()>0) {
+                                permittedDragObjects.add(selectedObject);
                             }
                         }
                     }
+                    userContext.clearSelectObjects();
                     userContext.addDragObjects(permittedDragObjects);
                 }
                 else {
@@ -453,42 +462,42 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
                     List<Integer> selectedIds = pickObject.getSelectedIds();
 
-                    logger.info("considering adding click id="+pickId);
+//                    logger.info("considering adding click id="+pickId);
 
                     boolean pickIdAlreadySelected=false;
 
                     if (selectedIds.contains(pickId)) {
-                        logger.info(">>> check1");
+  //                      logger.info(">>> check1");
                         pickIdAlreadySelected=true;
                     }
 
-                    logger.info(">>> check2");
+//                    logger.info(">>> check2");
 
                     if (pickObject.isSelectable(pickId)) {
 
-                        logger.info(">>> check3");
+//                        logger.info(">>> check3");
 
                         pickObject.releaseAllSelect();
 
                         if (!pickIdAlreadySelected) {
 
-                            logger.info(">>> check4");
+//                            logger.info(">>> check4");
 
                             pickObject.setSelect(pickId);
                         }
 
                         if (!alreadySelected) {
 
-                            logger.info(">>> check5");
+//                            logger.info(">>> check5");
 
                             userContext.addSelectObject(pickObject);
                         }
 
-                        logger.info(">>> check6");
+//                        logger.info(">>> check6");
 
                     }
 
-                    logger.info(">>> check7");
+//                    logger.info(">>> check7");
 
                 }
                 pickObject.processEvent(event);
@@ -608,7 +617,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
             AB2Event event = displayEventQueue.poll();
             if (event != null) {
                 processDisplayEvent(glAutoDrawable, event);
-                repaint=true;
+                repaint = true;
             }
         }
         if (repaint) {

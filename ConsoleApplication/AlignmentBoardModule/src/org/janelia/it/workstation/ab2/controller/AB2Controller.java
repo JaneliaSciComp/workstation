@@ -218,25 +218,28 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
                 AB2Event event = eventQueue.poll();
                 if (event != null) {
                     if (event instanceof AB2ChangeModeEvent) {
-                        Class targetModeClass=((AB2ChangeModeEvent) event).getNewMode();
-                        AB2ControllerMode targetMode=modeMap.get(targetModeClass);
+                        Class targetModeClass = ((AB2ChangeModeEvent) event).getNewMode();
+                        AB2ControllerMode targetMode = modeMap.get(targetModeClass);
                         if (!targetMode.equals(currentMode)) {
                             currentMode.stop();
                             drainWaitQueueToEventQueue();
-                            currentMode=targetMode;
+                            currentMode = targetMode;
                             currentMode.start();
                         }
-                    } else if (event instanceof AB2SampleAddedEvent) {
+                    }
+                    else if (event instanceof AB2SampleAddedEvent) {
                         logger.info("EventHandler run() handling AB2SampleAddedEvent");
-                        Class targetModeClass=AB2SampleBasicMode.class;
+                        Class targetModeClass = AB2SampleBasicMode.class;
                         if (currentMode.getClass().equals(targetModeClass)) {
                             logger.info("EventHandler run() passing AB2SampleAddedEvent to currentMode process()");
                             currentMode.processEvent(event);
-                        } else {
+                        }
+                        else {
                             processEvent(new AB2ChangeModeEvent(AB2SampleBasicMode.class));
                             processEvent(event); // put this back in queue, to be processed after mode change
                         }
-                    } else {
+                    }
+                    else {
                         currentMode.processEvent(event);
                     }
                 }

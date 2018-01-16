@@ -395,17 +395,17 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
     @Override
     public void processEvent(AB2Event event) {
         if (event instanceof AB2MouseDragEvent) {
-            logger.info("processEvent() received event="+event.getClass().getName());
+            //logger.info("processEvent() received event="+event.getClass().getName());
             AB2UserContext userContext=AB2Controller.getController().getUserContext();
             List<Point> points=userContext.getPositionHistory();
             if (points.size()>1) {
-                logger.info("check 0.5");
+                //logger.info("check 0.5");
                 int maxIndex=points.size()-1;
                 Point p1=points.get(maxIndex);
                 Point p0=points.get(maxIndex-1);
-                logger.info("check 0.55");
+                //logger.info("check 0.55");
                 if (draggingIds.contains(slider1Id)) {
-                    logger.info("check1");
+                    //logger.info("check1");
                     int xdiff=p1.x-p0.x;
                     if (xdiff>0) {
                         setSlider1Position(slider1Position+0.001f);
@@ -414,7 +414,7 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
                     }
                 }
                 else if (draggingIds.contains(slider2Id)) {
-                    logger.info("check2");
+                    //logger.info("check2");
                     int xdiff=p1.x-p0.x;
                     if (xdiff>0) {
                         setSlider2Position(slider2Position+0.001f);
@@ -423,7 +423,7 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
                     }
                 }
             } else {
-                logger.info("check 0.6");
+                //logger.info("check 0.6");
             }
         }
     }
