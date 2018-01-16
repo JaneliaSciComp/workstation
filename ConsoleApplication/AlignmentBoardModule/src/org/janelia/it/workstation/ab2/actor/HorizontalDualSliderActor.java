@@ -317,10 +317,12 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
 
     private void pickLeftSlider(GL4 gl, AB2PickShader shader) {
         shader.setPickId(gl, slider1Id);
+        drawLeftSlider(gl);
     }
 
     private void pickRightSlider(GL4 gl, AB2PickShader shader) {
         shader.setPickId(gl, slider2Id);
+        drawRightSlider(gl);
     }
 
 
