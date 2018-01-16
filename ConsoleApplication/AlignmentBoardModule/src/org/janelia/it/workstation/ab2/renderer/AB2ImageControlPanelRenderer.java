@@ -2,10 +2,12 @@ package org.janelia.it.workstation.ab2.renderer;
 
 import javax.media.opengl.GL4;
 
+import antlr.collections.impl.Vector;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.AB2Properties;
 import org.janelia.it.workstation.ab2.actor.ColorBox2DActor;
+import org.janelia.it.workstation.ab2.actor.HorizontalDualSliderActor;
 import org.janelia.it.workstation.ab2.actor.OpenCloseActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2Event;
@@ -25,6 +27,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
 
     private ImageControlBackgroundColorBoxActor backgroundPanel;
     private OpenCloseActor openCloseActor;
+    private HorizontalDualSliderActor rangeSlider;
 
     private GLShaderActionSequence panelDrawSequence;
     private GLShaderActionSequence panelPickSequence;
@@ -43,7 +46,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         public ImageControlBackgroundColorBoxActor(AB2ImageControlPanelRenderer renderer, int actorId, Vector3 v0, Vector3 v1,
                                                    Vector4 color, Vector4 hoverColor, Vector4 selectColor) {
             super(renderer, actorId, v0, v1, color, hoverColor, selectColor);
-            isHoverable=true;
+            setHoverable(true);
         }
 
         @Override
@@ -80,7 +83,8 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         public ImageControlOpenCloseActor(AB2ImageControlPanelRenderer renderer, int actorId, Vector3 v0, Vector3 v1,
                                           Vector4 foregroundColor, Vector4 backgroundColor, Vector4 hoverColor, Vector4 selectColor) {
             super(renderer, actorId, v0, v1, foregroundColor, backgroundColor, hoverColor, selectColor);
-            isHoverable=true;
+            setHoverable(true);
+            setDisplay(false);
         }
 
         @Override
@@ -124,6 +128,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
     public void init(GL4 gl) {
         createBackgroundPanel(x, y, width, height, screenWidth, screenHeight);
         createOpenCloseActor();
+        createRangeSlider();
         super.init(gl);
         initialized=true;
     }
@@ -137,6 +142,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
             backgroundPanel.setHoverable(false);
             openCloseActor.setDisplay(true);
             openCloseActor.setOpen(false);
+            rangeSlider.setDisplay(true);
         } else {
             //logger.info("  -- closing, background hoverable=true");
             backgroundPanel.setColor(AB2Properties.IMAGE_CONTROL_PANEL_COLOR);
@@ -144,6 +150,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
             backgroundPanel.setHoverable(true);
             openCloseActor.setDisplay(false);
             openCloseActor.setOpen(true);
+            rangeSlider.setDisplay(false);
         }
         this.isOpen=isOpen;
     }
@@ -164,8 +171,13 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
                 AB2Properties.IMAGE_CONTROL_PANEL_BACKGROUND_Z);
         backgroundPanel.updateVertices(normed2dPositions[0], normed2dPositions[1]);
 
+        // open close
         Vector3[] openCloseVertices=getOpenCloseVertices(x, y, width, height, screenWidth, screenHeight);
         openCloseActor.updatePosition(openCloseVertices[0], openCloseVertices[1]);
+
+        // range slider
+        Vector3[] rangeVertices=getRangeSliderVertices(x, y, width, height, screenWidth, screenHeight);
+        rangeSlider.updateVertices(rangeVertices[0], rangeVertices[1]);
     }
 
     private Vector3[] getOpenCloseVertices(int x, int y, int width, int height, int screenWidth, int screenHeight) {
@@ -184,6 +196,40 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         result[1]=v1;
 
         return result;
+    }
+
+    private Vector3[] getRangeSliderVertices(int x, int y, int width, int height, int screenWidth, int screenHeight) {
+        Vector3[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(x, y, width, height, screenWidth, screenHeight,
+                AB2Properties.IMAGE_CONTROL_PANEL_BACKGROUND_Z);
+
+        float h1=normed2dPositions[1].getY()-normed2dPositions[0].getY();
+        float w1=normed2dPositions[1].getX()-normed2dPositions[0].getX();
+
+        float ch=normed2dPositions[0].getY()+(h1/2.0f);
+        float cw=normed2dPositions[0].getX()+(w1/2.0f);
+
+        float h2=h1*0.5f;
+        float w2=w1*0.5f;
+
+        Vector3 v0=new Vector3(cw-w2/2f, ch-h2/2f, normed2dPositions[0].getZ()-0.1f);
+        Vector3 v1=new Vector3( cw+w2/2f, ch+h2/2f, normed2dPositions[0].getZ()-0.1f);
+        normed2dPositions[0]=v0;
+        normed2dPositions[1]=v1;
+
+        return normed2dPositions;
+    }
+
+    private void createRangeSlider() {
+        Vector3[] rangeSliderVertices=getRangeSliderVertices(x, y, width, height, screenWidth, screenHeight);
+
+        AB2Controller controller=AB2Controller.getController();
+        rangeSlider = new HorizontalDualSliderActor(this, controller.getNextPickIndex(), controller.getNextPickIndex(),
+                controller.getNextPickIndex(), rangeSliderVertices[0], rangeSliderVertices[1], AB2Properties.IMAGE_CONTROL_RANGE_SLIDER_BACKGROUND_COLOR,
+                AB2Properties.IMAGE_CONTROL_RANGE_SLIDER_GUIDE_COLOR, AB2Properties.IMAGE_CONTROL_RANGE_SLIDER_SLIDER_COLOR,
+                AB2Properties.IMAGE_CONTROL_RANGE_SLIDER_SLIDER_HOVER_COLOR);
+        rangeSlider.setDisplay(false);
+        panelDrawSequence.getActorSequence().add(rangeSlider);
+        panelPickSequence.getActorSequence().add(rangeSlider);
     }
 
     private void createOpenCloseActor() {

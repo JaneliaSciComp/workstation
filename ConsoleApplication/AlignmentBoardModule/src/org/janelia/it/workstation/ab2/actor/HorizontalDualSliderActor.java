@@ -149,9 +149,9 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
 
         float gh=(float)(1.0/(1.0*glHeight));
         float gw=(float)((0.9*(v1.getX()-v0.getX()))/2.0);
-        float xC=(v1.getX()-v0.getX())/2.0f;
-        float yC=(v1.getY()-v0.getY())/2.0f;
-        float z=v0.get(2)+0.05f;
+        float xC=(v1.getX()+v0.getX())/2.0f;
+        float yC=(v1.getY()+v0.getY())/2.0f;
+        float z=v0.get(2)-0.05f;
 
         float[] vertexData = {
 
@@ -170,9 +170,9 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
 
         float sw=(float)(3.0/(1.0*glWidth));
         float sh=(float)((0.9*(v1.getY()-v0.getY()))/2.0);
-        float xC=((v1.getX()-v0.getX())*p)+v0.getX();
-        float yC=(v1.getY()-v0.getY())/2.0f;
-        float z=v0.get(2)+0.1f;
+        float xC=((v1.getX()-v0.getX())*p*0.9f)+v0.getX()+(v1.getX()-v0.getX())*0.05f;
+        float yC=(v1.getY()+v0.getY())/2.0f;
+        float z=v0.get(2)-0.1f;
 
         if (sliderSide.equals(SliderSide.Left)) {
             xC=xC-sw;
@@ -213,7 +213,7 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
             gl.glBufferData(GL4.GL_ARRAY_BUFFER, backgroundVertexFb.capacity() * 4, backgroundVertexFb, GL4.GL_STATIC_DRAW);
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-            float[] guideVertexData=computeBackgroundVertexData();
+            float[] guideVertexData=computeGuideVertexData();
             guideVertexFb=createGLFloatBuffer(guideVertexData);
             gl.glGenVertexArrays(1, guideVertexArrayId);
             gl.glBindVertexArray(guideVertexArrayId.get(0));
@@ -231,7 +231,7 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
             gl.glBufferData(GL4.GL_ARRAY_BUFFER, slider1VertexFb.capacity() * 4, slider1VertexFb, GL4.GL_STATIC_DRAW);
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-            float[] slider2VertexData=computeSliderVertexData(slider2Position, SliderSide.Left);
+            float[] slider2VertexData=computeSliderVertexData(slider2Position, SliderSide.Right);
             slider2VertexFb=createGLFloatBuffer(slider2VertexData);
             gl.glGenVertexArrays(1, slider2VertexArrayId);
             gl.glBindVertexArray(slider2VertexArrayId.get(0));
@@ -252,7 +252,7 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
         gl.glBufferSubData(GL4.GL_ARRAY_BUFFER, 0, backgroundVertexFb.capacity() * 4, backgroundVertexFb);
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-        float[] guideVertexData=computeBackgroundVertexData();
+        float[] guideVertexData=computeGuideVertexData();
         guideVertexFb=createGLFloatBuffer(guideVertexData);
         gl.glBindVertexArray(guideVertexArrayId.get(0));
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, guideVertexBufferId.get(0));
@@ -266,7 +266,7 @@ public class HorizontalDualSliderActor extends GLAbstractActor {
         gl.glBufferSubData(GL4.GL_ARRAY_BUFFER,0, slider1VertexFb.capacity() * 4, slider1VertexFb);
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-        float[] slider2VertexData=computeSliderVertexData(slider2Position, SliderSide.Left);
+        float[] slider2VertexData=computeSliderVertexData(slider2Position, SliderSide.Right);
         slider2VertexFb=createGLFloatBuffer(slider2VertexData);
         gl.glBindVertexArray(slider2VertexArrayId.get(0));
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, slider2VertexBufferId.get(0));

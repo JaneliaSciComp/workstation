@@ -145,10 +145,10 @@ public class ColorBox2DActor extends GLAbstractActor {
             AB2Basic2DShader basic2DShader=(AB2Basic2DShader)shader;
             basic2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
             //logger.info("display() actorId="+actorId);
-            if (isSelectable() && isSelected) {
+            if (isSelectable() && isSelected()) {
                 basic2DShader.setColor(gl, selectColor);
             }
-            else if (isHoverable() && isHovered) {
+            else if (isHoverable() && isHovered()) {
                 basic2DShader.setColor(gl, hoverColor);
             }
             else {

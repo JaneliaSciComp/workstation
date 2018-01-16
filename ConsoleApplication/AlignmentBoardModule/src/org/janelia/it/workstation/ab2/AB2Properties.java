@@ -31,4 +31,10 @@ public class AB2Properties {
     public static Vector4 IMAGE_CONTROL_OPENCLOSE_SELECT_COLOR = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
     public static float   IMAGE_CONTROL_OPENCLOSE_Z=0.7f;
 
+    public static Vector4 IMAGE_CONTROL_RANGE_SLIDER_BACKGROUND_COLOR = new Vector4(0.2f, 0.2f, 0.2f, 1.0f);
+    public static Vector4 IMAGE_CONTROL_RANGE_SLIDER_GUIDE_COLOR = new Vector4(0.2f, 0.4f, 0.2f, 1.0f);
+    public static Vector4 IMAGE_CONTROL_RANGE_SLIDER_SLIDER_COLOR = new Vector4(0.2f, 0.6f, 0.2f, 1.0f);
+    public static Vector4 IMAGE_CONTROL_RANGE_SLIDER_SLIDER_HOVER_COLOR = new Vector4(0.2f, 0.8f, 0.2f, 1.0f);
+
+
 }
