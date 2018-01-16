@@ -369,7 +369,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
                 boolean alreadySelected=userContext.getSelectObjects().contains(pickObject);
 
-                if (pickObject instanceof GLRegion) {
+                if (pickObject instanceof GLRegion && pickObject.isSelectable()) {
 
                     if (alreadySelected) {
                         userContext.removeSelectObject(pickObject);
@@ -379,7 +379,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                         pickObject.setSelect();
                     }
 
-                } else if (pickObject instanceof GLAbstractActor) {
+                } else if (pickObject instanceof GLAbstractActor && pickObject.isSelectable(pickId)) {
 
                     List<Integer> selectedIds = pickObject.getSelectedIds();
 
@@ -414,7 +414,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
                 boolean alreadySelected=userContext.getSelectObjects().contains(pickObject);
 
-                if (pickObject instanceof GLRegion) {
+                if (pickObject instanceof GLRegion && pickObject.isSelectable()) {
 
                     pickObject.releaseAllSelect();
 
@@ -433,14 +433,18 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
                         pickIdAlreadySelected=true;
                     }
 
-                    pickObject.releaseAllSelect();
+                    if (pickObject.isSelectable(pickId)) {
 
-                    if (!pickIdAlreadySelected) {
-                        pickObject.setSelect(pickId);
-                    }
+                        pickObject.releaseAllSelect();
 
-                    if (!alreadySelected) {
-                        userContext.addSelectObject(pickObject);
+                        if (!pickIdAlreadySelected) {
+                            pickObject.setSelect(pickId);
+                        }
+
+                        if (!alreadySelected) {
+                            userContext.addSelectObject(pickObject);
+                        }
+
                     }
 
                 }

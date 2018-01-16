@@ -227,7 +227,15 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
                 controller.getNextPickIndex(), rangeSliderVertices[0], rangeSliderVertices[1], AB2Properties.IMAGE_CONTROL_RANGE_SLIDER_BACKGROUND_COLOR,
                 AB2Properties.IMAGE_CONTROL_RANGE_SLIDER_GUIDE_COLOR, AB2Properties.IMAGE_CONTROL_RANGE_SLIDER_SLIDER_COLOR,
                 AB2Properties.IMAGE_CONTROL_RANGE_SLIDER_SLIDER_HOVER_COLOR);
+
         rangeSlider.setDisplay(false);
+        rangeSlider.setHoverable(rangeSlider.getSlider1Id());
+        rangeSlider.setHoverable(rangeSlider.getSlider2Id());
+        rangeSlider.setSelectable(rangeSlider.getSlider1Id());
+        rangeSlider.setSelectable(rangeSlider.getSlider2Id());
+        rangeSlider.setDraggable(rangeSlider.getSlider1Id());
+        rangeSlider.setDraggable(rangeSlider.getSlider2Id());
+
         panelDrawSequence.getActorSequence().add(rangeSlider);
         panelPickSequence.getActorSequence().add(rangeSlider);
     }
