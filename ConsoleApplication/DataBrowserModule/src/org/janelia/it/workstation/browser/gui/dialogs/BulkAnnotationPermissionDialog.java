@@ -143,7 +143,12 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
         }
         
         selected.clear();
-        selected.addAll(selectionModel.getSelectedIds());
+        for(Object id : selectionModel.getSelectedIds()) {
+            if (id instanceof Reference) {
+                selected.add((Reference)id);
+            }
+        }
+        
         if (selected.isEmpty()) {
             showSelectionMessage();
             return;

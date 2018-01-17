@@ -19,7 +19,7 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.Sample;
 
-public abstract class DomainObjectImageModel implements ImageModel<DomainObject, Reference>{
+public abstract class DomainObjectImageModel implements ImageModel<DomainObject, Reference> {
 
     @Override
     public Reference getImageUniqueId(DomainObject domainObject) {

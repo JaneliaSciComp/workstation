@@ -39,9 +39,10 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
+import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.dialogs.EditCriteriaDialog;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
-import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
@@ -51,7 +52,6 @@ import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SmartSearchBox;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
-import org.janelia.it.workstation.browser.model.search.DomainObjectResultPage;
 import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
@@ -90,7 +90,7 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implements SearchProvider {
+public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainObject,Reference> implements SearchProvider {
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
 
@@ -115,6 +115,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private final JButton infoButton;
 
     // State
+    private DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     private FilterNode filterNode;
     private Filter filter;    
     private boolean dirty = false;
@@ -797,7 +798,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     }
 
     @Override
-    public PaginatedResultsPanel getResultsPanel() {
+    public PaginatedDomainResultsPanel getResultsPanel() {
         return resultsPanel;
     }
 
@@ -918,5 +919,10 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
         worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Loading...", ""));
         worker.execute();
+    }
+
+    @Override
+    public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+        return selectionModel;
     }
 }

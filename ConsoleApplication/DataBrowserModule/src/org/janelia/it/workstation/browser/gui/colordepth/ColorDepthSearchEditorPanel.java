@@ -49,7 +49,6 @@ import org.janelia.it.workstation.browser.events.selection.DomainObjectSelection
 import org.janelia.it.workstation.browser.gui.editor.ConfigPanel;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
-import org.janelia.it.workstation.browser.gui.editor.DomainObjectNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.editor.SelectionButton;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
@@ -70,7 +69,6 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
@@ -684,12 +682,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     }
 
     @Override
-    public DomainObjectEditorState<ColorDepthSearch> saveState() {
+    public DomainObjectEditorState<ColorDepthSearch,ColorDepthMatch,String> saveState() {
         return null;
     }
 
     @Override
-    public void restoreState(DomainObjectEditorState<ColorDepthSearch> state) {
+    public void restoreState(DomainObjectEditorState<ColorDepthSearch,ColorDepthMatch,String> state) {
         if (state==null) {
             log.warn("Cannot restore null state");
             return;

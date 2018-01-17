@@ -19,13 +19,18 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 
+/**
+ * A paginated results panel which displays domain objects, and responds to changes to those domain objects.
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public abstract class PaginatedDomainResultsPanel extends PaginatedResultsPanel<DomainObject,Reference> {
+
+    private static final Logger log = LoggerFactory.getLogger(PaginatedDomainResultsPanel.class);
     
     public PaginatedDomainResultsPanel(ChildSelectionModel<DomainObject, Reference> selectionModel, SearchProvider searchProvider) {
         super(selectionModel, searchProvider);
     }
-
-    private static final Logger log = LoggerFactory.getLogger(PaginatedDomainResultsPanel.class);
 
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {

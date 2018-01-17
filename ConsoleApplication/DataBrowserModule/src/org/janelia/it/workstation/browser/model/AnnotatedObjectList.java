@@ -5,11 +5,14 @@ import java.util.List;
 import org.janelia.model.domain.ontology.Annotation;
 
 /**
- * An ordered list of domain objects with associated annotations.
+ * An ordered list of objects with associated annotations.
  * 
  * The component that manages this list is responsible for listening to changes to the 
- * annotations on the domain objects in this list (i.e. DomainObjectAnnotationChangeEvents),
+ * annotations on the objects in this list (i.e. DomainObjectAnnotationChangeEvents),
  * and updating them with the updateAnnotations method.
+ * 
+ * T - the type of the objects
+ * S - the type of the unique identifiers for the objects
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -18,32 +21,32 @@ public interface AnnotatedObjectList<T,S> {
     public List<T> getObjects();
     
     /**
-     * Returns the annotations for the domain object identifier by the given GUID
-     * @param domainObjectId GUID
+     * Returns the annotations for the given object identifier. 
+     * @param objectId unique identifier for the object
      * @return anotations 
      */
-    public List<Annotation> getAnnotations(S domainObjectId);
+    public List<Annotation> getAnnotations(S objectId);
     
     /**
-     * Get the domain object identified by the given GUID.
-     * @param domainObjectId GUID
-     * @return the domain object
+     * Get the object identified by the given unique id.
+     * @param objectId unique object id
+     * @return the object
      */
-    public T getObjectById(S domainObjectId);
+    public T getObjectById(S objectId);
     
     /**
-     * Update the given domain object.
+     * Update the given object.
      * @param updatedObject the new object possessing the same id as an existing object
-     * @return true if the domain object id is found
+     * @return true if the object is found and successfully updated
      */
     public boolean updateObject(T updatedObject);
     
     /**
-     * Update the annotations for a given domain object. 
-     * @param domainObjectId GUID for the domain object to update
-     * @param annotations the new set of annotations for the given domain object
-     * @return true if the domain object id is found
+     * Update the annotations for a given object. 
+     * @param objectId GUID for the object to update
+     * @param annotations the new set of annotations for the given object
+     * @return true if the object id is found
      */
-    public boolean updateAnnotations(S domainObjectId, List<Annotation> annotations);
+    public boolean updateAnnotations(S objectId, List<Annotation> annotations);
     
 }

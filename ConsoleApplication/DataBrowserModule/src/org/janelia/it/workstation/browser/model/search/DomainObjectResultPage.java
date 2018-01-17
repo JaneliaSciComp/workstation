@@ -14,7 +14,7 @@ import org.janelia.model.domain.ontology.Annotation;
 import com.google.common.collect.ListMultimap;
 
 /**
- * One page of annotated results, treated as a unit for performance reasons.
+ * One page of annotated domain objects, treated as a unit for performance reasons.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

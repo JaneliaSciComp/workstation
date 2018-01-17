@@ -31,7 +31,7 @@ public abstract class ResultIteratorFind<T,S> {
 
     /**
      * Implement this method to describe how an object should be matched.
-     * @param resultPage the result page containing domainObject
+     * @param resultPage the result page containing the object
      * @param object object to match against
      * @return true if the object matches the search string
      */

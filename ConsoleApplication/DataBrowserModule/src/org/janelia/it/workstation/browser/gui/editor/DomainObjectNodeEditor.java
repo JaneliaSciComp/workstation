@@ -10,7 +10,7 @@ import org.janelia.model.domain.DomainObject;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public interface DomainObjectNodeEditor<T extends DomainObject> extends Editor {
+public interface DomainObjectNodeEditor<P extends DomainObject, T, S> extends Editor {
 
     /**
      * Reset the viewer state. This is usually done in preparation of loading a novel domain object.
@@ -22,14 +22,14 @@ public interface DomainObjectNodeEditor<T extends DomainObject> extends Editor {
      * 
      * @return Editor state
      */
-    public DomainObjectEditorState<T> saveState();
+    public DomainObjectEditorState<P,T,S> saveState();
 
     /**
      * Restore the given snap shot of the editor state.
      * 
      * @param state Saved editor state 
      */
-    public void restoreState(DomainObjectEditorState<T> state);
+    public void restoreState(DomainObjectEditorState<P,T,S> state);
     
     /**
      * Load the given domain object node into the editor. 
@@ -38,7 +38,7 @@ public interface DomainObjectNodeEditor<T extends DomainObject> extends Editor {
      * @param isUserDriven
      * @param success
      */
-    public void loadDomainObjectNode(AbstractDomainObjectNode<T> domainObjectNode, final boolean isUserDriven, final Callable<Void> success);
+    public void loadDomainObjectNode(AbstractDomainObjectNode<P> domainObjectNode, final boolean isUserDriven, final Callable<Void> success);
 
     /**
      * Load the given domain object into the editor. This bypasses the need for a AbstractDomainObjectNode, 
@@ -48,6 +48,6 @@ public interface DomainObjectNodeEditor<T extends DomainObject> extends Editor {
      * @param isUserDriven
      * @param success
      */
-    public void loadDomainObject(T domainObject, final boolean isUserDriven, final Callable<Void> success);
+    public void loadDomainObject(P domainObject, final boolean isUserDriven, final Callable<Void> success);
 
 }

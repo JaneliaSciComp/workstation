@@ -75,7 +75,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private List<DomainObjectAttribute> attrs;
 
     // UI state
-    private ListViewerActionListener listener;
     private String sortField;
     private boolean ascending = true;
 
@@ -118,7 +117,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     public void setActionListener(ListViewerActionListener listener) {
-        this.listener = listener;
+        // Ignored, because this viewer does not hide objects
     }
 
     @Override

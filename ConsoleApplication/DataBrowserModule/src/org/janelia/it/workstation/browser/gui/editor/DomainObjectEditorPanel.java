@@ -5,11 +5,10 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,32 +17,32 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JPanel implements DomainObjectNodeSelectionEditor<T> {
+public abstract class DomainObjectEditorPanel<P extends DomainObject, T, S> extends JPanel implements ParentNodeSelectionEditor<P, T, S> {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectEditorPanel.class);
 
-    private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
+    protected abstract PaginatedResultsPanel<T,S> getResultsPanel();
+    
+    protected abstract P getDomainObject();
+    
+    protected abstract AbstractDomainObjectNode<P> getDomainObjectNode();
 
-    protected abstract PaginatedResultsPanel getResultsPanel();
-    
-    protected abstract T getDomainObject();
-    
-    protected abstract AbstractDomainObjectNode<T> getDomainObjectNode();
+    public abstract ChildSelectionModel<T,S> getSelectionModel();
     
     @Override
-    public abstract void loadDomainObject(T domainObject, boolean isUserDriven, Callable<Void> success);
+    public abstract void loadDomainObject(P domainObject, boolean isUserDriven, Callable<Void> success);
 
     @Override
-    public abstract void loadDomainObjectNode(AbstractDomainObjectNode<T> domainObjectNode, boolean isUserDriven, Callable<Void> success);
+    public abstract void loadDomainObjectNode(AbstractDomainObjectNode<P> domainObjectNode, boolean isUserDriven, Callable<Void> success);
 
     @Override
-    public DomainObjectEditorState<T> saveState() {
+    public DomainObjectEditorState<P,T,S> saveState() {
         if (getDomainObjectNode()==null) {
             if (getDomainObject()==null) {
                 log.warn("No object is loaded, so state cannot be saved");
                 return null;
             }
-            return new DomainObjectEditorState<T>(
+            return new DomainObjectEditorState<P,T,S>(
                     getDomainObject(),
                     getResultsPanel().getCurrPage(),
                     getResultsPanel().getViewer().saveState(),
@@ -54,7 +53,7 @@ public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JP
                 log.warn("No object is loaded, so state cannot be saved");
                 return null;
             }
-            return new DomainObjectEditorState<>(
+            return new DomainObjectEditorState<P,T,S>(
                     getDomainObjectNode(),
                     getResultsPanel().getCurrPage(),
                     getResultsPanel().getViewer().saveState(),
@@ -68,7 +67,7 @@ public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JP
     }
     
     @Override
-    public void restoreState(final DomainObjectEditorState<T> state) {
+    public void restoreState(final DomainObjectEditorState<P,T,S> state) {
         
         if (state==null) {
             log.warn("Cannot restore null state");
@@ -81,7 +80,7 @@ public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JP
         }
 
         // Prepare to restore the selection
-        List<Reference> selected = getResultsPanel().getViewer().getSelectionModel().getSelectedIds();
+        List<S> selected = getSelectionModel().getSelectedIds();
         selected.clear();
         selected.addAll(state.getSelectedIds());
         
@@ -123,10 +122,5 @@ public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JP
     @Override
     public void deactivate() {
         getResultsPanel().deactivate();
-    }
-
-    @Override
-    public DomainObjectSelectionModel getSelectionModel() {
-        return selectionModel;
     }
 }

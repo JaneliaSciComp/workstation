@@ -42,14 +42,18 @@ public class ResultIterator<T,S> implements Iterator<T> {
         this.startPage = this.currPage = this.lastPage = globalStartIndex / PAGE_SIZE;
         this.startIndex = this.currIndex = globalStartIndex % PAGE_SIZE;
         this.hasNext = searchResults.getNumTotalResults() > (skipStartingIndex ? 2 : 1);
-        log.debug("Init result iterator:");
-        log.debug("  globalStartIndex={}",globalStartIndex);
-        log.debug("  numTotalPages={}",searchResults.getNumTotalPages());
-        log.debug("  numTotalResults={}",searchResults.getNumTotalResults());
-        log.debug("  bias={}",bias);
-        log.debug("  startPage={}",startPage);
-        log.debug("  startIndex={}",startIndex);
-        log.debug("  hasNext={}",hasNext);
+        
+        if (log.isDebugEnabled()) {
+            log.debug("Init result iterator:");
+            log.debug("  globalStartIndex={}",globalStartIndex);
+            log.debug("  numTotalPages={}",searchResults.getNumTotalPages());
+            log.debug("  numTotalResults={}",searchResults.getNumTotalResults());
+            log.debug("  bias={}",bias);
+            log.debug("  startPage={}",startPage);
+            log.debug("  startIndex={}",startIndex);
+            log.debug("  hasNext={}",hasNext);
+        }
+        
         if (skipStartingIndex) {
             log.debug("Skipping starting index.");
             try {
@@ -62,9 +66,12 @@ public class ResultIterator<T,S> implements Iterator<T> {
                 throw new IllegalStateException("Error fetching current page",e);
             }
         }
-        log.debug("Starting at:");
-        log.debug("  currPage={}",currPage);
-        log.debug("  currIndex={}",currIndex);
+
+        if (log.isDebugEnabled()) {
+            log.debug("Starting at:");
+            log.debug("  currPage={}",currPage);
+            log.debug("  currIndex={}",currIndex);
+        }
     }
 
     @Override

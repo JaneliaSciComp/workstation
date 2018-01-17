@@ -14,8 +14,9 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
+import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
-import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
@@ -38,13 +39,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 
-
 /**
  * Simple editor panel for viewing folders. In the future it may support drag and drop editing of folders.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> implements SearchProvider {
+public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode,DomainObject,Reference> implements SearchProvider {
 
     private final static Logger log = LoggerFactory.getLogger(TreeNodeEditorPanel.class);
     
@@ -55,6 +55,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     private final PaginatedDomainResultsPanel resultsPanel;
 
     // State
+    private DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     private TreeNodeNode treeNodeNode;
     private TreeNode treeNode;
     
@@ -201,7 +202,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     }
 
     @Override
-    protected PaginatedResultsPanel getResultsPanel() {
+    protected PaginatedDomainResultsPanel getResultsPanel() {
         return resultsPanel;
     }
 
@@ -295,5 +296,10 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
         }
         ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
         action.actionPerformed(null);
+    }
+    
+    @Override
+    public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+        return selectionModel;
     }
 }

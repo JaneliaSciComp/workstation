@@ -153,7 +153,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     void writeProperties(java.util.Properties p) {
         if (p==null || editor==null) return;
         try {
-            DomainObjectEditorState<?> state = editor.saveState();
+            DomainObjectEditorState<?,?,?> state = editor.saveState();
             String serializedState = DomainObjectEditorState.serialize(state);
             log.info("Writing state: {}",serializedState);
             p.setProperty("version", TC_VERSION);
@@ -212,7 +212,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         this.intialState = null;
 
         SimpleWorker worker = new SimpleWorker() {
-            DomainObjectEditorState<?> state;
+            DomainObjectEditorState<?,?,?> state;
             DomainObject domainObject;
 
             @Override
@@ -323,7 +323,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         @Override
         public Void call() throws Exception {
 
-            DomainObjectEditorState<?> state = editor.saveState();
+            DomainObjectEditorState<?,?,?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
                 StateMgr.getStateMgr().getNavigationHistory(DomainListViewTopComponent.this).pushHistory(state);
@@ -354,7 +354,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
         // Update the previous editor state. Things may have changed since we saved it. 
         if (editor!=null) {
-            DomainObjectEditorState<?> state = editor.saveState();
+            DomainObjectEditorState<?,?,?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
                 StateMgr.getStateMgr().getNavigationHistory(DomainListViewTopComponent.this).updateCurrentState(state);
@@ -376,7 +376,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     }
     
     @SuppressWarnings("unchecked")
-    public void loadState(DomainObjectEditorState<?> state) {
+    public void loadState(DomainObjectEditorState<?,?,?> state) {
 
         log.trace("loadState({})", state);
         if (state==null) return;
