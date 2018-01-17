@@ -249,9 +249,9 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
         this.prMatrix=prMatrix;
         if (voxel3DActor!=null) {
             voxel3DActor.setPostProjectionMatrix(prMatrix);
-            logger.info("voxel3DActor - pr matrix set");
+            //logger.info("voxel3DActor - pr matrix set");
         } else {
-            logger.info("voxel3DActor is null - pr matrix not set");
+            //logger.info("voxel3DActor is null - pr matrix not set");
         }
     }
 
@@ -284,7 +284,7 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
         //logger.info("setSizeParameters() x="+x+" y="+y+" width="+width+" height="+height+" screenWidth="+screenWidth+" screenHeight="+screenHeight);
         float[] parameters = computeOffsetParameters(x, y, width, height, screenWidth, screenHeight);
         //logger.info("setSizeParameters() xtrans="+parameters[0]+" ytrans="+parameters[1]+" scale="+parameters[2]);
-        setVoxel3DActorPostProjectionMatrix(getOffsetPostProjectionMatrix(parameters[0], parameters[1], parameters[2]));
+        setVoxel3DActorPostProjectionMatrix(getOffsetPostProjectionMatrix(parameters[0], parameters[1], parameters[2], parameters[3]));
         int[] xyBounds = getXYBounds(x, y, width, height);
         setVoxel3DxyBounds(xyBounds[0], xyBounds[1], xyBounds[2], xyBounds[3]);
     }

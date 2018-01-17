@@ -261,7 +261,7 @@ public abstract class AB2RendererD extends AB2Renderer {
         //
         // 4 - We want the scale to be smaller of either case, by comparing the scale difference between
         //     using one aspect side or the other.
-        float[] parameters=new float[3];
+        float[] parameters=new float[4];
 
         double xfr = (1.0 * x)/(1.0 * screenWidth);
         double yfr = (1.0 * y)/(1.0 * screenHeight);
@@ -279,19 +279,20 @@ public abstract class AB2RendererD extends AB2Renderer {
         double widthScale = (1.0 * width) / (1.0 * screenWidth);
         double heightScale = (1.0 * height) / (1.0 * screenHeight);
 
-        float scale = (float)widthScale;
-        if (heightScale < scale) {
-            scale = (float)heightScale;
-        }
+//        float scale = (float)widthScale;
+//        if (heightScale < scale) {
+//            scale = (float)heightScale;
+//        }
 
         parameters[0]=xTranslate;
         parameters[1]=yTranslate;
-        parameters[2]=scale;
+        parameters[2]=(float)widthScale;
+        parameters[3]=(float)heightScale;
         return parameters;
     }
 
 
-    public static Matrix4 getOffsetPostProjectionMatrix(float xTranslate, float yTranslate, float scale) {
+    public static Matrix4 getOffsetPostProjectionMatrix(float xTranslate, float yTranslate, float widthScale, float heightScale) {
         Matrix4 translationMatrix = new Matrix4();
         translationMatrix.set(
                 1.0f, 0.0f, 0.0f, 0.0f,
@@ -300,9 +301,9 @@ public abstract class AB2RendererD extends AB2Renderer {
                 xTranslate, yTranslate, 0.0f, 1.0f);
         Matrix4 scaleMatrix = new Matrix4();
         scaleMatrix.set(
-                scale, 0.0f, 0.0f, 0.0f,
-                0.0f, scale, 0.0f, 0.0f,
-                0.0f, 0.0f, scale, 0.0f,
+                widthScale, 0.0f, 0.0f, 0.0f,
+                0.0f, heightScale, 0.0f, 0.0f,
+                0.0f, 0.0f, heightScale, 0.0f,
                 0.0f, 0.0f, 0.0f, 1.0f);
         Matrix4 prMatrix=scaleMatrix.multiply(translationMatrix);
         return prMatrix;
