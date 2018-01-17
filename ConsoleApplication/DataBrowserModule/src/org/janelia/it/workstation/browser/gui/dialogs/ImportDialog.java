@@ -35,6 +35,7 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
 import org.janelia.it.jacs.model.user_data.Node;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
@@ -451,13 +452,19 @@ public class ImportDialog extends ModalDialog {
         AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
 
         final WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
-
+        final String subjectName = FileMgr.getFileMgr().getSubjectName();
+        String uploadContext;
+        if (StringUtils.isBlank(subjectName)) {
+            uploadContext = "WorkstationFileUpload";
+        } else {
+            uploadContext = subjectName + "/" + "WorkstationFileUpload";
+        }
         String uploadPath;
         if (selectedChildren == null) {
-            RemoteLocation uploadedFile = uploader.uploadFile(importTopLevelFolderName, IMPORT_STORAGE_DEFAULT_TAGS, selectedFile);
+            RemoteLocation uploadedFile = uploader.uploadFile(importTopLevelFolderName, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, selectedFile);
             uploadPath = uploadedFile.getRemoteStorageURL();
         } else {
-            List<RemoteLocation> uploadedFiles = uploader.uploadFiles(importTopLevelFolderName, IMPORT_STORAGE_DEFAULT_TAGS, selectedChildren, selectedFile);
+            List<RemoteLocation> uploadedFiles = uploader.uploadFiles(importTopLevelFolderName, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, selectedChildren, selectedFile);
             // all files should be uploaded to the same storage
             uploadPath = uploadedFiles.stream().findFirst().map(rl -> rl.getRemoteStorageURL()).orElseThrow(() -> new IllegalStateException("Invalid upload state " + uploadedFiles));
         }

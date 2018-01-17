@@ -11,7 +11,6 @@ import com.google.common.collect.ImmutableList;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
-import org.apache.commons.httpclient.auth.AuthPolicy;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -232,6 +231,10 @@ public class FileMgr {
 
     public String getSubjectKey() {
         return currentSubject == null ? null : currentSubject.getKey();
+    }
+
+    public String getSubjectName() {
+        return currentSubject == null ? null : currentSubject.getName();
     }
 
     void setSubjectProxy(Subject proxy) {

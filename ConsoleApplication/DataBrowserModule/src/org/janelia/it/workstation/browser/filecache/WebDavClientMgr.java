@@ -116,8 +116,8 @@ public class WebDavClientMgr {
         return webDavClient.findFile(remoteFileName);
     }
 
-    String createStorage(String storageName, String storageTags) {
-        return masterWebDavInstance.createStorage(storageName, storageTags);
+    String createStorage(String storageName, String storageContext, String storageTags) {
+        return masterWebDavInstance.createStorage(storageName, storageContext, storageTags);
     }
 
     RemoteLocation uploadFile(File file, String storageURL, String storageLocation) {

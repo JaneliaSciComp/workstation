@@ -72,10 +72,11 @@ public class WebDavUploaderTest {
     public void uploadASingleFile() throws Exception {
         String testStorageName = "f1";
         String testStorageTags = "t1, t2";
+        String testUploadContext = "WorkstationFileUpload";
         String testStorageUrl = "http://teststorage/" + testStorageName;
         File testFile = testFiles.get(0);
         
-        Mockito.when(webDavClientMgr.createStorage(testStorageName, testStorageTags))
+        Mockito.when(webDavClientMgr.createStorage(testStorageName, testUploadContext, testStorageTags))
                 .thenReturn(testStorageUrl);
         Mockito.when(webDavClientMgr.urlEncodeComp(ArgumentMatchers.anyString()))
                 .thenCallRealMethod();
@@ -85,7 +86,7 @@ public class WebDavUploaderTest {
                     remoteFile.setRemoteStorageURL(invocation.getArgument(1));
                     return remoteFile;
                 });
-        RemoteLocation remoteFile = uploader.uploadFile(testStorageName, testStorageTags, testFile);
+        RemoteLocation remoteFile = uploader.uploadFile(testStorageName, testUploadContext, testStorageTags, testFile);
         assertNotNull("null path returned for file upload", remoteFile);
         assertEquals(testStorageUrl, remoteFile.getRemoteStorageURL());
     }
@@ -94,8 +95,9 @@ public class WebDavUploaderTest {
     public void uploadMultipleFiles() throws Exception {
         String testStorageName = "f1";
         String testStorageTags = "t1, t2";
+        String testUploadContext = "WorkstationFileUpload";
         String testStorageUrl = "http://teststorage/" + testStorageName;
-        Mockito.when(webDavClientMgr.createStorage(testStorageName, testStorageTags))
+        Mockito.when(webDavClientMgr.createStorage(testStorageName, testUploadContext, testStorageTags))
                 .thenReturn(testStorageUrl);
         Mockito.when(webDavClientMgr.urlEncodeComp(ArgumentMatchers.anyString()))
                 .thenCallRealMethod();
@@ -110,6 +112,7 @@ public class WebDavUploaderTest {
 
         List<RemoteLocation> remoteFiles = uploader.uploadFiles(
                 testStorageName,
+                testUploadContext,
                 testStorageTags,
                 testFiles,
                 testRootParentDirectory);
