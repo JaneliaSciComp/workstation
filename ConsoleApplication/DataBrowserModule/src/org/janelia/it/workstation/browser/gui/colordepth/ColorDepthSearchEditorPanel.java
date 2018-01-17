@@ -14,7 +14,6 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -45,12 +44,13 @@ import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
+import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.editor.ConfigPanel;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectNodeSelectionEditor;
+import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.editor.SelectionButton;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
@@ -70,7 +70,9 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.sample.DataSet;
@@ -88,7 +90,7 @@ import com.google.common.eventbus.Subscribe;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectEditor<ColorDepthSearch>, DomainObjectNodeSelectionEditor<ColorDepthSearch>, SearchProvider {
+public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectEditor<ColorDepthSearch>, ParentNodeSelectionEditor<ColorDepthSearch, ColorDepthMatch, String>, SearchProvider {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchEditorPanel.class);
 
@@ -97,14 +99,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private static final String THRESHOLD_LABEL_PREFIX = "Data Threshold: ";
     private static final int DEFAULT_THRESHOLD_VALUE = 100;
     private static final NumberFormat PX_FORMATTER = new DecimalFormat("#0.00");
-
     private static final String PCT_POSITIVE_THRESHOLD = "% of Positive PX Threshold";
-
     private static final String DEFAULT_PCT_PC = "10.00";
 
     // Utilities
     private final Debouncer debouncer = new Debouncer();
-    private AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
+    private final AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
     
     // UI Components
     private final ConfigPanel configPanel;
@@ -123,18 +123,31 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private final SelectablePanelListPanel maskPanel;
     private final JScrollPane maskScrollPane;
     private final Set<LoadedImagePanel> lips = new HashSet<>();
-    private final PaginatedResultsPanel resultPanel;
+    private final PaginatedResultsPanel<ColorDepthMatch, String> resultPanel;
     
     // Results
-    private SearchResults searchResults;
-    private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
+    private SearchResults<ColorDepthMatch,String> searchResults;
+    
+    private final ChildSelectionModel<ColorDepthMatch,String> selectionModel = new ChildSelectionModel<ColorDepthMatch,String>() {
+
+        @Override
+        protected void selectionChanged(List<ColorDepthMatch> objects, boolean select, boolean clearAll, boolean isUserDriven) {
+            
+        }
+
+        @Override
+        public String getId(ColorDepthMatch match) {
+            return match.getFilepath();
+        }
+        
+    };
     
     // State
     private boolean dirty = false;
     private ColorDepthSearch search;
-    private List<ColorDepthMask> masks;
-    private List<ColorDepthResult> results;
-    private List<DataSet> dataSets;
+    private List<ColorDepthMask> masks; // cached masks
+    private List<ColorDepthResult> results; // cached results
+    private List<DataSet> alignmentSpaceDataSets; // all possible data sets in the current alignment space
     private String sortCriteria;
     
     public ColorDepthSearchEditorPanel() {
@@ -170,7 +183,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
             @Override
             protected Collection<DataSet> getValues() {
-                return dataSets.stream().collect(Collectors.toSet());
+                return alignmentSpaceDataSets.stream().collect(Collectors.toSet());
             }
 
             @Override
@@ -251,11 +264,15 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
         });
         
-        
-        resultPanel = new PaginatedResultsPanel(selectionModel, this) {
+        resultPanel = new PaginatedResultsPanel<ColorDepthMatch,String>(selectionModel, this) {
+
             @Override
-            protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
+            protected ResultPage<ColorDepthMatch, String> getPage(SearchResults<ColorDepthMatch, String> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
+            }
+            @Override
+            public String getId(ColorDepthMatch object) {
+                return object.getFilepath();
             }
         };
 
@@ -495,7 +512,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 masks = model.getDomainObjectsAs(ColorDepthMask.class, colorDepthSearch.getMasks());
                 results = model.getDomainObjectsAs(ColorDepthResult.class, colorDepthSearch.getResults());
-                dataSets = model.getColorDepthDataSets(colorDepthSearch.getAlignmentSpace());
+                alignmentSpaceDataSets = model.getColorDepthDataSets(colorDepthSearch.getAlignmentSpace());
                 loadPreferences();
 //                prepareResults();
             }
@@ -530,12 +547,11 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     
     private void loadMaskResults(ColorDepthMask mask, boolean isUserDriven) {
     
-        // results.get(0);
-        
         List<DomainObject> filteredMatches = new ArrayList<>();
 
         DomainUtils.sortDomainObjects(filteredMatches, sortCriteria);
-        searchResults = SearchResults.paginate(filteredMatches, Collections.emptyList());
+        // TODO: implement pagination
+        searchResults = null;//DomainObjectSearchResults.paginate(filteredMatches, Collections.emptyList());
         
         resultPanel.showSearchResults(searchResults, isUserDriven, null);
         
@@ -627,7 +643,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     }
     
     @Override
-    public DomainObjectSelectionModel getSelectionModel() {
+    public ChildSelectionModel<ColorDepthMatch,String> getSelectionModel() {
         return selectionModel;
     }
 

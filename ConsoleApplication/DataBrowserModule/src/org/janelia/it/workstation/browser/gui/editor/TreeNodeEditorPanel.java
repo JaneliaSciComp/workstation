@@ -14,11 +14,13 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
+import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
+import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
@@ -27,6 +29,7 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.perf4j.StopWatch;
@@ -49,24 +52,28 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     private final Debouncer debouncer = new Debouncer();
     
     // UI Elements
-    private final PaginatedResultsPanel resultsPanel;
+    private final PaginatedDomainResultsPanel resultsPanel;
 
     // State
     private TreeNodeNode treeNodeNode;
     private TreeNode treeNode;
     
     // Results
-    private SearchResults searchResults;
+    private DomainObjectSearchResults searchResults;
     private String sortCriteria;
 
     public TreeNodeEditorPanel() {
         
         setLayout(new BorderLayout());
         
-        resultsPanel = new PaginatedResultsPanel(getSelectionModel(), this) {
+        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this) {
             @Override
-            protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
+            protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
+            }
+            @Override
+            public Reference getId(DomainObject object) {
+                return Reference.createFor(object);
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->TreeNodeEditorPanel"));
@@ -108,7 +115,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
                 annotations = model.getAnnotations(DomainUtils.getReferences(children));
                 loadPreferences();
                 DomainUtils.sortDomainObjects(children, sortCriteria);
-                searchResults = SearchResults.paginate(children, annotations);
+                searchResults = DomainObjectSearchResults.paginate(children, annotations);
                 log.info("Showing "+children.size()+" items");
             }
 

@@ -19,19 +19,19 @@ import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.components.DomainObjectProviderHelper;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.IconGridViewerConfigDialog;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
-import org.janelia.it.workstation.browser.gui.listview.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.browser.gui.listview.ListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
-import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
+import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.model.DomainObjectImageModel;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
@@ -43,7 +43,6 @@ import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.interfaces.IsParent;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.slf4j.Logger;
@@ -54,7 +53,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,Reference> implements AnnotatedDomainObjectListViewer {
+public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,Reference> implements ListViewer<DomainObject, Reference> {
     
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
 
@@ -66,9 +65,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private IconGridViewerConfiguration config;
     
     // These members deal with the context and entities within it
-    private AnnotatedDomainObjectList domainObjectList;
-    private DomainObjectSelectionModel selectionModel;
-    private DomainObjectSelectionModel editSelectionModel;
+    private AnnotatedObjectList<DomainObject,Reference> domainObjectList;
+    private ChildSelectionModel<DomainObject,Reference> selectionModel;
+    private ChildSelectionModel<DomainObject,Reference> editSelectionModel;
     private DomainObjectProviderHelper domainObjectProviderHelper = new DomainObjectProviderHelper();
     @SuppressWarnings("unused")
     private SearchProvider searchProvider;
@@ -101,7 +100,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         
         @Override
         public List<Annotation> getAnnotations(DomainObject domainObject) {
-            return domainObjectList.getAnnotations(domainObject.getId());
+            return domainObjectList.getAnnotations(Reference.createFor(domainObject));
         }
     };
 
@@ -187,19 +186,19 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
     
     @Override
-    public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
+    public void setSelectionModel(ChildSelectionModel<DomainObject,Reference> selectionModel) {
         super.setSelectionModel(selectionModel);
         this.selectionModel = selectionModel;
     }
     
     @Override
-    public DomainObjectSelectionModel getSelectionModel() {
+    public ChildSelectionModel<DomainObject,Reference> getSelectionModel() {
         return selectionModel;
     }
 
     @Override
     public int getNumItemsHidden() {
-        int totalItems = this.domainObjectList.getDomainObjects().size();
+        int totalItems = this.domainObjectList.getObjects().size();
         int totalVisibleItems = getObjects().size();
         return totalItems-totalVisibleItems;
     }
@@ -217,7 +216,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
-    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
+    public void select(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
         log.info("selectDomainObjects(domainObjects={},select={},clearAll={},isUserDriven={},notifyModel={})", DomainUtils.abbr(domainObjects), select, clearAll, isUserDriven, notifyModel);
 
         if (domainObjects.isEmpty()) {
@@ -247,7 +246,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     private void refreshDomainObjects() {
-        showDomainObjects(domainObjectList, new Callable<Void>() {
+        show(domainObjectList, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
                 Utils.setMainFrameCursorWaitStatus(false);
@@ -257,10 +256,10 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
     
     @Override
-    public void showDomainObjects(AnnotatedDomainObjectList objects, final Callable<Void> success) {
+    public void show(AnnotatedObjectList<DomainObject,Reference> objects, final Callable<Void> success) {
 
         this.domainObjectList = objects;
-        log.debug("showDomainObjects(domainObjectList={})",DomainUtils.abbr(domainObjectList.getDomainObjects()));
+        log.debug("showDomainObjects(domainObjectList={})",DomainUtils.abbr(domainObjectList.getObjects()));
 
         SimpleWorker worker = new SimpleWorker() {
             
@@ -302,17 +301,17 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                     }   
                 }
 
-                resultButton.populate(domainObjectList.getDomainObjects());
+                resultButton.populate(domainObjectList.getObjects());
                 typeButton.setResultDescriptor(resultButton.getResultDescriptor());
-                typeButton.populate(domainObjectList.getDomainObjects());
+                typeButton.populate(domainObjectList.getObjects());
 
                 if (mustHaveImage && (resultButton.isVisible() || typeButton.isVisible())) {
-                    domainObjects = domainObjectList.getDomainObjects().stream()
+                    domainObjects = domainObjectList.getObjects().stream()
                         .filter(domainObject -> imageModel.getImageFilepath(domainObject)!=null || ServiceAcceptorHelper.findFirstHelper(domainObject)!=null)
                         .collect(Collectors.toList());
                 }
                 else {
-                    domainObjects = domainObjectList.getDomainObjects();
+                    domainObjects = domainObjectList.getObjects();
                 }
                 
             }
@@ -355,18 +354,18 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
 
     @Override
-    public void setEditSelectionModel(DomainObjectSelectionModel editSelectionModel) {
+    public void setEditSelectionModel(ChildSelectionModel<DomainObject, Reference> editSelectionModel) {
         this.editSelectionModel = editSelectionModel;
         imagesPanel.setEditSelectionModel(editSelectionModel);
     }
 
     @Override
-    public DomainObjectSelectionModel getEditSelectionModel() {
+    public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
         return editSelectionModel;
     }
 
     @Override
-    public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
+    public boolean matches(ResultPage<DomainObject, Reference> resultPage, DomainObject domainObject, String text) {
         log.trace("Searching {} for {}", domainObject.getName(), text);
 
         String tupper = text.toUpperCase();
@@ -381,7 +380,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             return true;
         }
 
-        for(Annotation annotation : resultPage.getAnnotations(domainObject.getId())) {
+        for(Annotation annotation : resultPage.getAnnotations(Reference.createFor(domainObject))) {
             if (annotation.getName().toUpperCase().contains(tupper)) {
                 return true;
             }
@@ -391,7 +390,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
-    public void refreshDomainObject(DomainObject domainObject) {
+    public void refresh(DomainObject domainObject) {
         refreshObject(domainObject);
     }
 
@@ -431,7 +430,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     protected void deleteKeyPressed() {
         try {
-            IsParent parent = selectionModel.getParentObject();
+            Object parent = selectionModel.getParentObject();
             if (parent instanceof TreeNode) {
                 TreeNode treeNode = (TreeNode)parent;
                 if (ClientDomainUtils.hasWriteAccess(treeNode)) {
@@ -449,12 +448,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     protected void configButtonPressed() {
         try {
-            if (domainObjectList.getDomainObjects().isEmpty()) return;
+            if (domainObjectList.getObjects().isEmpty()) return;
 
             DomainObject firstObject;
             List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
             if (selectedObjects.isEmpty()) {
-                firstObject = domainObjectList.getDomainObjects().get(0);
+                firstObject = domainObjectList.getObjects().get(0);
             }
             else {
                 firstObject = selectedObjects.get(0);

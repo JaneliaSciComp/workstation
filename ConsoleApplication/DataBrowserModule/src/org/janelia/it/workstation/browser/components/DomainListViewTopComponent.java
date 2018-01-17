@@ -15,8 +15,8 @@ import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthSearchEditorPanel;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
-import org.janelia.it.workstation.browser.gui.editor.DomainObjectNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.editor.FilterEditorPanel;
+import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.editor.TreeNodeEditorPanel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextActivator;
@@ -77,7 +77,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     
     private final InstanceContent content = new InstanceContent();
     @SuppressWarnings("rawtypes")
-    private DomainObjectNodeSelectionEditor editor;
+    private ParentNodeSelectionEditor editor;
     private FindContext findContext;
     private boolean active = false;
     private String intialState;
@@ -273,7 +273,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         this.editor = null;
     }
     
-    public void setEditorClass(Class<? extends DomainObjectNodeSelectionEditor<?>> editorClass) {
+    public void setEditorClass(Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> editorClass) {
         try {
             clearEditor();
             editor = editorClass.newInstance();
@@ -290,12 +290,12 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         setName(editor.getName());
     }
     
-    public DomainObjectNodeSelectionEditor<?> getEditor() {
+    public ParentNodeSelectionEditor<? extends DomainObject,?,?> getEditor() {
         return editor;
     }
 
     @SuppressWarnings({ "unchecked" })
-    public void loadDomainObjectNode(AbstractDomainObjectNode<?> domainObjectNode, boolean isUserDriven) {
+    public void loadDomainObjectNode(AbstractDomainObjectNode<? extends DomainObject> domainObjectNode, boolean isUserDriven) {
         
         log.trace("loadDomainObjectNode({}, isUserDriven={})", domainObjectNode.getDomainObject().getName(), isUserDriven);
         
@@ -342,7 +342,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     private boolean prepareForLoad(DomainObject domainObject) {
 
         // Can view display this object?
-        final Class<? extends DomainObjectNodeSelectionEditor<?>> editorClass = getEditorClass(domainObject);
+        final Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> editorClass = getEditorClass(domainObject);
         if (editorClass==null) {
             return false;
         }
@@ -389,7 +389,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         setName(editor.getName());
     }
 
-    private static Class<? extends DomainObjectNodeSelectionEditor<?>> getEditorClass(DomainObject domainObject) {
+    private static Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
         if (TreeNode.class.isAssignableFrom(domainObject.getClass())) {
             return TreeNodeEditorPanel.class;
         }

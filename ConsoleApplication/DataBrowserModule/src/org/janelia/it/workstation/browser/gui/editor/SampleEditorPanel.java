@@ -45,7 +45,7 @@ import org.janelia.it.workstation.browser.events.selection.PipelineErrorSelectio
 import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
-import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
+import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
@@ -59,6 +59,7 @@ import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
@@ -66,6 +67,7 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.ErrorType;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
@@ -110,10 +112,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private final SelectablePanelListPanel mainPanel;
     private final JScrollPane scrollPane;
     private final Set<LoadedImagePanel> lips = new HashSet<>();
-    private final PaginatedResultsPanel lsmPanel;
+    private final PaginatedDomainResultsPanel lsmPanel;
     
     // Results
-    private SearchResults lsmSearchResults;
+    private DomainObjectSearchResults lsmSearchResults;
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     
     // State
@@ -145,10 +147,14 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         };
         configPanel.addTitleComponent(viewButton, true, true);
         
-        lsmPanel = new PaginatedResultsPanel(selectionModel, this) {
+        lsmPanel = new PaginatedDomainResultsPanel(selectionModel, this) {
             @Override
-            protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
+            protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
+            }
+            @Override
+            public Reference getId(DomainObject object) {
+                return Reference.createFor(object);
             }
         };
 
@@ -414,7 +420,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         }
 
         DomainUtils.sortDomainObjects(filteredLsms, sortCriteria);
-        lsmSearchResults = SearchResults.paginate(filteredLsms, lsmAnnotations);
+        lsmSearchResults = DomainObjectSearchResults.paginate(filteredLsms, lsmAnnotations);
     }
 
     private void showLsmView(boolean isUserDriven) {

@@ -3,7 +3,7 @@ package org.janelia.it.workstation.browser.gui.support;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
-import org.janelia.it.workstation.browser.model.search.SearchResults;
+import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
 import org.janelia.it.workstation.browser.nb_action.NewFilterActionListener;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.sample.LSMImage;
@@ -18,7 +18,7 @@ public class LSMSearchProvider implements SearchProvider {
 
         Filter filter = FilterEditorPanel.createUnsavedFilter(LSMImage.class, null);
         filter.setSearchString(searchString);
-        SearchConfiguration searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
+        SearchConfiguration searchConfig = new SearchConfiguration(filter, DomainObjectSearchResults.PAGE_SIZE);
         Long numResults = null;
         try {
             numResults = searchConfig.performSearch().getNumTotalResults();

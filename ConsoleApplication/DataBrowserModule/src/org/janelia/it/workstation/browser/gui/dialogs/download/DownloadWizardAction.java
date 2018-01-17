@@ -37,7 +37,7 @@ import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.gui.support.FileDownloadWorker;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
-import org.janelia.it.workstation.browser.model.search.ResultPage;
+import org.janelia.it.workstation.browser.model.search.DomainObjectResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.browser.model.search.SolrSearchResults;
 import org.janelia.it.workstation.browser.util.Utils;
@@ -212,10 +212,10 @@ public final class DownloadWizardAction implements ActionListener {
                 SearchConfiguration config = new SearchConfiguration(filter, 1000);
                 SolrSearchResults searchResults = config.performSearch();
                 searchResults.loadAllResults();
-                for (ResultPage page : searchResults.getPages()) {
+                for (DomainObjectResultPage page : searchResults.getPages()) {
                     List<String> childPath = new ArrayList<>(path);
                     childPath.add(domainObject.getName());
-                    for (DomainObject resultObject : page.getDomainObjects()) {
+                    for (DomainObject resultObject : page.getObjects()) {
                         downloadItems.addAll(addObjectsToExport(childPath, resultObject));
                     }
                 }

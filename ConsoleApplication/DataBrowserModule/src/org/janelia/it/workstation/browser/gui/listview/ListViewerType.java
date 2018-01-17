@@ -14,9 +14,9 @@ public enum ListViewerType {
     TableViewer("Table View", DomainObjectTableViewer.class);
 
     private final String name;
-    private final Class<? extends AnnotatedDomainObjectListViewer> viewerClass;
+    private final Class<? extends ListViewer<?,?>> viewerClass;
 
-    ListViewerType(String name, Class<? extends AnnotatedDomainObjectListViewer> viewerClass) {
+    ListViewerType(String name, Class<? extends ListViewer<?,?>> viewerClass) {
         this.name = name;
         this.viewerClass = viewerClass;
     }
@@ -25,7 +25,7 @@ public enum ListViewerType {
         return name;
     }
 
-    public Class<? extends AnnotatedDomainObjectListViewer> getViewerClass() {
+    public Class<? extends ListViewer<?,?>> getViewerClass() {
         return viewerClass;
     }
 }

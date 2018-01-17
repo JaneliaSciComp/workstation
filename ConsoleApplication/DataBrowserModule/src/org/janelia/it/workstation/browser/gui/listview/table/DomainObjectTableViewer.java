@@ -29,16 +29,16 @@ import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.dialogs.TableViewerConfigDialog;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
-import org.janelia.it.workstation.browser.gui.listview.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.browser.gui.listview.ListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
-import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
+import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.model.DomainObjectImageModel;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
@@ -47,7 +47,6 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.interfaces.IsParent;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.slf4j.Logger;
@@ -58,7 +57,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Reference> implements AnnotatedDomainObjectListViewer {
+public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Reference> implements ListViewer<DomainObject, Reference> {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectTableViewer.class);
 
@@ -70,8 +69,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
 
     // These members deal with the context and entities within it
-    private AnnotatedDomainObjectList domainObjectList;
-    private DomainObjectSelectionModel selectionModel;
+    private AnnotatedObjectList<DomainObject,Reference> domainObjectList;
+    private ChildSelectionModel<DomainObject, Reference> selectionModel;
     private SearchProvider searchProvider;
     private List<DomainObjectAttribute> attrs;
 
@@ -104,7 +103,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         
         @Override
         public List<Annotation> getAnnotations(DomainObject domainObject) {
-            return domainObjectList.getAnnotations(domainObject.getId());
+            return domainObjectList.getAnnotations(Reference.createFor(domainObject));
         }
     };
     
@@ -123,25 +122,25 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
+    public void setSelectionModel(ChildSelectionModel<DomainObject, Reference> selectionModel) {
         super.setSelectionModel(selectionModel);
         this.selectionModel = selectionModel;
     }
 
     @Override
-    public DomainObjectSelectionModel getSelectionModel() {
+    public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
         return selectionModel;
     }
 
     @Override
     public int getNumItemsHidden() {
-        int totalItems = this.domainObjectList.getDomainObjects().size();
+        int totalItems = this.domainObjectList.getObjects().size();
         int totalVisibleItems = getObjects().size();
         return totalItems-totalVisibleItems;
     }
         
     @Override
-    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
+    public void select(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
         super.selectObjects(domainObjects, select, clearAll, isUserDriven, notifyModel);
     }
 
@@ -153,7 +152,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public void showDomainObjects(final AnnotatedDomainObjectList domainObjectList, final Callable<Void> success) {
+    public void show(final AnnotatedObjectList<DomainObject,Reference> domainObjectList, final Callable<Void> success) {
 
         try {
             this.config = TableViewerConfiguration.loadConfig();
@@ -162,11 +161,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
 
         this.domainObjectList = domainObjectList;
-        log.debug("showDomainObjects(domainObjectList={})",DomainUtils.abbr(domainObjectList.getDomainObjects()));
+        log.debug("showDomainObjects(domainObjectList={})",DomainUtils.abbr(domainObjectList.getObjects()));
 
         attributeMap.clear();
 
-        attrs = DomainUtils.getDisplayAttributes(domainObjectList.getDomainObjects());
+        attrs = DomainUtils.getDisplayAttributes(domainObjectList.getObjects());
         attrs.add(0, annotationAttr);
 
         getDynamicTable().clearColumns();
@@ -177,14 +176,14 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             getDynamicTable().addColumn(attr.getName(), attr.getLabel(), visible, false, true, sortable);
         }
 
-        showObjects(domainObjectList.getDomainObjects(), success);
+        showObjects(domainObjectList.getObjects(), success);
         setSortCriteria(searchProvider.getSortField());
     }
 
     @Override
-    public void refreshDomainObject(DomainObject domainObject) {        
+    public void refresh(DomainObject domainObject) {        
         domainObjectList.updateObject(domainObject);
-        showDomainObjects(domainObjectList, null);
+        show(domainObjectList, null);
     }
 
     @Override
@@ -277,7 +276,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     protected void deleteKeyPressed() {
         // TODO: this was copy and pasted from DomainObjectIconGridViewer and should be refactored someday
         try {
-            IsParent parent = selectionModel.getParentObject();
+            Object parent = selectionModel.getParentObject();
             if (parent instanceof TreeNode) {
                 TreeNode treeNode = (TreeNode) parent;
                 if (ClientDomainUtils.hasWriteAccess(treeNode)) {
@@ -317,13 +316,13 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
-    public void setEditSelectionModel(DomainObjectSelectionModel editSelectionModel) {
+    public void setEditSelectionModel(ChildSelectionModel<DomainObject, Reference> editSelectionModel) {
 
     }
 
     // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
-    public DomainObjectSelectionModel getEditSelectionModel() {
+    public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
         return null;
     }
 
@@ -334,12 +333,12 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public AnnotatedDomainObjectList getDomainObjectList() {
+    public AnnotatedObjectList<DomainObject, Reference> getDomainObjectList() {
         return domainObjectList;
     }
 
     @Override
-    public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
+    public boolean matches(ResultPage<DomainObject, Reference> resultPage, DomainObject domainObject, String text) {
         log.debug("Searching {} for {}",domainObject.getName(),text);
 
         String tupper = text.toUpperCase();
@@ -367,10 +366,10 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         return false;
     }
 
-    public Object getValue(AnnotatedDomainObjectList domainObjectList, DomainObject object, String columnName) {
+    public Object getValue(AnnotatedObjectList<DomainObject, Reference> domainObjectList, DomainObject object, String columnName) {
         if (COLUMN_KEY_ANNOTATIONS.equals(columnName)) {
             StringBuilder builder = new StringBuilder();
-            for(Annotation annotation : domainObjectList.getAnnotations(object.getId())) {
+            for(Annotation annotation : domainObjectList.getAnnotations(Reference.createFor(object))) {
                 if (builder.length()>0) builder.append(", ");
                 builder.append(annotation.getName());
             }

@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.browser.gui.listview;
 
-import static org.janelia.it.workstation.browser.api.DomainMgr.getDomainMgr;
 import static org.janelia.it.workstation.browser.model.search.SearchResults.PAGE_SIZE;
 
 import java.awt.BorderLayout;
@@ -29,13 +28,8 @@ import javax.swing.text.Position;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
-import org.janelia.it.workstation.browser.events.model.DomainObjectAnnotationChangeEvent;
-import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextRegistration;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
@@ -52,56 +46,51 @@ import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
-
 /**
- * A panel that displays a paginated result set inside of a user-configurable AnnotatedDomainObjectListViewer.
+ * A panel that displays a paginated result set inside of a user-selectable ListViewer.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class PaginatedResultsPanel extends JPanel implements FindContext {
+public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindContext {
 
     private static final Logger log = LoggerFactory.getLogger(PaginatedResultsPanel.class);
     
     // Splash panel
-    private final JLabel splashPanel;
+    protected final JLabel splashPanel;
 
     // Result view
-    private AnnotatedDomainObjectListViewer resultsView;
+    protected ListViewer<T,S> resultsView;
 
     // Status bar
-    private FindToolbar findToolbar;
-    private final JPanel bottomBar;
-    private final JPanel statusBar;
-    private final JLabel statusLabel;
-    private final JPanel selectionButtonContainer;
-    private final JButton prevPageButton;
-    private final JButton nextPageButton;
-    private final JButton endPageButton;
-    private final JButton startPageButton;
-    private final JButton selectAllButton;
-    private final JLabel pagingStatusLabel;
-    private final DropDownButton viewTypeButton;
+    protected FindToolbar findToolbar;
+    protected final JPanel bottomBar;
+    protected final JPanel statusBar;
+    protected final JLabel statusLabel;
+    protected final JPanel selectionButtonContainer;
+    protected final JButton prevPageButton;
+    protected final JButton nextPageButton;
+    protected final JButton endPageButton;
+    protected final JButton startPageButton;
+    protected final JButton selectAllButton;
+    protected final JLabel pagingStatusLabel;
+    protected final DropDownButton viewTypeButton;
 
     // Content
-    private SearchResults searchResults;
-    private ResultPage resultPage;
-    private int numPages = 0;
-    private int currPage = 0;
+    protected SearchResults<T,S> searchResults;
+    protected ResultPage<T,S> resultPage;
+    protected int numPages = 0;
+    protected int currPage = 0;
     
     // State
-    protected DomainObjectSelectionModel selectionModel;
+    protected ChildSelectionModel<T,S> selectionModel;
     protected SearchProvider searchProvider;
-    	
-    public PaginatedResultsPanel(DomainObjectSelectionModel selectionModel, SearchProvider searchProvider) {
-                
+
+    public PaginatedResultsPanel(ChildSelectionModel<T,S> selectionModel, SearchProvider searchProvider) {
+               
         this.selectionModel = selectionModel;
         this.searchProvider = searchProvider;
         
@@ -199,7 +188,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
 
         setViewerType(ListViewerType.IconViewer);
     }
-    
+
     private void populateViewerPopupMenu(DropDownButton button) {
         for(final ListViewerType type : ListViewerType.values()) {
             JMenuItem viewItem = new JMenuItem(type.getName());
@@ -208,25 +197,14 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                     ActivityLogHelper.logUserAction("PaginatedResultsPanel.setViewerType", type.getName());
                     setViewerType(type);
 
-                    final List<DomainObject> selectedDomainObjects = new ArrayList<>();
-                    DomainModel model = getDomainMgr().getModel();
-                    for(Reference id : selectionModel.getSelectedIds()) {
-                        try {
-                            DomainObject domainObject = model.getDomainObject(id);
-                            if (domainObject!=null) {
-                                selectedDomainObjects.add(domainObject);
-                            }
-                        }  catch (Exception e) {
-                            ConsoleApp.handleException(e);
-                        }
-                    }
+                    final List<T> selectedDomainObjects = getPageObjects(selectionModel.getSelectedIds());
 
                     updateResultsView(new Callable<Void>() {
                         @Override
                         public Void call() throws Exception {
                             // Reselect the items that were selected
                             log.info("Reselecting {} domain objects in the {} viewer",selectedDomainObjects.size(),type.getName());
-                            resultsView.selectDomainObjects(selectedDomainObjects, true, true, true, false);
+                            resultsView.select(selectedDomainObjects, true, true, true, false);
                             return null;
                         }
                     });
@@ -243,7 +221,8 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                 setViewer(null);
             }
             else {
-                AnnotatedDomainObjectListViewer viewer = viewerType.getViewerClass().newInstance();
+                @SuppressWarnings("unchecked")
+                ListViewer<T,S> viewer = (ListViewer<T, S>) viewerType.getViewerClass().newInstance();
                 viewer.getPanel().addMouseListener(new MouseForwarder(this, "AnnotatedDomainObjectListViewer->PaginatedResultsPanel"));
                 setViewer(viewer);
             }
@@ -262,11 +241,11 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         resultsView.deactivate();
     }
     
-    public AnnotatedDomainObjectListViewer getViewer() {
+    public ListViewer<T,S> getViewer() {
         return resultsView;
     }
     
-    private void setViewer(AnnotatedDomainObjectListViewer viewer) {
+    private void setViewer(ListViewer<T,S> viewer) {
         if (resultsView!=null) {
             Events.getInstance().unregisterOnEventBus(resultsView);
         }
@@ -282,54 +261,6 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         resultsView.setSearchProvider(searchProvider);
     }
         
-    @Subscribe
-    public void domainObjectSelected(DomainObjectSelectionEvent event) {
-        if (event.getSource()!=resultsView) return;
-        updateStatusBar();
-    }
-
-    @Subscribe
-    public void domainObjectChanged(DomainObjectChangeEvent event) {
-        if (searchResults==null) return;
-        if (searchResults.updateIfFound(event.getDomainObject())) {
-            log.info("Updated search results with changed domain object: {}", event.getDomainObject());
-            resultsView.refreshDomainObject(event.getDomainObject());
-        }
-    }
-    
-    @Subscribe
-    public void annotationsChanged(DomainObjectAnnotationChangeEvent event) {
-        if (searchResults==null) return;
-        for(final ResultPage page : searchResults.getPages()) {
-            if (page==null) continue; // Page not yet loaded
-            final Long domainObjectId = event.getDomainObject().getId();
-            final DomainObject pageObject = page.getDomainObject(domainObjectId);
-            if (pageObject!=null) {
-
-                SimpleWorker annotationUpdateWorker = new SimpleWorker() {
-
-                    @Override
-                    protected void doStuff() throws Exception {
-                        DomainModel model = getDomainMgr().getModel();
-                        page.updateAnnotations(domainObjectId, model.getAnnotations(Reference.createFor(pageObject)));
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        resultsView.refreshDomainObject(pageObject);
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
-                    }
-                };
-
-                annotationUpdateWorker.execute();
-                break;
-            }
-        }
-    }
 
     private void loadAndSelectAll() {
         
@@ -369,22 +300,22 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     
     private void selectAll() {
         boolean clearAll = true;
-        List<DomainObject> domainObjects = new ArrayList<>();
-        for(ResultPage page : searchResults.getPages()) {
+        List<T> allObjects = new ArrayList<>();
+        for(ResultPage<T,S> page : searchResults.getPages()) {
             if (page==null) continue; // Page not yet loaded
-            domainObjects.addAll(page.getDomainObjects());
+            allObjects.addAll(page.getObjects());
         }
-        selectionModel.select(domainObjects, clearAll, true);
+        selectionModel.select(allObjects, clearAll, true);
     }
 
-    private void updatePagingStatus() {
+    protected void updatePagingStatus() {
         startPageButton.setEnabled(numPages>0 && currPage != 0);
         prevPageButton.setEnabled(numPages>0 && currPage > 0);
         nextPageButton.setEnabled(numPages>0 && currPage < numPages - 1);
         endPageButton.setEnabled(numPages>0 && currPage != numPages - 1);
     }
     
-    private void updateStatusBar() {
+    protected void updateStatusBar() {
         if (resultPage==null || resultsView==null) {
             statusLabel.setText("");
             selectionButtonContainer.setVisible(false);
@@ -478,7 +409,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         updateUI();
     }
     
-    public void showSearchResults(SearchResults searchResults, boolean isUserDriven, Callable<Void> success) {
+    public void showSearchResults(SearchResults<T,S> searchResults, boolean isUserDriven, Callable<Void> success) {
 
         if (searchResults==null) {
             // First load into this panel, so we need a top-level loading indicator, since the resultsView isn't active yet
@@ -529,7 +460,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             @Override
             protected void hadSuccess() {
                 log.debug("Got results, updating view");
-                final ArrayList<Reference> selectedRefs = new ArrayList<>(selectionModel.getSelectedIds());
+                final ArrayList<S> selectedRefs = new ArrayList<>(selectionModel.getSelectedIds());
                 log.debug("Got selected refs: {}",selectedRefs);
                 updateResultsView(new Callable<Void>() {   
                     @Override
@@ -541,17 +472,17 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                         log.info("updateResultsView complete, restoring selection");
                         if (selectedRefs.isEmpty()) {
                             // If the selection model is empty, just select the first item to make it appear in the inspector
-                            List<DomainObject> objects = resultPage.getDomainObjects();
+                            List<T> objects = resultPage.getObjects();
                             if (!objects.isEmpty()) {
                                 log.debug("Auto-selecting first object");
-                                resultsView.selectDomainObjects(Arrays.asList(objects.get(0)), true, true, false, notifyModel);
+                                resultsView.select(Arrays.asList(objects.get(0)), true, true, false, notifyModel);
                             }
                         }
                         else {
                             // There's already something in the selection model, so we should attempt to reselect it
                             log.debug("Reselecting {} objects",selectedRefs.size());
-                            List<DomainObject> domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectedRefs);
-                            resultsView.selectDomainObjects(domainObjects, true, true, false, notifyModel);
+                            List<T> objects = getPageObjects(selectedRefs);
+                            resultsView.select(objects, true, true, false, notifyModel);
                         }
                             
                         resultsView.refreshEditMode();
@@ -571,10 +502,27 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         worker.execute();
     }
     
+    protected List<T> getPageObjects(List<S> selectedRefs) {
+        final List<T> objects = new ArrayList<>();
+        for(S id : selectionModel.getSelectedIds()) {
+            try {
+                T object = resultPage.getObjectById(id);
+                if (object!=null) {
+                    objects.add(object);
+                }
+            }  catch (Exception e) {
+                ConsoleApp.handleException(e);
+            }
+        }
+        
+        return objects;
+    }
+
+    
     private void updateResultsView(final Callable<Void> success) {
         selectionModel.reset();
         if (resultPage!=null) {
-            resultsView.showDomainObjects(resultPage, new Callable<Void>() {
+            resultsView.show(resultPage, new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     showResultsView();
@@ -588,7 +536,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         }
     }
     
-    protected abstract ResultPage getPage(SearchResults searchResults, int page) throws Exception;
+    protected abstract ResultPage<T,S> getPage(SearchResults<T,S> searchResults, int page) throws Exception;
 
     @Override
     public void showFindUI() {
@@ -618,35 +566,35 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         SimpleWorker worker = createFindWorker(text, bias, skipStartingNode);
         worker.execute();
     }
-
+    
     private SimpleWorker createFindWorker(final String text, final Position.Bias bias, final boolean skipStartingNode) {
 
         return new SimpleWorker() {
 
-            private ResultIteratorFind searcher;
-            private DomainObject match;
+            private ResultIteratorFind<T,S> searcher;
+            private T match;
             private Integer matchPage;
 
             @Override
             protected void doStuff() throws Exception {
                 System.currentTimeMillis();
-                DomainObject startObject;
-                Reference lastSelectedRef = selectionModel.getLastSelectedId();
+                T startObject;
+                S lastSelectedRef = selectionModel.getLastSelectedId();
                 log.info("lastSelectedId={}", lastSelectedRef);
                 if (lastSelectedRef!=null) {
-                    startObject = DomainMgr.getDomainMgr().getModel().getDomainObject(lastSelectedRef);
+                    startObject = resultPage.getObjectById(lastSelectedRef);
                 }
                 else {
                     // This is generally unexpected, because the viewer should
                     // select the first item automatically, and there is no way to deselect everything.
                     log.warn("No 'last selected object' in selection model! Defaulting to first object...");
-                    startObject = resultPage.getDomainObjects().get(0);
+                    startObject = resultPage.getObjects().get(0);
                 }
 
                 int index = 0;
                 Integer foundIndex = null;
-                for (DomainObject domainObject : resultPage.getDomainObjects()) {
-                    if (DomainUtils.equals(domainObject, startObject)) {
+                for (T object : resultPage.getObjects()) {
+                    if (areEqual(object, startObject)) {
                         foundIndex = index;
                         break;
                     }
@@ -661,11 +609,11 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                 log.debug("currPage={}",currPage);
                 int globalStartIndex = currPage*PAGE_SIZE + foundIndex;
                 log.debug("globalStartIndex={}",globalStartIndex);
-                ResultIterator resultIterator = new ResultIterator(searchResults, globalStartIndex, bias, skipStartingNode);
-                searcher = new ResultIteratorFind(resultIterator) {
+                ResultIterator<T,S> resultIterator = new ResultIterator<T,S>(searchResults, globalStartIndex, bias, skipStartingNode);
+                searcher = new ResultIteratorFind<T,S>(resultIterator) {
                     @Override
-                    protected boolean matches(ResultPage resultPage, DomainObject currObject) {
-                        return resultsView.matches(resultPage, currObject, text);
+                    protected boolean matches(ResultPage<T, S> resultPage, T object) {
+                        return resultsView.matches(resultPage, object, text);
                     }
                 };
                 match = searcher.find();
@@ -676,15 +624,15 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             protected void hadSuccess() {
                 Utils.setDefaultCursor(ConsoleApp.getMainFrame());
                 if (match != null) {
-                    log.info("Found match for '{}': {}",text,match.getId());
+                    log.info("Found match for '{}': {}", text, match);
                     if (matchPage!=null && matchPage!=currPage) {
-                        log.trace("Match page ({}) differs from current page ({})",matchPage,currPage);
+                        log.trace("Match page ({}) differs from current page ({})", matchPage, currPage);
                         currPage = matchPage;
                         selectionModel.select(Arrays.asList(match), true, true);
                         showCurrPage(false); // isUserDriven=false in order to "reselect" the match
                     }
                     else {
-                        resultsView.selectDomainObjects(Arrays.asList(match), true, true, true, true);
+                        resultsView.select(Arrays.asList(match), true, true, true, true);
                     }
                 }
                 else {
@@ -712,5 +660,30 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
 
     @Override
     public void openMatch() {
+    }
+
+    /**
+     * Returns the id for the given object.
+     * TODO: merge with getId in SelectionModel
+     * @param object
+     * @return
+     */
+    public abstract S getId(T object);
+    
+    public T getObject(S id) {
+        T object = null;
+        for (ResultPage<T, S> page : searchResults.getPages()) {
+            object = page.getObjectById(id);
+            if (object!=null) return object;
+        }
+        return object;
+    }
+
+    private boolean areEqual(T o1, T o2) {
+        if (o1==null || o2==null) return false;
+        S id1 = getId(o1);
+        S id2 = getId(o2);
+        if (id1==null || id2==null) return false;
+        return id1.equals(id2);
     }
 }

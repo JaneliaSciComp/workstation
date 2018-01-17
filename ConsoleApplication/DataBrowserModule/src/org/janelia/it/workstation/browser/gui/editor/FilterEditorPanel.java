@@ -40,6 +40,7 @@ import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.gui.dialogs.EditCriteriaDialog;
+import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
@@ -50,6 +51,8 @@ import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SmartSearchBox;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
+import org.janelia.it.workstation.browser.model.search.DomainObjectResultPage;
+import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
@@ -62,6 +65,7 @@ import org.janelia.model.access.domain.DomainObjectAttribute;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;
@@ -104,7 +108,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private final ConfigPanel configPanel;
     private final JButton saveButton;
     private final JButton saveAsButton;
-    private final PaginatedResultsPanel resultsPanel;
+    private final PaginatedDomainResultsPanel resultsPanel;
     private final DropDownButton typeCriteriaButton;
     private final DropDownButton addCriteriaButton;
     private final SmartSearchBox searchBox;
@@ -117,7 +121,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private SearchConfiguration searchConfig;
     
     // Results
-    private SearchResults searchResults;
+    private DomainObjectSearchResults searchResults;
 
     public FilterEditorPanel() {
 
@@ -269,10 +273,14 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
         getActionMap().put("enterAction", mySearchAction);
         
-        this.resultsPanel = new PaginatedResultsPanel(getSelectionModel(), this) {
+        this.resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this) {
             @Override
-            protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
+            protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
+            }
+            @Override
+            public Reference getId(DomainObject object) {
+                return Reference.createFor(object);
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->FilterEditorPanel"));
@@ -291,7 +299,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             // We can only override the given object with a cloned filter (e.g. use the "Save" action) if it's a Filter to begin with
             filter.setId(canonicalFilter.getId());
         }
-        this.searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
+        this.searchConfig = new SearchConfiguration(filter, DomainObjectSearchResults.PAGE_SIZE);
     }
 
     @Override
@@ -881,7 +889,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
         SimpleWorker worker = new SimpleWorker() {
 
-            private SearchResults exportSearchResults = searchResults;
+            private DomainObjectSearchResults exportSearchResults = searchResults;
 
             @Override
             protected void doStuff() throws Exception {
