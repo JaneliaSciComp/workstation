@@ -191,6 +191,7 @@ public abstract class AB2RendererD extends AB2Renderer {
             for (Pair<GLAbstractActor, GLShaderProgram> pair : actorDisposalQueue) {
                 GLAbstractActor actor=pair.getLeft();
                 GLShaderProgram shader=pair.getRight();
+                //logger.info(">>> disposing actor type="+actor.getClass().getName()+" with shader type="+shader.getClass().getName());
                 actor.dispose(gl, shader);
             }
             actorDisposalQueue.clear();

@@ -61,6 +61,8 @@ public class AB2SampleRegionManager extends GLRegionManager {
         return mainRegion;
     }
 
+    public AB2SampleBottomRegion getBottomRegion() { return bottomRegion; }
+
     public GLRegion getRegionAtPosition(Point point) {
         if (mainRegion.containsPointUsingYFlip(point)) {
             return mainRegion;

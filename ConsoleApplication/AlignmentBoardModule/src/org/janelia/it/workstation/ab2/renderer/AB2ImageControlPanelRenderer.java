@@ -135,6 +135,8 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
 
     }
 
+    public HorizontalDualSliderActor getRangeSlider() { return rangeSlider; }
+
     public AB2ImageControlPanelRenderer(int x, int y, int width, int height, int screenWidth, int screenHeight, GLRegion parentRegion) {
         super(parentRegion);
 

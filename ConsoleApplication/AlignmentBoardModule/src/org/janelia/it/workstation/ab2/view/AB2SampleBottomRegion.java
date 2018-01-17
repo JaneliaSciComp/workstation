@@ -38,6 +38,8 @@ public class AB2SampleBottomRegion extends AB2SideRegion {
         imageControlPanelRenderer.reshape(gl4, x, y, width, height, screenWidth, screenHeight);
     }
 
+    public AB2ImageControlPanelRenderer getImageControlPanelRenderer() { return imageControlPanelRenderer; }
+
     @Override
     public void processEvent(AB2Event event) {
         //logger.info("processEvent() event="+event.getClass().getName());

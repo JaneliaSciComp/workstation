@@ -4,6 +4,7 @@ import java.awt.Point;
 
 import javax.media.opengl.GLAutoDrawable;
 
+import org.janelia.it.workstation.ab2.actor.HorizontalDualSliderActor;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2Main3DRendererSetRangeEvent;
 import org.janelia.it.workstation.ab2.event.AB2Sample3DImageLoadedEvent;
@@ -11,7 +12,9 @@ import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLRegionManager;
 import org.janelia.it.workstation.ab2.loader.AB2Sample3DImageLoader;
+import org.janelia.it.workstation.ab2.renderer.AB2ImageControlPanelRenderer;
 import org.janelia.it.workstation.ab2.renderer.AB2Main3DRenderer;
+import org.janelia.it.workstation.ab2.view.AB2SampleBottomRegion;
 import org.janelia.it.workstation.ab2.view.AB2SampleMainRegion;
 import org.janelia.it.workstation.ab2.view.AB2SampleRegionManager;
 import org.slf4j.Logger;
@@ -81,6 +84,15 @@ public class AB2SampleBasicMode extends AB2View3DMode {
             logger.info("calling sampleRenderer.addSample3DImage()");
             sampleRenderer.addSample3DImage(sample3DImageLoadedEvent.getData());
             sample3DImageLoadedEvent.clearData();
+
+            AB2SampleRegionManager regionManager=(AB2SampleRegionManager)getRegionManager();
+            AB2SampleBottomRegion bottomRegion=regionManager.getBottomRegion();
+            AB2ImageControlPanelRenderer imageControlPanelRenderer=bottomRegion.getImageControlPanelRenderer();
+            HorizontalDualSliderActor rangeSlider=imageControlPanelRenderer.getRangeSlider();
+            AB2Main3DRendererSetRangeEvent rangeEvent=new AB2Main3DRendererSetRangeEvent(rangeSlider.getSlider1Position(),
+                    rangeSlider.getSlider2Position());
+            controller.processEvent(rangeEvent);
+
             logger.info("calling controller.repaint after sampleRenderer.addSample3DImage");
             controller.setNeedsRepaint(true);
         } else if (event instanceof AB2Main3DRendererSetRangeEvent) {
