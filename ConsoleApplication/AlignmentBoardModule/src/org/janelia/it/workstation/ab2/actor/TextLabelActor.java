@@ -48,7 +48,8 @@ public class TextLabelActor extends GLAbstractActor {
 
     int labelImageWidth;
     int labelImageHeight;
-    boolean recompute=false;
+    boolean recomputeVertices=false;
+    boolean recomputeAll=false;
 
     int glWidth=500;  // sane initialization value
     int glHeight=500; // sane initialization value
@@ -111,7 +112,7 @@ public class TextLabelActor extends GLAbstractActor {
     protected void glWindowResize(int width, int height) {
         glWidth=width;
         glHeight=height;
-        recompute=true;
+        recomputeVertices=true;
     }
 
     public Vector4 getTextColor() { return textColor; }
@@ -124,10 +125,18 @@ public class TextLabelActor extends GLAbstractActor {
 
     public void setCenterPosition(Vector3 position) {
         this.centerPosition = position;
-        recompute=true;
+        recomputeVertices=true;
     }
 
-    public void setOrientation(Orientation orientation) { this.orientation = orientation; }
+    public void setOrientation(Orientation orientation) {
+        this.orientation = orientation;
+        recomputeVertices=true;
+    }
+
+    public void setText(String text) {
+        this.text=text;
+        recomputeAll=true;
+    }
 
     @Override
     public boolean isTwoDimensional() { return true; }
@@ -189,50 +198,40 @@ public class TextLabelActor extends GLAbstractActor {
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
             checkGlError(gl, "Refresh - glBindBuffer 0");
         }
-        recompute=false;
+        recomputeVertices=false;
+    }
+
+    private void updateTextImage(GL4 gl) {
+        byte[] labelPixels=createTextImage();
+
+        if (imageTextureId.get(0)!=0) {
+            gl.glDeleteTextures(1, imageTextureId);
+        }
+
+        // Create texture
+        gl.glGenTextures(1, imageTextureId);
+        gl.glBindTexture(GL4.GL_TEXTURE_2D, imageTextureId.get(0));
+
+        ByteBuffer byteBuffer=ByteBuffer.allocate(labelPixels.length);
+        for (int i=0;i<labelPixels.length;i++) {
+            byteBuffer.put(i, labelPixels[i]);
+        }
+
+        byteBuffer.rewind();
+        gl.glTexImage2D(GL4.GL_TEXTURE_2D,0, GL4.GL_RGBA, labelImageWidth, labelImageHeight,0,
+                GL4.GL_RGBA, GL4.GL_UNSIGNED_BYTE, byteBuffer);
+        checkGlError(gl, "Uploading texture");
+        gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_NEAREST );
+        gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST );
+        gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
     }
 
     @Override
     public void init(GL4 gl, GLShaderProgram shader) {
-        logger.info("init() called");
         if (shader instanceof AB2Text2DShader) {
-
-            byte[] labelPixels=createTextImage();
-
+            updateTextImage(gl);
             computeVertices(gl, false);
-
-            // Create texture
-            gl.glGenTextures(1, imageTextureId);
-            gl.glBindTexture(GL4.GL_TEXTURE_2D, imageTextureId.get(0));
-
-            ByteBuffer byteBuffer=ByteBuffer.allocate(labelPixels.length);
-            for (int i=0;i<labelPixels.length;i++) {
-                byteBuffer.put(i, labelPixels[i]);
-            }
-
-            int sizeCheck=labelImageWidth*labelImageHeight;
-            //logger.info("labelPixels.length="+labelPixels.length+" labelImageWidth="+labelImageWidth+" labelImageHeight="+labelImageHeight+" sizeCheck="+sizeCheck);
-
-            byteBuffer.rewind();
-            gl.glTexImage2D(GL4.GL_TEXTURE_2D,0, GL4.GL_RGBA, labelImageWidth, labelImageHeight,0,
-                    GL4.GL_RGBA, GL4.GL_UNSIGNED_BYTE, byteBuffer);
-            checkGlError(gl, "Uploading texture");
-            gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_NEAREST );
-            gl.glTexParameteri( GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST );
-            gl.glBindTexture(GL4.GL_TEXTURE_2D, 0);
-
         }
-
-        // Deprecated design in favor of handling via setSelect() or setHover()
-
-//        else if (shader instanceof AB2PickShader) {
-//            if (pickIndex<0) {
-//                pickIndex = AB2Controller.getController().getNextPickIndex();
-//                AB2Controller.getController().setPickEvent(pickIndex, new AB2TextLabelClickEvent(this));
-//                //logger.info("Setting pickIndex="+pickIndex);
-//            }
-//        }
-
     }
 
     protected byte[] createTextImage() {
@@ -299,8 +298,13 @@ public class TextLabelActor extends GLAbstractActor {
 
         //logger.info("display() called");
 
-        if (recompute) {
+        if (recomputeAll) {
+            updateTextImage(gl);
             computeVertices(gl, true);
+            recomputeAll=false;
+        } else if (recomputeVertices) {
+            computeVertices(gl, true);
+            recomputeVertices=false;
         }
         if (shader instanceof AB2Text2DShader) {
             AB2Text2DShader text2DShader=(AB2Text2DShader)shader;

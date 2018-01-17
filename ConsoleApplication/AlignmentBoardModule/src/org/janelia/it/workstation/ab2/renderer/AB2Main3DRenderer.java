@@ -14,10 +14,12 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
+import org.janelia.it.workstation.ab2.AB2Properties;
 import org.janelia.it.workstation.ab2.actor.BoundingBoxActor;
 import org.janelia.it.workstation.ab2.actor.Camera3DFollowBoxActor;
 import org.janelia.it.workstation.ab2.actor.Image3DActor;
 import org.janelia.it.workstation.ab2.actor.PointSetActor;
+import org.janelia.it.workstation.ab2.actor.TextLabelActor;
 import org.janelia.it.workstation.ab2.actor.Voxel3DActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.controller.AB2UserContext;
@@ -31,6 +33,7 @@ import org.janelia.it.workstation.ab2.gl.GLShaderProgram;
 import org.janelia.it.workstation.ab2.model.AB2Image3D_RGBA8UI;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.janelia.it.workstation.ab2.shader.AB2Basic3DShader;
+import org.janelia.it.workstation.ab2.shader.AB2Text2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2Volume3DShader;
 import org.janelia.it.workstation.ab2.shader.AB2Voxel3DShader;
 import org.slf4j.Logger;
@@ -50,18 +53,34 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
 
     private AB2Controller controller;
 
+    int x;
+    int y;
+    int width;
+    int height;
+    int screenWidth;
+    int screenHeight;
+
     private int getNextActorIndex() {
         return controller.getNextPickIndex();
     }
 
     public AB2Main3DRenderer(int x, int y, int width, int height, int screenWidth, int screenHeight, GLRegion parentRegion) {
         super(parentRegion);
+
+        this.x=x;
+        this.y=y;
+        this.width=width;
+        this.height=height;
+        this.screenHeight=screenHeight;
+        this.screenWidth=screenWidth;
+
         controller=AB2Controller.getController();
 
-        setSizeParameters(x, y, width, height, screenWidth, screenHeight);
+        setVoxel3DActorSizeParameters(x, y, width, height, screenWidth, screenHeight);
 
         voxel3DShaderSequence=new GLShaderActionSequence( "Voxel3D");
         pickShaderSequence=new GLShaderActionSequence("PickSequence");
+
         voxel3DShaderSequence.setShader(new AB2Voxel3DShader());
         pickShaderSequence.setShader(new AB2PickShader());
 
@@ -119,7 +138,7 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
     public void addSample3DImage(byte[] data) {
         clearVoxel3DActor();
         resetView();
-        Voxel3DActor v=new Voxel3DActor(this, getNextActorIndex(), 0.02f, data, true);
+        Voxel3DActor v=new Voxel3DActor(this, getNextActorIndex(), 0.0275f, data, true);
         addVoxel3DActor(v);
     }
 
@@ -174,11 +193,19 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
 
     @Override
     public void reshape(GL4 gl, int x, int y, int width, int height, int screenWidth, int screenHeight) {
+
+        this.x=x;
+        this.y=y;
+        this.width=width;
+        this.height=height;
+        this.screenHeight=screenHeight;
+        this.screenWidth=screenWidth;
+
         super.reshape(gl, x, y, width, height, screenWidth, screenHeight);
-        setSizeParameters(x, y, width, height, screenWidth, screenHeight);
+        setVoxel3DActorSizeParameters(x, y, width, height, screenWidth, screenHeight);
     }
 
-    private void setSizeParameters(int x, int y, int width, int height, int screenWidth, int screenHeight) {
+    private void setVoxel3DActorSizeParameters(int x, int y, int width, int height, int screenWidth, int screenHeight) {
         float[] parameters = computeOffsetParameters(x, y, width, height, screenWidth, screenHeight);
         setVoxel3DActorPostProjectionMatrix(getOffsetPostProjectionMatrix(parameters[0], parameters[1], parameters[2], parameters[3]));
         int[] xyBounds = getXYBounds(x, y, width, height);

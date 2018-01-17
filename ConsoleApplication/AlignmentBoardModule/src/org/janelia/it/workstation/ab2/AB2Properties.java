@@ -36,5 +36,9 @@ public class AB2Properties {
     public static Vector4 IMAGE_CONTROL_RANGE_SLIDER_SLIDER_COLOR = new Vector4(0.2f, 0.6f, 0.2f, 1.0f);
     public static Vector4 IMAGE_CONTROL_RANGE_SLIDER_SLIDER_HOVER_COLOR = new Vector4(0.2f, 0.8f, 0.2f, 1.0f);
 
+    public static float   MAIN_RENDERER_MESSAGE_Z = 0.7f;
+    public static Vector4 MAIN_RENDERER_MESSAGE_TEXT_COLOR = new Vector4(0.5f, 0.5f, 0.5f, 1.0f);
+    public static Vector4 MAIN_RENDERER_MESSAGE_BACKGROUND_COLOR = new Vector4( 0.0f, 0.0f, 0.0f, 1.0f);
+
 
 }

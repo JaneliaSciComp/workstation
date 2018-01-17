@@ -7,12 +7,15 @@ import javax.media.opengl.GLAutoDrawable;
 import org.janelia.it.workstation.ab2.actor.HorizontalDualSliderActor;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2Main3DRendererSetRangeEvent;
+import org.janelia.it.workstation.ab2.event.AB2MainMessageEvent;
+import org.janelia.it.workstation.ab2.event.AB2MainMessageHideEvent;
 import org.janelia.it.workstation.ab2.event.AB2Sample3DImageLoadedEvent;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLRegionManager;
 import org.janelia.it.workstation.ab2.loader.AB2Sample3DImageLoader;
 import org.janelia.it.workstation.ab2.renderer.AB2ImageControlPanelRenderer;
+import org.janelia.it.workstation.ab2.renderer.AB2Main2DRenderer;
 import org.janelia.it.workstation.ab2.renderer.AB2Main3DRenderer;
 import org.janelia.it.workstation.ab2.view.AB2SampleBottomRegion;
 import org.janelia.it.workstation.ab2.view.AB2SampleMainRegion;
@@ -70,7 +73,19 @@ public class AB2SampleBasicMode extends AB2View3DMode {
     public void processEvent(AB2Event event) {
         //logger.info("processEvent() - type="+event.getClass().getName());
         super.processEvent(event);
-        if (event instanceof AB2SampleAddedEvent) {
+        if (event instanceof AB2MainMessageEvent) {
+            AB2SampleRegionManager regionManager=(AB2SampleRegionManager)getRegionManager();
+            AB2SampleMainRegion mainRegion=regionManager.getMainRegion();
+            AB2Main2DRenderer messageRenderer=mainRegion.getMessageRenderer();
+            messageRenderer.updateTextMessage(((AB2MainMessageEvent) event).getMessage());
+        }
+        else if (event instanceof AB2MainMessageHideEvent) {
+            AB2SampleRegionManager regionManager=(AB2SampleRegionManager)getRegionManager();
+            AB2SampleMainRegion mainRegion=regionManager.getMainRegion();
+            AB2Main2DRenderer messageRenderer=mainRegion.getMessageRenderer();
+            messageRenderer.hideTextMessage();
+        }
+        else if (event instanceof AB2SampleAddedEvent) {
             logger.info("processing AB2SampleAddedEvent");
             AB2SampleAddedEvent sampleAddedEvent=(AB2SampleAddedEvent)event;
             sampleRenderer.clearActors();
@@ -78,7 +93,9 @@ public class AB2SampleBasicMode extends AB2View3DMode {
             AB2Sample3DImageLoader sample3DImageLoader=new AB2Sample3DImageLoader(sampleAddedEvent.getSample());
             logger.info("executing sample3DImageLoader");
             sample3DImageLoader.execute();
-        } else if  (event instanceof AB2Sample3DImageLoadedEvent) {
+            controller.processEvent(new AB2MainMessageEvent("Loading Sample "+sampleAddedEvent.getSample().getName()+" ..."));
+        }
+        else if  (event instanceof AB2Sample3DImageLoadedEvent) {
             logger.info("processing AB2Sample3DImageLoadedEvent");
             AB2Sample3DImageLoadedEvent sample3DImageLoadedEvent=(AB2Sample3DImageLoadedEvent)event;
             logger.info("calling sampleRenderer.addSample3DImage()");
@@ -93,9 +110,12 @@ public class AB2SampleBasicMode extends AB2View3DMode {
                     rangeSlider.getSlider2Position());
             controller.processEvent(rangeEvent);
 
+            controller.processEvent(new AB2MainMessageHideEvent());
+
             logger.info("calling controller.repaint after sampleRenderer.addSample3DImage");
             controller.setNeedsRepaint(true);
-        } else if (event instanceof AB2Main3DRendererSetRangeEvent) {
+        }
+        else if (event instanceof AB2Main3DRendererSetRangeEvent) {
             AB2SampleRegionManager regionManager=(AB2SampleRegionManager)getRegionManager();
             AB2SampleMainRegion mainRegion=regionManager.getMainRegion();
             mainRegion.processEvent(event);

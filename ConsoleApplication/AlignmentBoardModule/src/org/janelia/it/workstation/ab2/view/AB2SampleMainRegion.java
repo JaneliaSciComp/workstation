@@ -5,7 +5,9 @@ import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
+import org.janelia.it.workstation.ab2.renderer.AB2Main2DRenderer;
 import org.janelia.it.workstation.ab2.renderer.AB2Main3DRenderer;
+import org.janelia.it.workstation.ab2.renderer.AB2Renderer2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +19,7 @@ public class AB2SampleMainRegion extends GLRegion {
 
 
     private AB2Main3DRenderer main3DRenderer;
+    private AB2Main2DRenderer messageRenderer;
 
     public AB2SampleMainRegion(int x, int y, int width, int height, int screenWidth, int screenHeight) {
         this.x=x;
@@ -29,13 +32,17 @@ public class AB2SampleMainRegion extends GLRegion {
         setHoverable(true);
 
         main3DRenderer=new AB2Main3DRenderer(x, y, width, height, screenWidth, screenHeight, this);
+        messageRenderer=new AB2Main2DRenderer(x, y, width, height, screenWidth, screenHeight, this);
 
         renderers.add(main3DRenderer);
+        renderers.add(messageRenderer);
     }
 
     public AB2Main3DRenderer getSampleRenderer() {
         return main3DRenderer;
     }
+
+    public AB2Main2DRenderer getMessageRenderer() { return messageRenderer; }
 
     @Override
     protected void reshape(GLAutoDrawable drawable) {
@@ -45,9 +52,8 @@ public class AB2SampleMainRegion extends GLRegion {
 
     @Override
     public void processEvent(AB2Event event) {
-        //logger.info("processEvent() received event type="+event.getClass().getName());
         main3DRenderer.processEvent(event);
+        messageRenderer.processEvent(event);
     }
-
 
 }
