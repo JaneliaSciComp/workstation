@@ -110,6 +110,7 @@ public class TextLabelActor extends GLAbstractActor {
 
     @Override
     protected void glWindowResize(int width, int height) {
+        //logger.info(">>>>>>>>>>> glWindowResize width="+width+" height="+height);
         glWidth=width;
         glHeight=height;
         recomputeVertices=true;
@@ -143,8 +144,11 @@ public class TextLabelActor extends GLAbstractActor {
 
     protected void computeVertices(GL4 gl, boolean refreshOnly) {
         float imageNormalHeight=(float)((labelImageHeight*1.0)/glHeight);
-        float imageAspectRatio=(float)((labelImageWidth*1.0)/(labelImageHeight*1.0));
-        float imageNormalWidth=imageAspectRatio*imageNormalHeight;
+
+//        float imageAspectRatio=(float)((labelImageWidth*1.0)/(labelImageHeight*1.0));
+//        float imageNormalWidth=imageAspectRatio*imageNormalHeight;
+
+        float imageNormalWidth=(float)((labelImageWidth*1.0)/glWidth);
 
         if (orientation.equals(Orientation.NORMAL)) {
             v0.set(0, centerPosition.get(0) - imageNormalWidth/2.0f);
@@ -308,7 +312,10 @@ public class TextLabelActor extends GLAbstractActor {
         }
         if (shader instanceof AB2Text2DShader) {
             AB2Text2DShader text2DShader=(AB2Text2DShader)shader;
-            text2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
+
+//            text2DShader.setMVP2d(gl, getModelMatrix().multiply(renderer2d.getVp2d()));
+            text2DShader.setMVP2d(gl, getModelMatrix());
+
             text2DShader.setForegroundColor(gl, getTextColor());
             text2DShader.setBackgroundColor(gl, getBackgroundColor());
 
@@ -318,7 +325,10 @@ public class TextLabelActor extends GLAbstractActor {
             checkGlError(gl, "d2 glBindTexture()");
         } else if (shader instanceof AB2PickShader) {
             AB2PickShader pickShader=(AB2PickShader)shader;
-            pickShader.setMVP(gl, renderer2d.getVp2d());
+
+            pickShader.setMVP(gl, getModelMatrix());
+//            pickShader.setMVP(gl, renderer2d.getVp2d());
+
             pickShader.setPickId(gl, getActorId());
         }
 
