@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.http.HttpStatus;
 import org.apache.jackrabbit.webdav.DavConstants;
@@ -125,14 +126,7 @@ public class WebDavClient {
             if (responseCode != HttpServletResponse.SC_CREATED) {
                 throw new WebDavException(responseCode + " returned for PUT " + directoryUrl, responseCode);
             }
-            JsonNode jsonResponse = objectMapper.readTree(method.getResponseBodyAsStream());
-            final Header locationHeader = method.getResponseHeader("Location");
-            String location = null;
-            if (locationHeader != null) {
-                location = locationHeader.getValue();
-            }
-            String remoteFilePath = Paths.get(jsonResponse.get("rootPrefix").asText(), jsonResponse.get("nodeRelativePath").asText()).toString();
-            return new RemoteLocation(remoteFilePath, location);
+            return extractRemoteLocationFromResponse(method);
         } catch (WebDavException e) {
             throw e;
         } catch (Exception e) {
@@ -207,14 +201,7 @@ public class WebDavClient {
                 throw new WebDavException(responseCode + " returned for PUT " + url,
                         responseCode);
             }
-            JsonNode jsonResponse = objectMapper.readTree(method.getResponseBodyAsStream());
-            final Header locationHeader = method.getResponseHeader("Location");
-            String location = null;
-            if (locationHeader != null) {
-                location = locationHeader.getValue();
-            }
-            String remoteFilePath = Paths.get(jsonResponse.get("rootPrefix").asText(), jsonResponse.get("nodeRelativePath").asText()).toString();
-            return new RemoteLocation(remoteFilePath, location);
+            return extractRemoteLocationFromResponse(method);
         } catch (WebDavException e) {
             throw e;
         } catch (Exception e) {
@@ -224,6 +211,21 @@ public class WebDavClient {
                 method.releaseConnection();
             }
         }
+    }
+
+    private RemoteLocation extractRemoteLocationFromResponse(HttpMethod method) throws IOException {
+        JsonNode jsonResponse = objectMapper.readTree(method.getResponseBodyAsStream());
+        final Header locationHeader = method.getResponseHeader("Location");
+        String location = null;
+        if (locationHeader != null) {
+            location = locationHeader.getValue();
+        }
+        String storageVirtualPath = jsonResponse.get("rootPrefix").asText();
+        String storageRealPath = jsonResponse.get("rootLocation").asText();
+        String storageRelativePath = jsonResponse.get("nodeRelativePath").asText();
+
+        return new RemoteLocation(Paths.get(storageVirtualPath, storageRelativePath).toString(),
+                Paths.get(storageRealPath, storageRelativePath).toString(), location);
     }
 
     private MultiStatusResponse[] getResponses(String href, int depth, int callCount)

@@ -124,7 +124,7 @@ public class WebDavClientMgr {
         try {
             String uploadFileUrl = storageURL + "/file/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation);
             RemoteLocation remoteFile = masterWebDavInstance.saveFile(new URL(uploadFileUrl), file);
-            remoteFile.setRemoteStorageURL(storageURL);
+            remoteFile.setStorageURL(storageURL);
             return remoteFile;
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
@@ -135,7 +135,7 @@ public class WebDavClientMgr {
         try {
             String createDirUrl = storageURL + "/directory/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation);
             RemoteLocation remoteDirectory = masterWebDavInstance.createDirectory(new URL(createDirUrl));
-            remoteDirectory.setRemoteStorageURL(storageURL);
+            remoteDirectory.setStorageURL(storageURL);
             return remoteDirectory;
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
