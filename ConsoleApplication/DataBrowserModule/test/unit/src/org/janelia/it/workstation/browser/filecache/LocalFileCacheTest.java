@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
@@ -99,7 +101,16 @@ public class LocalFileCacheTest {
 
         Mockito.when(webDavClient.findStorage(ArgumentMatchers.anyString()))
                 .then(invocation -> {
+                    String storagePathName = invocation.getArgument(0);
+                    Path storagePath = Paths.get(storagePathName);
+                    Path storagePrefix;
+                    if (storagePath.getRoot() == null) {
+                        storagePrefix = storagePath.subpath(0, 3);
+                    } else {
+                        storagePrefix = storagePath.getRoot().resolve(storagePath.subpath(0, 3));
+                    }
                     MultiStatusResponse multiStatusResponse = new MultiStatusResponse("http://test", "desc");
+                    multiStatusResponse.add(new DefaultDavProperty<>(DavPropertyName.GETETAG, storagePrefix.toString()));
                     return new WebDavFile(invocation.getArgument(0), multiStatusResponse);
                 });
         Mockito.when(webDavClient.findFile(ArgumentMatchers.anyString()))
