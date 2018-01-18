@@ -13,6 +13,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -88,7 +89,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private static final int DEFAULT_THRESHOLD_VALUE = 100;
     private static final NumberFormat PX_FORMATTER = new DecimalFormat("#0.00");
     private static final String PCT_POSITIVE_THRESHOLD = "% of Positive PX Threshold";
-    private static final String PIX_COLOR_FLUCTUATION = "Pix Color Fluctuation, 1.18 per slice";
+    private static final String PIX_COLOR_FLUCTUATION = "Pix Color Fluctuation";
     private static final String DEFAULT_PCT_PC = "10.00";
     private static final String DEFAULT_PIX_FLUC = "2";
 
@@ -157,6 +158,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         pctPxPanel.add(pctPxField, BorderLayout.CENTER);
 
         pixFlucField = new JTextField(DEFAULT_PIX_FLUC);
+        pixFlucField.setToolTipText("1.18 per slice");
         pixFlucField.setColumns(10);
         pixFlucPanel = new JPanel(new BorderLayout());
         pixFlucPanel.add(new JLabel(PIX_COLOR_FLUCTUATION), BorderLayout.NORTH);
@@ -166,7 +168,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
             @Override
             protected Collection<DataSet> getValues() {
-                return alignmentSpaceDataSets.stream().collect(Collectors.toSet());
+                return alignmentSpaceDataSets.stream().sorted(Comparator.comparing(DataSet::getIdentifier)).collect(Collectors.toSet());
             }
 
             @Override
