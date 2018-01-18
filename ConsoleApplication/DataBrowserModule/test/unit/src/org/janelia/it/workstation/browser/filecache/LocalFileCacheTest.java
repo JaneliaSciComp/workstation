@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.filecache;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -22,6 +23,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
@@ -94,11 +97,20 @@ public class LocalFileCacheTest {
         // adding last file should force removal of first file
         final int cacheKilobytes =
                 (singleFileKilobytes + 1) * maxNumberOfCachedFiles;
-        PowerMockito.whenNew(WebDavClient.class).withArguments(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpClient.class)).thenReturn(webDavClient);
+        PowerMockito.whenNew(WebDavClient.class).withArguments(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpClient.class), ArgumentMatchers.any(ObjectMapper.class)).thenReturn(webDavClient);
 
         Mockito.when(webDavClient.findStorage(ArgumentMatchers.anyString()))
                 .then(invocation -> {
+                    String storagePathName = invocation.getArgument(0);
+                    Path storagePath = Paths.get(storagePathName);
+                    Path storagePrefix;
+                    if (storagePath.getRoot() == null) {
+                        storagePrefix = storagePath.subpath(0, 3);
+                    } else {
+                        storagePrefix = storagePath.getRoot().resolve(storagePath.subpath(0, 3));
+                    }
                     MultiStatusResponse multiStatusResponse = new MultiStatusResponse("http://test", "desc");
+                    multiStatusResponse.add(new DefaultDavProperty<>(DavPropertyName.GETETAG, storagePrefix.toString()));
                     return new WebDavFile(invocation.getArgument(0), multiStatusResponse);
                 });
         Mockito.when(webDavClient.findFile(ArgumentMatchers.anyString()))

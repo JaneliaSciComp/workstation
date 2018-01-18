@@ -7,7 +7,12 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -16,6 +21,8 @@ import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
@@ -66,25 +73,27 @@ public class WebDavClientMgr {
     private WebDavClient getWebDavClientForStandardPath(String standardPathName) {
         Path standardPath = Paths.get(standardPathName);
         int nPathComponents = standardPath.getNameCount();
-        Path storagePathPrefix;
-        if (nPathComponents < STORAGE_PATH_PREFIX_COMPS_COUNT) {
-            storagePathPrefix = standardPath;
-        } else {
-            if (standardPath.getRoot() == null) {
-                storagePathPrefix = standardPath.subpath(0, STORAGE_PATH_PREFIX_COMPS_COUNT);
-            } else {
-                storagePathPrefix = standardPath.getRoot().resolve(standardPath.subpath(0, STORAGE_PATH_PREFIX_COMPS_COUNT));
+        List<String> storagePathPrefixCandidates = new LinkedList<>();
+        IntStream.range(1, nPathComponents)
+                .mapToObj(pathIndex -> {
+                    if (standardPath.getRoot() == null) {
+                        return standardPath.subpath(0, pathIndex).toString();
+                    } else {
+                        return standardPath.getRoot().resolve(standardPath.subpath(0, pathIndex)).toString();
+                    }
+                })
+                .forEach(p -> storagePathPrefixCandidates.add(0, p));
+        WebDavClient webDavClient;
+        for (String pathPrefix : storagePathPrefixCandidates) {
+            webDavClient = WEBDAV_AGENTS_CACHE.getIfPresent(pathPrefix);
+            if (webDavClient != null) {
+                return webDavClient;
             }
         }
-        try {
-            String storageKey = storagePathPrefix.toString();
-            return WEBDAV_AGENTS_CACHE.get(storageKey, () -> {
-                WebDavFile webDavFile = findWebDavFileStorage(storageKey);
-                return new WebDavClient(webDavFile.getRemoteFileUrl().toString(), httpClient, objectMapper);
-            });
-        } catch (ExecutionException e) {
-            throw new IllegalStateException(e);
-        }
+        WebDavFile webDavFile = findWebDavFileStorage(standardPathName);
+        webDavClient = new WebDavClient(webDavFile.getRemoteFileUrl().toString(), httpClient, objectMapper);
+        WEBDAV_AGENTS_CACHE.put(webDavFile.getEtag(), webDavClient);
+        return webDavClient;
     }
 
     private WebDavFile findWebDavFileStorage(String storagePath) throws WebDavException {
@@ -107,8 +116,8 @@ public class WebDavClientMgr {
         return webDavClient.findFile(remoteFileName);
     }
 
-    String createStorage(String storageName, String storageTags) {
-        return masterWebDavInstance.createStorage(storageName, storageTags);
+    String createStorage(String storageName, String storageContext, String storageTags) {
+        return masterWebDavInstance.createStorage(storageName, storageContext, storageTags);
     }
 
     RemoteLocation uploadFile(File file, String storageURL, String storageLocation) {

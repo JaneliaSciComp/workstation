@@ -1,13 +1,9 @@
 package org.janelia.it.workstation.browser.filecache;
 
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,7 +34,9 @@ public class WebDavUploader {
     /**
      * Uploads the specified file to the server.
      *
-     * @param  storageName user assigned storage name
+     * @param  storageName user assigned storage name.
+     * @param  storageContext storage path context.
+     * @param  storageTags tags used for selecting the storage.
      * @param  file  file to upload.
      *
      * @return the server path for the parent directory of the uploaded file.
@@ -46,8 +44,8 @@ public class WebDavUploader {
      * @throws WebDavException
      *   if the file cannot be uploaded.
      */
-    public RemoteLocation uploadFile(String storageName, String storageTags, File file) throws WebDavException {
-        String storageURL = webDavClientMgr.createStorage(storageName, storageTags);
+    public RemoteLocation uploadFile(String storageName, String storageContext, String storageTags, File file) throws WebDavException {
+        String storageURL = webDavClientMgr.createStorage(storageName, storageContext, storageTags);
         RemoteLocation remoteFile = webDavClientMgr.uploadFile(file, storageURL, webDavClientMgr.urlEncodeComp(file.getName()));
         LOG.info("uploaded {} to {} - {}", file, storageURL, remoteFile);
         return remoteFile;
@@ -58,7 +56,8 @@ public class WebDavUploader {
      *
      * @param  storageName         user assigned storage name
      * @param  fileList            list of local files to upload.
-     *
+     * @param  storageContext storage path context.
+     * @param  storageTags tags used for selecting the storage.
      * @param  localRootDirectory  a common parent of all listed files that is used to determine
      *                             the relative path for each file on the server.
      *                             For example given files /a/b/f1.txt and /a/b/c/f2.txt
@@ -76,10 +75,10 @@ public class WebDavUploader {
      * @throws WebDavException
      *   if the files cannot be uploaded.
      */
-    public List<RemoteLocation> uploadFiles(String storageName, String storageTags, List<File> fileList, File localRootDirectory)
+    public List<RemoteLocation> uploadFiles(String storageName, String storageContext, String storageTags, List<File> fileList, File localRootDirectory)
             throws IllegalArgumentException, WebDavException {
 
-        String storageURL = webDavClientMgr.createStorage(storageName, storageTags);
+        String storageURL = webDavClientMgr.createStorage(storageName, storageContext, storageTags);
 
         // need to go through the entire fileList and create the directory hierarchy
         // and then upload the file content
