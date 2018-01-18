@@ -88,11 +88,17 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     // State
     protected ChildSelectionModel<T,S> selectionModel;
     protected SearchProvider searchProvider;
+    protected List<ListViewerType> validViewerTypes;
 
-    public PaginatedResultsPanel(ChildSelectionModel<T,S> selectionModel, SearchProvider searchProvider) {
+    public PaginatedResultsPanel(ChildSelectionModel<T,S> selectionModel, SearchProvider searchProvider, List<ListViewerType> validViewerTypes) {
                
         this.selectionModel = selectionModel;
         this.searchProvider = searchProvider;
+        this.validViewerTypes = validViewerTypes;
+        
+        if (validViewerTypes==null || validViewerTypes.isEmpty()) {
+            throw new IllegalArgumentException("PaginatedResultsPanel needs at least one valid viewer type");
+        }
         
         setLayout(new BorderLayout());
         
@@ -186,25 +192,25 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
         addHierarchyListener(new FindContextRegistration(this, this));
 
-        setViewerType(ListViewerType.IconViewer);
+        setViewerType(validViewerTypes.get(0));
     }
 
     private void populateViewerPopupMenu(DropDownButton button) {
-        for(final ListViewerType type : ListViewerType.values()) {
+        for(final ListViewerType type : validViewerTypes) {
             JMenuItem viewItem = new JMenuItem(type.getName());
             viewItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     ActivityLogHelper.logUserAction("PaginatedResultsPanel.setViewerType", type.getName());
                     setViewerType(type);
 
-                    final List<T> selectedDomainObjects = getPageObjects(selectionModel.getSelectedIds());
+                    final List<T> selectedObjects = getPageObjects(selectionModel.getSelectedIds());
 
                     updateResultsView(new Callable<Void>() {
                         @Override
                         public Void call() throws Exception {
                             // Reselect the items that were selected
-                            log.info("Reselecting {} domain objects in the {} viewer",selectedDomainObjects.size(),type.getName());
-                            resultsView.select(selectedDomainObjects, true, true, true, false);
+                            log.info("Reselecting {} objects in the {} viewer",selectedObjects.size(),type.getName());
+                            resultsView.select(selectedObjects, true, true, true, false);
                             return null;
                         }
                     });
@@ -215,6 +221,11 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     }
     
     public void setViewerType(final ListViewerType viewerType) {
+        
+        if (!validViewerTypes.contains(viewerType)) {
+            throw new IllegalArgumentException("Viewer type is not in valid list: "+viewerType);
+        }
+        
         this.viewTypeButton.setText(viewerType.getName());
         try {
             if (viewerType.getViewerClass()==null) {
@@ -223,7 +234,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             else {
                 @SuppressWarnings("unchecked")
                 ListViewer<T,S> viewer = (ListViewer<T, S>) viewerType.getViewerClass().newInstance();
-                viewer.getPanel().addMouseListener(new MouseForwarder(this, "AnnotatedDomainObjectListViewer->PaginatedResultsPanel"));
+                viewer.getPanel().addMouseListener(new MouseForwarder(this, "ListViewer->PaginatedResultsPanel"));
                 setViewer(viewer);
             }
         }

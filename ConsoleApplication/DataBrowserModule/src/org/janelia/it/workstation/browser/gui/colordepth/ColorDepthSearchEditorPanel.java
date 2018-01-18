@@ -11,7 +11,6 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -32,7 +31,6 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -52,21 +50,16 @@ import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
 import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.editor.SelectionButton;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
-import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
-import org.janelia.it.workstation.browser.model.search.ResultPage;
-import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
@@ -81,23 +74,23 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 
-
 /**
  * Specialized component for executing color depth searches on the cluster and viewing their results.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectEditor<ColorDepthSearch>, ParentNodeSelectionEditor<ColorDepthSearch, ColorDepthMatch, String>, SearchProvider {
+public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectEditor<ColorDepthSearch>, ParentNodeSelectionEditor<ColorDepthSearch, ColorDepthMatch, String> {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchEditorPanel.class);
 
     // Constants
-    private static final String PREFERENCE_KEY = "ColorDepthSearchEditor";
     private static final String THRESHOLD_LABEL_PREFIX = "Data Threshold: ";
     private static final int DEFAULT_THRESHOLD_VALUE = 100;
     private static final NumberFormat PX_FORMATTER = new DecimalFormat("#0.00");
     private static final String PCT_POSITIVE_THRESHOLD = "% of Positive PX Threshold";
+    private static final String PIX_COLOR_FLUCTUATION = "Pix Color Fluctuation, 1.18 per slice";
     private static final String DEFAULT_PCT_PC = "10.00";
+    private static final String DEFAULT_PIX_FLUC = "2";
 
     // Utilities
     private final Debouncer debouncer = new Debouncer();
@@ -111,33 +104,19 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private final JSplitPane splitPane;
     private final JPanel dataSetPanel;
     private final JPanel pctPxPanel;
+    private final JPanel pixFlucPanel;
     private final JPanel thresholdPanel;
     private final JSlider thresholdSlider;
     private final JTextField pctPxField;
+    private final JTextField pixFlucField;
     private final JLabel thresholdLabel;
     private final SelectionButton<DataSet> dataSetButton;
     private final JButton searchButton;
     private final SelectablePanelListPanel maskPanel;
     private final JScrollPane maskScrollPane;
     private final Set<LoadedImagePanel> lips = new HashSet<>();
-    private final PaginatedResultsPanel<ColorDepthMatch, String> resultPanel;
-    
-    // Results
-    private SearchResults<ColorDepthMatch,String> searchResults;
-    
-    private final ChildSelectionModel<ColorDepthMatch,String> selectionModel = new ChildSelectionModel<ColorDepthMatch,String>() {
-
-        @Override
-        protected void selectionChanged(List<ColorDepthMatch> objects, boolean select, boolean clearAll, boolean isUserDriven) {
-            
-        }
-
-        @Override
-        public String getId(ColorDepthMatch match) {
-            return match.getFilepath();
-        }
+    private final ColorDepthResultPanel resultPanel;
         
-    };
     
     // State
     private boolean dirty = false;
@@ -146,7 +125,6 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private List<ColorDepthMask> masks; // cached masks
     private List<ColorDepthResult> results; // cached results
     private List<DataSet> alignmentSpaceDataSets; // all possible data sets in the current alignment space
-    private String sortCriteria;
     
     public ColorDepthSearchEditorPanel() {
 
@@ -173,10 +151,17 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         thresholdPanel.add(thresholdSlider, BorderLayout.CENTER);
         
         pctPxField = new JTextField(DEFAULT_PCT_PC);
+        pctPxField.setColumns(10);
         pctPxPanel = new JPanel(new BorderLayout());
         pctPxPanel.add(new JLabel(PCT_POSITIVE_THRESHOLD), BorderLayout.NORTH);
         pctPxPanel.add(pctPxField, BorderLayout.CENTER);
 
+        pixFlucField = new JTextField(DEFAULT_PIX_FLUC);
+        pixFlucField.setColumns(10);
+        pixFlucPanel = new JPanel(new BorderLayout());
+        pixFlucPanel.add(new JLabel(PIX_COLOR_FLUCTUATION), BorderLayout.NORTH);
+        pixFlucPanel.add(pixFlucField, BorderLayout.CENTER);
+        
         dataSetButton = new SelectionButton<DataSet>("Data Sets") {
 
             @Override
@@ -243,12 +228,11 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                         populateSearchFromForm();
                         DomainModel model = getDomainMgr().getModel();
                         search = model.save(search);
-                        executeSearch();
                     }
 
                     @Override
                     protected void hadSuccess() {
-
+                        executeSearch();
                     }
 
                     @Override
@@ -262,18 +246,8 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
         });
         
-        resultPanel = new PaginatedResultsPanel<ColorDepthMatch,String>(selectionModel, this) {
-
-            @Override
-            protected ResultPage<ColorDepthMatch, String> getPage(SearchResults<ColorDepthMatch, String> searchResults, int page) throws Exception {
-                return searchResults.getPage(page);
-            }
-            @Override
-            public String getId(ColorDepthMatch object) {
-                return object.getFilepath();
-            }
-        };
-
+        resultPanel = new ColorDepthResultPanel();
+        
         maskPanel = new SelectablePanelListPanel() {
 
             @Override
@@ -349,77 +323,26 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
+
+        Double pixFlucValue;
+        try {
+            pixFlucValue = new Double(pixFlucField.getText());
+            if (pixFlucValue<1 || pixFlucValue>100) {
+                throw new NumberFormatException();
+            }
+            search.setPixColorFluctuation(pixFlucValue);
+        }
+        catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(
+                    ColorDepthSearchEditorPanel.this,
+                    PIX_COLOR_FLUCTUATION+" must be a percentage between 1 and 100",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
         
         search.setDataThreshold(thresholdSlider.getValue());
     }
     
-    @Override
-    public String getSortField() {
-        return sortCriteria;
-    }
-
-    @Override
-    public void setSortField(final String sortCriteria) {
-        this.sortCriteria = sortCriteria;
-        savePreferences();
-    }
-    
-    @Override
-    public void search() {
-
-//        SimpleWorker worker = new SimpleWorker() {
-//
-//            @Override
-//            protected void doStuff() throws Exception {
-//                loadPreferences();
-//                prepareLsmResults();
-//            }
-//
-//            @Override
-//            protected void hadSuccess() {
-//                showResults(true);
-//            }
-//
-//            @Override
-//            protected void hadError(Throwable error) {
-//                showNothing();
-//                ConsoleApp.handleException(error);
-//            }
-//        };
-//
-//        worker.execute();
-    }
-    
-    @Override
-    public void export() {
-//        DomainObjectTableViewer viewer = null;
-//        if (lsmPanel.getViewer() instanceof DomainObjectTableViewer) {
-//            viewer = (DomainObjectTableViewer)lsmPanel.getViewer();
-//        }
-//        ExportResultsAction<DomainObject> action = new ExportResultsAction<>(lsmSearchResults, viewer);
-//        action.actionPerformed(null);
-    }
-
-    private void loadPreferences() {
-        if (search.getId()==null) return;
-        try {
-            sortCriteria = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, null);
-        }
-        catch (Exception e) {
-            log.error("Could not load sort criteria",e);
-        }
-    }
-
-    private void savePreferences() {
-        if (StringUtils.isEmpty(sortCriteria)) return;
-        try {
-            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
-        }
-        catch (Exception e) {
-            log.error("Could not save sort criteria",e);
-        }
-    }
-
     private void reload() throws Exception {
         
         if (search==null) {
@@ -498,11 +421,18 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         else {
             pctPxField.setText(DEFAULT_PCT_PC);
         }
+
+        if (colorDepthSearch.getPixColorFluctuation()!=null) {
+            pixFlucField.setText(PX_FORMATTER.format(colorDepthSearch.getPixColorFluctuation()));
+        }
+        else {
+            pixFlucField.setText(DEFAULT_PIX_FLUC);
+        }
         
-        selectionModel.setParentObject(colorDepthSearch);
         this.dirty = false;
-        
         this.search = colorDepthSearch;
+        log.info("Loading {} masks", colorDepthSearch.getMasks().size());
+        log.info("Loading {} results", colorDepthSearch.getResults().size());
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -512,12 +442,16 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 masks = model.getDomainObjectsAs(ColorDepthMask.class, colorDepthSearch.getMasks());
                 results = model.getDomainObjectsAs(ColorDepthResult.class, colorDepthSearch.getResults());
                 alignmentSpaceDataSets = model.getColorDepthDataSets(colorDepthSearch.getAlignmentSpace());
-                loadPreferences();
-//                prepareResults();
             }
             
             @Override
             protected void hadSuccess() {
+
+                log.info("Loaded ColorDepthSearch#{}", colorDepthSearch.getId());
+                log.info("Loaded {} masks", masks.size());
+                log.info("Loaded {} results", results.size());
+                log.info("Loaded {} data sets", alignmentSpaceDataSets.size());
+                
                 showUI(isUserDriven);
                 ConcurrentUtils.invokeAndHandleExceptions(success);
                 debouncer.success();
@@ -545,14 +479,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     }
     
     private void loadMaskResults(ColorDepthMask mask, boolean isUserDriven) {
-    
-        List<ColorDepthMatch> filteredMatches = new ArrayList<>();
-
-        // TODO: implement sort
-        //DomainUtils.sortDomainObjects(filteredMatches, sortCriteria);
-
-        searchResults = new ColorDepthSearchResults(filteredMatches);
-        resultPanel.showSearchResults(searchResults, isUserDriven, null);
+        resultPanel.loadSearchResults(results, mask, isUserDriven);
     }
         
     private void showSearchView(boolean isUserDriven) {
@@ -564,6 +491,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         configPanel.removeAllConfigComponents();
         configPanel.addConfigComponent(thresholdPanel);
         configPanel.addConfigComponent(pctPxPanel);
+        configPanel.addConfigComponent(pixFlucPanel);
         configPanel.addConfigComponent(dataSetPanel);
         configPanel.addConfigComponent(searchButton);
         
@@ -603,7 +531,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     
     @Override
     public ChildSelectionModel<ColorDepthMatch,String> getSelectionModel() {
-        return selectionModel;
+        throw new UnsupportedOperationException();
     }
 
     private void executeSearch() {

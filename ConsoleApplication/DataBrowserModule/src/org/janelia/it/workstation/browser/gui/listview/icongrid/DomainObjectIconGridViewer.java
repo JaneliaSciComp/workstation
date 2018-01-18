@@ -63,14 +63,14 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     // Configuration
     private IconGridViewerConfiguration config;
+    @SuppressWarnings("unused")
+    private SearchProvider searchProvider;
     
-    // These members deal with the context and entities within it
+    // State
     private AnnotatedObjectList<DomainObject,Reference> domainObjectList;
     private ChildSelectionModel<DomainObject,Reference> selectionModel;
     private ChildSelectionModel<DomainObject,Reference> editSelectionModel;
     private DomainObjectProviderHelper domainObjectProviderHelper = new DomainObjectProviderHelper();
-    @SuppressWarnings("unused")
-    private SearchProvider searchProvider;
 
     // UI state
     private ListViewerActionListener listener;
@@ -144,7 +144,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
             @Override
             protected void hadSuccess() {
-                refreshDomainObjects();
+                refreshView();
             }
 
             @Override
@@ -184,7 +184,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     public void setActionListener(ListViewerActionListener listener) {
         this.listener = listener;
     }
-    
+
+    @Override
+    public void setSearchProvider(SearchProvider searchProvider) {
+        this.searchProvider = searchProvider;
+    }
+
     @Override
     public void setSelectionModel(ChildSelectionModel<DomainObject,Reference> selectionModel) {
         super.setSelectionModel(selectionModel);
@@ -197,6 +202,14 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
+    public void activate() {
+    }
+
+    @Override
+    public void deactivate() {
+    }
+    
+    @Override
     public int getNumItemsHidden() {
         int totalItems = this.domainObjectList.getObjects().size();
         int totalVisibleItems = getObjects().size();
@@ -204,20 +217,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
     
     @Override
-    public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
-        log.info("selectEditObjects(domainObjects={},select={})", DomainUtils.abbr(domainObjects), select);
-
-        if (domainObjects.isEmpty()) {
-            return;
-        }
-        if (select) {
-            editSelectionModel.select(domainObjects, true, true);
-        }
-    }
-
-    @Override
     public void select(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
-        log.info("selectDomainObjects(domainObjects={},select={},clearAll={},isUserDriven={},notifyModel={})", DomainUtils.abbr(domainObjects), select, clearAll, isUserDriven, notifyModel);
+        log.info("selectDomainObjects(domainObjects={},select={},clearAll={},isUserDriven={},notifyModel={})", 
+                DomainUtils.abbr(domainObjects), select, clearAll, isUserDriven, notifyModel);
 
         if (domainObjects.isEmpty()) {
             return;
@@ -239,27 +241,29 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
+    public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
+        log.info("selectEditObjects(domainObjects={},select={})", DomainUtils.abbr(domainObjects), select);
+
+        if (domainObjects.isEmpty()) {
+            return;
+        }
+        if (select) {
+            editSelectionModel.select(domainObjects, true, true);
+        }
+    }
+    
+    @Override
     public void showLoadingIndicator() {
         removeAll();
         add(new JLabel(Icons.getLoadingIcon()));
         updateUI();
-    }
-
-    private void refreshDomainObjects() {
-        show(domainObjectList, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                Utils.setMainFrameCursorWaitStatus(false);
-                return null;
-            }
-        });
     }
     
     @Override
     public void show(AnnotatedObjectList<DomainObject,Reference> objects, final Callable<Void> success) {
 
         this.domainObjectList = objects;
-        log.debug("showDomainObjects(domainObjectList={})",DomainUtils.abbr(domainObjectList.getObjects()));
+        log.debug("show(objects={})",DomainUtils.abbr(domainObjectList.getObjects()));
 
         SimpleWorker worker = new SimpleWorker() {
             
@@ -329,14 +333,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
         worker.execute();
     }
-    
-    @Override
-    public void activate() {
-    }
-
-    @Override
-    public void deactivate() {
-    }
 
     @Override
     public void toggleEditMode(boolean editMode) {
@@ -351,7 +347,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             imagesPanel.setEditSelection(editSelectionModel.getSelectedIds(), true);
         }
     }
-
 
     @Override
     public void setEditSelectionModel(ChildSelectionModel<DomainObject, Reference> editSelectionModel) {
@@ -394,6 +389,16 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         refreshObject(domainObject);
     }
 
+    private void refreshView() {
+        show(domainObjectList, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                Utils.setMainFrameCursorWaitStatus(false);
+                return null;
+            }
+        });
+    }
+    
     @Override
     protected DomainObjectContextMenu getContextualPopupMenu() {
         return getPopupMenu(getSelectedObjects());
@@ -474,7 +479,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     protected void setMustHaveImage(boolean mustHaveImage) {
         try {
             FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, mustHaveImage);
-            refreshDomainObjects();
+            refreshView();
             if (listener!=null) listener.visibleObjectsChanged();
         }
         catch (Exception e) {
@@ -533,11 +538,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             ConsoleApp.handleException(e);
             return null;
         }
-    }
-
-    @Override
-    public void setSearchProvider(SearchProvider searchProvider) {
-        this.searchProvider = searchProvider;
     }
 
     @Override

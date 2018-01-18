@@ -2,6 +2,8 @@ package org.janelia.it.workstation.browser.gui.listview;
 
 import static org.janelia.it.workstation.browser.api.DomainMgr.getDomainMgr;
 
+import java.util.List;
+
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.model.DomainObjectAnnotationChangeEvent;
@@ -17,6 +19,7 @@ import org.janelia.model.domain.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 
 /**
@@ -28,8 +31,10 @@ public abstract class PaginatedDomainResultsPanel extends PaginatedResultsPanel<
 
     private static final Logger log = LoggerFactory.getLogger(PaginatedDomainResultsPanel.class);
     
+    private static final List<ListViewerType> viewerTypes = ImmutableList.of(ListViewerType.IconViewer, ListViewerType.TableViewer);
+    
     public PaginatedDomainResultsPanel(ChildSelectionModel<DomainObject, Reference> selectionModel, SearchProvider searchProvider) {
-        super(selectionModel, searchProvider);
+        super(selectionModel, searchProvider, viewerTypes);
     }
 
     @Subscribe

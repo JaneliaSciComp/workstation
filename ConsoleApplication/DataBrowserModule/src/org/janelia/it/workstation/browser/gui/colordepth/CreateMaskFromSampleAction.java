@@ -12,7 +12,7 @@ import javax.swing.JOptionPane;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
-import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
+import org.janelia.it.workstation.browser.filecache.RemoteLocation;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
@@ -133,8 +133,11 @@ public class CreateMaskFromSampleAction extends AbstractAction {
                     
                     // Upload the mask
                     WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
-                    uploadPath = uploader.uploadFile("UserGeneratedMask", IMPORT_STORAGE_DEFAULT_TAGS, tempFile).getRemoteFilePath();
-                    log.debug("Uploaded mask to: "+uploadPath);
+                    String subjectName = FileMgr.getFileMgr().getSubjectName();
+                    String uploadContext = subjectName + "/" + "WorkstationFileUpload";
+                    RemoteLocation location = uploader.uploadFile("UserGeneratedMask", uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, tempFile);
+                    uploadPath = location.getRemoteFilePath();
+                    log.info("Uploaded mask to: "+uploadPath);
                 }
 
                 @Override
