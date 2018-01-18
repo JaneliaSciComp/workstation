@@ -18,6 +18,7 @@ import org.janelia.messaging.client.Receiver;
 import org.janelia.messaging.broker.sharedworkspace.MessageType;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.slf4j.Logger;
@@ -66,8 +67,10 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             msgReceiver.setupReceiver(this);
             log.info("Established connection to message server " + MESSAGESERVER_URL);
         } catch (Exception e) {
-            log.error("Problems initializing connection to message server " + MESSAGESERVER_URL +
-                    ", with credentials username/password: " + MESSAGESERVER_USERACCOUNT + "/" + MESSAGESERVER_PASSWORD);
+            AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+            String error = "Problems initializing connection to message server " + MESSAGESERVER_URL +
+                    ", with credentials username/password: " + MESSAGESERVER_USERACCOUNT + "/" + MESSAGESERVER_PASSWORD;
+            annotationMgr.presentError(error, "Problem connecting to Message Server");
             e.printStackTrace();
         }
     }
@@ -85,11 +88,32 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         if (msgHeaders == null) {
             throw new IOException("Issue trying to process metadata from update");
         }
-        String user = convertLongString((LongString) msgHeaders.get(HeaderConstants.USER));
         MessageType action = MessageType.valueOf(convertLongString((LongString) msgHeaders.get(HeaderConstants.TYPE)));
+        String user = convertLongString((LongString) msgHeaders.get(HeaderConstants.USER));
+        Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
+        if (action==MessageType.ERROR_PROCESSING) {
+             byte[] msgBody = message.getBody();
+             handle (new String(msgBody));
+             return;
+        }
+        
         String metadata = convertLongString((LongString) msgHeaders.get(HeaderConstants.METADATA));
         ObjectMapper mapper = new ObjectMapper();
         TmNeuronMetadata neuron = mapper.readValue(metadata, TmNeuronMetadata.class);
+        
+        if (neuron!=null) {
+            TmNeuronMetadata localNeuron = annotationModel.getNeuronManager().getNeuronById(neuron.getId());// decrease the sync level 
+            localNeuron.decrementSyncLevel();
+            if (localNeuron.getSyncLevel()==0) {
+                localNeuron.setSynced(true);
+            }
+        }
+        
+       
+        // if not this workspace, filter out message
+        if (workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
+            return;
+        }
         
         if (action==MessageType.NEURON_OWNERSHIP_DECISION) {
              boolean decision = Boolean.parseBoolean(convertLongString((LongString) msgHeaders.get(HeaderConstants.DECISION)));
@@ -105,12 +129,6 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                         Map<String, Object> msgHeaders = message.getProperties().getHeaders();
                         if (msgHeaders == null) {
                             throw new IOException("Issue trying to process metadata from update");
-                        }
-
-                        Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
-                        // if not this workspace, filter out message
-                        if (workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
-                            return;
                         }
 
                         // change relevant to this workspace and not execute don this client, so update model or process request
@@ -146,9 +164,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                                 break;
                         }
                     } catch (Exception e) {
-                        // problem deserializing the protobuf stream
-                        e.printStackTrace();
-                        // TO DO: handle exception in other thread
+                        handle (e.getMessage());
                     }
 
                 }
@@ -157,11 +173,14 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
     }
 
     /**
-     * problem receiving update from queue
+     * error callback receiving update from queue
      */
     @Override
-    public void handle(String string) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void handle(String errorMsg) {
+        AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+        String error = "Problems receiving message updates, " + errorMsg;
+        annotationMgr.presentError(error, "Problem receiving message from Message Server");
+        log.error(error);
     }
 
     public AnnotationModel getAnnotationModel() {
