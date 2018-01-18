@@ -44,5 +44,12 @@ public class AB2Properties {
     public static Vector4 MAIN_RENDERER_MESSAGE_TEXT_COLOR = new Vector4(0.5f, 0.5f, 0.5f, 1.0f);
     public static Vector4 MAIN_RENDERER_MESSAGE_BACKGROUND_COLOR = new Vector4( 0.0f, 0.0f, 0.0f, 1.0f);
 
+    public static int     SAMPLE_PANEL_OPEN_WIDTH = 150;
+    public static int     SAMPLE_PANEL_CLOSED_WIDTH = 30;
+
+    public static int     NEURON_PANEL_OPEN_WIDTH = 150;
+    public static int     NEURON_PANEL_CLOSED_WIDTH = 30;
+
+
 
 }

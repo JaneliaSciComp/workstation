@@ -44,7 +44,7 @@ public class AB2SampleRegionManager extends GLRegionManager {
 
         topRegion=new AB2SampleTopRegion(0, height-topHeight-1, width, topHeight, width, height);
         bottomRegion=new AB2SampleBottomRegion(leftWidth, 0, width-(leftWidth+rightWidth), bottomHeight, width, height);
-        leftRegion=new AB2SampleLeftRegion();
+        leftRegion=new AB2SampleLeftRegion(0, 0, leftWidth, height-topHeight, width, height);
         rightRegion=new AB2SampleRightRegion();
         mainRegion=new AB2SampleMainRegion(leftWidth, bottomHeight, width-(leftWidth+rightWidth), mainHeight, width, height);
 
@@ -85,14 +85,14 @@ public class AB2SampleRegionManager extends GLRegionManager {
     @Override
     public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
 
-        int leftWidth=AB2SampleLeftRegion.CLOSED_WIDTH;
+        int leftWidth=AB2Properties.SAMPLE_PANEL_CLOSED_WIDTH;
         if (leftRegion.isOpen()) {
-            leftWidth=AB2SampleLeftRegion.OPEN_WIDTH;
+            leftWidth=AB2Properties.SAMPLE_PANEL_OPEN_WIDTH;
         }
 
-        int rightWidth=AB2SampleRightRegion.CLOSED_WIDTH;
+        int rightWidth=AB2Properties.NEURON_PANEL_CLOSED_WIDTH;
         if (rightRegion.isOpen()) {
-            rightWidth=AB2SampleRightRegion.OPEN_WIDTH;
+            rightWidth=AB2Properties.NEURON_PANEL_OPEN_WIDTH;
         }
 
         int topHeight= AB2Properties.TOP_MENU_CLOSED_HEIGHT;

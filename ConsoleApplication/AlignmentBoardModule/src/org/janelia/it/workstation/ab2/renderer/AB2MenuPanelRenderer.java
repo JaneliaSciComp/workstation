@@ -98,8 +98,8 @@ public class AB2MenuPanelRenderer extends AB2Renderer2D {
     private void createBackgroundPanel(int x, int y, int width, int height, int screenWidth, int screenHeight) {
         Vector3[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(x, y, width, height, screenWidth, screenHeight, AB2Properties.MENU_BACKGROUND_Z);
 
-        logger.info("backgroundPanel v0="+normed2dPositions[0].get(0)+" "+normed2dPositions[0].get(1)+" v1="+
-                normed2dPositions[1].get(0)+" "+normed2dPositions[1].get(1));
+//        logger.info("backgroundPanel v0="+normed2dPositions[0].get(0)+" "+normed2dPositions[0].get(1)+" v1="+
+//                normed2dPositions[1].get(0)+" "+normed2dPositions[1].get(1));
 
         backgroundPanel=new ColorBox2DActor(this, AB2Controller.getController().getNextPickIndex(),
                 normed2dPositions[0], normed2dPositions[1], AB2Properties.MENU_COLOR, AB2Properties.MENU_HOVER_COLOR, AB2Properties.MENU_SELECT_COLOR);
