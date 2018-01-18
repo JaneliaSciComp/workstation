@@ -230,9 +230,9 @@ public class Voxel3DActor extends GLAbstractActor {
 
         if (shader instanceof AB2Voxel3DShader) {
 
-            gl.glDisable(GL4.GL_DEPTH_TEST);
-            gl.glEnable(GL4.GL_BLEND);
-            gl.glBlendEquation(GL4.GL_MAX);
+//            gl.glDisable(GL4.GL_DEPTH_TEST);
+//            gl.glEnable(GL4.GL_BLEND);
+//            gl.glBlendEquation(GL4.GL_MAX);
 
             if (voxels.size()!=colors.size()) {
                 logger.error("voxels and colors arrays must be same size");
@@ -308,8 +308,8 @@ public class Voxel3DActor extends GLAbstractActor {
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-            gl.glDisable(GL4.GL_BLEND);
-            gl.glEnable(GL4.GL_DEPTH_TEST);
+//            gl.glDisable(GL4.GL_BLEND);
+//            gl.glEnable(GL4.GL_DEPTH_TEST);
 
         }
 

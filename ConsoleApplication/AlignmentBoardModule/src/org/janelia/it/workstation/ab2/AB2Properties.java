@@ -16,6 +16,12 @@ public class AB2Properties {
     public static Vector4 AB2_TEXT_LABEL_BACKGROUND = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
     public static float   AB2_TEXT_LABEL_Z=0.8f;
 
+    public static float   MENU_MODE_BUTTON_Z=0.7f;
+    public static Vector4 MENU_BLACK_MODE_COLOR = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+    public static Vector4 MENU_BLACK_MODE_HOVER = new Vector4( 0.1f, 0.1f, 0.1f, 1.0f);
+    public static Vector4 MENU_WHITE_MODE_COLOR = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    public static Vector4 MENU_WHITE_MODE_HOVER = new Vector4( 0.7f, 0.7f, 0.7f, 1.0f);
+
     public static int     IMAGE_CONTROL_PANEL_OPEN_HEIGHT = 200;
     public static int     IMAGE_CONTROL_PANEL_CLOSED_HEIGHT = 30;
 

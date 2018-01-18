@@ -5,12 +5,14 @@ import java.awt.Point;
 import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.workstation.ab2.actor.HorizontalDualSliderActor;
+import org.janelia.it.workstation.ab2.event.AB2BlackModeRequestEvent;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2Main3DRendererSetRangeEvent;
 import org.janelia.it.workstation.ab2.event.AB2MainMessageEvent;
 import org.janelia.it.workstation.ab2.event.AB2MainMessageHideEvent;
 import org.janelia.it.workstation.ab2.event.AB2Sample3DImageLoadedEvent;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
+import org.janelia.it.workstation.ab2.event.AB2WhiteModeRequestEvent;
 import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLRegionManager;
 import org.janelia.it.workstation.ab2.loader.AB2Sample3DImageLoader;
@@ -120,6 +122,12 @@ public class AB2SampleBasicMode extends AB2View3DMode {
             AB2SampleMainRegion mainRegion=regionManager.getMainRegion();
             mainRegion.processEvent(event);
             controller.setNeedsRepaint(true);
+        }
+        else if (event instanceof AB2BlackModeRequestEvent) {
+            logger.info("Received request for AB2BlackModeRequestEvent");
+        }
+        else if (event instanceof AB2WhiteModeRequestEvent) {
+            logger.info("Received request for AB2WhiteModeRequestEvent");
         }
     }
 

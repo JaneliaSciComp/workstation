@@ -605,7 +605,7 @@ s at an unmarked pick location, then the drop coordinates are passed to the
         GL4 gl4 = (GL4) (glAutoDrawable.getGL());
 
         gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, pickFramebufferId.get(0));
-        gl4.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        gl4.glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
         gl4.glClearDepth(1.0f);
         gl4.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT);
         gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);
