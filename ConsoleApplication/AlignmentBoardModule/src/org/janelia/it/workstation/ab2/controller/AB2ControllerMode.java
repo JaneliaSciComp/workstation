@@ -16,6 +16,7 @@ import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.event.*;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.gl.GLRegionManager;
@@ -38,6 +39,8 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
     protected IntBuffer pickDepthTextureId;
 
     protected long mouseReleaseTimestampMs=0L;
+
+    Vector4 backgroundClearColor=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
 
     int[] drawBuffersTargets = new int[]{
             GL4.GL_COLOR_ATTACHMENT0
@@ -600,12 +603,17 @@ s at an unmarked pick location, then the drop coordinates are passed to the
 //        gl.glEnable(GL4.GL_BLEND);
     }
 
+    public void setBackgroundClearColor(Vector4 backgroundClearColor) {
+        this.backgroundClearColor=backgroundClearColor;
+        controller.setNeedsRepaint(true);
+    }
+
     @Override
     final public void display(GLAutoDrawable glAutoDrawable) {
         GL4 gl4 = (GL4) (glAutoDrawable.getGL());
 
         gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, pickFramebufferId.get(0));
-        gl4.glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+        gl4.glClearColor(backgroundClearColor.get(0), backgroundClearColor.get(1), backgroundClearColor.get(2), backgroundClearColor.get(3));
         gl4.glClearDepth(1.0f);
         gl4.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT);
         gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, 0);

@@ -102,7 +102,7 @@ public class AB2MenuPanelRenderer extends AB2Renderer2D {
         int size=getModeButtonSize()/2;
         int xC=getBlackModeX();
         int yC=getBlackModeY();
-        Vector3[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(xC-size, yC-size, xC+size, yC+size,
+        Vector3[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(xC-size, yC-size, size*2, size*2,
                 screenWidth, screenHeight, AB2Properties.MENU_MODE_BUTTON_Z);
         blackModeBox=new ColorBoxButtonActor(this, AB2Controller.getController().getNextPickIndex(), normed2dPositions[0],
                 normed2dPositions[1], AB2Properties.MENU_BLACK_MODE_COLOR, AB2Properties.MENU_BLACK_MODE_HOVER,
@@ -115,7 +115,7 @@ public class AB2MenuPanelRenderer extends AB2Renderer2D {
         int size=getModeButtonSize()/2;
         int xC=getWhiteModeX();
         int yC=getWhiteModeY();
-        Vector3[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(xC-size, yC-size, xC+size, yC+size,
+        Vector3[] normed2dPositions=getNormed2DPositionsFromScreenCoordinates(xC-size, yC-size, size*2, size*2,
                 screenWidth, screenHeight, AB2Properties.MENU_MODE_BUTTON_Z);
         whiteModeBox=new ColorBoxButtonActor(this, AB2Controller.getController().getNextPickIndex(), normed2dPositions[0],
                 normed2dPositions[1], AB2Properties.MENU_WHITE_MODE_COLOR, AB2Properties.MENU_WHITE_MODE_HOVER,
@@ -134,10 +134,10 @@ public class AB2MenuPanelRenderer extends AB2Renderer2D {
 
     private int getModeButtonSize() { return 20; }
 
-    private int getBlackModeX() { return x+width-60; }
+    private int getBlackModeX() { return x+width-100; }
     private int getBlackModeY() { return y+(height/2); }
 
-    private int getWhiteModeX() { return x+width-40; }
+    private int getWhiteModeX() { return x+width-125; }
     private int getWhiteModeY() { return y+(height/2); }
 
     private void repositionModeButtons() {
@@ -149,10 +149,12 @@ public class AB2MenuPanelRenderer extends AB2Renderer2D {
         int xWC=getWhiteModeX();
         int yWC=getWhiteModeY();
 
-        Vector3[] blackNormed2dPositions=getNormed2DPositionsFromScreenCoordinates(xBC-size, yBC-size, xBC+size, yBC+size,
+        //logger.info("x="+x+" y="+y+" width="+width+" height="+height+" xBC="+xBC+" yBC="+yBC+" screenWidth="+screenWidth+" screenHeight="+screenHeight);
+
+        Vector3[] blackNormed2dPositions=getNormed2DPositionsFromScreenCoordinates(xBC-size, yBC-size, size*2, size*2,
                 screenWidth, screenHeight, AB2Properties.MENU_MODE_BUTTON_Z);
 
-        Vector3[] whiteNormed2dPositions=getNormed2DPositionsFromScreenCoordinates(xWC-size, yWC-size, xWC+size, yWC+size,
+        Vector3[] whiteNormed2dPositions=getNormed2DPositionsFromScreenCoordinates(xWC-size, yWC-size, size*2, size*2,
                 screenWidth, screenHeight, AB2Properties.MENU_MODE_BUTTON_Z);
 
         blackModeBox.updateVertices(blackNormed2dPositions[0], blackNormed2dPositions[1]);

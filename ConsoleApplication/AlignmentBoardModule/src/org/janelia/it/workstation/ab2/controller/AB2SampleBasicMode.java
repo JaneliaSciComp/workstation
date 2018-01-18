@@ -4,7 +4,9 @@ import java.awt.Point;
 
 import javax.media.opengl.GLAutoDrawable;
 
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.actor.HorizontalDualSliderActor;
+import org.janelia.it.workstation.ab2.actor.Voxel3DActor;
 import org.janelia.it.workstation.ab2.event.AB2BlackModeRequestEvent;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2Main3DRendererSetRangeEvent;
@@ -124,10 +126,18 @@ public class AB2SampleBasicMode extends AB2View3DMode {
             controller.setNeedsRepaint(true);
         }
         else if (event instanceof AB2BlackModeRequestEvent) {
-            logger.info("Received request for AB2BlackModeRequestEvent");
+            AB2SampleRegionManager regionManager=(AB2SampleRegionManager)getRegionManager();
+            AB2SampleMainRegion mainRegion=regionManager.getMainRegion();
+            AB2Main3DRenderer main3DRenderer=mainRegion.getSampleRenderer();
+            main3DRenderer.setRenderMode(Voxel3DActor.RenderMode.BLACK_MIP);
+            setBackgroundClearColor(new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
         }
         else if (event instanceof AB2WhiteModeRequestEvent) {
-            logger.info("Received request for AB2WhiteModeRequestEvent");
+            AB2SampleRegionManager regionManager=(AB2SampleRegionManager)getRegionManager();
+            AB2SampleMainRegion mainRegion=regionManager.getMainRegion();
+            AB2Main3DRenderer main3DRenderer=mainRegion.getSampleRenderer();
+            main3DRenderer.setRenderMode(Voxel3DActor.RenderMode.WHITE_CUBE);
+            setBackgroundClearColor(new Vector4(0.8f, 0.8f, 0.8f, 0.0f));
         }
     }
 

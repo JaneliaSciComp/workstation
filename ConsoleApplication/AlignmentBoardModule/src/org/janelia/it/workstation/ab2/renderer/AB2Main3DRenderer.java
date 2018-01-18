@@ -223,4 +223,10 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
         }
     }
 
+    public void setRenderMode(Voxel3DActor.RenderMode renderMode) {
+        if (voxel3DActor!=null) {
+            voxel3DActor.setRenderMode(renderMode);
+        }
+    }
+
 }

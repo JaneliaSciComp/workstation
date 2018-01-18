@@ -23,6 +23,8 @@ public class Voxel3DActor extends GLAbstractActor {
 
     private final Logger logger = LoggerFactory.getLogger(Voxel3DActor.class);
 
+    public enum RenderMode { BLACK_MIP, WHITE_CUBE }
+
     List<Vector3> voxels;
     List<Vector4> colors;
     int dimX;
@@ -40,6 +42,10 @@ public class Voxel3DActor extends GLAbstractActor {
 
     float intensityRange0=0.0f;
     float intensityRange1=1.0f;
+
+    protected RenderMode renderMode=RenderMode.BLACK_MIP;
+
+    public void setRenderMode(RenderMode renderMode) { this.renderMode=renderMode; }
 
     public void setIntensityRange(float intensityRange0, float intensityRange1) {
         //logger.info("setIntensityRange r0="+intensityRange0+" r1="+intensityRange1);
@@ -230,9 +236,14 @@ public class Voxel3DActor extends GLAbstractActor {
 
         if (shader instanceof AB2Voxel3DShader) {
 
-//            gl.glDisable(GL4.GL_DEPTH_TEST);
-//            gl.glEnable(GL4.GL_BLEND);
-//            gl.glBlendEquation(GL4.GL_MAX);
+            if (renderMode==RenderMode.BLACK_MIP) {
+                gl.glDisable(GL4.GL_DEPTH_TEST);
+                gl.glEnable(GL4.GL_BLEND);
+                gl.glBlendEquation(GL4.GL_MAX);
+            }
+            else if (renderMode==RenderMode.WHITE_CUBE){
+                // do nothing - assume defaults are correct
+            }
 
             if (voxels.size()!=colors.size()) {
                 logger.error("voxels and colors arrays must be same size");
@@ -308,8 +319,13 @@ public class Voxel3DActor extends GLAbstractActor {
 
             gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
-//            gl.glDisable(GL4.GL_BLEND);
-//            gl.glEnable(GL4.GL_DEPTH_TEST);
+            if (renderMode==RenderMode.BLACK_MIP) {
+                gl.glDisable(GL4.GL_BLEND);
+                gl.glEnable(GL4.GL_DEPTH_TEST);
+            }
+            else if (renderMode==RenderMode.WHITE_CUBE) {
+                // do nothing - assume default are correct
+            }
 
         }
 

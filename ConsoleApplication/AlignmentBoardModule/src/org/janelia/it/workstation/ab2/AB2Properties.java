@@ -7,9 +7,9 @@ public class AB2Properties {
     public static int     TOP_MENU_OPEN_HEIGHT = 100;
     public static int     TOP_MENU_CLOSED_HEIGHT = 30;
 
-    public static Vector4 MENU_COLOR = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
-    public static Vector4 MENU_HOVER_COLOR = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
-    public static Vector4 MENU_SELECT_COLOR = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
+    public static Vector4 MENU_COLOR = new Vector4(0.20f, 0.20f, 0.20f, 1.0f);
+    public static Vector4 MENU_HOVER_COLOR = new Vector4(0.20f, 0.20f, 0.20f, 1.0f);
+    public static Vector4 MENU_SELECT_COLOR = new Vector4(0.20f, 0.20f, 0.20f, 1.0f);
     public static float   MENU_BACKGROUND_Z=0.9f;
 
     public static Vector4 AB2_TEXT_LABEL_FOREGROUND = new Vector4(0.5f, 0.5f, 0.5f, 1.0f);
@@ -18,8 +18,8 @@ public class AB2Properties {
 
     public static float   MENU_MODE_BUTTON_Z=0.7f;
     public static Vector4 MENU_BLACK_MODE_COLOR = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
-    public static Vector4 MENU_BLACK_MODE_HOVER = new Vector4( 0.1f, 0.1f, 0.1f, 1.0f);
-    public static Vector4 MENU_WHITE_MODE_COLOR = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    public static Vector4 MENU_BLACK_MODE_HOVER = new Vector4( 0.2f, 0.2f, 0.2f, 1.0f);
+    public static Vector4 MENU_WHITE_MODE_COLOR = new Vector4(0.8f, 0.8f, 0.8f, 1.0f);
     public static Vector4 MENU_WHITE_MODE_HOVER = new Vector4( 0.7f, 0.7f, 0.7f, 1.0f);
 
     public static int     IMAGE_CONTROL_PANEL_OPEN_HEIGHT = 200;
