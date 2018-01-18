@@ -420,7 +420,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         }
 
         DomainUtils.sortDomainObjects(filteredLsms, sortCriteria);
-        lsmSearchResults = DomainObjectSearchResults.paginate(filteredLsms, lsmAnnotations);
+        lsmSearchResults = new DomainObjectSearchResults(filteredLsms, lsmAnnotations);
     }
 
     private void showLsmView(boolean isUserDriven) {

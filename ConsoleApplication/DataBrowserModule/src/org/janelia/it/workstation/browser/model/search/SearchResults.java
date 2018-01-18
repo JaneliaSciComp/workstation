@@ -33,4 +33,5 @@ public interface SearchResults<T,S> {
     public ResultPage<T,S> getPage(int page) throws Exception;
 
     public boolean updateIfFound(T object);
+   
 }

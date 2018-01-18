@@ -116,7 +116,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode,Domain
                 annotations = model.getAnnotations(DomainUtils.getReferences(children));
                 loadPreferences();
                 DomainUtils.sortDomainObjects(children, sortCriteria);
-                searchResults = DomainObjectSearchResults.paginate(children, annotations);
+                searchResults = new DomainObjectSearchResults(children, annotations);
                 log.info("Showing "+children.size()+" items");
             }
 

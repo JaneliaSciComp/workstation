@@ -1,31 +1,26 @@
-package org.janelia.it.workstation.browser.model.search;
+package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.browser.model.search.SearchResults;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ListMultimap;
 
 /**
  * Manages a set of domain search results with pagination.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectSearchResults implements SearchResults<DomainObject, Reference> {
+public class ColorDepthSearchResults implements SearchResults<ColorDepthMatch, String> {
 
-    private static final Logger log = LoggerFactory.getLogger(DomainObjectSearchResults.class);
+    private static final Logger log = LoggerFactory.getLogger(ColorDepthSearchResults.class);
 
-    protected final List<DomainObjectResultPage> pages = new ArrayList<>();
+    protected final List<ColorDepthResultPage> pages = new ArrayList<>();
     protected Set<Integer> loadedPages = new HashSet<>();
     protected long numTotalResults = 0;
     protected long numLoadedResults = 0;
@@ -33,51 +28,43 @@ public class DomainObjectSearchResults implements SearchResults<DomainObject, Re
     /**
      * Factory method to paginate a list of results already in memory. 
      * @param domainObjects
-     * @param annotations
      * @return 
      */
-    public DomainObjectSearchResults(Collection<? extends DomainObject> domainObjects, Collection<Annotation> annotations) {
+    public ColorDepthSearchResults(Collection<ColorDepthMatch> matches) {
         
-        List<DomainObject> pageObjects = new ArrayList<>();
+        List<ColorDepthMatch> pageObjects = new ArrayList<>();
         
-        ListMultimap<Reference, Annotation> annotationsByTarget = DomainUtils.getAnnotationsByDomainObjectReference(annotations);
-        Set<DomainObject> uniqueObjects = new LinkedHashSet<>(domainObjects);
-        Set<Annotation> pageAnnotations = new LinkedHashSet<>();
-        
-        for(DomainObject domainObject : uniqueObjects)  {
-            if (domainObject==null) continue;
-            pageObjects.add(domainObject);
-            List<Annotation> annots = annotationsByTarget.get(Reference.createFor(domainObject));
-            pageAnnotations.addAll(annots);
+        for(ColorDepthMatch match : matches)  {
+            if (match==null) continue;
+            pageObjects.add(match);
             if (pageObjects.size() >= SearchResults.PAGE_SIZE) {
-                addPage(createResultPage(pageObjects, new ArrayList<>(pageAnnotations), domainObjects.size()));
+                addPage(createResultPage(pageObjects, matches.size()));
                 pageObjects.clear();
-                pageAnnotations.clear();
             }
         }
         
         if (!pageObjects.isEmpty()) {
             // Create one more page with the remaining items
-            addPage(createResultPage(pageObjects, new ArrayList<>(pageAnnotations), domainObjects.size()));
+            addPage(createResultPage(pageObjects, matches.size()));
         }
         
         if (getPages().isEmpty()) {
             // Construct an empty search results so as not to return null from this factory method
-            addPage(createResultPage(new ArrayList<DomainObject>(), new ArrayList<Annotation>(), 0));
+            addPage(createResultPage(new ArrayList<ColorDepthMatch>(), 0));
         }
     }
     
-    public DomainObjectSearchResults(DomainObjectResultPage firstPage) {
+    public ColorDepthSearchResults(ColorDepthResultPage firstPage) {
         addPage(firstPage);
     }
 
-    final void addPage(DomainObjectResultPage resultPage) {
+    final void addPage(ColorDepthResultPage resultPage) {
         updateNumResults(resultPage);
         pages.add(resultPage);
         loadedPages.add(pages.size()-1);
     }
     
-    final void setPage(int page, DomainObjectResultPage resultPage) {
+    final void setPage(int page, ColorDepthResultPage resultPage) {
         updateNumResults(resultPage);
         while (pages.size()-1<page) {
             pages.add(null);
@@ -112,12 +99,12 @@ public class DomainObjectSearchResults implements SearchResults<DomainObject, Re
     }
 
     @Override
-    public List<DomainObjectResultPage> getPages() {
+    public List<ColorDepthResultPage> getPages() {
         return pages;
     }
 
     @Override
-    public DomainObjectResultPage getPage(int page) throws Exception {
+    public ColorDepthResultPage getPage(int page) throws Exception {
         if (page>pages.size()-1 || page<0) {
             return null;
         }
@@ -133,7 +120,7 @@ public class DomainObjectSearchResults implements SearchResults<DomainObject, Re
     public void loadAllResults() {
     }
     
-    private void updateNumResults(DomainObjectResultPage resultPage) {
+    private void updateNumResults(ColorDepthResultPage resultPage) {
         if (!pages.isEmpty() && numTotalResults!=resultPage.getNumTotalResults()) {
             log.warn("Adding page where total number of results ({}) does not match result set ({}) ",resultPage.getNumTotalResults(),numTotalResults);
         }
@@ -144,14 +131,14 @@ public class DomainObjectSearchResults implements SearchResults<DomainObject, Re
         log.debug("Updated numFound to {}", numTotalResults);
     }
 
-    public boolean updateIfFound(DomainObject domainObject) {
+    public boolean updateIfFound(ColorDepthMatch match) {
 
         boolean updated = false;
-        for(final DomainObjectResultPage page : getPages()) {
+        for(final ColorDepthResultPage page : getPages()) {
             if (page==null) continue; // Page not yet loaded
-            final DomainObject pageObject = page.getObjectById(Reference.createFor(domainObject));
+            final ColorDepthMatch pageObject = page.getObjectById(match.getFilepath());
             if (pageObject!=null) {
-                page.updateObject(domainObject);
+                page.updateObject(match);
                 updated = true;
             }
         }
@@ -159,7 +146,7 @@ public class DomainObjectSearchResults implements SearchResults<DomainObject, Re
         return updated;
     }
     
-    private final DomainObjectResultPage createResultPage(List<DomainObject> domainObjects, List<Annotation> annotations, long totalNumResults) {
-        return new DomainObjectResultPage(domainObjects, annotations, totalNumResults);
+    private final ColorDepthResultPage createResultPage(List<ColorDepthMatch> matches, long totalNumResults) {
+        return new ColorDepthResultPage(matches, totalNumResults);
     }
 }

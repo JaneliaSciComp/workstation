@@ -400,7 +400,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         }
         
         DomainUtils.sortDomainObjects(domainObjects, sortCriteria);
-        this.searchResults = DomainObjectSearchResults.paginate(domainObjects, annotations);
+        this.searchResults = new DomainObjectSearchResults(domainObjects, annotations);
     }
 
     public void showResults(boolean isUserDriven, Callable<Void> success) {
