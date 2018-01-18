@@ -9,6 +9,7 @@ import org.janelia.it.workstation.ab2.AB2Properties;
 import org.janelia.it.workstation.ab2.actor.ColorBox2DActor;
 import org.janelia.it.workstation.ab2.actor.HorizontalDualSliderActor;
 import org.janelia.it.workstation.ab2.actor.OpenCloseActor;
+import org.janelia.it.workstation.ab2.actor.TextLabelActor;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2Event;
 import org.janelia.it.workstation.ab2.event.AB2ImageControlRequestCloseEvent;
@@ -20,6 +21,7 @@ import org.janelia.it.workstation.ab2.gl.GLRegion;
 import org.janelia.it.workstation.ab2.gl.GLShaderActionSequence;
 import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
 import org.janelia.it.workstation.ab2.shader.AB2PickShader;
+import org.janelia.it.workstation.ab2.shader.AB2Text2DShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +32,10 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
     private ImageControlBackgroundColorBoxActor backgroundPanel;
     private OpenCloseActor openCloseActor;
     private ImageControlRangeSlider rangeSlider;
+    private TextLabelActor imageControlTextLabelActor;
 
     private GLShaderActionSequence panelDrawSequence;
+    private GLShaderActionSequence textDrawSequence;
     private GLShaderActionSequence panelPickSequence;
 
     private int x;
@@ -49,7 +53,6 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
                                                    Vector4 color, Vector4 hoverColor, Vector4 selectColor) {
             super(renderer, actorId, v0, v1, color, hoverColor, selectColor);
             setHoverable(true);
-            logger.info(" --*-- actorId="+actorId);
         }
 
         @Override
@@ -151,6 +154,10 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         panelDrawSequence.setShader(new AB2Basic2DShader());
         addDrawShaderActionSequence(panelDrawSequence);
 
+        textDrawSequence = new GLShaderActionSequence(this.getClass().getName()+ " Text");
+        textDrawSequence.setShader(new AB2Text2DShader());
+        addDrawShaderActionSequence(textDrawSequence);
+
         panelPickSequence = new GLShaderActionSequence(this.getClass().getName()+" Pick");
         panelPickSequence.setShader(new AB2PickShader());
         addPickShaderActionSequence(panelPickSequence);
@@ -162,6 +169,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         createBackgroundPanel(x, y, width, height, screenWidth, screenHeight);
         createOpenCloseActor();
         createRangeSlider();
+        createImageControlTextLabel();
         super.init(gl);
         initialized=true;
     }
@@ -176,6 +184,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
             openCloseActor.setDisplay(true);
             openCloseActor.setOpen(false);
             rangeSlider.setDisplay(true);
+            imageControlTextLabelActor.setDisplay(false);
         } else {
             //logger.info("  -- closing, background hoverable=true");
             backgroundPanel.setColor(AB2Properties.IMAGE_CONTROL_PANEL_COLOR);
@@ -184,6 +193,7 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
             openCloseActor.setDisplay(false);
             openCloseActor.setOpen(true);
             rangeSlider.setDisplay(false);
+            imageControlTextLabelActor.setDisplay(true);
         }
         this.isOpen=isOpen;
     }
@@ -211,6 +221,11 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         // range slider
         Vector3[] rangeVertices=getRangeSliderVertices(x, y, width, height, screenWidth, screenHeight);
         rangeSlider.updateVertices(rangeVertices[0], rangeVertices[1]);
+
+        // text label actor
+        Vector3 labelPosition=getNormedCenterPositionFromScreenCoordinates( (x+width)/2, (y+height)/2, screenWidth, screenHeight, AB2Properties.AB2_TEXT_LABEL_Z);
+        imageControlTextLabelActor.setCenterPosition(labelPosition);
+
     }
 
     private Vector3[] getOpenCloseVertices(int x, int y, int width, int height, int screenWidth, int screenHeight) {
@@ -250,6 +265,13 @@ public class AB2ImageControlPanelRenderer extends AB2Renderer2D {
         normed2dPositions[1]=v1;
 
         return normed2dPositions;
+    }
+
+    private void createImageControlTextLabel() {
+        Vector3 labelPosition=getNormedCenterPositionFromScreenCoordinates( (x+width)/2, (y+height)/2, screenWidth, screenHeight, AB2Properties.IMAGE_CONTROL_TEXT_LABEL_Z);
+        imageControlTextLabelActor=new TextLabelActor(this, AB2Controller.getController().getNextPickIndex(), "Image Controls",
+                labelPosition, AB2Properties.IMAGE_CONTROL_TEXT_LABEL_FOREGROUND, AB2Properties.IMAGE_CONTROL_TEXT_LABEL_BACKGROUND, TextLabelActor.Orientation.NORMAL);
+        textDrawSequence.getActorSequence().add(imageControlTextLabelActor);
     }
 
     private void createRangeSlider() {

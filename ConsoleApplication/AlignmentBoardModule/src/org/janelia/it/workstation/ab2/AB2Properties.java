@@ -19,6 +19,10 @@ public class AB2Properties {
     public static int     IMAGE_CONTROL_PANEL_OPEN_HEIGHT = 200;
     public static int     IMAGE_CONTROL_PANEL_CLOSED_HEIGHT = 30;
 
+    public static Vector4 IMAGE_CONTROL_TEXT_LABEL_FOREGROUND = new Vector4(0.5f, 0.5f, 0.5f, 1.0f);
+    public static Vector4 IMAGE_CONTROL_TEXT_LABEL_BACKGROUND = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
+    public static float   IMAGE_CONTROL_TEXT_LABEL_Z=0.8f;
+
     public static Vector4 IMAGE_CONTROL_PANEL_COLOR = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
     public static Vector4 IMAGE_CONTROL_PANEL_HOVER_COLOR = new Vector4(0.20f, 0.20f, 0.20f, 1.0f);
     public static Vector4 IMAGE_CONTROL_PANEL_SELECT_COLOR = new Vector4(0.15f, 0.15f, 0.15f, 1.0f);
