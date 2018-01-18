@@ -45,7 +45,7 @@ public class AB2SampleRegionManager extends GLRegionManager {
         topRegion=new AB2SampleTopRegion(0, height-topHeight-1, width, topHeight, width, height);
         bottomRegion=new AB2SampleBottomRegion(leftWidth, 0, width-(leftWidth+rightWidth), bottomHeight, width, height);
         leftRegion=new AB2SampleLeftRegion(0, 0, leftWidth, height-topHeight, width, height);
-        rightRegion=new AB2SampleRightRegion();
+        rightRegion=new AB2SampleRightRegion(width-rightWidth-1, 0,width, height-topHeight, width, height);
         mainRegion=new AB2SampleMainRegion(leftWidth, bottomHeight, width-(leftWidth+rightWidth), mainHeight, width, height);
 
         regions.add(topRegion);

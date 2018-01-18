@@ -14,7 +14,7 @@ public class AB2SamplePanelRenderer extends AB2Renderer2D {
 
     private ColorBox2DActor backgroundPanel;
 
-    private GLShaderActionSequence menuPanelDrawSequence;
+    private GLShaderActionSequence samplePanelDrawSequence;
 
 
     private int x;
@@ -34,9 +34,9 @@ public class AB2SamplePanelRenderer extends AB2Renderer2D {
         this.screenWidth=screenWidth;
         this.screenHeight=screenHeight;
 
-        menuPanelDrawSequence = new GLShaderActionSequence(this.getClass().getName()+ " Draw");
-        menuPanelDrawSequence.setShader(new AB2Basic2DShader());
-        addDrawShaderActionSequence(menuPanelDrawSequence);
+        samplePanelDrawSequence = new GLShaderActionSequence(this.getClass().getName()+ " Draw");
+        samplePanelDrawSequence.setShader(new AB2Basic2DShader());
+        addDrawShaderActionSequence(samplePanelDrawSequence);
 
     }
 
@@ -69,7 +69,7 @@ public class AB2SamplePanelRenderer extends AB2Renderer2D {
 
         backgroundPanel=new ColorBox2DActor(this, AB2Controller.getController().getNextPickIndex(),
                 normed2dPositions[0], normed2dPositions[1], AB2Properties.MENU_COLOR, AB2Properties.MENU_HOVER_COLOR, AB2Properties.MENU_SELECT_COLOR);
-        menuPanelDrawSequence.getActorSequence().add(backgroundPanel);
+        samplePanelDrawSequence.getActorSequence().add(backgroundPanel);
     }
 
 }
