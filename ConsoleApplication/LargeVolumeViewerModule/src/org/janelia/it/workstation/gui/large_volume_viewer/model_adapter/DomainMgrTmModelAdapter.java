@@ -115,6 +115,10 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
     }
     
     private void sendMessage (TmNeuronMetadata neuron, MessageType type) throws Exception {
+        // whatever the message is, unsync the object and increment the unsynced level counter
+        neuron.setSynced(false);
+        neuron.incrementSyncLevel();
+        
         List<Long> neuronIds = new ArrayList<Long>();
         neuronIds.add(neuron.getId());
         
