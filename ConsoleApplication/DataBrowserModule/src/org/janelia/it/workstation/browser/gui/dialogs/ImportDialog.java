@@ -478,7 +478,7 @@ public class ImportDialog extends ModalDialog {
         return asyncServiceClient.invokeService("dataTreeLoad",
                 serviceArgsBuilder.build(),
                 FileMgr.getFileMgr().getSubjectKey(),
-                null,
+                "LSF_DRMAA",
                 ImmutableMap.of()
         );
     }
