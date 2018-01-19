@@ -6,7 +6,9 @@
 package org.janelia.it.workstation.ab2;
 
 import javax.swing.BoxLayout;
+import javax.swing.SwingUtilities;
 
+import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
@@ -19,6 +21,7 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponentGroup;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +99,47 @@ public final class AB2TopComponent extends TopComponent {
         }
     }
 
+    private void initMyComponents() {
+        // TODO add custom code on component opening
+        if (ab2Controller==null) {
+            logger.info("Check1");
+            ab2Controller=AB2Controller.getController();
+        }
+        if (ab2Data==null) {
+            ab2Data=new AB2Data();
+        }
+        if (ab2GLPanel==null) {
+            logger.info("Check2");
+            ab2GLPanel=new AB2GLPanel(600, 400, ab2Controller);
+            ab2Controller.setGljPanel(ab2GLPanel);
+            glWrapperPanel.setLayout(new BoxLayout(glWrapperPanel, BoxLayout.Y_AXIS));
+            glWrapperPanel.add(ab2GLPanel);
+//            AB2SkeletonDomainObject skeletonDomainObject=new AB2SkeletonDomainObject();
+//            try {
+//                logger.info("Check3");
+//                skeletonDomainObject.createSkeletonsAndVolume(10);
+//                logger.info("Created skeleton domain object");
+//            } catch (Exception ex) {
+//                ex.printStackTrace();
+//                logger.error(ex.getMessage());
+//                return;
+//            }
+//            logger.info("Check4");
+//            ab2Controller.setDomainObject(skeletonDomainObject);
+        }
+        logger.info("Check5");
+        logger.info("Check6");
+        ab2GLPanel.setVisible(true);
+        glWrapperPanel.setVisible(true);
+        ab2Controller.start();
+        logger.info("Check7");
+    }
+
+    private void closeMyComponents() {
+        // TODO add custom code on component closing
+        ab2Controller.shutdown();
+    }
+
         /**
          * This method is called from within the constructor to initialize the form.
          * WARNING: Do NOT modify this code. The content of this method is always
@@ -135,46 +179,37 @@ public final class AB2TopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         logger.info("AB2TopComponent opened()");
-        // TODO add custom code on component opening
-        if (ab2Controller==null) {
-            logger.info("Check1");
-            ab2Controller=AB2Controller.getController();
-        }
-        if (ab2Data==null) {
-            ab2Data=new AB2Data();
-        }
-        if (ab2GLPanel==null) {
-            logger.info("Check2");
-            ab2GLPanel=new AB2GLPanel(600, 400, ab2Controller);
-            ab2Controller.setGljPanel(ab2GLPanel);
-            glWrapperPanel.setLayout(new BoxLayout(glWrapperPanel, BoxLayout.Y_AXIS));
-            glWrapperPanel.add(ab2GLPanel);
-//            AB2SkeletonDomainObject skeletonDomainObject=new AB2SkeletonDomainObject();
-//            try {
-//                logger.info("Check3");
-//                skeletonDomainObject.createSkeletonsAndVolume(10);
-//                logger.info("Created skeleton domain object");
-//            } catch (Exception ex) {
-//                ex.printStackTrace();
-//                logger.error(ex.getMessage());
-//                return;
-//            }
-//            logger.info("Check4");
-//            ab2Controller.setDomainObject(skeletonDomainObject);
-        }
-        logger.info("Check5");
-        ab2Controller.start();
-        logger.info("Check6");
-        ab2GLPanel.setVisible(true);
-        glWrapperPanel.setVisible(true);
-        logger.info("Check7");
+        Events.getInstance().registerOnEventBus(this);
+        initMyComponents();
     }
 
     @Override
     public void componentClosed() {
         logger.info("AB2TopComponent closed()");
-        // TODO add custom code on component closing
-        ab2Controller.shutdown();
+        closeMyComponents();
+        Events.getInstance().unregisterOnEventBus(this);
+        Runnable runnable = new Runnable() {
+            public void run() {
+                TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup(
+                        "AB2TopComponent"
+                );
+                if (tcg != null) {
+                    tcg.close();
+                }
+            }
+        };
+        if ( SwingUtilities.isEventDispatchThread() ) {
+            runnable.run();
+        }
+        else {
+            try {
+                SwingUtilities.invokeAndWait( runnable );
+            } catch ( Exception ex ) {
+                logger.error(ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
+
     }
 
     void writeProperties(java.util.Properties p) {

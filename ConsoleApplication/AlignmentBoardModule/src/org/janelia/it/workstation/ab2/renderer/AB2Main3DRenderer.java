@@ -146,6 +146,8 @@ public class AB2Main3DRenderer extends AB2Renderer3D {
         // For some reason, the cast to GLAbstractActor is necessary for compatibility with the apache commons Pair implementation
         if (voxel3DActor!=null) {
             removeActor(voxel3DActor, voxel3DShaderSequence);
+            controller.setNeedsRepaint(true);
+            try { Thread.sleep(100); } catch (Exception ex) {}
             voxel3DActor = null;
         }
     }

@@ -338,7 +338,9 @@ public class Voxel3DActor extends GLAbstractActor {
 
     @Override
     public void dispose(GL4 gl, GLShaderProgram shader) {
+        logger.info("&&&&&&&&&&&&&&& DISPOSE CALLED 1");
         if (shader instanceof AB2Voxel3DShader) {
+            logger.info("&&&&&&&&&&&&&&& DISPOSE CALLED 2");
             gl.glDeleteVertexArrays(1, vertexArrayId);
             gl.glDeleteBuffers(1, vertexBufferId);
             gl.glDeleteBuffers(1, colorBufferId);

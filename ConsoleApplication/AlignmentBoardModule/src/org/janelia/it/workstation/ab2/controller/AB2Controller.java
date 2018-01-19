@@ -21,6 +21,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.GLJPanel;
@@ -179,6 +180,7 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
 
     @Override
     public void dispose(GLAutoDrawable glAutoDrawable) {
+        logger.info(" &&&&&&&&&&&&&& DISPOSE CALLED");
         if (currentMode!=null) {
             currentMode.dispose(glAutoDrawable);
         }
@@ -190,7 +192,7 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
 //            try { Thread.sleep(500); } catch (Exception ex) {}
 //            startDelayComplete=true;
 //        }
-        if (currentMode!=null) {
+        if (currentMode != null) {
             currentMode.display(glAutoDrawable);
         }
     }

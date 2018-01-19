@@ -40,7 +40,7 @@ public abstract class AB2ControllerMode implements GLEventListener, AB2EventHand
 
     protected long mouseReleaseTimestampMs=0L;
 
-    Vector4 backgroundClearColor=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+    Vector4 backgroundClearColor=new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 
     int[] drawBuffersTargets = new int[]{
             GL4.GL_COLOR_ATTACHMENT0
