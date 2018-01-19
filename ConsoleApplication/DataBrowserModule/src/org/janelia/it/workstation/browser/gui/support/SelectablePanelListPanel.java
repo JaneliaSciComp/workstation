@@ -98,7 +98,7 @@ public class SelectablePanelListPanel extends ScrollablePanel {
             }
 
             if (object != null) {
-                panelSelection(object, true);
+                selectPanel(object, true);
                 updateHud(false);
             }
 
@@ -162,7 +162,7 @@ public class SelectablePanelListPanel extends ScrollablePanel {
                 return;
             }
             SelectablePanel resultPanel = getSelectablePanelAncestor(e.getComponent());
-            panelSelection(resultPanel, true);
+            selectPanel(resultPanel, true);
             SelectablePanelListPanel.this.popupTriggered(e, resultPanel);
             e.consume();
         }
@@ -174,7 +174,7 @@ public class SelectablePanelListPanel extends ScrollablePanel {
                 return;
             }
             SelectablePanel resultPanel = getSelectablePanelAncestor(e.getComponent());
-            panelSelection(resultPanel, true);
+            selectPanel(resultPanel, true);
             SelectablePanelListPanel.this.doubleLeftClicked(e, resultPanel);
             e.consume();
         }
@@ -189,18 +189,18 @@ public class SelectablePanelListPanel extends ScrollablePanel {
             if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
                 return;
             }
-            panelSelection(resultPanel, true);
+            selectPanel(resultPanel, true);
             e.consume();
         }
     };
 
     public void selectFirst(boolean isUserDriven) {
         if (!resultPanels.isEmpty()) {
-            panelSelection(resultPanels.get(0), isUserDriven);
+            selectPanel(resultPanels.get(0), isUserDriven);
         }
     }
     
-    private void panelSelection(SelectablePanel resultPanel, boolean isUserDriven) {
+    public void selectPanel(SelectablePanel resultPanel, boolean isUserDriven) {
         if (resultPanel==null) return;
         for(SelectablePanel otherResultPanel : resultPanels) {
             if (resultPanel != otherResultPanel) {

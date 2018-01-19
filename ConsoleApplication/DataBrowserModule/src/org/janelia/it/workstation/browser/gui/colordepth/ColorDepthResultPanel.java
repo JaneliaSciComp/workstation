@@ -49,7 +49,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
     private JButton prevResultButton;
     private JLabel resultLabel;
     private JButton nextResultButton;
-    private final PaginatedResultsPanel<ColorDepthMatch, String> resultPanel;
+    private final PaginatedResultsPanel<ColorDepthMatch, String> resultsPanel;
 
     // State
     private ColorDepthMask mask;
@@ -70,7 +70,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
         public String getId(ColorDepthMatch match) {
             return match.getFilepath();
         }
-        
     };
     
     public ColorDepthResultPanel() {
@@ -95,13 +94,13 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
             }
         });
         
-        this.topPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 2));
+        this.topPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 5, 2));
         topPanel.add(new JLabel("Results:"));
         topPanel.add(prevResultButton);
         topPanel.add(resultLabel);
         topPanel.add(nextResultButton);
         
-        this.resultPanel = new PaginatedResultsPanel<ColorDepthMatch,String>(selectionModel, this, viewerTypes) {
+        this.resultsPanel = new PaginatedResultsPanel<ColorDepthMatch,String>(selectionModel, this, viewerTypes) {
     
             @Override
             protected ResultPage<ColorDepthMatch, String> getPage(SearchResults<ColorDepthMatch, String> searchResults, int page) throws Exception {
@@ -115,7 +114,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
         
         setLayout(new BorderLayout());
         add(topPanel, BorderLayout.NORTH);
-        add(resultPanel, BorderLayout.CENTER);
+        add(resultsPanel, BorderLayout.CENTER);
     }
     
     public void loadSearchResults(List<ColorDepthResult> resultList, ColorDepthMask mask, boolean isUserDriven) {
@@ -141,13 +140,13 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
                 }
                 else {
                     log.info("No results for mask");
-                    resultPanel.showNothing();
+                    resultsPanel.showNothing();
                 }
             }
 
             @Override
             protected void hadError(Throwable error) {
-                resultPanel.showNothing();
+                resultsPanel.showNothing();
                 ConsoleApp.handleException(error);
             }
         };
@@ -187,7 +186,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
         
         List<ColorDepthMatch> maskMatches = result.getMaskMatches(mask);
         ColorDepthSearchResults searchResults = new ColorDepthSearchResults(maskMatches);
-        resultPanel.showSearchResults(searchResults, isUserDriven, null);
+        resultsPanel.showSearchResults(searchResults, isUserDriven, null);
     }
 
     private synchronized void goPrevResult() {
@@ -277,6 +276,23 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
         catch (Exception e) {
             log.error("Could not save sort criteria",e);
         }
+    }
+
+    public ChildSelectionModel<ColorDepthMatch, String> getSelectionModel() {
+        return selectionModel;
+    }
+
+    void reset() {
+        selectionModel.reset();
+        this.currResultIndex = results.size() - 1;
+    }
+
+    int getCurrResultIndex() {
+        return currResultIndex;
+    }
+
+    public PaginatedResultsPanel<ColorDepthMatch, String> getResultPanel() {
+        return resultsPanel;
     }
 
 }

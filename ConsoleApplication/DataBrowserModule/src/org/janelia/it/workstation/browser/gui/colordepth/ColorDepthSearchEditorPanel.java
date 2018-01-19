@@ -14,8 +14,10 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -62,6 +64,7 @@ import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
@@ -113,11 +116,10 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private final JLabel thresholdLabel;
     private final SelectionButton<DataSet> dataSetButton;
     private final JButton searchButton;
-    private final SelectablePanelListPanel maskPanel;
+    private final SelectablePanelListPanel maskListPanel;
     private final JScrollPane maskScrollPane;
     private final Set<LoadedImagePanel> lips = new HashSet<>();
-    private final ColorDepthResultPanel resultPanel;
-        
+    private final ColorDepthResultPanel colorDepthResultPanel;
     
     // State
     private boolean dirty = false;
@@ -125,7 +127,9 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private ColorDepthSearch search;
     private List<ColorDepthMask> masks; // cached masks
     private List<ColorDepthResult> results; // cached results
+    private ColorDepthMask selectedMask = null;
     private List<DataSet> alignmentSpaceDataSets; // all possible data sets in the current alignment space
+    private Map<ColorDepthMask,MaskPanel> maskPanelMap = new HashMap<>();
     
     public ColorDepthSearchEditorPanel() {
 
@@ -248,15 +252,15 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
         });
         
-        resultPanel = new ColorDepthResultPanel();
+        colorDepthResultPanel = new ColorDepthResultPanel();
         
-        maskPanel = new SelectablePanelListPanel() {
+        maskListPanel = new SelectablePanelListPanel() {
 
             @Override
             protected void panelSelected(SelectablePanel resultPanel, boolean isUserDriven) {
                 if (resultPanel instanceof MaskPanel) {
-                    ColorDepthMask mask = ((MaskPanel)resultPanel).getMask();
-                    loadMaskResults(mask, true);
+                    selectedMask = ((MaskPanel)resultPanel).getMask();
+                    loadMaskResults(selectedMask, true);
                 }
             }
             
@@ -285,17 +289,17 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
         maskScrollPane = new JScrollPane();
         maskScrollPane.setBorder(BorderFactory.createEmptyBorder());
-        maskScrollPane.setViewportView(maskPanel);
+        maskScrollPane.setViewportView(maskListPanel);
         maskScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         maskScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
         
-        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, maskScrollPane, resultPanel);
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, maskScrollPane, colorDepthResultPanel);
         splitPane.setDividerLocation(0.30);
         splitPane.setBorder(BorderFactory.createEmptyBorder());
         
         Dimension minimumSize = new Dimension(100, 0);
         maskScrollPane.setMinimumSize(minimumSize);
-        resultPanel.setMinimumSize(minimumSize);
+        colorDepthResultPanel.setMinimumSize(minimumSize);
         
         maskScrollPane.addComponentListener(new ComponentAdapter() {
             @Override
@@ -378,7 +382,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     
     @Override
     public Object getEventBusListener() {
-        return this;
+        return colorDepthResultPanel;
     }
 
     @Override
@@ -431,6 +435,8 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             pixFlucField.setText(DEFAULT_PIX_FLUC);
         }
         
+        maskPanelMap.clear();
+        
         this.dirty = false;
         this.search = colorDepthSearch;
         log.debug("Loading {} masks", colorDepthSearch.getMasks().size());
@@ -455,7 +461,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 log.debug("Loaded {} data sets", alignmentSpaceDataSets.size());
                 
                 showUI(isUserDriven);
-                maskPanel.selectFirst(isUserDriven);
+                maskListPanel.selectFirst(isUserDriven);
                 
                 ConcurrentUtils.invokeAndHandleExceptions(success);
                 debouncer.success();
@@ -483,7 +489,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     }
     
     private void loadMaskResults(ColorDepthMask mask, boolean isUserDriven) {
-        resultPanel.loadSearchResults(results, mask, isUserDriven);
+        colorDepthResultPanel.loadSearchResults(results, mask, isUserDriven);
     }
         
     private void showSearchView(boolean isUserDriven) {
@@ -491,7 +497,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         dataSetButton.update();
         
         lips.clear();
-        maskPanel.clearPanels();
+        maskListPanel.clearPanels();
         configPanel.removeAllConfigComponents();
         configPanel.addConfigComponent(thresholdPanel);
         configPanel.addConfigComponent(pctPxPanel);
@@ -505,10 +511,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
      
         JPanel titlePanel = new JPanel(new BorderLayout());
         titlePanel.add(titleLabel, BorderLayout.CENTER);
-        maskPanel.add(titlePanel);
+        maskListPanel.add(titlePanel);
         
         for(ColorDepthMask mask : masks) {
-            maskPanel.addPanel(new MaskPanel(mask));
+            MaskPanel maskPanel = new MaskPanel(mask);
+            maskListPanel.addPanel(maskPanel);
+            maskPanelMap.put(mask, maskPanel);
         }
         
         removeAll();
@@ -535,7 +543,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     
     @Override
     public ChildSelectionModel<ColorDepthMatch,String> getSelectionModel() {
-        throw new UnsupportedOperationException();
+        return colorDepthResultPanel.getSelectionModel();
     }
 
     private void executeSearch() {
@@ -572,11 +580,37 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     
     @Override
     public void resetState() {
+        colorDepthResultPanel.reset();
     }
 
     @Override
     public DomainObjectEditorState<ColorDepthSearch,ColorDepthMatch,String> saveState() {
-        return null;
+        if (searchNode==null) {
+            if (search==null) {
+                log.warn("No object is loaded, so state cannot be saved");
+                return null;
+            }
+            return new ColorDepthSearchEditorState(
+                    search,
+                    selectedMask == null ? null : Reference.createFor(selectedMask),
+                    colorDepthResultPanel.getCurrResultIndex(),
+                    colorDepthResultPanel.getResultPanel().getCurrPage(),
+                    colorDepthResultPanel.getResultPanel().getViewer().saveState(),
+                    getSelectionModel().getSelectedIds());
+        }
+        else {
+            if (searchNode==null || searchNode.getDomainObject()==null) {
+                log.warn("No object is loaded, so state cannot be saved");
+                return null;
+            }
+            return new ColorDepthSearchEditorState(
+                    searchNode,
+                    selectedMask == null ? null : Reference.createFor(selectedMask),
+                    colorDepthResultPanel.getCurrResultIndex(),
+                    colorDepthResultPanel.getResultPanel().getCurrPage(),
+                    colorDepthResultPanel.getResultPanel().getViewer().saveState(),
+                    getSelectionModel().getSelectedIds());
+        }
     }
 
     @Override
@@ -586,29 +620,42 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             return;
         }
         
-        log.info("Restoring state: {}", state);
-//        if (state.getListViewerState()!=null) {
-//            getResultsPanel().setViewerType(state.getListViewerState().getType());
-//        }
+        ColorDepthSearchEditorState myState = (ColorDepthSearchEditorState)state;
+        log.info("Restoring state: {}", myState);
+        if (state.getListViewerState()!=null) {
+            colorDepthResultPanel.getResultPanel().setViewerType(state.getListViewerState().getType());
+        }
 
         // Prepare to restore the selection
-//        List<Reference> selected = getResultsPanel().getViewer().getSelectionModel().getSelectedIds();
-//        selected.clear();
-//        selected.addAll(state.getSelectedIds());
+        List<String> selected = colorDepthResultPanel.getResultPanel().getViewer().getSelectionModel().getSelectedIds();
+        selected.clear();
+        selected.addAll(state.getSelectedIds());
         
         // Prepare to restore the page
-//        getResultsPanel().setCurrPage(state.getPage());
-//
-//        getResultsPanel().getViewer().restoreState(state.getListViewerState());
+        colorDepthResultPanel.getResultPanel().setCurrPage(state.getPage());
+        colorDepthResultPanel.getResultPanel().getViewer().restoreState(state.getListViewerState());
         
         // Prepare to restore viewer state, after the reload
         Callable<Void> success = new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-//                if (state.getListViewerState()!=null) {
-//                    log.info("State load completed, restoring viewer state {}", state.getListViewerState());
-////                    getResultsPanel().getViewer().restoreState(state.getListViewerState());
-//                }
+                
+                // Restore mask selection
+                if (myState.getSelectedMask() != null) {
+                    ColorDepthMask mask = null;
+                    for (ColorDepthMask colorDepthMask : masks) {
+                        if (colorDepthMask.getId().equals(myState.getSelectedMask().getTargetId())) {
+                            mask = colorDepthMask;
+                        }
+                    }
+                    if (mask!=null) {
+                        MaskPanel maskPanel = maskPanelMap.get(mask);
+                        maskListPanel.selectPanel(maskPanel, false);
+                        
+                        // TODO: Need to wait until the results load before restoring searchResultIndex
+                    }
+                }
+                
                 return null;
             }
         };

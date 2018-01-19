@@ -12,6 +12,7 @@ import org.janelia.model.domain.DomainObject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -19,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "class")
 public class DomainObjectEditorState<P extends DomainObject, T, S> {
 
     @JsonIgnore
@@ -118,12 +120,12 @@ public class DomainObjectEditorState<P extends DomainObject, T, S> {
 
     private static final ObjectMapper mapper = new ObjectMapper();
     
-    public static String serialize(DomainObjectEditorState<?,?,?> descriptor) throws Exception {
-        return mapper.writeValueAsString(descriptor);
+    public static String serialize(DomainObjectEditorState<?,?,?> state) throws Exception {
+        return mapper.writeValueAsString(state);
     }
 
-    public static DomainObjectEditorState<?,?,?> deserialize(String artifactDescriptorString) throws Exception {
-        return mapper.readValue(DomainModelViewUtils.convertModelPackages(artifactDescriptorString), DomainObjectEditorState.class);
+    public static DomainObjectEditorState<?,?,?> deserialize(String serializedState) throws Exception {
+        return mapper.readValue(DomainModelViewUtils.convertModelPackages(serializedState), DomainObjectEditorState.class);
     }
 
 }
