@@ -46,6 +46,7 @@ import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleTile;
 import org.janelia.model.domain.support.NotCacheable;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.model.security.Subject;
@@ -839,50 +840,50 @@ public class DomainModel {
         notifyAnnotationsChanged(getDomainObject(annotation.getTarget()));
     }
 
-    public TreeNode reorderChildren(TreeNode treeNode, int[] order) throws Exception {
-        TreeNode canonicalObject = null;
+    public <T extends Node> T reorderChildren(T node, int[] order) throws Exception {
+        T canonicalObject = null;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(workspaceFacade.reorderChildren(treeNode, order));
+            canonicalObject = putOrUpdate(workspaceFacade.reorderChildren(node, order));
         }
         return canonicalObject;
     }
 
-    public TreeNode addChild(TreeNode treeNode, DomainObject domainObject) throws Exception {
-        return addChildren(treeNode, Arrays.asList(domainObject));
+    public <T extends Node> T addChild(T node, DomainObject domainObject) throws Exception {
+        return addChildren(node, Arrays.asList(domainObject));
     }
 
-    public TreeNode addChild(TreeNode treeNode, DomainObject domainObject, Integer index) throws Exception {
-        return addChildren(treeNode, Arrays.asList(domainObject), index);
+    public <T extends Node> T addChild(T node, DomainObject domainObject, Integer index) throws Exception {
+        return addChildren(node, Arrays.asList(domainObject), index);
     }
 
-    public TreeNode addChildren(TreeNode treeNode, Collection<? extends DomainObject> domainObjects) throws Exception {
-        return addChildren(treeNode, domainObjects, null);
+    public <T extends Node> T addChildren(T node, Collection<? extends DomainObject> domainObjects) throws Exception {
+        return addChildren(node, domainObjects, null);
     }
 
-    public TreeNode addChildren(TreeNode treeNode, Collection<? extends DomainObject> domainObjects, Integer index) throws Exception {
-        TreeNode canonicalObject = null;
+    public <T extends Node> T addChildren(T node, Collection<? extends DomainObject> domainObjects, Integer index) throws Exception {
+        T canonicalObject = null;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(workspaceFacade.addChildren(treeNode, DomainUtils.getReferences(domainObjects), index));
+            canonicalObject = putOrUpdate(workspaceFacade.addChildren(node, DomainUtils.getReferences(domainObjects), index));
         }
         return canonicalObject;
     }
 
-    public TreeNode removeChild(TreeNode treeNode, DomainObject domainObject) throws Exception {
-        return removeChildren(treeNode, Arrays.asList(domainObject));
+    public <T extends Node> T removeChild(T node, DomainObject domainObject) throws Exception {
+        return removeChildren(node, Arrays.asList(domainObject));
     }
 
-    public TreeNode removeChildren(TreeNode treeNode, Collection<? extends DomainObject> domainObjects) throws Exception {
-        TreeNode canonicalObject = null;
+    public <T extends Node> T removeChildren(T node, Collection<? extends DomainObject> domainObjects) throws Exception {
+        T canonicalObject = null;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(workspaceFacade.removeChildren(treeNode, DomainUtils.getReferences(domainObjects)));
+            canonicalObject = putOrUpdate(workspaceFacade.removeChildren(node, DomainUtils.getReferences(domainObjects)));
         }
         return canonicalObject;
     }
 
-    public TreeNode removeReference(TreeNode treeNode, Reference reference) throws Exception {
-        TreeNode canonicalObject = null;
+    public <T extends Node> T removeReference(T node, Reference reference) throws Exception {
+        T canonicalObject = null;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(workspaceFacade.removeChildren(treeNode, Arrays.asList(reference)));
+            canonicalObject = putOrUpdate(workspaceFacade.removeChildren(node, Arrays.asList(reference)));
         }
         return canonicalObject;
     }

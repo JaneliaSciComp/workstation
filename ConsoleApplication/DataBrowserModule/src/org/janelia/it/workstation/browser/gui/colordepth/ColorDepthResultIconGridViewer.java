@@ -16,7 +16,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
@@ -37,6 +36,7 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
+import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.Sample;
 import org.slf4j.Logger;
@@ -102,7 +102,7 @@ public class ColorDepthResultIconGridViewer
 
         @Override
         public String getImageSubtitle(ColorDepthMatch match) {
-            return String.format("Score: %d (%2f%%)", match.getScore(), match.getScorePercent()*100);
+            return String.format("Score: %d (%2.0f%%)", match.getScore(), match.getScorePercent()*100);
         }
         
         @Override
@@ -261,13 +261,14 @@ public class ColorDepthResultIconGridViewer
             protected void doStuff() throws Exception {
                 matchObjects = matchList.getObjects();
 
-                // Look up any samples
+                // Populate maps
                 Set<Reference> sampleRefs = new HashSet<>();
                 for (ColorDepthMatch match : matchObjects) {
                     if (!sampleMap.containsKey(match.getSample())) {
-                        log.info("Will load {}", match.getSample());
+                        log.trace("Will load {}", match.getSample());
                         sampleRefs.add(match.getSample());
                     }
+                    matchMap.put(match.getFilepath(), match);
                 }
                 sampleMap.putAll(DomainUtils.getMapByReference(model.getDomainObjectsAs(Sample.class, new ArrayList<>(sampleRefs))));
             }
@@ -334,10 +335,18 @@ public class ColorDepthResultIconGridViewer
     }
 
     @Override
-    protected DomainObjectContextMenu getContextualPopupMenu() {
-        return null;
+    protected ColorDepthMatchContextMenu getContextualPopupMenu() {
+        return getPopupMenu(getSelectedObjects());
     }
-
+    
+    private ColorDepthMatchContextMenu getPopupMenu(List<ColorDepthMatch> matches) {
+        log.info("Selected objects: "+matches);
+        ColorDepthMatchContextMenu popupMenu = new ColorDepthMatchContextMenu(
+                (ColorDepthResult)selectionModel.getParentObject(), matches, sampleMap);
+        popupMenu.addMenuItems();
+        return popupMenu;
+    }
+    
     @Override
     protected JPopupMenu getAnnotationPopupMenu(Annotation annotation) {
         return null;
@@ -401,13 +410,24 @@ public class ColorDepthResultIconGridViewer
     public void restoreState(ListViewerState viewerState) {
     }
 
-//    private List<ColorDepthMatch> getSelectedObjects() {
-//        try {
-//            return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
-//        }  catch (Exception e) {
-//            ConsoleApp.handleException(e);
-//            return null;
-//        }
-//    }
+    private List<ColorDepthMatch> getSelectedObjects() {
+        try {
+            List<ColorDepthMatch> selected = new ArrayList<>();
+            for(String filepath : selectionModel.getSelectedIds()) {
+                ColorDepthMatch match = imageModel.getImageByUniqueId(filepath);
+                if (match==null) {
+                    throw new IllegalStateException("Image model has no object for unique id: "+filepath);
+                }
+                else {
+                    selected.add(match);
+                }
+            }
+            return selected;
+        }  
+        catch (Exception e) {
+            ConsoleApp.handleException(e);
+            return null;
+        }
+    }
     
 }

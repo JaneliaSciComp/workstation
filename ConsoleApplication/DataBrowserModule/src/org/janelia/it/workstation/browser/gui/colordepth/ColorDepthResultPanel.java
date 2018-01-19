@@ -82,7 +82,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
 
         log.info("loadSearchResults(resultList.size={}, mask={}, isUserDriven={})", resultList.size(), mask.getFilepath(), isUserDriven);
         this.mask = mask;
-        selectionModel.setParentObject(mask);
         sampleMap.clear();
         matchMap.clear();
 
@@ -99,6 +98,10 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
                 if (!results.isEmpty()) {
                     ColorDepthResult latestResult = results.get(results.size()-1);
                     showSearchResult(latestResult, isUserDriven);
+                }
+                else {
+                    log.info("No results for mask");
+                    resultPanel.showNothing();
                 }
             }
 
@@ -123,11 +126,14 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
                 results.add(result);
             }
         }
+        
+        log.info("Found {} results for {}", results.size(), mask);
     }
     
     public void showSearchResult(ColorDepthResult result, boolean isUserDriven) {
         log.info("showSearchResult({}, isUserDriven={})", result.getId(), isUserDriven);
         this.selectedResult = result;
+        selectionModel.setParentObject(selectedResult);
         List<ColorDepthMatch> maskMatches = selectedResult.getMaskMatches(mask);
         ColorDepthSearchResults searchResults = new ColorDepthSearchResults(maskMatches);
         resultPanel.showSearchResults(searchResults, isUserDriven, null);

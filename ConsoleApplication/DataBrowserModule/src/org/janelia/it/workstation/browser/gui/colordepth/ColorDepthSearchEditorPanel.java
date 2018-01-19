@@ -168,7 +168,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
             @Override
             protected Collection<DataSet> getValues() {
-                return alignmentSpaceDataSets.stream().sorted(Comparator.comparing(DataSet::getIdentifier)).collect(Collectors.toSet());
+                return alignmentSpaceDataSets.stream().sorted(Comparator.comparing(DataSet::getIdentifier)).collect(Collectors.toList());
             }
 
             @Override
@@ -433,8 +433,8 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         
         this.dirty = false;
         this.search = colorDepthSearch;
-        log.info("Loading {} masks", colorDepthSearch.getMasks().size());
-        log.info("Loading {} results", colorDepthSearch.getResults().size());
+        log.debug("Loading {} masks", colorDepthSearch.getMasks().size());
+        log.debug("Loading {} results", colorDepthSearch.getResults().size());
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -450,9 +450,9 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             protected void hadSuccess() {
 
                 log.info("Loaded ColorDepthSearch#{}", colorDepthSearch.getId());
-                log.info("Loaded {} masks", masks.size());
-                log.info("Loaded {} results", results.size());
-                log.info("Loaded {} data sets", alignmentSpaceDataSets.size());
+                log.debug("Loaded {} masks", masks.size());
+                log.debug("Loaded {} results", results.size());
+                log.debug("Loaded {} data sets", alignmentSpaceDataSets.size());
                 
                 showUI(isUserDriven);
                 maskPanel.selectFirst(isUserDriven);

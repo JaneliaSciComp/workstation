@@ -17,6 +17,7 @@ import org.janelia.it.workstation.browser.api.facade.interfaces.WorkspaceFacade;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.search.Filter;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
 import org.slf4j.Logger;
@@ -118,56 +119,55 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
     }
 
     @Override
-    public TreeNode addChildren(TreeNode treeNode, Collection<Reference> references, Integer index) throws Exception {
+    public <T extends Node> T addChildren(T node, Collection<Reference> references, Integer index) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
-        query.setDomainObject(treeNode);
+        query.setDomainObject(node);
         query.setReferences(new ArrayList<>(references));
-        Response response = manager.getTreeNodeEndpoint()
+        Response response = manager.getNodeEndpoint()
                 .path("children")
                 .request("application/json")
                 .put(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request addChildrenToTreeNode to server: " + treeNode + "," + references)) {
+        if (checkBadResponse(response.getStatus(), "problem making request addChildrenToNode to server: " + node + "," + references)) {
             throw new WebApplicationException(response);
         }
-        return response.readEntity(TreeNode.class);
+        return (T)response.readEntity(node.getClass());
     }
 
-
     @Override
-    public TreeNode removeChildren(TreeNode treeNode, Collection<Reference> references) throws Exception {
+    public <T extends Node> T removeChildren(T node, Collection<Reference> references) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
-        query.setDomainObject(treeNode);
+        query.setDomainObject(node);
         query.setReferences(new ArrayList<>(references));
-        Response response = manager.getTreeNodeEndpoint()
+        Response response = manager.getNodeEndpoint()
                 .path("children")
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request removeChildrenFromTreeNode to server: " + treeNode + "," + references)) {
+        if (checkBadResponse(response.getStatus(), "problem making request removeChildrenFromNode to server: " + node + "," + references)) {
             throw new WebApplicationException(response);
         }
-        return response.readEntity(TreeNode.class);
+        return (T)response.readEntity(node.getClass());
     }
 
     @Override
-    public TreeNode reorderChildren(TreeNode treeNode, int[] order) throws Exception {
+    public <T extends Node> T reorderChildren(T node, int[] order) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
-        query.setDomainObject(treeNode);
+        query.setDomainObject(node);
         List<Integer> orderList = new ArrayList<>();
         for (int i=0; i<order.length; i++) {
             orderList.add(new Integer(order[i]));
         }
         query.setOrdering(orderList);
-        Response response = manager.getTreeNodeEndpoint()
+        Response response = manager.getNodeEndpoint()
                 .path("reorder")
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request reorderChildrenInTreeNode to server: " + treeNode + "," + order)) {
+        if (checkBadResponse(response.getStatus(), "problem making request reorderChildrenInNode to server: " + node + "," + order)) {
             throw new WebApplicationException(response);
         }
-        return response.readEntity(TreeNode.class);
+        return (T)response.readEntity(node.getClass());
     }
 
     @Override
