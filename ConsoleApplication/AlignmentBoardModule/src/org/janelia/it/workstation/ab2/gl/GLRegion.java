@@ -50,6 +50,7 @@ public abstract class GLRegion extends GLSelectable {
         for (AB2Renderer renderer : renderers) {
             renderer.dispose(gl);
         }
+        renderers.clear();
     }
 
     public void display(GLAutoDrawable drawable) {

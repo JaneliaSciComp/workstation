@@ -102,14 +102,12 @@ public final class AB2TopComponent extends TopComponent {
     private void initMyComponents() {
         // TODO add custom code on component opening
         if (ab2Controller==null) {
-            logger.info("Check1");
             ab2Controller=AB2Controller.getController();
         }
         if (ab2Data==null) {
             ab2Data=new AB2Data();
         }
         if (ab2GLPanel==null) {
-            logger.info("Check2");
             ab2GLPanel=new AB2GLPanel(600, 400, ab2Controller);
             ab2Controller.setGljPanel(ab2GLPanel);
             glWrapperPanel.setLayout(new BoxLayout(glWrapperPanel, BoxLayout.Y_AXIS));
@@ -127,17 +125,15 @@ public final class AB2TopComponent extends TopComponent {
 //            logger.info("Check4");
 //            ab2Controller.setDomainObject(skeletonDomainObject);
         }
-        logger.info("Check5");
-        logger.info("Check6");
         ab2GLPanel.setVisible(true);
         glWrapperPanel.setVisible(true);
         ab2Controller.start();
-        logger.info("Check7");
     }
 
     private void closeMyComponents() {
         // TODO add custom code on component closing
         ab2Controller.shutdown();
+        //try { Thread.sleep(5000); } catch (Exception ex) {}
     }
 
         /**

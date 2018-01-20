@@ -13,6 +13,8 @@ are placed in the waitQueue, to be handled by the next Mode controller.
 
 */
 
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -26,6 +28,7 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.GLJPanel;
 
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.ab2.event.AB2ChangeModeEvent;
 import org.janelia.it.workstation.ab2.event.AB2DomainObjectUpdateEvent;
 import org.janelia.it.workstation.ab2.event.AB2Event;
@@ -33,8 +36,12 @@ import org.janelia.it.workstation.ab2.event.AB2EventHandler;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.model.AB2DomainObject;
+import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
+import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.janelia.it.workstation.ab2.gl.GLAbstractActor.createGLFloatBuffer;
 
 public class AB2Controller implements GLEventListener, AB2EventHandler {
 
@@ -60,7 +67,6 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
 
     // We are changing this design so that actors handle their own select events
     // private Map<Integer,AB2Event> pickEventLookup=new HashMap<>();
-
 
     public static AB2Controller getController() {
         if (instance==null) {
@@ -252,6 +258,5 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
         }
 
     }
-
 
 }

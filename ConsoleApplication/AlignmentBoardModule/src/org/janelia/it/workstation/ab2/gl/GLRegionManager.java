@@ -22,6 +22,7 @@ public abstract class GLRegionManager implements GLEventListener {
         for (GLRegion glRegion : regions) {
             glRegion.dispose(drawable);
         }
+        regions.clear();
     }
 
     @Override

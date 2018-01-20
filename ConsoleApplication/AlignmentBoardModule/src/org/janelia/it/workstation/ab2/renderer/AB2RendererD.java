@@ -160,10 +160,12 @@ public abstract class AB2RendererD extends AB2Renderer {
         for (GLShaderActionSequence shaderActionSequence : drawShaderList) {
             shaderActionSequence.dispose(gl);
         }
+        drawShaderList.clear();
 
         for (GLShaderActionSequence shaderActionSequence : pickShaderList) {
             shaderActionSequence.dispose(gl);
         }
+        pickShaderList.clear();
 
     }
 

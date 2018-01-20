@@ -121,21 +121,26 @@ public abstract class GLAbstractActor extends GLSelectable {
         return actorId;
     }
 
+    public static Matrix4 getStandardModelMatrix() {
+        Matrix4 translationMatrix = new Matrix4();
+        translationMatrix.set(
+                1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                -0.5f, -0.5f, -0.5f, 1.0f);
+        Matrix4 scaleMatrix = new Matrix4();
+        scaleMatrix.set(
+                2.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 2.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 2.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f);
+        Matrix4 modelMatrix=translationMatrix.multiply(scaleMatrix);
+        return modelMatrix;
+    }
+
     public Matrix4 getModelMatrix() {
         if (modelMatrix==null) {
-            Matrix4 translationMatrix = new Matrix4();
-            translationMatrix.set(
-                    1.0f, 0.0f, 0.0f, 0.0f,
-                    0.0f, 1.0f, 0.0f, 0.0f,
-                    0.0f, 0.0f, 1.0f, 0.0f,
-                    -0.5f, -0.5f, -0.5f, 1.0f);
-            Matrix4 scaleMatrix = new Matrix4();
-            scaleMatrix.set(
-                    2.0f, 0.0f, 0.0f, 0.0f,
-                    0.0f, 2.0f, 0.0f, 0.0f,
-                    0.0f, 0.0f, 2.0f, 0.0f,
-                    0.0f, 0.0f, 0.0f, 1.0f);
-            modelMatrix=translationMatrix.multiply(scaleMatrix);
+            modelMatrix=getStandardModelMatrix();
         }
         return new Matrix4(modelMatrix);
     }

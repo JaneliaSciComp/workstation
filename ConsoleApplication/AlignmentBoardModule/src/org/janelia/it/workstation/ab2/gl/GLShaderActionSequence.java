@@ -42,6 +42,7 @@ public class GLShaderActionSequence {
             actor.dispose(gl, shader);
         }
         shader.dispose(gl);
+        actorSequence.clear();
     }
 
     public void disposeAndClearActorsOnly(GL4 gl) {
