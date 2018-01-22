@@ -200,19 +200,18 @@ public class Hud extends ModalDialog {
         log.debug("hideDialog");
         setVisible(false);
     }
-
-
-    public void setObject(DomainObject domainObject, ArtifactDescriptor resultDescriptor, String typeName, boolean overrideSettings) {
-        log.debug("setObject({})",domainObject);
-        setObjectAndToggleDialog(domainObject, resultDescriptor, typeName, false, overrideSettings);
-    }
-
-    public void setObjectAndToggleDialog(DomainObject domainObject, ArtifactDescriptor resultDescriptor, String typeName) {
-        log.debug("setObjectAndToggleDialog({})",domainObject);
-        setObjectAndToggleDialog(domainObject, resultDescriptor, typeName, true, true);
-    }
     
-    public void setObjectAndToggleDialog(final DomainObject domainObject, ArtifactDescriptor resultDescriptor, String typeName, final boolean toggle, boolean overrideSettings) {
+    /**
+     * Display a domain object with the possibility of switching between different views of it. 
+     * @param domainObject
+     * @param resultDescriptor
+     * @param typeName
+     * @param toggle
+     * @param overrideSettings
+     */
+    public void setObjectAndToggleDialog(final DomainObject domainObject, ArtifactDescriptor resultDescriptor, String typeName, 
+            final boolean toggle, boolean overrideSettings) {
+        
         this.domainObject = domainObject;
         if (domainObject == null) {
             dirtyEntityFor3D = false;
@@ -261,6 +260,12 @@ public class Hud extends ModalDialog {
         setObjectAndToggleDialog(imagePath, toggle, overrideSettings);
     }
 
+    /**
+     * Display an image in the lightbox viewer.
+     * @param imagePath
+     * @param toggle
+     * @param overrideSettings
+     */
     public void setFilepathAndToggleDialog(String imagePath, final boolean toggle, boolean overrideSettings) {
         this.title = new File(imagePath).getName();
         resultButton.setVisible(false);

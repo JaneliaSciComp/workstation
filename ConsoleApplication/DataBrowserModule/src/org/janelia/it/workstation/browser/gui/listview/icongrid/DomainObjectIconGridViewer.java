@@ -520,12 +520,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             }
             
             DomainObject domainObject = selected.get(0);
-            if (toggle) {
-                hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
-            }
-            else {
-                hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), false);
-            }
+            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), toggle, toggle);
         } 
         catch (Exception ex) {
             ConsoleApp.handleException(ex);

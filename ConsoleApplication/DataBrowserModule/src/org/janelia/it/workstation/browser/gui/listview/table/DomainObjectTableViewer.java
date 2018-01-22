@@ -407,12 +407,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             }
 
             DomainObject domainObject = selected.get(0);
-            if (toggle) {
-                hud.setObjectAndToggleDialog(domainObject, null, null);
-            }
-            else {
-                hud.setObject(domainObject, null, null, false);
-            }
+            hud.setObjectAndToggleDialog(domainObject, null, null, toggle, toggle);
         } 
         catch (Exception ex) {
             ConsoleApp.handleException(ex);

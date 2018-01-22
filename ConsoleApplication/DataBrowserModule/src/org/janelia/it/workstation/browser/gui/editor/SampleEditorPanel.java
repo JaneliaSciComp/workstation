@@ -176,13 +176,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             protected void updateHud(SelectablePanel resultPanel, boolean toggle) {
                 if (resultPanel instanceof PipelineResultPanel) {
                     ArtifactDescriptor resultDescriptor = ((PipelineResultPanel)resultPanel).getResultDescriptor();
-                    Hud hud = Hud.getSingletonInstance();
-                    if (toggle) {
-                        hud.setObjectAndToggleDialog(sample, resultDescriptor, null);
-                    }
-                    else {
-                        hud.setObject(sample, resultDescriptor, null, true);
-                    }
+                    Hud.getSingletonInstance().setObjectAndToggleDialog(sample, resultDescriptor, null, toggle, toggle);
                 }
             }
             

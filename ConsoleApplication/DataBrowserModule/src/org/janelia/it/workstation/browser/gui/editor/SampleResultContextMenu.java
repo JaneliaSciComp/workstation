@@ -234,7 +234,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
                 ObjectiveSample objectiveSample = result.getParentRun().getParent();
                 Sample sample = objectiveSample.getParent();
                 ArtifactDescriptor descriptor = new ResultArtifactDescriptor(result);
-                Hud.getSingletonInstance().setObjectAndToggleDialog(sample, descriptor, FileType.SignalMip.toString());
+                Hud.getSingletonInstance().setObjectAndToggleDialog(sample, descriptor, FileType.SignalMip.toString(), true, true);
             }
         });
 
