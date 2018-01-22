@@ -65,6 +65,7 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.security.Subject;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -257,15 +258,16 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
     
     private void handleOwnershipChange(TmNeuronMetadata neuron) {
-        presentError("You do not own this neuron.You must request access to this neuron to change it.", "Wrong Neuron Ownership");
+        presentError("Neuron " + neuron.getName() + " is owned by " + neuron.getOwnerName() +
+            ". Ask them for ownership if you'd like to make changes.", "Neuron not owned");
     }
         
     private void handleOwnershipChange(List<TmNeuronMetadata> neuronList) {
         String neuronNames = neuronList.stream()
                 .map(TmNeuronMetadata::getName)
                 .collect(Collectors.joining(", "));
-        presentError("You do not own the following neurons, " + neuronNames + 
-                ". You must request access to these neurons to change them.", "Wrong Neuron Ownership");
+        presentError("You do not own the following neurons: " + neuronNames +
+                ". You must request access to these neurons to make change.", "Neurons not owned");
     }
     
     public void moveAnchor(Anchor anchor) {
@@ -1311,6 +1313,42 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     }
 
+    /**
+     * change the ownership of the input neurons
+     */
+    public void changeNeuronsOwner(List<TmNeuronMetadata> neuronList, Subject newOwner) {
+        if (neuronList.size() == 0) {
+            return;
+        }
+
+        // at this point, what ownership checks do we need?  should we assume checks have
+        //  already been done?
+        //  this will be used to changing ownership as well as requesting changes, right?
+
+
+
+        List<Long> neuronIDs = new ArrayList<>();
+        for (TmNeuronMetadata neuron: neuronList) {
+            neuronIDs.add(neuron.getId());
+        }
+        SimpleWorker changer = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.changeNeuronsOwner(neuronIDs, newOwner);
+            }
+
+            @Override
+            protected void hadSuccess() {
+
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                presentError("Could not change neuron owner!", error);
+            }
+        };
+        changer.execute();
+    }
 
     /**
      * pop a dialog that asks for a name for a neuron;

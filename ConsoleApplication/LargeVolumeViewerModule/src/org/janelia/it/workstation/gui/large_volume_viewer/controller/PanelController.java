@@ -142,7 +142,20 @@ public class PanelController {
             filteredAnnotationList.loadNeuron(neuron);
             wsNeuronList.updateModel(neuron);
         }
-        
+
+        @Override
+        public void neuronsOwnerChanged(List<TmNeuronMetadata> neuronList) {
+            // I don't think this needs to be refreshed here (not sure why it
+            //  is after rename, above):
+            // filteredAnnotationList.loadNeuron(neuron);
+
+            // I don't think there's any overhead that makes the one-by-one
+            //  update a bad idea:
+            for (TmNeuronMetadata neuron: neuronList) {
+                wsNeuronList.updateModel(neuron);
+            }
+        }
+
         @Override
         public void neuronSelected(TmNeuronMetadata neuron) {
             filteredAnnotationList.loadNeuron(neuron);

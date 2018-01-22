@@ -45,6 +45,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAd
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.SpatialFilter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.model.security.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -548,6 +549,41 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             public void run() {
                 fireNeuronRenamed(neuron);
                 activityLog.logRenameNeuron(workspace.getId(), neuron.getId());
+            }
+        });
+    }
+
+    /**
+     * change the ownership of the input neurons
+     */
+    public synchronized void changeNeuronsOwner(List<Long> neuronIDs, Subject newOwner) throws Exception {
+
+        // what checks are needed here?
+
+
+        final List<TmNeuronMetadata> neuronList = new ArrayList<>();
+        for (Long neuronID: neuronIDs) {
+            neuronList.add(getNeuronFromNeuronID(neuronID));
+        }
+
+        for (TmNeuronMetadata neuron: neuronList) {
+            // this is not a simple "save neuron data"; need to explicitly
+            //  request ownership; here we wait, though
+            // in other places, this is done asynchronously
+            neuron.setOwnerKey(newOwner.getKey());
+            getNeuronManager().requestOwnershipChange(neuron);
+
+            log.info("Neuron " + neuron.getName() + " owner changed to  " + newOwner.getKey());
+        }
+
+        final TmWorkspace workspace = getCurrentWorkspace();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                fireNeuronsOwnerChanged(neuronList);
+                for (TmNeuronMetadata neuron: neuronList) {
+                    activityLog.logChangeNeuronOwner(workspace.getId(), neuron.getId());
+                }
             }
         });
     }
@@ -2170,6 +2206,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     void fireNeuronRenamed(TmNeuronMetadata neuron) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronRenamed(neuron);
+        }
+    }
+
+    void fireNeuronsOwnerChanged(List<TmNeuronMetadata> neuronList) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.neuronsOwnerChanged(neuronList);
         }
     }
 
