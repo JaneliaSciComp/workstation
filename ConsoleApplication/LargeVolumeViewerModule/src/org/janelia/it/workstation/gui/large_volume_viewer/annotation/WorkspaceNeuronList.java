@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -25,6 +26,7 @@ import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
@@ -139,7 +141,11 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                     int realRowIndex = convertRowIndexToModel(rowIndex);
                     TmNeuronMetadata neuronMetadata = neuronTableModel.getNeuronAtRow(realRowIndex);
                     if (realColumnIndex == NeuronTableModel.COLUMN_NAME) {
-                        tip = neuronMetadata.getName();
+                        if (neuronMetadata.getSyncLevel() < NeuronTableModel.SYNC_WARN_LEVEL) {
+                            tip = neuronMetadata.getName();
+                        } else {
+                            tip = neuronMetadata.getName() + " (" + neuronMetadata.getSyncLevel() + " unsynced changes)";
+                        }
                     } else if (realColumnIndex == NeuronTableModel.COLUMN_OWNER) {
                         tip = neuronMetadata.getOwnerName();
                     } else if (realColumnIndex == NeuronTableModel.COLUMN_COLOR) {
@@ -195,6 +201,12 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
         // custom renderer does color swatches for the neurons
         neuronTable.setDefaultRenderer(Color.class, new ColorCellRenderer(true));
+
+        // name is italic if neuron is becoming unsynced
+        // neuronTable.getColumn(NeuronTableModel.COLUMN_NAME).setCellRenderer(new SyncLevelRenderer());
+
+        neuronTable.getColumn(neuronTable.getColumnName(NeuronTableModel.COLUMN_NAME)).setCellRenderer(new SyncLevelRenderer());
+
 
         neuronTable.addMouseListener(new MouseHandler() {
             
@@ -732,6 +744,8 @@ class NeuronTableModel extends AbstractTableModel {
 
     public enum NeuronTagMode {NONE, INCLUDE, EXCLUDE};
 
+    public static int SYNC_WARN_LEVEL = 2;
+
     // note: creation date column will be hidden
     // column names, tooltips, and associated methods should probably be static
     private String[] columnNames = {"Name", "O", "C", "V", "Creation Date"};
@@ -1021,4 +1035,23 @@ class ColorCellRenderer extends JLabel implements TableCellRenderer {
         return this;
     }
 
+}
+
+class SyncLevelRenderer extends DefaultTableCellRenderer {
+
+    public Component getTableCellRendererComponent(JTable tableData,
+                                                   Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+
+        Component cellComponent = super.getTableCellRendererComponent(
+                tableData, value, isSelected, hasFocus, row, column);
+
+        // draw attention to the neuron if its sync level gets too far from zero:
+        TmNeuronMetadata targetNeuron = ((NeuronTableModel) tableData.getModel()).getNeuronAtRow(row);
+        if (targetNeuron.getSyncLevel() < NeuronTableModel.SYNC_WARN_LEVEL) {
+            cellComponent.setFont(cellComponent.getFont().deriveFont(Font.PLAIN));
+        } else {
+            cellComponent.setFont(cellComponent.getFont().deriveFont(Font.ITALIC));
+        }
+        return cellComponent;
+    }
 }
