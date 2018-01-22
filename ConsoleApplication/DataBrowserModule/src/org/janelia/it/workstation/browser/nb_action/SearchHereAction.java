@@ -12,8 +12,7 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
-import org.janelia.model.domain.workspace.TreeNode;
-import org.openide.nodes.Node;
+import org.janelia.model.domain.workspace.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
 
@@ -50,10 +49,10 @@ public final class SearchHereAction extends NodeAction {
     }
 
     @Override
-    protected boolean enable(Node[] activatedNodes) {
+    protected boolean enable(org.openide.nodes.Node[] activatedNodes) {
         selected = null;
         if (activatedNodes.length!=1) return false;
-        for(Node node : activatedNodes) {
+        for(org.openide.nodes.Node node : activatedNodes) {
             if (node instanceof TreeNodeNode || node instanceof FilterNode) {
                 this.selected = (AbstractDomainObjectNode<?>)node;
             }
@@ -62,7 +61,7 @@ public final class SearchHereAction extends NodeAction {
     }
 
     @Override
-    protected void performAction(Node[] activatedNodes) {
+    protected void performAction(org.openide.nodes.Node[] activatedNodes) {
 
         ActivityLogHelper.logUserAction("SearchHereAction.performAction");
 
@@ -70,7 +69,7 @@ public final class SearchHereAction extends NodeAction {
 
         Filter filter;
         if (selected instanceof TreeNodeNode) {
-            TreeNode treeNode = ((TreeNodeNode)selected).getTreeNode();
+            Node treeNode = ((TreeNodeNode)selected).getNode();
             TreeNodeCriteria criteria = new TreeNodeCriteria();
             criteria.setTreeNodeName(treeNode.getName());
             criteria.setTreeNodeReference(Reference.createFor(treeNode));

@@ -48,7 +48,7 @@ import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -276,10 +276,10 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         // TODO: this was copy and pasted from DomainObjectIconGridViewer and should be refactored someday
         try {
             Object parent = selectionModel.getParentObject();
-            if (parent instanceof TreeNode) {
-                TreeNode treeNode = (TreeNode) parent;
-                if (ClientDomainUtils.hasWriteAccess(treeNode)) {
-                    RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, getSelectedObjects());
+            if (parent instanceof Node) {
+                Node node = (Node) parent;
+                if (ClientDomainUtils.hasWriteAccess(node)) {
+                    RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(node, getSelectedObjects());
                     action.actionPerformed(null);
                 }
             }

@@ -13,27 +13,20 @@ import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.browser.nb_action.RenameAction;
-import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.openide.nodes.ChildFactory;
-import org.openide.nodes.Children;
 
-public class ColorDepthMaskNode extends AbstractDomainObjectNode<ColorDepthMask> {
+public class ColorDepthMaskNode extends TreeNodeNode {
 
-    
-    public ColorDepthMaskNode(ChildFactory<?> parentChildFactory, ColorDepthMask mask) throws Exception {
-        super(parentChildFactory, Children.LEAF, mask);
+    public ColorDepthMaskNode(ChildFactory<?> parentChildFactory, ColorDepthMask mask) {
+        super(parentChildFactory, mask);
     }
     
     public ColorDepthMask getColorDepthMask() {
-        return getDomainObject();
+        return (ColorDepthMask)getDomainObject();
     }
-    
-    @Override
-    public String getPrimaryLabel() {
-        return getColorDepthMask().getName();
-    }
-        
+            
     @Override
     public Image getIcon(int type) {
         if (ClientDomainUtils.isOwner(getColorDepthMask())) {

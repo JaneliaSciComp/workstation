@@ -42,7 +42,7 @@ public final class NewDomainObjectAction extends NodePresenterAction {
         newFilterItem.addActionListener(new NewFilterActionListener(node));
         newMenu.add(newFilterItem);
 
-        if (selected.size()!=1 || !ClientDomainUtils.hasWriteAccess(node.getTreeNode())) {
+        if (selected.size()!=1 || !ClientDomainUtils.hasWriteAccess(node.getNode())) {
             newMenu.setEnabled(false);
         }
         

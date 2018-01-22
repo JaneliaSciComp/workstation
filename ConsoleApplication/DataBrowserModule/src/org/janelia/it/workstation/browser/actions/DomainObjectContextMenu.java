@@ -79,7 +79,7 @@ import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SamplePostProcessingResult;
 import org.janelia.model.domain.sample.SampleProcessingResult;
-import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -796,8 +796,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     protected JMenuItem getRemoveFromFolderItem() {
 
         Action action;
-        if (contextObject instanceof TreeNode) {
-            action = new RemoveItemsFromFolderAction((TreeNode)contextObject, domainObjectList);
+        if (contextObject instanceof Node) {
+            action = new RemoveItemsFromFolderAction((Node)contextObject, domainObjectList);
         }
         else {
             return null;

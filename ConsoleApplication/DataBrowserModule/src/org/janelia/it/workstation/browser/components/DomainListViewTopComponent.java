@@ -27,7 +27,7 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.gui.search.Filtering;
-import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Node;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -390,7 +390,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     }
 
     private static Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
-        if (TreeNode.class.isAssignableFrom(domainObject.getClass())) {
+        if (Node.class.isAssignableFrom(domainObject.getClass())) {
             return TreeNodeEditorPanel.class;
         }
         else if (Filtering.class.isAssignableFrom(domainObject.getClass())) {

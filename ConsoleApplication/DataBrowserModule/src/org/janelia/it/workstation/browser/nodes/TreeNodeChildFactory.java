@@ -12,15 +12,15 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Node;
 import org.openide.nodes.ChildFactory;
-import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A child factory for tree nodes (i.e. folders). Supports adding and removing 
- * children dynamically.
+ * A child factory for nodes (i.e. folders and other nodes in the explorer tree). 
+ * 
+ * Supports adding and removing children dynamically.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -28,20 +28,20 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
 
     private final static Logger log = LoggerFactory.getLogger(TreeNodeChildFactory.class);
     
-    private TreeNode treeNode;
+    private Node node;
 
-    TreeNodeChildFactory(TreeNode treeNode) {
-        if (treeNode==null) {
+    public TreeNodeChildFactory(Node node) {
+        if (node==null) {
             throw new IllegalArgumentException("Cannot create child factory with null tree node");
         }
-        this.treeNode = treeNode;
+        this.node = node;
     }
 
-    public void update(TreeNode treeNode) {
-        if (treeNode==null) {
+    public void update(Node node) {
+        if (node==null) {
             throw new IllegalArgumentException("Cannot set null tree node for child factory");
         }
-        this.treeNode = treeNode;
+        this.node = node;
     }
 
     private boolean isSupportedAsChild(Class<? extends DomainObject> clazz) {
@@ -61,7 +61,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     }
     
     public boolean hasNodeChildren() {
-        for(Reference reference : treeNode.getChildren()) {
+        for(Reference reference : node.getChildren()) {
             if (reference==null) continue;
             Class<? extends DomainObject> clazz = DomainUtils.getObjectClassByName(reference.getTargetClassName());
             if (isSupportedAsChild(clazz)) {
@@ -74,16 +74,16 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     @Override
     protected boolean createKeys(List<DomainObject> list) {
         try {
-            if (treeNode==null) {
+            if (node==null) {
                 throw new IllegalStateException("No tree node is set for this child factory");
             }
 
-            log.debug("Creating children keys for {}",treeNode.getName());
+            log.debug("Creating children keys for {}",node.getName());
 
             DomainModel model = DomainMgr.getDomainMgr().getModel();
-            List<DomainObject> children = model.getDomainObjects(treeNode.getChildren());
-            if (children.size()!=treeNode.getNumChildren()) {
-                log.info("Got {} children but expected {}",children.size(),treeNode.getNumChildren());
+            List<DomainObject> children = model.getDomainObjects(node.getChildren());
+            if (children.size()!=node.getNumChildren()) {
+                log.info("Got {} children but expected {}",children.size(),node.getNumChildren());
             }
             log.debug("Got children: {}",children);
 
@@ -93,8 +93,8 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             }
 
             List<DomainObject> temp = new ArrayList<>();
-            if (treeNode.hasChildren()) {
-                for(Reference reference : treeNode.getChildren()) {
+            if (node.hasChildren()) {
+                for(Reference reference : node.getChildren()) {
                     if (reference==null) continue;
                     DomainObject obj = map.get(reference.getTargetId());
                     if (obj!=null) {
@@ -112,13 +112,13 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             list.addAll(temp);
         }
         catch (Exception ex) {
-            log.error("Error creating tree node child keys for "+treeNode,ex);
+            log.error("Error creating tree node child keys for "+node,ex);
         }
         return true;
     }
 
     @Override
-    protected Node createNodeForKey(DomainObject key) {
+    protected org.openide.nodes.Node createNodeForKey(DomainObject key) {
         log.debug("Creating node for '{}'",key.getName());
         try {
             DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(key);
@@ -134,37 +134,37 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     }
 
     public void refresh() {
-        log.debug("Refreshing child factory for: {}",treeNode.getName());
+        log.debug("Refreshing child factory for: {}",node.getName());
         refresh(true);
     }
 
     public void addChildren(List<DomainObject> domainObjects) throws Exception {
-        if (treeNode==null) {
+        if (node==null) {
             log.warn("Cannot add child to unloaded treeNode");
             return;
         }   
 
         for(DomainObject domainObject : domainObjects) {
-            log.info("Adding child '{}' to '{}'",domainObject.getName(),treeNode.getName());
+            log.info("Adding child '{}' to '{}'",domainObject.getName(),node.getName());
         }
         
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        model.addChildren(treeNode, domainObjects);
+        model.addChildren(node, domainObjects);
     }
     
     public void addChildren(List<DomainObject> domainObjects, int index) throws Exception {
-        if (treeNode==null) {
+        if (node==null) {
             log.warn("Cannot add child to unloaded treeNode");
             return;
         }   
 
         int i = 0;
         for(DomainObject domainObject : domainObjects) {
-            log.info("Adding child '{}' to '{}' at {}",domainObject.getName(),treeNode.getName(),index+i);
+            log.info("Adding child '{}' to '{}' at {}",domainObject.getName(),node.getName(),index+i);
             i++;
         }
         
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        model.addChildren(treeNode, domainObjects, index);
+        model.addChildren(node, domainObjects, index);
     }
 }

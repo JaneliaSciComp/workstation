@@ -20,9 +20,9 @@ import org.janelia.it.workstation.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.browser.nb_action.RenameAction;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -173,11 +173,11 @@ public class ColorDepthSearchNode extends AbstractDomainObjectNode<ColorDepthSea
                 
                 // Have to keep track of the original parents before we do anything, 
                 // because once we start moving nodes, the parents will be recreated
-                List<TreeNode> originalParents = new ArrayList<>();
+                List<Node> originalParents = new ArrayList<>();
                 for(AbstractDomainObjectNode<?> node : nodes) {
                     if (node.getParentNode() instanceof TreeNodeNode) {
                         TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
-                        TreeNode originalParent = originalParentNode.getTreeNode();
+                        Node originalParent = originalParentNode.getNode();
                         originalParents.add(originalParent);
                     }
                     else {

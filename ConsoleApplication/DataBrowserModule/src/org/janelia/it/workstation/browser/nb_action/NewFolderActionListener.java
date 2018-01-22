@@ -15,6 +15,7 @@ import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
 
 public final class NewFolderActionListener implements ActionListener {
@@ -63,7 +64,7 @@ public final class NewFolderActionListener implements ActionListener {
                 folder = new TreeNode();
                 folder.setName(name);
                 folder = model.create(folder);
-                TreeNode parentFolder = parentNode.getTreeNode();
+                Node parentFolder = parentNode.getNode();
                 model.addChild(parentFolder, folder);
             }
 

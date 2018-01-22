@@ -44,7 +44,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -435,12 +435,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     protected void deleteKeyPressed() {
         try {
+            // TODO: we should move this somewhere else, this logic doesn't belong here
             Object parent = selectionModel.getParentObject();
-            if (parent instanceof TreeNode) {
-                TreeNode treeNode = (TreeNode)parent;
-                if (ClientDomainUtils.hasWriteAccess(treeNode)) {
+            if (parent instanceof Node) {
+                Node node = (Node)parent;
+                if (ClientDomainUtils.hasWriteAccess(node)) {
                     List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
-                    RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, selectedObjects);
+                    RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(node, selectedObjects);
                     action.actionPerformed(null);
                 }
             }

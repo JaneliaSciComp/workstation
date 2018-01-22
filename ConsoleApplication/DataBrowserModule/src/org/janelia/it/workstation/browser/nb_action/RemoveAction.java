@@ -8,8 +8,8 @@ import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
-import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
 
@@ -25,9 +25,9 @@ public final class RemoveAction extends NodeAction {
         return singleton;
     }
 
-    private final List<Node> selected = new ArrayList<>();
+    private final List<org.openide.nodes.Node> selected = new ArrayList<>();
     private List<DomainObject> toRemove = new ArrayList<>();
-    private TreeNode parentTreeNode;
+    private Node parentTreeNode;
     
     private RemoveAction() {
     }
@@ -48,20 +48,20 @@ public final class RemoveAction extends NodeAction {
     }
     
     @Override
-    protected boolean enable(Node[] activatedNodes) {
+    protected boolean enable(org.openide.nodes.Node[] activatedNodes) {
         selected.clear();
         toRemove.clear();
         parentTreeNode = null;
-        for(Node node : activatedNodes) {
+        for(org.openide.nodes.Node node : activatedNodes) {
             selected.add(node);
             
             boolean included = true;
         
-            Node parentNode = node.getParentNode();
+            org.openide.nodes.Node parentNode = node.getParentNode();
             
             if (parentNode instanceof TreeNodeNode) {
                 TreeNodeNode parentTreeNodeNode = (TreeNodeNode)parentNode;
-                TreeNode parentTreeNode = parentTreeNodeNode.getTreeNode();
+                Node parentTreeNode = parentTreeNodeNode.getNode();
                 if (this.parentTreeNode==null) {
                     this.parentTreeNode = parentTreeNode;
                 }
@@ -90,7 +90,7 @@ public final class RemoveAction extends NodeAction {
     }
     
     @Override
-    protected void performAction (Node[] activatedNodes) {
+    protected void performAction (org.openide.nodes.Node[] activatedNodes) {
         RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(parentTreeNode, toRemove);
         action.actionPerformed(null);
     }
