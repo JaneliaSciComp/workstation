@@ -7,36 +7,44 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 public class RemoteLocation {
 
-    private String remoteStorageURL;
-    private final String remoteFilePath;
-    private final String remoteFileUrl;
+    private String storageURL;
+    private final String virtualFilePath;
+    private final String realFilePath;
+    private final String fileUrl;
 
-    RemoteLocation(String remoteFilePath, String remoteFileUrl) {
-        this.remoteFilePath = remoteFilePath;
-        this.remoteFileUrl = remoteFileUrl;
+    RemoteLocation(String virtualFilePath, String realFilePath, String fileUrl) {
+        this.virtualFilePath = virtualFilePath;
+        this.realFilePath = realFilePath;
+        this.fileUrl = fileUrl;
     }
 
-    public String getRemoteStorageURL() {
-        return remoteStorageURL;
+    public String getStorageURL() {
+        return storageURL;
     }
 
-    public void setRemoteStorageURL(String remoteStorageURL) {
-        this.remoteStorageURL = remoteStorageURL;
+    public void setStorageURL(String storageURL) {
+        this.storageURL = storageURL;
     }
 
-    public String getRemoteFilePath() {
-        return remoteFilePath;
+    public String getVirtualFilePath() {
+        return virtualFilePath;
     }
 
-    public String getRemoteFileUrl() {
-        return remoteFileUrl;
+    public String getRealFilePath() {
+        return realFilePath;
+    }
+
+    public String getFileUrl() {
+        return fileUrl;
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this)
-                .append("remoteFilePath", remoteFilePath)
-                .append("remoteFileUrl", remoteFileUrl)
+                .append("storageURL", storageURL)
+                .append("virtualFilePath", virtualFilePath)
+                .append("realFilePath", realFilePath)
+                .append("fileUrl", fileUrl)
                 .toString();
     }
 }

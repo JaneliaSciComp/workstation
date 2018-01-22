@@ -462,11 +462,11 @@ public class ImportDialog extends ModalDialog {
         String uploadPath;
         if (selectedChildren == null) {
             RemoteLocation uploadedFile = uploader.uploadFile(importTopLevelFolderName, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, selectedFile);
-            uploadPath = uploadedFile.getRemoteStorageURL();
+            uploadPath = uploadedFile.getStorageURL();
         } else {
             List<RemoteLocation> uploadedFiles = uploader.uploadFiles(importTopLevelFolderName, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, selectedChildren, selectedFile);
             // all files should be uploaded to the same storage
-            uploadPath = uploadedFiles.stream().findFirst().map(rl -> rl.getRemoteStorageURL()).orElseThrow(() -> new IllegalStateException("Invalid upload state " + uploadedFiles));
+            uploadPath = uploadedFiles.stream().findFirst().map(rl -> rl.getStorageURL()).orElseThrow(() -> new IllegalStateException("Invalid upload state " + uploadedFiles));
         }
 
         ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
@@ -478,7 +478,7 @@ public class ImportDialog extends ModalDialog {
         return asyncServiceClient.invokeService("dataTreeLoad",
                 serviceArgsBuilder.build(),
                 FileMgr.getFileMgr().getSubjectKey(),
-                null,
+                "LSF_DRMAA",
                 ImmutableMap.of()
         );
     }

@@ -7,6 +7,7 @@ import com.google.common.cache.RemovalListeners;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.cache.Weigher;
 import org.apache.commons.httpclient.HttpClient;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -408,8 +409,13 @@ public class LocalFileCache {
         final List<CachedFile> cachedFiles = loader.locateCachedFiles();
         for (CachedFile cachedFile : cachedFiles) {
             // make sure newer cache record has not already been loaded
-            if (remoteNameToFileCache.getIfPresent(cachedFile.getRemoteFileName()) == null) {
-                remoteNameToFileCache.put(cachedFile.getRemoteFileName(), cachedFile);
+            if (!StringUtils.isBlank(cachedFile.getRemoteFileName())) {
+                if (remoteNameToFileCache.getIfPresent(cachedFile.getRemoteFileName()) == null) {
+                    remoteNameToFileCache.put(cachedFile.getRemoteFileName(), cachedFile);
+                }
+            } else {
+                // this is a legacy file - remove it from the active directory
+                cachedFile.remove(this.activeDirectory);
             }
         }
 
