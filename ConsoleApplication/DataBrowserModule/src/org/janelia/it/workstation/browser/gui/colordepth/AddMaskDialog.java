@@ -187,10 +187,14 @@ public class AddMaskDialog extends ModalDialog {
                 else {
                     existingSearchRadioButton.setSelected(true);
                     DefaultComboBoxModel<SearchWrapper> model = (DefaultComboBoxModel<SearchWrapper>) searchComboBox.getModel();
+                    SearchWrapper wrapper = null;
                     for(ColorDepthSearch search : searches) {
-                        SearchWrapper wrapper = new SearchWrapper();
+                        wrapper = new SearchWrapper();
                         wrapper.search = search;
                         model.addElement(wrapper);
+                    }
+                    if (wrapper!=null) {
+                        model.setSelectedItem(wrapper); // select the last item by default
                     }
                 }
                 
