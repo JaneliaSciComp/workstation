@@ -25,6 +25,7 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleAlignmentResult;
+import org.janelia.model.util.TimebasedIdentifierGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,8 +136,9 @@ public class CreateMaskFromSampleAction extends AbstractAction {
                     WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
                     String subjectName = FileMgr.getFileMgr().getSubjectName();
                     String uploadContext = subjectName + "/" + "WorkstationFileUpload";
-                    RemoteLocation location = uploader.uploadFile("UserGeneratedMask", uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, tempFile);
-                    uploadPath = location.getRemoteFilePath();
+                    Long guid = TimebasedIdentifierGenerator.generateIdList(1).get(0);
+                    RemoteLocation location = uploader.uploadFile("UserGeneratedMask_"+guid, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, tempFile);
+                    uploadPath = location.getRealFilePath();
                     log.info("Uploaded mask to: "+uploadPath);
                 }
 

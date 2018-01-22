@@ -1,13 +1,20 @@
 package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
 import javax.swing.JMenuItem;
+import javax.swing.KeyStroke;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
+import org.janelia.it.workstation.browser.actions.OpenInFinderAction;
+import org.janelia.it.workstation.browser.actions.OpenWithDefaultAppAction;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
@@ -26,6 +33,7 @@ public class MaskContextMenu extends PopupContextMenu {
     public MaskContextMenu(ColorDepthSearch search, ColorDepthMask mask) {
         this.search = search;
         this.mask = mask;
+        ActivityLogHelper.logUserAction("MaskContextMenu.create", mask);
     }
     
     public void addMenuItems() {
@@ -40,8 +48,16 @@ public class MaskContextMenu extends PopupContextMenu {
         add(getTitleItem());
         add(getCopyNameToClipboardItem());
         add(getCopyIdToClipboardItem());
+        
         setNextAddRequiresSeparator(true);
         add(getRemoveFromSearchItem());
+
+        setNextAddRequiresSeparator(true);
+        add(getOpenInFinderItem());
+        add(getOpenWithAppItem());
+
+        setNextAddRequiresSeparator(true);
+        add(getHudMenuItem());
     }
         
     protected JMenuItem getTitleItem() {
@@ -90,4 +106,32 @@ public class MaskContextMenu extends PopupContextMenu {
         return removeItem;
     }
 
+    protected JMenuItem getOpenInFinderItem() {
+        String path = mask.getFilepath();
+        if (path==null) return null;
+        if (!OpenInFinderAction.isSupported()) return null;
+        return getNamedActionItem(new OpenInFinderAction(path));
+    }
+
+    protected JMenuItem getOpenWithAppItem() {
+        String path = mask.getFilepath();
+        if (path==null) return null;
+        if (!OpenWithDefaultAppAction.isSupported()) return null;
+        return getNamedActionItem(new OpenWithDefaultAppAction(path));
+    }
+
+    protected JMenuItem getHudMenuItem() {
+        
+        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
+        toggleHudMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
+        toggleHudMI.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("MaskContextMenu.showInLightbox", mask);
+                Hud.getSingletonInstance().setFilepathAndToggleDialog(mask.getFilepath(), false, false);
+            }
+        });
+
+        return toggleHudMI;
+    }
 }

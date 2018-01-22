@@ -17,6 +17,7 @@ import org.janelia.it.workstation.browser.actions.OpenWithDefaultAppAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -25,8 +26,6 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.sample.Sample;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Context pop up menu for color depth results.
@@ -34,8 +33,6 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ColorDepthMatchContextMenu extends PopupContextMenu {
-
-    private static final Logger log = LoggerFactory.getLogger(ColorDepthMatchContextMenu.class);
     
     // Current selection
     protected ColorDepthResult contextObject;
@@ -155,22 +152,6 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         return item;
     }
 
-    protected JMenuItem getHudMenuItem() {
-        if (multiple) return null;
-        
-        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
-        toggleHudMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
-        toggleHudMI.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ActivityLogHelper.logUserAction("ColorDepthMatchContentMenu.showInLightbox", match);
-//                Hud.getSingletonInstance().setObjectAndToggleDialog(domainObject, resultDescriptor, typeName);
-            }
-        });
-
-        return toggleHudMI;
-    }
-
     protected JMenuItem getOpenInFinderItem() {
     	if (multiple) return null;
         String path = match.getFilepath();
@@ -185,6 +166,22 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         if (path==null) return null;
         if (!OpenWithDefaultAppAction.isSupported()) return null;
         return getNamedActionItem(new OpenWithDefaultAppAction(path));
+    }
+
+    protected JMenuItem getHudMenuItem() {
+        if (multiple) return null;
+        
+        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
+        toggleHudMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
+        toggleHudMI.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("ColorDepthMatchContentMenu.showInLightbox", match);
+                Hud.getSingletonInstance().setFilepathAndToggleDialog(match.getFilepath(), false, false);
+            }
+        });
+
+        return toggleHudMI;
     }
     
     protected List<Sample> getSamples() {

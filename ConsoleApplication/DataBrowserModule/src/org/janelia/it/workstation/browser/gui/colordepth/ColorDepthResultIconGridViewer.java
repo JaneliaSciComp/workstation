@@ -379,26 +379,21 @@ public class ColorDepthResultIconGridViewer
         
         Hud hud = Hud.getSingletonInstance();
         hud.setKeyListener(keyListener);
-//
-//        try {
-//            List<DomainObject> selected = getSelectedObjects();
-//            
-//            if (selected.size() != 1) {
-//                hud.hideDialog();
-//                return;
-//            }
-//            
-//            DomainObject domainObject = selected.get(0);
-//            if (toggle) {
-////                hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
-//            }
-//            else {
-////                hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), false);
-//            }
-//        } 
-//        catch (Exception ex) {
-//            ConsoleApp.handleException(ex);
-//        }
+
+        try {
+            List<ColorDepthMatch> selected = getSelectedObjects();
+            
+            if (selected.size() != 1) {
+                hud.hideDialog();
+                return;
+            }
+            
+            ColorDepthMatch match = selected.get(0);
+            hud.setFilepathAndToggleDialog(match.getFilepath(), toggle, false);
+        } 
+        catch (Exception ex) {
+            ConsoleApp.handleException(ex);
+        }
     }
 
     @Override

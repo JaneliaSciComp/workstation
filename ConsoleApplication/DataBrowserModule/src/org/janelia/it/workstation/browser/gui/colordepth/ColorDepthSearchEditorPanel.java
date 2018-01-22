@@ -268,13 +268,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             protected void updateHud(SelectablePanel resultPanel, boolean toggle) {
                 if (resultPanel instanceof MaskPanel) {
                     ColorDepthMask mask = ((MaskPanel)resultPanel).getMask();
-                    Hud hud = Hud.getSingletonInstance();
-                    if (toggle) {
-                        hud.setObjectAndToggleDialog(mask, null, null);
-                    }
-                    else {
-                        hud.setObject(mask, null, null, true);
-                    }
+                    Hud.getSingletonInstance().setFilepathAndToggleDialog(mask.getFilepath(), toggle, false);
                 }
             }
             
