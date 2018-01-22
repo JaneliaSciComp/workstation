@@ -1,36 +1,22 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.dialogs;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableModel;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
-import org.janelia.it.workstation.browser.gui.keybind.ShortcutTextField;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
@@ -49,8 +35,7 @@ public class AdminHistoryDialog extends ModalDialog implements BackgroundAnnotat
     private final JButton closeButton;
     private final JTable historyTable;
     private final JPanel buttonPane;
-    private final JPanel historyPanel;
-    
+
     private final AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
     private AnnotationModel annotationModel;
     private AdminHistoryDialog dialog;
@@ -59,14 +44,11 @@ public class AdminHistoryDialog extends ModalDialog implements BackgroundAnnotat
     	super(ConsoleApp.getMainFrame());
         dialog = this;
     	
-        setTitle("View Change History");
+        setTitle("View neuron change history");
         // set to modeless
         setModalityType(Dialog.ModalityType.MODELESS);
 
-        historyPanel = new JPanel();
-        add(historyPanel, BorderLayout.CENTER);
-        
-        closeButton = new JButton("CLose");
+        closeButton = new JButton("Close");
         closeButton.setToolTipText("Close this window");
         closeButton.addActionListener(new ActionListener() {
             @Override
@@ -89,9 +71,10 @@ public class AdminHistoryDialog extends ModalDialog implements BackgroundAnnotat
         
         historyTable = new JTable(tableModel); 
         historyTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-       
-        historyPanel.add(new JScrollPane(historyTable));
-        
+
+        setLayout(new BorderLayout());
+        add(new JScrollPane(historyTable), BorderLayout.CENTER);
+
         add(buttonPane, BorderLayout.SOUTH);
         
         // add dialog to the listeners being notificed by the refreshHandler
@@ -104,7 +87,8 @@ public class AdminHistoryDialog extends ModalDialog implements BackgroundAnnotat
     }
     
     private void updateTable(TmNeuronMetadata neuron, MessageType type) {
-         try {// get workspace and sample
+         try {
+            // get workspace and sample
             TmWorkspace workspace = annotationModel.getWorkspace(neuron.getWorkspaceId());
             TmSample sample = annotationModel.getSample(workspace.getSampleId());
             ((NeuronHistoryTableModel)historyTable.getModel()).addRow(neuron, workspace, sample, type);

@@ -745,7 +745,11 @@ implements NeuronSet// , LookupListener
         @Override
         public void neuronRenamed(TmNeuronMetadata neuron) {
         }
-        
+
+        @Override
+        public void neuronsOwnerChanged(List<TmNeuronMetadata> neuronList) {
+        }
+
         @Override
         public void neuronSelected(TmNeuronMetadata neuron) {
         }

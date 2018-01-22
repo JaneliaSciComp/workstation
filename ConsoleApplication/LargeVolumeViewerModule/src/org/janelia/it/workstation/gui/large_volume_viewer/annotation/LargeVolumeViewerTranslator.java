@@ -444,6 +444,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         // We don't care about neuron names
     }
     
+    @Override
+    public void neuronsOwnerChanged(List<TmNeuronMetadata> neuronList) {
+        // We don't care about neuron owners
+    }
+
     /**
      * called when the model changes the current neuron
      */

@@ -558,7 +558,7 @@ implements MouseMode, KeyListener
                     result.add(null); // separator
                 }
                 
-                AbstractAction neuronHistoryAction = new AbstractAction("View Neuron History") {
+                AbstractAction neuronHistoryAction = new AbstractAction("View neuron history...") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().showNeuronHistory();

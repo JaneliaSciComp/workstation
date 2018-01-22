@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -35,8 +36,10 @@ import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
+import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronSelectedListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.ChangeNeuronOwnerDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -238,23 +241,37 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                         // single click visibility = toggle visibility
                         annotationManager.setNeuronVisibility(selectedNeuron, !selectedNeuron.getVisibility());
                     } else if (modelColumn == NeuronTableModel.COLUMN_OWNER) {
-                        // pop up a dialog so the user can request to change the ownership
-                        //  of the neuron
+                        String owner = selectedNeuron.getOwnerName();
+                        String username = AccessManager.getAccessManager().getActualSubject().getName();
+                        if (owner.equals(username) || AccessManager.getAccessManager().isAdmin()) {
+                            // (note that admins can change ownership on any neuron)
 
-                        // coming soon but not now:
-                        /*
-                        ChangeNeuronOwnerDialog dialog = new ChangeNeuronOwnerDialog((Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
-                            selectedNeuron);
-                        dialog.setVisible(true);
-                        if (dialog.isSuccess()) {
+                            // pop up a dialog so the user can request to change the ownership
+                            //  of the neuron
+                            ChangeNeuronOwnerDialog dialog = new ChangeNeuronOwnerDialog((Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
+                                selectedNeuron);
+                            dialog.setVisible(true);
+                            if (dialog.isSuccess()) {
+                                List<TmNeuronMetadata> neuronList = new ArrayList<>();
+                                neuronList.add(selectedNeuron);
+                                annotationManager.changeNeuronsOwner(neuronList, dialog.getNewOwnerKey());
+                                }
 
-                            // retrieve results and do something
+                        } else if (owner.equals(NeuronTableModel.COMMON_USER_KEY)) {
+                            // can take ownership immediately
 
-                            System.out.println("ownership change requested for neuron " + selectedNeuron.getName() + " to " + dialog.getNewOwner());
+                            // for now:
+                            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
+                                "This is a Mouselight common neuron.  In the future, you'll be able to take ownership of this automatically.  For now, you can't.");
+                        } else {
+                            // submit a request to take ownership
 
-
+                            // for now:
+                            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
+                                owner + " owns this neuron. In the future, you'll be able to request ownership from this dialog, but for now, you will need to ask " +
+                                owner + " to give this neuron to you.");
                         }
-                        */
+
                     }
                 }
                 me.consume();
@@ -727,7 +744,7 @@ class NeuronTableModel extends AbstractTableModel {
     public static final int COLUMN_CREATION_DATE = 4;
 
     // this is the username for neurons that don't belong to anyone
-    private static final String COMMON_USER = "mouselight_common";
+    public static final String COMMON_USER_KEY = "group:mouselight";
 
     private ArrayList<TmNeuronMetadata> neurons = new ArrayList<>();
     private ArrayList<TmNeuronMetadata> matchedNeurons = new ArrayList<>();
@@ -752,8 +769,12 @@ class NeuronTableModel extends AbstractTableModel {
         visibleIcon = SimpleIcons.getIcon("eye.png");
         invisibleIcon = SimpleIcons.getIcon("closed_eye.png");
 
+        // I'm not super fond of either of these icons; user and computer
+        //  are both kind of busy, even after I removed the color from them
+        // the db icon is a little cleaner but may not be as suggestive
         peopleIcon = Icons.getIcon("user_bw.png");
-        computerIcon = Icons.getIcon("computer_bw.png");
+        // computerIcon = Icons.getIcon("computer_bw.png");
+        computerIcon = Icons.getIcon("database.png");
     }
 
     public void clear() {
@@ -933,11 +954,11 @@ class NeuronTableModel extends AbstractTableModel {
                 // old: string name
                 // return targetNeuron.getOwnerName();
                 // new, first alternative: icon
-                String owner = targetNeuron.getOwnerName();
-                if (owner.equals(AccessManager.getAccessManager().getActualSubject().getName())) {
+                String ownerKey = targetNeuron.getOwnerKey();
+                if (ownerKey.equals(AccessManager.getAccessManager().getActualSubject().getKey())) {
                     // no icon if you're the owner
                     return null;
-                } else if (owner.equals(COMMON_USER)) {
+                } else if (ownerKey.equals(COMMON_USER_KEY)) {
                     return computerIcon;
                 } else {
                     // owned by someone else
