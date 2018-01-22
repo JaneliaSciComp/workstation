@@ -83,6 +83,7 @@ public class DropDownButton extends JButton {
                             for (Component component : components) {
                                 popupMenu.add(component);
                             }
+                            popupMenu.addPopupMenuListener(getMenuListener());
                             popupMenu.setMaximumVisibleRows(maxVisibleElements);
                             popupMenu.show(DropDownButton.this, 0, getHeight());
                             DropDownButton.this.popupMenu = popupMenu;
@@ -143,9 +144,6 @@ public class DropDownButton extends JButton {
 
                 public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
                     synchronized (DropDownButton.this) {
-                        // If inside the button let the button's mouse listener
-                        // deal with the state. The popup menu will be hidden and
-                        // we should not show it again.
                         if (getModel() instanceof Model) {
                             ((Model) getModel())._release();
                         }
