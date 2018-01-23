@@ -192,14 +192,13 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
 
         log.debug("showCurrSearchResult(isUserDriven={})",isUserDriven);
 
-        updatePagingStatus();
-        
         if (currResultIndex < 0 || currResultIndex >= results.size()) {
             throw new IllegalStateException("Cannot show search result index outside of result list size");
         }
+
+        updatePagingStatus();
         
         ColorDepthResult result = results.get(currResultIndex);
-        
         selectionModel.setParentObject(result);
         resultLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
         
@@ -335,6 +334,10 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
 
     public PaginatedResultsPanel<ColorDepthMatch, String> getResultPanel() {
         return resultsPanel;
+    }
+
+    public void showNothing() {
+        resultsPanel.showNothing();
     }
 
 }

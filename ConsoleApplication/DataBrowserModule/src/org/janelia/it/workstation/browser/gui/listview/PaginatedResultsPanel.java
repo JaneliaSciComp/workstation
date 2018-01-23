@@ -422,7 +422,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     
     public void showSearchResults(SearchResults<T,S> searchResults, boolean isUserDriven, Callable<Void> success) {
 
-        if (searchResults==null) {
+        if (this.searchResults==null) {
             // First load into this panel, so we need a top-level loading indicator, since the resultsView isn't active yet
             showLoadingIndicator();
         }

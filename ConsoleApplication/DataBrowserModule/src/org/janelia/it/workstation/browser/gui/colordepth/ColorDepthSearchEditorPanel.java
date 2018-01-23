@@ -455,7 +455,13 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 log.debug("Loaded {} data sets", alignmentSpaceDataSets.size());
                 
                 showUI(isUserDriven);
-                maskListPanel.selectFirst(isUserDriven);
+                
+                if (!masks.isEmpty()) {
+                    maskListPanel.selectFirst(isUserDriven);
+                }
+                else {
+                    colorDepthResultPanel.showNothing();
+                }
                 
                 ConcurrentUtils.invokeAndHandleExceptions(success);
                 debouncer.success();
