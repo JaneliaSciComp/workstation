@@ -5,12 +5,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -49,6 +54,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
     private JButton prevResultButton;
     private JLabel resultLabel;
     private JButton nextResultButton;
+    private JCheckBox newOnlyCheckbox;
     private final PaginatedResultsPanel<ColorDepthMatch, String> resultsPanel;
 
     // State
@@ -94,11 +100,20 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
             }
         });
         
-        this.topPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 5, 2));
+        this.newOnlyCheckbox = new JCheckBox("Only new results");
+        newOnlyCheckbox.addActionListener((ActionEvent e) -> {
+                showCurrSearchResult(true);
+            }
+        );
+        
+        this.topPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 8, 5));
         topPanel.add(new JLabel("Results:"));
         topPanel.add(prevResultButton);
         topPanel.add(resultLabel);
         topPanel.add(nextResultButton);
+        topPanel.add(new JSeparator(SwingConstants.VERTICAL));
+        topPanel.add(newOnlyCheckbox);
+        topPanel.add(new JSeparator(SwingConstants.VERTICAL));
         
         this.resultsPanel = new PaginatedResultsPanel<ColorDepthMatch,String>(selectionModel, this, viewerTypes) {
     
@@ -134,14 +149,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
 
             @Override
             protected void hadSuccess() {
-                if (!results.isEmpty()) {
-                    currResultIndex = results.size()-1;
-                    showCurrSearchResult(isUserDriven);
-                }
-                else {
-                    log.info("No results for mask");
-                    resultsPanel.showNothing();
-                }
+                showResults(isUserDriven);
             }
 
             @Override
@@ -169,6 +177,17 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
         log.info("Found {} results for {}", results.size(), mask);
     }
     
+    private void showResults(boolean isUserDriven) {
+        if (!results.isEmpty()) {
+            currResultIndex = results.size()-1;
+            showCurrSearchResult(isUserDriven);
+        }
+        else {
+            log.info("No results for mask");
+            resultsPanel.showNothing();
+        }
+    }
+    
     public void showCurrSearchResult(boolean isUserDriven) {
 
         log.debug("showCurrSearchResult(isUserDriven={})",isUserDriven);
@@ -185,6 +204,29 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
         resultLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
         
         List<ColorDepthMatch> maskMatches = result.getMaskMatches(mask);
+        
+        if (newOnlyCheckbox.isSelected()) {
+            
+            Set<String> filepaths = new HashSet<>();
+            
+            // First determine what was a match in previous results
+            for (int i=0; i<currResultIndex; i++) {
+                for(ColorDepthMatch match : results.get(i).getMaskMatches(mask)) {
+                    filepaths.add(match.getFilepath());
+                }
+            }
+            
+            // Now filter the current results to show the new matches only
+            List<ColorDepthMatch> filteredMatches = new ArrayList<>();
+            for(ColorDepthMatch match : maskMatches) {
+                if (!filepaths.contains(match.getFilepath())) {
+                    filteredMatches.add(match);
+                }
+            }
+            
+            maskMatches = filteredMatches;
+        }
+        
         ColorDepthSearchResults searchResults = new ColorDepthSearchResults(maskMatches);
         resultsPanel.showSearchResults(searchResults, isUserDriven, null);
     }
