@@ -40,6 +40,7 @@ public class ChangeNeuronOwnerDialog extends JDialog {
             "mouselight",
             "olbrisd",
             "ramirezd2",
+            "rokickik",
             "schauderd",
             "taylora",
             "weldonm",

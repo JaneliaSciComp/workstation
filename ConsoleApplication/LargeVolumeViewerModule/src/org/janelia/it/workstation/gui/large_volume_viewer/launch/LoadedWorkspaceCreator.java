@@ -85,9 +85,9 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
                 inputDialog.setLayout(new GridLayout(6, 1));
                 inputDialog.add(workspaceNameLabel);
                 inputDialog.add(workspaceNameTextField);
-                inputDialog.add(new JLabel("Enter Full Path to Input Folder"));
+                inputDialog.add(new JLabel("Enter full path to input folder"));
                 inputDialog.add(pathTextField);
-                inputDialog.add(new JLabel("Assign All Neurons to System Owner"));
+                inputDialog.add(new JLabel("Assign all neurons to mouselight"));
                 inputDialog.add(systemOwnerCheckbox);
                 JPanel buttonPanel = new JPanel();
                 buttonPanel.setLayout(new BorderLayout());

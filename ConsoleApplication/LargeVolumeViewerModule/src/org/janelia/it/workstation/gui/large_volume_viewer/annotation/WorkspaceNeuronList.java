@@ -182,7 +182,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_COLOR).setPreferredWidth(NARROW_COLUNN_WIDTH);
         neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_COLOR).setMaxWidth(NARROW_COLUNN_WIDTH);
         neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_OWNER).setPreferredWidth(NARROW_COLUNN_WIDTH);
-        // neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_OWNER).setMaxWidth(NARROW_COLUNN_WIDTH);
+        neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_OWNER).setMaxWidth(NARROW_COLUNN_WIDTH);
         neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_VISIBILITY).setPreferredWidth(NARROW_COLUNN_WIDTH);
         neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_VISIBILITY).setMaxWidth(NARROW_COLUNN_WIDTH);
 
@@ -203,8 +203,6 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         neuronTable.setDefaultRenderer(Color.class, new ColorCellRenderer(true));
 
         // name is italic if neuron is becoming unsynced
-        // neuronTable.getColumn(NeuronTableModel.COLUMN_NAME).setCellRenderer(new SyncLevelRenderer());
-
         neuronTable.getColumn(neuronTable.getColumnName(NeuronTableModel.COLUMN_NAME)).setCellRenderer(new SyncLevelRenderer());
 
 
@@ -774,7 +772,7 @@ class NeuronTableModel extends AbstractTableModel {
     private ImageIcon visibleIcon;
     private ImageIcon invisibleIcon;
     private ImageIcon peopleIcon;
-    private ImageIcon computerIcon;
+    private ImageIcon commonIcon;
 
     public void setAnnotationModel(AnnotationModel annotationModel) {
         this.annotationModel = annotationModel;
@@ -785,10 +783,8 @@ class NeuronTableModel extends AbstractTableModel {
 
         // I'm not super fond of either of these icons; user and computer
         //  are both kind of busy, even after I removed the color from them
-        // the db icon is a little cleaner but may not be as suggestive
         peopleIcon = Icons.getIcon("user_bw.png");
-        // computerIcon = Icons.getIcon("computer_bw.png");
-        computerIcon = Icons.getIcon("database.png");
+        commonIcon = Icons.getIcon("computer_bw.png");
     }
 
     public void clear() {
@@ -973,7 +969,7 @@ class NeuronTableModel extends AbstractTableModel {
                     // no icon if you're the owner
                     return null;
                 } else if (ownerKey.equals(COMMON_USER_KEY)) {
-                    return computerIcon;
+                    return commonIcon;
                 } else {
                     // owned by someone else
                     return peopleIcon;
