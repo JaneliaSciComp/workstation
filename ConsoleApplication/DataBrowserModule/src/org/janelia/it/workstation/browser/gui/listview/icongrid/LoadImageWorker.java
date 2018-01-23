@@ -100,7 +100,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
     }
 
     private void rescaleToDisplaySize() {
-        if (displaySize != null) {
+        if (displaySize != null && displaySize>0) {
             this.scaledImage = Utils.getScaledImageByWidth(maxSizeImage, displaySize);
         }
         else {

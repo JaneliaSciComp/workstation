@@ -261,6 +261,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 if (resultPanel instanceof MaskPanel) {
                     selectedMask = ((MaskPanel)resultPanel).getMask();
                     loadMaskResults(selectedMask, true);
+                    Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(selectedMask), isUserDriven, true, true));
                 }
             }
             
@@ -360,7 +361,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             loadDomainObject(updatedSearch, false, null);
         }
         else {
-            // The folder no longer exists, or we no longer have access to it (perhaps running as a different user?) 
+            // The search no longer exists, or we no longer have access to it (perhaps running as a different user?) 
             // Either way, there's nothing to show. 
             showNothing();
         }

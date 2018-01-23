@@ -600,11 +600,11 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     ontologyListMenu.setMaximumVisibleRows(50);
 
                     Long currOntologyId = StateMgr.getStateMgr().getCurrentOntologyId();
-                
                     for (final Ontology ontology : ontologies) {
                         Subject subject = null;
                         try {
-                            subject = AccessManager.getSubjectByKey(ontology.getOwnerKey());
+                            // TODO: this should happen in a background thread
+                            subject = AccessManager.getSubjectByNameOrKey(ontology.getOwnerKey());
                         }
                         catch (Exception ex) {
                             log.error("Error getting subject: "+ontology.getOwnerKey(),ex);

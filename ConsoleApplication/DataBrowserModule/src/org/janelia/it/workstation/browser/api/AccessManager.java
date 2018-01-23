@@ -220,11 +220,11 @@ public final class AccessManager {
                 if (!runAsUser.startsWith("user:") && !runAsUser.startsWith("group:")) {
                     fullUserKey = "user:" + fullUserKey;
                 }
-                Subject runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByKey(fullUserKey);
+                Subject runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByNameOrKey(fullUserKey);
                 if (runAsSubject==null) {
                     // try group before failing
                     fullUserKey = "group:" + runAsUser;
-                    runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByKey(fullUserKey);
+                    runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByNameOrKey(fullUserKey);
                     if (runAsSubject==null) {
                         return false;
                     }
@@ -400,9 +400,9 @@ public final class AccessManager {
         FileMgr.getFileMgr().setSubjectProxy(subject);
     }
     
-    public static Subject getSubjectByKey(String key) {
+    public static Subject getSubjectByNameOrKey(String key) {
         try {
-            return DomainMgr.getDomainMgr().getModel().getSubjectByKey(key);
+            return DomainMgr.getDomainMgr().getModel().getSubjectByNameOrKey(key);
         } 
         catch (Exception e) {
             log.error("Error getting subject with key: " + key, e);

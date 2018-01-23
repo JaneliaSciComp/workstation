@@ -6,8 +6,10 @@ import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.PipelineErrorSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
+import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthMatchSelectionEvent;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.sample.PipelineError;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -141,6 +143,26 @@ public final class DomainInspectorTopComponent extends TopComponent {
             PipelineError error = event.getPipelineError();
             log.info("errorSelected()");
             detailsPanel.loadPipelineError(error);
+        }
+    }
+
+    @Subscribe
+    public void colorDepthMatchSelected(ColorDepthMatchSelectionEvent event) {
+
+        // We only care about single selections
+        ColorDepthMatch match = event.getObjectIfSingle();
+        if (match==null) {
+            return;
+        }
+
+        if (!event.isSelect()) {
+            log.debug("Event is not selection: {}",event);
+            return;
+        }
+        
+        if (event.isUserDriven()) {
+            log.info("colorDepthMatchSelected({})", match.getFilepath());
+            detailsPanel.loadColorDepthMatch(match);
         }
     }
 }

@@ -293,7 +293,7 @@ public class ColorDepthResultIconGridViewer
     }
 
     @Override
-    public void refreshEditMode() {   }
+    public void refreshEditMode() {}
 
     @Override
     public void setEditSelectionModel(ChildSelectionModel<ColorDepthMatch, String> editSelectionModel) {

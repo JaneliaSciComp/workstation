@@ -953,8 +953,8 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public Subject getSubjectByKey(String subjectKey) throws Exception {
-        return subjectFacade.getSubjectByKey(subjectKey);
+    public Subject getSubjectByNameOrKey(String subjectKey) throws Exception {
+        return subjectFacade.getSubjectByNameOrKey(subjectKey);
     }
 
     public Subject getOrCreateUser(String username) throws Exception {

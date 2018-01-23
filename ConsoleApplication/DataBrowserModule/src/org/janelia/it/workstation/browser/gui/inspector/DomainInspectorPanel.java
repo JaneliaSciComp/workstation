@@ -32,6 +32,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -52,6 +53,7 @@ import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.AlignmentScoreType;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.model.domain.ontology.Annotation;
@@ -64,6 +66,7 @@ import org.janelia.model.domain.sample.SampleAlignmentResult;
 import org.janelia.model.domain.sample.SampleProcessingResult;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.security.Subject;
+import org.janelia.model.security.util.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -446,6 +449,42 @@ public class DomainInspectorPanel extends JPanel {
         addProperty("Classification", error.getClassification());
         addProperty("Description", error.getDescription());
 
+        addPropertiesToTable();
+        attributesPanel.removeAll();
+        attributesPanel.add(attributesTable, BorderLayout.CENTER);
+
+        tabbedPane.setSelectedIndex(0);
+        tabbedPane.setEnabledAt(1, false);
+        tabbedPane.setEnabledAt(2, false);
+    }
+
+    public void loadColorDepthMatch(ColorDepthMatch match) {
+
+        log.debug("Loading properties for color depth match");
+        showAttributesLoadingIndicator();
+
+        this.propertySet = new TreeSet<>();
+        
+        String dataSet = match.getDataSet();
+        String owner = dataSet.split("_")[0];
+
+        addProperty("Filepath", match.getFilepath());
+        addProperty("Channel Number", match.getChannelNumber());
+        addProperty("Score", match.getScore());
+        addProperty("Score Percent", match.getScorePercent());
+        addProperty("Data Set", dataSet);
+        addProperty("Owner", owner);
+        
+        try {
+            Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(match.getSample());
+            if (sample!=null) {
+                addProperty("Sample Name", sample.getName());
+            }
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
+        }
+        
         addPropertiesToTable();
         attributesPanel.removeAll();
         attributesPanel.add(attributesTable, BorderLayout.CENTER);

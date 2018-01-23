@@ -75,18 +75,21 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
         if (displaySize == width) {
             return;
         }
-
-        if (viewable) {
-            if (maxSizeImage == null) {
-                // Must be currently loading, in which case this method will get called again when the loading is done
+        
+        if (width>0 && height>0) {
+            
+            if (viewable) {
+                if (maxSizeImage == null) {
+                    // Must be currently loading, in which case this method will get called again when the loading is done
+                }
+                else {
+                    imagePanel.setImage(Utils.getScaledImageByWidth(maxSizeImage, width));
+                }
             }
-            else {
-                imagePanel.setImage(Utils.getScaledImageByWidth(maxSizeImage, width));
-            }
+    
+            this.displaySize = width;
+            invalidate();
         }
-
-        this.displaySize = width;
-        invalidate();
     }
 
     /**
