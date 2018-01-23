@@ -102,10 +102,13 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         TmNeuronMetadata neuron = mapper.readValue(metadata, TmNeuronMetadata.class);
         
         if (neuron!=null) {
-            TmNeuronMetadata localNeuron = annotationModel.getNeuronManager().getNeuronById(neuron.getId());// decrease the sync level 
-            localNeuron.decrementSyncLevel();
-            if (localNeuron.getSyncLevel()==0) {
-                localNeuron.setSynced(true);
+            // note that sometimes the neuron doesn't exist locally, as when we've deleted it, so check for null
+            TmNeuronMetadata localNeuron = annotationModel.getNeuronManager().getNeuronById(neuron.getId());// decrease the sync level
+            if (localNeuron != null) {
+                localNeuron.decrementSyncLevel();
+                if (localNeuron.getSyncLevel() == 0) {
+                    localNeuron.setSynced(true);
+                }
             }
         }
         
