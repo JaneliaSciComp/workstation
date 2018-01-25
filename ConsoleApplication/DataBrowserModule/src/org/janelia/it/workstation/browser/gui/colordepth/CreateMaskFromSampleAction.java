@@ -116,6 +116,7 @@ public class CreateMaskFromSampleAction extends AbstractAction {
         try {
             MaskCreationDialog maskCreationDialog = new MaskCreationDialog();
             BufferedImage maskImage = maskCreationDialog.showForImage(image);
+            if (maskImage==null) return; // User cancelled the operation
             log.debug("Got mask: "+maskImage);
 
             SimpleWorker worker = new SimpleWorker()     {
