@@ -23,8 +23,8 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
-import org.openide.nodes.Node;
 
 import com.google.common.collect.Multimap;
 
@@ -56,12 +56,12 @@ public final class ExportFoldersAction extends NodePresenterAction {
     }
 
     @Override
-    protected void performAction (Node[] activatedNodes) {
-        List<TreeNode> treeNodes = new ArrayList<>();
-        for(Node node : getSelectedNodes()) {
+    protected void performAction (org.openide.nodes.Node[] activatedNodes) {
+        List<Node> nodes = new ArrayList<>();
+        for(org.openide.nodes.Node node : getSelectedNodes()) {
             if (node instanceof TreeNodeNode) {
                 TreeNodeNode treeNodeNode = (TreeNodeNode)node;
-                treeNodes.add(treeNodeNode.getTreeNode());
+                nodes.add(treeNodeNode.getNode());
             }
             else {
                 throw new IllegalStateException("Download can only be called on DomainObjectNode");
@@ -69,8 +69,8 @@ public final class ExportFoldersAction extends NodePresenterAction {
         }
         
         String folderName = "";
-        if (treeNodes.size()==1) {
-            folderName = "_"+treeNodes.iterator().next().getName().replaceAll("\\s+", "_");
+        if (nodes.size()==1) {
+            folderName = "_"+nodes.iterator().next().getName().replaceAll("\\s+", "_");
         }
 
         String filePrefix = "FolderExport" + folderName;
@@ -112,7 +112,7 @@ public final class ExportFoldersAction extends NodePresenterAction {
 
             @Override
             protected void doStuff() throws Exception {
-                export(treeNodes, destFile, this);
+                export(nodes, destFile, this);
             }
 
             @Override
@@ -135,7 +135,7 @@ public final class ExportFoldersAction extends NodePresenterAction {
         worker.execute();   
     }
     
-    private void export(List<TreeNode> treeNodes, String destFile, Progress progress) throws Exception {
+    private void export(List<Node> nodes, String destFile, Progress progress) throws Exception {
         
         try (FileWriter writer = new FileWriter(destFile)) {
 
@@ -145,14 +145,17 @@ public final class ExportFoldersAction extends NodePresenterAction {
             writer.write("Annotations\t");
             writer.write("Folder Path\n");
             
-            for (TreeNode treeNode : treeNodes) {
-                TreeNode root = model.getDomainObject(TreeNode.class, treeNode.getId());
-                walkSubtree(root, 0, writer, "", progress);
+            for (Node node : nodes) {
+                if (node instanceof TreeNode) {
+                    Node root = model.getDomainObject(TreeNode.class, node.getId());
+                    walkSubtree(root, 0, writer, "", progress);
+                }
+                // TODO: handle other types of nodes
             }
         }
     }
     
-    private void walkSubtree(TreeNode node, int level, FileWriter writer, String path, Progress progress) throws Exception {
+    private void walkSubtree(Node node, int level, FileWriter writer, String path, Progress progress) throws Exception {
             
         if (progress.isCancelled()) return;
         
@@ -163,8 +166,8 @@ public final class ExportFoldersAction extends NodePresenterAction {
         Multimap<Long, Annotation> annotationMap = DomainUtils.getAnnotationsByDomainObjectId(model.getAnnotations(node.getChildren()));
         
         for(DomainObject child : model.getDomainObjects(node.getChildren())) {
-            if (child instanceof TreeNode) {
-                walkSubtree((TreeNode)child, level+1, writer, path+"\t"+node.getName(), progress);
+            if (child instanceof Node) {
+                walkSubtree((Node)child, level+1, writer, path+"\t"+node.getName(), progress);
             }
             else if (child instanceof Filter) {
                 // TODO: maybe implement this in the future?

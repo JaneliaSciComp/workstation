@@ -132,9 +132,9 @@ public class ExportResultsAction<T> extends AbstractAction {
         long numProcessed = 0;
         int page = 0;
         while (true) {
-            ResultPage resultPage = searchResults.getPage(page);
+            DomainObjectResultPage resultPage = searchResults.getPage(page);
 
-            for (DomainObject domainObject : resultPage.getDomainObjects()) {
+            for (DomainObject domainObject : resultPage.getObjects()) {
 
                 buf = new StringBuffer();
                 int i = 0;
