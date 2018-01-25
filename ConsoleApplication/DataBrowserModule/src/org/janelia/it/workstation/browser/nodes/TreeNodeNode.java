@@ -22,6 +22,7 @@ import org.janelia.it.workstation.browser.flavors.DomainObjectNodeFlavor;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.DownloadAction;
+import org.janelia.it.workstation.browser.nb_action.ExportFoldersAction;
 import org.janelia.it.workstation.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RemoveAction;
@@ -243,6 +244,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<Node> {
         actions.add(null);
         actions.add(SearchHereAction.get());
         actions.add(DownloadAction.get());
+        actions.add(ExportFoldersAction.get());
         return actions.toArray(new Action[actions.size()]);
     }
 

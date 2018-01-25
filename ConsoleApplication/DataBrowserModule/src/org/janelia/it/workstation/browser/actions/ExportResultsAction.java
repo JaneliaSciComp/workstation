@@ -11,6 +11,7 @@ import javax.swing.ProgressMonitor;
 import javax.swing.filechooser.FileFilter;
 
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
+import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
@@ -88,53 +89,7 @@ public class ExportResultsAction<T> extends AbstractAction {
 
             @Override
             protected void doStuff() throws Exception {
-
-                long numFound = searchResults.getNumTotalResults();
-
-                FileWriter writer = new FileWriter(destFile);
-
-                StringBuffer buf = new StringBuffer();
-                for (DynamicColumn column : domainObjectTableViewer.getColumns()) {
-                    if (buf.length() > 0) {
-                        buf.append("\t");
-                    }
-                    buf.append(column.getLabel());
-                }
-                buf.append("\n");
-                writer.write(buf.toString());
-
-
-                long numProcessed = 0;
-                int page = 0;
-                while (true) {
-                    DomainObjectResultPage resultPage = searchResults.getPage(page);
-
-                    for (DomainObject domainObject : resultPage.getObjects()) {
-
-                        buf = new StringBuffer();
-                        int i = 0;
-                        for (DynamicColumn column : domainObjectTableViewer.getColumns()) {
-                            Object value = domainObjectTableViewer.getValue(resultPage, domainObject, column.getName());
-                            if (i++ > 0) {
-                                buf.append("\t");
-                            }
-                            if (value != null) {
-                                buf.append(value.toString());
-                            }
-
-                        }
-                        buf.append("\n");
-                        writer.write(buf.toString());
-                        numProcessed++;
-                        setProgress((int) numProcessed, (int) numFound);
-                    }
-
-                    if (numProcessed >= numFound) {
-                        break;
-                    }
-                    page++;
-                }
-                writer.close();
+                export(destFile, this);
             }
 
             @Override
@@ -155,5 +110,55 @@ public class ExportResultsAction<T> extends AbstractAction {
 
         worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Exporting data", "", 0, 100));
         worker.execute();
+    }
+    
+    private void export(String destFile, Progress progress) throws Exception {
+
+        long numFound = searchResults.getNumTotalResults();
+
+        FileWriter writer = new FileWriter(destFile);
+
+        StringBuffer buf = new StringBuffer();
+        for (DynamicColumn column : domainObjectTableViewer.getColumns()) {
+            if (buf.length() > 0) {
+                buf.append("\t");
+            }
+            buf.append(column.getLabel());
+        }
+        buf.append("\n");
+        writer.write(buf.toString());
+
+
+        long numProcessed = 0;
+        int page = 0;
+        while (true) {
+            ResultPage resultPage = searchResults.getPage(page);
+
+            for (DomainObject domainObject : resultPage.getDomainObjects()) {
+
+                buf = new StringBuffer();
+                int i = 0;
+                for (DynamicColumn column : domainObjectTableViewer.getColumns()) {
+                    Object value = domainObjectTableViewer.getValue(resultPage, domainObject, column.getName());
+                    if (i++ > 0) {
+                        buf.append("\t");
+                    }
+                    if (value != null) {
+                        buf.append(value.toString());
+                    }
+
+                }
+                buf.append("\n");
+                writer.write(buf.toString());
+                numProcessed++;
+                progress.setProgress((int) numProcessed, (int) numFound);
+            }
+
+            if (numProcessed >= numFound) {
+                break;
+            }
+            page++;
+        }
+        writer.close();
     }
 }
