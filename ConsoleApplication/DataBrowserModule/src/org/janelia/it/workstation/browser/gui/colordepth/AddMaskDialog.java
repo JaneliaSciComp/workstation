@@ -157,7 +157,7 @@ public class AddMaskDialog extends ModalDialog {
         }
     }
     
-    public void load() {
+    private void load() {
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -166,7 +166,9 @@ public class AddMaskDialog extends ModalDialog {
             @Override
             protected void doStuff() throws Exception {
                 for(ColorDepthSearch search : DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(ColorDepthSearch.class)) {
-                    searches.add(search);
+                    if (alignment==null || search.getAlignmentSpace().equals(alignment.getAlignmentSpace())) {
+                        searches.add(search);
+                    }
                 }
             }
 
