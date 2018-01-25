@@ -108,7 +108,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
    
     protected JMenuItem getAddToMaskResultsItem() {
 
-        String name = matches.size() > 1 ? "  Add " + matches.size() + " Items to Mask Results" : "  Add Mask Results";
+        String name = matches.size() > 1 ? "  Add " + matches.size() + " Samples to Mask Results" : "  Add Sample To Mask Results";
         
         JMenuItem addToMaskItem = new JMenuItem(name);
         addToMaskItem.addActionListener(new ActionListener() {
@@ -144,10 +144,13 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     
     protected JMenuItem getAddToFolderItem() {
         AddToFolderAction action = AddToFolderAction.get();
-        action.setDomainObjects(getSamples());
+        List<Sample> samples = getSamples();
+        action.setDomainObjects(samples);
         JMenuItem item = action.getPopupPresenter();
         if (item!=null) {
-            item.setText("  " + item.getText());
+            // Override title to include the word "Sample" instead of generic "Item"
+            String title = samples.size() > 1 ? "Add " + samples.size() + " Samples To Folder" : "Add Sample To Folder";
+            item.setText("  " + title);
         }
         return item;
     }
