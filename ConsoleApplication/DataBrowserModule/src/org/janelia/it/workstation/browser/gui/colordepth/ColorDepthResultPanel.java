@@ -182,16 +182,20 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
     private void showResults(boolean isUserDriven) {
         if (!results.isEmpty()) {
             currResultIndex = results.size()-1;
+            topPanel.setVisible(true);
             showCurrSearchResult(isUserDriven);
         }
         else {
             log.info("No results for mask");
+            topPanel.setVisible(false);
             resultsPanel.showNothing();
         }
     }
     
     public void showCurrSearchResult(boolean isUserDriven) {
 
+        if (results.isEmpty()) return;
+        
         log.debug("showCurrSearchResult(isUserDriven={})",isUserDriven);
 
         if (currResultIndex < 0 || currResultIndex >= results.size()) {
