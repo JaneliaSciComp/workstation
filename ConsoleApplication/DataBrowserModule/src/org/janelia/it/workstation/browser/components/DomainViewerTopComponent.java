@@ -16,6 +16,7 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.Sample;
@@ -277,20 +278,23 @@ public final class DomainViewerTopComponent extends TopComponent {
         }
     }
 
-    private static Class<? extends DomainObjectEditor<?>> getEditorClass(DomainObject domainObject) {
-        if (domainObject instanceof Sample) {
+    private static Class<? extends DomainObjectEditor<?>> getEditorClass(Object object) {
+        if (object instanceof Sample) {
             return SampleEditorPanel.class;
         }
-        else if (domainObject instanceof NeuronFragment) {
+        else if (object instanceof NeuronFragment) {
             return SampleEditorPanel.class;
         }
-        else if (domainObject instanceof LSMImage) {
+        else if (object instanceof LSMImage) {
+            return SampleEditorPanel.class;
+        }
+        else if (object instanceof ColorDepthMatch) {
             return SampleEditorPanel.class;
         }
         return null;
     }
     
-    public static boolean isSupported(DomainObject domainObject) {
-        return domainObject!=null && getEditorClass(domainObject)!=null;
+    public static boolean isSupported(Object object) {
+        return object!=null && getEditorClass(object)!=null;
     }
 }

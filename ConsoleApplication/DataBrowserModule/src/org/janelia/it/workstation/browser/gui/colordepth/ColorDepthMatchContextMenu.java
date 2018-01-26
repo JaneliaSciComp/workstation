@@ -17,6 +17,10 @@ import org.janelia.it.workstation.browser.actions.OpenWithDefaultAppAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.browser.components.DomainViewerManager;
+import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
+import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
@@ -54,6 +58,16 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     }
 
     public void runDefaultAction() {
+        if (multiple) return;
+        if (DomainViewerTopComponent.isSupported(match)) {
+            Sample sample = getSamples().get(0);
+            DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
+            if (viewer == null || !viewer.isCurrent(sample)) {
+                viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
+                viewer.requestActive();
+                viewer.loadDomainObject(sample, true);
+            }
+        }
     }
 
     public void addMenuItems() {

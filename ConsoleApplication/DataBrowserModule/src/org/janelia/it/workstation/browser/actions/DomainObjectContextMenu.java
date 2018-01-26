@@ -117,6 +117,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
 
     public void runDefaultAction() {
+        if (multiple) return;
         if (DomainViewerTopComponent.isSupported(domainObject)) {
             DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
             if (viewer == null || !viewer.isCurrent(domainObject)) {

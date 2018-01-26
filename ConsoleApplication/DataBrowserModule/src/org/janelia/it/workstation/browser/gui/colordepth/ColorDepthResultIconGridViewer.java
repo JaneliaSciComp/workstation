@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -356,7 +357,14 @@ public class ColorDepthResultIconGridViewer
     protected void moreAnnotationsButtonDoubleClicked(ColorDepthMatch match) {}
 
     @Override
-    protected void objectDoubleClick(ColorDepthMatch match) {}
+    protected void objectDoubleClick(ColorDepthMatch match) {
+//        if (domainObjectProviderHelper.isSupported(object)) {
+//            domainObjectProviderHelper.service(object);
+//        }
+//        else {
+            getPopupMenu(Arrays.asList(match)).runDefaultAction();            
+//        }
+    }
     
     @Override
     protected void deleteKeyPressed() {}
