@@ -11,11 +11,14 @@ import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.ButtonGroup;
@@ -74,6 +77,7 @@ import org.janelia.model.domain.gui.search.criteria.Criteria;
 import org.janelia.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
+import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.Sample;
 import org.perf4j.StopWatch;
@@ -502,6 +506,14 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainO
                         return value.getCount()==0;
                     }
 
+                    @Override
+                    protected void selectAll() {
+                        for(FacetValue value : getValues()) {
+                            updateFacet(attr.getName(), value.getValue(), true);
+                        }
+                        dirty = true;
+                        refreshSearchResults(true);
+                    }
                     @Override
                     protected void clearSelected() {
                         updateFacet(attr.getName(), null, false);

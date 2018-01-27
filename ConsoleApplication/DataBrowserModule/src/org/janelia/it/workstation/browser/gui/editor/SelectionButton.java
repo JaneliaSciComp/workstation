@@ -55,23 +55,34 @@ public abstract class SelectionButton<T> extends DropDownButton {
     private void populateFacetMenu() {
         
         removeAll();
-        
-        Set<String> selectedValueNames = new HashSet<>(getSelectedValueNames());
 
-        if (!selectedValueNames.isEmpty()) {
-            final JMenuItem menuItem = new JMenuItem("Clear selected");
-            menuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    clearSelected();
-                    update();
-                }
-            });
-            addMenuItem(menuItem);
-        }
-        
         Collection<T> values = getValues();
-                
         if (values!=null) {
+            
+            Set<String> selectedValueNames = new HashSet<>(getSelectedValueNames());
+    
+            if (!selectedValueNames.isEmpty()) {
+                final JMenuItem menuItem = new JMenuItem("Clear selected");
+                menuItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        clearSelected();
+                        update();
+                    }
+                });
+                addMenuItem(menuItem);
+            }
+
+            if (selectedValueNames.size() != values.size()) {
+                final JMenuItem selectAllItem = new JMenuItem("Select All");
+                selectAllItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        selectAll();
+                        update();
+                    }
+                });
+                addMenuItem(selectAllItem);
+            }
+        
             for (final T value : values) {
                 boolean selected = selectedValueNames.contains(getName(value));
                 if (isHidden(value) && !selected) {
@@ -140,6 +151,11 @@ public abstract class SelectionButton<T> extends DropDownButton {
      * Clear all selections. Called when the user clicks the "Clear selected" menu option.
      */
     protected abstract void clearSelected();
+    
+    /**
+     * Select all values. Called when the user clicks the "Select all" menu option.
+     */
+    protected abstract void selectAll();
     
     /**
      * Set the selection for a given value. Called when the user clicks on a menu option.

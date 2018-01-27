@@ -106,7 +106,6 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 //    private final JButton saveButton;
 //    private final JButton saveAsButton;
     private final JSplitPane splitPane;
-    private final JPanel dataSetPanel;
     private final JPanel pctPxPanel;
     private final JPanel pixFlucPanel;
     private final JPanel thresholdPanel;
@@ -169,10 +168,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         pixFlucPanel.add(pixFlucField, BorderLayout.CENTER);
         
         dataSetButton = new SelectionButton<DataSet>("Data Sets") {
-
+            
             @Override
             protected Collection<DataSet> getValues() {
-                return alignmentSpaceDataSets.stream().sorted(Comparator.comparing(DataSet::getIdentifier)).collect(Collectors.toList());
+                return alignmentSpaceDataSets.stream()
+                        .sorted(Comparator.comparing(DataSet::getIdentifier))
+                        .collect(Collectors.toList());
             }
 
             @Override
@@ -185,6 +186,16 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 return value.getIdentifier();
             }
 
+            @Override
+            protected void selectAll() {
+                List<String> allDataSets = alignmentSpaceDataSets.stream()
+                        .sorted(Comparator.comparing(DataSet::getIdentifier))
+                        .map(DataSet::getIdentifier)
+                        .collect(Collectors.toList());
+                search.setDataSets(allDataSets);
+                dirty = true;
+            }
+            
             @Override
             protected void clearSelected() {
                 search.getDataSets().clear();
@@ -204,10 +215,6 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             
         };
         
-        dataSetPanel = new JPanel(new BorderLayout());
-        dataSetPanel.add(new JLabel("Data sets to search:"), BorderLayout.NORTH);
-        dataSetPanel.add(dataSetButton, BorderLayout.CENTER);
-
         searchButton = new JButton("Execute Search");
         searchButton.addActionListener(new ActionListener() {
             @Override
@@ -503,7 +510,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         configPanel.addConfigComponent(thresholdPanel);
         configPanel.addConfigComponent(pctPxPanel);
         configPanel.addConfigComponent(pixFlucPanel);
-        configPanel.addConfigComponent(dataSetPanel);
+        configPanel.addConfigComponent(dataSetButton);
         configPanel.addConfigComponent(searchButton);
         
         JLabel titleLabel = new JLabel("Search Masks:");
