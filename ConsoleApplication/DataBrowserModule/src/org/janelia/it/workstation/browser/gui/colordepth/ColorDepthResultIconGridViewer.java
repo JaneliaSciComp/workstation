@@ -397,7 +397,9 @@ public class ColorDepthResultIconGridViewer
             }
             
             ColorDepthMatch match = selected.get(0);
-            hud.setFilepathAndToggleDialog(match.getFilepath(), toggle, false);
+            
+            String filepath = imageModel.getImageFilepath(match);
+            hud.setFilepathAndToggleDialog(filepath, toggle, false);
         } 
         catch (Exception ex) {
             ConsoleApp.handleException(ex);

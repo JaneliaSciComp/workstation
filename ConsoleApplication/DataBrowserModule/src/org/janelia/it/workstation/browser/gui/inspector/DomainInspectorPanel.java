@@ -468,7 +468,6 @@ public class DomainInspectorPanel extends JPanel {
         String dataSet = match.getDataSet();
         String owner = dataSet.split("_")[0];
 
-        addProperty("Filepath", match.getFilepath());
         addProperty("Channel Number", match.getChannelNumber());
         addProperty("Score", match.getScore());
         addProperty("Score Percent", match.getScorePercent());
@@ -479,6 +478,8 @@ public class DomainInspectorPanel extends JPanel {
             Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(match.getSample());
             if (sample!=null) {
                 addProperty("Sample Name", sample.getName());
+                // Only display the filepath if user has access to the sample
+                addProperty("Filepath", match.getFilepath());
             }
         }
         catch (Exception e) {

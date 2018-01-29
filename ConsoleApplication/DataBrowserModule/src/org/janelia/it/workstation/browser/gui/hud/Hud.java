@@ -267,7 +267,12 @@ public class Hud extends ModalDialog {
      * @param overrideSettings
      */
     public void setFilepathAndToggleDialog(String imagePath, final boolean toggle, boolean overrideSettings) {
-        this.title = new File(imagePath).getName();
+        if (imagePath!=null) {
+            this.title = new File(imagePath).getName();
+        }
+        else {
+            this.title = "";
+        }
         resultButton.setVisible(false);
         typeButton.setVisible(false);
         setObjectAndToggleDialog(imagePath, toggle, overrideSettings);
