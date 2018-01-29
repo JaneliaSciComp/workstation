@@ -91,8 +91,8 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private static final String THRESHOLD_LABEL_PREFIX = "Data Threshold: ";
     private static final int DEFAULT_THRESHOLD_VALUE = 100;
     private static final NumberFormat PX_FORMATTER = new DecimalFormat("#0.00");
-    private static final String PCT_POSITIVE_THRESHOLD = "% of Positive PX Threshold";
-    private static final String PIX_COLOR_FLUCTUATION = "Pix Color Fluctuation";
+    private static final String PCT_POSITIVE_THRESHOLD = "Min match %";
+    private static final String PIX_COLOR_FLUCTUATION = "Num slices to search";
     private static final String DEFAULT_PCT_PC = "10.00";
     private static final String DEFAULT_PIX_FLUC = "2";
 
@@ -155,17 +155,20 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         thresholdPanel.add(thresholdSlider, BorderLayout.CENTER);
         
         pctPxField = new JTextField(DEFAULT_PCT_PC);
-        pctPxField.setColumns(10);
+        pctPxField.setHorizontalAlignment(JTextField.RIGHT);
+        pctPxField.setColumns(5);
         pctPxPanel = new JPanel(new BorderLayout());
-        pctPxPanel.add(new JLabel(PCT_POSITIVE_THRESHOLD), BorderLayout.NORTH);
-        pctPxPanel.add(pctPxField, BorderLayout.CENTER);
+        pctPxPanel.add(new JLabel(PCT_POSITIVE_THRESHOLD), BorderLayout.CENTER);
+        pctPxPanel.add(pctPxField, BorderLayout.SOUTH);
 
         pixFlucField = new JTextField(DEFAULT_PIX_FLUC);
+        pixFlucField.setHorizontalAlignment(JTextField.RIGHT);
         pixFlucField.setToolTipText("1.18 per slice");
-        pixFlucField.setColumns(10);
+        pixFlucField.setColumns(5);
+        
         pixFlucPanel = new JPanel(new BorderLayout());
-        pixFlucPanel.add(new JLabel(PIX_COLOR_FLUCTUATION), BorderLayout.NORTH);
-        pixFlucPanel.add(pixFlucField, BorderLayout.CENTER);
+        pixFlucPanel.add(new JLabel(PIX_COLOR_FLUCTUATION), BorderLayout.CENTER);
+        pixFlucPanel.add(pixFlucField, BorderLayout.SOUTH);
         
         dataSetButton = new SelectionButton<DataSet>("Data Sets") {
             

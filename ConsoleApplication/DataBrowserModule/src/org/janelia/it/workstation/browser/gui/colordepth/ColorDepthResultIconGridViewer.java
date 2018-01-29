@@ -121,6 +121,8 @@ public class ColorDepthResultIconGridViewer
     public ColorDepthResultIconGridViewer() {
         setImageModel(imageModel);
         this.config = IconGridViewerConfiguration.loadConfig();
+        // Hide config button since the options there don't apply to this viewer
+        getToolbar().getConfigButton().setVisible(false);
         
     }
     
@@ -271,6 +273,10 @@ public class ColorDepthResultIconGridViewer
                     }
                     matchMap.put(match.getFilepath(), match);
                 }
+                
+                // This does the same thing as ColorDepthResultPanel, but it should pull samples out of the cache.
+                // This is not really the best thing to depend on, we should have a more direct way of communicating these
+                // objects from ColorDepthResultPanel to this child class. 
                 sampleMap.putAll(DomainUtils.getMapByReference(model.getDomainObjectsAs(Sample.class, new ArrayList<>(sampleRefs))));
             }
 
