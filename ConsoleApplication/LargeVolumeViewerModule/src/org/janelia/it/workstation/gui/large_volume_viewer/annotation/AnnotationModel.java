@@ -121,6 +121,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private TmSample currentSample;
     private TmWorkspace currentWorkspace;
     private TmNeuronMetadata currentNeuron;
+    private List<TmNeuronMetadata> currentFilteredNeuronList;
     private TmNeuronTagMap currentTagMap;
 
     private ViewStateListener viewStateListener;
@@ -386,6 +387,15 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         else {
             this.currentNeuron = null;
         }
+    }
+    
+    // used to get current filtered list in annotation panel
+    public List<TmNeuronMetadata> getCurrentFilteredNeuronList() {
+        return currentFilteredNeuronList ;
+    }
+    
+    public void setCurrentFilteredNeuronList(List<TmNeuronMetadata> neuronList) {
+        currentFilteredNeuronList = neuronList;
     }
 
     // this method sets the current neuron *and* updates the UI; null neuron means deselect
