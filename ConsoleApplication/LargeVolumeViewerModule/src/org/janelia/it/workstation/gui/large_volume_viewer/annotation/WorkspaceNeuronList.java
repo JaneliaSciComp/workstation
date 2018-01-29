@@ -38,6 +38,7 @@ import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronSelectedListener;
@@ -72,6 +73,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private static final int height = 2 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
 
     private static final int NARROW_COLUNN_WIDTH = 50;
+
+    private static final String COMMON_USER_KEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
 
     /**
      * @param neuronSelectedListener the neuronSelectedListener to set
@@ -267,7 +270,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                                 annotationManager.changeNeuronsOwner(neuronList, dialog.getNewOwnerKey());
                                 }
 
-                        } else if (owner.equals(NeuronTableModel.COMMON_USER_KEY)) {
+                        } else if (owner.equals(COMMON_USER_KEY)) {
                             // can take ownership immediately
 
                             // for now:
@@ -762,7 +765,7 @@ class NeuronTableModel extends AbstractTableModel {
     public static final int COLUMN_CREATION_DATE = 4;
 
     // this is the username for neurons that don't belong to anyone
-    public static final String COMMON_USER_KEY = "group:mouselight";
+    private static final String COMMON_USER_KEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
 
     private ArrayList<TmNeuronMetadata> neurons = new ArrayList<>();
     private ArrayList<TmNeuronMetadata> matchedNeurons = new ArrayList<>();
