@@ -794,7 +794,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (!checkOwnership(sourceNeuron))
             return;
         
-        ArrayList<TmNeuronMetadata> neuronList = new ArrayList<>(annotationModel.getNeuronList());
+        ArrayList<TmNeuronMetadata> neuronList = new ArrayList<>(annotationModel.getCurrentFilteredNeuronList());
         neuronList.remove(sourceNeuron);
         // not sure alphabetical is the best sort; neuron list is selectable (defaults to creation
         //  date), but I don't want to figure out how to grab that sort order and use it here;

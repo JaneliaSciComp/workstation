@@ -511,11 +511,17 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         }
         sorter.setRowFilter(rowFilter);
         updateNeuronLabel();
+        updateFilteredNeuronList();
+    }
+    
+    private void updateFilteredNeuronList() {
+        annotationModel.setCurrentFilteredNeuronList(this.getNeuronList());
     }
 
     private void updateNeuronLabel() {
         neuronLabel.setText(String.format("Neurons (showing %s/%s)",
             neuronTable.getRowCount(), neuronTableModel.getTotalNeuronCount()));
+        
     }
 
     /**
