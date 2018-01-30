@@ -146,7 +146,6 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         thresholdLabel = new JLabel();
         thresholdSlider = new JSlider(1, 255);
         thresholdSlider.putClientProperty("Slider.paintThumbArrowShape", Boolean.TRUE);
-        thresholdSlider.setMaximumSize(new Dimension(120, Integer.MAX_VALUE));
         thresholdSlider.addChangeListener((ChangeEvent e) -> {
             setThreshold(thresholdSlider.getValue());
         });
