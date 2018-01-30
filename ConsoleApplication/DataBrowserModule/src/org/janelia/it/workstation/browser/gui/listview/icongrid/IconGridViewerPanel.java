@@ -430,6 +430,9 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         if (informModel) {
             selectionModel.select(objects, clearAll, isUserDriven);    
         }
+        
+        // Need to repaint the entire panel. Sometimes individual buttons do not repaint correctly for some reason.
+        imagesPanel.repaint();
     }
 
     protected void selectEditObjects(List<T> objects) {
@@ -455,6 +458,8 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         if (informModel) {
             selectionModel.deselect(objects, isUserDriven);
         }
+        
+        imagesPanel.repaint();
     }
 
     public T getPreviousObject() {
@@ -578,6 +583,10 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         for(T object : objectList) {
             objectMap.put(getImageModel().getImageUniqueId(object), object);
         }
+    }
+    
+    protected List<T> getObjects() {
+        return objectList;
     }
 
     public synchronized void clear() {

@@ -163,7 +163,9 @@ public abstract class ResultWorker<T> extends SwingWorker<T, Void> implements Pr
 
     @Override
     public void setStatus(String status) {
-        throw new UnsupportedOperationException("SimpleWorker.setStatus is not implemented by default");
+        if (progressMonitor!=null) {
+            progressMonitor.setNote(status);
+        }
     }
     
     /**

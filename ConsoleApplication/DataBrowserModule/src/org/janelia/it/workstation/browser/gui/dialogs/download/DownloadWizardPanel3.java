@@ -1,20 +1,23 @@
 package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.event.ChangeListener;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
 import org.openide.util.ChangeSupport;
 import org.openide.util.HelpCtx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DownloadWizardPanel3 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
+
+    private static final Logger log = LoggerFactory.getLogger(DownloadWizardPanel3.class);
     
     private final ChangeSupport changeSupport = new ChangeSupport(this);
     private WizardDescriptor wiz;
@@ -47,16 +50,21 @@ public class DownloadWizardPanel3 implements WizardDescriptor.ValidatingPanel<Wi
     public void validate() throws WizardValidationException {
         // Check if all paths are unique
         boolean pathsUnique = true;
-        Set<String> uniquePaths = new HashSet<>();
+        Map<String, DownloadFileItem> uniquePaths = new HashMap<>();
         for (DownloadFileItem downloadItem : component.getDownloadItems()) {
             File targetFile = downloadItem.getTargetFile();
             if (targetFile!=null) {
                 String path = targetFile.getAbsolutePath();
-                if (uniquePaths.contains(path)) {
+                if (uniquePaths.containsKey(path)) {
+                    DownloadFileItem otherItem = uniquePaths.get(path);
+                    log.warn("Path is not unique: "+path);
+                    log.warn("  Original item: "+otherItem.getDomainObject());
+                    log.warn("  Duplicate item: "+downloadItem.getDomainObject());
+                    
                     pathsUnique = false;
                     break;
                 }
-                uniquePaths.add(path);
+                uniquePaths.put(path, downloadItem);
             }
         }
         if (!pathsUnique) {

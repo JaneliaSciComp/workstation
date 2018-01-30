@@ -24,7 +24,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
@@ -54,8 +53,10 @@ import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
+import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
+import org.janelia.it.workstation.browser.nb_action.ApplyPublishingNamesAction;
 import org.janelia.it.workstation.browser.nb_action.GetRelatedItemsAction;
 import org.janelia.it.workstation.browser.nb_action.SetPublishingNameAction;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
@@ -75,6 +76,8 @@ import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SamplePostProcessingResult;
+import org.janelia.model.domain.sample.SampleProcessingResult;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -172,7 +175,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
         add(getPartialSecondaryDataDeletiontItem());
-        add(getApplyPublishingNameItem());
+        //add(getSetPublishingNameItem());
+        add(getApplyPublishingNamesItem());
         add(getMergeItem());
         
         setNextAddRequiresSeparator(true);
@@ -616,7 +620,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return blockItem;
     }
 
-    protected JMenuItem getApplyPublishingNameItem() {
+    protected JMenuItem getSetPublishingNameItem() {
         
         List<Sample> samples = new ArrayList<>();
         for(DomainObject domainObject : domainObjectList) {
@@ -627,16 +631,21 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         
         if (samples.size()!=domainObjectList.size()) return null;
         
-        JMenuItem menuItem = getNamedActionItem(new SetPublishingNameAction(samples));
+        return getNamedActionItem(new SetPublishingNameAction(samples));
+    }
+    
+    protected JMenuItem getApplyPublishingNamesItem() {
         
-        for(Sample sample : samples) {
-            if (!ClientDomainUtils.hasWriteAccess(sample)) {
-                menuItem.setEnabled(false);
-                break;
+        List<Sample> samples = new ArrayList<>();
+        for(DomainObject domainObject : domainObjectList) {
+            if (domainObject instanceof Sample) {
+                samples.add((Sample)domainObject);
             }
         }
         
-        return menuItem;
+        if (samples.size()!=domainObjectList.size()) return null;
+        
+        return getNamedActionItem(new ApplyPublishingNamesAction(samples));
     }
 
     /** Allows users to rerun their own samples. */
@@ -813,7 +822,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getVaa3dTriViewItem() {
     	if (multiple) return null;
-    	HasFiles fileProvider = getSingleResult();
+    	HasFiles fileProvider = getSingle3dResult();
         if (fileProvider==null) return null;
         String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
         if (path==null) return null;
@@ -822,7 +831,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getVaa3d3dViewItem() {
     	if (multiple) return null;
-        HasFiles fileProvider = getSingleResult();
+        HasFiles fileProvider = getSingle3dResult();
         if (fileProvider==null) return null;
         String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
         if (path==null) return null;
@@ -831,7 +840,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getFijiViewerItem() {
     	if (multiple) return null;
-        HasFiles fileProvider = getSingleResult();
+        HasFiles fileProvider = getSingle3dResult();
         if (fileProvider==null) return null;
         String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
         if (path==null) return null;
@@ -851,7 +860,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     protected JMenuItem getDownloadItem() {
         String label = domainObjectList.size() > 1 ? "Download " + domainObjectList.size() + " Items..." : "Download...";
         JMenuItem menuItem = new JMenuItem("  "+label);
-        menuItem.addActionListener(new DownloadWizardAction(domainObjectList, resultDescriptor));
+        menuItem.addActionListener(new DownloadWizardAction(domainObjectList, null));
         menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.META_DOWN_MASK));
         return menuItem;
     }
@@ -1032,11 +1041,38 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         HasFiles result = null;
         if (domainObject instanceof Sample) {
             Sample sample = (Sample)domainObject;
-            result = DescriptorUtils.getResult(sample, resultDescriptor);
+            result = DescriptorUtils.getResult(sample, resultDescriptor);            
         }
         else if (domainObject instanceof HasFiles) {
             result = (HasFiles)domainObject;
         }
         return result;
     }
+
+    private HasFiles getSingle3dResult() {
+        
+        ArtifactDescriptor rd = this.resultDescriptor;
+        
+        if (rd instanceof ResultArtifactDescriptor) {
+            ResultArtifactDescriptor rad = (ResultArtifactDescriptor)rd;
+            if ("Post-Processing Result".equals(rad.getResultName())) {
+                rd = new ResultArtifactDescriptor(rd.getObjective(), rd.getArea(), SampleProcessingResult.class.getName(), null, false);
+            }
+            else if (SamplePostProcessingResult.class.getSimpleName().equals(rad.getResultClass())) {
+                rd = new ResultArtifactDescriptor(rd.getObjective(), rd.getArea(), SampleProcessingResult.class.getName(), null, false);
+            }
+        }
+        
+        HasFiles result = null;
+        if (domainObject instanceof Sample) {
+            Sample sample = (Sample)domainObject;
+            result = DescriptorUtils.getResult(sample, rd);            
+        }
+        else if (domainObject instanceof HasFiles) {
+            result = (HasFiles)domainObject;
+        }
+        return result;
+    }
+
+    
 }

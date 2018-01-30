@@ -1,4 +1,42 @@
+// 7.1
+
+Workstation Browser
+* Added "Apply Publishing Names" right-click option to automatically populate publishing names 
+* Changed "Open in Fiji" right-click option so that it works even when displaying post processed results
+* Granting write privilege on annotations now confers the ability to delete them 
+* Added Polarity Case 5 pipeline
+* Fixed issue with "Select All" button not appearing when "Show only items with selected imagery" was checked
+* Fixed issue with LSMs not appearing when "Show only items with selected imagery" was checked
+* Downloading thousands of files at once no longer hangs the application
+
+Large Volume Viewer
+* Fixed issue with exporting multiple neurons to file without .swc extension
+* Improved point review workflow
+* LVV size panel components now resize correctly when stretched
+* Increased gateway timeout values to allow long running operations (e.g. workspace copy)
+* Added neuron length to workspace info dialog
+
+// 7.0.4
+
+Large Volume Viewer  
+* Fixed issue with exporting multiple neurons to file without .swc extension
+
+// 7.0.3
+
+Large Volume Viewer
+* Fixed issue with casting JSON response to Long on Sample creation
+
 // 7.0.2
+
+Workstation Browser
+* Fixed client to use production server
+
+// 7.0.1
+
+Workstation Browser
+* Fixed login for non-admin users
+
+// 7.0
 
 Workstation Browser
 * Updated to use secure network connections and token-based authentication

@@ -105,9 +105,9 @@ of adapter.
         <exec executable="${ssh}" description="Removing Installer files">
             <arg line="${ssh.common.params} rm -f /var/www/files/JaneliaWorkstation.zip"/>
             <arg line="${ssh.common.params} rm -f /var/www/files/JaneliaWorkstation-windows.zip"/>
+            <arg line="${ssh.common.params} rm -f /var/www/files/JaneliaWorkstation-windows.exe"/>
             <arg line="${ssh.common.params} rm -f /var/www/files/JaneliaWorkstation-macosx.tgz"/>
             <arg line="${ssh.common.params} rm -f /var/www/files/JaneliaWorkstation-linux.tgz"/>
-            <arg line="${ssh.common.params} rm -f /var/www/files/JaneliaWorkstation-windows.exe"/>
         </exec>
 
         <!--copy new Installers to download dir (links available on website) -->
@@ -123,7 +123,7 @@ of adapter.
         <echo message="Copying new installers to archive at workstation.int.janelia.org" />
         <echo message="SCP Common Params ${scp.common.params} for ${scp}"/>
         <exec executable="bash" description="Copying Windows installer to archive at workstation.int.janelia.org">
-            <arg line="-c '${scp} ${basedir}/dist/JaneliaWorkstation-windows.zip ${ssh.common.params}:/opt/files/${git.branch}-windows.zip'"/>
+            <arg line="-c '${scp} ${basedir}/dist/JaneliaWorkstation-windows.exe ${ssh.common.params}:/opt/files/${git.branch}-windows.exe'"/>
         </exec>
         <exec executable="bash" description="Copying Mac installer to archive at workstation.int.janelia.org">
             <arg line="-c '${scp} ${basedir}/dist/JaneliaWorkstation-macosx.tgz ${ssh.common.params}:/opt/files/${git.branch}-macosx.tgz'"/>

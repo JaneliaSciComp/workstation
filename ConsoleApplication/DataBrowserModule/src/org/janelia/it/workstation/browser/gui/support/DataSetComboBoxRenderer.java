@@ -42,7 +42,7 @@ public class DataSetComboBoxRenderer extends JLabel implements ListCellRenderer<
         }
 
         setIcon(Icons.getIcon("folder_database.png"));
-        setText(dataSetEntity.getName());
+        setText(dataSetEntity.getIdentifier());
 
         return this;
     }

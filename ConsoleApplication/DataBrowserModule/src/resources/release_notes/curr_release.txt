@@ -1,4 +1,8 @@
-// 7.0.3
+// 7.2
 
-Large Volume Viewer  
-* Fixed issue with casting JSON response to Long on Sample creation
+Workstation Browser
+* Added "Export Folder Structure" as a right-click option in the Data Explorer
+
+Large Volume Viewer
+* Added neuron ownership column to neuron list
+* Added neuron visibility column to neuron list; click to toggle visibility

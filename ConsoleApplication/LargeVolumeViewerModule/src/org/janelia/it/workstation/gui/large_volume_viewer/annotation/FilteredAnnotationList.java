@@ -361,7 +361,9 @@ public class FilteredAnnotationList extends JPanel {
         filteredTable.getColumnModel().getColumn(0).setPreferredWidth(70);
         filteredTable.getColumnModel().getColumn(1).setPreferredWidth(50);
         filteredTable.getColumnModel().getColumn(2).setPreferredWidth(105);
-        filteredTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        // and let all the extra space go into the note column on resize
+        filteredTable.getColumnModel().getColumn(0).setMaxWidth(70);
+        filteredTable.getColumnModel().getColumn(1).setMaxWidth(50);
 
         JScrollPane scrollPane = new JScrollPane(filteredTable);
         filteredTable.setFillsViewportHeight(true);

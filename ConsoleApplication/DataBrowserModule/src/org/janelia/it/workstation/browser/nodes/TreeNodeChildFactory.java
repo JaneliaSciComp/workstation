@@ -112,7 +112,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             list.addAll(temp);
         }
         catch (Exception ex) {
-            log.error("Error creating tree node child keys",ex);
+            log.error("Error creating tree node child keys for "+treeNode,ex);
             return false;
         }
         return true;

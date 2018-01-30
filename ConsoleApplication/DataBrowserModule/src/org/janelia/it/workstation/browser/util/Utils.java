@@ -571,8 +571,12 @@ public class Utils {
         }
     }
 
-    public static void copyURLToFile(String standardPath, File destination, SimpleWorker worker) throws Exception {
+    public static void copyURLToFile(String standardPath, File destination, SimpleWorker worker, boolean hasProgress) throws Exception {
 
+        if (worker != null) {
+            worker.throwExceptionIfCancelled();
+        }
+        
         log.info("copyURLToFile: entry, standardPath={}, destination={}", standardPath, destination);
 
         final File destinationDir = destination.getParentFile();
@@ -611,16 +615,18 @@ public class Utils {
 
             FileOutputStream output = new FileOutputStream(destination);
             try {
-                final long totalBytesWritten = copy(input, output, length==null?100:length, worker, estimatedCompressionFactor);
+                final long totalBytesWritten = copy(input, output, length==null?100:length, worker, estimatedCompressionFactor, hasProgress);
                 if (length != null && totalBytesWritten < length) {
                     throw new IOException("bytes written (" + totalBytesWritten + ") for " + wfile.getEffectiveURL() +
                                           " is less than source length (" + length + ")");
                 }
-            } finally {
+            } 
+            finally {
                 IOUtils.closeQuietly(input); // close input here to ensure bzip stream is properly closed
                 IOUtils.closeQuietly(output);
             }
-        } finally {
+        } 
+        finally {
             wfile.close();
         }
     }
@@ -628,21 +634,21 @@ public class Utils {
     /**
      * Adapted from Apache's commons-io, so that we could add progress percentage and status.
      */
-    private static long copy(InputStream input,
-                             OutputStream output,
-                             long length,
-                             SimpleWorker worker,
-                             int estimatedCompressionFactor) throws IOException {
+    private static long copy(InputStream input, OutputStream output, long length,
+                             SimpleWorker worker, int estimatedCompressionFactor, 
+                             boolean hasProgress) throws IOException {
 
         BackgroundWorker backgroundWorker = null;
         String backgroundStatus = null;
-        if (worker instanceof BackgroundWorker) {
-            backgroundWorker = (BackgroundWorker) worker;
-            backgroundStatus = backgroundWorker.getStatus();
-            if (backgroundStatus == null) {
-                backgroundStatus = "copying file (";
-            } else {
-                backgroundStatus = backgroundStatus + " (";
+        if (hasProgress && worker!=null) {
+            if (worker instanceof BackgroundWorker) {
+                backgroundWorker = (BackgroundWorker) worker;
+                backgroundStatus = backgroundWorker.getStatus();
+                if (backgroundStatus == null) {
+                    backgroundStatus = "copying file (";
+                } else {
+                    backgroundStatus = backgroundStatus + " (";
+                }
             }
         }
 
@@ -660,20 +666,21 @@ public class Utils {
             totalBytesWritten += bytesRead;
 
             if (worker != null) {
-
                 worker.throwExceptionIfCancelled();
 
-                if ((totalBytesWritten - totalBytesWrittenAtLastStatusUpdate) > TEN_MEGABYTES) {
-
-                    totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;
-
-                    if (totalBytesWritten < estimatedLength) {
-                        worker.setProgress(totalBytesWritten, estimatedLength);
-                    }
-
-                    if (backgroundWorker != null) {
-                        totalMegabytesWritten = totalBytesWritten / ONE_MEGABYTE;
-                        backgroundWorker.setStatus(backgroundStatus + totalMegabytesWritten + " Mb written)");
+                if (hasProgress) {
+                    if ((totalBytesWritten - totalBytesWrittenAtLastStatusUpdate) > TEN_MEGABYTES) {
+   
+                        totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;
+    
+                        if (totalBytesWritten < estimatedLength) {
+                            worker.setProgress(totalBytesWritten, estimatedLength);
+                        }
+    
+                        if (backgroundWorker != null) {
+                            totalMegabytesWritten = totalBytesWritten / ONE_MEGABYTE;
+                            backgroundWorker.setStatus(backgroundStatus + totalMegabytesWritten + " Mb written)");
+                        }
                     }
                 }
             }
@@ -681,11 +688,12 @@ public class Utils {
 
         if (worker != null) {
 
-            worker.setProgress(totalBytesWritten, totalBytesWritten);
-
-            if (backgroundWorker != null) {
-                totalMegabytesWritten = totalBytesWritten / ONE_MEGABYTE;
-                backgroundWorker.setStatus(backgroundStatus + totalMegabytesWritten + " Mb written)");
+            if (hasProgress) {
+                worker.setProgress(totalBytesWritten, totalBytesWritten);
+                if (backgroundWorker != null) {
+                    totalMegabytesWritten = totalBytesWritten / ONE_MEGABYTE;
+                    backgroundWorker.setStatus(backgroundStatus + totalMegabytesWritten + " Mb written)");
+                }
             }
         }
 

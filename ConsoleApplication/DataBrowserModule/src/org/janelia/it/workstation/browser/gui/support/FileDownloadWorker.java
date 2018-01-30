@@ -2,29 +2,39 @@ package org.janelia.it.workstation.browser.gui.support;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.locks.Lock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.StateMgr;
+import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.workers.WorkerChangedEvent;
 import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadFileItem;
+import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Multisets;
+
 /**
- * Worker for downloading a sample image (or set of split channel images) in a specific format.
+ * Worker for downloading sample images (or sets of split channel images) in a specific format.
  * The specified extension is used to determine whether conversion is necessary and when necessary,
  * if conversion can be managed locally or remotely (via task submission).
  * 
@@ -34,29 +44,33 @@ public class FileDownloadWorker {
 
     private static final Logger log = LoggerFactory.getLogger(FileDownloadWorker.class);
     
-    private final DownloadFileItem downloadItem;
+    private final File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
+    private final Collection<DownloadFileItem> downloadItems;
     private final Lock copyFileLock;
-    private final String objectName;
-    private final String targetExtension;
-    private final String sourceFilePath;
-    private final File targetDir;
-
-    public FileDownloadWorker(DownloadFileItem downloadItem, Lock copyFileLock) {
-        this.downloadItem = downloadItem;
+    private Multiset<String> parentDirs = HashMultiset.create();
+    
+    public FileDownloadWorker(Collection<DownloadFileItem> downloadItems, Lock copyFileLock) {
+        this.downloadItems = downloadItems;
         this.copyFileLock = copyFileLock;
-        this.objectName = downloadItem.getDomainObject().getName();
-        this.targetExtension = downloadItem.getTargetExtension();
-        this.sourceFilePath = downloadItem.getSourceFile();
-        this.targetDir = downloadItem.getTargetFile().getParentFile();
+    }
+    
+    public FileDownloadWorker(DownloadFileItem downloadItem, Lock copyFileLock) {
+        this(Arrays.asList(downloadItem), copyFileLock);
     }
 
     public void startDownload() {
 
-        log.debug("Starting download of {} to {}", downloadItem.getSourceExtension(), downloadItem.getTargetExtension());
-
-        try {
+        List<DownloadFileItem> toConvertOnServer = new ArrayList<>();
+        List<DownloadFileItem> toTransfer = new ArrayList<>();
+        
+        for(DownloadFileItem downloadItem : downloadItems) {
+            String targetExtension = downloadItem.getTargetExtension();
+            String sourceFilePath = downloadItem.getSourceFile();
+            
+            String parentDir = downloadItem.getTargetFile().getParent();
+            parentDirs.add(parentDir);
+            
             boolean convertOnServer = true;
-
             if (!downloadItem.isSplitChannels()) {
                 if (sourceFilePath.endsWith(targetExtension)) {
                     // no conversion needed, simply transfer the file
@@ -69,117 +83,168 @@ public class FileDownloadWorker {
             }
             
             if (convertOnServer) {
-                convertOnServer();
-            } 
+                toConvertOnServer.add(downloadItem);
+            }
             else {
-                transferAndConvertLocallyAsNeeded();
+                toTransfer.add(downloadItem);
             }
         }
-        catch (Exception e) {
-            ConsoleApp.handleException(e);
-        }
-    }
-    
-    private void copyFile(String remoteFile,
-                          File localFile,
-                          BackgroundWorker worker) throws Exception {
-        worker.setStatus("Waiting to download...");
-        copyFileLock.lock();
-        try {
-            worker.setStatus("Downloading " + new File(remoteFile).getName());
-            Utils.copyURLToFile(remoteFile, localFile, worker);
-        } 
-        finally {
-            copyFileLock.unlock();
-        }
-    }
 
-    private void convertOnServer() throws Exception {
-
-        log.info("Converting {} to {} (splitChannels={})",sourceFilePath,targetExtension,downloadItem.isSplitChannels());
+        log.info("Will convert and download {} files, and directly download {} files.", toConvertOnServer.size(), toTransfer.size());
         
-        Task task;
-        if (downloadItem.isSplitChannels()) {
-            HashSet<TaskParameter> taskParameters = new HashSet<>();
-            taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
-            taskParameters.add(new TaskParameter("output extension", targetExtension, null));
-            task = StateMgr.getStateMgr().submitJob("ConsoleSplitChannels", "Split Channels: "+objectName, taskParameters);
-        }
-        else {
-            HashSet<TaskParameter> taskParameters = new HashSet<>();
-            taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
-            taskParameters.add(new TaskParameter("output extension", targetExtension, null));
-            task = StateMgr.getStateMgr().submitJob("ConsoleConvertFile", "Convert: "+objectName, taskParameters);
-        }
+        for(DownloadFileItem downloadItem : toConvertOnServer) {
 
-        TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
-
-            @Override
-            public String getName() {
-                return "Downloading " + objectName;
-            }
-
-            @Override
-            protected void doStuff() throws Exception {
-
-                setStatus("Grid execution");
-
-                // Wait until task is finished
-                super.doStuff();
-
-                throwExceptionIfCancelled();
-
-                setStatus("Parse result");
-
-                // Since there is no way to log task output vars, we use a convention where the last message
-                // will contain the output files.
-                String resultFiles = null;
-                final Task task = getTask();
-                List<TaskMessage> messages = new ArrayList<>(task.getMessages());
-                if (! messages.isEmpty()) {
-                    Collections.sort(messages, new Comparator<TaskMessage>() {
-                        @Override
-                        public int compare(TaskMessage o1, TaskMessage o2) {
-                            return o2.getMessageId().compareTo(o1.getMessageId());
-                        }
-                    });
-                    resultFiles = messages.get(0).getMessage();
+            try {
+                String objectName = downloadItem.getDomainObject().getName();
+                String targetExtension = downloadItem.getTargetExtension();
+                String sourceFilePath = downloadItem.getSourceFile();
+                
+                log.info("Converting {} to {} (splitChannels={})",sourceFilePath,targetExtension,downloadItem.isSplitChannels());
+                
+                Task task;
+                if (downloadItem.isSplitChannels()) {
+                    HashSet<TaskParameter> taskParameters = new HashSet<>();
+                    taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
+                    taskParameters.add(new TaskParameter("output extension", targetExtension, null));
+                    task = StateMgr.getStateMgr().submitJob("ConsoleSplitChannels", "Split Channels: "+objectName, taskParameters);
+                }
+                else {
+                    HashSet<TaskParameter> taskParameters = new HashSet<>();
+                    taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
+                    taskParameters.add(new TaskParameter("output extension", targetExtension, null));
+                    task = StateMgr.getStateMgr().submitJob("ConsoleConvertFile", "Convert: "+objectName, taskParameters);
                 }
 
-                throwExceptionIfCancelled();
+                TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
 
-                if (resultFiles==null) {
-                    throw new Exception("No result files generated");
-                }
-
-                // Copy the files to the local drive
-                String[] pathAndFiles = resultFiles.split(":");
-                String path = pathAndFiles[0];
-                String[] filePaths = pathAndFiles[1].split(",");
-                for(String filePath : filePaths) {
-                    String remoteFile = path + "/" + filePath;
-                    String targetFile = downloadItem.getTargetFile().getAbsolutePath();
-                    
-                    String channelSuffix = getChannelSuffix(filePath);
-                    if (channelSuffix!=null) {
-                        targetFile = targetFile.replaceAll("#",channelSuffix);    
+                    @Override
+                    public String getName() {
+                        return "Downloading " + downloadItem.getTargetFile().getName();
                     }
                     
-                    File localFile = new File(targetFile);
-                    copyFile(remoteFile, localFile, this);
+                    @Override
+                    public void doStuff() throws Exception {
+    
+                        setStatus("Converting file on compute cluster");
+                        
+                        super.doStuff();
+                        
+                        throwExceptionIfCancelled();
+    
+                        setStatus("Parsing results");
+    
+                        // Since there is no way to log task output vars, we use a convention where the last message
+                        // will contain the output files.
+                        String resultFiles = null;
+                        Task task = getTask();
+                        List<TaskMessage> messages = new ArrayList<>(task.getMessages());
+                        if (! messages.isEmpty()) {
+                            Collections.sort(messages, new Comparator<TaskMessage>() {
+                                @Override
+                                public int compare(TaskMessage o1, TaskMessage o2) {
+                                    return o2.getMessageId().compareTo(o1.getMessageId());
+                                }
+                            });
+                            resultFiles = messages.get(0).getMessage();
+                        }
+    
+                        throwExceptionIfCancelled();
+    
+                        if (resultFiles==null) {
+                            throw new Exception("No result files generated");
+                        }
+    
+                        setStatus("Downloading converted files");
+                        
+                        // Copy the files to the local drive
+                        String[] pathAndFiles = resultFiles.split(":");
+                        String path = pathAndFiles[0];
+                        String[] filePaths = pathAndFiles[1].split(",");
+                        for(String filePath : filePaths) {
+                            String remoteFile = path + "/" + filePath;
+                            String targetFile = downloadItem.getTargetFile().getAbsolutePath();
+                            
+                            String channelSuffix = getChannelSuffix(filePath);
+                            if (channelSuffix!=null) {
+                                targetFile = targetFile.replaceAll("#",channelSuffix);    
+                            }
+                            
+                            File localFile = new File(targetFile);
+                            copyFile(remoteFile, localFile, this, true);
+                        }
+    
+                        throwExceptionIfCancelled();
+                        setStatus("Done");
+                    }
+    
+                    @Override
+                    public Callable<Void> getSuccessCallback() {
+                        return getDownloadSuccessCallback();
+                    }
+                };
+    
+                taskWorker.executeWithEvents();
+            }
+            catch (Exception e) {
+                FrameworkImplProvider.handleExceptionQuietly(e);
+            }
+        }
+        
+        if (!toTransfer.isEmpty()) {
+            NamedBackgroundWorker transferWorker = new NamedBackgroundWorker() {
+                
+                @Override
+                public void doStuff() {
+    
+                    int errors = 0;
+                    int success = 0;
+                    int i = 0;
+
+                    setName("Download "+ toTransfer.size() +" items");
+                    
+                    for(DownloadFileItem downloadItem : toTransfer) {
+                        try {
+                            log.debug("Starting download of {} to {}", downloadItem.getSourceExtension(), downloadItem.getTargetExtension());
+                            setName("Downloading "+downloadItem.getTargetFile().getName());
+                            // For 2d files, we pass in a null worker here because we may be downloading a lot of small files, and if that's the case, 
+                            // the rapid-fire events generated by the download would overwhelm the GUI.
+                            transferAndConvertLocallyAsNeeded(downloadItem, this, downloadItem.is3d());
+                            success++;
+                        }
+                        catch (Exception e) {
+                            errors++;
+                            if (e instanceof CancellationException) {
+                                log.error("Download was cancelled: "+downloadItem.getTargetFile().getName());
+                                throw new CancellationException();
+                            }
+                            else {
+                                FrameworkImplProvider.handleExceptionQuietly(e);
+                            }
+                        }
+                        
+                        setProgress(i++, toTransfer.size());
+                    }                
+
+                    setName("Download "+ toTransfer.size() +" items");
+                    if (success==0) {
+                        setFinalStatus("Failed to download all items.");
+                    }
+                    else if (errors>0) {
+                        setFinalStatus("Successfully downloaded "+success+" items. Failed to download "+errors+" items.");
+                    }
+                    else {
+                        setFinalStatus("Successfully downloaded all items.");
+                    }
                 }
-
-                throwExceptionIfCancelled();
-                setFinalStatus("Done");
-            }
-
-            @Override
-            public Callable<Void> getSuccessCallback() {
-                return getDownloadSuccessCallback();
-            }
-        };
-
-        taskWorker.executeWithEvents();
+    
+                @Override
+                public Callable<Void> getSuccessCallback() {
+                    return getDownloadSuccessCallback();
+                }
+            };
+    
+            transferWorker.executeWithEvents();
+        }
     }
 
     private String getChannelSuffix(String filepath) {
@@ -191,65 +256,55 @@ public class FileDownloadWorker {
         return null;
     }
     
-    private void transferAndConvertLocallyAsNeeded() {
-
+    private void transferAndConvertLocallyAsNeeded(DownloadFileItem downloadItem, BackgroundWorker worker, boolean hasProgress) throws Exception {
         final String remoteFile = downloadItem.getSourceFile();
         final File localFile = downloadItem.getTargetFile();
-
         log.info("Transferring {} to {}",remoteFile,localFile);
-        
-        final BackgroundWorker transferWorker = new BackgroundWorker() {
-
-            @Override
-            public String getName() {
-                return "Downloading " + new File(remoteFile).getName();
-            }
-
-            @Override
-            protected void doStuff() throws Exception {
-                setStatus("Local execution");
-                throwExceptionIfCancelled();
-                copyFile(remoteFile, localFile, this);
-                throwExceptionIfCancelled();
-                setFinalStatus("Done");
-            }
-
-            @Override
-            public Callable<Void> getSuccessCallback() {
-                return getDownloadSuccessCallback();
-            }
-        };
-
-        transferWorker.executeWithEvents();
+        if (worker!=null) worker.throwExceptionIfCancelled();
+        copyFile(remoteFile, localFile, worker, hasProgress);
+        if (worker!=null) worker.throwExceptionIfCancelled();
     }
 
+    private void copyFile(String remoteFile, File localFile, BackgroundWorker worker, boolean hasProgress) throws Exception {
+        if (hasProgress && worker!=null) worker.setStatus("Waiting to download...");
+        copyFileLock.lock();
+        try {
+            if (hasProgress && worker!=null) worker.setStatus("Downloading " + new File(remoteFile).getName());
+            Utils.copyURLToFile(remoteFile, localFile, worker, hasProgress);
+        } 
+        finally {
+            copyFileLock.unlock();
+        }
+    }
+        
     private Callable<Void> getDownloadSuccessCallback() {
         return new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                DesktopApi.browse(targetDir);
+                String maxPath = Multisets.copyHighestCountFirst(parentDirs).iterator().next();
+                if (maxPath!=null) {
+                    DesktopApi.browse(new File(maxPath));
+                }
+                else {
+                    DesktopApi.browse(workstationImagesDir);
+                }
                 return null;
             }
         };
     }
+    
+    private static abstract class NamedBackgroundWorker extends BackgroundWorker {
+        
+        private String name;
 
-    public DownloadFileItem getDownloadItem() {
-        return downloadItem;
-    }
-
-    public String getObjectName() {
-        return objectName;
-    }
-
-    public String getTargetExtension() {
-        return targetExtension;
-    }
-
-    public String getSourceFilePath() {
-        return sourceFilePath;
-    }
-
-    public File getTargetDir() {
-        return targetDir;
+        public void setName(String name) {
+            this.name = name;
+            Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
+        }
+        
+        @Override
+        public String getName() {
+            return name;
+        }
     }
 }

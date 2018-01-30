@@ -4,12 +4,15 @@ import java.beans.PropertyChangeEvent;
 import java.util.concurrent.Callable;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.components.ProgressTopComponent;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.workers.WorkerChangedEvent;
 import org.janelia.it.workstation.browser.events.workers.WorkerEndedEvent;
 import org.janelia.it.workstation.browser.events.workers.WorkerStartedEvent;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A worker thread which can be monitored in the background.
@@ -18,6 +21,8 @@ import org.janelia.it.workstation.browser.util.ConcurrentUtils;
  */
 public abstract class BackgroundWorker extends SimpleWorker {
 
+    private static final Logger log = LoggerFactory.getLogger(BackgroundWorker.class);
+    
     private String status;
     private Callable<Void> success;
 
@@ -60,7 +65,9 @@ public abstract class BackgroundWorker extends SimpleWorker {
     public abstract String getName();
 
     public void setStatus(String status) {
+        if (StringUtils.areEqual(status, this.status)) return;
         this.status = status;
+        log.info("Worker '{}' changed status to: {}", getName(), status);
         Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
     }
 
@@ -101,7 +108,7 @@ public abstract class BackgroundWorker extends SimpleWorker {
      */
     public void executeWithEvents() {
         ProgressTopComponent.ensureActive();
-        Events.getInstance().postOnEventBus(new WorkerStartedEvent(BackgroundWorker.this));
+        Events.getInstance().postOnEventBus(new WorkerStartedEvent(this));
         execute();
     }
 }
