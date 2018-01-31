@@ -53,6 +53,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.SetMultimap;
 
 import Jama.Matrix;
 import java.util.Iterator;
@@ -2038,12 +2039,39 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     }
                 }
             }
-        }
+        } 
+        // populate user preferences, which for now only deal with user visibility
+         Map userTagPreferences = FrameworkImplProvider
+                 .getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_TAGS, 
+                         this.getCurrentSample().getId().toString(), null);
+         if (userTagPreferences!=null) {
+             Iterator<String> userTagIterator = userTagPreferences.keySet().iterator();
+             List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>();             
+             while (userTagIterator.hasNext()) {
+                 String neuronKey = userTagIterator.next();
+                 if (userTagPreferences.get(neuronKey) instanceof ArrayList) {
+                     List<String> tagList = (List<String>)userTagPreferences.get(neuronKey);
+                     Set<String> tagSet = new HashSet(tagList);
+                     if (tagSet.contains("hidden")) {
+                         TmNeuronMetadata neuron = this.getNeuronFromNeuronID(Long.parseLong(neuronKey));
+                         currentTagMap.addUserTag("hidden",neuron);
+                         neuronList.add(neuron);
+                     }
+                 }
+             }
+             LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, false);               
+         }                         
     }
 
     public void saveUserPreferences() throws Exception {
         // for now use the tag map as the user preferences... as preferences increase, generalize the structure
-        FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), currentTagMap.getAllTagGroupMappings());
+        FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, 
+                this.getCurrentSample().getId().toString(), currentTagMap.getAllTagGroupMappings());      
+    }
+    
+    public void saveUserTags() throws Exception {
+        FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_TAGS, 
+                this.getCurrentSample().getId().toString(), currentTagMap.getUserTags());        
     }
     
 
@@ -2066,6 +2094,28 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             neuron.getTags().add(tag);
         }
         fireNeuronTagsChanged(neuronList);
+    }
+    
+    public void addUserNeuronTag(String tag, TmNeuronMetadata neuron) {
+        currentTagMap.addUserTag(tag, neuron);
+        try {
+            saveUserTags();
+        } catch (Exception error) {
+            ConsoleApp.handleException(error);
+        }
+    }
+    
+    public void removeUserNeuronTag(String tag, TmNeuronMetadata neuron) {
+        currentTagMap.removeUserTag(tag, neuron);
+        try {
+            saveUserTags();
+        } catch (Exception error) {
+            ConsoleApp.handleException(error);
+        }
+    }
+    
+    public Set<String> getUserNeuronTags(TmNeuronMetadata neuron) {
+        return currentTagMap.getUserTags().get(neuron.getId());
     }
 
     public void removeNeuronTag(String tag, TmNeuronMetadata neuron) throws Exception {
