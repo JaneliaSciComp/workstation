@@ -57,6 +57,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private static final List<ListViewerType> viewerTypes = ImmutableList.of(ListViewerType.ColorDepthResultViewer);
     private static final String PREFERENCE_CATEGORY_CDS_RESULTS_PER_LINE = "CDSResultPerLine";
     private static final String PREFERENCE_CATEGORY_CDS_NEW_RESULTS = "CDSOnlyNewResults";
+    private static final int DEFAULT_RESULTS_PER_LINE = 2;
     
     // UI Components
     private JPanel topPanel;
@@ -172,7 +173,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         sampleMap.clear();
         matchMap.clear();
 
-        resultsPerLineField.setText("2");
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -197,8 +197,15 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
                     boolean newResults = Boolean.parseBoolean(newResultPreference);
                     newOnlyCheckbox.setSelected(newResults);
                 }
+                else {
+                    newOnlyCheckbox.setSelected(false);
+                }
+                
                 if (resultsPerLinePreference != null) {
                     resultsPerLineField.setText(resultsPerLinePreference);
+                }
+                else {
+                    resultsPerLineField.setText(""+DEFAULT_RESULTS_PER_LINE);
                 }
                 
                 showResults(isUserDriven);

@@ -500,7 +500,6 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                     colorDepthResultPanel.showNothing();
                 }
                 
-                ConcurrentUtils.invokeAndHandleExceptions(success);
                 debouncer.success();
                 
                 // Update processing status

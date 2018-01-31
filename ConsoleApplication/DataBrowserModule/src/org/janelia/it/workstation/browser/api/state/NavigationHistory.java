@@ -39,9 +39,8 @@ public class NavigationHistory {
         if (historyPosition > 0) {
             DomainObjectEditorState<?,?,?> state = history.get(historyPosition-1);
             loadState(state);
-            // We must wait until after loading the state to update the history position, 
-            // because loadState will trigger a call to updateCurrentState()
             historyPosition--;
+            log.info("Now at history position {}", historyPosition);
             // Now the buttons can be updated
             updateButtons();
             logCurrHistory();
@@ -56,6 +55,7 @@ public class NavigationHistory {
             loadState(state);
             // Same logic as goBack()
             historyPosition++;
+            log.info("Now at history position {}", historyPosition);
             updateButtons();
             logCurrHistory();
             return state;
@@ -77,7 +77,7 @@ public class NavigationHistory {
             throw new IllegalStateException("State with null domain object");
         }
         
-        log.debug("Pushing editor state: {}",state);
+        log.info("Pushing editor state: {}",state);
                     
         if (clearForward) {
             // Clear out navigation in the future direction
@@ -127,7 +127,7 @@ public class NavigationHistory {
             tc.open();
         }
         tc.requestVisible();
-        log.debug("Restoring state to {}",tc.getClass().getSimpleName());
+        log.info("Loading state in {}",tc.getClass().getSimpleName());
         tc.loadState(state);
 
         if (state.getDomainObjectNode()!=null) {
