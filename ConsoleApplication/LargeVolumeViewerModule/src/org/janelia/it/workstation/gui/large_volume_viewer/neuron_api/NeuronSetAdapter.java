@@ -115,6 +115,10 @@ implements NeuronSet// , LookupListener
         return !annotationModel.editsAllowed();
     }
     
+    public void changeNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
+        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuron, visibility);
+    }
+    
     @Override
     public void changeNeuronUserVisible(List<TmNeuronMetadata> neuronList, boolean userVisible) {
         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, userVisible);
@@ -804,12 +808,12 @@ implements NeuronSet// , LookupListener
                 result = true;
             }
             
-            boolean vis = style.isVisible();
+            /*boolean vis = style.isVisible();
             if (vis != neuronModel.isVisible()) {
                 neuronModel.setVisible(vis);
                 neuronModel.getVisibilityChangeObservable().notifyObservers();
                 result = true;
-            }
+            }*/
              boolean userviz = style.isUserVisible();
             if (userviz != neuronModel.isUserVisible()) {
                 neuronModel.setUserVisible(userviz);

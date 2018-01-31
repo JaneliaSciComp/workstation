@@ -520,21 +520,21 @@ public class NeuronModelAdapter implements NeuronModel
         
         // Synchronize with TmNeuron Style
         NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
-        Color color = cachedColor;
+      //  Color color = cachedColor;
 
-        boolean deepVisibility = ! visible;
-        if (style != null) {
-            color = style.getColor();
-            deepVisibility = style.isVisible();
-        }
+      //  boolean deepVisibility = ! visible;
+     //   if (style != null) {
+     //       color = style.getColor();
+     //       deepVisibility = style.isVisible();
+     //   }
         // Don't keep updating visibility, if it's already set correctly
-        if (visible != deepVisibility) {
+       // if (visible != deepVisibility) {
             try {
-                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, visible, isNonInteractable(), isUserVisible()));
+                neuronSet.changeNeuronVisibility(neuron, visible);
             } catch (Exception ex) {
                 logger.error("Error setting neuron style", ex);
             }
-        }
+      //  }
         
         getVisibilityChangeObservable().setChanged();
     }

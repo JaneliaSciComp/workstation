@@ -132,6 +132,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         // neuron table
         neuronTableModel = new NeuronTableModel();
         neuronTableModel.setAnnotationModel(annotationModel);
+        neuronTableModel.setAnnotationManager(annotationManager);
         neuronTable = new JTable(neuronTableModel){
             // mostly taken from the Oracle tutorial
             public String getToolTipText(MouseEvent event) {
@@ -252,7 +253,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                         annotationManager.chooseNeuronStyle(selectedNeuron);
                     } else if (modelColumn == NeuronTableModel.COLUMN_VISIBILITY) {
                         // single click visibility = toggle visibility
-                        annotationManager.setNeuronVisibility(selectedNeuron, !selectedNeuron.getVisibility());
+                        annotationManager.setNeuronVisibility(selectedNeuron, !annotationManager.getNeuronVisibility(selectedNeuron));
                     } else if (modelColumn == NeuronTableModel.COLUMN_OWNER) {
                         String owner = selectedNeuron.getOwnerName();
                         String username = AccessManager.getAccessManager().getActualSubject().getName();
@@ -776,6 +777,7 @@ class NeuronTableModel extends AbstractTableModel {
 
     // need this to retrieve colors, tags
     private AnnotationModel annotationModel;
+    private AnnotationManager annotationManager;
 
     // icons
     private ImageIcon visibleIcon;
@@ -796,6 +798,10 @@ class NeuronTableModel extends AbstractTableModel {
         commonIcon = Icons.getIcon("computer_bw.png");
     }
 
+    public void setAnnotationManager(AnnotationManager annotationManager) {
+        this.annotationManager = annotationManager;
+    }
+    
     public void clear() {
         neurons.clear();
         matchedNeurons.clear();
@@ -987,7 +993,7 @@ class NeuronTableModel extends AbstractTableModel {
                 // Note that is not the same as targetNeuron.getColor(). If the persisted color is null, it picks a default.
                 return annotationModel.getNeuronStyle(targetNeuron).getColor();
             case COLUMN_VISIBILITY:
-                if (targetNeuron.getVisibility()) {
+                if ( annotationManager.getNeuronVisibility(targetNeuron)) {
                     return visibleIcon;
                 } else {
                     return invisibleIcon;
