@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import javax.swing.SwingUtilities;
@@ -561,6 +562,10 @@ public class DomainModel {
         }
         throw new IllegalStateException("Cannot find default workspace");
     }
+
+    public TreeNode getDefaultWorkspaceFolder(String folderName) throws Exception {
+        return getDefaultWorkspaceFolder(folderName, false);
+    }
     
     public TreeNode getDefaultWorkspaceFolder(String folderName, boolean createIfNecessary) throws Exception {
         Workspace workspace = getDefaultWorkspace();
@@ -591,6 +596,16 @@ public class DomainModel {
         Collections.sort(canonicalDataSets, new DomainObjectComparator());
         if (TIMER) w.stop("getColorDepthDataSets");
         return canonicalDataSets;
+    }
+
+    public List<String> getAlignmentSpaces() throws Exception {
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        Set<String> alignmentSpaces = new TreeSet<>();
+        for(DataSet dataSet : getDataSets()) {
+            alignmentSpaces.addAll(dataSet.getColorDepthCounts().keySet());
+        }
+        if (TIMER) w.stop("getAlignmentSpaces");
+        return new ArrayList<>(alignmentSpaces);
     }
     
     public List<LSMImage> getLsmsForSample(Sample sample) throws Exception {
@@ -977,11 +992,12 @@ public class DomainModel {
         return search;
     }
     
-    public ColorDepthMask createColorDepthMask(String maskName, String filepath, Integer maskThreshold, Sample sample) throws Exception {
+    public ColorDepthMask createColorDepthMask(String maskName, String alignmentSpace, String filepath, Integer maskThreshold, Sample sample) throws Exception {
         
         ColorDepthMask mask = new ColorDepthMask();
-        mask.setFilepath(filepath);
         mask.setName(maskName);
+        mask.setAlignmentSpace(alignmentSpace);
+        mask.setFilepath(filepath);
         mask.setMaskThreshold(maskThreshold);
         if (sample != null) {
             mask.setSample(Reference.createFor(sample));
@@ -998,7 +1014,7 @@ public class DomainModel {
     public ColorDepthSearch addMaskToSearch(ColorDepthSearch search, ColorDepthMask mask) throws Exception {
         Reference ref = Reference.createFor(mask);
         if (search.getMasks().contains(ref)) return search;
-        search.addMask(ref);
+        search.getParameters().addMask(ref);
         return save(search);
     }
 

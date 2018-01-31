@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
@@ -34,6 +36,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -47,13 +50,16 @@ import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationE
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.it.workstation.browser.events.workers.WorkerEndedEvent;
 import org.janelia.it.workstation.browser.gui.editor.ConfigPanel;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
 import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.editor.SelectionButton;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
+import org.janelia.it.workstation.browser.gui.progress.ProgressMeterPanel;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
@@ -86,7 +92,7 @@ import com.google.common.eventbus.Subscribe;
 public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectEditor<ColorDepthSearch>, ParentNodeSelectionEditor<ColorDepthSearch, ColorDepthMatch, String> {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchEditorPanel.class);
-
+    
     // Constants
     private static final String THRESHOLD_LABEL_PREFIX = "Data Threshold: ";
     private static final int DEFAULT_THRESHOLD_VALUE = 100;
@@ -115,6 +121,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private final JLabel thresholdLabel;
     private final SelectionButton<DataSet> dataSetButton;
     private final JButton searchButton;
+    private final JPanel executingPanel;
     private final SelectablePanelListPanel maskListPanel;
     private final JScrollPane maskScrollPane;
     private final Set<LoadedImagePanel> lips = new HashSet<>();
@@ -189,12 +196,19 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
 
             @Override
+            protected String getLabel(DataSet value) {
+                Integer count = value.getColorDepthCounts().get(search.getAlignmentSpace());
+                if (count==null) return value.getIdentifier();
+                return String.format("%s (%d images)", value.getIdentifier(), count);
+            }
+            
+            @Override
             protected void selectAll() {
                 List<String> allDataSets = alignmentSpaceDataSets.stream()
                         .sorted(Comparator.comparing(DataSet::getIdentifier))
                         .map(DataSet::getIdentifier)
                         .collect(Collectors.toList());
-                search.setDataSets(allDataSets);
+                search.getParameters().setDataSets(allDataSets);
                 dirty = true;
             }
             
@@ -232,8 +246,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                     return;
                 }
                 
-                int result = JOptionPane.showConfirmDialog(ColorDepthSearchEditorPanel.this, 
-                        "Are you sure you want to queue this search to run on the compute cluster?");
+                Object[] options = { "Yes", "Cancel" };
+                int result = JOptionPane.showOptionDialog(ColorDepthSearchEditorPanel.this, 
+                        "Are you sure you want to queue this search to run on the compute cluster?", 
+                        "Queue search", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                        null, options, options[0]);
+                
                 if (result != 0) return;
                 
                 SimpleWorker worker = new SimpleWorker() {
@@ -257,9 +275,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 };
 
                 worker.execute();
-                
             }
         });
+        
+        executingPanel = new JPanel(new BorderLayout());
+        executingPanel.setVisible(false);
+        executingPanel.add(new JLabel("Executing...", Icons.getLoadingIcon(), SwingConstants.RIGHT));
         
         colorDepthResultPanel = new ColorDepthResultPanel();
         
@@ -324,7 +345,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             if (pctPositivePixels<1 || pctPositivePixels>100) {
                 throw new NumberFormatException();
             }
-            search.setPctPositivePixels(pctPositivePixels);
+            search.getParameters().setPctPositivePixels(pctPositivePixels);
         }
         catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(
@@ -340,7 +361,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             if (pixFlucValue<1 || pixFlucValue>100) {
                 throw new NumberFormatException();
             }
-            search.setPixColorFluctuation(pixFlucValue);
+            search.getParameters().setPixColorFluctuation(pixFlucValue);
         }
         catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(
@@ -350,7 +371,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                     JOptionPane.ERROR_MESSAGE);
         }
         
-        search.setDataThreshold(thresholdSlider.getValue());
+        search.getParameters().setDataThreshold(thresholdSlider.getValue());
     }
     
     private void reload() throws Exception {
@@ -360,19 +381,24 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             return;
         }
         
-        ColorDepthSearch updatedSearch = DomainMgr.getDomainMgr().getModel().getDomainObject(search.getClass(), search.getId());
-        if (updatedSearch!=null) {
-//            if (treeNodeNode!=null && !treeNodeNode.getTreeNode().equals(updatedTreeNode)) {
-//                treeNodeNode.update(updatedTreeNode);
-//            }
-//            this.treeNode = updatedTreeNode;
-//            restoreState(saveState());
-            loadDomainObject(updatedSearch, false, null);
+        try {
+            ColorDepthSearch updatedSearch = DomainMgr.getDomainMgr().getModel().getDomainObject(search.getClass(), search.getId());
+            if (updatedSearch!=null) {
+                if (searchNode!=null && !searchNode.getColorDepthSearch().equals(updatedSearch)) {
+                    searchNode.update(updatedSearch);
+                }
+                this.search = updatedSearch;
+                restoreState(saveState());
+                loadDomainObject(updatedSearch, false, null);
+            }
+            else {
+                // The search no longer exists, or we no longer have access to it (perhaps running as a different user?) 
+                // Either way, there's nothing to show. 
+                showNothing();
+            }
         }
-        else {
-            // The search no longer exists, or we no longer have access to it (perhaps running as a different user?) 
-            // Either way, there's nothing to show. 
-            showNothing();
+        catch (Exception e) {
+            ConsoleApp.handleException(e);
         }
     }
     
@@ -439,12 +465,13 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             pixFlucField.setText(DEFAULT_PIX_FLUC);
         }
         
+        setProcessing(false);
         maskPanelMap.clear();
         
         this.dirty = false;
         this.search = colorDepthSearch;
-        log.debug("Loading {} masks", colorDepthSearch.getMasks().size());
-        log.debug("Loading {} results", colorDepthSearch.getResults().size());
+        log.info("Loading {} masks", colorDepthSearch.getMasks().size());
+        log.info("Loading {} results", colorDepthSearch.getResults().size());
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -460,9 +487,9 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             protected void hadSuccess() {
 
                 log.info("Loaded ColorDepthSearch#{}", colorDepthSearch.getId());
-                log.debug("Loaded {} masks", masks.size());
-                log.debug("Loaded {} results", results.size());
-                log.debug("Loaded {} data sets", alignmentSpaceDataSets.size());
+                log.info("Loaded {} masks", masks.size());
+                log.info("Loaded {} results", results.size());
+                log.info("Loaded {} data sets", alignmentSpaceDataSets.size());
                 
                 showUI(isUserDriven);
                 
@@ -475,6 +502,17 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 
                 ConcurrentUtils.invokeAndHandleExceptions(success);
                 debouncer.success();
+                
+                // Update processing status
+                for(BackgroundWorker worker : ProgressMeterPanel.getSingletonInstance().getWorkersInProgress()) {
+                    if (worker instanceof SearchMonitoringWorker) {
+                        SearchMonitoringWorker searchWorker = (SearchMonitoringWorker)worker;
+                        if (searchWorker.getSearch().getId().equals(search.getId())) {
+                            setProcessing(true);
+                        }
+                    }
+                }
+                
                 ActivityLogHelper.logElapsed("ColorDepthSearchEditorPanel.loadDomainObject", search, w);
             }
             
@@ -514,6 +552,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         configPanel.addConfigComponent(pixFlucPanel);
         configPanel.addConfigComponent(dataSetButton);
         configPanel.addConfigComponent(searchButton);
+        configPanel.addConfigComponent(executingPanel);
         
         JLabel titleLabel = new JLabel("Search Masks:");
         titleLabel.setHorizontalTextPosition(SwingConstants.LEFT);
@@ -536,14 +575,17 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
     private void rescaleImage(LoadedImagePanel image) {
         double width = image.getParent()==null?0:image.getParent().getSize().getWidth()-18;
-        if (width==0) {
+        if (width<=0) {
+            log.debug("Could not get width from parent, using viewport");
             width = maskScrollPane.getViewport().getSize().getWidth()-18;
         }
-        if (width==0) {
-            log.warn("Could not get width from parent or viewport");
+        if (width<=0) {
+            log.debug("Could not get width from parent or viewport");
             return;
         }
-        image.scaleImage((int)Math.ceil(width));
+        int w = (int)Math.ceil(width);
+        log.trace("Using width={}", w);
+        image.scaleImage(w);
     }
 
     private void setThreshold(int threshold) {
@@ -564,28 +606,74 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 null,
                 ImmutableMap.of());
         
-        BackgroundWorker executeWorker = new AsyncServiceMonitoringWorker(FileMgr.getFileMgr().getSubjectKey(), serviceId) {
-            
-            @Override
-            public String getName() {
-                return "Executing "+search.getName();
-            }
-
-            @Override
-            public Callable<Void> getSuccessCallback() {
-                return new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        // Refresh and load the search which is completed
-                        ColorDepthSearch updatedSearch = DomainMgr.getDomainMgr().getModel().getDomainObject(search.getClass(), search.getId());
-                        loadDomainObject(updatedSearch, true, null);
-                        return null;
-                    }
-                };
-            }
-        };
-
+        AsyncServiceMonitoringWorker executeWorker = new SearchMonitoringWorker(FileMgr.getFileMgr().getSubjectKey(), search, serviceId);
+        setProcessing(true);
         executeWorker.executeWithEvents();
+    }
+
+    private class SearchMonitoringWorker extends AsyncServiceMonitoringWorker {
+        
+        private ColorDepthSearch search;
+
+        public SearchMonitoringWorker(String subjectKey, ColorDepthSearch search, Long serviceId) {
+            super(subjectKey, serviceId);
+            this.search = search;
+        }
+
+        public ColorDepthSearch getSearch() {
+            return search;
+        }
+
+        @Override
+        public String getName() {
+            return "Executing "+search.getName();
+        }
+
+        @Override
+        protected boolean isOpenProgressMonitor() {
+            return false;
+        }
+
+        @Override
+        public Callable<Void> getSuccessCallback() {
+            return new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    // Refresh and load the search which is completed
+                    forceInvalidate();
+                    return null;
+                }
+            };
+        }
+    }
+    
+    @Subscribe
+    public void processEvent(WorkerEndedEvent e) {
+        log.info("Got worker ended event");
+        if (e.getWorker() instanceof SearchMonitoringWorker) {
+            SearchMonitoringWorker worker = (SearchMonitoringWorker)e.getWorker();
+            log.info("Got worker ended event: "+worker.getSearch().getId());
+            if (worker.getSearch().getId().equals(search.getId())) {
+                setProcessing(false);
+                forceInvalidate();
+            }
+        }
+    }
+    
+    private void forceInvalidate() {
+        SimpleWorker.runInBackground(() -> {
+            try {
+                log.info("Invaliding search object");
+                DomainMgr.getDomainMgr().getModel().invalidate(search);
+            }
+            catch (Exception ex) {
+                FrameworkImplProvider.handleExceptionQuietly(ex);
+            }
+        });
+    }
+    
+    private void setProcessing(boolean isRunning) {
+        executingPanel.setVisible(isRunning);
     }
     
     @Override

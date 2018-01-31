@@ -6,10 +6,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.util.function.Consumer;
 
 import javax.imageio.ImageIO;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -38,11 +38,13 @@ public class ImageMaskingPanel extends JPanel {
     private JButton maskButton;
     private JButton resetButton;
     private JButton continueButton;
+    private JButton cancelButton;
     private BufferedImage mask;
     private Consumer<BufferedImage> onMask;
     private Consumer<BufferedImage> onContinue;
+    private Consumer<Void> onCancel;
     
-    public ImageMaskingPanel() throws IOException {
+    public ImageMaskingPanel() {
         
         setLayout(new BorderLayout());
 
@@ -69,6 +71,17 @@ public class ImageMaskingPanel extends JPanel {
             }
         });
 
+        cancelButton = new JButton("Cancel");
+        cancelButton.setFocusable(false);
+        cancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (onContinue!=null) {
+                    onCancel.accept(null);
+                }
+            }
+        });
+        
         continueButton = new JButton("Continue");
         continueButton.setFocusable(false);
         continueButton.addActionListener(new ActionListener() {
@@ -107,6 +120,8 @@ public class ImageMaskingPanel extends JPanel {
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
         buttonPanel.add(maskButton);
         buttonPanel.add(resetButton);
+        buttonPanel.add(Box.createHorizontalGlue());
+        buttonPanel.add(cancelButton);
         buttonPanel.add(continueButton);
         
         add(buttonPanel, BorderLayout.SOUTH);
@@ -123,7 +138,13 @@ public class ImageMaskingPanel extends JPanel {
         this.onContinue = onContinue;
     }
 
-    private BufferedImage createMask() {
+    public void setOnCancel(Consumer<Void> onCancel) {
+        this.onCancel = onCancel;
+    }
+    
+    private void createMask() {
+        
+        if (imagePlus.getRoi()==null) return;
         
         prepareProcessor(imagePlus.getImageProcessor(), imagePlus);
         
@@ -139,7 +160,6 @@ public class ImageMaskingPanel extends JPanel {
         resetButton.setEnabled(true);
         
         this.mask = imagePlus.getImageProcessor().getBufferedImage();
-        return mask;
     }
     
     public BufferedImage getMask() {
@@ -148,7 +168,6 @@ public class ImageMaskingPanel extends JPanel {
     
     // Code from PlugInFilterRunner
     private void prepareProcessor(ImageProcessor ip, ImagePlus imp) {
-        ImageProcessor mask = imp.getMask();
         Roi roi = imp.getRoi();
         if (roi!=null && roi.isArea())
             ip.setRoi(roi);
@@ -156,6 +175,18 @@ public class ImageMaskingPanel extends JPanel {
             ip.setRoi((Roi)null);
     }
     
+    public JButton getMaskButton() {
+        return maskButton;
+    }
+
+    public JButton getResetButton() {
+        return resetButton;
+    }
+
+    public JButton getContinueButton() {
+        return continueButton;
+    }
+
     /**
      * Test harness.
      */

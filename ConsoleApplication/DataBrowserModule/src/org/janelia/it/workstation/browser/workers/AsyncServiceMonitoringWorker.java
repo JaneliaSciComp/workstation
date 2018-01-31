@@ -11,9 +11,6 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.AbstractAction;
 
 import org.janelia.it.jacs.compute.engine.service.ServiceException;
-import org.janelia.it.jacs.model.tasks.Event;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
 import org.janelia.it.workstation.browser.components.ProgressTopComponent;
 import org.janelia.it.workstation.browser.events.Events;
@@ -146,9 +143,13 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
 
     @Override
     public void executeWithEvents() {
-        ProgressTopComponent.ensureActive();
+        if (isOpenProgressMonitor()) ProgressTopComponent.ensureActive();
         Events.getInstance().postOnEventBus(new WorkerStartedEvent(this));
         getWorkersExecutorService().execute(this);
+    }
+    
+    protected boolean isOpenProgressMonitor() {
+        return true;
     }
 
     protected void setServiceId(Long serviceId) {

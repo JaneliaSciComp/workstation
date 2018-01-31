@@ -11,6 +11,7 @@ import java.util.Set;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
+import javax.swing.JRadioButtonMenuItem;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
@@ -27,9 +28,15 @@ public abstract class SelectionButton<T> extends DropDownButton {
     private static final int MAX_VALUES_STRING_LENGTH = 20;
     
     private String label;
-    
+    private boolean isRadio;
+
     public SelectionButton(String label) {
+        this(label, false);
+    }
+    
+    public SelectionButton(String label, boolean radio) {
         this.label = label;
+        this.isRadio = radio;
     }
     
     public void update() {
@@ -61,7 +68,7 @@ public abstract class SelectionButton<T> extends DropDownButton {
             
             Set<String> selectedValueNames = new HashSet<>(getSelectedValueNames());
     
-            if (!selectedValueNames.isEmpty()) {
+            if (!isRadio && !selectedValueNames.isEmpty()) {
                 final JMenuItem menuItem = new JMenuItem("Clear selected");
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -72,7 +79,7 @@ public abstract class SelectionButton<T> extends DropDownButton {
                 addMenuItem(menuItem);
             }
 
-            if (selectedValueNames.size() != values.size()) {
+            if (!isRadio && selectedValueNames.size() != values.size()) {
                 final JMenuItem selectAllItem = new JMenuItem("Select All");
                 selectAllItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -90,7 +97,9 @@ public abstract class SelectionButton<T> extends DropDownButton {
                     continue;
                 }
                 String label = getLabel(value);
-                final JMenuItem menuItem = new JCheckBoxMenuItem(label, selected);
+                final JMenuItem menuItem = isRadio 
+                        ? new JRadioButtonMenuItem(label, selected) 
+                        : new JCheckBoxMenuItem(label, selected);
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         if (menuItem.isSelected()) {

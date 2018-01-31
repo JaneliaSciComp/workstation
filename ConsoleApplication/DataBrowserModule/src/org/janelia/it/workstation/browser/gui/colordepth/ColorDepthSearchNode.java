@@ -23,7 +23,6 @@ import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.workspace.Node;
-import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.NodeTransfer;

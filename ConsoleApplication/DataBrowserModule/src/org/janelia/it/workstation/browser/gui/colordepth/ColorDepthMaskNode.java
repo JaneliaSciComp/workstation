@@ -1,9 +1,11 @@
 package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.Image;
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
@@ -58,7 +60,26 @@ public class ColorDepthMaskNode extends TreeNodeNode {
         actions.add(AddToFolderAction.get());
         actions.add(RenameAction.get());
         actions.add(RemoveAction.get());
+        actions.add(null);
+        actions.add(new AddMaskAction());
         return actions.toArray(new Action[actions.size()]);
+    }
+
+    protected final class AddMaskAction extends AbstractAction {
+
+        public AddMaskAction() {
+            putValue(NAME, "Add Mask to Color Depth Search...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            new AddMaskDialog().showForMask(getColorDepthMask());
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return true;
+        }
     }
 
 }

@@ -43,6 +43,7 @@ import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
+import org.janelia.it.workstation.browser.gui.colordepth.AddMaskDialog;
 import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog;
@@ -71,6 +72,7 @@ import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.OntologyTerm;
@@ -181,6 +183,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getApplyPublishingNamesItem());
         add(getMergeItem());
         add(getColorDepthSearchItem());
+        add(getAddToColorDepthSearchItem());
         
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
@@ -639,6 +642,31 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (!resultDescriptor.isAligned()) return null;
         
         return getNamedActionItem(new CreateMaskFromSampleAction(samples.get(0), resultDescriptor, typeName));
+    }
+
+    protected JMenuItem getAddToColorDepthSearchItem() {
+
+        if (multiple) return null;
+        
+        List<ColorDepthMask> masks = new ArrayList<>();
+        for(DomainObject domainObject : domainObjectList) {
+            if (domainObject instanceof ColorDepthMask) {
+                masks.add((ColorDepthMask)domainObject);
+            }
+        }
+        
+        if (masks.size()!=1) return null;
+                
+        ColorDepthMask colorDepthMask = masks.get(0);
+
+        JMenuItem menuItem = null;
+        menuItem = new JMenuItem("  Add Mask to Color Depth Search...");
+        menuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                new AddMaskDialog().showForMask(colorDepthMask);
+            }
+        });
+        return menuItem;
     }
     
     protected JMenuItem getSetPublishingNameItem() {

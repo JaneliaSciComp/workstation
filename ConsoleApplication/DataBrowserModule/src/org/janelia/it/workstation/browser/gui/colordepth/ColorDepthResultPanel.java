@@ -231,7 +231,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
             showCurrSearchResult(isUserDriven);
         }
         else {
-            log.info("No results for mask");
+            log.debug("No results for mask");
             topPanel.setVisible(false);
             resultsPanel.showNothing();
         }

@@ -156,7 +156,8 @@ public class LoadedImagePanel extends JPanel {
         else {
             h = (int) Math.round(w / aspectRatio);
         }
-        
+
+        log.trace("Scaling image with preferredSize=({},{})", w, h);
         setPreferredSize(new Dimension(w, h));
     }
 }
