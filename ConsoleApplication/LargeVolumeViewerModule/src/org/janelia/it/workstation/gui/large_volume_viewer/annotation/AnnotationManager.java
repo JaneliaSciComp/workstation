@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -239,15 +241,23 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     
     public boolean checkOwnership(TmNeuronMetadata neuron)  {
         if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
-            
+
             // change owner asynchronously behind the scenes for now
             if (neuron.getOwnerKey().equals(SYSTEM_OWNER)) {
                 try {
-                    annotationModel.getNeuronManager().requestOwnershipChange(neuron);
-                } catch (Exception error) {
-                    ConsoleApp.handleException(error);
+                    CompletableFuture<Boolean> future = annotationModel.getNeuronManager().requestOwnershipChange(neuron);
+                    if (future == null) {
+                        return false;
+                    }
+                    Boolean ownershipDecision = future.get(2, TimeUnit.SECONDS);
+                    return ownershipDecision.booleanValue();
+                } catch (Exception e) {
+                    String errorMessage = "Problems handling roundtrip request for ownership of System-owned neuron";
+                    log.error(errorMessage);
+                    e.printStackTrace();
+                    ConsoleApp.handleException(e);
                 }
-                return true;
+                return false;
             }
             handleOwnershipChange(neuron);
             return false;

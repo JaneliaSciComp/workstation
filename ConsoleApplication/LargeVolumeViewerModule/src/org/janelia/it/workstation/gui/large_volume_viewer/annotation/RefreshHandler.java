@@ -119,9 +119,12 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         }
         
         if (action==MessageType.NEURON_OWNERSHIP_DECISION) {
-             boolean decision = Boolean.parseBoolean(convertLongString((LongString) msgHeaders.get(HeaderConstants.DECISION)));
-             annotationModel.getNeuronManager().completeOwnershipRequest(decision);
+             boolean decision = Boolean.parseBoolean(convertLongString((LongString) msgHeaders.get(HeaderConstants.DECISION)));  
+             if (decision) {
+                 annotationModel.getNeuronManager().getNeuronById(neuron.getId()).setOwnerKey(neuron.getOwnerKey());
+             }
              annotationModel.fireBackgroundNeuronOwnershipChanged(neuron);
+             annotationModel.getNeuronManager().completeOwnershipRequest(decision);
         } else if (action == MessageType.REQUEST_NEURON_OWNERSHIP) {
             // some other user is asking for ownership of this neuron... process accordingly
         } else {

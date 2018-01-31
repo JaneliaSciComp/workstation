@@ -622,7 +622,10 @@ implements NeuronSet// , LookupListener
 
         @Override
         public void neuronOwnerChanged(TmNeuronMetadata neuron) {
-         
+              NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+              neuronModel.setOwnerKey(neuron.getOwnerKey());
+              getMembershipChangeObservable().setChanged();
+              getMembershipChangeObservable().notifyObservers(neuronModel);
         }
         
     }
