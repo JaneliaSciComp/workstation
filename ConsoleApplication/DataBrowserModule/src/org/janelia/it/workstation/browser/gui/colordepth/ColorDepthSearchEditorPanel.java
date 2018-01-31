@@ -537,7 +537,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     }
     
     private void loadMaskResults(ColorDepthMask mask, boolean isUserDriven) {
-        colorDepthResultPanel.loadSearchResults(results, mask, isUserDriven);
+        colorDepthResultPanel.loadSearchResults(search, results, mask, isUserDriven);
     }
         
     private void showSearchView(boolean isUserDriven) {

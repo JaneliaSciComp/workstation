@@ -22,8 +22,6 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -32,6 +30,7 @@ import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerType;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.WrapLayout;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
@@ -39,24 +38,25 @@ import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
+import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.sample.Sample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-public class ColorDepthResultPanel extends JPanel implements SearchProvider {
+public class ColorDepthResultPanel extends JPanel implements SearchProvider, PreferenceSupport {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthResultPanel.class);
 
     // Constants
-    private static final String PREFERENCE_KEY = "ColorDepthResultPanel";
     private static final List<ListViewerType> viewerTypes = ImmutableList.of(ListViewerType.ColorDepthResultViewer);
+    private static final String PREFERENCE_CATEGORY_CDS_RESULTS_PER_LINE = "CDSResultPerLine";
+    private static final String PREFERENCE_CATEGORY_CDS_NEW_RESULTS = "CDSOnlyNewResults";
     
     // UI Components
     private JPanel topPanel;
@@ -68,6 +68,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
     private final PaginatedResultsPanel<ColorDepthMatch, String> resultsPanel;
 
     // State
+    private ColorDepthSearch search;
     private ColorDepthMask mask;
     /** relevant results for the currently selected mask */
     private List<ColorDepthResult> results = new ArrayList<>();
@@ -113,7 +114,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
         
         this.newOnlyCheckbox = new JCheckBox("Only new results");
         newOnlyCheckbox.addActionListener((ActionEvent e) -> {
-                showCurrSearchResult(true);
+                setPreferenceAsync(PREFERENCE_CATEGORY_CDS_NEW_RESULTS, newOnlyCheckbox.isSelected()+"");
             }
         );
         
@@ -122,7 +123,13 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
         resultsPerLineField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
-                showCurrSearchResult(true);
+                try {
+                    Integer resultPerLine = new Integer(resultsPerLineField.getText());
+                    setPreferenceAsync(PREFERENCE_CATEGORY_CDS_RESULTS_PER_LINE, resultPerLine+"");
+                }
+                catch (NumberFormatException ex) {
+                    resultsPerLineField.setText("");
+                }
             }
             
         });
@@ -157,9 +164,10 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
         add(resultsPanel, BorderLayout.CENTER);
     }
     
-    public void loadSearchResults(List<ColorDepthResult> resultList, ColorDepthMask mask, boolean isUserDriven) {
+    public void loadSearchResults(ColorDepthSearch search, List<ColorDepthResult> resultList, ColorDepthMask mask, boolean isUserDriven) {
 
         log.info("loadSearchResults(resultList.size={}, mask={}, isUserDriven={})", resultList.size(), mask.getFilepath(), isUserDriven);
+        this.search = search;
         this.mask = mask;
         sampleMap.clear();
         matchMap.clear();
@@ -168,14 +176,31 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
         
         SimpleWorker worker = new SimpleWorker() {
 
+            String newResultPreference;
+            String resultsPerLinePreference;
+            
             @Override
             protected void doStuff() throws Exception {
-                loadPreferences();
+                
+                newResultPreference = getPreference(PREFERENCE_CATEGORY_CDS_NEW_RESULTS);
+                log.info("Got new result preference: "+newResultPreference);
+
+                resultsPerLinePreference = getPreference(PREFERENCE_CATEGORY_CDS_RESULTS_PER_LINE);
+                log.info("Got results per line preference: "+resultsPerLinePreference);
+                
                 prepareResults(resultList);
             }
 
             @Override
             protected void hadSuccess() {
+                if (newResultPreference != null) {
+                    boolean newResults = Boolean.parseBoolean(newResultPreference);
+                    newOnlyCheckbox.setSelected(newResults);
+                }
+                if (resultsPerLinePreference != null) {
+                    resultsPerLineField.setText(resultsPerLinePreference);
+                }
+                
                 showResults(isUserDriven);
             }
 
@@ -291,7 +316,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
             resultsPerLine = new Integer(resultsPerLineField.getText());
         }
         catch (NumberFormatException e) {
-            resultsPerLineField.setText("");
+            log.warn("Illegal results per line value: "+resultsPerLineField.getText());
         }
         
         // Group matches by line
@@ -333,7 +358,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
         
         public List<ColorDepthMatch> getOrderedFilteredMatches(Integer resultsPerLine) {
 
-            log.info("Getting matches for line {} with {} max results", line, resultsPerLine);
+            log.debug("Getting matches for line {} with {} max results", line, resultsPerLine);
             
             Set<Long> seenSamples = new HashSet<>();
             List<ColorDepthMatch> orderedMatches = new ArrayList<>();
@@ -344,17 +369,17 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
 
                 if (seenSamples.contains(match.getSample().getTargetId())) {
                     // Only show top hit for each sample
-                    log.info("  Skipping duplicate sample: {}", matchStr);
+                    log.debug("  Skipping duplicate sample: {}", matchStr);
                     continue;
                 }
 
                 if (resultsPerLine!=null && orderedMatches.size() >= resultsPerLine) {
                     // Got enough matches
-                    log.info("  Skipping line: {}", matchStr);
+                    log.debug("  Skipping line: {}", matchStr);
                     continue;
                 }
                 
-                log.info("  Adding match: {}", matchStr);
+                log.debug("  Adding match: {}", matchStr);
                 orderedMatches.add(match);
                 
                 seenSamples.add(match.getSample().getTargetId());
@@ -394,63 +419,14 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
     @Override
     public void setSortField(final String sortCriteria) {
         this.sortCriteria = sortCriteria;
-        savePreferences();
     }
     
     @Override
     public void search() {
-
-//        SimpleWorker worker = new SimpleWorker() {
-//
-//            @Override
-//            protected void doStuff() throws Exception {
-//                loadPreferences();
-//                prepareLsmResults();
-//            }
-//
-//            @Override
-//            protected void hadSuccess() {
-//                showResults(true);
-//            }
-//
-//            @Override
-//            protected void hadError(Throwable error) {
-//                showNothing();
-//                ConsoleApp.handleException(error);
-//            }
-//        };
-//
-//        worker.execute();
     }
     
     @Override
     public void export() {
-//        DomainObjectTableViewer viewer = null;
-//        if (lsmPanel.getViewer() instanceof DomainObjectTableViewer) {
-//            viewer = (DomainObjectTableViewer)lsmPanel.getViewer();
-//        }
-//        ExportResultsAction<DomainObject> action = new ExportResultsAction<>(lsmSearchResults, viewer);
-//        action.actionPerformed(null);
-    }
-
-    private void loadPreferences() {
-//        if (search.getId()==null) return;
-        try {
-            sortCriteria = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, null);
-        }
-        catch (Exception e) {
-            log.error("Could not load sort criteria",e);
-        }
-    }
-
-    private void savePreferences() {
-        if (StringUtils.isEmpty(sortCriteria)) return;
-        try {
-            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
-        }
-        catch (Exception e) {
-            log.error("Could not save sort criteria",e);
-        }
     }
 
     public ChildSelectionModel<ColorDepthMatch, String> getSelectionModel() {
@@ -474,4 +450,13 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider {
         resultsPanel.showNothing();
     }
 
+    @Override
+    public Long getCurrentParentId() {
+        return search.getId();
+    }
+    
+    @Override
+    public void refreshView() {
+        showCurrSearchResult(true);
+    }
 }

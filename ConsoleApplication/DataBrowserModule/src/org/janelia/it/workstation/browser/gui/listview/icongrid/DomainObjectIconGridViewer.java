@@ -29,6 +29,7 @@ import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
@@ -53,7 +54,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,Reference> implements ListViewer<DomainObject, Reference> {
+public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,Reference> implements ListViewer<DomainObject, Reference>, PreferenceSupport {
     
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
 
@@ -131,48 +132,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         getToolbar().addCustomComponent(typeButton);
     }
     
-    private void setPreferenceAsync(final String category, final Object value) {
-
-        Utils.setMainFrameCursorWaitStatus(true);
-
-        SimpleWorker worker = new SimpleWorker() {
-
-            @Override
-            protected void doStuff() throws Exception {
-                setPreference(category, value);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                refreshView();
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                Utils.setMainFrameCursorWaitStatus(false);
-                ConsoleApp.handleException(error);
-            }
-        };
-
-        worker.execute();
-    }
-    
-    private String getPreference(String category) {
-        try {
-            final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
-            return FrameworkImplProvider.getRemotePreferenceValue(category, parentObject.getId().toString(), null);
-        }
-        catch (Exception e) {
-            log.error("Error getting preference", e);
-            return null;
-        }
-    }
-    
-    private void setPreference(final String category, final Object value) throws Exception {
-        final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
-        if (parentObject.getId()!=null) {
-            FrameworkImplProvider.setRemotePreferenceValue(category, parentObject.getId().toString(), value);
-        }
+    public Long getCurrentParentId() {
+        final DomainObject parentObject = (DomainObject)getSelectionModel().getParentObject();
+        return parentObject.getId();
     }
     
     @Override
@@ -389,7 +351,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         refreshObject(domainObject);
     }
 
-    private void refreshView() {
+    @Override
+    public void refreshView() {
         show(domainObjectList, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
