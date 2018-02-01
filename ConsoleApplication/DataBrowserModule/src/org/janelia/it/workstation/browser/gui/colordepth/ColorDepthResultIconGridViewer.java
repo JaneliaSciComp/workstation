@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -74,10 +75,7 @@ public class ColorDepthResultIconGridViewer
         
         @Override
         public String getImageFilepath(ColorDepthMatch match) {
-            Sample sample = sampleMap.get(match.getSample());
-            if (sample==null) {
-                return null;
-            }
+            if (!hasAccess(match)) return null;
             return match.getFilepath();
         }
 
@@ -94,11 +92,14 @@ public class ColorDepthResultIconGridViewer
         
         @Override
         public String getImageTitle(ColorDepthMatch match) {
+            if (!hasAccess(match)) return "Access denied";
             Sample sample = sampleMap.get(match.getSample());
             if (sample==null) {
-                return "Access denied";
+                return (new File(match.getFilepath())).getName();
             }
-            return sample.getName();
+            else {
+                return sample.getName();
+            }
         }
 
         @Override
@@ -114,6 +115,16 @@ public class ColorDepthResultIconGridViewer
         @Override
         public List<Annotation> getAnnotations(ColorDepthMatch imageObject) {
             return Collections.emptyList();
+        }
+        
+        private boolean hasAccess(ColorDepthMatch match) {
+            Sample sample = sampleMap.get(match.getSample());
+            if (match.getSample()!=null && sample==null) {
+                // The result maps to a sample, but the user has no access to see it
+                // TODO: check access to data set?
+                return false;
+            }
+            return true;
         }
         
     };

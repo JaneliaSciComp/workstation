@@ -3,6 +3,7 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 import static org.janelia.it.workstation.browser.api.DomainMgr.getDomainMgr;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,8 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
@@ -65,7 +64,6 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
-import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -108,7 +106,6 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     
     // UI Components
     private final ConfigPanel configPanel;
-    // TODO: IMPLEMENT THESE FEATURES
 //    private final JButton saveButton;
 //    private final JButton saveAsButton;
     private final JSplitPane splitPane;
@@ -122,6 +119,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private final SelectionButton<DataSet> dataSetButton;
     private final JButton searchButton;
     private final JPanel executingPanel;
+    private final JLabel executionErrorLabel;
     private final SelectablePanelListPanel maskListPanel;
     private final JScrollPane maskScrollPane;
     private final Set<LoadedImagePanel> lips = new HashSet<>();
@@ -248,8 +246,8 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 
                 Object[] options = { "Yes", "Cancel" };
                 int result = JOptionPane.showOptionDialog(ColorDepthSearchEditorPanel.this, 
-                        "Are you sure you want to queue this search to run on the compute cluster?", 
-                        "Queue search", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                        "Are you sure you want to run this search on the compute cluster?", 
+                        "Execute search", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
                         null, options, options[0]);
                 
                 if (result != 0) return;
@@ -281,6 +279,10 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         executingPanel = new JPanel(new BorderLayout());
         executingPanel.setVisible(false);
         executingPanel.add(new JLabel("Executing...", Icons.getLoadingIcon(), SwingConstants.RIGHT));
+        
+        executionErrorLabel = new JLabel("Error encountered while executing search");
+        executionErrorLabel.setVisible(false);
+        executionErrorLabel.setForeground(Color.red);
         
         colorDepthResultPanel = new ColorDepthResultPanel();
         
@@ -466,6 +468,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         }
         
         setProcessing(false);
+        setError(false);
         maskPanelMap.clear();
         
         this.dirty = false;
@@ -552,6 +555,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         configPanel.addConfigComponent(dataSetButton);
         configPanel.addConfigComponent(searchButton);
         configPanel.addConfigComponent(executingPanel);
+        configPanel.addConfigComponent(executionErrorLabel);
         
         JLabel titleLabel = new JLabel("Search Masks:");
         titleLabel.setHorizontalTextPosition(SwingConstants.LEFT);
@@ -607,6 +611,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         
         AsyncServiceMonitoringWorker executeWorker = new SearchMonitoringWorker(FileMgr.getFileMgr().getSubjectKey(), search, serviceId);
         setProcessing(true);
+        setError(false);
         executeWorker.executeWithEvents();
     }
 
@@ -648,12 +653,14 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     
     @Subscribe
     public void processEvent(WorkerEndedEvent e) {
-        log.info("Got worker ended event");
         if (e.getWorker() instanceof SearchMonitoringWorker) {
             SearchMonitoringWorker worker = (SearchMonitoringWorker)e.getWorker();
             log.info("Got worker ended event: "+worker.getSearch().getId());
             if (worker.getSearch().getId().equals(search.getId())) {
                 setProcessing(false);
+                if (worker.getError() != null) {
+                    setError(true);
+                }
                 forceInvalidate();
             }
         }
@@ -673,6 +680,10 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     
     private void setProcessing(boolean isRunning) {
         executingPanel.setVisible(isRunning);
+    }
+    
+    private void setError(boolean isError) {
+        executionErrorLabel.setVisible(isError);
     }
     
     @Override

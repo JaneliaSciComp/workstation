@@ -5,7 +5,6 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.HelpCtx;
-import org.openide.util.NbBundle.Messages;
 import org.openide.util.actions.CallableSystemAction;
 
 /**
@@ -15,15 +14,14 @@ import org.openide.util.actions.CallableSystemAction;
  */
 @ActionID(
         category = "File",
-        id = "org.janelia.it.workstation.browser.nb_action.NewColorDepthSearchAction"
+        id = "org.janelia.it.workstation.browser.gui.colordepth.NewColorDepthSearchAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_NewColorDepthMaskAction"
+        displayName = "Color Depth Search"
 )
 @ActionReferences({
         @ActionReference(path = "Menu/File/New", position = 20)
 })
-@Messages("CTL_NewColorDepthSearchAction=Color Depth Search")
 public final class NewSearchAction extends CallableSystemAction {
 
     @Override

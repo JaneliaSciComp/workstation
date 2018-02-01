@@ -330,7 +330,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         Map<String,LineMatches> lines = new LinkedHashMap<>();
         for (ColorDepthMatch match : maskMatches) {
             Sample sample = sampleMap.get(match.getSample());
-            String line = sample==null ? match.getSample().toString() : sample.getLine();
+            String line = sample==null ? ""+match.getSample() : sample.getLine();
             LineMatches lineMatches = lines.get(line);
             if (lineMatches==null) {
                 lineMatches = new LineMatches(line);
@@ -370,6 +370,11 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             Set<Long> seenSamples = new HashSet<>();
             List<ColorDepthMatch> orderedMatches = new ArrayList<>();
             for (ColorDepthMatch match : matches) {
+                
+                if (match.getSample() == null) {
+                    orderedMatches.add(match);
+                    continue;
+                }
                 
                 String matchStr = String.format("%s@ch%s - %2.2f", 
                         match.getSample(), match.getChannelNumber(), match.getScorePercent());

@@ -66,7 +66,6 @@ import org.janelia.model.domain.sample.SampleAlignmentResult;
 import org.janelia.model.domain.sample.SampleProcessingResult;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.security.Subject;
-import org.janelia.model.security.util.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -475,11 +474,17 @@ public class DomainInspectorPanel extends JPanel {
         addProperty("Owner", owner);
         
         try {
-            Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(match.getSample());
-            if (sample!=null) {
-                addProperty("Sample Name", sample.getName());
-                // Only display the filepath if user has access to the sample
+            if (match.getSample()==null) {
+                // Non-Workstation Data set
                 addProperty("Filepath", match.getFilepath());
+            }
+            else {
+                Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(match.getSample());
+                if (sample!=null) {
+                    addProperty("Sample Name", sample.getName());
+                    // Only display the filepath if user has access to the sample
+                    addProperty("Filepath", match.getFilepath());
+                }
             }
         }
         catch (Exception e) {
