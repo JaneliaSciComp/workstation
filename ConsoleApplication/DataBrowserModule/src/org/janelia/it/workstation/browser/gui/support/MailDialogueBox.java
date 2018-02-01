@@ -97,12 +97,9 @@ public class MailDialogueBox {
         JTextArea textArea = new JTextArea(4, 40);
         textArea.setText(initialBody);
         panel.add(new JScrollPane(textArea), BorderLayout.CENTER);
-        int ans;
-        while (StringUtils.isBlank(desc)) {
-            ans = JOptionPane.showConfirmDialog(parentFrame, panel, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-            if (ans == JOptionPane.CANCEL_OPTION) return null;
-            desc = textArea.getText() + "\n";
-        }
+        int ans = JOptionPane.showConfirmDialog(parentFrame, panel, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (ans == JOptionPane.CANCEL_OPTION) return null;
+        desc = textArea.getText() + "\n";
         return desc;
     }
     

@@ -102,7 +102,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         }
 
         String st = ExceptionUtils.getStackTrace(throwable);
-        String firstLine = getFirstLine(st);
+        String firstLine = getSummary(st);
 
         if (isIgnoredForAutoSend(throwable, st)) {
             log.trace("Ignoring exception for auto-send: {}", firstLine);
@@ -217,11 +217,12 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
     private void sendEmail(String stacktrace, boolean askForInput) {
 
         try {
-            String firstLine = getFirstLine(stacktrace);
+            String firstLine = getSummary(stacktrace);
             log.info("Reporting exception: "+firstLine);
 
             String email = AccessManager.getUserEmail();
-            String titleSuffix = " from "+AccessManager.getUsername()+" -- "+firstLine;
+            String version = ConsoleApp.getConsoleApp().getApplicationVersion();
+            String titleSuffix = " from "+AccessManager.getUsername()+" -- "+version+" -- "+firstLine;
             String subject = (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix;
              
             MailDialogueBox mailDialogueBox = MailDialogueBox.newDialog(ConsoleApp.getMainFrame(), email)
@@ -259,10 +260,14 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         }
     }
     
-    private String getFirstLine(String st) {
-        int n = st.indexOf('\n');
-        if (n<1) return st; 
-        return st.substring(0, n);
+    private String getSummary(String st) {
+        String[] s = st.split("\n");
+        String summary = s[0];
+        if (!summary.contains(" ")) {
+            // No message available, add the second line for context
+            summary += " "+s[1];
+        }
+        return summary;
     }
 
     private String getTrace(String st) {
