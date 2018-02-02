@@ -427,7 +427,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         
         if (t.isDataFlavorSupported(OntologyTermNodeFlavor.SINGLE_FLAVOR)) {
             OntologyTermNode node = OntologyTermNodeFlavor.getOntologyTermNode(t);
-            if (node==null || !(node instanceof OntologyTermNode)) { 
+            if (node==null || node.getParentNode() == null || !(node instanceof OntologyTermNode)) { 
                 return null;
             }
             log.debug("  Single drop - {} with parent {}",node.getDisplayName(),node.getParentNode().getDisplayName());
