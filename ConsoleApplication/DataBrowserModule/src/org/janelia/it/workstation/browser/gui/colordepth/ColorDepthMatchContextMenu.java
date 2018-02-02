@@ -17,7 +17,6 @@ import org.janelia.it.workstation.browser.actions.OpenWithDefaultAppAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
@@ -52,8 +51,13 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         this.sampleMap = sampleMap;
         this.multiple = matches.size() > 1;
         this.match = matches.size() == 1 ? matches.get(0) : null;
-        Sample sample = match==null ? null : sampleMap.get(match.getSample());
-        this.matchName = multiple ? null : (sample == null ? "Access denied" : sample.getName());
+        if (match.getSample()==null) {
+            this.matchName = match.getFile().getName();
+        }
+        else {
+            Sample sample = match==null ? null : sampleMap.get(match.getSample());
+            this.matchName = multiple ? null : (sample == null ? "Access denied" : sample.getName());
+        }
         ActivityLogHelper.logUserAction("ColorDepthMatchContextMenu.create", match);
     }
 

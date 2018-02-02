@@ -3,7 +3,6 @@ package org.janelia.it.workstation.browser.components;
 import java.awt.Component;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
@@ -123,7 +122,9 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
         }
 
         log.info("colorDepthMatchSelected({})",match);
-
+        
+        if (match.getSample()==null) return;
+        
         SimpleWorker worker = new SimpleWorker() {
 
             private Sample sample;
@@ -136,7 +137,7 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
             @Override
             protected void hadSuccess() {
                 if (sample == null) {
-                    log.warn("Cannot find "+match.getSample());
+                    log.warn("Cannot find match sample: {}", match.getSample());
                 }
                 else {
                     DomainViewerTopComponent viewer = DomainViewerManager.getInstance().getActiveViewer();

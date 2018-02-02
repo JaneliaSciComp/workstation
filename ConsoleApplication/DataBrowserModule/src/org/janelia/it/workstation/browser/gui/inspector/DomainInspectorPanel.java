@@ -476,12 +476,13 @@ public class DomainInspectorPanel extends JPanel {
         try {
             if (match.getSample()==null) {
                 // Non-Workstation Data set
+                addProperty("Name", match.getFile().getName());
                 addProperty("Filepath", match.getFilepath());
             }
             else {
                 Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(match.getSample());
                 if (sample!=null) {
-                    addProperty("Sample Name", sample.getName());
+                    addProperty("Name", sample.getName());
                     // Only display the filepath if user has access to the sample
                     addProperty("Filepath", match.getFilepath());
                 }

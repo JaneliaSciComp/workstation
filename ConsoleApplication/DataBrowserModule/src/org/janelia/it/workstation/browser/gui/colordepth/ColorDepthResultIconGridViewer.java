@@ -93,12 +93,11 @@ public class ColorDepthResultIconGridViewer
         @Override
         public String getImageTitle(ColorDepthMatch match) {
             if (!hasAccess(match)) return "Access denied";
-            Sample sample = sampleMap.get(match.getSample());
-            if (sample==null) {
-                return (new File(match.getFilepath())).getName();
+            if (match.getSample()==null) {
+                return match.getFile().getName();
             }
             else {
-                return sample.getName();
+                return sampleMap.get(match.getSample()).getName();
             }
         }
 
