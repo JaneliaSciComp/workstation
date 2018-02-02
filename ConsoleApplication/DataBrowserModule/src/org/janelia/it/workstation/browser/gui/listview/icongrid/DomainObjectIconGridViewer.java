@@ -20,6 +20,7 @@ import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.components.DomainObjectProviderHelper;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.IconGridViewerConfigDialog;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
@@ -71,7 +72,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private AnnotatedObjectList<DomainObject,Reference> domainObjectList;
     private ChildSelectionModel<DomainObject,Reference> selectionModel;
     private ChildSelectionModel<DomainObject,Reference> editSelectionModel;
-    private DomainObjectProviderHelper domainObjectProviderHelper = new DomainObjectProviderHelper();
 
     // UI state
     private ListViewerActionListener listener;
@@ -387,12 +387,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected void objectDoubleClick(DomainObject object) {
-        if (domainObjectProviderHelper.isSupported(object)) {
-            domainObjectProviderHelper.service(object);
-        }
-        else {
-            getPopupMenu(Arrays.asList(object)).runDefaultAction();            
-        }
+        getPopupMenu(Arrays.asList(object)).runDefaultAction();
     }
     
     @Override

@@ -38,6 +38,7 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.browser.components.DomainObjectProviderHelper;
 import org.janelia.it.workstation.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.SampleResultViewerManager;
@@ -93,6 +94,8 @@ import org.slf4j.LoggerFactory;
 public class DomainObjectContextMenu extends PopupContextMenu {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
+
+    private static final DomainObjectProviderHelper domainObjectProviderHelper = new DomainObjectProviderHelper();
     
     private static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
     private static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
@@ -132,6 +135,11 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             // TODO: here we should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
             DomainExplorerTopComponent.getInstance().expandNodeById(contextObject.getId());
             DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(domainObject.getId());
+        }
+        else {
+            if (domainObjectProviderHelper.isSupported(domainObject)) {
+                domainObjectProviderHelper.service(domainObject);
+            }
         }
     }
 
@@ -1067,14 +1075,14 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         return specialAnnotationSession;
     }
-        
+    
     private Collection<JComponent> getOpenObjectItems() {
         if (multiple) {
             return Collections.emptyList();
         }
         return ServiceAcceptorActionHelper.getOpenForContextItems(domainObject);
     }
-    
+        
     private List<JMenuItem> getWrapObjectItems() {
         if (multiple) {
             return Collections.emptyList();
