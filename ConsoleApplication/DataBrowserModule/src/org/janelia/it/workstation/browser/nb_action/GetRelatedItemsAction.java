@@ -237,8 +237,10 @@ public class GetRelatedItemsAction extends NodePresenterAction {
 
     private <T extends DomainObject> void addUniqueItemsToFolder(final TreeNode treeNode, final Long[] idPath, final Class<T> targetClass) {
 
+        List<DomainObject> objects = new ArrayList<>(domainObjects);
+        
         int existing = 0;
-        for(DomainObject domainObject : domainObjects) {
+        for(DomainObject domainObject : objects) {
             if (treeNode.hasChild(domainObject)) {
                 existing++;
             }
@@ -246,7 +248,7 @@ public class GetRelatedItemsAction extends NodePresenterAction {
 
         if (existing>0) {
             String message;
-            if (existing==domainObjects.size()) {
+            if (existing==objects.size()) {
                 message = "All items are already in the target folder, no items will be added.";
             }
             else {
@@ -255,12 +257,12 @@ public class GetRelatedItemsAction extends NodePresenterAction {
             JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), message, "Items already present", JOptionPane.OK_OPTION);
         }
 
-        final int numAdded = domainObjects.size()-existing;
+        final int numAdded = objects.size()-existing;
 
         SimpleWorker worker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                addItemsToFolder(treeNode, idPath, targetClass);
+                addItemsToFolder(treeNode, idPath, targetClass, objects);
             }
 
             @Override
@@ -273,14 +275,15 @@ public class GetRelatedItemsAction extends NodePresenterAction {
                 ConsoleApp.handleException(error);
             }
         };
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));
         worker.execute();
     }
 
-    protected <T extends DomainObject> void addItemsToFolder(final TreeNode treeNode, final Long[] idPath, Class<T> targetClass) throws Exception {
+    protected <T extends DomainObject> void addItemsToFolder(final TreeNode treeNode, final Long[] idPath, Class<T> targetClass, List<DomainObject> objects) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
 
         // Map the items first
-        List<T> mapped = DomainModelViewUtils.map(domainObjects, targetClass);
+        List<T> mapped = DomainModelViewUtils.map(objects, targetClass);
         
         // Add them to the given folder
         model.addChildren(treeNode, mapped);
