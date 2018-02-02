@@ -4,6 +4,7 @@ Workstation Browser
 * Added Color Depth Mask Search. Right-click any color depth MIP and choose "Create Color Depth Mask" to 
   create a new mask and add it to a search. Detailed documentation is available in the user manual.
 * Added "Export Folder Structure" as a right-click option in the Data Explorer
+* Sanitize data before export to Excel, removing newlines and tabs
 
 Large Volume Viewer
 * Added neuron ownership column to neuron list

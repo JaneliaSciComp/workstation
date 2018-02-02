@@ -144,7 +144,7 @@ public class ExportResultsAction<T> extends AbstractAction {
                         buf.append("\t");
                     }
                     if (value != null) {
-                        buf.append(value.toString());
+                        buf.append(sanitize(value.toString()));
                     }
 
                 }
@@ -160,5 +160,15 @@ public class ExportResultsAction<T> extends AbstractAction {
             page++;
         }
         writer.close();
+    }
+    
+    /**
+     * Sanitize a string value before exporting to tab-delimited format.
+     * @param s
+     * @return
+     */
+    private String sanitize(String s) {
+        // Replace all whitespace with a single space. This gets rid of newlines and tabs which will mess up the tab-delimited format.
+        return s.replaceAll("\\s+", " ");
     }
 }
