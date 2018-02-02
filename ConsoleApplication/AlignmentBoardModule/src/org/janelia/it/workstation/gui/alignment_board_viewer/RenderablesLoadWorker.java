@@ -466,7 +466,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
     /**
      * Builds out the signal volume from the files referred to by renderables.  Sets up common code for the
-     * "signal" mode.
+     * "signal" controller.
      *
      * @param renderableDatas sources of data paths.
      * @param renderableBeans sources of mask, coloring, etc.
@@ -495,7 +495,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
     /**
      * Builds out the mask volume from the files referred to by the renderables.  Sets up common code for the
-     * "mask" mode.
+     * "mask" controller.
      *
      * @param renderableDatas sources of data paths.
      * @param renderableBeans sources of mask numbers.

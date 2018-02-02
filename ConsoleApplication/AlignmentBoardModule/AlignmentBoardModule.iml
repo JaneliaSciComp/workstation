@@ -12,9 +12,11 @@
     <orderEntry type="module" module-name="Shared" />
     <orderEntry type="module" module-name="Viewer3D" />
     <orderEntry type="module" module-name="DataBrowserModule" />
-    <orderEntry type="library" name="Jogl213" level="project" />
     <orderEntry type="library" name="Apache Commons" level="project" />
     <orderEntry type="library" name="core" level="project" />
     <orderEntry type="library" name="Common External Libraries" level="project" />
+    <orderEntry type="module" module-name="Geometry3d" />
+    <orderEntry type="library" name="Jogl224Lib" level="project" />
+    <orderEntry type="module" module-name="ViewerAPI" />
   </component>
 </module>

@@ -141,8 +141,8 @@ public class VoxelViewerRenderer implements GLEventListener, VoxelViewerEventLis
         try {
 
             // Array transparency context
-            atc.setWidth(glDrawable.getWidth());
-            atc.setHeight(glDrawable.getHeight());
+            atc.setWidth(glDrawable.getSurfaceWidth());
+            atc.setHeight(glDrawable.getSurfaceHeight());
             int depth=0;
             if (properties==null) {
                 logger.error("VoxelViewerProperties is null - cannot set transparency depth");
@@ -241,8 +241,8 @@ public class VoxelViewerRenderer implements GLEventListener, VoxelViewerEventLis
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
         gl.glEnable(GL4.GL_DEPTH_TEST);
 
-        widthInPixels = glDrawable.getWidth();
-        heightInPixels = glDrawable.getHeight();
+        widthInPixels = glDrawable.getSurfaceWidth();
+        heightInPixels = glDrawable.getSurfaceHeight();
         if (resetFirstRedraw && (! hasBeenReset)) {
             //resetView();
             hasBeenReset = true;

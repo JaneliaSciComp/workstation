@@ -34,6 +34,15 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>org.janelia.geometry3d</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <release-version>1</release-version>
+                        <specification-version>2.4</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.janelia.it.workstation.gui.viewer3d</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -43,7 +52,16 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
-                    <code-name-base>org.janelia.jogl213</code-name-base>
+                    <code-name-base>org.janelia.console.viewerapi</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <release-version>1</release-version>
+                        <specification-version>2.4</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.janelia.jogl224</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
