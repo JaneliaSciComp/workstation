@@ -74,6 +74,7 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.sample.DataSet;
+import org.janelia.model.domain.sample.Sample;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -664,6 +665,61 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 forceInvalidate();
             }
         }
+    }
+
+    @Subscribe
+    public void colorDepthMatchSelected(ColorDepthMatchSelectionEvent event) {
+
+        // We only care about single selections
+        ColorDepthMatch match = event.getObjectIfSingle();
+        if (match==null) {
+            return;
+        }
+
+        if (!event.isSelect()) {
+            log.debug("Event is not selection: {}",event);
+            return;
+        }
+        
+        if (event.isUserDriven()) {
+            log.info("colorDepthMatchSelected({})", match.getFilepath());
+            FrameworkImplProvider.getInspectionHandler().inspect(getProperties(match));
+        }
+    }
+    
+    private Map<String,Object> getProperties(ColorDepthMatch match) {
+
+        Map<String,Object> values = new HashMap<>();
+        
+        String dataSet = match.getDataSet();
+        String owner = dataSet.split("_")[0];
+
+        values.put("Channel Number", match.getChannelNumber());
+        values.put("Score", match.getScore());
+        values.put("Score Percent", match.getScorePercent());
+        values.put("Data Set", dataSet);
+        values.put("Owner", owner);
+        
+        try {
+            if (match.getSample()==null) {
+                // Non-Workstation Data set
+                values.put("Name", match.getFile().getName());
+                values.put("Filepath", match.getFilepath());
+            }
+            else {
+                Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(match.getSample());
+                if (sample!=null) {
+                    values.put("Name", sample.getName());
+                    // Only display the filepath if user has access to the sample
+                    values.put("Filepath", match.getFilepath());
+                }
+            }
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
+        }
+        
+        return values;
     }
     
     private void forceInvalidate() {

@@ -1,16 +1,25 @@
 package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.sample.Sample;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * A helper for working with color depth nodes.
@@ -20,6 +29,8 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = DomainObjectHelper.class, path = DomainObjectHelper.DOMAIN_OBJECT_LOOKUP_PATH)
 public class ColorDepthNodeObjectHelper implements DomainObjectHelper {
 
+    private Logger log = LoggerFactory.getLogger(ColorDepthNodeObjectHelper.class);
+    
     @Override
     public boolean isCompatible(DomainObject domainObject) {
         return isCompatible(domainObject.getClass());
@@ -88,5 +99,4 @@ public class ColorDepthNodeObjectHelper implements DomainObjectHelper {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);
         }
     }
-
 }

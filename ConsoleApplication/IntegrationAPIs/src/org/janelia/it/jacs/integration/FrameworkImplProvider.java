@@ -10,6 +10,7 @@ import org.janelia.it.jacs.integration.framework.exceptions.UnprovidedServiceExc
 import org.janelia.it.jacs.integration.framework.system.ActivityLogging;
 import org.janelia.it.jacs.integration.framework.system.ErrorHandler;
 import org.janelia.it.jacs.integration.framework.system.FileAccess;
+import org.janelia.it.jacs.integration.framework.system.InspectionHandler;
 import org.janelia.it.jacs.integration.framework.system.ParentFrame;
 import org.janelia.it.jacs.integration.framework.system.SettingsModel;
 import org.openide.util.NbPreferences;
@@ -53,6 +54,10 @@ public class FrameworkImplProvider {
     
     public static ParentFrame getParentFrameProvider() {
         return getProvider(ParentFrame.LOOKUP_PATH, ParentFrame.class);
+    }
+    
+    public static InspectionHandler getInspectionHandler() {
+        return getProvider(InspectionHandler.LOOKUP_PATH, InspectionHandler.class);
     }
 
     private static <T> T getProvider(String path, Class<T> clazz) {

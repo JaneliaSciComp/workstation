@@ -68,17 +68,22 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.enums.AlignmentScoreType;
 import org.janelia.model.domain.enums.ErrorType;
 import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.NeuronSeparation;
 import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.PipelineError;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SampleAlignmentResult;
 import org.janelia.model.domain.sample.SamplePipelineRun;
+import org.janelia.model.domain.sample.SampleProcessingResult;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -887,4 +892,87 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             lsmPanel.annotationsChanged(event);
         }
     }
+
+    @Subscribe
+    public void resultSelected(PipelineResultSelectionEvent event) {
+        if (event.isUserDriven()) {
+            PipelineResult result = event.getPipelineResult();
+            log.info("resultSelected({})", result.getId());
+            FrameworkImplProvider.getInspectionHandler().inspect(getProperties(result));
+        }
+    }
+
+    @Subscribe
+    public void errorSelected(PipelineErrorSelectionEvent event) {
+        if (event.isUserDriven()) {
+            PipelineError error = event.getPipelineError();
+            log.info("errorSelected()");
+            FrameworkImplProvider.getInspectionHandler().inspect(getProperties(error));
+        }
+    }
+
+    private Map<String,Object> getProperties(PipelineResult result) {
+
+        Map<String,Object> values = new HashMap<>();
+
+        values.put("Creation Date", result.getCreationDate());
+        values.put("Disk Space Usage (Bytes)", result.getDiskSpaceUsage());
+        values.put("Disk Space Usage", result.getDiskSpaceUsageForHumans());
+        values.put("Filepath", result.getFilepath());
+        values.put("GUID", result.getId());
+        values.put("Name", result.getName());
+        values.put("Purged", result.getPurged());
+        
+        if (result instanceof HasAnatomicalArea) {
+            HasAnatomicalArea hasAA = (HasAnatomicalArea) result;
+            values.put("Anatomical Area", hasAA.getAnatomicalArea());
+        }
+
+        if (result instanceof SampleAlignmentResult) {
+            SampleAlignmentResult alignment = (SampleAlignmentResult) result;
+            values.put("Alignment Space", alignment.getAlignmentSpace());
+            values.put("Bounding Box", alignment.getBoundingBox());
+            values.put("Channel Colors", alignment.getChannelColors());
+            values.put("Channel Spec", alignment.getChannelSpec());
+            values.put("Image Size", alignment.getImageSize());
+            values.put("Objective", alignment.getObjective());
+            values.put("Optical Resolution", alignment.getOpticalResolution());
+            values.put("Message", alignment.getMessage());
+            for (AlignmentScoreType scoretype : alignment.getScores().keySet()) {
+                String score = alignment.getScores().get(scoretype);
+                values.put(scoretype.getLabel(), score);
+            }
+        }
+        else if (result instanceof SampleProcessingResult) {
+            SampleProcessingResult spr = (SampleProcessingResult) result;
+            values.put("Channel Colors", spr.getChannelColors());
+            values.put("Channel Spec", spr.getChannelSpec());
+            values.put("Image Size", spr.getImageSize());
+            values.put("Optical Resolution", spr.getOpticalResolution());
+            values.put("Distortion Corrected", spr.isDistortionCorrected());
+        }
+        else if (result instanceof NeuronSeparation) {
+            NeuronSeparation ns = (NeuronSeparation) result;
+            values.put("Number of Neurons", ns.getFragmentsReference().getCount());
+            values.put("Neuron Weights", ns.getHasWeights());
+        }
+        return values;
+    }
+
+    private Map<String,Object> getProperties(PipelineError error) {
+
+        Map<String,Object> values = new HashMap<>();
+
+        values.put("Creation Date", error.getCreationDate());
+        values.put("Filepath", error.getFilepath());
+        values.put("Operation", error.getOperation());
+        values.put("Classification", error.getClassification());
+        values.put("Description", error.getDescription());
+
+        return values;
+    }
+    
+    
+    
+    
 }
