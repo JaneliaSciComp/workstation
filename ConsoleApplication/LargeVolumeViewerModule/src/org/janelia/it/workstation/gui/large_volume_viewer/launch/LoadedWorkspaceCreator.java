@@ -15,7 +15,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
+import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.tiledMicroscope.SwcImportTask;
@@ -30,6 +30,7 @@ import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
@@ -40,19 +41,20 @@ import org.slf4j.LoggerFactory;
  * 
  * @author fosterl
  */
-@ServiceProvider(service = DomainObjectAcceptor.class, path = DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH)
-public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
+@ServiceProvider(service = ObjectOpenAcceptor.class, path = ObjectOpenAcceptor.LOOKUP_PATH)
+public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
     
     private static final Logger log = LoggerFactory.getLogger(LoadedWorkspaceCreator.class);
 
     private static final int MENU_ORDER = 500;
    
     @Override
-    public void acceptDomainObject(DomainObject domainObject) {
+    public void acceptObject(Object obj) {
 
-        final JFrame mainFrame = ConsoleApp.getMainFrame();
-        final TmSample sample = (TmSample)domainObject;
-
+        DomainObject domainObject = (DomainObject)obj;
+        TmSample sample = (TmSample)domainObject;
+        JFrame mainFrame = ConsoleApp.getMainFrame();
+        
         SimpleWorker worker = new SimpleWorker() {
             
             private String userInput;
@@ -166,6 +168,11 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
             @Override
             protected void hadSuccess() {
                 if (task!=null) {
+
+                    // Update "Recently Opened" history
+                    String strRef = Reference.createFor(domainObject).toString();
+                    StateMgr.getStateMgr().updateRecentlyOpenedHistory(strRef);
+                    
                     // Launch another thread/worker to monitor the 
                     // remote-running task.
                     TaskMonitoringWorker tmw = new TaskMonitoringWorker(task.getObjectId()) {
@@ -194,12 +201,12 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
     }
 
     @Override
-    public boolean isCompatible(DomainObject e) {
-        return e != null && (e instanceof TmSample);
+    public boolean isCompatible(Object obj) {
+        return obj != null && (obj instanceof TmSample);
     }
 
     @Override
-    public boolean isEnabled(DomainObject e) {
+    public boolean isEnabled(Object obj) {
         return true;
     }
     

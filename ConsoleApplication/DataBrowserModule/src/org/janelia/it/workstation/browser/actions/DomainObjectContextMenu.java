@@ -54,6 +54,7 @@ import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.browser.model.SampleImage;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
@@ -73,6 +74,7 @@ import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.ontology.Annotation;
@@ -197,13 +199,13 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getHudMenuItem());
 
         if (domainObject!=null) {
-            for (JComponent item : this.getOpenObjectItems()) {
+            for (JComponent item : getOpenObjectItems()) {
                 add(item);
             }
-            for (JMenuItem item : this.getWrapObjectItems()) {
+            for (JMenuItem item : getWrapObjectItems()) {
                 add(item);
             }
-            for (JMenuItem item : this.getAppendObjectItems()) {
+            for (JMenuItem item : getAppendObjectItems()) {
                 add(item);
             }
         }
@@ -1080,7 +1082,26 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (multiple) {
             return Collections.emptyList();
         }
-        return ServiceAcceptorActionHelper.getOpenForContextItems(domainObject);
+
+        Object contextObject = null;
+        
+        if (domainObject instanceof Sample) {
+            Sample sample = (Sample)domainObject;
+            HasFiles hasFiles = DescriptorUtils.getResult(sample, resultDescriptor);
+            if (hasFiles instanceof PipelineResult) {
+                PipelineResult result = (PipelineResult)DescriptorUtils.getResult(sample, resultDescriptor);      
+                contextObject = new SampleImage(result, FileType.valueOf(typeName));
+            }
+            else {
+                log.warn("Results which are not PipelineResults are not supported for open operations");
+            }
+        }
+        else {
+            contextObject = domainObject;
+        }
+        
+        if (contextObject==null) return Collections.emptyList();
+        return ServiceAcceptorActionHelper.getOpenForContextItems(contextObject);
     }
         
     private List<JMenuItem> getWrapObjectItems() {

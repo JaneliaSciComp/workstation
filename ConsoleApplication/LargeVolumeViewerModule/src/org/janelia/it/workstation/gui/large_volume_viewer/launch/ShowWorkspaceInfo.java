@@ -3,10 +3,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer.launch;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
+import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.openide.util.lookup.ServiceProvider;
@@ -16,15 +15,15 @@ import org.slf4j.LoggerFactory;
 /**
  * right-click on workspace in Data Explorer, get info on its sample
  */
-@ServiceProvider(service = DomainObjectAcceptor.class, path = DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH)
-public class ShowWorkspaceInfo implements DomainObjectAcceptor  {
+@ServiceProvider(service = ObjectOpenAcceptor.class, path = ObjectOpenAcceptor.LOOKUP_PATH)
+public class ShowWorkspaceInfo implements ObjectOpenAcceptor  {
 
     private static final Logger log = LoggerFactory.getLogger(ShowWorkspaceInfo.class);
     
     private static final int MENU_ORDER = 400;
     
     @Override
-    public void acceptDomainObject(DomainObject domainObject) {
+    public void acceptObject(Object domainObject) {
     	
     	TmWorkspace workspace = (TmWorkspace)domainObject;
     	
@@ -58,12 +57,12 @@ public class ShowWorkspaceInfo implements DomainObjectAcceptor  {
     }
 
     @Override
-    public boolean isCompatible(DomainObject e) {
-        return e != null && (e instanceof TmWorkspace);
+    public boolean isCompatible(Object obj) {
+        return obj != null && (obj instanceof TmWorkspace);
     }
 
     @Override
-    public boolean isEnabled(DomainObject e) {
+    public boolean isEnabled(Object obj) {
         return true;
     }
     

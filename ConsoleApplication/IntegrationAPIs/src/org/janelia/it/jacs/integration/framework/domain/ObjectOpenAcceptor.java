@@ -1,16 +1,13 @@
 package org.janelia.it.jacs.integration.framework.domain;
 
-import org.janelia.model.domain.DomainObject;
-
-
 /**
- * Implement this to accept a Domain Object for processing.
+ * Implement this to accept a object for processing.
  * 
  * @author fosterl
  */
-public interface DomainObjectAcceptor extends Compatible<DomainObject> {
+public interface ObjectOpenAcceptor extends Compatible<Object> {
     
-    public static final String DOMAIN_OBJECT_LOOKUP_PATH = "DomainObject/DomainObjectAcceptor/Nodes";
+    public static final String LOOKUP_PATH = "Acceptors/ObjectOpenAcceptor";
     
     /**
      * The label for the menu item.
@@ -21,14 +18,14 @@ public interface DomainObjectAcceptor extends Compatible<DomainObject> {
      * Should the menu item be shown for the specified domain object?
      */
     @Override
-    boolean isCompatible(DomainObject e);
+    boolean isCompatible(Object obj);
     
     /**
      * Should the menu item be enabled for the specified domain object?
      */
-    boolean isEnabled(DomainObject e);
+    boolean isEnabled(Object obj);
     
-    void acceptDomainObject(DomainObject e);
+    void acceptObject(Object obj);
     
     /**
      * Space these apart by at least 100, to leave room for injected separators

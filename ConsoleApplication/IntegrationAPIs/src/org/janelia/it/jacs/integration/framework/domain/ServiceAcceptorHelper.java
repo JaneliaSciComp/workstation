@@ -43,12 +43,12 @@ public class ServiceAcceptorHelper {
         return rtnVal.iterator().next();
     }
 
-    public static Collection<DomainObjectAcceptor> findAcceptors(DomainObject domainObject) {
-        return findHandler(domainObject, DomainObjectAcceptor.class, DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH);
+    public static Collection<ObjectOpenAcceptor> findAcceptors(Object obj) {
+        return findHandler(obj, ObjectOpenAcceptor.class, ObjectOpenAcceptor.LOOKUP_PATH);
     }
     
-    public static DomainObjectAcceptor findFirstAcceptor(DomainObject domainObject) {
-        Collection<DomainObjectAcceptor> handlers = findAcceptors(domainObject);
+    public static ObjectOpenAcceptor findFirstAcceptor(Object domainObject) {
+        Collection<ObjectOpenAcceptor> handlers = findAcceptors(domainObject);
         if (handlers.isEmpty()) return null;
         return handlers.iterator().next();
     }

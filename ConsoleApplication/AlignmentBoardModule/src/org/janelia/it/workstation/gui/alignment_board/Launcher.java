@@ -2,9 +2,11 @@ package org.janelia.it.workstation.gui.alignment_board;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
+import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
+import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.alignment_board.AlignmentBoard;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
@@ -18,17 +20,14 @@ import org.slf4j.LoggerFactory;
  * 
  * @author fosterl
  */
-@ServiceProvider(service = DomainObjectAcceptor.class, path=DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH)
-public class Launcher implements DomainObjectAcceptor  {
+@ServiceProvider(service = ObjectOpenAcceptor.class, path=ObjectOpenAcceptor.LOOKUP_PATH)
+public class Launcher implements ObjectOpenAcceptor  {
     
     private static final Logger log = LoggerFactory.getLogger(Launcher.class);
     
     private static final int MENU_ORDER = 200;
-    
-    public Launcher() {
-    }
 
-    public void launch( long domainObjectId ) {
+    public void launch(long domainObjectId) {
         TopComponentGroup group = 
                 WindowManager.getDefault().findTopComponentGroup(
                         "alignment_board_plugin"
@@ -64,8 +63,16 @@ public class Launcher implements DomainObjectAcceptor  {
     }
 
     @Override
-    public void acceptDomainObject(DomainObject dObj) {
-        launch( dObj.getId() );
+    public void acceptObject(Object obj) {
+        if (obj instanceof DomainObject) {
+            
+            DomainObject domainObject = (DomainObject) obj;
+            launch(domainObject.getId());
+
+            // Update "Recently Opened" history
+            String strRef = Reference.createFor(domainObject).toString();
+            StateMgr.getStateMgr().updateRecentlyOpenedHistory(strRef);
+        }
     }
 
     @Override
@@ -74,13 +81,12 @@ public class Launcher implements DomainObjectAcceptor  {
     }
 
     @Override
-    public boolean isCompatible(DomainObject dObj) {
-        log.trace(dObj.getType() + " called " + dObj.getName() + " class: " + dObj.getClass().getSimpleName());
-        return dObj instanceof AlignmentBoard;
+    public boolean isCompatible(Object obj) {
+        return obj instanceof AlignmentBoard;
     }
     
     @Override
-    public boolean isEnabled(DomainObject dObj) {
+    public boolean isEnabled(Object obj) {
         return true;
     }
     
@@ -97,19 +103,5 @@ public class Launcher implements DomainObjectAcceptor  {
     @Override
     public boolean isSucceededBySeparator() {
         return false;
-    }
-
-    // May find use elsewhere...
-    private String expectedTypeForClass(Class clazz) {
-        String simpleName = clazz.getSimpleName();
-        String[] capWords = simpleName.split("[A-Z]");
-        StringBuilder rtnVal = new StringBuilder();
-        for (String capWord: capWords) {
-            if (rtnVal.length() > 0) {
-                rtnVal.append(" ");
-            }
-            rtnVal.append(capWord);
-        }
-        return rtnVal.toString();
     }
 }

@@ -8,19 +8,17 @@ package org.janelia.it.workstation.ab2;
 import javax.swing.BoxLayout;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.workstation.browser.events.Events;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.sample.Sample;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.ab2.controller.AB2Controller;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.model.AB2Data;
-import org.janelia.it.workstation.ab2.model.AB2DomainObject;
-import org.janelia.it.workstation.ab2.model.AB2SkeletonDomainObject;
+import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.model.SampleImage;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponent;
 import org.openide.windows.TopComponentGroup;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
@@ -62,7 +60,6 @@ public final class AB2TopComponent extends TopComponent {
     private AB2GLPanel ab2GLPanel;
     private AB2Controller ab2Controller;
     private AB2Data ab2Data;
-    private AB2DomainObject ab2DomainObject;
 
     private AB2TopComponent() {
         logger.info("AB2TopComponent() constructed");
@@ -89,23 +86,17 @@ public final class AB2TopComponent extends TopComponent {
         return ab2TopComponent;
     }
 
-    public void loadDomainObject(DomainObject domainObject, boolean isUserDriven) {
-        if (domainObject instanceof Sample) {
-            Sample sample=(Sample)domainObject;
-            logger.info("loadDomainObject() calling controller.processEvent() with AB2SampleAddedEvent");
-            AB2Controller.getController().processEvent(new AB2SampleAddedEvent(sample));
-        } else {
-            logger.info("loadDomainObject() domainObject not Sample : class="+domainObject.getType());
-        }
+    public void loadSampleImage(SampleImage sampleImage, boolean isUserDriven) {
+        logger.info("loadSampleImage() calling controller.processEvent() with AB2SampleAddedEvent");
+        AB2Controller.getController().processEvent(new AB2SampleAddedEvent(sampleImage));
     }
-
+    
     private void initMyComponents() {
-        // TODO add custom code on component opening
-        if (ab2Controller==null) {
-            ab2Controller=AB2Controller.getController();
+        if (ab2Controller == null) {
+            ab2Controller = AB2Controller.getController();
         }
-        if (ab2Data==null) {
-            ab2Data=new AB2Data();
+        if (ab2Data == null) {
+            ab2Data = new AB2Data();
         }
         if (ab2GLPanel==null) {
             ab2GLPanel=new AB2GLPanel(600, 400, ab2Controller);
@@ -131,7 +122,6 @@ public final class AB2TopComponent extends TopComponent {
     }
 
     private void closeMyComponents() {
-        // TODO add custom code on component closing
         ab2Controller.shutdown();
         //try { Thread.sleep(5000); } catch (Exception ex) {}
     }
@@ -199,10 +189,10 @@ public final class AB2TopComponent extends TopComponent {
         }
         else {
             try {
-                SwingUtilities.invokeAndWait( runnable );
-            } catch ( Exception ex ) {
-                logger.error(ex.getMessage());
-                ex.printStackTrace();
+                SwingUtilities.invokeAndWait(runnable);
+            }
+            catch (Exception ex) {
+                FrameworkImplProvider.handleException(ex);
             }
         }
 

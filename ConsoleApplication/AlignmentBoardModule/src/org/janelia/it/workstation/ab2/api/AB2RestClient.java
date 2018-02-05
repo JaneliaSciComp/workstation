@@ -1,12 +1,9 @@
 package org.janelia.it.workstation.ab2.api;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.client.Client;
@@ -15,8 +12,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.janelia.it.jacs.shared.ffmpeg.H5JLoader;
 import org.janelia.it.jacs.shared.ffmpeg.ImageStack;
@@ -84,12 +79,14 @@ public class AB2RestClient {
 //            } else if (bodyPart.getMediaType().equals(MediaType.APPLICATION_OCTET_STREAM_TYPE)) {
 //        byte[] h5jData=bodyPart.getEntityAs(byte[].class);
         
-        byte[] h5jData;
-        try(InputStream is = new FileInputStream(FileMgr.getFileMgr().getFile(filepath, false))) {
-            h5jData = IOUtils.toByteArray(is);
-        }
-         
-        byte[] data = getDataFromH5JBytes(h5jData, imageStack);
+        File file = FileMgr.getFileMgr().getFile(filepath, false);
+        if (file==null) throw new IllegalStateException("Could not retrieve file: "+filepath);
+        
+        byte[] data = h5jGet3DBytesUsingList(file, imageStack);
+        
+        // TODO: use optical resolution to scale the image in z to avoid "pancake" appearance
+        String opticalResolution = imageStack.getOpticalResolution();
+        
         log.info("Received " + data.length + " bytes");
         byte[] dimBytes = new byte[12];
         for (int i = 0; i < 12; i++) {
@@ -114,15 +111,6 @@ public class AB2RestClient {
             return true;
         }
         return false;
-    }
-
-    byte[] getDataFromH5JBytes(byte[] h5jBytes, HasImageStack imageStack) throws Exception {
-        Long uniqueTime=new Date().getTime();
-        File tempFile = File.createTempFile("file_"+uniqueTime, ".h5j");
-        FileUtils.writeByteArrayToFile(tempFile, h5jBytes);
-        byte[] dataBytes = h5jGet3DBytesUsingList(tempFile, imageStack);
-        tempFile.delete();
-        return dataBytes;
     }
 
     private static synchronized byte[] h5jGet3DBytesUsingList(File file, HasImageStack imageStack) throws IOException {

@@ -12,7 +12,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JPopupMenu;
 
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
+import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.model.domain.DomainObject;
 
@@ -44,10 +44,10 @@ public class DomainObjectProviderHelper {
         // Option to popup menu is carried out here, if multiple handlers exist.
         if (domainObject != null) {
             handledHere = true;
-            Collection<DomainObjectAcceptor> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(domainObject);
+            Collection<ObjectOpenAcceptor> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(domainObject);
             if (domainObjectAcceptors.size() == 1) {
-                DomainObjectAcceptor acceptor = domainObjectAcceptors.iterator().next();
-                acceptor.acceptDomainObject(domainObject);
+                ObjectOpenAcceptor acceptor = domainObjectAcceptors.iterator().next();
+                acceptor.acceptObject(domainObject);
             }
             else if (domainObjectAcceptors.size() > 1) {
                 showMenu(domainObject, domainObjectAcceptors);
@@ -56,11 +56,11 @@ public class DomainObjectProviderHelper {
         return handledHere;
     }
     
-    private void showMenu(DomainObject dObj, Collection<DomainObjectAcceptor> acceptors) {
+    private void showMenu(DomainObject dObj, Collection<ObjectOpenAcceptor> acceptors) {
         Map<Integer,Action> orderingMap = new HashMap<>();
         List<Integer> orderingList = new ArrayList<>();
         JPopupMenu popupMenu = new JPopupMenu("Multiple Choices for " + dObj.getName());
-        for (DomainObjectAcceptor acceptor: acceptors) {
+        for (ObjectOpenAcceptor acceptor: acceptors) {
             orderingMap.put(acceptor.getOrder(), new ServiceAction(acceptor, dObj));
         }
         Collections.sort(orderingList);
@@ -74,9 +74,9 @@ public class DomainObjectProviderHelper {
      * Usable for placing into menu, to make the provider just work.
      */
     private class ServiceAction extends AbstractAction implements Comparable<ServiceAction> {
-        private DomainObjectAcceptor acceptor;
+        private ObjectOpenAcceptor acceptor;
         private DomainObject dObj;
-        public ServiceAction(DomainObjectAcceptor acceptor, DomainObject dObj) {
+        public ServiceAction(ObjectOpenAcceptor acceptor, DomainObject dObj) {
             this.acceptor = acceptor;
             this.dObj = dObj;
             putValue(Action.NAME, acceptor.getActionLabel());
@@ -84,7 +84,7 @@ public class DomainObjectProviderHelper {
         
         @Override
         public void actionPerformed(ActionEvent e) {
-            acceptor.acceptDomainObject(dObj);
+            acceptor.acceptObject(dObj);
         }
 
         /**

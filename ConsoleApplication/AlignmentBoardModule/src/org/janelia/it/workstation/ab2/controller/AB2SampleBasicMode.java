@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 public class AB2SampleBasicMode extends AB2View3DMode {
 
-    Logger logger= LoggerFactory.getLogger(AB2SampleBasicMode.class);
+    private static final Logger logger = LoggerFactory.getLogger(AB2SampleBasicMode.class);
 
     private AB2SampleRegionManager sampleRegionManager=new AB2SampleRegionManager();
 
@@ -94,10 +94,10 @@ public class AB2SampleBasicMode extends AB2View3DMode {
             AB2SampleAddedEvent sampleAddedEvent=(AB2SampleAddedEvent)event;
             sampleRenderer.clearActors();
             logger.info("creating AB2Sample3DImageLoader");
-            AB2Sample3DImageLoader sample3DImageLoader=new AB2Sample3DImageLoader(sampleAddedEvent.getSample());
+            AB2Sample3DImageLoader sample3DImageLoader = new AB2Sample3DImageLoader(sampleAddedEvent.getSampleImage());
             logger.info("executing sample3DImageLoader");
             sample3DImageLoader.execute();
-            controller.processEvent(new AB2MainMessageEvent("Loading Sample "+sampleAddedEvent.getSample().getName()+" ..."));
+            controller.processEvent(new AB2MainMessageEvent("Loading Sample "+sampleAddedEvent.getSampleImage().getSample().getName()+" ..."));
         }
         else if  (event instanceof AB2Sample3DImageLoadedEvent) {
             logger.info("processing AB2Sample3DImageLoadedEvent");

@@ -3,8 +3,10 @@ package org.janelia.it.workstation.browser.gui.editor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
+import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
@@ -12,6 +14,7 @@ import org.janelia.it.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.browser.actions.OpenInToolAction;
 import org.janelia.it.workstation.browser.actions.OpenWithDefaultAppAction;
+import org.janelia.it.workstation.browser.actions.ServiceAcceptorActionHelper;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.browser.components.SampleResultViewerTopComponent;
@@ -20,6 +23,7 @@ import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadWizardAct
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.browser.model.SampleImage;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
@@ -77,6 +81,10 @@ public class SampleResultContextMenu extends PopupContextMenu {
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
 
+        for (JComponent item : getOpenObjectItems()) {
+            add(item);
+        }
+        
         for (JMenuItem item: getWrapObjectItems()) {
             add(item);
         }
@@ -157,6 +165,12 @@ public class SampleResultContextMenu extends PopupContextMenu {
         return getNamedActionItem(new OpenWithDefaultAppAction(path));
     }
 
+    private Collection<JComponent> getOpenObjectItems() {
+        // TODO: pass the actual file type the user clicked on
+        SampleImage sampleImage = new SampleImage(result, FileType.ReferenceMip);
+        return ServiceAcceptorActionHelper.getOpenForContextItems(sampleImage);
+    }
+    
     protected List<JMenuItem> getWrapObjectItems() {
         return new WrapperCreatorItemFactory().makeWrapperCreatorItems(result);
     }
