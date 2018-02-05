@@ -22,6 +22,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.rabbitmq.client.Channel;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
@@ -114,7 +115,7 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
         return messageSender;
     }
     
-    private void sendMessage (TmNeuronMetadata neuron, MessageType type) throws Exception {
+    private void sendMessage (TmNeuronMetadata neuron, MessageType type, Map<String,String> extraArguments) throws Exception {
         // whatever the message is, unsync the object and increment the unsynced level counter
         neuron.setSynced(false);
         neuron.incrementSyncLevel();
@@ -129,6 +130,13 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
         updateHeaders.put(HeaderConstants.WORKSPACE, neuron.getWorkspaceId().toString());
         updateHeaders.put(HeaderConstants.METADATA, mapper.writeValueAsString(neuron));
         updateHeaders.put(HeaderConstants.NEURONIDS, neuronIds.toString());
+        if (extraArguments!=null) {
+            Iterator<String> extraKeys = extraArguments.keySet().iterator();
+            while (extraKeys.hasNext()) {
+                String extraKey = extraKeys.next();            
+                updateHeaders.put(extraKey, extraArguments.get(extraKey));
+            }
+        }
         
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
         byte[] neuronData = exchanger.serializeNeuron(neuron);
@@ -140,27 +148,35 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
     public void asyncCreateNeuron(TmNeuronMetadata neuron) throws Exception {
         // make sure the neuron contains the current user's ownerKey;
         neuron.setOwnerKey(AccessManager.getSubjectKey());
-        sendMessage (neuron, MessageType.NEURON_CREATE);
+        sendMessage (neuron, MessageType.NEURON_CREATE, null);
     }
 
     @Override
     public void asyncSaveNeuron(TmNeuronMetadata neuron) throws Exception {
-        sendMessage (neuron, MessageType.NEURON_SAVE_NEURONDATA);
+        sendMessage (neuron, MessageType.NEURON_SAVE_NEURONDATA, null);
     }
 
     @Override
     public void asyncSaveNeuronMetadata(TmNeuronMetadata neuron) throws Exception {
-        sendMessage (neuron, MessageType.NEURON_SAVE_METADATA);
+        sendMessage (neuron, MessageType.NEURON_SAVE_METADATA, null);
     }
 
     @Override
     public void asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {
-        sendMessage (neuron, MessageType.NEURON_DELETE);
+        sendMessage (neuron, MessageType.NEURON_DELETE, null);
     }
     
     @Override
     public CompletableFuture<Boolean> requestOwnership(TmNeuronMetadata neuron) throws Exception {
-        sendMessage (neuron, MessageType.REQUEST_NEURON_OWNERSHIP);
+        sendMessage (neuron, MessageType.REQUEST_NEURON_OWNERSHIP, null);
+        return new CompletableFuture<Boolean>();
+    }
+    
+    @Override
+    public CompletableFuture<Boolean> requestAssignment(TmNeuronMetadata neuron, String targetUser) throws Exception {
+        Map<String,String> extraArgs = new HashMap<>();
+        extraArgs.put(HeaderConstants.TARGET_USER, targetUser);        
+        sendMessage (neuron, MessageType.REQUEST_NEURON_ASSIGNMENT, extraArgs);
         return new CompletableFuture<Boolean>();
     }
 }
