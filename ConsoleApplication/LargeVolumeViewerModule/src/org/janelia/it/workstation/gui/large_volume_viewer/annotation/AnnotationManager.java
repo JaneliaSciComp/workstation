@@ -1704,16 +1704,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     public SimpleListenableFuture setBulkNeuronVisibility(Collection<TmNeuronMetadata> neuronList, final boolean visibility) {
         final Collection<TmNeuronMetadata> neurons = neuronList==null?annotationModel.getNeuronList():neuronList;
-        List<TmNeuronMetadata> nonOwnedNeurons = new ArrayList<>();
-        for (TmNeuronMetadata neuron: neurons) {
-            if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
-                nonOwnedNeurons.add(neuron);
-            }
-        } 
-        if (nonOwnedNeurons.size()>0) {
-            handleOwnershipChange(nonOwnedNeurons); 
-            return null;
-        }
       
         log.info("setBulkNeuronVisibility(neurons.size={}, visibility={})",neurons.size(),visibility);
         SimpleWorker updater = new SimpleWorker() {
@@ -1737,16 +1727,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     // hide others = hide all then show current; this is purely a convenience function
     public void hideUnselectedNeurons() {
-        List<TmNeuronMetadata> nonOwnedNeurons = new ArrayList<>();
-        for (TmNeuronMetadata neuron: annotationModel.getNeuronList()) {
-            if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
-                nonOwnedNeurons.add(neuron);
-            }
-        } 
-        if (nonOwnedNeurons.size()>0) {
-            handleOwnershipChange(nonOwnedNeurons); 
-            return;
-        }
         SimpleWorker updater = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
@@ -1817,12 +1797,16 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             style.setUserVisible(visibility);
             styleUpdater.put(neuron, style);
             if (visibility) {
-                this.annotationModel.removeUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
+                this.annotationModel.getAllTagMeta().removeUserTag(NEURON_TAG_VISIBILITY, neuron);
             } else {
-                this.annotationModel.addUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
+                this.annotationModel.getAllTagMeta().addUserTag(NEURON_TAG_VISIBILITY, neuron);
             }
         }
-        
+        try {
+            this.annotationModel.saveUserTags();
+        } catch (Exception e) {
+            ConsoleApp.handleException(e);
+        }        
         this.annotationModel.fireNeuronStylesChanged(styleUpdater);
     }
     

@@ -2041,23 +2041,15 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             }
         } 
         // populate user preferences, which for now only deal with user visibility
-         Map userTagPreferences = FrameworkImplProvider
+         List<String> userTagPreferences = FrameworkImplProvider
                  .getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_TAGS, 
                          this.getCurrentSample().getId().toString(), null);
-         if (userTagPreferences!=null) {
-             Iterator<String> userTagIterator = userTagPreferences.keySet().iterator();
+         if (userTagPreferences!=null) {            
              List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>();             
-             while (userTagIterator.hasNext()) {
-                 String neuronKey = userTagIterator.next();
-                 if (userTagPreferences.get(neuronKey) instanceof ArrayList) {
-                     List<String> tagList = (List<String>)userTagPreferences.get(neuronKey);
-                     Set<String> tagSet = new HashSet(tagList);
-                     if (tagSet.contains("hidden")) {
-                         TmNeuronMetadata neuron = this.getNeuronFromNeuronID(Long.parseLong(neuronKey));
-                         currentTagMap.addUserTag("hidden",neuron);
-                         neuronList.add(neuron);
-                     }
-                 }
+             for (String neuronKey: userTagPreferences) {                 
+                 TmNeuronMetadata neuron = this.getNeuronFromNeuronID(Long.parseLong(neuronKey));
+                 currentTagMap.addUserTag("hidden",neuron);
+                 neuronList.add(neuron);                                  
              }
              LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, false);               
          }                         
@@ -2070,8 +2062,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public void saveUserTags() throws Exception {
+        // for now translate this into a set for much faster persistence        
         FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_TAGS, 
-                this.getCurrentSample().getId().toString(), currentTagMap.getUserTags());        
+                this.getCurrentSample().getId().toString(), currentTagMap.getUserTags().keySet());       
     }
     
 
