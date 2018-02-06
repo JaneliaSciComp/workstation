@@ -93,7 +93,6 @@ public class ColorDepthSearchNode extends AbstractDomainObjectNode<ColorDepthSea
     }
     
     @Override
-    @SuppressWarnings("unchecked")
     public PasteType getDropType(final Transferable t, int action, final int index) {
 
         if (!ClientDomainUtils.hasWriteAccess(getDomainObject())) {
