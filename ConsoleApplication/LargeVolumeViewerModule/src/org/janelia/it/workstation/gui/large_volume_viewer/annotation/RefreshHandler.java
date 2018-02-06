@@ -9,7 +9,6 @@ import com.rabbitmq.client.LongString;
 import com.rabbitmq.client.impl.LongStringHelper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import javax.swing.SwingUtilities;
 import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
@@ -111,13 +110,12 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                 }
             }
         }
-        
-       
+
         // if not this workspace, filter out message
         if (workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
             return;
         }
-        
+
         if (action==MessageType.NEURON_OWNERSHIP_DECISION) {
              boolean decision = Boolean.parseBoolean(convertLongString((LongString) msgHeaders.get(HeaderConstants.DECISION)));  
              if (decision) {
@@ -131,13 +129,13 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
                     try {
-// fire notice to AnnotationModel
+                        // fire notice to AnnotationModel
                         Map<String, Object> msgHeaders = message.getProperties().getHeaders();
                         if (msgHeaders == null) {
                             throw new IOException("Issue trying to process metadata from update");
                         }
 
-                        // change relevant to this workspace and not execute don this client, so update model or process request
+                        // change relevant to this workspace and not executed on this client, so update model or process request
                         switch (action) {
                             case NEURON_CREATE:
                                 TmProtobufExchanger exchanger = new TmProtobufExchanger();
@@ -183,9 +181,14 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
      */
     @Override
     public void handle(String errorMsg) {
-        AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         String error = "Problems receiving message updates, " + errorMsg;
-        annotationMgr.presentError(error, "Problem receiving message from Message Server");
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+                annotationMgr.presentError(error, "Problem receiving message from Message Server");
+            }
+        });
         log.error(error);
     }
 
@@ -193,9 +196,6 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         return annotationModel;
     }
 
-    /**
-     * @param annModel the annModel to set
-     */
     public void setAnnotationModel(AnnotationModel annotationModel) {
         this.annotationModel = annotationModel;
     }

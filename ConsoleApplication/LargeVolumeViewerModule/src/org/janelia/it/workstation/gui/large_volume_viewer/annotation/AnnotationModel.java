@@ -53,24 +53,20 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.SetMultimap;
 
 import Jama.Matrix;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.tiledMicroscope.TmModelManipulator;
 import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.Preference;
 import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
@@ -565,36 +561,40 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     /**
-     * change the ownership of the input neurons
+     * change the ownership of the input neuron
      */
-    public synchronized void changeNeuronsOwner(List<Long> neuronIDs, Subject newOwner) throws Exception {
-
-        // what checks are needed here?
-
-
-        final List<TmNeuronMetadata> neuronList = new ArrayList<>();
-        for (Long neuronID: neuronIDs) {
-            neuronList.add(getNeuronFromNeuronID(neuronID));
+    public synchronized void changeNeuronOwner(Long neuronID, Subject newOwner) throws Exception {
+        final TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronID);
+        // CompletableFuture<Boolean> future = getNeuronManager().requestOwnershipChange(neuron);
+        CompletableFuture<Boolean> future = getNeuronManager().requestAssignmentChange(neuron, newOwner.getKey());
+        if (future == null) {
+            presentError("Error while attempting to request ownership of " + neuron.getName(), "Error changing owner");
+            log.error("Completeable future is null when requesting owner change of neuron " + neuron.getName() +
+                " to owner " + newOwner.getKey());
+            return;
+        } else {
+            // wait for the future to finish (blocks)
+            Boolean ownershipDecision = future.get();
+            if (!ownershipDecision) {
+                presentError("Error while attempting to request ownership of " + neuron.getName(), "Error changing owner");
+                log.error("Ownership change rejected; neuron " + neuron.getName() + " owned by " +
+                    neuron.getOwnerName() + " not " + newOwner.getKey());
+                return;
+            }
         }
 
-        for (TmNeuronMetadata neuron: neuronList) {
-            // this is not a simple "save neuron data"; need to explicitly
-            //  request ownership; here we wait, though
-            // in other places, this is done asynchronously
-            neuron.setOwnerKey(newOwner.getKey());
-            getNeuronManager().requestOwnershipChange(neuron);
-
-            log.info("Neuron " + neuron.getName() + " owner changed to  " + newOwner.getKey());
-        }
+        // it's now safe to change local object
+        neuron.setOwnerKey(newOwner.getKey());
+        log.info("Neuron " + neuron.getName() + " owner changed to  " + newOwner.getKey());
 
         final TmWorkspace workspace = getCurrentWorkspace();
+        final List<TmNeuronMetadata> neuronList = new ArrayList<>();
+        neuronList.add(neuron);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fireNeuronsOwnerChanged(neuronList);
-                for (TmNeuronMetadata neuron: neuronList) {
-                    activityLog.logChangeNeuronOwner(workspace.getId(), neuron.getId());
-                }
+                activityLog.logChangeNeuronOwner(workspace.getId(), neuron.getId());
             }
         });
     }
@@ -2135,6 +2135,22 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         return new SWCData().breakOutByRoots(infile);
     }
 
+    /**
+     * tells the annotation mgr to pop up an error dialog; this is
+     * not a great way to do this, but hopefully it's going to be rare
+     */
+    private void presentError(String message, String title) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+                annotationMgr.presentError(message, title);
+            }
+        });
+    }
+
+
+    // ----- notifications to listeners -----
     public void fireAnnotationNotMoved(TmGeoAnnotation annotation) {
         for (TmGeoAnnotationModListener l: tmGeoAnnoModListeners) {
             l.annotationNotMoved(annotation);
