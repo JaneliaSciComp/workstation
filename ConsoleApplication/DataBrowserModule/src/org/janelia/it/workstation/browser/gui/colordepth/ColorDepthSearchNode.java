@@ -6,6 +6,8 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import javax.swing.Action;
 
@@ -137,7 +139,10 @@ public class ColorDepthSearchNode extends AbstractDomainObjectNode<ColorDepthSea
             log.trace("Transferable is expected to support either DomainObjectNodeFlavor or multiFlavor.");
             return null;
         }
-
+        
+        // Only allow those masks which match the search's alignment space
+        nodes = nodes.stream().filter(mask -> mask.getColorDepthMask().getAlignmentSpace().equals(getColorDepthSearch().getAlignmentSpace())).collect(Collectors.toList());
+        
         if (!nodes.isEmpty()) {
             return new SearchPasteType(nodes, this);
         }
@@ -163,7 +168,7 @@ public class ColorDepthSearchNode extends AbstractDomainObjectNode<ColorDepthSea
         @Override
         public Transferable paste() throws IOException {
             try {
-                log.trace("paste called on TreeNodePasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
+                log.trace("paste called on SearchPasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
                 ColorDepthSearch newParent = targetNode.getColorDepthSearch();
                 if (newParent==null) {
                     log.warn("Target node has no TreeNode: "+targetNode.getDisplayName());
