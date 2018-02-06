@@ -4,7 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -131,8 +131,8 @@ public final class DownloadVisualPanel3 extends JPanel {
         downloadItemCountLabel = new JLabel();
         attrPanel.addItem("File count", downloadItemCountLabel);
         
-        File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
-        JLabel downloadDirLabel = new JLabel(workstationImagesDir.getAbsolutePath());
+        Path workstationImagesDir = SystemInfo.getDownloadsDir().resolve("Workstation Images");
+        JLabel downloadDirLabel = new JLabel(workstationImagesDir.toString());
         attrPanel.addItem("Destination folder", downloadDirLabel);
         
         downloadItemList = new JList<>(new DefaultListModel<DownloadFileItem>());

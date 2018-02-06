@@ -3,7 +3,9 @@ package org.janelia.it.workstation.browser.gui.dialogs.download;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +18,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -480,15 +483,15 @@ public final class DownloadWizardAction implements ActionListener {
         
     }
     
-    private Map<File,File[]> listCache = new HashMap<>();
+    private Map<Path,List<Path>> listCache = new HashMap<>();
 
-    private String getAlreadyDownloadedFilename(DownloadFileItem downloadItem) {
+    private String getAlreadyDownloadedFilename(DownloadFileItem downloadItem) throws IOException {
 
-        final File targetDir = downloadItem.getTargetFile().getParentFile();
+        final Path targetDir = downloadItem.getTargetFile().getParent();
         
-        File[] files = listCache.get(targetDir);
-        if (files==null) {
-            files = targetDir.listFiles();
+        List<Path> files = listCache.get(targetDir);
+        if (files==null && Files.exists(targetDir)) {
+            files = Files.list(targetDir).collect(Collectors.toList());
             listCache.put(targetDir, files);
         }
 
@@ -498,12 +501,12 @@ public final class DownloadWizardAction implements ActionListener {
         }
         
         final String targetExtension = downloadItem.getTargetExtension();
-        final String targetName = downloadItem.getTargetFile().getName();
+        final String targetName = downloadItem.getTargetFile().getFileName().toString();
         final String basename = FileUtil.getBasename(targetName).replaceAll("#","");
 
         // Find the first matching file
-        for(File file : files) {
-            String name = file.getName();
+        for(Path file : files) {
+            String name = file.getFileName().toString();
             if (name.startsWith(basename) && name.endsWith(targetExtension)) {
                 return name;
             }
@@ -559,7 +562,7 @@ public final class DownloadWizardAction implements ActionListener {
                         "Maximum number of folders have been opened. Further folders will not be opened for this file set.", "Open Folder", JOptionPane.WARNING_MESSAGE);
             }
             else if (numBrowseFileAttempts < MAX_BROWSE_FILES) {
-                DesktopApi.browse(downloadItem.getTargetFile().getParentFile());
+                DesktopApi.browse(downloadItem.getTargetFile().getParent().toFile());
             }
             numBrowseFileAttempts++;
         }

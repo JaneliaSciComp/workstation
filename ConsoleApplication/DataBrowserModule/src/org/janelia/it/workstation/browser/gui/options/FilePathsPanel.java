@@ -65,7 +65,7 @@ final class FilePathsPanel extends javax.swing.JPanel {
             }
         });
         
-        String downloadsDir = SystemInfo.getDownloadsDir().getAbsolutePath();
+        String downloadsDir = SystemInfo.getDownloadsDir().toString();
         downloadsDirField.setText(downloadsDir);
 
         String chooseFileText = null;
@@ -108,7 +108,7 @@ final class FilePathsPanel extends javax.swing.JPanel {
     void store() {
 
         String downloadsDir = downloadsDirField.getText().trim();
-        if (!downloadsDir.equals(SystemInfo.getDownloadsDir().getAbsolutePath())) {
+        if (!downloadsDir.equals(SystemInfo.getDownloadsDir().toString())) {
             log.info("Saving downloads dir: "+downloadsDir);
             SystemInfo.setDownloadsDir(downloadsDir);
         }

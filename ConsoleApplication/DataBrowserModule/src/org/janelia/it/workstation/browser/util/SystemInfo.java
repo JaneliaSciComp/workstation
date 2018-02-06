@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.browser.util;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
@@ -125,22 +127,20 @@ public class SystemInfo {
         FrameworkImplProvider.setModelProperty(OptionConstants.DOWNLOADS_DIR, downloadsDir);
     }
 
-    public static File getDownloadsDir() {
+    public static Path getDownloadsDir() {
         String downloadsDir = (String) FrameworkImplProvider.getModelProperty(OptionConstants.DOWNLOADS_DIR);
-        File downloadsDirFile;
+        Path downloadsDirFile;
         // Check for existence and clear out references to tmp
         if (null==downloadsDir || downloadsDir.startsWith("/tmp")) {
-            downloadsDirFile = new File(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
+            downloadsDirFile = Paths.get(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
         }
         else {
-            downloadsDirFile = new File(downloadsDir);
+            downloadsDirFile = Paths.get(downloadsDir);
         }
         try {
-            if (!downloadsDirFile.exists()) {
-                boolean success = downloadsDirFile.mkdir();
-                if (success) {
-                    log.debug("Created Download dir: "+downloadsDirFile.getAbsolutePath());
-                }
+            if (!Files.exists(downloadsDirFile)) {
+                Files.createDirectories(downloadsDirFile);
+                log.debug("Created Download dir: "+downloadsDirFile.toString());
             }
         }
         catch (Exception e) {

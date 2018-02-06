@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +48,7 @@ public class DownloadFileItem {
     public static final String ATTR_LABEL_EXTENSION = "Extension";
     public static final String ATTR_LABEL_GUID = "GUID";
     
-    private final File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
+    private final Path workstationImagesDir = SystemInfo.getDownloadsDir().resolve("Workstation Images");
     private final List<String> itemPath;
     private final DomainObject domainObject;
     private HasFiles fileProvider;
@@ -56,7 +58,7 @@ public class DownloadFileItem {
     private String errorMessage;
     private String resultName;
     private String sourceFile;
-    private File targetFile;
+    private Path targetLocalPath;
     private String sourceExtension;
     private String targetExtension;
     private boolean is3d;
@@ -77,7 +79,7 @@ public class DownloadFileItem {
         this.splitChannels = splitChannels;
         this.errorMessage = null;
         this.resultName = null;
-        this.targetFile = null;
+        this.targetLocalPath = null;
         this.is3d = fileType.is3dImage();
         
         if (!fileType.is3dImage() && splitChannels) {
@@ -130,22 +132,22 @@ public class DownloadFileItem {
         log.debug("Output extension: {}",sourceExtension);
                 
         // Build the path
-        File itemDir = null;
+        Path itemDir = null;
         if (itemPath!=null && !flattenStructure) {
             StringBuilder pathBuilder = new StringBuilder();
             for(String item : itemPath) {
                 if (pathBuilder.length()!=0) pathBuilder.append("/");
                 pathBuilder.append(item);
             }
-            itemDir = new File(workstationImagesDir, pathBuilder.toString());
+            itemDir = workstationImagesDir.resolve(pathBuilder.toString());
         }
         else {
             itemDir = workstationImagesDir;
         }
 
         try {
-            targetFile = new File(itemDir, constructFilePath(filenamePattern));
-            log.debug("Target path: {}", targetFile.getAbsolutePath());
+            targetLocalPath = itemDir.resolve(constructFilePath(filenamePattern));
+            log.debug("Target path: {}", targetLocalPath.toString());
             log.debug("Target extension: {}", this.targetExtension);
         }
         catch (Exception e) {
@@ -156,14 +158,18 @@ public class DownloadFileItem {
     private String getStaticPath(HasFilepath hasFilePath, FileType fileType) {
         if (hasFilePath.getFilepath()==null) return null;
         switch (fileType) {
-            case NeuronAnnotatorLabel: return new File(hasFilePath.getFilepath(),"ConsolidatedLabel.v3dpbd").getAbsolutePath();
-            case NeuronAnnotatorSignal: return new File(hasFilePath.getFilepath(),"ConsolidatedSignal.v3dpbd").getAbsolutePath();
-            case NeuronAnnotatorReference: return new File(hasFilePath.getFilepath(),"Reference.v3dpbd").getAbsolutePath();
+            case NeuronAnnotatorLabel: return ensureUnixPath(Paths.get(hasFilePath.getFilepath(),"ConsolidatedLabel.v3dpbd").toString());
+            case NeuronAnnotatorSignal: return ensureUnixPath(Paths.get(hasFilePath.getFilepath(),"ConsolidatedSignal.v3dpbd").toString());
+            case NeuronAnnotatorReference: return ensureUnixPath(Paths.get(hasFilePath.getFilepath(),"Reference.v3dpbd").toString());
             default: break;
         }
         return null;
     }
  
+    private String ensureUnixPath(String path) {
+        return path.replaceAll("\\\\", "/").replaceFirst("^[A-Z]:", "");
+    }
+    
     private String constructFilePath(String filePattern) throws Exception {
 
         log.debug("Objects used for path constructions: ");
@@ -287,8 +293,8 @@ public class DownloadFileItem {
         return sourceFile;
     }
 
-    public File getTargetFile() {
-        return targetFile;
+    public Path getTargetFile() {
+        return targetLocalPath;
     }
 
     public String getSourceExtension() {
@@ -312,10 +318,10 @@ public class DownloadFileItem {
     	if (errorMessage!=null) {
 			return errorMessage;
 		}
-    	if (targetFile==null) {
+    	if (targetLocalPath==null) {
     		return "Error getting file for "+domainObject.getName();
     	}
-        int cut = workstationImagesDir.getAbsolutePath().length()+1;
-        return targetFile.getAbsolutePath().substring(cut);
+        int cut = workstationImagesDir.toString().length()+1;
+        return targetLocalPath.toString().substring(cut);
     }
 }
