@@ -257,7 +257,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                     } else if (modelColumn == NeuronTableModel.COLUMN_OWNER) {
                         String owner = selectedNeuron.getOwnerName();
                         String username = AccessManager.getAccessManager().getActualSubject().getName();
-                        if (owner.equals(username) || AccessManager.getAccessManager().isAdmin()) {
+                        if (owner.equals(username) || owner.equals(COMMON_USER_KEY) || AccessManager.getAccessManager().isAdmin()) {
                             // (note that admins can change ownership on any neuron)
 
                             // pop up a dialog so the user can request to change the ownership
@@ -269,12 +269,6 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                                 annotationManager.changeNeuronOwner(selectedNeuron, dialog.getNewOwnerKey());
                                 }
 
-                        } else if (owner.equals(COMMON_USER_KEY)) {
-                            // can take ownership immediately
-
-                            // for now:
-                            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
-                                "This is a Mouselight common neuron.  In the future, you'll be able to take ownership of this automatically.  For now, you can't.");
                         } else {
                             // submit a request to take ownership
 
