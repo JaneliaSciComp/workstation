@@ -2,17 +2,26 @@ package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -26,6 +35,7 @@ import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.enums.FileType;
@@ -131,9 +141,52 @@ public final class DownloadVisualPanel3 extends JPanel {
         downloadItemCountLabel = new JLabel();
         attrPanel.addItem("File count", downloadItemCountLabel);
         
-        Path workstationImagesDir = SystemInfo.getDownloadsDir().resolve("Workstation Images");
+        Path workstationImagesDir = SystemInfo.getDownloadsDir();
         JLabel downloadDirLabel = new JLabel(workstationImagesDir.toString());
-        attrPanel.addItem("Destination folder", downloadDirLabel);
+        
+        String chooseFileText = null;
+        ImageIcon chooseFileIcon = null;
+        try {
+            chooseFileIcon = Utils.getClasspathImage("magnifier.png");
+        } catch (FileNotFoundException e) {
+            log.warn("failed to load button icon", e);
+            chooseFileText = "...";
+        }
+        
+        JButton chooseFileButton = new JButton(chooseFileText, chooseFileIcon);
+        chooseFileButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Path workstationImagesDir = SystemInfo.getDownloadsDir();
+                if (!Files.exists(workstationImagesDir)) {
+                    workstationImagesDir = null;
+                }
+                JFileChooser fileChooser = new JFileChooser() {
+
+                    @Override
+                    public void approveSelection() {
+                        log.info("{}",getSelectedFile());
+                        super.approveSelection();
+                    }
+                    
+                };
+                fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                fileChooser.setCurrentDirectory(workstationImagesDir.toFile());
+                int returnVal = fileChooser.showOpenDialog(DownloadVisualPanel3.this);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    String downloadDirPath = fileChooser.getSelectedFile().getAbsolutePath();
+                    SystemInfo.setDownloadsDir(downloadDirPath);
+                    downloadDirLabel.setText(downloadDirPath);
+                }
+            }
+        });
+
+        JPanel filePanel = new JPanel();
+        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.LINE_AXIS));
+        filePanel.add(downloadDirLabel);
+        filePanel.add(Box.createRigidArea(new Dimension(5,  0)));
+        filePanel.add(chooseFileButton);
+        attrPanel.addItem("Destination folder", filePanel);
         
         downloadItemList = new JList<>(new DefaultListModel<DownloadFileItem>());
         downloadItemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);

@@ -165,7 +165,7 @@ public class DownloadFileItem {
         }
         return null;
     }
- 
+
     private String ensureUnixPath(String path) {
         return path.replaceAll("\\\\", "/").replaceFirst("^[A-Z]:", "");
     }

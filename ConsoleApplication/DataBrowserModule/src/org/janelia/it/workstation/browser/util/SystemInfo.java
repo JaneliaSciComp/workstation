@@ -36,7 +36,8 @@ public class SystemInfo {
     public static final String ARCH_DATA_MODEL = System.getProperty("sun.arch.data.model");
     public static final String SUN_DESKTOP = System.getProperty("sun.desktop");
 
-    public static final String DOWNLOADS_FINAL_PATH_DIR = "Downloads/";
+    public static final String DOWNLOADS_DIR = "Downloads";
+    public static final String WORKSTATION_FILES_DIR = "Workstation";
     public static final String USERHOME_SYSPROP_NAME = "user.home";
 
     public static final boolean isWindows = OS_NAME_LC.startsWith("windows");
@@ -124,29 +125,42 @@ public class SystemInfo {
     }
 
     public static void setDownloadsDir(String downloadsDir) {
-        FrameworkImplProvider.setModelProperty(OptionConstants.DOWNLOADS_DIR, downloadsDir);
+        FrameworkImplProvider.setModelProperty(OptionConstants.FILE_DOWNLOADS_DIR, downloadsDir);
     }
 
     public static Path getDownloadsDir() {
-        String downloadsDir = (String) FrameworkImplProvider.getModelProperty(OptionConstants.DOWNLOADS_DIR);
-        Path downloadsDirFile;
+        
+        String fileDownloadsDir = (String) FrameworkImplProvider.getModelProperty(OptionConstants.FILE_DOWNLOADS_DIR);
+        
+        Path fileDownloadsPath;
         // Check for existence and clear out references to tmp
-        if (null==downloadsDir || downloadsDir.startsWith("/tmp")) {
-            downloadsDirFile = Paths.get(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
+        if (fileDownloadsDir==null || fileDownloadsDir.startsWith("/tmp")) {
+
+            Path downloadDir;
+            String oldDownloadsDir = (String) FrameworkImplProvider.getModelProperty(OptionConstants.DOWNLOADS_DIR);
+            if (oldDownloadsDir != null) { 
+                downloadDir = Paths.get(oldDownloadsDir);
+            }
+            else {
+                downloadDir = Paths.get(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_DIR);
+            }
+            fileDownloadsPath = downloadDir.resolve(WORKSTATION_FILES_DIR);
         }
         else {
-            downloadsDirFile = Paths.get(downloadsDir);
+            fileDownloadsPath = Paths.get(fileDownloadsDir);
         }
+        
         try {
-            if (!Files.exists(downloadsDirFile)) {
-                Files.createDirectories(downloadsDirFile);
-                log.debug("Created Download dir: "+downloadsDirFile.toString());
+            if (!Files.exists(fileDownloadsPath)) {
+                Files.createDirectories(fileDownloadsPath);
+                log.debug("Created download dir: "+fileDownloadsPath.toString());
             }
         }
         catch (Exception e) {
-            log.error("Error trying to test and create a Downloads directory.");
+            log.error("Error trying to test and create a download directory", e);
         }
-        return downloadsDirFile;
+        
+        return fileDownloadsPath;
     }
 
     private static com.sun.management.OperatingSystemMXBean getOSMXBean() {

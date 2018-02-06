@@ -10,7 +10,6 @@ import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -27,24 +26,14 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.tasks.Event;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
-import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.FileMgr;
-import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
-import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.filecache.RemoteLocation;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
@@ -54,13 +43,15 @@ import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.jdesktop.swingx.VerticalLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -135,7 +126,7 @@ public class ImportDialog extends ModalDialog {
                     currentDir = null;
                 }
                 JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 fileChooser.setCurrentDirectory(currentDir);
                 int returnVal = fileChooser.showOpenDialog(ImportDialog.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
