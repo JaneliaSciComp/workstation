@@ -142,11 +142,13 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                                 byte[] msgBody = message.getBody();
                                 exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
                                 if (user.equals(AccessManager.getSubjectKey())) {
-                                    annotationModel.getNeuronManager().mergeCreatedNeuron(neuron);
+                                    annotationModel.getNeuronManager().mergeCreatedNeuron(neuron);                                    
+                                    annotationModel.fireBackgroundNeuronCreated(neuron);                                    
+                                    annotationModel.selectNeuron(neuron);
                                 } else {
-                                    annotationModel.getNeuronManager().addNeuron(neuron);
+                                    annotationModel.getNeuronManager().addNeuron(neuron);                                                                   
+                                    annotationModel.fireBackgroundNeuronCreated(neuron);   
                                 }
-                                annotationModel.fireBackgroundNeuronCreated(neuron);
                                 break;
                             case NEURON_SAVE_NEURONDATA:
                             case NEURON_SAVE_METADATA:
