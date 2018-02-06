@@ -293,7 +293,7 @@ public class PanelController {
 
         @Override
         public void neuronOwnerChanged(TmNeuronMetadata neuron) {
-          
+            wsNeuronList.updateModel(neuron);
         }
     }
 }

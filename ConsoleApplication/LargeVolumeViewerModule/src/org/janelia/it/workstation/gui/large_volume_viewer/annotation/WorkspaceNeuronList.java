@@ -266,9 +266,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                                 selectedNeuron);
                             dialog.setVisible(true);
                             if (dialog.isSuccess()) {
-                                List<TmNeuronMetadata> neuronList = new ArrayList<>();
-                                neuronList.add(selectedNeuron);
-                                annotationManager.changeNeuronsOwner(neuronList, dialog.getNewOwnerKey());
+                                annotationManager.changeNeuronOwner(selectedNeuron, dialog.getNewOwnerKey());
                                 }
 
                         } else if (owner.equals(COMMON_USER_KEY)) {
