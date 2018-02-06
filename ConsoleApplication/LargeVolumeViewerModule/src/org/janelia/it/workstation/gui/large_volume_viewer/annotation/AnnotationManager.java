@@ -241,8 +241,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     
     public boolean checkOwnership(TmNeuronMetadata neuron)  {
         if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
-
-            // change owner asynchronously behind the scenes for now
             if (neuron.getOwnerKey().equals(SYSTEM_OWNER)) {
                 try {
                     CompletableFuture<Boolean> future = annotationModel.getNeuronManager().requestOwnershipChange(neuron);
@@ -1328,25 +1326,20 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     /**
      * change the ownership of the input neurons
      */
-    public void changeNeuronsOwner(List<TmNeuronMetadata> neuronList, Subject newOwner) {
-        if (neuronList.size() == 0) {
-            return;
+    public void changeNeuronOwner(TmNeuronMetadata neuron, Subject newOwner) {
+        // UI should have checked this, but let's allow for multiple entry points to this code
+
+        Subject userSubject = AccessManager.getAccessManager().getActualSubject();
+        if (!neuron.getOwnerKey().equals(userSubject) && !AccessManager.getAccessManager().isAdmin()) {
+            // user doesn't have permission for this neuron
+            presentError("You don't have permission to change the owner of neuron " + neuron.getName() +
+                "; current owner " + neuron.getOwnerName() + " must change ownership.", "Can't change ownership");
         }
 
-        // at this point, what ownership checks do we need?  should we assume checks have
-        //  already been done?
-        //  this will be used to changing ownership as well as requesting changes, right?
-
-
-
-        List<Long> neuronIDs = new ArrayList<>();
-        for (TmNeuronMetadata neuron: neuronList) {
-            neuronIDs.add(neuron.getId());
-        }
         SimpleWorker changer = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.changeNeuronsOwner(neuronIDs, newOwner);
+                annotationModel.changeNeuronOwner(neuron.getId(), newOwner);
             }
 
             @Override
