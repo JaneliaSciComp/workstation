@@ -1251,8 +1251,9 @@ public class TracingInteractor extends MouseAdapter
         if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
             JOptionPane.showMessageDialog(
                     volumeProjection.getMouseableComponent(),
-                    "You cannot change a neuron that you don't own.",
-                    "Wrong Neuron Ownership",
+                    "Neuron " + neuron.getName() + " is owned by " + neuron.getOwnerKey() +
+                            ". Ask them for ownership if you'd like to make changes.",
+                    "Neuron not owned",
                     JOptionPane.WARNING_MESSAGE);
             return false;
         }
