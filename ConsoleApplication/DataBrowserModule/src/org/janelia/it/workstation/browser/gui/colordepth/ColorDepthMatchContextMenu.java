@@ -42,9 +42,12 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     protected Map<Reference, Sample> sampleMap;
     protected List<ColorDepthMatch> matches;
     protected boolean multiple;
+    
+    // If single result selected, these will be not null
     protected ColorDepthMatch match;
+    protected Sample sample;
     protected String matchName;
-
+    
     public ColorDepthMatchContextMenu(ColorDepthResult result, List<ColorDepthMatch> matches, Map<Reference, Sample> sampleMap) {
         this.contextObject = result;
         this.matches = matches;
@@ -55,7 +58,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
             this.matchName = match.getFile().getName();
         }
         else {
-            Sample sample = match==null ? null : sampleMap.get(match.getSample());
+            this.sample = match==null ? null : sampleMap.get(match.getSample());
             this.matchName = multiple ? null : (sample == null ? "Access denied" : sample.getName());
         }
         ActivityLogHelper.logUserAction("ColorDepthMatchContextMenu.create", match);
@@ -86,17 +89,22 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         add(getTitleItem());
         add(getCopyNameToClipboardItem());
 
-        setNextAddRequiresSeparator(true);
-        add(getAddToMaskResultsItem());
-        add(getAddToFolderItem());
-        add(getColorDepthSearchItem());
-        
-        setNextAddRequiresSeparator(true);
-        add(getOpenInFinderItem());
-        add(getOpenWithAppItem());
-
-        setNextAddRequiresSeparator(true);
-        add(getHudMenuItem());
+        if (sample != null) {
+            setNextAddRequiresSeparator(true);
+            add(getAddToMaskResultsItem());
+            add(getAddToFolderItem());
+            add(getColorDepthSearchItem());
+            
+            setNextAddRequiresSeparator(true);
+            add(getOpenInFinderItem());
+            add(getOpenWithAppItem());
+    
+            setNextAddRequiresSeparator(true);
+            add(getHudMenuItem());
+        }
+        else {
+            add(getRequestAccessItem());
+        }
     }
 
     protected JMenuItem getTitleItem() {
@@ -115,9 +123,6 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     protected JMenuItem getColorDepthSearchItem() {
 
         if (multiple) return null;
-        
-        Sample sample = sampleMap.get(match.getSample());
-        if (sample==null) return null;
         
         return null;
         // TODO: figure out the result descriptor, or create a new action to make this work
@@ -157,6 +162,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
                 worker.execute();
             }
         });
+        
         return addToMaskItem;
     }
     
@@ -203,6 +209,15 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         });
 
         return toggleHudMI;
+    }
+
+    
+    protected JMenuItem getRequestAccessItem() {
+        if (multiple) return null;
+        
+        // TODO: Implement this
+        
+        return null;
     }
     
     protected List<Sample> getSamples() {
