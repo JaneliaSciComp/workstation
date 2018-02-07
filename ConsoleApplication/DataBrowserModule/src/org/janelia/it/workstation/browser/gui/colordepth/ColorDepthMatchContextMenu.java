@@ -10,6 +10,7 @@ import java.util.Map;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OpenInFinderAction;
@@ -132,40 +133,26 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     }
    
     protected JMenuItem getAddToMaskResultsItem() {
-
-        String name = matches.size() > 1 ? "  Add " + matches.size() + " Samples to Mask Results" : "  Add Sample To Mask Results";
-        
-        JMenuItem addToMaskItem = new JMenuItem(name);
-        addToMaskItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ActivityLogHelper.logUserAction("ColorDepthMatchContentMenu.getAddToMaskResultsItem", matches);
-                
-                SimpleWorker worker = new SimpleWorker() {
-                    
-                    DomainModel model = DomainMgr.getDomainMgr().getModel();
-                    
-                    @Override
-                    protected void doStuff() throws Exception {
-                        ColorDepthMask mask = model.getDomainObject(matches.get(0).getMaskRef());
-                        model.addChildren(mask, getSamples());
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        // TODO: reload data explorer?
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
-                    }
-                };
-                worker.execute();
-            }
-        });
-        
-        return addToMaskItem;
+        AddToResultsAction action = AddToResultsAction.get();
+        List<Sample> samples = getSamples();
+        action.setDomainObjects(samples);
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        try {
+            // This should properly be done in a background thread, but as a shortcut we'll rely on the fact it's cached 
+            ColorDepthMask mask = model.getDomainObject(matches.get(0).getMaskRef());
+            action.setMask(mask);
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
+            return null;
+        }
+        JMenuItem item = action.getPopupPresenter();
+        if (item!=null) {
+            // Override title to include the word "Sample" instead of generic "Item"
+            String title = samples.size() > 1 ? "Add " + samples.size() + " Samples To Result Set" : "Add Sample To Result Set";
+            item.setText("  " + title);
+        }
+        return item;
     }
     
     protected JMenuItem getAddToFolderItem() {
