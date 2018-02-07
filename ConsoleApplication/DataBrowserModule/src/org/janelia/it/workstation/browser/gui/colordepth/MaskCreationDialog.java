@@ -9,17 +9,13 @@ import java.util.Set;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
 import javax.swing.JSlider;
-import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
-import org.janelia.it.workstation.browser.gui.editor.SelectionButton;
+import org.janelia.it.workstation.browser.gui.editor.SingleSelectionButton;
 import org.janelia.it.workstation.browser.gui.lasso.ImageMaskingPanel;
 import org.janelia.it.workstation.browser.gui.support.WrapLayout;
-
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Create a new mask for color depth searching. 
@@ -35,7 +31,7 @@ public class MaskCreationDialog extends ModalDialog {
     private JSlider thresholdSlider;
     private JLabel thresholdLabel;
     private final JPanel thresholdPanel;
-    private SelectionButton<String> alignmentSpaceButton;
+    private SingleSelectionButton<String> alignmentSpaceButton;
     private ImageMaskingPanel maskingPanel;
     private BufferedImage mask;
     private String alignmentSpace;
@@ -59,35 +55,21 @@ public class MaskCreationDialog extends ModalDialog {
         thresholdPanel.add(thresholdSlider, BorderLayout.CENTER);
         setThreshold(DEFAULT_THRESHOLD_VALUE);
                 
-        alignmentSpaceButton = new SelectionButton<String>("Alignment Space", true) {
+        alignmentSpaceButton = new SingleSelectionButton<String>("Alignment Space") {
             
             @Override
-            protected Collection<String> getValues() {
+            public Collection<String> getValues() {
                 return alignmentSpaces;
             }
 
             @Override
-            protected Set<String> getSelectedValueNames() {
-                if (alignmentSpace==null) return ImmutableSet.of();
-                return ImmutableSet.of(alignmentSpace);
+            public String getSelectedValue() {
+                return alignmentSpace;
             }
             
             @Override
-            protected void selectAll() {
-            }
-            
-            @Override
-            protected void clearSelected() {
-            }
-
-            @Override
-            protected void updateSelection(String value, boolean selected) {
-                if (selected) {
-                    alignmentSpace = value;
-                }
-                else {
-                    alignmentSpace = null;
-                }
+            public void updateSelection(String value) {
+                alignmentSpace = value;
             }
         };
         alignmentSpaceButton.update();

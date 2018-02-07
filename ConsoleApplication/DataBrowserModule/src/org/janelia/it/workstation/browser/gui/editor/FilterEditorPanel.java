@@ -14,8 +14,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.ButtonGroup;
@@ -478,27 +480,27 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainO
                 SelectionButton<FacetValue> facetButton = new SelectionButton<FacetValue>(attr.getLabel()) {
 
                     @Override
-                    protected Collection<FacetValue> getValues() {
+                    public Collection<FacetValue> getValues() {
                         return searchConfig.getFacetValues(attr.getFacetKey());
                     }
 
                     @Override
-                    protected Set<String> getSelectedValueNames() {
-                        return getSelectedFacetValues(attr.getName());
+                    public Set<FacetValue> getSelectedValues() {
+                        return getSelectedFacetValues(attr);
                     }
 
                     @Override
-                    protected String getName(FacetValue value) {
+                    public String getName(FacetValue value) {
                         return value.getValue();
                     }
-
+                    
                     @Override
-                    protected String getLabel(FacetValue value) {
+                    public String getLabel(FacetValue value) {
                         return value.getValue()+" ("+value.getCount()+" items)";
                     }
 
                     @Override
-                    protected boolean isHidden(FacetValue value) {
+                    public boolean isHidden(FacetValue value) {
                         return value.getCount()==0;
                     }
 
@@ -683,13 +685,19 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainO
         }
     }
 
-    private Set<String> getSelectedFacetValues(String attrName) {
+    private Set<FacetValue> getSelectedFacetValues(DomainObjectAttribute attr) {
         if (filter==null || !filter.hasCriteria()) return new HashSet<>();
         for (Criteria criteria : filter.getCriteriaList()) {
             if (criteria instanceof FacetCriteria) {
                 FacetCriteria fc = (FacetCriteria) criteria;
-                if (fc.getAttributeName().equals(attrName)) {
-                    return fc.getValues();
+                if (fc.getAttributeName().equals(attr.getName())) {
+                    List<FacetValue> facetValues = searchConfig.getFacetValues(attr.getFacetKey());
+                    if (facetValues != null) {
+                        return searchConfig.getFacetValues(attr.getFacetKey())
+                                .stream()
+                                .filter(facetValue -> fc.getValues().contains(facetValue.getValue()))
+                                .collect(Collectors.toSet());
+                    }
                 }
             }
         }

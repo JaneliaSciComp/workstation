@@ -8,10 +8,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
-import javax.swing.JRadioButtonMenuItem;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
@@ -28,17 +28,11 @@ public abstract class SelectionButton<T> extends DropDownButton {
     private static final int MAX_VALUES_STRING_LENGTH = 20;
     
     private String label;
-    private boolean isRadio;
 
     public SelectionButton(String label) {
-        this(label, false);
-    }
-    
-    public SelectionButton(String label, boolean radio) {
         this.label = label;
-        this.isRadio = radio;
     }
-    
+        
     public void update() {
         updateText();
         populateFacetMenu();
@@ -48,7 +42,7 @@ public abstract class SelectionButton<T> extends DropDownButton {
 
         StringBuilder text = new StringBuilder();
         text.append(label);
-        List<String> valueLabels = new ArrayList<>(getSelectedValueNames());
+        List<String> valueLabels = new ArrayList<>(getSelectedValues().stream().map(value -> getName(value)).collect(Collectors.toList()));
         if (!valueLabels.isEmpty()) {
             Collections.sort(valueLabels);
                 text.append(" (");
@@ -66,9 +60,9 @@ public abstract class SelectionButton<T> extends DropDownButton {
         Collection<T> values = getValues();
         if (values!=null) {
             
-            Set<String> selectedValueNames = new HashSet<>(getSelectedValueNames());
+            Set<T> selectedValueNames = new HashSet<>(getSelectedValues());
     
-            if (!isRadio && !selectedValueNames.isEmpty()) {
+            if (!selectedValueNames.isEmpty()) {
                 final JMenuItem menuItem = new JMenuItem("Clear selected");
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -79,7 +73,7 @@ public abstract class SelectionButton<T> extends DropDownButton {
                 addMenuItem(menuItem);
             }
 
-            if (!isRadio && selectedValueNames.size() != values.size()) {
+            if (selectedValueNames.size() != values.size()) {
                 final JMenuItem selectAllItem = new JMenuItem("Select All");
                 selectAllItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -91,15 +85,13 @@ public abstract class SelectionButton<T> extends DropDownButton {
             }
         
             for (final T value : values) {
-                boolean selected = selectedValueNames.contains(getName(value));
+                boolean selected = selectedValueNames.contains(value);
                 if (isHidden(value) && !selected) {
                     // Skip anything that is not selected, and which doesn't have results. Clicking it would be futile.
                     continue;
                 }
                 String label = getLabel(value);
-                final JMenuItem menuItem = isRadio 
-                        ? new JRadioButtonMenuItem(label, selected) 
-                        : new JCheckBoxMenuItem(label, selected);
+                final JMenuItem menuItem = new JCheckBoxMenuItem(label, selected);
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         if (menuItem.isSelected()) {
@@ -115,35 +107,44 @@ public abstract class SelectionButton<T> extends DropDownButton {
             }
         }
     }
+
+    /**
+     * Set the current value(s) programmatically.
+     * @param value
+     */
+    public void setSelectedValue(T value, boolean selected) {
+        updateSelection(value, selected);
+        update();
+    }
    
     /**
      * Returns the possible values.
      * @return
      */
-    protected abstract Collection<T> getValues();
+    public abstract Collection<T> getValues();
 
     /**
      * Returns the list of value names which are currently selected.
      * @return
      */
-    protected abstract Collection<String> getSelectedValueNames();
-    
+    public abstract Collection<T> getSelectedValues();
+
     /**
-     * Returns the given value's name. Returns the value's toString by default.
+     * Return the given value's name. Returns the value's toString by default.
      * @param value
      * @return
      */
-    protected String getName(T value) {
+    public String getName(T value) {
         return value==null ? null : value.toString();
     }
     
     /**
-     * Return the given value's label. Returns getName(value) by default.
+     * Return the given value's label. Returns the value's toString by default.
      * @param value
      * @return
      */
-    protected String getLabel(T value) {
-        return getName(value);
+    public String getLabel(T value) {
+        return value==null ? null : value.toString();
     }
     
     /**

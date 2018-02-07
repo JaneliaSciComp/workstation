@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
@@ -55,6 +56,7 @@ import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
 import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.editor.SelectionButton;
+import org.janelia.it.workstation.browser.gui.editor.SingleSelectionButton;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.progress.ProgressMeterPanel;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
@@ -97,10 +99,16 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private static final int DEFAULT_THRESHOLD_VALUE = 100;
     private static final NumberFormat PX_FORMATTER = new DecimalFormat("#0.00");
     private static final String PCT_POSITIVE_THRESHOLD = "Min match %";
-    private static final String PIX_COLOR_FLUCTUATION = "Num slices to search";
+    private static final String PIX_COLOR_FLUCTUATION = "Z Slice Range";
     private static final String DEFAULT_PCT_PC = "10.00";
     private static final String DEFAULT_PIX_FLUC = "2";
-
+    
+    private static final ZSliceRange defaultSliceRange = new ZSliceRange("1", 1);
+    private static final List<ZSliceRange> rangeValues;
+    static {
+        rangeValues = ImmutableList.of(defaultSliceRange, new ZSliceRange("3", 2), new ZSliceRange("5", 3));
+    }
+    
     // Utilities
     private final Debouncer debouncer = new Debouncer();
     private final AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
@@ -111,11 +119,10 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 //    private final JButton saveAsButton;
     private final JSplitPane splitPane;
     private final JPanel pctPxPanel;
-    private final JPanel pixFlucPanel;
+    private final SingleSelectionButton<ZSliceRange> pixFlucButton;
     private final JPanel thresholdPanel;
     private final JSlider thresholdSlider;
     private final JTextField pctPxField;
-    private final JTextField pixFlucField;
     private final JLabel thresholdLabel;
     private final SelectionButton<DataSet> dataSetButton;
     private final JButton searchButton;
@@ -141,7 +148,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         setBorder(BorderFactory.createEmptyBorder());
         setLayout(new BorderLayout());
         setFocusable(true);
-
+        
         configPanel = new ConfigPanel(true, 15, 10) {
             @Override
             protected void titleClicked(MouseEvent e) {
@@ -166,36 +173,53 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         pctPxPanel.add(new JLabel(PCT_POSITIVE_THRESHOLD), BorderLayout.CENTER);
         pctPxPanel.add(pctPxField, BorderLayout.SOUTH);
 
-        pixFlucField = new JTextField(DEFAULT_PIX_FLUC);
-        pixFlucField.setHorizontalAlignment(JTextField.RIGHT);
-        pixFlucField.setToolTipText("1.18 per slice");
-        pixFlucField.setColumns(5);
-        
-        pixFlucPanel = new JPanel(new BorderLayout());
-        pixFlucPanel.add(new JLabel(PIX_COLOR_FLUCTUATION), BorderLayout.CENTER);
-        pixFlucPanel.add(pixFlucField, BorderLayout.SOUTH);
+        pixFlucButton = new SingleSelectionButton<ZSliceRange>(PIX_COLOR_FLUCTUATION) {
+            
+            private ZSliceRange currSliceRange;
+            
+            @Override
+            public Collection<ZSliceRange> getValues() {
+                return rangeValues;
+            }
+
+            @Override
+            public ZSliceRange getSelectedValue() {
+                return currSliceRange;
+            }
+            
+            @Override
+            public String getLabel(ZSliceRange sliceRange) {
+                return sliceRange.getLabel();
+            }
+            
+            @Override
+            protected void updateSelection(ZSliceRange value) {
+                this.currSliceRange = value;
+            }
+        };
         
         dataSetButton = new SelectionButton<DataSet>("Data Sets") {
             
             @Override
-            protected Collection<DataSet> getValues() {
+            public Collection<DataSet> getValues() {
                 return alignmentSpaceDataSets.stream()
                         .sorted(Comparator.comparing(DataSet::getIdentifier))
                         .collect(Collectors.toList());
             }
 
             @Override
-            protected Set<String> getSelectedValueNames() {
-                return search.getDataSets().stream().collect(Collectors.toSet());
+            public Set<DataSet> getSelectedValues() {
+                Map<String, DataSet> dataSetLookup = alignmentSpaceDataSets.stream().collect(Collectors.toMap(DataSet::getIdentifier, Function.identity()));
+                return search.getDataSets().stream().map(dataSet -> dataSetLookup.get(dataSet)).collect(Collectors.toSet());
             }
 
             @Override
-            protected String getName(DataSet value) {
+            public String getName(DataSet value) {
                 return value.getIdentifier();
             }
-
+            
             @Override
-            protected String getLabel(DataSet value) {
+            public String getLabel(DataSet value) {
                 Integer count = value.getColorDepthCounts().get(search.getAlignmentSpace());
                 if (count==null) return value.getIdentifier();
                 return String.format("%s (%d images)", value.getIdentifier(), count);
@@ -360,7 +384,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
         Double pixFlucValue;
         try {
-            pixFlucValue = new Double(pixFlucField.getText());
+            pixFlucValue = new Double(pixFlucButton.getSelectedValue().getValue());
             if (pixFlucValue<1 || pixFlucValue>100) {
                 throw new NumberFormatException();
             }
@@ -461,12 +485,9 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             pctPxField.setText(DEFAULT_PCT_PC);
         }
 
-        if (colorDepthSearch.getPixColorFluctuation()!=null) {
-            pixFlucField.setText(PX_FORMATTER.format(colorDepthSearch.getPixColorFluctuation()));
-        }
-        else {
-            pixFlucField.setText(DEFAULT_PIX_FLUC);
-        }
+        int currValue = colorDepthSearch.getPixColorFluctuation() == null ? -1 : colorDepthSearch.getPixColorFluctuation().intValue();
+        ZSliceRange value = rangeValues.stream().filter(sliceRange -> sliceRange.getValue()==currValue).findFirst().orElseGet(() -> defaultSliceRange);
+        pixFlucButton.setSelectedValue(value);
         
         setProcessing(false);
         setError(false);
@@ -544,7 +565,8 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     }
         
     private void showSearchView(boolean isUserDriven) {
-        
+
+        pixFlucButton.update();
         dataSetButton.update();
         
         lips.clear();
@@ -552,7 +574,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         configPanel.removeAllConfigComponents();
         configPanel.addConfigComponent(thresholdPanel);
         configPanel.addConfigComponent(pctPxPanel);
-        configPanel.addConfigComponent(pixFlucPanel);
+        configPanel.addConfigComponent(pixFlucButton);
         configPanel.addConfigComponent(dataSetButton);
         configPanel.addConfigComponent(searchButton);
         configPanel.addConfigComponent(executingPanel);
@@ -695,8 +717,8 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         String owner = dataSet.split("_")[0];
 
         values.put("Channel Number", match.getChannelNumber());
-        values.put("Score", match.getScore());
-        values.put("Score Percent", match.getScorePercent());
+        values.put("Score (Pixels)", match.getScore());
+        values.put("Score (Percent)", match.getScorePercent());
         values.put("Data Set", dataSet);
         values.put("Owner", owner);
         
@@ -938,6 +960,25 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             lip.addMouseListener(new MouseForwarder(this, "LoadedImagePanel->PipelineResultPanel"));
             lips.add(lip);
             return lip;
+        }
+    }
+
+    public static final class ZSliceRange {
+        
+        private String label;
+        private int value;
+        
+        private ZSliceRange(String label, int value) {
+            this.label = label;
+            this.value = value;
+        }
+        
+        public String getLabel() {
+            return label;
+        }
+        
+        public int getValue() {
+            return value;
         }
     }
 }

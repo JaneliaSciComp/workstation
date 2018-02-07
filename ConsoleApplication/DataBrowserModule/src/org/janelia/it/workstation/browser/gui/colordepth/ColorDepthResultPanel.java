@@ -2,10 +2,10 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -27,9 +26,9 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.gui.editor.SingleSelectionButton;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerType;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
-import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.WrapLayout;
@@ -61,9 +60,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     
     // UI Components
     private JPanel topPanel;
-    private JButton prevResultButton;
-    private JLabel resultLabel;
-    private JButton nextResultButton;
+    private SingleSelectionButton<ColorDepthResult> historyButton;
     private JCheckBox newOnlyCheckbox;
     private JTextField resultsPerLineField;
     private final PaginatedResultsPanel<ColorDepthMatch, String> resultsPanel;
@@ -73,7 +70,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private ColorDepthMask mask;
     /** relevant results for the currently selected mask */
     private List<ColorDepthResult> results = new ArrayList<>();
-    private int currResultIndex;
+    private ColorDepthResult currResult;
     private Map<Reference, Sample> sampleMap = new HashMap<>();
     private Map<String, ColorDepthMatch> matchMap = new HashMap<>();
     private String sortCriteria;
@@ -93,26 +90,30 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     
     public ColorDepthResultPanel() {
 
-        this.prevResultButton = new JButton(Icons.getIcon("resultset_previous.png"));
-        prevResultButton.setToolTipText("View the previous search result");
-        prevResultButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                goPrevResult();
-            }
-        });
+        historyButton = new SingleSelectionButton<ColorDepthResult>("Search Results") {
 
-        this.resultLabel = new JLabel("");
-        
-        this.nextResultButton = new JButton(Icons.getIcon("resultset_next.png"));
-        nextResultButton.setToolTipText("View the next search result");
-        nextResultButton.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                goNextResult();
+            public Collection<ColorDepthResult> getValues() {
+                return results;
             }
-        });
-        
+
+            @Override
+            public ColorDepthResult getSelectedValue() {
+                return currResult;
+            }
+            
+            @Override
+            public String getLabel(ColorDepthResult result) {
+                return DomainModelViewUtils.getDateString(result.getCreationDate());
+            }
+            
+            @Override
+            protected void updateSelection(ColorDepthResult result) {
+                currResult = result;
+                showCurrSearchResult(true);
+            }            
+        };
+          
         this.newOnlyCheckbox = new JCheckBox("Only new results");
         newOnlyCheckbox.addActionListener((ActionEvent e) -> {
                 setPreferenceAsync(PREFERENCE_CATEGORY_CDS_NEW_RESULTS, newOnlyCheckbox.isSelected()+"");
@@ -139,10 +140,8 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         perLinePanel.add(new JLabel("results per line"), BorderLayout.CENTER);
         
         this.topPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 8, 5));
-        topPanel.add(new JLabel("Results:"));
-        topPanel.add(prevResultButton);
-        topPanel.add(resultLabel);
-        topPanel.add(nextResultButton);
+        topPanel.add(new JLabel("History:"));
+        topPanel.add(historyButton);
         topPanel.add(new JSeparator(SwingConstants.VERTICAL));
         topPanel.add(newOnlyCheckbox);
         topPanel.add(new JSeparator(SwingConstants.VERTICAL));
@@ -258,7 +257,8 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     
     private void showResults(boolean isUserDriven) {
         if (!results.isEmpty()) {
-            currResultIndex = results.size()-1;
+            currResult = results.get(results.size()-1);
+            historyButton.update();
             topPanel.setVisible(true);
             showCurrSearchResult(isUserDriven);
         }
@@ -275,17 +275,14 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         
         log.debug("showCurrSearchResult(isUserDriven={})",isUserDriven);
 
-        if (currResultIndex < 0 || currResultIndex >= results.size()) {
-            throw new IllegalStateException("Cannot show search result index outside of result list size");
+        if (currResult==null) {
+            throw new IllegalStateException("No current result to show");
         }
-
-        updatePagingStatus();
         
-        ColorDepthResult result = results.get(currResultIndex);
-        selectionModel.setParentObject(result);
-        resultLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
+        int currResultIndex = results.indexOf(currResult);
+        selectionModel.setParentObject(currResult);
         
-        List<ColorDepthMatch> maskMatches = result.getMaskMatches(mask);
+        List<ColorDepthMatch> maskMatches = currResult.getMaskMatches(mask);
 
         // Sort by descending score 
         // (this should be how they come from the database, but to be safe, we'll not make that assumption)
@@ -400,28 +397,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             return orderedMatches;   
         }
     }
-
-    private synchronized void goPrevResult() {
-        this.currResultIndex -= 1;
-        if (currResultIndex < 0) {
-            currResultIndex = 0;
-        }
-        showCurrSearchResult(true);
-    }
-
-    private synchronized void goNextResult() {
-        this.currResultIndex += 1;
-        if (currResultIndex >= results.size()) {
-            currResultIndex = results.size()-1;
-        }
-        showCurrSearchResult(true);
-    }
-
-    protected void updatePagingStatus() {
-        int numResults = results.size();
-        prevResultButton.setEnabled(numResults>0 && currResultIndex > 0);
-        nextResultButton.setEnabled(numResults>0 && currResultIndex < numResults - 1);
-    }
     
     @Override
     public String getSortField() {
@@ -447,11 +422,11 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
 
     void reset() {
         selectionModel.reset();
-        this.currResultIndex = results.size() - 1;
+        this.currResult = results.isEmpty() ? null : results.get(results.size() - 1);
     }
 
     int getCurrResultIndex() {
-        return currResultIndex;
+        return results.indexOf(currResult);
     }
 
     public PaginatedResultsPanel<ColorDepthMatch, String> getResultPanel() {
