@@ -745,16 +745,18 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainO
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         try {
-            if (filter==null || filter.getId()==null) {
-                refreshSearchResults(false);
-            }
-            else if (event.isTotalInvalidation()) {
+            if (event.isTotalInvalidation()) {
                 log.info("Total invalidation, reloading...");
                 reload();
             }
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
-                    if (domainObject.getId().equals(filter.getId())) {
+                    if (searchConfig.getSearchClass().isAssignableFrom(domainObject.getClass())) {
+                        log.info("Object with search class invalidated, reloading...");
+                        reload();
+                        break;
+                    }
+                    else if (filter!=null && filter.getId()!=null && domainObject.getId().equals(filter.getId())) {
                         log.info("Filter invalidated, reloading...");
                         reload();
                         break;
