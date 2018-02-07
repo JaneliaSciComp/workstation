@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -22,6 +23,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
@@ -42,6 +44,7 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.Sample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -264,8 +267,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         }
         else {
             log.debug("No results for mask");
-            topPanel.setVisible(false);
-            resultsPanel.showNothing();
+            showNothing();
         }
     }
     
@@ -282,16 +284,10 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         int currResultIndex = results.indexOf(currResult);
         selectionModel.setParentObject(currResult);
         
-        List<ColorDepthMatch> maskMatches = currResult.getMaskMatches(mask);
-
-        // Sort by descending score 
-        // (this should be how they come from the database, but to be safe, we'll not make that assumption)
-        maskMatches.sort(new Comparator<ColorDepthMatch>() {
-            @Override
-            public int compare(ColorDepthMatch o1, ColorDepthMatch o2) {
-                return o2.getScore().compareTo(o1.getScore());
-            }
-        });
+        List<ColorDepthMatch> maskMatches = currResult.getMaskMatches(mask).stream()
+                .filter(match -> showMatch(match))
+                .sorted(Comparator.comparing(ColorDepthMatch::getScore))
+                .collect(Collectors.toList());
         
         if (newOnlyCheckbox.isSelected()) {
             
@@ -347,6 +343,13 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         resultsPanel.showSearchResults(searchResults, isUserDriven, null);
     }
     
+    private boolean showMatch(ColorDepthMatch match) {
+        if (match.getSample()==null) return true; // Match is not bound to a sample
+        Sample sample = sampleMap.get(match.getSample());
+        // If match is bound to a sample, we need access to it
+        return sample != null;
+    }
+
     private class LineMatches {
         
         private String line;
@@ -434,6 +437,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     }
 
     public void showNothing() {
+        topPanel.setVisible(false);
         resultsPanel.showNothing();
     }
 

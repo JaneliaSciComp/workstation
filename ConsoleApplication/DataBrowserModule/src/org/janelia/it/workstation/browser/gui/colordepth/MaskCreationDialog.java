@@ -85,6 +85,11 @@ public class MaskCreationDialog extends ModalDialog {
         maskingPanel.setImage(image);
         maskingPanel.setOnContinue((BufferedImage mask) -> {
             
+            if (mask==null) {
+                JOptionPane.showMessageDialog(MaskCreationDialog.this, "You need to mask an area first.");
+                return;
+            }
+            
             if (alignmentSpace==null) {
                 JOptionPane.showMessageDialog(MaskCreationDialog.this, "You need to select an alignment space.");
                 return;

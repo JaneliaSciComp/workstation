@@ -5,6 +5,8 @@ import static org.janelia.it.workstation.browser.api.DomainMgr.getDomainMgr;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -40,6 +42,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.FileMgr;
@@ -66,6 +69,7 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.it.workstation.browser.util.HelpTextUtils;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -101,10 +105,14 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private static final String PCT_POSITIVE_THRESHOLD = "Min match %";
     private static final String PIX_COLOR_FLUCTUATION = "Z Slice Range";
     private static final String DEFAULT_PCT_PC = "10.00";
-    private static final String DEFAULT_PIX_FLUC = "2";
+
+    private static final String THRESHOLD_TOOLTIP = "Everything below this value is not considered in the search images";
+    private static final String PCT_PX_TOOLTIP = "Minimum percent pixel match to consider a match";
+    private static final String PIX_FLUC_TOOLTIP = "Tolerance for how many z slices to search for each pixel in the mask";
     
     private static final ZSliceRange defaultSliceRange = new ZSliceRange("1", 1);
     private static final List<ZSliceRange> rangeValues;
+
     static {
         rangeValues = ImmutableList.of(defaultSliceRange, new ZSliceRange("3", 2), new ZSliceRange("5", 3));
     }
@@ -118,6 +126,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 //    private final JButton saveButton;
 //    private final JButton saveAsButton;
     private final JSplitPane splitPane;
+    private final JPanel helpPanel;
     private final JPanel pctPxPanel;
     private final SingleSelectionButton<ZSliceRange> pixFlucButton;
     private final JPanel thresholdPanel;
@@ -165,6 +174,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         thresholdPanel = new JPanel(new BorderLayout());
         thresholdPanel.add(thresholdLabel, BorderLayout.NORTH);
         thresholdPanel.add(thresholdSlider, BorderLayout.CENTER);
+        thresholdPanel.setToolTipText(THRESHOLD_TOOLTIP);
         
         pctPxField = new JTextField(DEFAULT_PCT_PC);
         pctPxField.setHorizontalAlignment(JTextField.RIGHT);
@@ -172,7 +182,9 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         pctPxPanel = new JPanel(new BorderLayout());
         pctPxPanel.add(new JLabel(PCT_POSITIVE_THRESHOLD), BorderLayout.CENTER);
         pctPxPanel.add(pctPxField, BorderLayout.SOUTH);
-
+        pctPxPanel.setToolTipText(PCT_PX_TOOLTIP);
+        
+        
         pixFlucButton = new SingleSelectionButton<ZSliceRange>(PIX_COLOR_FLUCTUATION) {
             
             private ZSliceRange currSliceRange;
@@ -197,12 +209,14 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 this.currSliceRange = value;
             }
         };
+        pixFlucButton.setToolTipText(PIX_FLUC_TOOLTIP);
         
         dataSetButton = new SelectionButton<DataSet>("Data Sets") {
             
             @Override
             public Collection<DataSet> getValues() {
                 return alignmentSpaceDataSets.stream()
+                        .filter(dataSet -> showDataSet(dataSet))
                         .sorted(Comparator.comparing(DataSet::getIdentifier))
                         .collect(Collectors.toList());
             }
@@ -317,7 +331,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             protected void panelSelected(SelectablePanel resultPanel, boolean isUserDriven) {
                 if (resultPanel instanceof MaskPanel) {
                     selectedMask = ((MaskPanel)resultPanel).getMask();
-                    loadMaskResults(selectedMask, true);
+                    colorDepthResultPanel.loadSearchResults(search, results, selectedMask, isUserDriven);
                     Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(selectedMask), isUserDriven, true, true));
                 }
             }
@@ -344,6 +358,15 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         maskScrollPane.setViewportView(maskListPanel);
         maskScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         maskScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
+        
+        helpPanel = new JPanel();
+        helpPanel.setLayout(new GridBagLayout());
+        
+        JPanel panel = new JPanel();
+        panel.add(new JLabel("<html>You need to add some masks to this search.<br>"
+                + "To do so, right-click any Color Depth Projection and click "+HelpTextUtils.getBoldedLabel("Create Color Depth Search Mask")+",<br>"
+                + "or upload a custom mask using the "+HelpTextUtils.getMenuItemLabel("File","New","Color Depth Mask")+"  menu option.</html>"));
+        helpPanel.add(panel, new GridBagConstraints());
         
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, maskScrollPane, colorDepthResultPanel);
         splitPane.setDividerLocation(0.30);
@@ -516,14 +539,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 log.info("Loaded {} results", results.size());
                 log.info("Loaded {} data sets", alignmentSpaceDataSets.size());
                 
-                showUI(isUserDriven);
-                
-                if (!masks.isEmpty()) {
-                    maskListPanel.selectFirst(isUserDriven);
-                }
-                else {
-                    colorDepthResultPanel.showNothing();
-                }
+                showSearchView(isUserDriven);
                 
                 debouncer.success();
                 
@@ -549,21 +565,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         };
         worker.execute();
     }
-    
+
     public void showNothing() {
         removeAll();
         updateUI();
     }
     
-    public void showUI(boolean isUserDriven) {
-        showSearchView(isUserDriven);
-        updateUI();
-    }
-    
-    private void loadMaskResults(ColorDepthMask mask, boolean isUserDriven) {
-        colorDepthResultPanel.loadSearchResults(search, results, mask, isUserDriven);
-    }
-        
     private void showSearchView(boolean isUserDriven) {
 
         pixFlucButton.update();
@@ -593,10 +600,20 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             maskListPanel.addPanel(maskPanel);
             maskPanelMap.put(mask, maskPanel);
         }
-        
+
         removeAll();
         add(configPanel, BorderLayout.NORTH);
-        add(splitPane, BorderLayout.CENTER);
+        
+        if (masks.isEmpty()) {
+            add(helpPanel, BorderLayout.CENTER);
+            colorDepthResultPanel.showNothing();
+        }
+        else {
+            add(splitPane, BorderLayout.CENTER);
+            maskListPanel.selectFirst(isUserDriven);
+        }
+        
+        updateUI();
     }
 
     private void rescaleImage(LoadedImagePanel image) {
@@ -921,6 +938,10 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         }
     }
 
+    private boolean showDataSet(DataSet dataSet) {
+        return ClientDomainUtils.hasReadAccess(dataSet);
+    }
+    
     private class MaskPanel extends SelectablePanel {
         
         private final ColorDepthMask mask;
