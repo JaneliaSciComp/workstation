@@ -5,40 +5,41 @@ import java.util.Collection;
 
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
+import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 
 /**
  * Snapshot of the state of a list viewer for navigation purposes.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectEditorState<T extends DomainObject> {
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "class")
+public class DomainObjectEditorState<P extends DomainObject, T, S> {
 
     @JsonIgnore
     private DomainListViewTopComponent topComponent;
     
     @JsonIgnore
-    private AbstractDomainObjectNode<T> domainObjectNode;
+    private AbstractDomainObjectNode<P> domainObjectNode;
     
-    private T domainObject;
+    private P domainObject;
     private Integer page;
     private ListViewerState listViewerState;
-    private Collection<Reference> selectedIds;
+    private Collection<S> selectedIds;
 
     @JsonCreator
     public DomainObjectEditorState(
-            @JsonProperty("domainObject") T domainObject, 
+            @JsonProperty("domainObject") P domainObject, 
             @JsonProperty("page") Integer page, 
             @JsonProperty("listViewerState") ListViewerState listViewerState, 
-            @JsonProperty("selectedIds") Collection<Reference> selectedIds) {
+            @JsonProperty("selectedIds") Collection<S> selectedIds) {
         this.domainObjectNode = null;
         this.domainObject = domainObject;
         this.page = page;
@@ -46,7 +47,7 @@ public class DomainObjectEditorState<T extends DomainObject> {
         this.selectedIds = new ArrayList<>(selectedIds);
     }
     
-    public DomainObjectEditorState(AbstractDomainObjectNode<T> domainObjectNode, Integer page, ListViewerState listViewerState, Collection<Reference> selectedIds) {
+    public DomainObjectEditorState(AbstractDomainObjectNode<P> domainObjectNode, Integer page, ListViewerState listViewerState, Collection<S> selectedIds) {
         this.domainObjectNode = domainObjectNode;
         this.domainObject = domainObjectNode.getDomainObject();
         this.page = page;
@@ -62,12 +63,12 @@ public class DomainObjectEditorState<T extends DomainObject> {
         this.topComponent = topComponent;
     }
 
-    public T getDomainObject() {
+    public P getDomainObject() {
         return domainObject;
     }
     
     public void setDomainObject(DomainObject domainObject) {
-        this.domainObject = (T)domainObject;
+        this.domainObject = (P)domainObject;
     }
 
     public Integer getPage() {
@@ -78,11 +79,11 @@ public class DomainObjectEditorState<T extends DomainObject> {
         return listViewerState;
     }
 
-    public Collection<Reference> getSelectedIds() {
+    public Collection<S> getSelectedIds() {
         return selectedIds;
     }
 
-    public AbstractDomainObjectNode<T> getDomainObjectNode() {
+    public AbstractDomainObjectNode<P> getDomainObjectNode() {
         return domainObjectNode;
     }
 
@@ -119,12 +120,12 @@ public class DomainObjectEditorState<T extends DomainObject> {
 
     private static final ObjectMapper mapper = new ObjectMapper();
     
-    public static String serialize(DomainObjectEditorState<?> descriptor) throws Exception {
-        return mapper.writeValueAsString(descriptor);
+    public static String serialize(DomainObjectEditorState<?,?,?> state) throws Exception {
+        return mapper.writeValueAsString(state);
     }
 
-    public static DomainObjectEditorState<?> deserialize(String artifactDescriptorString) throws Exception {
-        return mapper.readValue(DomainModelViewUtils.convertModelPackages(artifactDescriptorString), DomainObjectEditorState.class);
+    public static DomainObjectEditorState<?,?,?> deserialize(String serializedState) throws Exception {
+        return mapper.readValue(DomainModelViewUtils.convertModelPackages(serializedState), DomainObjectEditorState.class);
     }
 
 }

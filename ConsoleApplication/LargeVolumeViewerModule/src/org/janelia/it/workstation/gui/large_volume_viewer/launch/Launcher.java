@@ -2,11 +2,13 @@ package org.janelia.it.workstation.gui.large_volume_viewer.launch;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
+import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.openide.util.lookup.ServiceProvider;
@@ -17,15 +19,17 @@ import org.openide.windows.WindowManager;
 /**
  * Launches the Data Viewer from a context-menu.
  */
-@ServiceProvider(service = DomainObjectAcceptor.class, path = DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH)
-public class Launcher implements DomainObjectAcceptor  {
+@ServiceProvider(service = ObjectOpenAcceptor.class, path = ObjectOpenAcceptor.LOOKUP_PATH)
+public class Launcher implements ObjectOpenAcceptor  {
     
     private static final int MENU_ORDER = 300;
     
     public Launcher() {
     }
 
-    public void launch(final DomainObject domainObject) {
+    public void launch(final Object obj) {
+        
+        DomainObject domainObject = (DomainObject)obj;
         
         LargeVolumeViewerTopComponent.setRestoreStateOnOpen(false);
         
@@ -64,11 +68,15 @@ public class Launcher implements DomainObjectAcceptor  {
         else {
             JOptionPane.showMessageDialog(WindowManager.getDefault().getMainWindow(), "Failed to open window group for plugin.");
         }
+
+        // Update "Recently Opened" history
+        String strRef = Reference.createFor(domainObject).toString();
+        StateMgr.getStateMgr().updateRecentlyOpenedHistory(strRef);
     }
 
     @Override
-    public void acceptDomainObject(DomainObject domainObject) {
-        launch(domainObject);
+    public void acceptObject(Object object) {
+        launch(object);
     }
 
     @Override
@@ -77,12 +85,12 @@ public class Launcher implements DomainObjectAcceptor  {
     }
 
     @Override
-    public boolean isCompatible(DomainObject e) {
-        return e != null &&  ((e instanceof TmWorkspace) || (e instanceof TmSample));
+    public boolean isCompatible(Object obj) {
+        return obj != null &&  ((obj instanceof TmWorkspace) || (obj instanceof TmSample));
     }
 
     @Override
-    public boolean isEnabled(DomainObject e) {
+    public boolean isEnabled(Object obj) {
         return true;
     }
     

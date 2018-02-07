@@ -20,7 +20,7 @@ import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.gui.search.Filter;
-import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Node;
 
 public final class NewFilterActionListener implements ActionListener {
 
@@ -79,7 +79,7 @@ public final class NewFilterActionListener implements ActionListener {
             protected void doStuff() throws Exception {
                 filter = createUnsavedFilter(name);
                 filter = model.save(filter);
-                TreeNode parentFolder = parentNode.getTreeNode();
+                Node parentFolder = parentNode.getNode();
                 model.addChild(parentFolder, filter);
             }
 

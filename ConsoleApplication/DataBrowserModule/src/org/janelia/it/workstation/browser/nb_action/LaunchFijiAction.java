@@ -30,7 +30,7 @@ public final class LaunchFijiAction extends CallableSystemAction {
 
     @Override
     protected String iconResource() {
-        return "images/brain.png";
+        return "images/fiji_16.png";
     }
 
     @Override

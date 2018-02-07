@@ -130,8 +130,7 @@ public class LocalFileLoader {
         }
     }
 
-    private void registerMetaFile(File metaFile,
-                                  List<File> unregisteredSiblings) {
+    private void registerMetaFile(File metaFile, List<File> unregisteredSiblings) {
 
         // remove meta file from the unregistered list regardless of
         // what happens during load

@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.gui.dialogs.download;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,9 +52,9 @@ public class DownloadWizardPanel3 implements WizardDescriptor.ValidatingPanel<Wi
         boolean pathsUnique = true;
         Map<String, DownloadFileItem> uniquePaths = new HashMap<>();
         for (DownloadFileItem downloadItem : component.getDownloadItems()) {
-            File targetFile = downloadItem.getTargetFile();
+            Path targetFile = downloadItem.getTargetFile();
             if (targetFile!=null) {
-                String path = targetFile.getAbsolutePath();
+                String path = targetFile.toString();
                 if (uniquePaths.containsKey(path)) {
                     DownloadFileItem otherItem = uniquePaths.get(path);
                     log.warn("Path is not unique: "+path);

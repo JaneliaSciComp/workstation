@@ -5,7 +5,6 @@ import java.util.List;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.interfaces.IsParent;
 
 /**
  * A selection model implementation which tracks the selection of domain objects, including
@@ -13,17 +12,7 @@ import org.janelia.model.domain.interfaces.IsParent;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectSelectionModel extends SelectionModel<DomainObject,Reference> {
-
-    private IsParent parentObject;
-    
-    public IsParent getParentObject() {
-        return parentObject;
-    }
-
-    public void setParentObject(IsParent parentObject) {
-        this.parentObject = parentObject;
-    }
+public class DomainObjectSelectionModel extends ChildSelectionModel<DomainObject,Reference> {
 
     @Override
     protected void selectionChanged(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {

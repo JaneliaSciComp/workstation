@@ -1,15 +1,13 @@
 package org.janelia.it.workstation.browser.components;
 
 import java.awt.BorderLayout;
+import java.util.Map;
 
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
-import org.janelia.it.workstation.browser.events.selection.PipelineErrorSelectionEvent;
-import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
+import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.sample.PipelineError;
-import org.janelia.model.domain.sample.PipelineResult;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -52,6 +50,11 @@ public final class DomainInspectorTopComponent extends TopComponent {
     private Logger log = LoggerFactory.getLogger(DomainInspectorTopComponent.class);
 
     public static final String TC_NAME = "DomainInspectorTopComponent";
+    public static final String TC_VERSION = "1.0";
+
+    public static DomainInspectorTopComponent getInstance() {
+        return (DomainInspectorTopComponent)WindowLocator.getByName(DomainInspectorTopComponent.TC_NAME);
+    }
     
     private final DomainInspectorPanel detailsPanel;
 
@@ -106,6 +109,18 @@ public final class DomainInspectorTopComponent extends TopComponent {
     
     // Custom methods
 
+    public void inspect(Object object) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public void inspect(DomainObject domainObject) {
+        detailsPanel.loadDomainObject(domainObject);
+    }
+
+    public void inspect(Map<String, Object> properties) {
+        detailsPanel.loadProperties(properties);
+    }
+    
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
         
@@ -123,24 +138,6 @@ public final class DomainInspectorTopComponent extends TopComponent {
         if (event.isUserDriven()) {
             log.info("domainObjectSelected({})", domainObject);
             detailsPanel.loadDomainObject(domainObject);
-        }
-    }
-
-    @Subscribe
-    public void resultSelected(PipelineResultSelectionEvent event) {
-        if (event.isUserDriven()) {
-            PipelineResult result = event.getPipelineResult();
-            log.info("resultSelected({})", result.getId());
-            detailsPanel.loadPipelineResult(result);
-        }
-    }
-
-    @Subscribe
-    public void errorSelected(PipelineErrorSelectionEvent event) {
-        if (event.isUserDriven()) {
-            PipelineError error = event.getPipelineError();
-            log.info("errorSelected()");
-            detailsPanel.loadPipelineError(error);
         }
     }
 }

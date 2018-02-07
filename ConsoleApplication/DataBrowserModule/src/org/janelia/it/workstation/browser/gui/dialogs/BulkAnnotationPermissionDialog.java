@@ -27,7 +27,7 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
@@ -136,14 +136,19 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
             return;
         }
         
-        DomainObjectSelectionModel selectionModel = listView.getEditor().getSelectionModel();
+        ChildSelectionModel selectionModel = listView.getEditor().getSelectionModel();
         if (selectionModel==null) {
             showSelectionMessage();
             return;
         }
         
         selected.clear();
-        selected.addAll(selectionModel.getSelectedIds());
+        for(Object id : selectionModel.getSelectedIds()) {
+            if (id instanceof Reference) {
+                selected.add((Reference)id);
+            }
+        }
+        
         if (selected.isEmpty()) {
             showSelectionMessage();
             return;

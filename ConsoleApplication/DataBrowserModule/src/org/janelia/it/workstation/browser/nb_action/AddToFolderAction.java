@@ -59,7 +59,7 @@ public class AddToFolderAction extends NodePresenterAction {
      * Activation method #1: set the domain objects directly
      * @param domainObjectList
      */
-    public void setDomainObjects(Collection<DomainObject> domainObjectList) {
+    public void setDomainObjects(Collection<? extends DomainObject> domainObjectList) {
         domainObjects.clear();
         domainObjects.addAll(domainObjectList);
     }

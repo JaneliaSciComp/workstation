@@ -54,13 +54,12 @@ public class WorkstationFile {
             return;
         }
         
-        this.effectiveURL = FileMgr.getURL(standardPath, cache);
+        this.effectiveURL = FileMgr.getFileMgr().getURL(standardPath, cache);
         if (effectiveURL.getProtocol().equals("file")) {
             getFile(new File(effectiveURL.getPath()));
         }
         else {
-            HttpClient client = FileMgr.getFileMgr().getWebDavClient().getHttpClient();
-        
+            HttpClient client = FileMgr.getFileMgr().getHttpClient();
             if (headOnly) {
                 HeadMethod head = new HeadMethod(effectiveURL.toString());  
                 int responseCode = client.executeMethod(head);

@@ -148,7 +148,6 @@ public class RecentOpenedItemsNode extends AbstractNode implements HasIdentifier
             } 
             catch (Exception ex) {
                 ConsoleApp.handleException(ex);
-                return false;
             }
             return true;
         }

@@ -20,10 +20,10 @@ public interface SubjectFacade {
     public List<Subject> getSubjects() throws Exception;
 
     /**
-     * Returns a specific subject given it's human-readable key
+     * Returns a specific subject given it's name or subject key
      * @return the Subject object if it exists
      */
-    public Subject getSubjectByKey(String subjectKey) throws Exception;
+    public Subject getSubjectByNameOrKey(String subjectNameOrKey) throws Exception;
 
     /**
      * Returns the User for the current authenticated user. If the user does

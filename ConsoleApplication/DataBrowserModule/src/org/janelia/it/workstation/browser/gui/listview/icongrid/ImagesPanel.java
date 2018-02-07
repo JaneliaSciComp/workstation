@@ -196,7 +196,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
                 continue;
             }            
 
-            AnnotatedImageButton<T,S> button = AnnotatedImageButton.create(imageObject, imageModel, selectionModel, this);
+            AnnotatedImageButton<T,S> button = create(imageObject);
 
             button.setTitleVisible(titlesVisible);
             button.setTagsVisible(tagsVisible);
@@ -216,6 +216,38 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
             buttons.put(imageId, button);
             buttonsPanel.add(button);
         }
+    }
+
+    public AnnotatedImageButton<T,S> create(T imageObject) {
+        String filepath = imageModel.getImageFilepath(imageObject);
+        // The filepath is passed through because it's kind of expensive to calculate. 
+        // But it's kind of redundant with the image model, and it doesn't make sense for static icons, 
+        // so we could use some refactoring here to make this cleaner.
+        AnnotatedImageButton<T,S> button;
+        if (filepath != null) {
+            button = new DynamicImageButton<T,S>(imageObject, imageModel, selectionModel, filepath) {
+                
+                @Override
+                protected synchronized void registerAspectRatio(int width, int height) {
+                    log.trace("registerAspectRatio({}x{})", width, height);
+                    double a = (double)width / (double)height;
+                    if (a != this.aspectRatio) {
+                        this.aspectRatio = a;
+                        ImagesPanel.this.registerAspectRatio(a);
+                    }
+                }
+                
+                @Override
+                public void updateEditSelectModel(boolean select) {
+                    ImagesPanel.this.updateEditSelectModel(imageObject, select);
+                }
+            };
+        }
+        else {
+            button = new StaticImageButton<>(imageObject, imageModel, selectionModel, filepath);
+        }
+        ensureCorrectAnnotationView(button);
+        return button;
     }
 
     public void removeImageObject(T imageObject) {
@@ -619,6 +651,10 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         }
 
         loadUnloadImages();
+    }
+    
+    public void setColumns(int numCols) {
+        buttonsPanel.setColumns(numCols);
     }
 
     private Date lastQueueDate = new Date();

@@ -31,11 +31,10 @@ import org.janelia.it.workstation.browser.nb_action.SearchHereAction;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Node;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
-import org.openide.nodes.Node;
 import org.openide.nodes.NodeTransfer;
 import org.openide.util.datatransfer.ExTransferable;
 import org.openide.util.datatransfer.MultiTransferObject;
@@ -49,17 +48,17 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
+public class TreeNodeNode extends AbstractDomainObjectNode<Node> {
     
     private final static Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
     
     private TreeNodeChildFactory childFactory;
     
-    public TreeNodeNode(ChildFactory<?> parentChildFactory, TreeNode treeNode) {
+    public TreeNodeNode(ChildFactory<?> parentChildFactory, Node treeNode) {
         this(parentChildFactory, new TreeNodeChildFactory(treeNode), treeNode);
     }
     
-    private TreeNodeNode(ChildFactory<?> parentChildFactory, final TreeNodeChildFactory childFactory, TreeNode treeNode) {
+    private TreeNodeNode(ChildFactory<?> parentChildFactory, final TreeNodeChildFactory childFactory, Node treeNode) {
         super(parentChildFactory, childFactory.hasNodeChildren()?Children.create(childFactory, false):Children.LEAF, treeNode);
             
         log.trace("Creating node@{} -> {}",System.identityHashCode(this),getDisplayName());
@@ -69,7 +68,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
             getLookupContents().add(new Index.Support() {
                 
                 @Override
-                public Node[] getNodes() {
+                public org.openide.nodes.Node[] getNodes() {
                     return getChildren().getNodes();
                 }
                 
@@ -82,7 +81,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                 public void reorder(final int[] order) {
                     
                     // Get current set of child nodes before going async
-                    final Node[] nodes = getNodes();
+                    final org.openide.nodes.Node[] nodes = getNodes();
                     
                     SimpleWorker worker = new SimpleWorker() {
                         @Override
@@ -101,12 +100,12 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                             log.info("Reordering nodes with new permutation: {}", Arrays.toString(order));
         
                             // Get current children for the node
-                            final List<Reference> children = getTreeNode().getChildren();
+                            final List<Reference> children = getNode().getChildren();
                                                         
                             // Build new list of ordered nodes
                             Map<Reference, Integer> newPositions = new HashMap<>();
                             for(int i=0; i<nodes.length; i++) {
-                                Node node = nodes[i];
+                                org.openide.nodes.Node node = nodes[i];
                                 if (node instanceof DomainObjectNode) {
                                     int newPos = order[i];
                                     DomainObjectNode<?> domainObjectNode = (DomainObjectNode<?>)node;
@@ -138,7 +137,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                             }
         
                             log.info("Reordering children with new permutation: {}", Arrays.toString(trueOrder));
-                            DomainMgr.getDomainMgr().getModel().reorderChildren(getTreeNode(), trueOrder);
+                            DomainMgr.getDomainMgr().getModel().reorderChildren(getNode(), trueOrder);
                         }
                         @Override
                         protected void hadSuccess() {
@@ -160,7 +159,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
      * This method should be called whenever the underlying domain object changes. It updates the UI to reflect the new object state.
      */
     @Override
-    public void update(TreeNode treeNode) {
+    public void update(Node treeNode) {
         log.debug("Refreshing node@{} -> {}",System.identityHashCode(this),getDisplayName());
         super.update(treeNode);
         log.debug("Refreshing children for {} (now has {} children)", treeNode.getName(), treeNode.getNumChildren());
@@ -188,7 +187,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
      */
     private Children createChildren() {
         if (childFactory.hasNodeChildren()) {
-            childFactory = new TreeNodeChildFactory(getTreeNode());
+            childFactory = new TreeNodeChildFactory(getNode());
             return Children.create(childFactory, false);
         }
         else {
@@ -196,23 +195,23 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
         }
     }
     
-    public TreeNode getTreeNode() {
+    public Node getNode() {
         return getDomainObject();
     }
     
     @Override
     public String getPrimaryLabel() {
-        return getTreeNode().getName();
+        return getNode().getName();
     }
 
     @Override
     public String getExtraLabel() {
-        return "("+getTreeNode().getNumChildren()+")";
+        return "("+getNode().getNumChildren()+")";
     }
 
     @Override
     public Image getIcon(int type) {
-        if (ClientDomainUtils.isOwner(getTreeNode())) {
+        if (ClientDomainUtils.isOwner(getNode())) {
             return Icons.getIcon("folder.png").getImage();
         }
         else {
@@ -246,7 +245,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
         actions.add(SearchHereAction.get());
         actions.add(DownloadAction.get());
         actions.add(ExportFoldersAction.get());
-        return actions.toArray(new Action[0]);
+        return actions.toArray(new Action[actions.size()]);
     }
 
     @Override
@@ -260,7 +259,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
     @SuppressWarnings("unchecked")
     public PasteType getDropType(final Transferable t, int action, final int index) {
 
-        if (!ClientDomainUtils.hasWriteAccess(getTreeNode())) {
+        if (!ClientDomainUtils.hasWriteAccess(getNode())) {
             return null;
         }
 
@@ -293,10 +292,10 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                     try {
                         DomainModel model = DomainMgr.getDomainMgr().getModel();
                         if (index<0) {
-                            model.addChildren(getTreeNode(), objects);
+                            model.addChildren(getNode(), objects);
                         }
                         else {
-                            model.addChildren(getTreeNode(), objects, index);
+                            model.addChildren(getNode(), objects, index);
                         }
                     }
                     catch (Exception e) {
@@ -337,19 +336,19 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
         }
 
         if (!nodes.isEmpty()) {
-            return new TreeNodePasteType(nodes, this, index);
+            return new NodePasteType(nodes, this, index);
         }
 
         return null;
     }
 
-    private class TreeNodePasteType extends PasteType {
+    private class NodePasteType extends PasteType {
         
         private final List<AbstractDomainObjectNode<?>> nodes;
         private final TreeNodeNode targetNode;
         private final int startingIndex;
         
-        TreeNodePasteType(List<AbstractDomainObjectNode<?>> nodes, TreeNodeNode targetNode, int startingIndex) {
+        NodePasteType(List<AbstractDomainObjectNode<?>> nodes, TreeNodeNode targetNode, int startingIndex) {
             log.trace("TreeNodePasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
             this.nodes = nodes;
             this.targetNode = targetNode;
@@ -364,7 +363,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
         public Transferable paste() throws IOException {
             try {
                 log.trace("paste called on TreeNodePasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
-                TreeNode newParent = targetNode.getTreeNode();
+                Node newParent = targetNode.getNode();
                 if (newParent==null) {
                     log.warn("Target node has no TreeNode: "+targetNode.getDisplayName());
                     return null;
@@ -372,11 +371,11 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                 
                 // Have to keep track of the original parents before we do anything, 
                 // because once we start moving nodes, the parents will be recreated
-                List<TreeNode> originalParents = new ArrayList<>();
+                List<Node> originalParents = new ArrayList<>();
                 for(AbstractDomainObjectNode<?> node : nodes) {
                     if (node.getParentNode() instanceof TreeNodeNode) {
                         TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
-                        TreeNode originalParent = originalParentNode.getTreeNode();
+                        Node originalParent = originalParentNode.getNode();
                         originalParents.add(originalParent);
                     }
                     else {
@@ -392,7 +391,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
 
                     DomainObject domainObject = node.getDomainObject();
                     
-                    TreeNode originalParent = originalParents.get(i);
+                    Node originalParent = originalParents.get(i);
                     if (originalParent!=null) {
                         log.trace("{} has parent {}",newParent.getId(),originalParent.getId());
                     }

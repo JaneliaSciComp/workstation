@@ -47,6 +47,7 @@ import com.google.common.util.concurrent.RateLimiter;
  * Starting -> Logged out (if the user cannot be logged in at start up for any reason)
  * Logged out -> Logged in (if the user authenticates manually after start up)
  * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public final class AccessManager {
     
@@ -219,11 +220,11 @@ public final class AccessManager {
                 if (!runAsUser.startsWith("user:") && !runAsUser.startsWith("group:")) {
                     fullUserKey = "user:" + fullUserKey;
                 }
-                Subject runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByKey(fullUserKey);
+                Subject runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByNameOrKey(fullUserKey);
                 if (runAsSubject==null) {
                     // try group before failing
                     fullUserKey = "group:" + runAsUser;
-                    runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByKey(fullUserKey);
+                    runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByNameOrKey(fullUserKey);
                     if (runAsSubject==null) {
                         return false;
                     }
@@ -284,21 +285,7 @@ public final class AccessManager {
         catch (Exception e) {
             throw new ServiceException("Error getting or creating user "+username, e);
         }
-
-        // Legacy JFS/Webdav needs basic auth
-        if (authenticatedSubject != null) {
-            log.info("Authenticated as {}", authenticatedSubject.getKey());
-            
-            log.debug("Setting default authenticator");
-            Authenticator.setDefault(new Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(username, password.toCharArray());
-                }
-            });
-            FileMgr.getFileMgr().getWebDavClient().setCredentialsUsingAuthenticator();
-        }
-        
+        FileMgr.getFileMgr().setAuthToken(token);
         return authenticatedSubject;
     }
     
@@ -410,11 +397,12 @@ public final class AccessManager {
         if (actualSubject!=null) {
             Events.getInstance().postOnEventBus(new SessionStartEvent(actualSubject));
         }
+        FileMgr.getFileMgr().setSubjectProxy(subject);
     }
     
-    public static Subject getSubjectByKey(String key) {
+    public static Subject getSubjectByNameOrKey(String key) {
         try {
-            return DomainMgr.getDomainMgr().getModel().getSubjectByKey(key);
+            return DomainMgr.getDomainMgr().getModel().getSubjectByNameOrKey(key);
         } 
         catch (Exception e) {
             log.error("Error getting subject with key: " + key, e);

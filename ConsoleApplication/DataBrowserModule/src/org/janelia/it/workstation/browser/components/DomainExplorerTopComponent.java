@@ -26,15 +26,17 @@ import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.events.prefs.LocalPreferenceChanged;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectNodeSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.IdentifiableNodeSelectionModel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
@@ -48,6 +50,7 @@ import org.janelia.it.workstation.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.DomainObjectNodeTracker;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
+import org.janelia.it.workstation.browser.nodes.RecentOpenedItemsNode;
 import org.janelia.it.workstation.browser.nodes.RootNode;
 import org.janelia.it.workstation.browser.nodes.WorkspaceNode;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
@@ -73,8 +76,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 
 
 /**
@@ -120,7 +121,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     private final FindToolbar findToolbar;
     
     private final ExplorerManager mgr = new ExplorerManager();
-    private final DomainObjectNodeSelectionModel selectionModel = new DomainObjectNodeSelectionModel();
+    private final IdentifiableNodeSelectionModel selectionModel = new IdentifiableNodeSelectionModel();
     private final Debouncer debouncer = new Debouncer();
 
     private Lookup.Result<AbstractNode> result = null;
@@ -358,7 +359,12 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         if (event.getKey().equals(StateMgr.RECENTLY_OPENED_HISTORY)) {
             // Something was added to the history, so we need to update the node's children
             if (root!=null) {
-                root.getRecentlyOpenedItemsNode().refreshChildren();
+                for(Node child : root.getChildren().getNodes()) {
+                    if (child instanceof RecentOpenedItemsNode) {
+                        RecentOpenedItemsNode node = (RecentOpenedItemsNode)child;
+                        node.refreshChildren();
+                    }
+                }
             }
             
         }
@@ -480,23 +486,20 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     
                     if (pathsToExpand!=null) {
                         log.info("Restoring serialized expanded state");
+                        for (Long[] path : pathsToExpand) {
+                            log.info("pathToExpand: "+NodeUtils.createPathString(path));
+                        }
                         beanTreeView.expand(pathsToExpand);
                         pathsToExpand = null;
                     }
                     else {
-                        int numExpanded = 0;
                         if (restoreState) {
-                            numExpanded = beanTreeView.expand(expanded);
-                            beanTreeView.selectPaths(selected);
-                        }
-                        if (numExpanded==0) {
-                            log.info("Expanding first node");
-                            for(Node node : root.getChildren().getNodes()) {
-                                beanTreeView.expandNode(node);
-                                if (node instanceof WorkspaceNode) {
-                                    break; // Expand everything up to and including the first Home
-                                }
+                            log.info("Restoring expanded state");
+                            for (Long[] path : expanded) {
+                                log.info("pathToExpand: "+NodeUtils.createPathString(path));
                             }
+                            beanTreeView.expand(expanded);
+                            beanTreeView.selectPaths(selected);
                         }
                     }
                     
@@ -543,7 +546,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         return mgr;
     }
     
-    public DomainObjectNodeSelectionModel getSelectionModel() {
+    public IdentifiableNodeSelectionModel getSelectionModel() {
         return selectionModel;
     }
 
@@ -601,6 +604,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         if (node instanceof AbstractDomainObjectNode) {
             log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
             selectionModel.select((AbstractDomainObjectNode<?>)node, true, true);
+        }
+        else {
+            
         }
     }
 

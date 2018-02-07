@@ -54,7 +54,6 @@ public class OntologyChildFactory extends ChildFactory<OntologyTerm> {
         }
         catch (Exception ex) {
             log.error("Error creating ontology term child keys",ex);
-            return false;
         }
         return true;
     }

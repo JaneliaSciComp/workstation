@@ -16,8 +16,8 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
-import org.janelia.it.workstation.browser.model.search.ResultPage;
-import org.janelia.it.workstation.browser.model.search.SearchResults;
+import org.janelia.it.workstation.browser.model.search.DomainObjectResultPage;
+import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 
@@ -33,10 +33,10 @@ public class ExportResultsAction<T> extends AbstractAction {
      */
     protected static final String DEFAULT_EXPORT_DIR = System.getProperty("user.home");
     
-    private SearchResults searchResults;
+    private DomainObjectSearchResults searchResults;
     private DomainObjectTableViewer domainObjectTableViewer;
 
-    public ExportResultsAction(SearchResults searchResults, DomainObjectTableViewer domainObjectTableViewer) {
+    public ExportResultsAction(DomainObjectSearchResults searchResults, DomainObjectTableViewer domainObjectTableViewer) {
         super("Export table");
         this.searchResults = searchResults;
         this.domainObjectTableViewer = domainObjectTableViewer;
@@ -132,9 +132,9 @@ public class ExportResultsAction<T> extends AbstractAction {
         long numProcessed = 0;
         int page = 0;
         while (true) {
-            ResultPage resultPage = searchResults.getPage(page);
+            DomainObjectResultPage resultPage = searchResults.getPage(page);
 
-            for (DomainObject domainObject : resultPage.getDomainObjects()) {
+            for (DomainObject domainObject : resultPage.getObjects()) {
 
                 buf = new StringBuffer();
                 int i = 0;
@@ -144,7 +144,7 @@ public class ExportResultsAction<T> extends AbstractAction {
                         buf.append("\t");
                     }
                     if (value != null) {
-                        buf.append(value.toString());
+                        buf.append(sanitize(value.toString()));
                     }
 
                 }
@@ -160,5 +160,15 @@ public class ExportResultsAction<T> extends AbstractAction {
             page++;
         }
         writer.close();
+    }
+    
+    /**
+     * Sanitize a string value before exporting to tab-delimited format.
+     * @param s
+     * @return
+     */
+    private String sanitize(String s) {
+        // Replace all whitespace with a single space. This gets rid of newlines and tabs which will mess up the tab-delimited format.
+        return s.replaceAll("\\s+", " ");
     }
 }

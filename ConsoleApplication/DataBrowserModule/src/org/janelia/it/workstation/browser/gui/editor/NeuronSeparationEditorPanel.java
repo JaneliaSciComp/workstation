@@ -23,14 +23,13 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
-import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
+import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
@@ -38,13 +37,13 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Preference;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.NeuronFragment;
@@ -81,7 +80,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     private final JButton editOkButton;
     private final JButton editCancelButton;
     private final JCheckBox enableVisibilityCheckBox;
-    private final PaginatedResultsPanel resultsPanel;
+    private final PaginatedDomainResultsPanel resultsPanel;
     
     // State
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
@@ -91,7 +90,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     // Results
     private List<DomainObject> domainObjects;
     private List<Annotation> annotations;
-    private SearchResults searchResults;
+    private DomainObjectSearchResults searchResults;
     private String sortCriteria = "number";
 
     public NeuronSeparationEditorPanel() {
@@ -171,16 +170,19 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
 
         enableVisibilityCheckBox = new JCheckBox(new AbstractAction("Hide/Unhide") {
             public void actionPerformed(ActionEvent e) {
-                JCheckBox cb = (JCheckBox) e.getSource();
                 search();
             }
         });
         configPanel.addConfigComponent(enableVisibilityCheckBox);
 
-        resultsPanel = new PaginatedResultsPanel(selectionModel, this) {
+        resultsPanel = new PaginatedDomainResultsPanel(selectionModel, this) {
             @Override
-            protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
+            protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
+            }
+            @Override
+            public Reference getId(DomainObject object) {
+                return Reference.createFor(object);
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->NeuronSeparationEditorPanel"));
@@ -398,7 +400,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         }
         
         DomainUtils.sortDomainObjects(domainObjects, sortCriteria);
-        this.searchResults = SearchResults.paginate(domainObjects, annotations);
+        this.searchResults = new DomainObjectSearchResults(domainObjects, annotations);
     }
 
     public void showResults(boolean isUserDriven, Callable<Void> success) {

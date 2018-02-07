@@ -38,7 +38,7 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.browser.gui.table.DynamicTable;
-import org.janelia.it.workstation.browser.model.AnnotatedDomainObjectList;
+import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.slf4j.Logger;
@@ -206,7 +206,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         }
     };
 
-    protected abstract Object getValue(AnnotatedDomainObjectList annotatedDomainObjectList, T object, String column);
+    protected abstract Object getValue(AnnotatedObjectList<T,S> annotatedDomainObjectList, T object, String column);
 
     protected void enterKeyPressed() {
         T selectedObject = getLastSelectedObject();
@@ -227,7 +227,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
     protected void updateHud(boolean toggle) {}
 
-    public abstract AnnotatedDomainObjectList getDomainObjectList();
+    public abstract AnnotatedObjectList<T,S> getDomainObjectList();
 
     public void selectObjects(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
 

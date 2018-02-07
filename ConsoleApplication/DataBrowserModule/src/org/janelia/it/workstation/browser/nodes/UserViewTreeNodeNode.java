@@ -135,11 +135,13 @@ public class UserViewTreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                 }
 
                 list.addAll(temp);
-                return true;
-            } catch (Exception e) {
+                
+            } 
+            catch (Exception e) {
                 ConsoleApp.handleException(e);
-                return false;
             }
+            
+            return true;
         }
 
         @Override

@@ -1,20 +1,5 @@
 package org.janelia.it.workstation.ab2.controller;
 
-/*
-
-This controller is intended to receive a stream of all events in the AB2 system. To make the controller
-thread-safe, events are added to a thread-safe queue, and handled in a separate thread.
-
-The EventHandler class handles certain non-controller specific Events, and then forwards all other Events to the
-current Mode controller.
-
-Events which are not handled by the current Mode controller (and implicitly, also not handled by the EventHandler)
-are placed in the waitQueue, to be handled by the next Mode controller.
-
-*/
-
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -23,12 +8,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.GLJPanel;
 
-import org.janelia.geometry3d.Vector4;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.ab2.event.AB2ChangeModeEvent;
 import org.janelia.it.workstation.ab2.event.AB2DomainObjectUpdateEvent;
 import org.janelia.it.workstation.ab2.event.AB2Event;
@@ -36,12 +20,8 @@ import org.janelia.it.workstation.ab2.event.AB2EventHandler;
 import org.janelia.it.workstation.ab2.event.AB2SampleAddedEvent;
 import org.janelia.it.workstation.ab2.gl.GLAbstractActor;
 import org.janelia.it.workstation.ab2.model.AB2DomainObject;
-import org.janelia.it.workstation.ab2.shader.AB2Basic2DShader;
-import org.janelia.it.workstation.ab2.shader.AB2PickShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.janelia.it.workstation.ab2.gl.GLAbstractActor.createGLFloatBuffer;
 
 public class AB2Controller implements GLEventListener, AB2EventHandler {
 
@@ -53,7 +33,7 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
     private ScheduledExecutorService controllerExecutor;
     private ScheduledFuture<?> controllerHandle;
     private EventHandler eventHandler;
-    private Map<Class, AB2ControllerMode> modeMap=new HashMap<>();
+    private Map<Class<?>, AB2ControllerMode> modeMap=new HashMap<>();
     private AB2ControllerMode currentMode;
     private GLJPanel gljPanel;
     private AB2DomainObject domainObject;
@@ -223,33 +203,38 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
             //logger.info("eventQueue size="+eventQueue.size());
             while (!eventQueue.isEmpty()) {
                 //logger.info("EventHandler run() queue size="+eventQueue.size());
-                AB2Event event = eventQueue.poll();
-                if (event != null) {
-                    if (event instanceof AB2ChangeModeEvent) {
-                        Class targetModeClass = ((AB2ChangeModeEvent) event).getNewMode();
-                        AB2ControllerMode targetMode = modeMap.get(targetModeClass);
-                        if (!targetMode.equals(currentMode)) {
-                            currentMode.stop();
-                            drainWaitQueueToEventQueue();
-                            currentMode = targetMode;
-                            currentMode.start();
+                try {
+                    AB2Event event = eventQueue.poll();
+                    if (event != null) {
+                        if (event instanceof AB2ChangeModeEvent) {
+                            Class<?> targetModeClass = ((AB2ChangeModeEvent) event).getNewMode();
+                            AB2ControllerMode targetMode = modeMap.get(targetModeClass);
+                            if (!targetMode.equals(currentMode)) {
+                                currentMode.stop();
+                                drainWaitQueueToEventQueue();
+                                currentMode = targetMode;
+                                currentMode.start();
+                            }
                         }
-                    }
-                    else if (event instanceof AB2SampleAddedEvent) {
-                        logger.info("EventHandler run() handling AB2SampleAddedEvent");
-                        Class targetModeClass = AB2SampleBasicMode.class;
-                        if (currentMode.getClass().equals(targetModeClass)) {
-                            logger.info("EventHandler run() passing AB2SampleAddedEvent to currentMode process()");
-                            currentMode.processEvent(event);
+                        else if (event instanceof AB2SampleAddedEvent) {
+                            logger.info("EventHandler run() handling AB2SampleAddedEvent");
+                            Class<?> targetModeClass = AB2SampleBasicMode.class;
+                            if (currentMode.getClass().equals(targetModeClass)) {
+                                logger.info("EventHandler run() passing AB2SampleAddedEvent to currentMode process()");
+                                currentMode.processEvent(event);
+                            }
+                            else {
+                                processEvent(new AB2ChangeModeEvent(AB2SampleBasicMode.class));
+                                processEvent(event); // put this back in queue, to be processed after mode change
+                            }
                         }
                         else {
-                            processEvent(new AB2ChangeModeEvent(AB2SampleBasicMode.class));
-                            processEvent(event); // put this back in queue, to be processed after mode change
+                            currentMode.processEvent(event);
                         }
                     }
-                    else {
-                        currentMode.processEvent(event);
-                    }
+                }
+                catch (Throwable t) {
+                    FrameworkImplProvider.handleException(t);
                 }
             }
             if (needsRepaint) {

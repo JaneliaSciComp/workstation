@@ -2,7 +2,6 @@ package org.janelia.it.workstation.browser.actions;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -19,7 +18,7 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +26,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 /**
- * Remove items from a tree node.
+ * Remove items from a node.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -35,47 +34,57 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
 
     private final static Logger log = LoggerFactory.getLogger(RemoveItemsFromFolderAction.class);
 
-    private final TreeNode treeNode;
+    private final Node node;
     private final Collection<DomainObject> domainObjects;
 
-    public RemoveItemsFromFolderAction(TreeNode treeNode, Collection<DomainObject> domainObjects) {
-        super(getName(treeNode, domainObjects));
-        this.treeNode = treeNode;
+    public RemoveItemsFromFolderAction(Node node, Collection<DomainObject> domainObjects) {
+        super(getName(node, domainObjects));
+        this.node = node;
         this.domainObjects = domainObjects;
     }
 
-    public static final String getName(TreeNode treeNode, Collection<DomainObject> domainObjects) {
-        return domainObjects.size() > 1 ? "Remove " + domainObjects.size() + " Items From Folder '"+treeNode.getName()+"'" : "Remove This Item From Folder '"+treeNode.getName()+"'";
+    public static final String getName(Node node, Collection<DomainObject> domainObjects) {
+        if (node==null) {
+            return domainObjects.size() > 1 ? "Delete " + domainObjects.size() + " Items" : "Delete This Item";
+        }
+        return domainObjects.size() > 1 ? "Remove " + domainObjects.size() + " Items From Folder '"+node.getName()+"'" : "Remove This Item From Folder '"+node.getName()+"'";
     }
 
     @Override
     public void actionPerformed(ActionEvent event) {
     	
-        ActivityLogHelper.logUserAction("RemoveItemsFromFolderAction.doAction", treeNode);
+        ActivityLogHelper.logUserAction("RemoveItemsFromFolderAction.doAction", node);
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
-        final Multimap<TreeNode,DomainObject> removeFromFolders = ArrayListMultimap.create();
+        final Multimap<Node,DomainObject> removeFromFolders = ArrayListMultimap.create();
         final List<DomainObject> listToDelete = new ArrayList<>();
 
         for(DomainObject domainObject : domainObjects) {
 
             DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
             if (provider!=null && provider.supportsRemoval(domainObject)) {
-                // first check to make sure this Object only has one ancestor references; if it does pop up a dialog before removal
-                List<Reference> refList = model.getContainerReferences(domainObject);
-                if (refList==null || refList.size()<=1) {
+                if (node==null) {
                     listToDelete.add(domainObject);
                 }
                 else {
-                    log.info("{} has multiple references: {}", domainObject, refList);
+                    // first check to make sure this Object only has one ancestor references; if it does pop up a dialog before removal
+                    List<Reference> refList = model.getContainerReferences(domainObject);
+                    if (refList==null || refList.size()<=1) {
+                        listToDelete.add(domainObject);
+                    }
+                    else {
+                        log.info("{} has multiple references: {}", domainObject, refList);
+                    }
                 }
             }
             else {
                 log.trace("Removal not supported for {}", domainObject);
             }
 
-            log.info("Will removing {} from {}", domainObject, treeNode);
-            removeFromFolders.put(treeNode,domainObject);
+            if (node!=null) {
+                log.info("Will removing {} from {}", domainObject, node);
+                removeFromFolders.put(node,domainObject);
+            }
         }
         
         if (!listToDelete.isEmpty()) {
@@ -108,10 +117,10 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
                 }
                 
                 // Delete references
-                for (TreeNode treeNode : removeFromFolders.keySet()) {
-                    Collection<DomainObject> items = removeFromFolders.get(treeNode);
-                    log.info("Removing {} items from {}", items.size(), treeNode);
-                    model.removeChildren(treeNode, items);
+                for (Node node : removeFromFolders.keySet()) {
+                    Collection<DomainObject> items = removeFromFolders.get(node);
+                    log.info("Removing {} items from {}", items.size(), node);
+                    model.removeChildren(node, items);
                 }
             }
 

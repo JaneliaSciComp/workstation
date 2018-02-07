@@ -83,6 +83,7 @@ public class Hud extends ModalDialog {
     // Current state
     private DomainObject domainObject;
     private HasFiles fileProvider;
+    private String title;
     
     public enum COLOR_CHANNEL {
         RED,
@@ -183,28 +184,34 @@ public class Hud extends ModalDialog {
             hideDialog();
         }
         else {
-            if (domainObject != null) {
-                render();
-            }
+            showDialog();
         }
     }
 
+    public void showDialog() {
+        log.debug("showDialog");
+        if (shouldRender3D()) {
+            renderIn3D();
+        }
+        packAndShow();
+    }
+    
     public void hideDialog() {
         log.debug("hideDialog");
         setVisible(false);
     }
-
-    public void setObjectAndToggleDialog(DomainObject domainObject, ArtifactDescriptor resultDescriptor, String typeName) {
-        log.debug("setObjectAndToggleDialog({})",domainObject);
-        setObjectAndToggleDialog(domainObject, resultDescriptor, typeName, true, true);
-    }
-
-    public void setObject(DomainObject domainObject, ArtifactDescriptor resultDescriptor, String typeName, boolean overrideSettings) {
-        log.debug("setObject({})",domainObject);
-        setObjectAndToggleDialog(domainObject, resultDescriptor, typeName, false, overrideSettings);
-    }
-
-    public void setObjectAndToggleDialog(final DomainObject domainObject, ArtifactDescriptor resultDescriptor, String typeName, final boolean toggle, boolean overrideSettings) {
+    
+    /**
+     * Display a domain object with the possibility of switching between different views of it. 
+     * @param domainObject
+     * @param resultDescriptor
+     * @param typeName
+     * @param toggle
+     * @param overrideSettings
+     */
+    public void setObjectAndToggleDialog(final DomainObject domainObject, ArtifactDescriptor resultDescriptor, String typeName, 
+            final boolean toggle, boolean overrideSettings) {
+        
         this.domainObject = domainObject;
         if (domainObject == null) {
             dirtyEntityFor3D = false;
@@ -220,7 +227,7 @@ public class Hud extends ModalDialog {
         ArtifactDescriptor currResult = (overrideSettings && resultDescriptor!=null) ? resultDescriptor : resultButton.getResultDescriptor();
         String currImageType  = (overrideSettings && typeName!=null) ? typeName : typeButton.getImageTypeName();
 
-        log.debug("setObjectAndToggleDialog - name:{}, toggle:{}, currResult:{}, currImageType:{}",domainObject.getName(),toggle,currResult,currImageType);
+        log.info("setObjectAndToggleDialog - name:{}, toggle:{}, currResult:{}, currImageType:{}",domainObject.getName(),toggle,currResult,currImageType);
         
         if (currResult==null) {
             currResult = ArtifactDescriptor.LATEST;
@@ -244,10 +251,38 @@ public class Hud extends ModalDialog {
         else if (domainObject instanceof HasFiles) {
             fileProvider = (HasFiles)domainObject;
         }
+
+        log.info("Using file provider: {}", fileProvider);
         
         final String imagePath = DomainUtils.getFilepath(fileProvider, typeButton.getImageTypeName());
-        if (imagePath == null) {
-            log.info("No image path for {} ({})", domainObject.getName(), typeButton.getImageTypeName());
+        
+        this.title = domainObject.getName();
+        setObjectAndToggleDialog(imagePath, toggle, overrideSettings);
+    }
+
+    /**
+     * Display an image in the lightbox viewer.
+     * @param imagePath
+     * @param toggle
+     * @param overrideSettings
+     */
+    public void setFilepathAndToggleDialog(String imagePath, final boolean toggle, boolean overrideSettings) {
+        if (imagePath!=null) {
+            this.title = new File(imagePath).getName();
+        }
+        else {
+            this.title = "";
+        }
+        resultButton.setVisible(false);
+        typeButton.setVisible(false);
+        setObjectAndToggleDialog(imagePath, toggle, overrideSettings);
+    }
+    
+    private void setObjectAndToggleDialog(String filepath, final boolean toggle, boolean overrideSettings) {
+        log.info("setObjectAndToggleDialog({},toggle={},overrideSettings={})",filepath,toggle,overrideSettings);
+        
+        if (filepath == null) {
+            log.info("No image path for {} ({})", title, typeButton.getImageTypeName());
             previewLabel.setIcon(new MissingIcon());
 
             if (render3DCheckbox != null) {
@@ -256,7 +291,7 @@ public class Hud extends ModalDialog {
             }
 
             setAllColorsOn();
-            setTitle(domainObject.getName());
+            setTitle(title);
 
             if (toggle) {
                 toggleDialog();
@@ -275,24 +310,24 @@ public class Hud extends ModalDialog {
                     
                     ImageCache ic = ConsoleApp.getConsoleApp().getImageCache();
                     if (ic != null) {
-                        image = ic.get(imagePath);
+                        image = ic.get(filepath);
                     }
 
                     // Ensure we have an image and that it is cached.
                     if (image == null) {
                         log.debug("Must load image.");
-                        final File imageFile = FileMgr.getCachedFile(imagePath, false);
+                        final File imageFile = FileMgr.getFileMgr().getFile(filepath, false);
                         if (imageFile != null) {
                             image = Utils.readImage(imageFile.getAbsolutePath());
                             if (ic != null) {
-                                ic.put(imagePath, image);
+                                ic.put(filepath, image);
                             }
                         }
                     }
 
                     // No image loaded or cached.  Do nada.
                     if (image == null) {
-                        log.info("No image read for {}:{}", domainObject.getId(), imagePath);
+                        log.info("No image read for {}", filepath);
                     }
 
                 }
@@ -308,7 +343,7 @@ public class Hud extends ModalDialog {
                             handleRenderSelection();
                         }
                         setAllColorsOn();
-                        setTitle(domainObject.getName());
+                        setTitle(title);
                         
                         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                         int width = (int)Math.round((double)screenSize.width*0.9);
@@ -382,13 +417,6 @@ public class Hud extends ModalDialog {
         this.repaint();
     }
     
-    private void render() {
-        if (shouldRender3D()) {
-            renderIn3D();
-        }
-        packAndShow();
-    }
-
     @Override
     protected void packAndShow() {
         SwingUtilities.updateComponentTreeUI(this);

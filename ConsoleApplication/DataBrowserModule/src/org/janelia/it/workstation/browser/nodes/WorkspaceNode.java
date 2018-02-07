@@ -32,12 +32,12 @@ public class WorkspaceNode extends TreeNodeNode {
     
     @Override
     public String getPrimaryLabel() {
-        return getTreeNode().getName();
+        return getNode().getName();
     }
     
     @Override
     public Image getIcon(int type) {
-        if (ClientDomainUtils.isOwner(getTreeNode())) {
+        if (ClientDomainUtils.isOwner(getNode())) {
             return Icons.getIcon("folder_user.png").getImage();
         }
         else {

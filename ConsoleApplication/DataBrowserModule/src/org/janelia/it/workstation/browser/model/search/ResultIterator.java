@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.model.search;
 
-import static org.janelia.it.workstation.browser.model.search.SearchResults.PAGE_SIZE;
+import static org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults.PAGE_SIZE;
 
 import java.util.Iterator;
 import java.util.List;
@@ -9,7 +9,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.Position;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.model.domain.DomainObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,11 +20,11 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ResultIterator implements Iterator<DomainObject> {
+public class ResultIterator<T,S> implements Iterator<T> {
 
     private static final Logger log = LoggerFactory.getLogger(ResultIterator.class);
 
-    SearchResults searchResults;
+    SearchResults<T,S> searchResults;
     private final int startIndex;
     private final int startPage;
     private final Position.Bias bias;
@@ -36,26 +35,30 @@ public class ResultIterator implements Iterator<DomainObject> {
     private boolean hasNext;
     private int lastPage;
     
-    public ResultIterator(SearchResults searchResults, int globalStartIndex, Position.Bias bias, boolean skipStartingIndex) {
+    public ResultIterator(SearchResults<T,S> searchResults, int globalStartIndex, Position.Bias bias, boolean skipStartingIndex) {
         this.searchResults = searchResults;
         this.bias = bias;
         this.skipStartingIndex = skipStartingIndex;
         this.startPage = this.currPage = this.lastPage = globalStartIndex / PAGE_SIZE;
         this.startIndex = this.currIndex = globalStartIndex % PAGE_SIZE;
         this.hasNext = searchResults.getNumTotalResults() > (skipStartingIndex ? 2 : 1);
-        log.debug("Init result iterator:");
-        log.debug("  globalStartIndex={}",globalStartIndex);
-        log.debug("  numTotalPages={}",searchResults.getNumTotalPages());
-        log.debug("  numTotalResults={}",searchResults.getNumTotalResults());
-        log.debug("  bias={}",bias);
-        log.debug("  startPage={}",startPage);
-        log.debug("  startIndex={}",startIndex);
-        log.debug("  hasNext={}",hasNext);
+        
+        if (log.isDebugEnabled()) {
+            log.debug("Init result iterator:");
+            log.debug("  globalStartIndex={}",globalStartIndex);
+            log.debug("  numTotalPages={}",searchResults.getNumTotalPages());
+            log.debug("  numTotalResults={}",searchResults.getNumTotalResults());
+            log.debug("  bias={}",bias);
+            log.debug("  startPage={}",startPage);
+            log.debug("  startIndex={}",startIndex);
+            log.debug("  hasNext={}",hasNext);
+        }
+        
         if (skipStartingIndex) {
             log.debug("Skipping starting index.");
             try {
-                ResultPage page = searchResults.getPage(currPage);
-                List<DomainObject> objects = page.getDomainObjects();
+                ResultPage<T,S> page = searchResults.getPage(currPage);
+                List<T> objects = page.getObjects();
                 moveNext(objects.size());
             }
             catch (Exception e) {
@@ -63,9 +66,12 @@ public class ResultIterator implements Iterator<DomainObject> {
                 throw new IllegalStateException("Error fetching current page",e);
             }
         }
-        log.debug("Starting at:");
-        log.debug("  currPage={}",currPage);
-        log.debug("  currIndex={}",currIndex);
+
+        if (log.isDebugEnabled()) {
+            log.debug("Starting at:");
+            log.debug("  currPage={}",currPage);
+            log.debug("  currIndex={}",currIndex);
+        }
     }
 
     @Override
@@ -74,7 +80,7 @@ public class ResultIterator implements Iterator<DomainObject> {
     }
 
     @Override
-    public DomainObject next() {
+    public T next() {
 
         if (SwingUtilities.isEventDispatchThread()) {
             throw new RuntimeException("ResultIterator.next called in the EDT");
@@ -85,8 +91,8 @@ public class ResultIterator implements Iterator<DomainObject> {
         try {
             // Find the current object that we need to return
             lastPage = currPage;
-            ResultPage page = searchResults.getPage(currPage);
-            List<DomainObject> objects = page.getDomainObjects();
+            ResultPage<T,S> page = searchResults.getPage(currPage);
+            List<T> objects = page.getObjects();
             
             if (currIndex>=objects.size()) {
                 // This clamp is needed for the edge case where we start on the first page 
@@ -94,7 +100,7 @@ public class ResultIterator implements Iterator<DomainObject> {
                 currIndex = objects.size()-1;
             }
                         
-            DomainObject object = objects.isEmpty() ? null : objects.get(currIndex);
+            T object = objects.isEmpty() ? null : objects.get(currIndex);
 
             if (currPage==startPage && currIndex==startIndex && skipStartingIndex) {
                 // We have looped back to the starting index, which was initially skipped,
@@ -157,7 +163,7 @@ public class ResultIterator implements Iterator<DomainObject> {
      * Returns the result page containing the last result returned by getNext().
      * @return loaded result page
      */
-    public ResultPage getCurrResultPage() {
+    public ResultPage<T,S> getCurrResultPage() {
         try {
             return searchResults.getPage(lastPage);
         }

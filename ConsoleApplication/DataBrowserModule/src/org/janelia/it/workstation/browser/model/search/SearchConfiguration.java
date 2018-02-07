@@ -326,7 +326,7 @@ public class SearchConfiguration {
         this.displayQueryString = qs.toString();
         
         this.query = builder.getQuery();
-        ResultPage firstPage = performSearch(0);
+        DomainObjectResultPage firstPage = performSearch(0);
         SolrSearchResults searchResults = new SolrSearchResults(this, firstPage);
         log.debug("Got {} results", firstPage.getNumPageResults());
         return searchResults;
@@ -340,7 +340,7 @@ public class SearchConfiguration {
      * @return
      * @throws Exception
      */
-    ResultPage performSearch(int page) throws Exception {
+    DomainObjectResultPage performSearch(int page) throws Exception {
 
         if (SwingUtilities.isEventDispatchThread()) {
             throw new RuntimeException("SearchConfiguration.performSearch called in the EDT");
@@ -411,6 +411,6 @@ public class SearchConfiguration {
         
         stopWatch.stop("performMongoSearch");
 
-        return new ResultPage(domainObjects, annotations, numFound);
+        return new DomainObjectResultPage(domainObjects, annotations, numFound);
     }
 }

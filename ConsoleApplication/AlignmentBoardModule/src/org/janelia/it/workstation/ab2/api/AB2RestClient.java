@@ -4,15 +4,24 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.Date;
 import java.util.List;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.janelia.it.jacs.shared.ffmpeg.H5JLoader;
+import org.janelia.it.jacs.shared.ffmpeg.ImageStack;
+import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.FileMgr;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.model.access.domain.ChanSpecUtils;
+import org.janelia.model.domain.interfaces.HasImageStack;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,16 +31,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import org.apache.commons.io.FileUtils;
-import org.glassfish.jersey.media.multipart.BodyPart;
-import org.glassfish.jersey.media.multipart.MultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.janelia.it.jacs.shared.ffmpeg.H5JLoader;
-import org.janelia.it.jacs.shared.ffmpeg.ImageStack;
-import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class AB2RestClient {
 
@@ -63,36 +62,43 @@ public class AB2RestClient {
                 .queryParam("subjectKey", AccessManager.getSubjectKey());
     }
 
-    public byte[] getSampleDefault3DImageXYZRGBA8(Long sampleId) throws Exception {
-        Response response = getAB2Endpoint("/sampleDefault3DImage")
-                .queryParam("sampleId", sampleId)
-                .request("multipart/mixed")
-                .get();
-        if (checkBadResponse(response, "getSampleDefault3DImageXYZRGBA8: "+sampleId)) {
-            throw new WebApplicationException(response);
+    public byte[] getSample3DImageXYZRGBA8(String filepath, HasImageStack imageStack) throws Exception {
+//        Response response = getAB2Endpoint("/sampleDefault3DImage")
+//                .queryParam("sampleId", sampleId)
+//                .request("multipart/mixed")
+//                .get();
+//        if (checkBadResponse(response, "getSampleDefault3DImageXYZRGBA8: "+sampleId)) {
+//            throw new WebApplicationException(response);
+//        }
+//        MultiPart multipart = response.readEntity(MultiPart.class);
+//        byte[] data=null;
+//        for (BodyPart bodyPart : multipart.getBodyParts()) {
+//            if (bodyPart.getMediaType().equals(MediaType.TEXT_PLAIN_TYPE)) {
+//                String typeString = bodyPart.getEntityAs(String.class);
+//                log.info("Received type="+typeString);
+//            } else if (bodyPart.getMediaType().equals(MediaType.APPLICATION_OCTET_STREAM_TYPE)) {
+//        byte[] h5jData=bodyPart.getEntityAs(byte[].class);
+        
+        File file = FileMgr.getFileMgr().getFile(filepath, false);
+        if (file==null) throw new IllegalStateException("Could not retrieve file: "+filepath);
+        
+        byte[] data = h5jGet3DBytesUsingList(file, imageStack);
+        
+        // TODO: use optical resolution to scale the image in z to avoid "pancake" appearance
+        String opticalResolution = imageStack.getOpticalResolution();
+        
+        log.info("Received " + data.length + " bytes");
+        byte[] dimBytes = new byte[12];
+        for (int i = 0; i < 12; i++) {
+            dimBytes[i] = data[i];
         }
-        MultiPart multipart = response.readEntity(MultiPart.class);
-        byte[] data=null;
-        for (BodyPart bodyPart : multipart.getBodyParts()) {
-            if (bodyPart.getMediaType().equals(MediaType.TEXT_PLAIN_TYPE)) {
-                String typeString = bodyPart.getEntityAs(String.class);
-                log.info("Received type="+typeString);
-            } else if (bodyPart.getMediaType().equals(MediaType.APPLICATION_OCTET_STREAM_TYPE)) {
-                byte[] h5jData=bodyPart.getEntityAs(byte[].class);
-                data = getDataFromH5JBytes(h5jData);
-                log.info("Received " + data.length + " bytes");
-                byte[] dimBytes = new byte[12];
-                for (int i = 0; i < 12; i++) {
-                    dimBytes[i] = data[i];
-                }
-                IntBuffer intBuf = ByteBuffer.wrap(dimBytes).asIntBuffer();
-                int[] dimArray = new int[intBuf.remaining()];
-                intBuf.get(dimArray);
-                for (int j = 0; j < dimArray.length; j++) {
-                    log.info("dim=" + j + " value=" + dimArray[j]);
-                }
-            }
+        IntBuffer intBuf = ByteBuffer.wrap(dimBytes).asIntBuffer();
+        int[] dimArray = new int[intBuf.remaining()];
+        intBuf.get(dimArray);
+        for (int j = 0; j < dimArray.length; j++) {
+            log.info("dim=" + j + " value=" + dimArray[j]);
         }
+
         return data;
     }
 
@@ -107,16 +113,7 @@ public class AB2RestClient {
         return false;
     }
 
-    byte[] getDataFromH5JBytes(byte[] h5jBytes) throws Exception {
-        Long uniqueTime=new Date().getTime();
-        File tempFile=new File("~/tmp/"+"file_"+uniqueTime+".h5j");
-        FileUtils.writeByteArrayToFile(tempFile, h5jBytes);
-        byte[] dataBytes=h5jGet3DBytesUsingList(tempFile);
-        tempFile.delete();
-        return dataBytes;
-    }
-
-    private static synchronized byte[] h5jGet3DBytesUsingList(File file) throws IOException {
+    private static synchronized byte[] h5jGet3DBytesUsingList(File file, HasImageStack imageStack) throws IOException {
         log.info("h5jInspector() start - file="+file.getAbsolutePath());
         try {
             H5JLoader h5JLoader = new H5JLoader(file.getAbsolutePath());
@@ -128,7 +125,15 @@ public class AB2RestClient {
                 log.info("channel "+i+" name="+channelName);
                 i++;
             }
-            ImageStack firstImage=images.get(0);
+            
+            List<Integer> signalChannels = ChanSpecUtils.getSignalChannelIndexList(imageStack.getChannelSpec());
+            if (signalChannels.isEmpty()) {
+                throw new IllegalStateException("Reference-only stacks are currently not supported by this viewer");
+            }
+
+            int numChannels = signalChannels.size();
+            
+            ImageStack firstImage=images.get(signalChannels.get(0));
             log.info("Getting h5j image size");
             log.info("getting maxFrames");
             log.info("maxFrames="+firstImage.getNumFrames());
@@ -136,13 +141,23 @@ public class AB2RestClient {
             log.info("width="+firstImage.width()+" height="+firstImage.height());
             log.info("getting bytesPerPixel");
             log.info("bytesPerPixel="+firstImage.getBytesPerPixel());
-            byte[] channel0Bytes=getSingleChannelH5JDataFromImage(images.get(0));
-            byte[] channel1Bytes=getSingleChannelH5JDataFromImage(images.get(1));
-            byte[] channel2Bytes=getSingleChannelH5JDataFromImage(images.get(2));
+            
+            byte[] channel0Bytes = getSingleChannelH5JDataFromImage(images.get(signalChannels.get(0)));
+            byte[] channel1Bytes = null;
+            byte[] channel2Bytes = null;
+            if (numChannels > 1) {
+                channel1Bytes = getSingleChannelH5JDataFromImage(images.get(signalChannels.get(1)));
+                if (numChannels > 2) {
+                    channel2Bytes = getSingleChannelH5JDataFromImage(images.get(signalChannels.get(2)));
+                }
+            }
 
-            int xDim=firstImage.width();
-            int yDim=firstImage.height();
-            int zDim=firstImage.getNumFrames();
+            int xDim = firstImage.width();
+            int yDim = firstImage.height();
+            int zDim = firstImage.getNumFrames();
+            log.info("xDim=" + xDim);
+            log.info("yDim=" + yDim);
+            log.info("zDim=" + zDim);
 
             byte[] image3DBytes=new byte[4 * xDim * yDim * zDim + 12];
 
@@ -159,18 +174,26 @@ public class AB2RestClient {
             }
 
             int totalLength=xDim*yDim*zDim;
-
-            for (i=0;i<totalLength;i++) {
-                byte r=channel0Bytes[i];
-                byte g=channel1Bytes[i];
-                byte b=channel2Bytes[i];
-                image3DBytes[p++]=r;
-                image3DBytes[p++]=g;
-                image3DBytes[p++]=b;
-                image3DBytes[p++]=maxByteValueFromRgb(r, g, b);
+            log.info("totalLength=" + totalLength);
+            
+            for (i = 0; i < totalLength; i++) {
+                byte r = 0, g = 0, b = 0;
+                r = channel0Bytes[i];
+                image3DBytes[p++] = r;
+                if (numChannels>1) {
+                    g = channel1Bytes[i];
+                    image3DBytes[p++] = g;
+                    if (numChannels>2) {
+                        b = channel2Bytes[i];
+                        image3DBytes[p++] = b;
+                    }
+                }
+                image3DBytes[p++] = maxByteValueFromRgb(r, g, b);
             }
+            
             return image3DBytes;
-        } catch (Exception ex) {
+        } 
+        catch (Exception ex) {
             log.error("Exception ex="+ex.getMessage());
             throw new IOException(ex);
         }

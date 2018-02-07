@@ -9,18 +9,18 @@ import org.janelia.it.workstation.browser.ConsoleApp;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SolrSearchResults extends SearchResults {
+public class SolrSearchResults extends DomainObjectSearchResults {
 
     private final SearchConfiguration searchConfig;
     
-    public SolrSearchResults(SearchConfiguration searchConfig, ResultPage firstPage) {
+    public SolrSearchResults(SearchConfiguration searchConfig, DomainObjectResultPage firstPage) {
         super(firstPage);
         this.searchConfig = searchConfig;
     }
 
     @Override
-    public ResultPage getPage(int page) throws Exception {
-        ResultPage resultPage = super.getPage(page);
+    public DomainObjectResultPage getPage(int page) throws Exception {
+        DomainObjectResultPage resultPage = super.getPage(page);
         if (resultPage==null) {
             resultPage = searchConfig.performSearch(page);
             setPage(page, resultPage);
@@ -29,7 +29,7 @@ public class SolrSearchResults extends SearchResults {
     }
     
     @Override
-    public List<ResultPage> getPages() {
+    public List<DomainObjectResultPage> getPages() {
         return pages;
     }
 

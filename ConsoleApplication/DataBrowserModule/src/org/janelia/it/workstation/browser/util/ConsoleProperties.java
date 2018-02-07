@@ -3,8 +3,11 @@ package org.janelia.it.workstation.browser.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Dynamic properties loaded from console.properties.
@@ -13,11 +16,17 @@ import java.util.Set;
  */
 public class ConsoleProperties extends XProperties {
 
+    private static final Logger log = LoggerFactory.getLogger(ConsoleProperties.class);
+    
+    private static final String CONSOLE_PROPERTIES = "console.properties";
+    private static final String DEVELOPER_PROPERTIES = "my.properties";
+    
+    private static final List<String> fileNames = new ArrayList<String>();
     private static ConsoleProperties me;
-    private static Set<String> fileNames = new HashSet<String>();
 
     static {
-        fileNames.add("console.properties");
+        fileNames.add(CONSOLE_PROPERTIES);
+        fileNames.add(DEVELOPER_PROPERTIES);
     }
 
     private static ConsoleProperties load(boolean reload) {
@@ -38,16 +47,6 @@ public class ConsoleProperties extends XProperties {
     public static ConsoleProperties getInstance() {
         load(false);
         return me;
-    }
-
-    /**
-     * Used by Spring to inject the property file name at startup
-     *
-     * @param filename - property file name to inject into Spring
-     */
-    public static void setFileName(String filename) {
-        fileNames.clear();
-        fileNames.add(filename);
     }
 
     /**
@@ -263,17 +262,29 @@ public class ConsoleProperties extends XProperties {
         if (cl == null) {
             try (FileInputStream in = new FileInputStream(new File(propertiesFileName))) {
                 properties.load(in);
+                log.info("Loaded properties file: "+propertiesFileName);
             }
             catch (Exception ex) {
-                throw new RuntimeException("Error reading properties file: " + propertiesFileName, ex);
+                if (CONSOLE_PROPERTIES.equals(propertiesFileName)) {
+                    throw new RuntimeException("Error reading properties file: " + propertiesFileName, ex);
+                }
+                else {
+                    log.info("Did not load extra properties file: "+propertiesFileName);
+                }
             }
         }
         else {
             try (InputStream in = cl.getResourceAsStream(propertiesFileName)) {
                 properties.load(in);
+                log.info("Loaded properties file: "+propertiesFileName);
             }
             catch (Exception ex) {
-                throw new RuntimeException("Error reading properties file in class path: " + propertiesFileName, ex);
+                if (CONSOLE_PROPERTIES.equals(propertiesFileName)) {
+                    throw new RuntimeException("Error reading properties file in class path: " + propertiesFileName, ex);
+                }
+                else {
+                    log.info("Did not load extra properties file: "+propertiesFileName);
+                }
             }
         }
         return properties;

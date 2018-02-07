@@ -5,21 +5,27 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
+import java.util.List;
 
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
+import org.janelia.it.workstation.browser.gui.listview.icongrid.DecoratedImage;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.LoadImageWorker;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import loci.formats.FormatException;
 
 /**
- * An image that is loaded asynchronously from a standard filename. The panel may be scaled as needed, 
- * resizing the image while keeping the aspect ratio intact. 
+ * An image that is loaded asynchronously from a standard filename. 
+ * 
+ * If the image cannot be loaded, a user-friendly warning is displayed instead.
+ * 
+ * The panel may be scaled as needed, resizing the image while keeping the aspect ratio intact. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -30,46 +36,32 @@ public class LoadedImagePanel extends JPanel {
     private static final int DEFAULT_HEIGHT = 20;
     
     protected final String imageFilename;
+    protected final List<ImageDecorator> decorators;
     
     protected final JLabel loadingLabel;
-    protected final JLabel imageLabel;
-    protected final JLabel errorLabel;
-    protected JLabel activeLabel;
+    protected JComponent activeComponent;
+    private final DecoratedImage imagePanel;
     
     private LoadImageWorker loadWorker;
     private Double aspectRatio;
-    
+
     public LoadedImagePanel(String imageFilename) {
+        this(imageFilename, null);
+    }
+    
+    public LoadedImagePanel(String imageFilename, List<ImageDecorator> decorators) {
         
         this.imageFilename = imageFilename;
+        this.decorators = decorators;
+        this.imagePanel = new DecoratedImage(null, decorators);
         
         setLayout(new BorderLayout());
         setOpaque(false);
         
         loadingLabel = new JLabel();
-        loadingLabel.setOpaque(false);
         loadingLabel.setIcon(Icons.getLoadingIcon());
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
-        loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
-        loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        errorLabel = new JLabel();
-        errorLabel.setOpaque(false);
-        errorLabel.setForeground(Color.red);
-        errorLabel.setIcon(Icons.getIcon("file_error.png"));
-        errorLabel.setVerticalTextPosition(JLabel.BOTTOM);
-        errorLabel.setHorizontalTextPosition(JLabel.CENTER);
-        errorLabel.setVerticalAlignment(SwingConstants.CENTER);
-        errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
-        imageLabel = new JLabel();
-        imageLabel.setOpaque(false);
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        imageLabel.setVerticalAlignment(SwingConstants.CENTER);
-        imageLabel.setVerticalAlignment(SwingConstants.CENTER);
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        
         if (imageFilename!=null) {
             load();
         }
@@ -77,7 +69,7 @@ public class LoadedImagePanel extends JPanel {
 
     private void load() {
         
-        setImageLabel(loadingLabel);
+        setImageComponent(loadingLabel);
         loadWorker = new LoadImageWorker(imageFilename) {
 
             @Override
@@ -93,34 +85,41 @@ public class LoadedImagePanel extends JPanel {
                     return;
                 }
 
-                imageLabel.setIcon(new StretchIcon(image));
                 aspectRatio = (double)image.getWidth() / (double)image.getHeight();
-                setImageLabel(imageLabel);
+                
+                imagePanel.setImage(image);
+                imagePanel.setFillParent(true);
+                setImageComponent(imagePanel);
                                 
-                loadWorker = null;
-                revalidate();
-                repaint();
                 doneLoading();
+                loadWorker = null;
             }
 
             @Override
             protected void hadError(Throwable error) {
+
+                String errorType;
                 if (error instanceof FileNotFoundException) {
                     log.warn("File not found: " + imageFilename);
-                    errorLabel.setText("File not found");
+                    errorType = "File not found";
                 }
                 else if (error.getCause() != null && (error.getCause() instanceof FormatException)) {
                     log.warn("Image format not supported for: " + imageFilename, error);
-                    errorLabel.setText("Image format not supported");
+                    errorType = "Image format not supported";
                 }
                 else {
                     log.warn("Image could not be loaded: " + imageFilename, error);
-                    errorLabel.setText("Image could not be loaded");
+                    errorType = "Image could not be loaded";
                 }
-                setImageLabel(errorLabel);
-                revalidate();
-                repaint();
+                
+                BufferedImage image = Icons.getImage("file_error.png");
+                
+                imagePanel.setImage(image);
+                imagePanel.setText(errorType, Color.red);
+                setImageComponent(imagePanel);
+                
                 doneLoading();
+                loadWorker = null;
             }
         };
 
@@ -131,29 +130,34 @@ public class LoadedImagePanel extends JPanel {
         
     }
 
-    private void setImageLabel(JLabel label) {
-        this.activeLabel = label;
+    private void setImageComponent(JComponent component) {
+        this.activeComponent = component;
         removeAll();
-        add(label, BorderLayout.CENTER);
+        component.addMouseListener(new MouseForwarder(this, "MainComponent->LoadedImagePanel"));
+        add(component, BorderLayout.CENTER);
+        revalidate();
+        repaint();
     }
 
     public void scaleImage(int w) {
         if (w<0) return;
         int h = DEFAULT_HEIGHT;
         if (aspectRatio==null) {
-            if (activeLabel==loadingLabel) {
+            if (activeComponent==loadingLabel) {
                 h = loadingLabel.getIcon().getIconHeight()+10;
-                return;
             }
-            else if (activeLabel==errorLabel) {
-                h = errorLabel.getIcon().getIconHeight()+40;
-                return;
+            else {
+                Dimension preferredSize = imagePanel.getPreferredSize();
+                if (preferredSize!=null) {
+                    h = preferredSize.height;
+                }
             }
         }
         else {
             h = (int) Math.round(w / aspectRatio);
         }
 
+        log.trace("Scaling image with preferredSize=({},{})", w, h);
         setPreferredSize(new Dimension(w, h));
     }
 }

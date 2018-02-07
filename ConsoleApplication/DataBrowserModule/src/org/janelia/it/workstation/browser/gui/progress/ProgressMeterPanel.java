@@ -5,7 +5,9 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 
@@ -119,6 +121,20 @@ public class ProgressMeterPanel extends JPanel {
         }
         return instance;
     }    
+    
+    public List<BackgroundWorker> getWorkersInProgress() {
+        List<BackgroundWorker> workers = new ArrayList<>();
+        for(Component child : mainPanel.getComponents()) {
+            if (child instanceof MonitoredWorkerPanel) {
+                MonitoredWorkerPanel workerPanel = (MonitoredWorkerPanel)child;
+                BackgroundWorker worker = workerPanel.getWorker();
+                if (!worker.isDone()) {
+                    workers.add(worker);
+                }
+            }
+        }
+        return workers;
+    }
     
     public boolean hasWorkersInProgress() {
         for(Component child : mainPanel.getComponents()) {

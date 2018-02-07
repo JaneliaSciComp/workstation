@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.gui.listview;
 
+import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthResultIconGridViewer;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.DomainObjectIconGridViewer;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 
@@ -11,12 +12,13 @@ import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableVi
 public enum ListViewerType {
 
     IconViewer("Image View", DomainObjectIconGridViewer.class),
-    TableViewer("Table View", DomainObjectTableViewer.class);
+    TableViewer("Table View", DomainObjectTableViewer.class),
+    ColorDepthResultViewer("Image View", ColorDepthResultIconGridViewer.class);
 
     private final String name;
-    private final Class<? extends AnnotatedDomainObjectListViewer> viewerClass;
+    private final Class<? extends ListViewer<?,?>> viewerClass;
 
-    ListViewerType(String name, Class<? extends AnnotatedDomainObjectListViewer> viewerClass) {
+    ListViewerType(String name, Class<? extends ListViewer<?,?>> viewerClass) {
         this.name = name;
         this.viewerClass = viewerClass;
     }
@@ -25,7 +27,7 @@ public enum ListViewerType {
         return name;
     }
 
-    public Class<? extends AnnotatedDomainObjectListViewer> getViewerClass() {
+    public Class<? extends ListViewer<?,?>> getViewerClass() {
         return viewerClass;
     }
 }

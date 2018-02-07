@@ -32,7 +32,7 @@ public interface DomainObjectHelper extends Compatible<DomainObject> {
      * @param parentChildFactory child factory which is requesting this node
      * @return
      */
-    Node getNode(DomainObject domainObject, ChildFactory<DomainObject> parentChildFactory) throws Exception;
+    <T extends DomainObject> Node getNode(T domainObject, ChildFactory<T> parentChildFactory) throws Exception;
  
     /**
      * Returns a large static icon for the given domain object.

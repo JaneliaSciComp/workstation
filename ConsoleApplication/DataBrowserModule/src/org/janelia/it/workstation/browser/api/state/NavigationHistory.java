@@ -21,7 +21,7 @@ public class NavigationHistory {
 
     private static final Logger log = LoggerFactory.getLogger(NavigationHistory.class);
 
-    private List<DomainObjectEditorState<?>> history = new ArrayList<>();
+    private List<DomainObjectEditorState<?,?,?>> history = new ArrayList<>();
     private int historyPosition = -1;
 
     public NavigationHistory() {
@@ -35,13 +35,12 @@ public class NavigationHistory {
         return historyPosition < history.size() - 1;
     }
 
-    public synchronized DomainObjectEditorState<?> goBack() {
+    public synchronized DomainObjectEditorState<?,?,?> goBack() {
         if (historyPosition > 0) {
-            DomainObjectEditorState<?> state = history.get(historyPosition-1);
+            DomainObjectEditorState<?,?,?> state = history.get(historyPosition-1);
             loadState(state);
-            // We must wait until after loading the state to update the history position, 
-            // because loadState will trigger a call to updateCurrentState()
             historyPosition--;
+            log.info("Now at history position {}", historyPosition);
             // Now the buttons can be updated
             updateButtons();
             logCurrHistory();
@@ -50,12 +49,13 @@ public class NavigationHistory {
         return null;
     }
 
-    public synchronized DomainObjectEditorState<?> goForward() {
+    public synchronized DomainObjectEditorState<?,?,?> goForward() {
         if (historyPosition < history.size() - 1) {
-            DomainObjectEditorState<?> state = history.get(historyPosition+1);
+            DomainObjectEditorState<?,?,?> state = history.get(historyPosition+1);
             loadState(state);
             // Same logic as goBack()
             historyPosition++;
+            log.info("Now at history position {}", historyPosition);
             updateButtons();
             logCurrHistory();
             return state;
@@ -63,11 +63,11 @@ public class NavigationHistory {
         return null;
     }
 
-    public synchronized void pushHistory(DomainObjectEditorState<?> state) {
+    public synchronized void pushHistory(DomainObjectEditorState<?,?,?> state) {
         pushHistory(state, true);
     }
     
-    private void pushHistory(DomainObjectEditorState<?> state, boolean clearForward) {
+    private void pushHistory(DomainObjectEditorState<?,?,?> state, boolean clearForward) {
         
         if (state==null) {
             throw new IllegalStateException("Null state");
@@ -77,7 +77,7 @@ public class NavigationHistory {
             throw new IllegalStateException("State with null domain object");
         }
         
-        log.debug("Pushing editor state: {}",state);
+        log.info("Pushing editor state: {}",state);
                     
         if (clearForward) {
             // Clear out navigation in the future direction
@@ -85,7 +85,7 @@ public class NavigationHistory {
         }
         
         if (!history.isEmpty()) {
-            DomainObjectEditorState<?> currState = history.get(historyPosition);
+            DomainObjectEditorState<?,?,?> currState = history.get(historyPosition);
             if (currState!=null) {
                 if (currState.getDomainObject()!=null && state.getDomainObject().getId().equals(currState.getDomainObject().getId())) {
                     log.warn("We already have this state. This shouldn't happen.");
@@ -100,7 +100,7 @@ public class NavigationHistory {
         logCurrHistory();
     }
 
-    public void updateCurrentState(DomainObjectEditorState<?> state) {
+    public void updateCurrentState(DomainObjectEditorState<?,?,?> state) {
 
         if (state==null) {
             throw new IllegalStateException("Null state");
@@ -120,14 +120,14 @@ public class NavigationHistory {
         CallableSystemAction.get(NavigateForward.class).setEnabled(isForwardEnabled());
     }
 
-    private void loadState(DomainObjectEditorState<?> state) {
+    private void loadState(DomainObjectEditorState<?,?,?> state) {
 
         DomainListViewTopComponent tc = state.getTopComponent();
         if (!tc.isOpened()) {
             tc.open();
         }
         tc.requestVisible();
-        log.debug("Restoring state to {}",tc.getClass().getSimpleName());
+        log.info("Loading state in {}",tc.getClass().getSimpleName());
         tc.loadState(state);
 
         if (state.getDomainObjectNode()!=null) {
@@ -140,7 +140,7 @@ public class NavigationHistory {
         if (!log.isTraceEnabled()) return;
         log.trace("History: ");
         int i = 0 ;
-        for(DomainObjectEditorState<?> state : history) {
+        for(DomainObjectEditorState<?,?,?> state : history) {
             String domainObjectName = state.getDomainObject()==null ? "null" : state.getDomainObject().getName();
             log.trace("  "+i+" "+domainObjectName+" "+(historyPosition==i?"<-CURR":""));
             i++;

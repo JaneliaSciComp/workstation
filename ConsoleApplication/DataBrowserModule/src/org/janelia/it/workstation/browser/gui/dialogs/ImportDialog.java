@@ -10,7 +10,6 @@ import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -28,31 +27,31 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.tasks.Event;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
-import org.janelia.it.jacs.model.user_data.Node;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.FileMgr;
-import org.janelia.it.workstation.browser.api.StateMgr;
+import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.browser.filecache.RemoteLocation;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.jdesktop.swingx.VerticalLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -71,6 +70,7 @@ public class ImportDialog extends ModalDialog {
             "Name of the folder in which data should be loaded with the data.";
     private static final String TOOLTIP_INPUT_DIR =
             "Directory of the tree that should be loaded into the database.";
+    private static final String IMPORT_STORAGE_DEFAULT_TAGS = ConsoleProperties.getString("console.importStorage.tags");
 
     private JTextField folderField;
     private TreeNode rootFolder;
@@ -126,7 +126,7 @@ public class ImportDialog extends ModalDialog {
                     currentDir = null;
                 }
                 JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 fileChooser.setCurrentDirectory(currentDir);
                 int returnVal = fileChooser.showOpenDialog(ImportDialog.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -336,9 +336,8 @@ public class ImportDialog extends ModalDialog {
                            final List<File> selectedChildren,
                            final String importFolderName,
                            final Long importFolderId) {
-
-        try {            
-            BackgroundWorker executeWorker = new TaskMonitoringWorker() {
+        try {
+            BackgroundWorker executeWorker = new AsyncServiceMonitoringWorker(FileMgr.getFileMgr().getSubjectKey()) {
     
                 @Override
                 public String getName() {
@@ -351,11 +350,11 @@ public class ImportDialog extends ModalDialog {
                     setStatus("Submitting task");
                     
                     Long taskId = startImportFilesTask(selectedFile,
-                                selectedChildren,
-                                importFolderName,
-                                importFolderId);
+                            selectedChildren,
+                            importFolderName,
+                            importFolderId);
                     
-                    setTaskId(taskId);
+                    setServiceId(taskId);
                     
                     setStatus("Grid execution");
                     
@@ -434,39 +433,44 @@ public class ImportDialog extends ModalDialog {
         catch (Exception e) {
             ConsoleApp.handleException(e);
         }
-        
     }
 
-    private long startImportFilesTask(File selectedFile,
-                             List<File> selectedChildren,
-                             String importTopLevelFolderName,
-                             Long importTopLevelFolderId) throws Exception {
+    private Long startImportFilesTask(File selectedFile,
+                                      List<File> selectedChildren,
+                                      String importTopLevelFolderName,
+                                      Long importTopLevelFolderId) throws Exception {
 
-        final WebDavUploader uploader = new WebDavUploader(FileMgr.getFileMgr().getWebDavClient());
+        AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
 
+        final WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
+        final String subjectName = FileMgr.getFileMgr().getSubjectName();
+        String uploadContext;
+        if (StringUtils.isBlank(subjectName)) {
+            uploadContext = "WorkstationFileUpload";
+        } else {
+            uploadContext = subjectName + "/" + "WorkstationFileUpload";
+        }
         String uploadPath;
         if (selectedChildren == null) {
-            uploadPath = uploader.uploadFile(selectedFile);
+            RemoteLocation uploadedFile = uploader.uploadFile(importTopLevelFolderName, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, selectedFile);
+            uploadPath = uploadedFile.getStorageURL();
         } else {
-            uploadPath = uploader.uploadFiles(selectedChildren, selectedFile);
+            List<RemoteLocation> uploadedFiles = uploader.uploadFiles(importTopLevelFolderName, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, selectedChildren, selectedFile);
+            // all files should be uploaded to the same storage
+            uploadPath = uploadedFiles.stream().findFirst().map(rl -> rl.getStorageURL()).orElseThrow(() -> new IllegalStateException("Invalid upload state " + uploadedFiles));
         }
 
-        final String process = "FileTreeLoader";
-        final boolean filesUploadedFlag = false;
-        Task task = new FileTreeLoaderPipelineTask(new HashSet<Node>(),
-                                                   AccessManager.getSubjectKey(),
-                                                   new ArrayList<Event>(),
-                                                   new HashSet<TaskParameter>(),
-                                                   uploadPath,
-                                                   importTopLevelFolderName,
-                                                   filesUploadedFlag,
-                                                   importTopLevelFolderId);
-        task.setJobName("Import Files Task");
-        task = StateMgr.getStateMgr().saveOrUpdateTask(task);
-
-        // Submit the job
-        StateMgr.getStateMgr().submitJob(process, task);
-        
-        return task.getObjectId();
+        ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
+                .add("-folderName", importTopLevelFolderName);
+        if (importTopLevelFolderId != null) {
+            serviceArgsBuilder.add("-parentFolderId", importTopLevelFolderId.toString());
+        }
+        serviceArgsBuilder.add("-storageLocation", uploadPath);
+        return asyncServiceClient.invokeService("dataTreeLoad",
+                serviceArgsBuilder.build(),
+                FileMgr.getFileMgr().getSubjectKey(),
+                "LSF_DRMAA",
+                ImmutableMap.of()
+        );
     }
 }

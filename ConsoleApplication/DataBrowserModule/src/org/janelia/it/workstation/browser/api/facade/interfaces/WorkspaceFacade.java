@@ -8,6 +8,7 @@ import org.janelia.it.jacs.shared.solr.SolrParams;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.search.Filter;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
 
@@ -63,37 +64,37 @@ public interface WorkspaceFacade {
     public Filter update(Filter filter) throws Exception;
 
     /**
-     * Add the given references as children of the specified tree node, at some index. 
-     * @param treeNode the tree node 
+     * Add the given references as children of the specified node, at some index. 
+     * @param node the node 
      * @param references collection of references to add
      * @param index the index at which to insert the new children, or null to add them at the end
-     * @return the updated tree node
+     * @return the updated node
      * @throws Exception something went wrong
      */
-    public TreeNode addChildren(TreeNode treeNode, Collection<Reference> references, Integer index) throws Exception;
+    public <T extends Node> T addChildren(T node, Collection<Reference> references, Integer index) throws Exception;
 
     /**
-     * Remove the given children from the given tree node. 
-     * @param treeNode the tree node
+     * Remove the given children from the given node. 
+     * @param node the node
      * @param references collection of references to remove
-     * @return the updated tree node
+     * @return the updated node
      * @throws Exception something went wrong
      */
-    public TreeNode removeChildren(TreeNode treeNode, Collection<Reference> references) throws Exception;
+    public <T extends Node> T removeChildren(T node, Collection<Reference> references) throws Exception;
 
     /**
-     * Reorder the children of the given tree node. 
-     * @param treeNode the tree node
+     * Reorder the children of the given node. 
+     * @param node the node
      * @param order permutation with the length of current children. The permutation lists the new positions of the original children, 
      * that is, for children <code>[A,B,C,D]</code> and permutation <code>[0,3,1,2]</code>, the final order would be <code>[A,C,D,B]</code>.
-     * @return the updated tree node object
+     * @return the updated node object
      * @throws Exception something went wrong
      */
-    public TreeNode reorderChildren(TreeNode treeNode, int[] order) throws Exception;
+    public <T extends Node> T reorderChildren(T node, int[] order) throws Exception;
 
     /**
      * Checks whether there are any TreeNode or ObjectSet references to this object
-     * @param object the object set\
+     * @param object the object set
      * @return the updated object set
      * @throws Exception something went wrong
      */

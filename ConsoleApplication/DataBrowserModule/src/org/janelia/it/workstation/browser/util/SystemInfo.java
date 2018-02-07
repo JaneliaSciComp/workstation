@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.browser.util;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
@@ -34,7 +36,8 @@ public class SystemInfo {
     public static final String ARCH_DATA_MODEL = System.getProperty("sun.arch.data.model");
     public static final String SUN_DESKTOP = System.getProperty("sun.desktop");
 
-    public static final String DOWNLOADS_FINAL_PATH_DIR = "Downloads/";
+    public static final String DOWNLOADS_DIR = "Downloads";
+    public static final String WORKSTATION_FILES_DIR = "Workstation";
     public static final String USERHOME_SYSPROP_NAME = "user.home";
 
     public static final boolean isWindows = OS_NAME_LC.startsWith("windows");
@@ -122,31 +125,42 @@ public class SystemInfo {
     }
 
     public static void setDownloadsDir(String downloadsDir) {
-        FrameworkImplProvider.setModelProperty(OptionConstants.DOWNLOADS_DIR, downloadsDir);
+        FrameworkImplProvider.setModelProperty(OptionConstants.FILE_DOWNLOADS_DIR, downloadsDir);
     }
 
-    public static File getDownloadsDir() {
-        String downloadsDir = (String) FrameworkImplProvider.getModelProperty(OptionConstants.DOWNLOADS_DIR);
-        File downloadsDirFile;
+    public static Path getDownloadsDir() {
+        
+        String fileDownloadsDir = (String) FrameworkImplProvider.getModelProperty(OptionConstants.FILE_DOWNLOADS_DIR);
+        
+        Path fileDownloadsPath;
         // Check for existence and clear out references to tmp
-        if (null==downloadsDir || downloadsDir.startsWith("/tmp")) {
-            downloadsDirFile = new File(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
+        if (fileDownloadsDir==null || fileDownloadsDir.startsWith("/tmp")) {
+
+            Path downloadDir;
+            String oldDownloadsDir = (String) FrameworkImplProvider.getModelProperty(OptionConstants.DOWNLOADS_DIR);
+            if (oldDownloadsDir != null) { 
+                downloadDir = Paths.get(oldDownloadsDir);
+            }
+            else {
+                downloadDir = Paths.get(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_DIR);
+            }
+            fileDownloadsPath = downloadDir.resolve(WORKSTATION_FILES_DIR);
         }
         else {
-            downloadsDirFile = new File(downloadsDir);
+            fileDownloadsPath = Paths.get(fileDownloadsDir);
         }
+        
         try {
-            if (!downloadsDirFile.exists()) {
-                boolean success = downloadsDirFile.mkdir();
-                if (success) {
-                    log.debug("Created Download dir: "+downloadsDirFile.getAbsolutePath());
-                }
+            if (!Files.exists(fileDownloadsPath)) {
+                Files.createDirectories(fileDownloadsPath);
+                log.debug("Created download dir: "+fileDownloadsPath.toString());
             }
         }
         catch (Exception e) {
-            log.error("Error trying to test and create a Downloads directory.");
+            log.error("Error trying to test and create a download directory", e);
         }
-        return downloadsDirFile;
+        
+        return fileDownloadsPath;
     }
 
     private static com.sun.management.OperatingSystemMXBean getOSMXBean() {

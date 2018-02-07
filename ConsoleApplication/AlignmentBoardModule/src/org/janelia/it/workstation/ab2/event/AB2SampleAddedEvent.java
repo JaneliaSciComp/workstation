@@ -1,13 +1,17 @@
 package org.janelia.it.workstation.ab2.event;
 
-import org.janelia.model.domain.sample.Sample;
+import org.janelia.it.workstation.browser.model.SampleImage;
 
 public class AB2SampleAddedEvent extends AB2Event {
-    Sample sample;
+    
+    private SampleImage sampleImage;
 
-    public AB2SampleAddedEvent(Sample sample) {
-        this.sample=sample;
+    public AB2SampleAddedEvent(SampleImage sampleImage) {
+        this.sampleImage=sampleImage;
     }
 
-    public Sample getSample() { return sample; }
+    public SampleImage getSampleImage() {
+        return sampleImage;
+    }
+
 }

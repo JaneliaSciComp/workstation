@@ -32,23 +32,28 @@ public class GroupedKeyValuePanel extends JPanel {
         ));
     }
 
+    public void addSeparator() {
+        add(new JSeparator(SwingConstants.HORIZONTAL), "span 2, gaptop 22lp, grow");
+    }
+    
     /**
      * Add a horizontal separator with a group label.
      * @param text
      */
-    public void addSeparator(String text) {
+    public JLabel addSeparator(String text) {
         JLabel label = new JLabel(text);
         label.setFont(SEPARATOR_FONT);
         add(label, "split 2, span, gaptop 10lp, ay top");
         add(new JSeparator(SwingConstants.HORIZONTAL), "wrap, gaptop 22lp, grow");
+        return label;
     }
 
     /**
      * Add a component without a label which spans the entire width of the panel.
      * @param component the component to add
      */
-    public void addItem(JComponent component) {
-        addItem(null, component, "span 2");
+    public JLabel addItem(JComponent component) {
+        return addItem(null, component, "span 2");
     }
 
     /**
@@ -56,12 +61,12 @@ public class GroupedKeyValuePanel extends JPanel {
      * @param component the component to add
      * @param constraints additional MIG layout constraints
      */
-    public void addItem(JComponent component, String constraints) {
+    public JLabel addItem(JComponent component, String constraints) {
         String compConstraints = "span 2";
         if (!StringUtils.isEmpty(constraints)) {
             compConstraints += ", "+constraints;
         }
-        addItem(null, component, compConstraints);
+        return addItem(null, component, compConstraints);
     }
 
     /**
@@ -69,8 +74,8 @@ public class GroupedKeyValuePanel extends JPanel {
      * @param label
      * @param component
      */
-    public void addItem(String label, JComponent component) {
-        addItem(label, component, "");
+    public JLabel addItem(String label, JComponent component) {
+        return addItem(label, component, "");
     }
 
     /**
@@ -79,12 +84,13 @@ public class GroupedKeyValuePanel extends JPanel {
      * @param component
      * @param constraints
      */
-    public void addItem(String label, JComponent component, String constraints) {
+    public JLabel addItem(String label, JComponent component, String constraints) {
+        JLabel attrLabel = null;
         if (label!=null) {
             if (!StringUtils.isBlank(label)) {
                 label = label + ": ";    
             }
-            JLabel attrLabel = new JLabel(label);
+            attrLabel = new JLabel(label);
             attrLabel.setLabelFor(component);
             add(attrLabel, "gap para, gaptop 10lp, ay top");
         }
@@ -93,5 +99,6 @@ public class GroupedKeyValuePanel extends JPanel {
             compConstraints += ", "+constraints;
         }
         add(component,compConstraints);
+        return attrLabel;
     }
 }

@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import javax.swing.SwingUtilities;
@@ -32,6 +33,8 @@ import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ReverseReference;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
+import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
@@ -44,6 +47,7 @@ import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleTile;
 import org.janelia.model.domain.support.NotCacheable;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.model.security.Subject;
@@ -172,6 +176,16 @@ public class DomainModel {
         List<T> canonicalObjects = putOrUpdate(Arrays.asList(domainObject), invalidateTree);
         if (canonicalObjects.isEmpty()) return null;
         return canonicalObjects.get(0);
+    }
+
+    /**
+     * Call putOrUpdate(domainObjects, false)
+     *
+     * @param domainObject
+     * @return canonical domain object instance
+     */
+    public <T extends DomainObject> List<T> putOrUpdate(Collection<T> domainObjects) {
+        return putOrUpdate(domainObjects, false);
     }
 
     /**
@@ -373,7 +387,7 @@ public class DomainModel {
             if (domainObject!=null) {
                 map.put(ref, domainObject);
             }
-            else {
+            else if (ref!=null) {
                 unsatisfiedRefs.add(ref);
             }
         }
@@ -481,6 +495,10 @@ public class DomainModel {
         log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",canonicalObjects.size(),unsatisfiedIds.size());
         return canonicalObjects;
     }
+
+    public <T extends DomainObject> List<T> getAllDomainObjectsByClass(Class<T> clazz) throws Exception {
+        return (List<T>)getAllDomainObjectsByClass(clazz.getName());
+    }
     
     public List<DomainObject> getAllDomainObjectsByClass(String className) throws Exception {
         List<DomainObject> domainObjects = new ArrayList<>();
@@ -492,7 +510,7 @@ public class DomainModel {
         
         if (TIMER) w.stop("getAllDomainObjectsByClass()");
         log.debug("getAllDomainObjectsByClass: returning {} objects",domainObjects.size());
-        return domainObjects;
+        return putOrUpdate(domainObjects);
     }
 
     public List<DomainObject> getDomainObjects(ReverseReference reverseReference) throws Exception {
@@ -544,6 +562,10 @@ public class DomainModel {
         }
         throw new IllegalStateException("Cannot find default workspace");
     }
+
+    public TreeNode getDefaultWorkspaceFolder(String folderName) throws Exception {
+        return getDefaultWorkspaceFolder(folderName, false);
+    }
     
     public TreeNode getDefaultWorkspaceFolder(String folderName, boolean createIfNecessary) throws Exception {
         Workspace workspace = getDefaultWorkspace();
@@ -565,6 +587,25 @@ public class DomainModel {
         Collections.sort(canonicalDataSets, new DomainObjectComparator());
         if (TIMER) w.stop("getDataSets");
         return canonicalDataSets;
+    }
+
+    public List<DataSet> getColorDepthDataSets(String alignmentSpace) throws Exception {
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        List<DataSet> dataSets = new ArrayList<>(sampleFacade.getColorDepthDataSets(alignmentSpace));
+        List<DataSet> canonicalDataSets = putOrUpdate(dataSets, false);
+        Collections.sort(canonicalDataSets, new DomainObjectComparator());
+        if (TIMER) w.stop("getColorDepthDataSets");
+        return canonicalDataSets;
+    }
+
+    public List<String> getAlignmentSpaces() throws Exception {
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        Set<String> alignmentSpaces = new TreeSet<>();
+        for(DataSet dataSet : getDataSets()) {
+            alignmentSpaces.addAll(dataSet.getColorDepthCounts().keySet());
+        }
+        if (TIMER) w.stop("getAlignmentSpaces");
+        return new ArrayList<>(alignmentSpaces);
     }
     
     public List<LSMImage> getLsmsForSample(Sample sample) throws Exception {
@@ -814,50 +855,50 @@ public class DomainModel {
         notifyAnnotationsChanged(getDomainObject(annotation.getTarget()));
     }
 
-    public TreeNode reorderChildren(TreeNode treeNode, int[] order) throws Exception {
-        TreeNode canonicalObject = null;
+    public <T extends Node> T reorderChildren(T node, int[] order) throws Exception {
+        T canonicalObject = null;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(workspaceFacade.reorderChildren(treeNode, order));
+            canonicalObject = putOrUpdate(workspaceFacade.reorderChildren(node, order));
         }
         return canonicalObject;
     }
 
-    public TreeNode addChild(TreeNode treeNode, DomainObject domainObject) throws Exception {
-        return addChildren(treeNode, Arrays.asList(domainObject));
+    public <T extends Node> T addChild(T node, DomainObject domainObject) throws Exception {
+        return addChildren(node, Arrays.asList(domainObject));
     }
 
-    public TreeNode addChild(TreeNode treeNode, DomainObject domainObject, Integer index) throws Exception {
-        return addChildren(treeNode, Arrays.asList(domainObject), index);
+    public <T extends Node> T addChild(T node, DomainObject domainObject, Integer index) throws Exception {
+        return addChildren(node, Arrays.asList(domainObject), index);
     }
 
-    public TreeNode addChildren(TreeNode treeNode, Collection<? extends DomainObject> domainObjects) throws Exception {
-        return addChildren(treeNode, domainObjects, null);
+    public <T extends Node> T addChildren(T node, Collection<? extends DomainObject> domainObjects) throws Exception {
+        return addChildren(node, domainObjects, null);
     }
 
-    public TreeNode addChildren(TreeNode treeNode, Collection<? extends DomainObject> domainObjects, Integer index) throws Exception {
-        TreeNode canonicalObject = null;
+    public <T extends Node> T addChildren(T node, Collection<? extends DomainObject> domainObjects, Integer index) throws Exception {
+        T canonicalObject = null;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(workspaceFacade.addChildren(treeNode, DomainUtils.getReferences(domainObjects), index));
+            canonicalObject = putOrUpdate(workspaceFacade.addChildren(node, DomainUtils.getReferences(domainObjects), index));
         }
         return canonicalObject;
     }
 
-    public TreeNode removeChild(TreeNode treeNode, DomainObject domainObject) throws Exception {
-        return removeChildren(treeNode, Arrays.asList(domainObject));
+    public <T extends Node> T removeChild(T node, DomainObject domainObject) throws Exception {
+        return removeChildren(node, Arrays.asList(domainObject));
     }
 
-    public TreeNode removeChildren(TreeNode treeNode, Collection<? extends DomainObject> domainObjects) throws Exception {
-        TreeNode canonicalObject = null;
+    public <T extends Node> T removeChildren(T node, Collection<? extends DomainObject> domainObjects) throws Exception {
+        T canonicalObject = null;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(workspaceFacade.removeChildren(treeNode, DomainUtils.getReferences(domainObjects)));
+            canonicalObject = putOrUpdate(workspaceFacade.removeChildren(node, DomainUtils.getReferences(domainObjects)));
         }
         return canonicalObject;
     }
 
-    public TreeNode removeReference(TreeNode treeNode, Reference reference) throws Exception {
-        TreeNode canonicalObject = null;
+    public <T extends Node> T removeReference(T node, Reference reference) throws Exception {
+        T canonicalObject = null;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(workspaceFacade.removeChildren(treeNode, Arrays.asList(reference)));
+            canonicalObject = putOrUpdate(workspaceFacade.removeChildren(node, Arrays.asList(reference)));
         }
         return canonicalObject;
     }
@@ -894,35 +935,41 @@ public class DomainModel {
         notifyDomainObjectRemoved(release);
     }
 
-    public DomainObject save(DomainObject domainObject) throws Exception {
-        DomainObject canonicalObject;
+    public <T extends DomainObject> T save(T domainObject) throws Exception {
+        T canonicalObject;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(domainFacade.save(domainObject));
+            canonicalObject = putOrUpdate((T)domainFacade.save(domainObject));
+        }
+        if (domainObject.getId()==null) {
+            notifyDomainObjectCreated(canonicalObject);
+            notifyDomainObjectChanged(canonicalObject); // Backwards compatibility until we can change everything to respond to creation events
+        }
+        else {
+            notifyDomainObjectChanged(canonicalObject);
+        }
+        return canonicalObject;
+    }
+
+    public <T extends DomainObject> T updateProperty(T domainObject, String propName, Object propValue) throws Exception {
+        T canonicalObject;
+        synchronized (modelLock) {
+            canonicalObject = putOrUpdate((T)domainFacade.updateProperty(domainObject, propName, propValue));
         }
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
-    public DomainObject updateProperty(DomainObject domainObject, String propName, Object propValue) throws Exception {
-        DomainObject canonicalObject;
+    public <T extends DomainObject> T changePermissions(T domainObject, String granteeKey, String rights) throws Exception {
+        T canonicalObject;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(domainFacade.updateProperty(domainObject, propName, propValue));
+            canonicalObject = putOrUpdate((T)domainFacade.setPermissions(domainObject, granteeKey, rights), true);
         }
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
-    public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights) throws Exception {
-        DomainObject canonicalObject;
-        synchronized (modelLock) {
-            canonicalObject = putOrUpdate(domainFacade.setPermissions(domainObject, granteeKey, rights), true);
-        }
-        notifyDomainObjectChanged(canonicalObject);
-        return canonicalObject;
-    }
-
-    public Subject getSubjectByKey(String subjectKey) throws Exception {
-        return subjectFacade.getSubjectByKey(subjectKey);
+    public Subject getSubjectByNameOrKey(String subjectKey) throws Exception {
+        return subjectFacade.getSubjectByNameOrKey(subjectKey);
     }
 
     public Subject getOrCreateUser(String username) throws Exception {
@@ -932,6 +979,54 @@ public class DomainModel {
     public String dispatchSamples(List<Reference> sampleRefs, String reprocessPurpose, boolean reuse) throws Exception {
         return sampleFacade.dispatchSamples(sampleRefs, reprocessPurpose, reuse);
     }
+    
+    public ColorDepthSearch createColorDepthSearch(String name, String alignmentSpace) throws Exception {
+        ColorDepthSearch search = new ColorDepthSearch();
+        search.setName(name);
+        search.setAlignmentSpace(alignmentSpace);
+        search = save(search);        
+
+        TreeNode searchesFolder = getDefaultWorkspaceFolder(DomainConstants.NAME_COLOR_DEPTH_SEARCHES, true);
+        addChild(searchesFolder, search);
+        
+        return search;
+    }
+    
+    public ColorDepthMask createColorDepthMask(String maskName, String alignmentSpace, String filepath, Integer maskThreshold, Sample sample) throws Exception {
+        
+        ColorDepthMask mask = new ColorDepthMask();
+        mask.setName(maskName);
+        mask.setAlignmentSpace(alignmentSpace);
+        mask.setFilepath(filepath);
+        mask.setMaskThreshold(maskThreshold);
+        if (sample != null) {
+            mask.setSample(Reference.createFor(sample));
+        }
+        mask = save(mask);
+        
+        // Add it to the mask folder
+        TreeNode masksFolder = getDefaultWorkspaceFolder(DomainConstants.NAME_COLOR_DEPTH_MASKS, true);
+        addChild(masksFolder, mask);
+        
+        return mask;
+    }
+    
+    public ColorDepthSearch addMaskToSearch(ColorDepthSearch search, ColorDepthMask mask) throws Exception {
+        Reference ref = Reference.createFor(mask);
+        if (search.getMasks().contains(ref)) return search;
+        search.getParameters().addMask(ref);
+        return save(search);
+    }
+
+    public ColorDepthSearch removeMaskFromSearch(ColorDepthSearch search, ColorDepthMask mask) throws Exception {
+        Reference ref = Reference.createFor(mask);
+        if (search.getMasks().contains(ref)) {
+            search.getMasks().remove(ref);
+            return save(search);
+        }
+        throw new IllegalArgumentException(mask+" was not found within "+search);
+    }
+    
 
     // EVENT HANDLING 
     // Important: never call these methods from within a synchronized. That can lead to deadlocks because

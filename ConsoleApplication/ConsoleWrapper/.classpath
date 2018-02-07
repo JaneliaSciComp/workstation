@@ -79,8 +79,6 @@
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/jalopy-1.5rc3.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/Jama-1.0.3.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/javacpp.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/javassist-3.16.1-GA.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/javassist.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/javax.annotation-api-1.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/javax.inject-2.4.0-b31.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/javax.ws.rs-api-2.0.1.jar"/>
@@ -190,5 +188,6 @@
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/amqp-client-5.0.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/jacs-messaging-1.0.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="release/modules/ext/javassist-3.21.0-GA.jar"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>
