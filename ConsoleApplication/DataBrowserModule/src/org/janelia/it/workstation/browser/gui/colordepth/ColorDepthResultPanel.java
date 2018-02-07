@@ -286,7 +286,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         
         List<ColorDepthMatch> maskMatches = currResult.getMaskMatches(mask).stream()
                 .filter(match -> showMatch(match))
-                .sorted(Comparator.comparing(ColorDepthMatch::getScore))
+                .sorted(Comparator.comparing(ColorDepthMatch::getScore).reversed())
                 .collect(Collectors.toList());
         
         if (newOnlyCheckbox.isSelected()) {
