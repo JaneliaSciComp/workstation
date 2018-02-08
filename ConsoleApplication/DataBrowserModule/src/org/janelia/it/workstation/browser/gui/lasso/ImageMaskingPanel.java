@@ -54,7 +54,6 @@ public class ImageMaskingPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 createMask();
-                continueButton.setEnabled(true);
                 if (onMask!=null) {
                     onMask.accept(mask);
                 }
@@ -69,7 +68,6 @@ public class ImageMaskingPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 resetButton.setEnabled(false);
                 mask = null;
-                continueButton.setEnabled(false);
                 setImage(image);
             }
         });
@@ -86,11 +84,13 @@ public class ImageMaskingPanel extends JPanel {
         });
         
         continueButton = new JButton("Continue");
-        continueButton.setEnabled(false);
         continueButton.setFocusable(false);
         continueButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (mask==null) {
+                    createMask();
+                }
                 if (onContinue!=null) {
                     onContinue.accept(mask);
                 }
@@ -148,7 +148,15 @@ public class ImageMaskingPanel extends JPanel {
     
     private void createMask() {
         
-        if (imagePlus.getRoi()==null) return;
+        if (imagePlus.getRoi()==null) {
+            if (mask == null) {
+                this.mask = image;
+            }
+            else {
+                // Already have mask
+            }
+            return;
+        }
         
         prepareProcessor(imagePlus.getImageProcessor(), imagePlus);
         

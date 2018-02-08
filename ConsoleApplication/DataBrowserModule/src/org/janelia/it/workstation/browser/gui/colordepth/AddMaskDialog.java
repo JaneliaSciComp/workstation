@@ -313,10 +313,6 @@ public class AddMaskDialog extends ModalDialog {
 
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 
-                if (colorDepthSearch==null && newSearchRadioButton.isSelected()) {
-                    colorDepthSearch = model.createColorDepthSearch(searchNameField.getText(), alignmentSpace);
-                }
-                
                 if (mask==null) {
                     String maskName = maskNameStr;
                     if (colorDepthSearch != null && !maskName.matches("#\\d+$")) {
@@ -326,6 +322,10 @@ public class AddMaskDialog extends ModalDialog {
                     }
                     
                     mask = model.createColorDepthMask(maskName, alignmentSpace, filepath, maskThreshold, sample);
+                }
+
+                if (colorDepthSearch == null && newSearchRadioButton.isSelected()) {
+                    colorDepthSearch = model.createColorDepthSearch(searchNameField.getText(), alignmentSpace);
                 }
                 
                 if (colorDepthSearch == null) {

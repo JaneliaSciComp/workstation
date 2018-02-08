@@ -85,7 +85,7 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
             }
 
             if (node!=null) {
-                log.info("Will removing {} from {}", domainObject, node);
+                log.info("Will remove {} from {}", domainObject, node);
                 removeFromFolders.put(node,domainObject);
             }
         }

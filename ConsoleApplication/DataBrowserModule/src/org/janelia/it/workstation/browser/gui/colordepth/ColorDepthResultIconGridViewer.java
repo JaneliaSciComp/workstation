@@ -26,6 +26,7 @@ import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerConfiguration;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
+import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerState;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
@@ -33,7 +34,6 @@ import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
@@ -308,16 +308,6 @@ public class ColorDepthResultIconGridViewer
         refreshObject(match);
     }
 
-    private void refreshView() {
-        show(matchList, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                Utils.setMainFrameCursorWaitStatus(false);
-                return null;
-            }
-        });
-    }
-
     @Override
     protected ColorDepthMatchContextMenu getContextualPopupMenu() {
         return getPopupMenu(getSelectedObjects());
@@ -341,12 +331,7 @@ public class ColorDepthResultIconGridViewer
 
     @Override
     protected void objectDoubleClick(ColorDepthMatch match) {
-//        if (domainObjectProviderHelper.isSupported(object)) {
-//            domainObjectProviderHelper.service(object);
-//        }
-//        else {
-            getPopupMenu(Arrays.asList(match)).runDefaultAction();            
-//        }
+        getPopupMenu(Arrays.asList(match)).runDefaultAction();
     }
     
     @Override
@@ -391,11 +376,30 @@ public class ColorDepthResultIconGridViewer
 
     @Override
     public ListViewerState saveState() {
-        return null;
+        int maxImageWidth = imagesPanel.getMaxImageWidth();
+        log.debug("Saving maxImageWidth={}",maxImageWidth);
+        ColorDepthResultIconGridViewerState state = new ColorDepthResultIconGridViewerState(maxImageWidth);
+        return state;
     }
 
     @Override
     public void restoreState(ListViewerState viewerState) {
+        final ColorDepthResultIconGridViewerState tableViewerState = (ColorDepthResultIconGridViewerState) viewerState;
+        SwingUtilities.invokeLater(new Runnable() {
+               public void run() {
+                   int maxImageWidth = tableViewerState.getMaxImageWidth();
+                   log.debug("Restoring maxImageWidth={}",maxImageWidth);
+                   getToolbar().getImageSizeSlider().setValue(maxImageWidth);
+                   // Wait until slider resizes images, then fix scroll:
+                   SwingUtilities.invokeLater(new Runnable() {
+                       @Override
+                       public void run() {
+                           scrollSelectedObjectsToCenter();
+                       }
+                   });
+               }
+           }
+        );
     }
 
     private List<ColorDepthMatch> getSelectedObjects() {

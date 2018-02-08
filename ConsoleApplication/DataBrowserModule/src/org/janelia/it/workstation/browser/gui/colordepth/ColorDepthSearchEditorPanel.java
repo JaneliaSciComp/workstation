@@ -634,6 +634,9 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 log.debug("Selecting previously selected group: "+maskPanel.getMask());
                 maskListPanel.selectPanel(maskPanel, isUserDriven);
             }
+            
+            // Update selected mask
+            selectedMaskRef = Reference.createFor(((MaskPanel)maskListPanel.getSelectedPanel()).getMask());
         }
         
         updateUI();
@@ -876,31 +879,19 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         try {
 		    if (search==null) return;
-		    boolean affected = false;
             if (event.isTotalInvalidation()) {
                 log.info("total invalidation, reloading...");
-                affected = true;
+                reload();
             }
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
                     if (StringUtils.areEqual(domainObject.getId(), search.getId())) {
                         log.info("Search invalidated, reloading...");
-                        affected = true;
+                        reload();
                         break;
-                    }
-                    else if (masks!=null) {
-                        for(ColorDepthMask mask : masks) {
-                            if (StringUtils.areEqual(domainObject.getId(), mask.getId())) {
-                                log.info("Mask invalidated, reloading...");
-                                affected = true;
-                                break;
-                            }
-                        }
                     }
                 }
             }
-        
-            if (affected) reload();
         }  
         catch (Exception e) {
             ConsoleApp.handleException(e);
@@ -914,22 +905,20 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             this.search = null;
             showNothing();
         }
-        else {
-            for (ColorDepthMask mask : masks) {
-                if (StringUtils.areEqual(event.getDomainObject().getId(), mask.getId())) {
-                    // Refresh
-                    loadDomainObject(search, false, null);
-                }
-            }
-        }
     }
 
     @Subscribe
     public void domainObjectChanged(DomainObjectChangeEvent event) {
         if (search==null) return;
         try {
-            if (event.getDomainObject().getId().equals(search)) {
-                // Refresh
+            DomainObject domainObject = event.getDomainObject();
+            if (domainObject==null) return;
+            if (search != null && domainObject.getId().equals(search.getId())) {
+                log.info("Search has changed, reloading...");
+                reload();
+            }
+            else if (selectedMaskRef!=null && selectedMaskRef.getTargetId().equals(domainObject.getId())) {
+                log.info("Selected mask has changed, reloading...");
                 reload();
             }
         }  

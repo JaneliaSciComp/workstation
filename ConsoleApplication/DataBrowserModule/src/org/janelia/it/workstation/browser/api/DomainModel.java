@@ -857,6 +857,7 @@ public class DomainModel {
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(workspaceFacade.reorderChildren(node, order));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -877,6 +878,7 @@ public class DomainModel {
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(workspaceFacade.addChildren(node, DomainUtils.getReferences(domainObjects), index));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -889,6 +891,7 @@ public class DomainModel {
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(workspaceFacade.removeChildren(node, DomainUtils.getReferences(domainObjects)));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
