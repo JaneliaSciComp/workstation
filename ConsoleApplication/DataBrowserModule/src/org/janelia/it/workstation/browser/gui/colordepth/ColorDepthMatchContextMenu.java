@@ -54,12 +54,14 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         this.sampleMap = sampleMap;
         this.multiple = matches.size() > 1;
         this.match = matches.size() == 1 ? matches.get(0) : null;
-        if (match.getSample()==null) {
-            this.matchName = match.getFile().getName();
-        }
-        else {
-            this.sample = match==null ? null : sampleMap.get(match.getSample());
-            this.matchName = multiple ? null : (sample == null ? "Access denied" : sample.getName());
+        if (match != null) {
+            if (match.getSample()==null) {
+                this.matchName = match.getFile().getName();
+            }
+            else {
+                this.sample = match==null ? null : sampleMap.get(match.getSample());
+                this.matchName = multiple ? null : (sample == null ? "Access denied" : sample.getName());
+            }
         }
         ActivityLogHelper.logUserAction("ColorDepthMatchContextMenu.create", match);
     }
