@@ -148,7 +148,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private ColorDepthSearch search;
     private List<ColorDepthMask> masks; // cached masks
     private List<ColorDepthResult> results; // cached results
-    private ColorDepthMask selectedMask = null;
+    private Reference selectedMaskRef = null;
     private List<DataSet> alignmentSpaceDataSets; // all possible data sets in the current alignment space
     private Map<ColorDepthMask,MaskPanel> maskPanelMap = new HashMap<>();
     
@@ -330,9 +330,10 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             @Override
             protected void panelSelected(SelectablePanel resultPanel, boolean isUserDriven) {
                 if (resultPanel instanceof MaskPanel) {
-                    selectedMask = ((MaskPanel)resultPanel).getMask();
-                    colorDepthResultPanel.loadSearchResults(search, results, selectedMask, isUserDriven);
-                    Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(selectedMask), isUserDriven, true, true));
+                    ColorDepthMask mask = ((MaskPanel)resultPanel).getMask();
+                    colorDepthResultPanel.loadSearchResults(search, results, mask, isUserDriven);
+                    selectedMaskRef = Reference.createFor(mask);
+                    Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(mask), isUserDriven, true, true));
                 }
             }
             
@@ -609,8 +610,30 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             colorDepthResultPanel.showNothing();
         }
         else {
+
+            ColorDepthMask selectedMask = null;
+            if (selectedMaskRef != null) {
+                log.debug("Checking groups for previously selected group: "+selectedMaskRef);
+                for(ColorDepthMask mask : masks) {
+                    if (mask.getId().equals(selectedMaskRef.getTargetId())) {
+                        selectedMask = mask;
+                        break;
+                    }
+                }
+            }
+
             add(splitPane, BorderLayout.CENTER);
-            maskListPanel.selectFirst(isUserDriven);
+            if (selectedMask == null) {
+                // Automatically select the first group
+                log.debug("Selecting first group");
+                maskListPanel.selectFirst(isUserDriven);
+            }
+            else {
+                // Reselect the last selected group
+                MaskPanel maskPanel = maskPanelMap.get(selectedMask);
+                log.debug("Selecting previously selected group: "+maskPanel.getMask());
+                maskListPanel.selectPanel(maskPanel, isUserDriven);
+            }
         }
         
         updateUI();
@@ -795,7 +818,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
             return new ColorDepthSearchEditorState(
                     search,
-                    selectedMask == null ? null : Reference.createFor(selectedMask),
+                    selectedMaskRef,
                     colorDepthResultPanel.getCurrResultIndex(),
                     colorDepthResultPanel.getResultPanel().getCurrPage(),
                     colorDepthResultPanel.getResultPanel().getViewer().saveState(),
@@ -808,7 +831,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
             return new ColorDepthSearchEditorState(
                     searchNode,
-                    selectedMask == null ? null : Reference.createFor(selectedMask),
+                    selectedMaskRef,
                     colorDepthResultPanel.getCurrResultIndex(),
                     colorDepthResultPanel.getResultPanel().getCurrPage(),
                     colorDepthResultPanel.getResultPanel().getViewer().saveState(),
@@ -833,44 +856,21 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         List<String> selected = colorDepthResultPanel.getResultPanel().getViewer().getSelectionModel().getSelectedIds();
         selected.clear();
         selected.addAll(state.getSelectedIds());
+
+        // Prepare to restore group selection
+        this.selectedMaskRef = myState.getSelectedMask();
         
         // Prepare to restore the page
         colorDepthResultPanel.getResultPanel().setCurrPage(state.getPage());
         colorDepthResultPanel.getResultPanel().getViewer().restoreState(state.getListViewerState());
         
-        // Prepare to restore viewer state, after the reload
-        Callable<Void> success = new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                
-                // Restore mask selection
-                if (myState.getSelectedMask() != null) {
-                    ColorDepthMask mask = null;
-                    for (ColorDepthMask colorDepthMask : masks) {
-                        if (colorDepthMask.getId().equals(myState.getSelectedMask().getTargetId())) {
-                            mask = colorDepthMask;
-                        }
-                    }
-                    if (mask!=null) {
-                        MaskPanel maskPanel = maskPanelMap.get(mask);
-                        maskListPanel.selectPanel(maskPanel, false);
-                        
-                        // TODO: Need to wait until the results load before restoring searchResultIndex
-                    }
-                }
-                
-                return null;
-            }
-        };
-                
         if (state.getDomainObjectNode()==null) {
-            loadDomainObject(state.getDomainObject(), true, success);
+            loadDomainObject(state.getDomainObject(), true, null);
         }
         else {
-            loadDomainObjectNode(state.getDomainObjectNode(), true, success);
+            loadDomainObjectNode(state.getDomainObjectNode(), true, null);
         }
     }
-
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {

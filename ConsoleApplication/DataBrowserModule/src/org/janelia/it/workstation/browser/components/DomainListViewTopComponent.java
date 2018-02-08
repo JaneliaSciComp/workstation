@@ -264,7 +264,9 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (editor!=null) {
             remove((JComponent)editor);
             Events.getInstance().unregisterOnEventBus(editor);
-            Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
+            if (editor.getEventBusListener() != editor) {
+                Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
+            }
         }
         this.editor = null;
     }
@@ -273,7 +275,9 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         try {
             clearEditor();
             editor = editorClass.newInstance();
-            Events.getInstance().registerOnEventBus(editor.getEventBusListener());
+            if (editor.getEventBusListener() != editor) {
+                Events.getInstance().registerOnEventBus(editor.getEventBusListener());
+            }
             Events.getInstance().registerOnEventBus(editor);
             
             JComponent editorComponent = (JComponent)editor;

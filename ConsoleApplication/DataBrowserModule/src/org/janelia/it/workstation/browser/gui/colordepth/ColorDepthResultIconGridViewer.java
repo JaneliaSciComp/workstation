@@ -28,6 +28,7 @@ import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerCo
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.model.ImageDecorator;
@@ -60,6 +61,7 @@ public class ColorDepthResultIconGridViewer
     private SearchProvider searchProvider;
     
     // State
+    private PreferenceSupport preferenceSupport;
     private AnnotatedObjectList<ColorDepthMatch, String> matchList;
     private Map<Reference, Sample> sampleMap = new HashMap<>();
     private Map<String, ColorDepthMatch> matchMap = new HashMap<>();
@@ -135,50 +137,6 @@ public class ColorDepthResultIconGridViewer
         
     }
     
-//    private void setPreferenceAsync(final String category, final Object value) {
-//
-//        Utils.setMainFrameCursorWaitStatus(true);
-//
-//        SimpleWorker worker = new SimpleWorker() {
-//
-//            @Override
-//            protected void doStuff() throws Exception {
-//                setPreference(category, value);
-//            }
-//
-//            @Override
-//            protected void hadSuccess() {
-//                refreshDomainObjects();
-//            }
-//
-//            @Override
-//            protected void hadError(Throwable error) {
-//                Utils.setMainFrameCursorWaitStatus(false);
-//                ConsoleApp.handleException(error);
-//            }
-//        };
-//
-//        worker.execute();
-//    }
-    
-//    private String getPreference(String category) {
-//        try {
-//            final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
-//            return FrameworkImplProvider.getRemotePreferenceValue(category, parentObject.getId().toString(), null);
-//        }
-//        catch (Exception e) {
-//            log.error("Error getting preference", e);
-//            return null;
-//        }
-//    }
-//    
-//    private void setPreference(final String category, final Object value) throws Exception {
-//        final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
-//        if (parentObject.getId()!=null) {
-//            FrameworkImplProvider.setRemotePreferenceValue(category, parentObject.getId().toString(), value);
-//        }
-//    }
-    
     @Override
     public JPanel getPanel() {
         return this;
@@ -204,6 +162,16 @@ public class ColorDepthResultIconGridViewer
         return selectionModel;
     }
 
+    @Override
+    public void setPreferenceSupport(PreferenceSupport preferenceSupport) {
+        this.preferenceSupport = preferenceSupport;
+    }
+    
+    @Override
+    public PreferenceSupport getPreferenceSupport() {
+        return preferenceSupport;
+    }
+    
     @Override
     public void activate() {
     }

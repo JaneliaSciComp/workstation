@@ -43,7 +43,6 @@ import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;
@@ -54,7 +53,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,Reference> implements ListViewer<DomainObject, Reference>, PreferenceSupport {
+public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,Reference> implements ListViewer<DomainObject, Reference> {
     
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
 
@@ -68,6 +67,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private SearchProvider searchProvider;
     
     // State
+    private PreferenceSupport preferenceSupport;
     private AnnotatedObjectList<DomainObject,Reference> domainObjectList;
     private ChildSelectionModel<DomainObject,Reference> selectionModel;
     private ChildSelectionModel<DomainObject,Reference> editSelectionModel;
@@ -106,39 +106,35 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     public DomainObjectIconGridViewer() {
         setImageModel(imageModel);
+        
         this.config = IconGridViewerConfiguration.loadConfig();
-        resultButton = new ResultSelectionButton(true) {
+        
+        this.resultButton = new ResultSelectionButton(true) {
             @Override
             protected void resultChanged(ArtifactDescriptor resultDescriptor) {
                 log.info("Setting result preference: "+resultDescriptor.toString());
                 try {
-                    setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, DescriptorUtils.serialize(resultDescriptor));
+                    preferenceSupport.setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, 
+                            DescriptorUtils.serialize(resultDescriptor))
+                            .addListener(() -> refreshView());
                 }
                 catch (Exception e) {
                     log.error("Error serializing sample result preference: "+resultDescriptor,e);
                 }
             }
         };
-        typeButton = new ImageTypeSelectionButton(true, true) {
+        this.typeButton = new ImageTypeSelectionButton(true, true) {
             @Override
             protected void imageTypeChanged(FileType fileType) {
                 log.info("Setting image type preference: "+fileType);
-                setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, fileType.name());
+                preferenceSupport.setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, 
+                        fileType.name())
+                        .addListener(() -> refreshView());
             }
         };
                 
         getToolbar().addCustomComponent(resultButton);
         getToolbar().addCustomComponent(typeButton);
-    }
-    
-    public Long getCurrentParentId() {
-        Object parentObject = getSelectionModel().getParentObject();
-        if (parentObject instanceof HasIdentifier) {
-            return ((HasIdentifier)parentObject).getId();
-        }
-        // Currently this doesn't happen, and we treat it as an exception assertion. 
-        // In the future we may want to have some other type of behavior here. 
-        throw new IllegalStateException("Parent object has no identifier: "+getSelectionModel().getParentObject());
     }
     
     @Override
@@ -165,6 +161,16 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     public ChildSelectionModel<DomainObject,Reference> getSelectionModel() {
         return selectionModel;
+    }
+
+    @Override
+    public void setPreferenceSupport(PreferenceSupport preferenceSupport) {
+        this.preferenceSupport = preferenceSupport;
+    }
+    
+    @Override
+    public PreferenceSupport getPreferenceSupport() {
+        return preferenceSupport;
     }
 
     @Override
@@ -245,7 +251,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject!=null && parentObject.getId()!=null) {
                     
-                    String preference = getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT);
+                    String preference = preferenceSupport.getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT);
                     log.info("Got result preference: "+preference);
                     if (preference!=null) {
                         try {
@@ -254,14 +260,14 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                         }
                         catch (Exception e) {
                             log.error("Error deserializing preference {}. Clearing it.", preference, e);
-                            setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, null);
+                            preferenceSupport.setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, null);
                         }
                     }
                     else {
                         resultButton.reset();
                     }
                     
-                    String preference2 = getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE);
+                    String preference2 = preferenceSupport.getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE);
                     log.info("Got image type preference: "+preference2);
                     if (preference2!=null) {
                         typeButton.setImageTypeName(preference2);
@@ -355,7 +361,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         refreshObject(domainObject);
     }
 
-    @Override
     public void refreshView() {
         show(domainObjectList, new Callable<Void>() {
             @Override
@@ -525,6 +530,4 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
            }
         );
     }
-
-    
 }

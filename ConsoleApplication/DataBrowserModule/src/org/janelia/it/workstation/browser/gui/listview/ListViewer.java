@@ -6,6 +6,7 @@ import java.util.concurrent.Callable;
 import javax.swing.JPanel;
 
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
@@ -28,6 +29,19 @@ public interface ListViewer<T,S> {
      * @return selection model
      */
     public ChildSelectionModel<T,S> getSelectionModel();
+
+    /**
+     * Configure the preference support implementation to use for saving preferences.
+     * @param preferenceSupport
+     */
+    public void setPreferenceSupport(PreferenceSupport preferenceSupport);
+
+    /**
+     * Returns the preference support implementation to use for saving preferences.
+     * The default implementation uses the selection model parent object as the preference category.
+     * @return
+     */
+    public PreferenceSupport getPreferenceSupport();
 
     /**
      * Configure the search provider for re-sorting, etc. 

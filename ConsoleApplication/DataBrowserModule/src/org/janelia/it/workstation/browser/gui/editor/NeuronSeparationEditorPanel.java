@@ -34,6 +34,7 @@ import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableVi
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
@@ -45,6 +46,7 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.NeuronSeparation;
@@ -62,7 +64,9 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class NeuronSeparationEditorPanel extends JPanel implements SampleResultEditor, SearchProvider {
+public class NeuronSeparationEditorPanel 
+        extends JPanel 
+        implements SampleResultEditor, SearchProvider, PreferenceSupport {
 
     private final static Logger log = LoggerFactory.getLogger(NeuronSeparationEditorPanel.class);
 
@@ -175,7 +179,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         });
         configPanel.addConfigComponent(enableVisibilityCheckBox);
 
-        resultsPanel = new PaginatedDomainResultsPanel(selectionModel, this) {
+        resultsPanel = new PaginatedDomainResultsPanel(selectionModel, this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
@@ -486,6 +490,15 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     @Override
     public DomainObjectSelectionModel getSelectionModel() {
         return selectionModel;
+    }
+
+    @Override
+    public Long getCurrentContextId() {
+        Object parentObject = getSelectionModel().getParentObject();
+        if (parentObject instanceof HasIdentifier) {
+            return ((HasIdentifier)parentObject).getId();
+        }
+        throw new IllegalStateException("Parent object has no identifier: "+getSelectionModel().getParentObject());
     }
     
     @Override

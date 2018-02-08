@@ -36,6 +36,7 @@ import org.janelia.it.workstation.browser.gui.listview.ListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
@@ -47,6 +48,7 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;
@@ -68,7 +70,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,null,true,null,null);
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
 
-    // These members deal with the context and entities within it
+    // State
+    private PreferenceSupport preferenceSupport;
     private AnnotatedObjectList<DomainObject,Reference> domainObjectList;
     private ChildSelectionModel<DomainObject, Reference> selectionModel;
     private SearchProvider searchProvider;
@@ -131,6 +134,16 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         return selectionModel;
     }
 
+    @Override
+    public void setPreferenceSupport(PreferenceSupport preferenceSupport) {
+        this.preferenceSupport = preferenceSupport;
+    }
+
+    @Override
+    public PreferenceSupport getPreferenceSupport() {
+        return preferenceSupport;
+    }
+    
     @Override
     public int getNumItemsHidden() {
         int totalItems = this.domainObjectList.getObjects().size();

@@ -117,7 +117,9 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
           
         this.newOnlyCheckbox = new JCheckBox("Only new results");
         newOnlyCheckbox.addActionListener((ActionEvent e) -> {
-                setPreferenceAsync(PREFERENCE_CATEGORY_CDS_NEW_RESULTS, newOnlyCheckbox.isSelected()+"");
+                setPreferenceAsync(PREFERENCE_CATEGORY_CDS_NEW_RESULTS, 
+                        newOnlyCheckbox.isSelected()+"")
+                        .addListener(() -> refreshView());
             }
         );
         
@@ -128,7 +130,9 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             public void keyReleased(KeyEvent e) {
                 try {
                     Integer resultPerLine = new Integer(resultsPerLineField.getText());
-                    setPreferenceAsync(PREFERENCE_CATEGORY_CDS_RESULTS_PER_LINE, resultPerLine+"");
+                    setPreferenceAsync(PREFERENCE_CATEGORY_CDS_RESULTS_PER_LINE, 
+                            resultPerLine+"")
+                            .addListener(() -> refreshView());
                 }
                 catch (NumberFormatException ex) {
                     resultsPerLineField.setText("");
@@ -148,7 +152,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         topPanel.add(new JSeparator(SwingConstants.VERTICAL));
         topPanel.add(perLinePanel);
         
-        this.resultsPanel = new PaginatedResultsPanel<ColorDepthMatch,String>(selectionModel, this, viewerTypes) {
+        this.resultsPanel = new PaginatedResultsPanel<ColorDepthMatch,String>(selectionModel, this, this, viewerTypes) {
     
             @Override
             protected ResultPage<ColorDepthMatch, String> getPage(SearchResults<ColorDepthMatch, String> searchResults, int page) throws Exception {
@@ -173,7 +177,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         sampleMap.clear();
         matchMap.clear();
 
-        
         SimpleWorker worker = new SimpleWorker() {
 
             String newResultPreference;
@@ -421,6 +424,12 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         return selectionModel;
     }
 
+    @Override
+    public Long getCurrentContextId() {
+        if (search == null) return null;
+        return search.getId();
+    }
+    
     void reset() {
         selectionModel.reset();
         this.currResult = results.isEmpty() ? null : results.get(results.size() - 1);
@@ -439,12 +448,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         resultsPanel.showNothing();
     }
 
-    @Override
-    public Long getCurrentParentId() {
-        return search.getId();
-    }
-    
-    @Override
     public void refreshView() {
         showCurrSearchResult(true);
     }
