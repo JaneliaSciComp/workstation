@@ -11,7 +11,7 @@ public class ConsoleFileAccess implements FileAccess {
 
     @Override
     public File getCachedFile(String standardPath, boolean forceRefresh) {
-        return FileMgr.getCachedFile(standardPath, forceRefresh);
+        return FileMgr.getFileMgr().getFile(standardPath, forceRefresh);
     }
     
 }

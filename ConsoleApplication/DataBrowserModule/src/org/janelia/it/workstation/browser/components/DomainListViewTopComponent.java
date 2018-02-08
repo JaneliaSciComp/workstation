@@ -13,9 +13,10 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
+import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthSearchEditorPanel;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
-import org.janelia.it.workstation.browser.gui.editor.DomainObjectNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.editor.FilterEditorPanel;
+import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.editor.TreeNodeEditorPanel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextActivator;
@@ -24,8 +25,9 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.gui.search.Filtering;
-import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Node;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -75,7 +77,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     
     private final InstanceContent content = new InstanceContent();
     @SuppressWarnings("rawtypes")
-    private DomainObjectNodeSelectionEditor editor;
+    private ParentNodeSelectionEditor editor;
     private FindContext findContext;
     private boolean active = false;
     private String intialState;
@@ -151,7 +153,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     void writeProperties(java.util.Properties p) {
         if (p==null || editor==null) return;
         try {
-            DomainObjectEditorState<?> state = editor.saveState();
+            DomainObjectEditorState<?,?,?> state = editor.saveState();
             String serializedState = DomainObjectEditorState.serialize(state);
             log.info("Writing state: {}",serializedState);
             p.setProperty("version", TC_VERSION);
@@ -210,13 +212,13 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         this.intialState = null;
 
         SimpleWorker worker = new SimpleWorker() {
-            DomainObjectEditorState<?> state;
+            DomainObjectEditorState<?,?,?> state;
             DomainObject domainObject;
 
             @Override
             protected void doStuff() throws Exception {
                 state = DomainObjectEditorState.deserialize(stateToLoad);
-                if (state.getDomainObject().getId()!=null) {
+                if (state!=null && state.getDomainObject()!=null && state.getDomainObject().getId()!=null) {
                     // Refresh the object, if it's coming from the database
                     domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(state.getDomainObject());
                     if (domainObject!=null) {
@@ -271,7 +273,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         this.editor = null;
     }
     
-    public void setEditorClass(Class<? extends DomainObjectNodeSelectionEditor<?>> editorClass) {
+    public void setEditorClass(Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> editorClass) {
         try {
             clearEditor();
             editor = editorClass.newInstance();
@@ -288,12 +290,12 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         setName(editor.getName());
     }
     
-    public DomainObjectNodeSelectionEditor<?> getEditor() {
+    public ParentNodeSelectionEditor<? extends DomainObject,?,?> getEditor() {
         return editor;
     }
 
     @SuppressWarnings({ "unchecked" })
-    public void loadDomainObjectNode(AbstractDomainObjectNode<?> domainObjectNode, boolean isUserDriven) {
+    public void loadDomainObjectNode(AbstractDomainObjectNode<? extends DomainObject> domainObjectNode, boolean isUserDriven) {
         
         log.trace("loadDomainObjectNode({}, isUserDriven={})", domainObjectNode.getDomainObject().getName(), isUserDriven);
         
@@ -321,7 +323,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         @Override
         public Void call() throws Exception {
 
-            DomainObjectEditorState<?> state = editor.saveState();
+            DomainObjectEditorState<?,?,?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
                 StateMgr.getStateMgr().getNavigationHistory(DomainListViewTopComponent.this).pushHistory(state);
@@ -340,7 +342,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     private boolean prepareForLoad(DomainObject domainObject) {
 
         // Can view display this object?
-        final Class<? extends DomainObjectNodeSelectionEditor<?>> editorClass = getEditorClass(domainObject);
+        final Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> editorClass = getEditorClass(domainObject);
         if (editorClass==null) {
             return false;
         }
@@ -352,7 +354,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
         // Update the previous editor state. Things may have changed since we saved it. 
         if (editor!=null) {
-            DomainObjectEditorState<?> state = editor.saveState();
+            DomainObjectEditorState<?,?,?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
                 StateMgr.getStateMgr().getNavigationHistory(DomainListViewTopComponent.this).updateCurrentState(state);
@@ -374,9 +376,10 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     }
     
     @SuppressWarnings("unchecked")
-    public void loadState(DomainObjectEditorState<?> state) {
+    public void loadState(DomainObjectEditorState<?,?,?> state) {
 
         log.trace("loadState({})", state);
+        if (state==null) return;
         
         if (!prepareForLoad(state.getDomainObject())) return;
         editor.restoreState(state);
@@ -386,12 +389,15 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         setName(editor.getName());
     }
 
-    private static Class<? extends DomainObjectNodeSelectionEditor<?>> getEditorClass(DomainObject domainObject) {
-        if (TreeNode.class.isAssignableFrom(domainObject.getClass())) {
+    private static Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
+        if (Node.class.isAssignableFrom(domainObject.getClass())) {
             return TreeNodeEditorPanel.class;
         }
         else if (Filtering.class.isAssignableFrom(domainObject.getClass())) {
             return FilterEditorPanel.class;
+        }
+        else if (ColorDepthSearch.class.isAssignableFrom(domainObject.getClass())) {
+            return ColorDepthSearchEditorPanel.class;
         }
         return null;
     }

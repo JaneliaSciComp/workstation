@@ -259,8 +259,13 @@ public class TextLabelActor extends GLAbstractActor {
         // Step 2: allocate new image
         int wPad=UBUNTU_FONT_UNIT_WIDTH/2;
         int hPad=UBUNTU_FONT_UNIT_HEIGHT/4;
-        int w=labelLength*UBUNTU_FONT_UNIT_WIDTH + wPad*2;
-        int h=UBUNTU_FONT_UNIT_HEIGHT + hPad*2;
+
+//        int w=labelLength*UBUNTU_FONT_UNIT_WIDTH + wPad*2;
+//        int h=UBUNTU_FONT_UNIT_HEIGHT + hPad*2;
+
+        int w=labelLength*(UBUNTU_FONT_UNIT_WIDTH+1);
+        int h=UBUNTU_FONT_UNIT_HEIGHT + UBUNTU_FONT_UNIT_HEIGHT/2;
+
         byte labelPixels[]=new byte[w*h*4];
         int sourceHeight=textResourceImage.getHeight();
         int sourceWidth=textResourceImage.getWidth();

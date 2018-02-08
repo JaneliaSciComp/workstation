@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/byte-buddy-1.6.14.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/byte-buddy-agent-1.6.14.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/hamcrest-core-1.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/javassist-3.21.0-GA.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/junit-4.11.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/mockito-core-2.8.9.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/objenesis-2.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/powermock-api-mockito-common-1.7.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/powermock-api-mockito2-1.7.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/powermock-api-support-1.7.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/powermock-core-1.7.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/powermock-module-junit4-1.7.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/powermock-module-junit4-common-1.7.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/powermock-reflect-1.7.3.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

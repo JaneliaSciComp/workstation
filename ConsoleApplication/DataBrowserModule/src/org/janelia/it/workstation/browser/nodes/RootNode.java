@@ -44,9 +44,4 @@ public class RootNode extends AbstractNode {
     public void refreshChildren() {
         childFactory.refresh();
     }   
-
-    public RecentOpenedItemsNode getRecentlyOpenedItemsNode() {
-        return childFactory.getRecentlyOpenedItemsNode();
-    }
-    
 }

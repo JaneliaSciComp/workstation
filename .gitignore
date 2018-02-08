@@ -18,6 +18,7 @@ ConsoleApplication/ConsoleWrapper/release/modules/ext/jacs-shared.jar
 ConsoleApplication/ConsoleWrapper/release/config
 .metadata
 .recommenders
+ConsoleApplication/DataBrowserModule/src/my.properties
 ConsoleApplication/HortaTracer/*.log
 .idea
 *.iws

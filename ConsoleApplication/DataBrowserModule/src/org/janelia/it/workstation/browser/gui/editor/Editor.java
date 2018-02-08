@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.browser.gui.editor;
 
 /**
- * Basic interface or a pluggable editor. 
+ * Basic interface for a pluggable editor. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

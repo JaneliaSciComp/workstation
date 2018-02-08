@@ -241,8 +241,7 @@ public class CustomTreeView extends BeanTreeView {
             n = n.getParentNode();
         }
         
-        TreeNode[] tns = new TreeNode[treeNodes.size()];
-        treeNodes.toArray(tns);
+        TreeNode[] tns = treeNodes.toArray(new TreeNode[treeNodes.size()]);
         return new TreePath(tns);
     }
     

@@ -274,7 +274,7 @@ public class ApplyAnnotationAction extends NodeAction {
         
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         Annotation savedAnnotation = model.save(annotation);
-        log.info("Saved annotation as " + savedAnnotation.getId());
+        log.info("Saved annotation: " + savedAnnotation);
         
         PermissionTemplate template = StateMgr.getStateMgr().getAutoShareTemplate();
         if (template!=null) {

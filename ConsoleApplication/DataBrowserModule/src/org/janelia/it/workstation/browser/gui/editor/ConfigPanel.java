@@ -46,8 +46,12 @@ public class ConfigPanel extends JPanel {
     private List<JComponent> expandedComponents = new ArrayList<>();
     
     private boolean configExpanded;
+
+    public ConfigPanel(boolean expandedByDefault) {
+        this(expandedByDefault, 2, 3);
+    }
     
-	public ConfigPanel(boolean expandedByDefault) {
+	public ConfigPanel(boolean expandedByDefault, int hgap, int vgap) {
 		
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		
@@ -86,10 +90,10 @@ public class ConfigPanel extends JPanel {
 			
 		});
                 
-        this.titlePanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 3));
+        this.titlePanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 2));
         addDefaultTitleComponents();
         
-        this.configPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 3));
+        this.configPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, hgap, vgap));
         configPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 8, 2));
         
         toggleCriteriaPanelState();

@@ -38,11 +38,14 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.browser.components.DomainObjectProviderHelper;
 import org.janelia.it.workstation.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
+import org.janelia.it.workstation.browser.gui.colordepth.AddMaskDialog;
+import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SpecialAnnotationChooserDialog;
@@ -51,6 +54,7 @@ import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.browser.model.SampleImage;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
@@ -70,6 +74,8 @@ import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.OntologyTerm;
@@ -78,7 +84,7 @@ import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SamplePostProcessingResult;
 import org.janelia.model.domain.sample.SampleProcessingResult;
-import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,6 +96,8 @@ import org.slf4j.LoggerFactory;
 public class DomainObjectContextMenu extends PopupContextMenu {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
+
+    private static final DomainObjectProviderHelper domainObjectProviderHelper = new DomainObjectProviderHelper();
     
     private static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
     private static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
@@ -116,6 +124,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
 
     public void runDefaultAction() {
+        if (multiple) return;
         if (DomainViewerTopComponent.isSupported(domainObject)) {
             DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
             if (viewer == null || !viewer.isCurrent(domainObject)) {
@@ -128,6 +137,11 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             // TODO: here we should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
             DomainExplorerTopComponent.getInstance().expandNodeById(contextObject.getId());
             DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(domainObject.getId());
+        }
+        else {
+            if (domainObjectProviderHelper.isSupported(domainObject)) {
+                domainObjectProviderHelper.service(domainObject);
+            }
         }
     }
 
@@ -178,18 +192,20 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         //add(getSetPublishingNameItem());
         add(getApplyPublishingNamesItem());
         add(getMergeItem());
+        add(getColorDepthSearchItem());
+        add(getAddToColorDepthSearchItem());
         
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
 
         if (domainObject!=null) {
-            for (JComponent item : this.getOpenObjectItems()) {
+            for (JComponent item : getOpenObjectItems()) {
                 add(item);
             }
-            for (JMenuItem item : this.getWrapObjectItems()) {
+            for (JMenuItem item : getWrapObjectItems()) {
                 add(item);
             }
-            for (JMenuItem item : this.getAppendObjectItems()) {
+            for (JMenuItem item : getAppendObjectItems()) {
                 add(item);
             }
         }
@@ -336,7 +352,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 ActivityLogHelper.logUserAction("DomainObjectContentMenu.showInLightbox", domainObject);
-                Hud.getSingletonInstance().setObjectAndToggleDialog(domainObject, resultDescriptor, typeName);
+                Hud.getSingletonInstance().setObjectAndToggleDialog(domainObject, resultDescriptor, typeName, true, true);
             }
         });
 
@@ -620,6 +636,49 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return blockItem;
     }
 
+    protected JMenuItem getColorDepthSearchItem() {
+
+        if (multiple) return null;
+        
+        List<Sample> samples = new ArrayList<>();
+        for(DomainObject domainObject : domainObjectList) {
+            if (domainObject instanceof Sample) {
+                samples.add((Sample)domainObject);
+            }
+        }
+        
+        if (samples.size()!=domainObjectList.size()) return null;
+                
+        if (!resultDescriptor.isAligned()) return null;
+        
+        return getNamedActionItem(new CreateMaskFromSampleAction(samples.get(0), resultDescriptor, typeName));
+    }
+
+    protected JMenuItem getAddToColorDepthSearchItem() {
+
+        if (multiple) return null;
+        
+        List<ColorDepthMask> masks = new ArrayList<>();
+        for(DomainObject domainObject : domainObjectList) {
+            if (domainObject instanceof ColorDepthMask) {
+                masks.add((ColorDepthMask)domainObject);
+            }
+        }
+        
+        if (masks.size()!=1) return null;
+                
+        ColorDepthMask colorDepthMask = masks.get(0);
+
+        JMenuItem menuItem = null;
+        menuItem = new JMenuItem("  Add Mask to Color Depth Search...");
+        menuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                new AddMaskDialog().showForMask(colorDepthMask);
+            }
+        });
+        return menuItem;
+    }
+    
     protected JMenuItem getSetPublishingNameItem() {
         
         List<Sample> samples = new ArrayList<>();
@@ -776,8 +835,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     protected JMenuItem getRemoveFromFolderItem() {
 
         Action action;
-        if (contextObject instanceof TreeNode) {
-            action = new RemoveItemsFromFolderAction((TreeNode)contextObject, domainObjectList);
+        if (contextObject instanceof Node) {
+            action = new RemoveItemsFromFolderAction((Node)contextObject, domainObjectList);
         }
         else {
             return null;
@@ -1018,14 +1077,33 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         return specialAnnotationSession;
     }
-        
+    
     private Collection<JComponent> getOpenObjectItems() {
         if (multiple) {
             return Collections.emptyList();
         }
-        return ServiceAcceptorActionHelper.getOpenForContextItems(domainObject);
+
+        Object contextObject = null;
+        
+        if (domainObject instanceof Sample) {
+            Sample sample = (Sample)domainObject;
+            HasFiles hasFiles = DescriptorUtils.getResult(sample, resultDescriptor);
+            if (hasFiles instanceof PipelineResult) {
+                PipelineResult result = (PipelineResult)DescriptorUtils.getResult(sample, resultDescriptor);      
+                contextObject = new SampleImage(result, FileType.valueOf(typeName));
+            }
+            else {
+                log.warn("Results which are not PipelineResults are not supported for open operations");
+            }
+        }
+        else {
+            contextObject = domainObject;
+        }
+        
+        if (contextObject==null) return Collections.emptyList();
+        return ServiceAcceptorActionHelper.getOpenForContextItems(contextObject);
     }
-    
+        
     private List<JMenuItem> getWrapObjectItems() {
         if (multiple) {
             return Collections.emptyList();

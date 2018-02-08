@@ -41,7 +41,7 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
     }
 
     @Override
-    public Subject getSubjectByKey(String key) throws Exception {
+    public Subject getSubjectByNameOrKey(String key) throws Exception {
         Response response = manager.getUserEndpoint()
                 .path("subject")
                 .queryParam("subjectKey", key)

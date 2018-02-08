@@ -74,7 +74,7 @@ public final class TestExceptionActions extends AbstractAction implements Presen
                 public void actionPerformed(ActionEvent e) {
                     try {
                         try {
-                            exceptionTest(); // Generate some causes to test the "Caused:" logging
+                            exceptionTest("Test Unexpected Exception"); // Generate some causes to test the "Caused:" logging
                         }
                         catch (Exception ex2) {
                             throw new Exception("Exception wrapper", ex2);
@@ -86,16 +86,30 @@ public final class TestExceptionActions extends AbstractAction implements Presen
                 }
             });
             subMenu.add(unexpectedItem);
+
+            JMenuItem unexpectedItem2 = new JMenuItem("Unexpected Exception (no message)");
+            unexpectedItem2.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        exceptionTest(null); // Generate some causes to test the "Caused:" logging
+                    }
+                    catch (Exception ex) {
+                        FrameworkImplProvider.handleException(ex);
+                    }
+                }
+            });
+            subMenu.add(unexpectedItem2);
         }
         return subMenu;
     }
 
-    private void exceptionTest() {
-        exceptionTestInner();
+    private void exceptionTest(String message) {
+        exceptionTestInner(message);
     }
     
-    private void exceptionTestInner() {
-        throw new IllegalStateException("Test Unexpected Exception");
+    private void exceptionTestInner(String message) {
+        throw new IllegalStateException(message);
     }
     
     @Override

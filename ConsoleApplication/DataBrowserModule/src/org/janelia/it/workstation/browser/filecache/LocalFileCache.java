@@ -6,6 +6,8 @@ import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalListeners;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.cache.Weigher;
+import org.apache.commons.httpclient.HttpClient;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,26 +30,29 @@ import java.util.concurrent.Executors;
  */
 public class LocalFileCache {
 
-    private File rootDirectory;
+    private static final Logger LOG = LoggerFactory.getLogger(LocalFileCache.class);
+
+    private static final String CACHE_DIRECTORY_NAME = ".jacs-file-cache";
+    private static final String ACTIVE_DIRECTORY_NAME = "active";
+    private static final String TEMP_DIRECTORY_NAME = "temp";
+
     private File tempDirectory;
     private File activeDirectory;
 
     private long kilobyteCapacity;
 
-    private WebDavClient webDavClient;
-    private ExecutorService asyncLoadService;
+    private final ExecutorService asyncLoadService;
+    private final Weigher<String, CachedFile> weigher;
+    private final RemovalListener<String, CachedFile> asyncRemovalListener;
+    private final WebDavClientMgr webDavClientMgr;
+    private final RemoteFileCacheLoader defaultLoader;
+    private LoadingCache<String, CachedFile> remoteNameToFileCache;
 
-    private Weigher<URL, CachedFile> weigher;
-    private RemovalListener<URL, CachedFile> asyncRemovalListener;
-    private RemoteFileLoader defaultLoader;
-
-    private LoadingCache<URL, CachedFile> urlToFileCache;
-
-    private CacheLoadEventListener cacheLoadEventListener;
+    private final CacheLoadEventListener cacheLoadEventListener;
 
     /**
      * Creates a new local cache whose physical storage is within the
-     * specified parent directory.  The cache uses a Least Recently Used
+     * specified parent directory. The cache uses a Least Recently Used
      * algorithm to cull files from the physical directory once the
      * specified capacity (in kilobytes) is reached.
      *
@@ -57,26 +62,26 @@ public class LocalFileCache {
      *                               physical cache before removing least
      *                               recently used files.
      *
-     * @param  webDavClient          client for issuing WebDAV requests.
-     *
      * @param  cacheLoadEventListener  listener for cache load events
      *                                 (or null if not needed).
+     *
+     * @param httpClient for loading remote files
+     *
+     * @param webDavClientMgr for finding remote files
      *
      * @throws IllegalStateException
      *   if any errors occur while constructing a cache tied to the file system.
      */
     public LocalFileCache(File cacheParentDirectory,
                           long kilobyteCapacity,
-                          WebDavClient webDavClient,
-                          CacheLoadEventListener cacheLoadEventListener)
+                          CacheLoadEventListener cacheLoadEventListener,
+                          HttpClient httpClient,
+                          WebDavClientMgr webDavClientMgr)
             throws IllegalStateException {
 
-        this.rootDirectory = createAndValidateDirectoryAsNeeded(cacheParentDirectory,
-                                                                CACHE_DIRECTORY_NAME);
-        this.activeDirectory = createAndValidateDirectoryAsNeeded(this.rootDirectory,
-                                                                  ACTIVE_DIRECTORY_NAME);
-        this.tempDirectory = createAndValidateDirectoryAsNeeded(this.rootDirectory,
-                                                                TEMP_DIRECTORY_NAME);
+        File cacheRootDirectory = createAndValidateDirectoryAsNeeded(cacheParentDirectory, CACHE_DIRECTORY_NAME);
+        this.activeDirectory = createAndValidateDirectoryAsNeeded(cacheRootDirectory, ACTIVE_DIRECTORY_NAME);
+        this.tempDirectory = createAndValidateDirectoryAsNeeded(cacheRootDirectory, TEMP_DIRECTORY_NAME);
 
         if (kilobyteCapacity < 1) {
             this.kilobyteCapacity = 1;
@@ -84,16 +89,15 @@ public class LocalFileCache {
             this.kilobyteCapacity = kilobyteCapacity;
         }
 
-        this.webDavClient = webDavClient;
         this.cacheLoadEventListener = cacheLoadEventListener;
 
         // separate thread pool for async addition of files to the cache
         this.asyncLoadService = Executors.newFixedThreadPool(4);
 
-        this.weigher = new Weigher<URL, CachedFile>() {
+        this.weigher = new Weigher<String, CachedFile>() {
 
             @Override
-            public int weigh(URL key, CachedFile value) {
+            public int weigh(String remoteFileRefName, CachedFile value) {
 
                 long kiloBytes = value.getKilobytes();
 
@@ -111,30 +115,21 @@ public class LocalFileCache {
             }
         };
 
-        // separate thread pool for removing files that expire from the cache
-        final ExecutorService removalService = Executors.newFixedThreadPool(4);
-
-        final RemovalListener<URL, CachedFile> removalListener =
-                new RemovalListener<URL, CachedFile>() {
-                    @Override
-                    public void onRemoval(RemovalNotification<URL, CachedFile> removal) {
-                        final CachedFile cachedFile = removal.getValue();
-                        if (cachedFile != null) {
-                            cachedFile.remove(getActiveDirectory());
-                        }
-                    }
-                };
-
         this.asyncRemovalListener =
-                RemovalListeners.asynchronous(removalListener, removalService);
+                RemovalListeners.asynchronous(
+                        new RemovalListener<String, CachedFile>() {
+                            @Override
+                            public void onRemoval(RemovalNotification<String, CachedFile> removal) {
+                                final CachedFile cachedFile = removal.getValue();
+                                if (cachedFile != null) {
+                                    cachedFile.remove(getActiveDirectory());
+                                }
+                            }
+                        },
+                        Executors.newFixedThreadPool(4)); // separate thread pool for removing files that expire from the cache
 
-        final LocalFileCache thisCache = this;
-        this.defaultLoader = new RemoteFileLoader() {
-            @Override
-            public LocalFileCache getCache() {
-                return thisCache;
-            }
-        };
+        this.webDavClientMgr = webDavClientMgr;
+        this.defaultLoader = new RemoteFileCacheLoader(httpClient, webDavClientMgr, this);
 
         final File[] tempFiles = tempDirectory.listFiles();
         if ((tempFiles != null) && (tempFiles.length > 0)) {
@@ -156,17 +151,10 @@ public class LocalFileCache {
     }
 
     /**
-     * @return the root directory for this cache.
-     */
-    public File getRootDirectory() {
-        return rootDirectory;
-    }
-
-    /**
      * @return the directory where cached files can be loaded
      *         before they are ready to be served from the cache.
      */
-    public File getTempDirectory() {
+    File getTempDirectory() {
         return tempDirectory;
     }
 
@@ -174,7 +162,7 @@ public class LocalFileCache {
      * @return the directory that contains all locally cached files
      *         that are ready to be served.
      */
-    public File getActiveDirectory() {
+    File getActiveDirectory() {
         return activeDirectory;
     }
 
@@ -182,7 +170,7 @@ public class LocalFileCache {
      * @return the number of files currently in the cache.
      */
     public long getNumberOfFiles() {
-        return urlToFileCache.size();
+        return remoteNameToFileCache.size();
     }
 
     /**
@@ -195,7 +183,7 @@ public class LocalFileCache {
     public long getNumberOfKilobytes() {
         long weightedSize = 0;
         // loop through values without affecting recency ordering
-        final Map<URL, CachedFile> internalCacheMap = urlToFileCache.asMap();
+        final Map<String, CachedFile> internalCacheMap = remoteNameToFileCache.asMap();
         for (CachedFile cachedFile : internalCacheMap.values()) {
             weightedSize += weigher.weigh(null, cachedFile);
         }
@@ -226,39 +214,13 @@ public class LocalFileCache {
     }
 
     /**
-     * @return the client used to issue WebDAV requests for this cache.
-     */
-    public WebDavClient getWebDavClient() {
-        return webDavClient;
-    }
-
-    /**
      * Looks for the specified resource in the cache and returns the
      * corresponding local file copy.
      * If the resource is not in the cache, it is retrieved/copied
      * (on the current thread of execution) and is added to the
      * cache before being returned.
      *
-     * @param  remoteFileUrl  remote URL for the file.
-     *
-     * @return the local cached instance of the specified remote file.
-     *
-     * @throws FileNotCacheableException
-     *   if the file cannot be cached locally.
-     */
-    public File getFile(URL remoteFileUrl)
-            throws FileNotCacheableException, FileNotFoundException {
-        return getFile(remoteFileUrl, false);
-    }
-
-    /**
-     * Looks for the specified resource in the cache and returns the
-     * corresponding local file copy.
-     * If the resource is not in the cache, it is retrieved/copied
-     * (on the current thread of execution) and is added to the
-     * cache before being returned.
-     *
-     * @param  remoteFileUrl  remote URL for the file.
+     * @param  remoteFileRefName  remote file reference name.
      *
      * @param  forceRefresh   if true, will force removal of any existing
      *                        cached file before retrieving it again from
@@ -269,33 +231,30 @@ public class LocalFileCache {
      * @throws FileNotCacheableException
      *   if the file cannot be cached locally.
      */
-    public File getFile(URL remoteFileUrl,
-                        boolean forceRefresh)
+    public File getFile(String remoteFileRefName, boolean forceRefresh)
             throws FileNotCacheableException, FileNotFoundException {
-
         File localFile;
-
         try {
             if (forceRefresh) {
-                urlToFileCache.invalidate(remoteFileUrl);
+                remoteNameToFileCache.invalidate(remoteFileRefName);
             }
             // get call should load file if it is not already present
-            CachedFile cachedFile = urlToFileCache.get(remoteFileUrl);
+            CachedFile cachedFile = remoteNameToFileCache.get(remoteFileRefName);
             localFile = getVerifiedLocalFile(cachedFile);
         } 
         catch (Exception e) {
             Throwable cause = e;
             while(cause != null) {
                 if (FileNotFoundException.class.isAssignableFrom(cause.getClass())) {
-                    throw new FileNotFoundException(remoteFileUrl.toString());
+                    throw new FileNotFoundException(remoteFileRefName);
                 }
                 cause = cause.getCause();
             }
-            throw new FileNotCacheableException("failed to retrieve " + remoteFileUrl, e);
+            throw new FileNotCacheableException("failed to retrieve " + remoteFileRefName, e);
         }
 
         if (localFile == null) {
-            throw new FileNotCacheableException("local cache file missing for " + remoteFileUrl);
+            throw new FileNotCacheableException("local cache file missing for " + remoteFileRefName);
         }
 
         return localFile;
@@ -308,106 +267,41 @@ public class LocalFileCache {
      * is immediately returned and an asynchronous request is submitted
      * to cache the resource.
      *
-     * @param  remoteFileUrl  remote URL for the file.
+     * @param  remoteFileRefName  remote reference file name
+     *
+     * @param cacheAsync to load the file
      *
      * @return the local or remote URL for the resource depending upon
      *         whether it has already been cached.
      */
-    public URL getEffectiveUrl(URL remoteFileUrl) {
-        return getEffectiveUrl(remoteFileUrl, true);
-    }
-    
-    public URL getEffectiveUrl(URL remoteFileUrl, boolean cacheAsync) {
-
-        URL effectiveUrl = remoteFileUrl;
-
+    public URL getEffectiveUrl(String remoteFileRefName, boolean cacheAsync) {
         // get call will NOT load file if it is missing
-        CachedFile cachedFile = urlToFileCache.getIfPresent(remoteFileUrl);
+        CachedFile cachedFile = remoteNameToFileCache.getIfPresent(remoteFileRefName);
         File localFile = getVerifiedLocalFile(cachedFile);
 
         if (localFile == null) {
-            
             if (cacheAsync) {
-                final URL asyncRetrievalUrl = remoteFileUrl;
                 asyncLoadService.submit(new Callable<File>() {
                     @Override
                     public File call() throws Exception {
                         try {
-                            return getFile(asyncRetrievalUrl);
-                        }
-                        catch (FileNotCacheableException e) {
+                            return getFile(remoteFileRefName, false);
+                        } catch (FileNotCacheableException e) {
                             LOG.warn("Problem encountered caching file asynchronously",e);
                             throw e;
                         }
                     }
                 });
             }
-
-        }
-        else  {
+            return webDavClientMgr.getDownloadFileURL(remoteFileRefName);
+        } else  {
             try {
-                effectiveUrl = localFile.toURI().toURL();
-            } 
-            catch (MalformedURLException e) {
+                return localFile.toURI().toURL();
+            }  catch (MalformedURLException e) {
                 LOG.error("failed to derive URL for " + localFile.getAbsolutePath(), e);
+                throw new IllegalStateException("Invalid cached file URL " + localFile, e);
             }
         }
-
-        return effectiveUrl;
-    }
-
-    /**
-     * Locally caches all files in the specified remote directory
-     * and returns the corresponding local directory.
-     * Any files not in the cache are retrieved/copied (on the current
-     * thread of execution) before control is returned to the caller.
-     *
-     * @param  remoteDirectoryUrl  remote URL for the directory.
-     *
-     * @param  fetchFilesInAllSubDirectories  if true, all files within the
-     *                                        directory and its sub-directories
-     *                                        will be retrieved; otherwise
-     *                                        only files in the immediate
-     *                                        directory are retrieved.
-     *
-     * @param  forceRefresh   if true, will force removal of any existing
-     *                        cached file before retrieving it again from
-     *                        the remote source.
-     *
-     * @return the local cached instance of the specified remote directory.
-     *
-     * @throws FileNotCacheableException
-     *   if any of the directory's files cannot be cached locally or
-     *   if the directory does not exist or is empty.
-     */
-    public File getDirectory(URL remoteDirectoryUrl,
-                             boolean fetchFilesInAllSubDirectories,
-                             boolean forceRefresh)
-            throws FileNotCacheableException {
-
-        try {
-            List<WebDavFile> webDavFiles;
-
-            if (fetchFilesInAllSubDirectories) {
-                webDavFiles = webDavClient.findAllInternalFiles(remoteDirectoryUrl);
-            } else {
-                webDavFiles = webDavClient.findImmediateInternalFiles(remoteDirectoryUrl);
-            }
-
-            for (WebDavFile webDavFile : webDavFiles) {
-                getFile(webDavFile.getUrl(), forceRefresh);
-            }
-
-        } catch (Exception e) {
-            throw new FileNotCacheableException("failed to retrieve " + remoteDirectoryUrl, e);
-        }
-
-        final File localDirectory = new File(activeDirectory, remoteDirectoryUrl.getPath());
-        if (! localDirectory.exists()) {
-            throw new FileNotCacheableException("local cache directory missing for " + remoteDirectoryUrl);
-        }
-
-        return localDirectory;
     }
 
     /**
@@ -417,13 +311,15 @@ public class LocalFileCache {
      * asynchronously by a separate pool of threads.
      */
     public void clear() {
-        LOG.info("clear: entry, scheduling removal of {} files from cache", urlToFileCache.size());
-        urlToFileCache.invalidateAll();
+        LOG.info("clear: entry, scheduling removal of {} files from cache", remoteNameToFileCache.size());
+        remoteNameToFileCache.invalidateAll();
     }
 
     @Override
     public String toString() {
-        return "LocalFileCache{rootDirectory=" + rootDirectory +
+        return "LocalFileCache{" +
+                "activeDirectory=" + activeDirectory +
+                ", tempDirectory=" + tempDirectory +
                 ", kilobyteCapacity=" + kilobyteCapacity +
                 '}';
     }
@@ -440,8 +336,7 @@ public class LocalFileCache {
      * @throws IllegalStateException
      *   if the directory cannot be created or is not writable.
      */
-    private File createAndValidateDirectoryAsNeeded(File parent,
-                                                    String name)
+    private File createAndValidateDirectoryAsNeeded(File parent, String name)
             throws IllegalStateException {
 
         File canonicalParent;
@@ -478,14 +373,13 @@ public class LocalFileCache {
         // The "penalty" for this appears to be serialzed put of the object
         // AFTER it has been loaded - which should not be a problem.
 
-        this.urlToFileCache =
+        this.remoteNameToFileCache =
                 CacheBuilder.newBuilder()
                         .concurrencyLevel(1)
                         .maximumWeight(getKilobyteCapacity())
                         .weigher(weigher)
                         .removalListener(asyncRemovalListener)
                         .build(defaultLoader);
-
 
         // load cache from a separate thread so that we don't
         // bog down application start up
@@ -515,8 +409,13 @@ public class LocalFileCache {
         final List<CachedFile> cachedFiles = loader.locateCachedFiles();
         for (CachedFile cachedFile : cachedFiles) {
             // make sure newer cache record has not already been loaded
-            if (urlToFileCache.getIfPresent(cachedFile.getUrl()) == null) {
-                urlToFileCache.put(cachedFile.getUrl(), cachedFile);
+            if (!StringUtils.isBlank(cachedFile.getRemoteFileName())) {
+                if (remoteNameToFileCache.getIfPresent(cachedFile.getRemoteFileName()) == null) {
+                    remoteNameToFileCache.put(cachedFile.getRemoteFileName(), cachedFile);
+                }
+            } else {
+                // this is a legacy file - remove it from the active directory
+                cachedFile.remove(this.activeDirectory);
             }
         }
 
@@ -540,18 +439,12 @@ public class LocalFileCache {
         File localFile = null;
         if (cachedFile != null) {
             localFile = cachedFile.getLocalFile();
-            if (! localFile.exists()) {
-                urlToFileCache.invalidate(cachedFile.getUrl());
+            if (!localFile.exists()) {
+                remoteNameToFileCache.invalidate(cachedFile.getRemoteFileName());
                 localFile = null;
             }
         }
         return localFile;
     }
-
-    private static final Logger LOG = LoggerFactory.getLogger(LocalFileCache.class);
-
-    private static final String CACHE_DIRECTORY_NAME = ".jacs-file-cache";
-    private static final String ACTIVE_DIRECTORY_NAME = "active";
-    private static final String TEMP_DIRECTORY_NAME = "temp";
 
 }

@@ -96,11 +96,13 @@ public class UserViewRootNode extends AbstractNode {
                 // It's tempting to add directly to the list above, but it seems
                 // to perform much better when we use addAll.
                 list.addAll(owned);
-                return true;
-            } catch (Exception e) {
+
+            } 
+            catch (Exception e) {
                 ConsoleApp.handleException(e);
-                return false;
             }
+            
+            return true;
         }
 
         @Override

@@ -1,17 +1,15 @@
 package org.janelia.it.workstation.browser.model.search;
 
-import org.janelia.model.domain.DomainObject;
-
 /**
  * Searches a ResultIterator to find objects matching some string
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class ResultIteratorFind {
+public abstract class ResultIteratorFind<T,S> {
 
-    private final ResultIterator resultIterator;
+    private final ResultIterator<T,S> resultIterator;
 
-    public ResultIteratorFind(ResultIterator resultIterator) {
+    public ResultIteratorFind(ResultIterator<T,S> resultIterator) {
         this.resultIterator = resultIterator;
     }
 
@@ -21,11 +19,11 @@ public abstract class ResultIteratorFind {
      * run in a background thread.
      * @return first match, or null if no match is found
      */
-    public DomainObject find() {
+    public T find() {
         while (resultIterator.hasNext()) {
-            DomainObject domainObject = resultIterator.next();
-            if (domainObject!=null && matches(resultIterator.getCurrResultPage(), domainObject)) {
-                return domainObject;
+            T object = resultIterator.next();
+            if (object!=null && matches(resultIterator.getCurrResultPage(), object)) {
+                return object;
             }
         }
         return null;
@@ -33,9 +31,9 @@ public abstract class ResultIteratorFind {
 
     /**
      * Implement this method to describe how an object should be matched.
-     * @param resultPage the result page containing domainObject
-     * @param domainObject object to match against
+     * @param resultPage the result page containing the object
+     * @param object object to match against
      * @return true if the object matches the search string
      */
-    protected abstract boolean matches(ResultPage resultPage, DomainObject domainObject);
+    protected abstract boolean matches(ResultPage<T,S> resultPage, T object);
 }

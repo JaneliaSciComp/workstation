@@ -12,7 +12,7 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JSeparator;
 
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
+import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.model.domain.DomainObject;
@@ -34,19 +34,17 @@ public class ServiceAcceptorActionHelper {
      * Makes the item for showing the object in its own viewer iff the object
      * type is correct.
      */
-    public static Collection<AbstractAction> getOpenForContextActions(final DomainObject domainObject) {
+    public static Collection<AbstractAction> getOpenForContextActions(final Object obj) {
 
-        TreeMap<Integer, AbstractAction> orderedMap = new TreeMap<>();
-        Collection<DomainObjectAcceptor> domainObjectAcceptors
-                = ServiceAcceptorHelper.findHandler(
-                        domainObject,
-                        DomainObjectAcceptor.class,
-                        DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH
-                );
+        Collection<ObjectOpenAcceptor> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(obj);
+        
         boolean lastItemWasSeparator = false;
         int expectedCount = 0;
+        TreeMap<Integer, AbstractAction> orderedMap = new TreeMap<>();
         List<AbstractAction> actionItemList = new ArrayList<>();
-        for (final DomainObjectAcceptor domainObjectAcceptor : domainObjectAcceptors) {
+        
+        for (final ObjectOpenAcceptor domainObjectAcceptor : domainObjectAcceptors) {
+            
             final Integer order = domainObjectAcceptor.getOrder();
             if (domainObjectAcceptor.isPrecededBySeparator() && (!lastItemWasSeparator)) {
                 orderedMap.put(order - 1, null);
@@ -56,24 +54,22 @@ public class ServiceAcceptorActionHelper {
             AbstractAction action = new AbstractAction(domainObjectAcceptor.getActionLabel()) {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    domainObjectAcceptor.acceptDomainObject(domainObject);
-                    // Update "Recently Opened" history
-                    String strRef = Reference.createFor(domainObject).toString();
-                    StateMgr.getStateMgr().updateRecentlyOpenedHistory(strRef);
+                    domainObjectAcceptor.acceptObject(obj);
                 }
             };
-            action.setEnabled(domainObjectAcceptor.isEnabled(domainObject));
+            action.setEnabled(domainObjectAcceptor.isEnabled(obj));
             
-            actionItemList.add(action);
-
             orderedMap.put(order, action);
-            actionItemList.add(action); // Bail alternative if ordering fails.
             expectedCount++;
+            
+            actionItemList.add(action); // Bail alternative if ordering fails.
+            
             if (domainObjectAcceptor.isSucceededBySeparator()) {
                 orderedMap.put(order + 1, null);
                 expectedCount++;
                 lastItemWasSeparator = true;
-            } else {
+            } 
+            else {
                 lastItemWasSeparator = false;
             }
         }
@@ -100,9 +96,9 @@ public class ServiceAcceptorActionHelper {
         return orderedMap.values();
     }
 
-    public static Collection<JComponent> getOpenForContextItems(final DomainObject domainObject) {
+    public static Collection<JComponent> getOpenForContextItems(final Object obj) {
         List<JComponent> components = new ArrayList<>();
-        for (AbstractAction action : getOpenForContextActions(domainObject)) {
+        for (AbstractAction action : getOpenForContextActions(obj)) {
             if (action == null) {
                 components.add(new JSeparator());
             } 

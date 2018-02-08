@@ -51,17 +51,10 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.enums.AlignmentScoreType;
 import org.janelia.model.domain.gui.search.Filtering;
-import org.janelia.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.DataSet;
-import org.janelia.model.domain.sample.NeuronSeparation;
-import org.janelia.model.domain.sample.PipelineError;
-import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.sample.SampleAlignmentResult;
-import org.janelia.model.domain.sample.SampleProcessingResult;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.security.Subject;
 import org.slf4j.Logger;
@@ -373,79 +366,17 @@ public class DomainInspectorPanel extends JPanel {
         refresh();
     }
 
-    // TODO: factor this out into a separate confocal module
-    public void loadPipelineResult(PipelineResult result) {
+    public void loadProperties(Map<String,Object> properties) {
 
-        log.debug("Loading properties for pipeline result {}", result.getId());
+        log.debug("Loading properties");
         showAttributesLoadingIndicator();
 
         this.propertySet = new TreeSet<>();
-
-        addProperty("Creation Date", result.getCreationDate());
-        addProperty("Disk Space Usage (Bytes)", result.getDiskSpaceUsage());
-        addProperty("Disk Space Usage", result.getDiskSpaceUsageForHumans());
-        addProperty("Filepath", result.getFilepath());
-        addProperty("GUID", result.getId());
-        addProperty("Name", result.getName());
-        addProperty("Purged", result.getPurged());
         
-        if (result instanceof HasAnatomicalArea) {
-            HasAnatomicalArea hasAA = (HasAnatomicalArea) result;
-            addProperty("Anatomical Area", hasAA.getAnatomicalArea());
+        for (String key : properties.keySet()) {
+            addProperty(key, properties.get(key));
         }
-
-        if (result instanceof SampleAlignmentResult) {
-            SampleAlignmentResult alignment = (SampleAlignmentResult) result;
-            addProperty("Alignment Space", alignment.getAlignmentSpace());
-            addProperty("Bounding Box", alignment.getBoundingBox());
-            addProperty("Channel Colors", alignment.getChannelColors());
-            addProperty("Channel Spec", alignment.getChannelSpec());
-            addProperty("Image Size", alignment.getImageSize());
-            addProperty("Objective", alignment.getObjective());
-            addProperty("Optical Resolution", alignment.getOpticalResolution());
-            addProperty("Message", alignment.getMessage());
-            for (AlignmentScoreType scoretype : alignment.getScores().keySet()) {
-                String score = alignment.getScores().get(scoretype);
-                addProperty(scoretype.getLabel(), score);
-            }
-        }
-        else if (result instanceof SampleProcessingResult) {
-            SampleProcessingResult spr = (SampleProcessingResult) result;
-            addProperty("Channel Colors", spr.getChannelColors());
-            addProperty("Channel Spec", spr.getChannelSpec());
-            addProperty("Image Size", spr.getImageSize());
-            addProperty("Optical Resolution", spr.getOpticalResolution());
-            addProperty("Distortion Corrected", spr.isDistortionCorrected());
-        }
-        else if (result instanceof NeuronSeparation) {
-            NeuronSeparation ns = (NeuronSeparation) result;
-            addProperty("Number of Neurons", ns.getFragmentsReference().getCount());
-            addProperty("Neuron Weights", ns.getHasWeights());
-        }
-        
-        addPropertiesToTable();
-        attributesPanel.removeAll();
-        attributesPanel.add(attributesTable, BorderLayout.CENTER);
-
-        tabbedPane.setSelectedIndex(0);
-        tabbedPane.setEnabledAt(1, false);
-        tabbedPane.setEnabledAt(2, false);
-    }
-
-    // TODO: factor this out into a separate module
-    public void loadPipelineError(PipelineError error) {
-
-        log.debug("Loading properties for pipeline error");
-        showAttributesLoadingIndicator();
-
-        this.propertySet = new TreeSet<>();
-
-        addProperty("Creation Date", error.getCreationDate());
-        addProperty("Filepath", error.getFilepath());
-        addProperty("Operation", error.getOperation());
-        addProperty("Classification", error.getClassification());
-        addProperty("Description", error.getDescription());
-
+                
         addPropertiesToTable();
         attributesPanel.removeAll();
         attributesPanel.add(attributesTable, BorderLayout.CENTER);

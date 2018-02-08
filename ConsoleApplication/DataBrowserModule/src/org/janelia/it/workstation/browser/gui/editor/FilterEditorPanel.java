@@ -10,20 +10,18 @@ import java.awt.event.KeyEvent;
 import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -40,12 +38,13 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
+import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.dialogs.EditCriteriaDialog;
-import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
+import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
@@ -55,6 +54,7 @@ import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SmartSearchBox;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
+import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
@@ -67,7 +67,7 @@ import org.janelia.model.access.domain.DomainObjectAttribute;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Preference;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;
@@ -92,7 +92,7 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implements SearchProvider {
+public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainObject,Reference> implements SearchProvider {
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
 
@@ -102,7 +102,6 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     public static final String DEFAULT_FILTER_NAME = "Unsaved Filter";
     public static final Class<?> DEFAULT_SEARCH_CLASS = Sample.class;
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
-    private static final int MAX_VALUES_STRING_LENGTH = 20;
     
     // Utilities
     private final Debouncer debouncer = new Debouncer();
@@ -111,20 +110,21 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     private final ConfigPanel configPanel;
     private final JButton saveButton;
     private final JButton saveAsButton;
-    private final PaginatedResultsPanel resultsPanel;
+    private final PaginatedDomainResultsPanel resultsPanel;
     private final DropDownButton typeCriteriaButton;
     private final DropDownButton addCriteriaButton;
     private final SmartSearchBox searchBox;
     private final JButton infoButton;
 
     // State
+    private DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     private FilterNode filterNode;
     private Filter filter;    
     private boolean dirty = false;
     private SearchConfiguration searchConfig;
     
     // Results
-    private SearchResults searchResults;
+    private DomainObjectSearchResults searchResults;
 
     public FilterEditorPanel() {
 
@@ -219,8 +219,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                         SwingUtilities.invokeLater(new Runnable() {
                             @Override
                             public void run() {
-                                // Select the filter and force it to reload
-                                DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(filter.getId());
+                                // Select the filter and force it to reloadMask
                             }
                         });
                     }
@@ -277,10 +276,14 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
         getActionMap().put("enterAction", mySearchAction);
         
-        this.resultsPanel = new PaginatedResultsPanel(getSelectionModel(), this) {
+        this.resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this) {
             @Override
-            protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
+            protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
+            }
+            @Override
+            public Reference getId(DomainObject object) {
+                return Reference.createFor(object);
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->FilterEditorPanel"));
@@ -299,7 +302,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
             // We can only override the given object with a cloned filter (e.g. use the "Save" action) if it's a Filter to begin with
             filter.setId(canonicalFilter.getId());
         }
-        this.searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
+        this.searchConfig = new SearchConfiguration(filter, DomainObjectSearchResults.PAGE_SIZE);
     }
 
     @Override
@@ -473,17 +476,59 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         for(DomainObjectAttribute attr : searchConfig.getDomainObjectAttributes()) {
             if (attr.getFacetKey()!=null) {
                 log.trace("Adding facet: {}",attr.getLabel());
-                StringBuilder label = new StringBuilder();
-                label.append(attr.getLabel());
-                List<String> values = new ArrayList<>(getSelectedFacetValues(attr.getName()));
-                Collections.sort(values);
-                if (!values.isEmpty()) {
-                    label.append(" (");
-                    label.append(StringUtils.getCommaDelimited(values, MAX_VALUES_STRING_LENGTH));
-                    label.append(")");
-                }
-                DropDownButton facetButton = new DropDownButton(label.toString());
-                populateFacetMenu(attr, facetButton);
+                
+                SelectionButton<FacetValue> facetButton = new SelectionButton<FacetValue>(attr.getLabel()) {
+
+                    @Override
+                    public Collection<FacetValue> getValues() {
+                        return searchConfig.getFacetValues(attr.getFacetKey());
+                    }
+
+                    @Override
+                    public Set<FacetValue> getSelectedValues() {
+                        return getSelectedFacetValues(attr);
+                    }
+
+                    @Override
+                    public String getName(FacetValue value) {
+                        return value.getValue();
+                    }
+                    
+                    @Override
+                    public String getLabel(FacetValue value) {
+                        return value.getValue()+" ("+value.getCount()+" items)";
+                    }
+
+                    @Override
+                    public boolean isHidden(FacetValue value) {
+                        return value.getCount()==0;
+                    }
+
+                    @Override
+                    protected void selectAll() {
+                        for(FacetValue value : getValues()) {
+                            updateFacet(attr.getName(), value.getValue(), true);
+                        }
+                        dirty = true;
+                        refreshSearchResults(true);
+                    }
+                    @Override
+                    protected void clearSelected() {
+                        updateFacet(attr.getName(), null, false);
+                        dirty = true;
+                        refreshSearchResults(true);
+                    }
+
+                    @Override
+                    protected void updateSelection(FacetValue value, boolean selected) {
+                        updateFacet(attr.getName(), value.getValue(), selected);
+                        dirty = true;
+                        refreshSearchResults(true);
+                    }
+                    
+                };
+                
+                facetButton.update();
                 configPanel.addConfigComponent(facetButton);
             }
         }
@@ -609,50 +654,6 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         
         return facetButton;
     }
-    
-    private void populateFacetMenu(final DomainObjectAttribute attr, DropDownButton button) {
-
-        Set<String> selectedValues = getSelectedFacetValues(attr.getName());
-
-        if (!selectedValues.isEmpty()) {
-            final JMenuItem menuItem = new JMenuItem("Clear selected");
-            menuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    updateFacet(attr.getName(), null, false);
-                    dirty = true;
-                    refreshSearchResults(true);
-                }
-            });
-            button.addMenuItem(menuItem);
-        }
-        
-        Collection<FacetValue> attrFacetValues = searchConfig.getFacetValues(attr.getFacetKey());
-                
-        if (attrFacetValues!=null) {
-            for (final FacetValue facetValue : attrFacetValues) {
-                boolean selected = selectedValues.contains(facetValue.getValue());
-                if (facetValue.getCount()==0 && !selected) {
-                    // Skip anything that is not selected, and which doesn't have results. Clicking it would be futile.
-                    continue;
-                }
-                String label = facetValue.getValue()+" ("+facetValue.getCount()+" items)";
-                final JMenuItem menuItem = new JCheckBoxMenuItem(label, selected);
-                menuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (menuItem.isSelected()) {
-                            updateFacet(attr.getName(), facetValue.getValue(), true);
-                        }
-                        else {
-                            updateFacet(attr.getName(), facetValue.getValue(), false);
-                        }
-                        dirty = true;
-                        refreshSearchResults(true);
-                    }
-                });
-                button.addMenuItem(menuItem);
-            }
-        }
-    }
 
     private void removeTreeNodeCriteria(String treeNodeName) {
         if (filter.hasCriteria()) {
@@ -682,6 +683,25 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
                 }
             }
         }
+    }
+
+    private Set<FacetValue> getSelectedFacetValues(DomainObjectAttribute attr) {
+        if (filter==null || !filter.hasCriteria()) return new HashSet<>();
+        for (Criteria criteria : filter.getCriteriaList()) {
+            if (criteria instanceof FacetCriteria) {
+                FacetCriteria fc = (FacetCriteria) criteria;
+                if (fc.getAttributeName().equals(attr.getName())) {
+                    List<FacetValue> facetValues = searchConfig.getFacetValues(attr.getFacetKey());
+                    if (facetValues != null) {
+                        return searchConfig.getFacetValues(attr.getFacetKey())
+                                .stream()
+                                .filter(facetValue -> fc.getValues().contains(facetValue.getValue()))
+                                .collect(Collectors.toSet());
+                    }
+                }
+            }
+        }
+        return new HashSet<>();
     }
     
     private void updateFacet(String attrName, String value, boolean addValue) {
@@ -722,32 +742,21 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
         }
     }
     
-    private Set<String> getSelectedFacetValues(String attrName) {
-        if (filter==null || !filter.hasCriteria()) return new HashSet<>();
-        for (Criteria criteria : filter.getCriteriaList()) {
-            if (criteria instanceof FacetCriteria) {
-                FacetCriteria fc = (FacetCriteria) criteria;
-                if (fc.getAttributeName().equals(attrName)) {
-                    return fc.getValues();
-                }
-            }
-        }
-        return new HashSet<>();
-    }
-
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         try {
-            if (filter==null || filter.getId()==null) {
-                refreshSearchResults(false);
-            }
-            else if (event.isTotalInvalidation()) {
+            if (event.isTotalInvalidation()) {
                 log.info("Total invalidation, reloading...");
                 reload();
             }
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
-                    if (domainObject.getId().equals(filter.getId())) {
+                    if (searchConfig.getSearchClass().isAssignableFrom(domainObject.getClass())) {
+                        log.info("Object with search class invalidated, reloading...");
+                        reload();
+                        break;
+                    }
+                    else if (filter!=null && filter.getId()!=null && domainObject.getId().equals(filter.getId())) {
                         log.info("Filter invalidated, reloading...");
                         reload();
                         break;
@@ -807,7 +816,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
     }
 
     @Override
-    public PaginatedResultsPanel getResultsPanel() {
+    public PaginatedDomainResultsPanel getResultsPanel() {
         return resultsPanel;
     }
 
@@ -899,7 +908,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
         SimpleWorker worker = new SimpleWorker() {
 
-            private SearchResults exportSearchResults = searchResults;
+            private DomainObjectSearchResults exportSearchResults = searchResults;
 
             @Override
             protected void doStuff() throws Exception {
@@ -928,5 +937,10 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering> implem
 
         worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Loading...", ""));
         worker.execute();
+    }
+
+    @Override
+    public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+        return selectionModel;
     }
 }

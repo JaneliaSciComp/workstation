@@ -14,11 +14,14 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
-import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
+import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
+import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
@@ -27,21 +30,21 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Node;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 
-
 /**
  * Simple editor panel for viewing folders. In the future it may support drag and drop editing of folders.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> implements SearchProvider {
+public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObject,Reference> implements SearchProvider {
 
     private final static Logger log = LoggerFactory.getLogger(TreeNodeEditorPanel.class);
     
@@ -49,24 +52,29 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     private final Debouncer debouncer = new Debouncer();
     
     // UI Elements
-    private final PaginatedResultsPanel resultsPanel;
+    private final PaginatedDomainResultsPanel resultsPanel;
 
     // State
+    private DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     private TreeNodeNode treeNodeNode;
-    private TreeNode treeNode;
+    private Node node;
     
     // Results
-    private SearchResults searchResults;
+    private DomainObjectSearchResults searchResults;
     private String sortCriteria;
 
     public TreeNodeEditorPanel() {
         
         setLayout(new BorderLayout());
         
-        resultsPanel = new PaginatedResultsPanel(getSelectionModel(), this) {
+        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this) {
             @Override
-            protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
+            protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
+            }
+            @Override
+            public Reference getId(DomainObject object) {
+                return Reference.createFor(object);
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->TreeNodeEditorPanel"));
@@ -74,13 +82,13 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     }
 
     @Override
-    public void loadDomainObjectNode(AbstractDomainObjectNode<TreeNode> treeNodeNode, boolean isUserDriven, Callable<Void> success) {
+    public void loadDomainObjectNode(AbstractDomainObjectNode<Node> treeNodeNode, boolean isUserDriven, Callable<Void> success) {
         this.treeNodeNode = (TreeNodeNode)treeNodeNode;
         loadDomainObject(treeNodeNode.getDomainObject(), isUserDriven, success);
     }
 
     @Override
-    public void loadDomainObject(final TreeNode treeNode, final boolean isUserDriven, final Callable<Void> success) {
+    public void loadDomainObject(final Node treeNode, final boolean isUserDriven, final Callable<Void> success) {
 
         if (treeNode==null) return;
         
@@ -93,7 +101,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
         final StopWatch w = new StopWatch();
         resultsPanel.showLoadingIndicator();
 
-        this.treeNode = treeNode;
+        this.node = treeNode;
         getSelectionModel().setParentObject(treeNode);
         
         SimpleWorker worker = new SimpleWorker() {
@@ -108,7 +116,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
                 annotations = model.getAnnotations(DomainUtils.getReferences(children));
                 loadPreferences();
                 DomainUtils.sortDomainObjects(children, sortCriteria);
-                searchResults = SearchResults.paginate(children, annotations);
+                searchResults = new DomainObjectSearchResults(children, annotations);
                 log.info("Showing "+children.size()+" items");
             }
 
@@ -142,14 +150,14 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         try {
-            if (treeNode==null) return;
+            if (node==null) return;
             if (event.isTotalInvalidation()) {
                 log.info("Total invalidation, reloading...");
                 reload();
             }
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
-                    if (treeNode.getId().equals(domainObject.getId())) {
+                    if (node.getId().equals(domainObject.getId())) {
                         log.info("Tree node was invalidated, reloading...");
                         reload();
                         break;
@@ -163,17 +171,17 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
 
     private void reload() throws Exception {
         
-        if (treeNode==null) {
+        if (node==null) {
             // Nothing to reload
             return;
         }
         
-        TreeNode updatedTreeNode = DomainMgr.getDomainMgr().getModel().getDomainObject(treeNode.getClass(), treeNode.getId());
+        Node updatedTreeNode = DomainMgr.getDomainMgr().getModel().getDomainObject(node.getClass(), node.getId());
         if (updatedTreeNode!=null) {
-            if (treeNodeNode!=null && !treeNodeNode.getTreeNode().equals(updatedTreeNode)) {
+            if (treeNodeNode!=null && !treeNodeNode.getNode().equals(updatedTreeNode)) {
                 treeNodeNode.update(updatedTreeNode);
             }
-            this.treeNode = updatedTreeNode;
+            this.node = updatedTreeNode;
             restoreState(saveState());
         }
         else {
@@ -185,26 +193,26 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
 
     @Override
     public String getName() {
-        if (treeNode==null) {
+        if (node==null) {
             return "Folder Editor";
         }
         else {
-            return "Folder: "+StringUtils.abbreviate(treeNode.getName(), 15);
+            return "Folder: "+StringUtils.abbreviate(node.getName(), 15);
         }
     }
 
     @Override
-    protected PaginatedResultsPanel getResultsPanel() {
+    protected PaginatedDomainResultsPanel getResultsPanel() {
         return resultsPanel;
     }
 
     @Override
-    protected TreeNode getDomainObject() {
-        return treeNode;
+    protected Node getDomainObject() {
+        return node;
     }
 
     @Override
-    protected AbstractDomainObjectNode<TreeNode> getDomainObjectNode() {
+    protected AbstractDomainObjectNode<Node> getDomainObjectNode() {
         return treeNodeNode;
     }
     
@@ -220,9 +228,9 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
 
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
-        if (treeNode==null) return;
-        if (event.getDomainObject().getId().equals(treeNode.getId())) {
-            this.treeNode = null;
+        if (node==null) return;
+        if (event.getDomainObject().getId().equals(node.getId())) {
+            this.node = null;
             searchResults = null;
             showNothing();
         }
@@ -249,7 +257,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     @Override
     public void search() {
         if (treeNodeNode==null) {
-            loadDomainObject(treeNode, false, null);
+            loadDomainObject(node, false, null);
         }
         else {
             loadDomainObjectNode(treeNodeNode, false, null);
@@ -257,10 +265,10 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
     }
 
     private void loadPreferences() {
-        if (treeNode==null || treeNode.getId()==null) return;
+        if (node==null || node.getId()==null) return;
         try {
             sortCriteria = (String)FrameworkImplProvider.getRemotePreferenceValue(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString(), null);
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, node.getId().toString(), null);
             log.debug("Loaded sort criteria preference: {}",sortCriteria);
         }
         catch (Exception e) {
@@ -272,7 +280,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
             FrameworkImplProvider.setRemotePreferenceValue(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString(), sortCriteria);
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, node.getId().toString(), sortCriteria);
             log.debug("Saved sort criteria preference: {}",sortCriteria);
         }
         catch (Exception e) {
@@ -288,5 +296,10 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
         }
         ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
         action.actionPerformed(null);
+    }
+    
+    @Override
+    public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+        return selectionModel;
     }
 }

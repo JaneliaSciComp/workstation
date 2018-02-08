@@ -2,19 +2,19 @@ package org.janelia.it.workstation.browser.nb_action;
 
 import javax.swing.JMenuItem;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
-import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * Action to move currently selected nodes to a folder.
@@ -39,7 +39,7 @@ public class MoveToFolderAction extends AddToFolderAction {
         JMenuItem menu = super.getPopupPresenter();
         menu.setText("Move To Folder");
 
-        for(Node node : getSelectedNodes()) {
+        for(org.openide.nodes.Node node : getSelectedNodes()) {
             if (node instanceof AbstractDomainObjectNode) {
                 AbstractDomainObjectNode<?> selectedNode = (AbstractDomainObjectNode<?>)node;
                 DomainObject domainObject = selectedNode.getDomainObject();
@@ -60,19 +60,19 @@ public class MoveToFolderAction extends AddToFolderAction {
         // TODO: ensure that all items were successfully added before deletion
 
         // Build list of things to remove
-        Multimap<TreeNode,DomainObject> removeMap = ArrayListMultimap.create();
-        for(Node node : getSelectedNodes()) {
+        Multimap<Node,DomainObject> removeMap = ArrayListMultimap.create();
+        for(org.openide.nodes.Node node : getSelectedNodes()) {
             log.info("Moving selected node '{}' to folder '{}'",node.getDisplayName(),folder.getName());
             TreeNodeNode selectedNode = (TreeNodeNode)node;
             TreeNodeNode parentNode = (TreeNodeNode)node.getParentNode();
-            if (ClientDomainUtils.isOwner(parentNode.getTreeNode())) {
-                removeMap.put(parentNode.getTreeNode(), selectedNode.getTreeNode());
+            if (ClientDomainUtils.isOwner(parentNode.getNode())) {
+                removeMap.put(parentNode.getNode(), selectedNode.getNode());
             }
         }
 
         // Remove from existing folders
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        for(TreeNode treeNode : removeMap.keys()) {
+        for(Node treeNode : removeMap.keys()) {
             model.removeChildren(treeNode, removeMap.get(treeNode));
         }
     }

@@ -19,6 +19,10 @@ public class OptionConstants {
     public static final String USE_RUN_AS_USER_PREFERENCES = "useRunAsUserPreferences";
     public static final String FILE_CACHE_DISABLED_PROPERTY = "console.localCache.disabled";
     public static final String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";
+    /**
+     * @deprecated use FILE_DOWNLOADS_DIR
+     */
     public static final String DOWNLOADS_DIR = "DownloadsDir";
+    public static final String FILE_DOWNLOADS_DIR = "FileDownloadsDir";
 
 }

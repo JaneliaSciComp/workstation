@@ -173,4 +173,19 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         }
         return response.readEntity(String.class);
     }
+    
+    @Override
+    public Collection<DataSet> getColorDepthDataSets(String alignmentSpace) throws Exception {
+        Response response = manager.getDataSetEndpoint()
+                .path("colordepth")
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .queryParam("alignmentSpace", alignmentSpace)
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request getDataSets from server")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(new GenericType<List<DataSet>>() {});
+    }
+
 }

@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.launch;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
+import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -14,8 +14,8 @@ import org.openide.util.lookup.ServiceProvider;
 /**
  * Right-click context menu that allows user to edit a TmSample file path.
  */
-@ServiceProvider(service = DomainObjectAcceptor.class, path = DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH)
-public class EditSamplePath implements DomainObjectAcceptor  {
+@ServiceProvider(service = ObjectOpenAcceptor.class, path = ObjectOpenAcceptor.LOOKUP_PATH)
+public class EditSamplePath implements ObjectOpenAcceptor  {
     
     private static final int MENU_ORDER = 400;
     
@@ -23,9 +23,9 @@ public class EditSamplePath implements DomainObjectAcceptor  {
     }
 
     @Override
-    public void acceptDomainObject(DomainObject domainObject) {
+    public void acceptObject(Object obj) {
 
-        final TmSample sample = (TmSample)domainObject;
+        final TmSample sample = (TmSample)obj;
         
         final String editedPath = (String) JOptionPane.showInputDialog(
                 ConsoleApp.getMainFrame(),
@@ -66,13 +66,13 @@ public class EditSamplePath implements DomainObjectAcceptor  {
     }
 
     @Override
-    public boolean isCompatible(DomainObject e) {
-        return e != null && (e instanceof TmSample);
+    public boolean isCompatible(Object obj) {
+        return obj != null && (obj instanceof TmSample);
     }
 
     @Override
-    public boolean isEnabled(DomainObject e) {
-        return e != null && ClientDomainUtils.hasWriteAccess(e);
+    public boolean isEnabled(Object obj) {
+        return obj != null && ClientDomainUtils.hasWriteAccess((DomainObject)obj);
     }
     
     @Override
