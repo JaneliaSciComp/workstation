@@ -292,7 +292,8 @@ public class WebDavClient {
             LOG.trace("createDirectory: {} returned for MKCOL {}", resourceURI, responseCode);
 
             if (responseCode != HttpServletResponse.SC_CREATED) {
-                throw new WebDavException(responseCode + " returned for MKCOL " + resourceURI, responseCode);
+                String response = method.getResponseBodyAsString();
+                throw new WebDavException(responseCode + " returned for MKCOL " + resourceURI + ": " + response, responseCode);
             }
             final Header locationHeader = method.getResponseHeader("Location");
             if (locationHeader == null) {
