@@ -191,4 +191,5 @@ public class ShowingHook implements Runnable {
         Action action = FileUtil.getConfigObject("Actions/Window/org-netbeans-core-windows-actions-ResetWindowsAction.instance", Action.class);
         action.actionPerformed(null);
     }
+    
 }
