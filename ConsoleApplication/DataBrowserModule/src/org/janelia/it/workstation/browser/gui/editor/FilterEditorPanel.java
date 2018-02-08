@@ -50,6 +50,7 @@ import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SmartSearchBox;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
@@ -76,6 +77,7 @@ import org.janelia.model.domain.gui.search.criteria.Criteria;
 import org.janelia.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
+import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.Sample;
 import org.perf4j.StopWatch;
@@ -92,7 +94,9 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainObject,Reference> implements SearchProvider {
+public class FilterEditorPanel 
+        extends DomainObjectEditorPanel<Filtering,DomainObject,Reference> 
+        implements SearchProvider, PreferenceSupport {
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
 
@@ -276,7 +280,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainO
         getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
         getActionMap().put("enterAction", mySearchAction);
         
-        this.resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this) {
+        this.resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
@@ -942,5 +946,14 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainO
     @Override
     public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
         return selectionModel;
+    }
+    
+    @Override
+    public Long getCurrentContextId() {
+        Object parentObject = getSelectionModel().getParentObject();
+        if (parentObject instanceof HasIdentifier) {
+            return ((HasIdentifier)parentObject).getId();
+        }
+        throw new IllegalStateException("Parent object has no identifier: "+getSelectionModel().getParentObject());
     }
 }

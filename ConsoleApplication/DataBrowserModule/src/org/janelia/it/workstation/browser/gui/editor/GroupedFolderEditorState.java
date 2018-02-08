@@ -51,10 +51,10 @@ public class GroupedFolderEditorState
         StringBuilder builder = new StringBuilder();
         builder.append("GroupedFolderEditorState[\n");
         if (selectedGroup != null) {
-            builder.append("\n    selectedGroup=");
+            builder.append("  selectedGroup=");
             builder.append(selectedGroup);
         }
-        builder.append("]");
+        builder.append("\n]\n");
         builder.append(super.toString());
         return builder.toString();
     }

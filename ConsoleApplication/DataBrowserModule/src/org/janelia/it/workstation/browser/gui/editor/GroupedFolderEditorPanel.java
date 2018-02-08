@@ -26,7 +26,6 @@ import javax.swing.SwingConstants;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -44,6 +43,7 @@ import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableVi
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
@@ -75,7 +75,8 @@ import com.google.common.eventbus.Subscribe;
 public class GroupedFolderEditorPanel extends JPanel implements 
         DomainObjectEditor<GroupedFolder>, 
         ParentNodeSelectionEditor<GroupedFolder, DomainObject, Reference>,
-        SearchProvider {
+        SearchProvider,
+        PreferenceSupport {
 
     private final static Logger log = LoggerFactory.getLogger(GroupedFolderEditorPanel.class);
     
@@ -110,18 +111,13 @@ public class GroupedFolderEditorPanel extends JPanel implements
         setLayout(new BorderLayout());
         setFocusable(true);
 
-        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this) {
-            @Override
-            protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
-                return searchResults.getPage(page);
-            }
-            @Override
-            public Reference getId(DomainObject object) {
-                return Reference.createFor(object);
-            }
-        };
-        resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->TreeNodeEditorPanel"));
+        helpPanel = new JPanel();
+        helpPanel.setLayout(new GridBagLayout());
         
+        JPanel panel = new JPanel();    
+        panel.add(new JLabel("<html>This Result Set is empty</html>"));
+        helpPanel.add(panel, new GridBagConstraints());
+
         groupListPanel = new SelectablePanelListPanel() {
 
             @Override
@@ -147,8 +143,9 @@ public class GroupedFolderEditorPanel extends JPanel implements
             @Override
             protected void popupTriggered(MouseEvent e, SelectablePanel resultPanel) {
                 if (resultPanel instanceof GroupPanel) {
+                    Group group = ((GroupPanel)resultPanel).getGroup();
                     DomainObject proxyObject = ((GroupPanel)resultPanel).getProxyObject();
-                    DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(groupedFolder, Arrays.asList(proxyObject), null, null);
+                    GroupContextMenu popupMenu = new GroupContextMenu(groupedFolder, group, proxyObject);
                     popupMenu.addMenuItems();
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
@@ -162,12 +159,17 @@ public class GroupedFolderEditorPanel extends JPanel implements
         groupScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         groupScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
         
-        helpPanel = new JPanel();
-        helpPanel.setLayout(new GridBagLayout());
-        
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("<html>This grouped folder is empty</html>"));
-        helpPanel.add(panel, new GridBagConstraints());
+        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this, this) {
+            @Override
+            protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
+                return searchResults.getPage(page);
+            }
+            @Override
+            public Reference getId(DomainObject object) {
+                return Reference.createFor(object);
+            }
+        };
+        resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->TreeNodeEditorPanel"));
         
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, groupScrollPane, resultsPanel);
         splitPane.setDividerLocation(0.30);
@@ -196,14 +198,14 @@ public class GroupedFolderEditorPanel extends JPanel implements
         }
         
         try {
-            GroupedFolder updatedSearch = DomainMgr.getDomainMgr().getModel().getDomainObject(groupedFolder.getClass(), groupedFolder.getId());
-            if (updatedSearch!=null) {
-                if (groupedFolderNode!=null && !groupedFolderNode.getGroupedFolder().equals(updatedSearch)) {
-                    groupedFolderNode.update(updatedSearch);
+            GroupedFolder updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(groupedFolder);
+            if (updatedFolder!=null) {
+                if (groupedFolderNode!=null && !groupedFolderNode.getGroupedFolder().equals(updatedFolder)) {
+                    groupedFolderNode.update(updatedFolder);
                 }
-                this.groupedFolder = updatedSearch; 
+                this.groupedFolder = updatedFolder; 
                 DomainObjectEditorState<GroupedFolder, DomainObject, Reference> state = saveState();
-                loadDomainObject(updatedSearch, false, () -> {
+                loadDomainObject(updatedFolder, false, () -> {
                     restoreState(state);    
                     return null;
                 });
@@ -342,10 +344,9 @@ public class GroupedFolderEditorPanel extends JPanel implements
         else {
             Group selectedGroup = null;
             if (selectedGroupRef != null) {
-                log.info("Checking groups for "+selectedGroupRef);
+                log.debug("Checking groups for previously selected group: "+selectedGroupRef);
                 for(Group group : groups) {
                     if (group.getId().equals(selectedGroupRef.getTargetId())) {
-                        log.info("Found previously selected group: "+selectedGroupRef);
                         selectedGroup = group;
                         break;
                     }
@@ -355,13 +356,13 @@ public class GroupedFolderEditorPanel extends JPanel implements
             add(splitPane, BorderLayout.CENTER);
             if (selectedGroup == null) {
                 // Automatically select the first group
-                log.info("Selecting first group");
+                log.debug("Selecting first group");
                 groupListPanel.selectFirst(isUserDriven);
             }
             else {
                 // Reselect the last selected group
                 GroupPanel groupPanel = groupPanelMap.get(selectedGroup);
-                log.info("Selecting previously selected group: "+groupPanel);
+                log.debug("Selecting previously selected group: "+groupPanel.getGroup());
                 groupListPanel.selectPanel(groupPanel, isUserDriven);
             }
         }
@@ -370,16 +371,16 @@ public class GroupedFolderEditorPanel extends JPanel implements
     }
 
     private void rescaleImage(LoadedImagePanel image) {
-        double width = image.getParent()==null?0:image.getParent().getSize().getWidth()-18;
+        double width = image.getParent()==null?0:image.getParent().getSize().getWidth();
         if (width<=0) {
             log.debug("Could not get width from parent, using viewport");
-            width = groupScrollPane.getViewport().getSize().getWidth()-18;
+            width = groupScrollPane.getViewport().getSize().getWidth();
         }
         if (width<=0) {
             log.debug("Could not get width from parent or viewport");
             return;
         }
-        int w = (int)Math.ceil(width);
+        int w = (int)Math.ceil(width) - 18;
         log.trace("Using width={}", w);
         image.scaleImage(w);
     }
@@ -453,7 +454,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
             }
             return new GroupedFolderEditorState(
                     groupedFolder,
-                    selectedGroupRef == null ? null : selectedGroupRef,
+                    selectedGroupRef,
                     resultsPanel.getCurrPage(),
                     resultsPanel.getViewer().saveState(),
                     getSelectionModel().getSelectedIds());
@@ -465,7 +466,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
             }
             return new GroupedFolderEditorState(
                     groupedFolderNode,
-                    selectedGroupRef == null ? null : selectedGroupRef,
+                    selectedGroupRef,
                     resultsPanel.getCurrPage(),
                     resultsPanel.getViewer().saveState(),
                     getSelectionModel().getSelectedIds());
@@ -508,8 +509,8 @@ public class GroupedFolderEditorPanel extends JPanel implements
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         try {
-		    if (groupedFolder==null) return;
-		    boolean affected = false;
+            if (groupedFolder==null) return;
+            boolean affected = false;
             if (event.isTotalInvalidation()) {
                 log.info("total invalidation, reloading...");
                 affected = true;
@@ -517,18 +518,9 @@ public class GroupedFolderEditorPanel extends JPanel implements
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
                     if (StringUtils.areEqual(domainObject.getId(), groupedFolder.getId())) {
-                        log.info("Search invalidated, reloading...");
+                        log.info("Grouped folder invalidated, reloading...");
                         affected = true;
                         break;
-                    }
-                    else if (groups!=null) {
-                        for(Group group : groups) {
-                            if (StringUtils.areEqual(domainObject.getId(), group.getId())) {
-                                log.info("Group invalidated, reloading...");
-                                affected = true;
-                                break;
-                            }
-                        }
                     }
                 }
             }
@@ -546,14 +538,6 @@ public class GroupedFolderEditorPanel extends JPanel implements
         if (StringUtils.areEqual(event.getDomainObject().getId(), groupedFolder.getId())) {
             this.groupedFolder = null;
             showNothing();
-        }
-        else {
-            for (Group mask : groups) {
-                if (StringUtils.areEqual(event.getDomainObject().getId(), mask.getId())) {
-                    // Refresh
-                    loadDomainObject(groupedFolder, false, null);
-                }
-            }
         }
     }
 
@@ -692,5 +676,11 @@ public class GroupedFolderEditorPanel extends JPanel implements
     @Override
     public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
         return selectionModel;
+    }
+
+    @Override
+    public Long getCurrentContextId() {
+        if (groupedFolder == null) return null;
+        return groupedFolder.getId();
     }
 }

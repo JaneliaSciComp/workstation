@@ -20,6 +20,7 @@ import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPan
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
@@ -31,6 +32,7 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
 import org.perf4j.StopWatch;
@@ -44,7 +46,8 @@ import com.google.common.eventbus.Subscribe;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObject,Reference> implements SearchProvider {
+public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObject,Reference> 
+        implements SearchProvider, PreferenceSupport {
 
     private final static Logger log = LoggerFactory.getLogger(TreeNodeEditorPanel.class);
     
@@ -67,7 +70,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
         
         setLayout(new BorderLayout());
         
-        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this) {
+        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
@@ -301,5 +304,14 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
     @Override
     public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
         return selectionModel;
+    }
+
+    @Override
+    public Long getCurrentContextId() {
+        Object parentObject = getSelectionModel().getParentObject();
+        if (parentObject instanceof HasIdentifier) {
+            return ((HasIdentifier)parentObject).getId();
+        }
+        throw new IllegalStateException("Parent object has no identifier: "+getSelectionModel().getParentObject());
     }
 }

@@ -110,7 +110,7 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
                     for(DomainObject domainObject : listToDelete) {
                         DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
                         if (provider!=null) {
-                            log.info("Using DomainObjectHelper {} to delete object {}", provider, domainObject);
+                            log.info("Using {} to delete object {}", provider.getClass().getName(), domainObject);
                             provider.remove(domainObject);
                         }
                         else {
