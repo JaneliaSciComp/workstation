@@ -802,7 +802,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                     getSelectionModel().getSelectedIds());
         }
         else {
-            if (searchNode==null || searchNode.getDomainObject()==null) {
+            if (searchNode.getDomainObject()==null) {
                 log.warn("No object is loaded, so state cannot be saved");
                 return null;
             }

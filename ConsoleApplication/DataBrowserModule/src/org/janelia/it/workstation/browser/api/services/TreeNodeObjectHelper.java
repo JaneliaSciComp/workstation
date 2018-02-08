@@ -5,11 +5,16 @@ import java.util.Arrays;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.gui.editor.FilterEditorPanel;
+import org.janelia.it.workstation.browser.gui.editor.GroupedFolderEditorPanel;
+import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
+import org.janelia.it.workstation.browser.gui.editor.TreeNodeEditorPanel;
 import org.janelia.it.workstation.browser.nodes.FilterNode;
 import org.janelia.it.workstation.browser.nodes.GroupedFolderNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.search.Filtering;
+import org.janelia.model.domain.workspace.Group;
 import org.janelia.model.domain.workspace.GroupedFolder;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.nodes.ChildFactory;
@@ -37,6 +42,9 @@ public class TreeNodeObjectHelper implements DomainObjectHelper {
         else if (GroupedFolder.class.isAssignableFrom(clazz)) {
             return true;
         }
+        else if (Group.class.isAssignableFrom(clazz)) {
+            return true;
+        }
         else if (Filtering.class.isAssignableFrom(clazz)) {
             return true;
         }
@@ -57,6 +65,20 @@ public class TreeNodeObjectHelper implements DomainObjectHelper {
         else {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);
         }    
+    }
+
+    @Override
+    public Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
+        if (TreeNode.class.isAssignableFrom(domainObject.getClass())) {
+            return TreeNodeEditorPanel.class;
+        }
+        else if (Filtering.class.isAssignableFrom(domainObject.getClass())) {
+            return FilterEditorPanel.class;
+        }
+        else if (GroupedFolder.class.isAssignableFrom(domainObject.getClass())) {
+            return GroupedFolderEditorPanel.class;
+        }
+        return null;
     }
     
     @Override   
@@ -83,6 +105,9 @@ public class TreeNodeObjectHelper implements DomainObjectHelper {
         else if (domainObject instanceof GroupedFolder) {
             return true;
         }
+        else if (domainObject instanceof Group) {
+            return true;
+        }
         else if (domainObject instanceof Filtering) {
             return true;
         }
@@ -99,6 +124,9 @@ public class TreeNodeObjectHelper implements DomainObjectHelper {
         }
         else if (domainObject instanceof GroupedFolder) {
             model.remove(Arrays.asList((GroupedFolder)domainObject));
+        }
+        else if (domainObject instanceof Group) {
+            model.remove(Arrays.asList((Group)domainObject));
         }
         else if (domainObject instanceof Filtering) {
             model.remove(Arrays.asList(((Filtering)domainObject)));

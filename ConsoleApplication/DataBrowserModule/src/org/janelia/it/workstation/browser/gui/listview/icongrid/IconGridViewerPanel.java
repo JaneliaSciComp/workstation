@@ -149,9 +149,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             @Override
             protected void setMustHaveImage(boolean mustHaveImage) {
                 IconGridViewerPanel.this.setMustHaveImage(mustHaveImage);
-            }
-            
-            
+            }  
         };
     }
 

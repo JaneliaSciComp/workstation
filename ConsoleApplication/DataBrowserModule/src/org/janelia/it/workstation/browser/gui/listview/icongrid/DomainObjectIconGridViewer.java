@@ -18,9 +18,7 @@ import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.components.DomainObjectProviderHelper;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.IconGridViewerConfigDialog;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
@@ -45,6 +43,7 @@ import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;
@@ -133,8 +132,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
     
     public Long getCurrentParentId() {
-        final DomainObject parentObject = (DomainObject)getSelectionModel().getParentObject();
-        return parentObject.getId();
+        Object parentObject = getSelectionModel().getParentObject();
+        if (parentObject instanceof HasIdentifier) {
+            return ((HasIdentifier)parentObject).getId();
+        }
+        // Currently this doesn't happen, and we treat it as an exception assertion. 
+        // In the future we may want to have some other type of behavior here. 
+        throw new IllegalStateException("Parent object has no identifier: "+getSelectionModel().getParentObject());
     }
     
     @Override
@@ -472,7 +476,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         try {
             List<DomainObject> selected = getSelectedObjects();
             
-            if (selected.size() != 1) {
+            if (selected==null || selected.size() != 1) {
                 hud.hideDialog();
                 return;
             }

@@ -1085,15 +1085,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         Object contextObject = null;
         
-        if (domainObject instanceof Sample) {
+        if (domainObject instanceof Sample && resultDescriptor != null) {
             Sample sample = (Sample)domainObject;
             HasFiles hasFiles = DescriptorUtils.getResult(sample, resultDescriptor);
             if (hasFiles instanceof PipelineResult) {
                 PipelineResult result = (PipelineResult)DescriptorUtils.getResult(sample, resultDescriptor);      
                 contextObject = new SampleImage(result, FileType.valueOf(typeName));
-            }
-            else {
-                log.warn("Results which are not PipelineResults are not supported for open operations");
             }
         }
         else {
