@@ -365,6 +365,9 @@ public class GroupedFolderEditorPanel extends JPanel implements
                 log.debug("Selecting previously selected group: "+groupPanel.getGroup());
                 groupListPanel.selectPanel(groupPanel, isUserDriven);
             }
+            
+            // Update selected group
+            selectedGroupRef = Reference.createFor(((GroupPanel)groupListPanel.getSelectedPanel()).getGroup());
         }
         
         updateUI();
@@ -510,22 +513,19 @@ public class GroupedFolderEditorPanel extends JPanel implements
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         try {
             if (groupedFolder==null) return;
-            boolean affected = false;
             if (event.isTotalInvalidation()) {
                 log.info("total invalidation, reloading...");
-                affected = true;
+                reload();
             }
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
                     if (StringUtils.areEqual(domainObject.getId(), groupedFolder.getId())) {
                         log.info("Grouped folder invalidated, reloading...");
-                        affected = true;
+                        reload();
                         break;
                     }
                 }
             }
-        
-            if (affected) reload();
         }  
         catch (Exception e) {
             ConsoleApp.handleException(e);
@@ -543,16 +543,16 @@ public class GroupedFolderEditorPanel extends JPanel implements
 
     @Subscribe
     public void domainObjectChanged(DomainObjectChangeEvent event) {
-        if (groupedFolder==null) return;
         try {
-            if (event.getDomainObject().getId().equals(groupedFolder)) {
-                // Refresh
+            DomainObject domainObject = event.getDomainObject();
+            if (domainObject==null) return;
+            if (groupedFolder != null && domainObject.getId().equals(groupedFolder.getId())) {
+                log.info("Grouped folder has changed, reloading...");
                 reload();
             }
-            else {
-                if (searchResults!=null && searchResults.updateIfFound(event.getDomainObject())) {
-                    log.info("Updated search results with changed domain object: {}", event.getDomainObject());
-                }
+            else if (selectedGroupRef!=null && selectedGroupRef.getTargetId().equals(domainObject.getId())) {
+                log.info("Selected group has changed, reloading...");
+                reload();
             }
         }  
         catch (Exception e) {
