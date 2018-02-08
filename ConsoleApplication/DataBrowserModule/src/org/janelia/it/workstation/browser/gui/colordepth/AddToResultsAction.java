@@ -31,7 +31,7 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
-import org.janelia.model.domain.gui.colordepth.ResultGroup;
+import org.janelia.model.domain.workspace.Group;
 import org.janelia.model.domain.workspace.GroupedFolder;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
@@ -222,18 +222,18 @@ public class AddToResultsAction extends NodePresenterAction {
 
         SimpleWorker worker = new SimpleWorker() {
             
-            List<ResultGroup> resultGroups; 
+            List<Group> resultGroups; 
             
             @Override
             protected void doStuff() throws Exception {
-                resultGroups = model.getDomainObjectsAs(ResultGroup.class, groupedFolder.getChildren());
+                resultGroups = model.getDomainObjectsAs(Group.class, groupedFolder.getChildren());
             }
 
             @Override
             protected void hadSuccess() {
 
                 int existing = 0;
-                ResultGroup resultGroup = getResultGroup(resultGroups, groupRef);
+                Group resultGroup = getGroupByProxy(resultGroups, groupRef);
                 if (resultGroup!=null) {
                     for(DomainObject domainObject : domainObjects) {
                         if (resultGroup.hasChild(domainObject)) {
@@ -250,22 +250,29 @@ public class AddToResultsAction extends NodePresenterAction {
                     else {
                         message = existing + " items are already in the target result set. "+(domainObjects.size()-existing)+" item(s) will be added.";
                     }
-                    JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), message, "Items already present", JOptionPane.OK_OPTION);
+                    int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), 
+                            message, "Items already present", JOptionPane.OK_CANCEL_OPTION);
+                    if (result != 0) {
+                        return;
+                    }
                 }
 
                 final int numAdded = domainObjects.size()-existing;
 
                 SimpleWorker worker = new SimpleWorker() {
                     
-                    ResultGroup group = resultGroup;
+                    Group group = resultGroup;
                     
                     @Override
                     protected void doStuff() throws Exception {
 
                         if (group==null) {
-                            group = new ResultGroup();
-                            group.setMaskRef(groupRef);
+                            group = new Group();
+                            group.setName("Mask Result Set");
+                            group.setProxyObject(groupRef);
                             group.setChildren(DomainUtils.getReferences(domainObjects));
+                            group = model.save(group);
+                            model.addChild(groupedFolder, group);
                         }
                         else {
                             model.addChildren(group, domainObjects);
@@ -293,13 +300,11 @@ public class AddToResultsAction extends NodePresenterAction {
             }
         };
         worker.execute();
-        
-        
     }
 
-    private ResultGroup getResultGroup(List<ResultGroup> resultGroups, Reference groupRef) {
-        for (ResultGroup resultGroup : resultGroups) {
-            if (resultGroup.getMaskRef().equals(groupRef)) {
+    private Group getGroupByProxy(List<Group> groups, Reference proxyObjectRef) {
+        for (Group resultGroup : groups) {
+            if (resultGroup.getProxyObject().equals(proxyObjectRef)) {
                 return resultGroup;
             }
         }

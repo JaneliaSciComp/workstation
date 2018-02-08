@@ -11,7 +11,6 @@ import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.browser.actions.OpenWithDefaultAppAction;
@@ -24,7 +23,6 @@ import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
@@ -92,22 +90,17 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         add(getTitleItem());
         add(getCopyNameToClipboardItem());
 
-        if (sample != null) {
-            setNextAddRequiresSeparator(true);
-            add(getAddToMaskResultsItem());
-            add(getAddToFolderItem());
-            add(getColorDepthSearchItem());
-            
-            setNextAddRequiresSeparator(true);
-            add(getOpenInFinderItem());
-            add(getOpenWithAppItem());
-    
-            setNextAddRequiresSeparator(true);
-            add(getHudMenuItem());
-        }
-        else {
-            add(getRequestAccessItem());
-        }
+        setNextAddRequiresSeparator(true);
+        add(getAddToMaskResultsItem());
+        add(getAddToFolderItem());
+        add(getColorDepthSearchItem());
+        
+        setNextAddRequiresSeparator(true);
+        add(getOpenInFinderItem());
+        add(getOpenWithAppItem());
+
+        setNextAddRequiresSeparator(true);
+        add(getHudMenuItem());
     }
 
     protected JMenuItem getTitleItem() {
@@ -133,8 +126,11 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     }
    
     protected JMenuItem getAddToMaskResultsItem() {
-        AddToResultsAction action = AddToResultsAction.get();
+        
         List<Sample> samples = getSamples();
+        if (samples.isEmpty()) return null;
+        
+        AddToResultsAction action = AddToResultsAction.get();
         action.setDomainObjects(samples);
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         try {
@@ -146,6 +142,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
             FrameworkImplProvider.handleExceptionQuietly(e);
             return null;
         }
+        
         JMenuItem item = action.getPopupPresenter();
         if (item!=null) {
             // Override title to include the word "Sample" instead of generic "Item"
@@ -156,9 +153,13 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     }
     
     protected JMenuItem getAddToFolderItem() {
-        AddToFolderAction action = AddToFolderAction.get();
+        
         List<Sample> samples = getSamples();
+        if (samples.isEmpty()) return null;
+        
+        AddToFolderAction action = AddToFolderAction.get();
         action.setDomainObjects(samples);
+        
         JMenuItem item = action.getPopupPresenter();
         if (item!=null) {
             // Override title to include the word "Sample" instead of generic "Item"
@@ -199,15 +200,6 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
 
         return toggleHudMI;
     }
-
-    
-    protected JMenuItem getRequestAccessItem() {
-        if (multiple) return null;
-        
-        // TODO: Implement this
-        
-        return null;
-    }
     
     protected List<Sample> getSamples() {
         List<Sample> samples = new ArrayList<>();
@@ -216,6 +208,4 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         }
         return samples;
     }
-    
-    
 }

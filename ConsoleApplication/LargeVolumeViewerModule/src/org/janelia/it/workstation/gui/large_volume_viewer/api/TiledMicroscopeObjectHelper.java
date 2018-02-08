@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.api;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
+import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.it.workstation.gui.large_volume_viewer.nodes.TmSampleNode;
 import org.janelia.it.workstation.gui.large_volume_viewer.nodes.TmWorkspaceNode;
 import org.janelia.model.domain.DomainObject;
@@ -45,6 +46,11 @@ public class TiledMicroscopeObjectHelper implements DomainObjectHelper {
         else {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);
         }    
+    }
+
+    @Override
+    public Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
+        return null;
     }
     
     @Override

@@ -33,7 +33,14 @@ public interface DomainObjectHelper extends Compatible<DomainObject> {
      * @return
      */
     <T extends DomainObject> Node getNode(T domainObject, ChildFactory<T> parentChildFactory) throws Exception;
- 
+    
+    /**
+     * Returns the class of the editor to use when a node with the given type is selected in the data explorer. 
+     * @param domainObject
+     * @return
+     */
+    public Class<?> getEditorClass(DomainObject domainObject);
+    
     /**
      * Returns a large static icon for the given domain object.
      * @param domainObject

@@ -254,7 +254,12 @@ public class GetRelatedItemsAction extends NodePresenterAction {
             else {
                 message = existing + " items are already in the target folder. "+(domainObjects.size()-existing)+" item(s) will be added.";
             }
-            JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), message, "Items already present", JOptionPane.OK_OPTION);
+
+            int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), 
+                    message, "Items already present", JOptionPane.OK_CANCEL_OPTION);
+            if (result != 0) {
+                return;
+            }
         }
 
         final int numAdded = objects.size()-existing;

@@ -47,6 +47,9 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
         if (node==null) {
             return domainObjects.size() > 1 ? "Delete " + domainObjects.size() + " Items" : "Delete This Item";
         }
+        if (node.getName()==null) {
+            return domainObjects.size() > 1 ? "Remove " + domainObjects.size() + " Items From Folder" : "Remove This Item From Folder";    
+        }
         return domainObjects.size() > 1 ? "Remove " + domainObjects.size() + " Items From Folder '"+node.getName()+"'" : "Remove This Item From Folder '"+node.getName()+"'";
     }
 
