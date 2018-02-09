@@ -43,7 +43,7 @@ public class AutoUpdater extends SimpleWorker {
 
     @Override
     protected void doStuff() throws Exception {
-        ProgressHandle handle = ProgressHandleFactory.createHandle("Checking for updates...");
+        ProgressHandle handle = ProgressHandle.createHandle("Checking for updates...");
         
         try {
             handle.start();
