@@ -189,7 +189,7 @@ public class AutoUpdater extends SimpleWorker {
 
     private Validator doDownload(OperationContainer<InstallSupport> container) throws OperationException {
         InstallSupport installSupport = container.getSupport();
-        return installSupport.doDownload(null, false, true);
+        return installSupport.doDownload(null, true, false);
     }
 
     private Restarter doInstall(InstallSupport support, Validator validator) throws OperationException {
