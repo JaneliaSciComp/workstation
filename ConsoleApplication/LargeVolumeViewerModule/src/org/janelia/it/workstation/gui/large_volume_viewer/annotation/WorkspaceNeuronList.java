@@ -623,6 +623,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         if (workspace != null) {
             updateTagMenu();
         }
+        updateFilteredNeuronList();
     }
     
    /**
