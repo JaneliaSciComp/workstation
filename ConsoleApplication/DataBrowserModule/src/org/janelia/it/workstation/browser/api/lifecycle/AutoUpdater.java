@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.netbeans.api.autoupdate.InstallSupport;
@@ -21,7 +22,6 @@ import org.netbeans.api.autoupdate.UpdateUnit;
 import org.netbeans.api.autoupdate.UpdateUnitProvider;
 import org.netbeans.api.autoupdate.UpdateUnitProviderFactory;
 import org.netbeans.api.progress.ProgressHandle;
-import org.netbeans.api.progress.ProgressHandleFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,13 +98,13 @@ public class AutoUpdater extends SimpleWorker {
             }
         }
         catch (Throwable ex) {
-            log.error("Error running auto-update restart", ex);
+            hadError(ex);
         }
     }
 
     @Override
     protected void hadError(Throwable ex) {
-        log.error("Error running auto-update check", ex);
+        FrameworkImplProvider.handleException("Error running auto-update check", ex);
     }
         
     private Collection<UpdateElement> doRealCheck(ProgressHandle handle) {    
