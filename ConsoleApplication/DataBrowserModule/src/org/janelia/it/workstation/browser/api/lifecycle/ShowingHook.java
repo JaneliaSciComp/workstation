@@ -113,15 +113,6 @@ public class ShowingHook implements Runnable {
                         null
                 );
             }
-            else if (BrandingConfig.getBrandingConfig().isNeedsRestart()) {
-                JOptionPane.showMessageDialog(
-                        WindowLocator.getMainFrame(),
-                        "Configuration has been updated. Please restart the application.",
-                        "Configuration updated",
-                        JOptionPane.WARNING_MESSAGE,
-                        null
-                );
-            }
         }
         catch (Throwable e) {
             FrameworkImplProvider.handleExceptionQuietly(e);
