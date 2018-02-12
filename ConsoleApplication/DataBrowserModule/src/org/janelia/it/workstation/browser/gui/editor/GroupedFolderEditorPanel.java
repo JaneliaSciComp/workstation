@@ -59,7 +59,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.interfaces.HasFilepath;
 import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.workspace.Group;
+import org.janelia.model.domain.workspace.ProxyGroup;
 import org.janelia.model.domain.workspace.GroupedFolder;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -96,10 +96,10 @@ public class GroupedFolderEditorPanel extends JPanel implements
     private DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     private GroupedFolderNode groupedFolderNode;
     private GroupedFolder groupedFolder;
-    private List<Group> groups; // cached masks
-    private Map<Group,DomainObject> groupProxyObjects = new HashMap<>(); // cached proxy objects
+    private List<ProxyGroup> groups; // cached masks
+    private Map<ProxyGroup,DomainObject> groupProxyObjects = new HashMap<>(); // cached proxy objects
     private Reference selectedGroupRef = null;
-    private Map<Group,GroupPanel> groupPanelMap = new HashMap<>();
+    private Map<ProxyGroup,GroupPanel> groupPanelMap = new HashMap<>();
 
     // Results
     private DomainObjectSearchResults searchResults;
@@ -123,7 +123,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
             @Override
             protected void panelSelected(SelectablePanel resultPanel, boolean isUserDriven) {
                 if (resultPanel instanceof GroupPanel) {
-                    Group group = ((GroupPanel)resultPanel).getGroup();
+                    ProxyGroup group = ((GroupPanel)resultPanel).getGroup();
                     loadGroup(group, isUserDriven, null);
                     Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(group), isUserDriven, true, true));
                 }
@@ -143,7 +143,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
             @Override
             protected void popupTriggered(MouseEvent e, SelectablePanel resultPanel) {
                 if (resultPanel instanceof GroupPanel) {
-                    Group group = ((GroupPanel)resultPanel).getGroup();
+                    ProxyGroup group = ((GroupPanel)resultPanel).getGroup();
                     DomainObject proxyObject = ((GroupPanel)resultPanel).getProxyObject();
                     GroupContextMenu popupMenu = new GroupContextMenu(groupedFolder, group, proxyObject);
                     popupMenu.addMenuItems();
@@ -275,12 +275,12 @@ public class GroupedFolderEditorPanel extends JPanel implements
             @Override
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                groups = model.getDomainObjectsAs(Group.class, groupedFolder.getChildren());
+                groups = model.getDomainObjectsAs(ProxyGroup.class, groupedFolder.getChildren());
                 
-                List<Reference> proxyRefs = groups.stream().map(Group::getProxyObject).collect(Collectors.toList());
+                List<Reference> proxyRefs = groups.stream().map(ProxyGroup::getProxyObject).collect(Collectors.toList());
                 Map<Reference, DomainObject> proxyMap = DomainUtils.getMapByReference(model.getDomainObjects(proxyRefs));
                 
-                for(Group group : groups) {
+                for(ProxyGroup group : groups) {
                     if (group.getProxyObject() != null) {
                         DomainObject domainObject = proxyMap.get(group.getProxyObject());
                         if (domainObject != null) {
@@ -328,7 +328,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
         titlePanel.add(titleLabel, BorderLayout.CENTER);
         groupListPanel.add(titlePanel);
         
-        for(Group group : groups) {
+        for(ProxyGroup group : groups) {
             DomainObject proxyObject = groupProxyObjects.get(group);
             GroupPanel maskPanel = new GroupPanel(group, proxyObject);
             groupListPanel.addPanel(maskPanel);
@@ -342,10 +342,10 @@ public class GroupedFolderEditorPanel extends JPanel implements
             resultsPanel.showNothing();
         }
         else {
-            Group selectedGroup = null;
+            ProxyGroup selectedGroup = null;
             if (selectedGroupRef != null) {
                 log.debug("Checking groups for previously selected group: "+selectedGroupRef);
-                for(Group group : groups) {
+                for(ProxyGroup group : groups) {
                     if (group.getId().equals(selectedGroupRef.getTargetId())) {
                         selectedGroup = group;
                         break;
@@ -388,7 +388,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
         image.scaleImage(w);
     }
 
-    private void loadGroup(Group group, final boolean isUserDriven, final Callable<Void> success) {
+    private void loadGroup(ProxyGroup group, final boolean isUserDriven, final Callable<Void> success) {
 
         if (group==null) return;
         
@@ -570,10 +570,10 @@ public class GroupedFolderEditorPanel extends JPanel implements
     
     private class GroupPanel extends SelectablePanel {
         
-        private final Group group;
+        private final ProxyGroup group;
         private final DomainObject proxyObject;
         
-        private GroupPanel(Group group, DomainObject proxyObject) {
+        private GroupPanel(ProxyGroup group, DomainObject proxyObject) {
             
             this.group = group;
             this.proxyObject = proxyObject;
@@ -594,7 +594,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
             setFocusTraversalKeysEnabled(false);
         }
 
-        public Group getGroup() {
+        public ProxyGroup getGroup() {
             return group;
         }
         

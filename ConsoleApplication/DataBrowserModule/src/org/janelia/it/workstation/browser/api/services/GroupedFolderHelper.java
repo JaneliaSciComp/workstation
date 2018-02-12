@@ -9,7 +9,7 @@ import org.janelia.it.workstation.browser.gui.editor.GroupedFolderEditorPanel;
 import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.it.workstation.browser.nodes.GroupedFolderNode;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.workspace.Group;
+import org.janelia.model.domain.workspace.ProxyGroup;
 import org.janelia.model.domain.workspace.GroupedFolder;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
@@ -33,7 +33,7 @@ public class GroupedFolderHelper implements DomainObjectHelper {
         if (GroupedFolder.class.isAssignableFrom(clazz)) {
             return true;
         }
-        else if (Group.class.isAssignableFrom(clazz)) {
+        else if (ProxyGroup.class.isAssignableFrom(clazz)) {
             return true;
         }
         return false;
@@ -72,7 +72,7 @@ public class GroupedFolderHelper implements DomainObjectHelper {
         if (domainObject instanceof GroupedFolder) {
             return true;
         }
-        else if (domainObject instanceof Group) {
+        else if (domainObject instanceof ProxyGroup) {
             return true;
         }
         else {
@@ -86,8 +86,8 @@ public class GroupedFolderHelper implements DomainObjectHelper {
         if (domainObject instanceof GroupedFolder) {
             model.remove(Arrays.asList((GroupedFolder)domainObject));
         }
-        else if (domainObject instanceof Group) {
-            model.remove(Arrays.asList((Group)domainObject));
+        else if (domainObject instanceof ProxyGroup) {
+            model.remove(Arrays.asList((ProxyGroup)domainObject));
         }
         else {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);

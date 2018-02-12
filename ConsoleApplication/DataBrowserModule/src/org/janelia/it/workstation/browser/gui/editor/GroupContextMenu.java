@@ -17,7 +17,7 @@ import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasFilepath;
-import org.janelia.model.domain.workspace.Group;
+import org.janelia.model.domain.workspace.ProxyGroup;
 import org.janelia.model.domain.workspace.GroupedFolder;
 
 /**
@@ -29,12 +29,12 @@ public class GroupContextMenu extends PopupContextMenu {
     
     // Current selection
     protected GroupedFolder contextObject;
-    protected Group group;
+    protected ProxyGroup group;
     protected DomainObject proxyObject;
     protected boolean multiple = false;
     protected String groupName;
     
-    public GroupContextMenu(GroupedFolder groupedFolder, Group group, DomainObject proxyObject) {
+    public GroupContextMenu(GroupedFolder groupedFolder, ProxyGroup group, DomainObject proxyObject) {
         this.contextObject = groupedFolder;
         this.group = group;
         this.proxyObject = proxyObject;

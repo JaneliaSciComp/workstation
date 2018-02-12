@@ -31,7 +31,7 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
-import org.janelia.model.domain.workspace.Group;
+import org.janelia.model.domain.workspace.ProxyGroup;
 import org.janelia.model.domain.workspace.GroupedFolder;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
@@ -222,18 +222,18 @@ public class AddToResultsAction extends NodePresenterAction {
 
         SimpleWorker worker = new SimpleWorker() {
             
-            List<Group> resultGroups; 
+            List<ProxyGroup> resultGroups; 
             
             @Override
             protected void doStuff() throws Exception {
-                resultGroups = model.getDomainObjectsAs(Group.class, groupedFolder.getChildren());
+                resultGroups = model.getDomainObjectsAs(ProxyGroup.class, groupedFolder.getChildren());
             }
 
             @Override
             protected void hadSuccess() {
 
                 int existing = 0;
-                Group resultGroup = getGroupByProxy(resultGroups, groupRef);
+                ProxyGroup resultGroup = getGroupByProxy(resultGroups, groupRef);
                 if (resultGroup!=null) {
                     for(DomainObject domainObject : domainObjects) {
                         if (resultGroup.hasChild(domainObject)) {
@@ -261,13 +261,13 @@ public class AddToResultsAction extends NodePresenterAction {
 
                 SimpleWorker worker = new SimpleWorker() {
                     
-                    Group group = resultGroup;
+                    ProxyGroup group = resultGroup;
                     
                     @Override
                     protected void doStuff() throws Exception {
 
                         if (group==null) {
-                            group = new Group();
+                            group = new ProxyGroup();
                             group.setName("Mask Result Set");
                             group.setProxyObject(groupRef);
                             group.setChildren(DomainUtils.getReferences(domainObjects));
@@ -302,8 +302,8 @@ public class AddToResultsAction extends NodePresenterAction {
         worker.execute();
     }
 
-    private Group getGroupByProxy(List<Group> groups, Reference proxyObjectRef) {
-        for (Group resultGroup : groups) {
+    private ProxyGroup getGroupByProxy(List<ProxyGroup> groups, Reference proxyObjectRef) {
+        for (ProxyGroup resultGroup : groups) {
             if (resultGroup.getProxyObject().equals(proxyObjectRef)) {
                 return resultGroup;
             }
