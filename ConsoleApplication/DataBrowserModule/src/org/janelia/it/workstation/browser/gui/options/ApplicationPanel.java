@@ -44,7 +44,8 @@ final class ApplicationPanel extends javax.swing.JPanel {
 
     private final GroupedKeyValuePanel mainPanel;
     private MemorySettingPanel pnlMemorySetting;
-    
+
+    private JCheckBox autoDownloadUpdates;
     private JCheckBox showReleaseNotesOnStartup;
     private JCheckBox showStartPageOnStartup;
     private JCheckBox useRunAsUserPreferences;
@@ -85,16 +86,24 @@ final class ApplicationPanel extends javax.swing.JPanel {
         // General options
         
         mainPanel.addSeparator("General");
+
+        autoDownloadUpdates = new JCheckBox("Download updates automatically");
+        autoDownloadUpdates.addActionListener((e) -> { controller.changed(); });
+        autoDownloadUpdates.setSelected(ApplicationOptions.getInstance().isAutoDownloadUpdates());
+        mainPanel.addItem(autoDownloadUpdates);
         
         showReleaseNotesOnStartup = new JCheckBox("Show release notes after update");
+        showReleaseNotesOnStartup.addActionListener((e) -> { controller.changed(); });
         showReleaseNotesOnStartup.setSelected(ApplicationOptions.getInstance().isShowReleaseNotes());
         mainPanel.addItem(showReleaseNotesOnStartup);
 
         showStartPageOnStartup = new JCheckBox("Show start page on startup");
+        showStartPageOnStartup.addActionListener((e) -> { controller.changed(); });
         showStartPageOnStartup.setSelected(ApplicationOptions.getInstance().isShowStartPageOnStartup());
         mainPanel.addItem(showStartPageOnStartup);
         
         useRunAsUserPreferences = new JCheckBox("Use preferences from Run As user");
+        useRunAsUserPreferences.addActionListener((e) -> { controller.changed(); });
         useRunAsUserPreferences.setSelected(ApplicationOptions.getInstance().isUseRunAsUserPreferences());
         if (AccessManager.getAccessManager().isAdmin()) {
             mainPanel.addItem(useRunAsUserPreferences);
@@ -289,7 +298,8 @@ final class ApplicationPanel extends javax.swing.JPanel {
         log.info("Saving application settings...");
         
         // General
-
+        
+        ApplicationOptions.getInstance().setAutoDownloadUpdates(autoDownloadUpdates.isSelected());
         ApplicationOptions.getInstance().setShowReleaseNotes(showReleaseNotesOnStartup.isSelected());
         ApplicationOptions.getInstance().setShowStartPageOnStartup(showStartPageOnStartup.isSelected());
         ApplicationOptions.getInstance().setUseRunAsUserPreferences(useRunAsUserPreferences.isSelected());

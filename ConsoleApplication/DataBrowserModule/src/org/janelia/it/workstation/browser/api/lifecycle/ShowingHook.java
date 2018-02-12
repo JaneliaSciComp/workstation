@@ -157,24 +157,35 @@ public class ShowingHook implements Runnable {
 //            }
 //        }
 
-        AutoUpdater updater = new AutoUpdater() {
-            @Override
-            protected void hadSuccess() {
-                super.hadSuccess();
-                if (!isRestarting()) {
-                    if (BrandingConfig.getBrandingConfig().isNeedsRestart()) {
-                        JOptionPane.showMessageDialog(
-                                WindowLocator.getMainFrame(),
-                                "Configuration has been updated. Please restart the application.",
-                                "Configuration updated",
-                                JOptionPane.WARNING_MESSAGE,
-                                null
-                        );
+        if (ApplicationOptions.getInstance().isAutoDownloadUpdates()) {
+            AutoUpdater updater = new AutoUpdater() {
+                @Override
+                protected void hadSuccess() {
+                    super.hadSuccess();
+                    if (!isRestarting()) {
+                        // If we're not already restarting for an updated, check to 
+                        // see if we need to restart for branding config changes
+                        restartIfBrandingChanged();
                     }
-                }
-            }  
-        };
-        updater.execute();
+                }  
+            };
+            updater.execute();
+        }
+        else {
+            restartIfBrandingChanged();
+        }
+    }
+    
+    private void restartIfBrandingChanged() {
+        if (BrandingConfig.getBrandingConfig().isNeedsRestart()) {
+            JOptionPane.showMessageDialog(
+                    WindowLocator.getMainFrame(),
+                    "Configuration has been updated. Please restart the application.",
+                    "Configuration updated",
+                    JOptionPane.WARNING_MESSAGE,
+                    null
+            );
+        }
     }
 
     private void resetWindows() {

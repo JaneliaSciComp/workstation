@@ -83,7 +83,7 @@ public class AutoUpdater extends SimpleWorker {
                     + "<p>Updates have been downloaded are ready to install.</p>"
                     + "</body></html>";
 
-            String[] buttons = { "Restart and Install Updates Now", "Later" };
+            String[] buttons = { "Restart and Update", "Later" };
             int selectedOption = JOptionPane.showOptionDialog(WindowLocator.getMainFrame(), html, 
                     "Updates Ready", JOptionPane.INFORMATION_MESSAGE, 0, null, buttons, buttons[0]);
 

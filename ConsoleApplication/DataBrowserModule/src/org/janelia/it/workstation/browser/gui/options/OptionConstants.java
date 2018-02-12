@@ -5,6 +5,8 @@ package org.janelia.it.workstation.browser.gui.options;
  */
 public class OptionConstants {
 
+    public static final String SHOW_START_PAGE_ON_STARTUP = "showOnStartup";
+    public static final String AUTO_DOWNLOAD_UPDATES = "autoDownloadUpdates";
     public static final String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
     public static final String DISPLAY_RENDERER_2D = "SessionMgr.Renderer2D";
     public static final String NAVIGATE_ON_CLICK = "SessionMgr.NavigateOnClick";

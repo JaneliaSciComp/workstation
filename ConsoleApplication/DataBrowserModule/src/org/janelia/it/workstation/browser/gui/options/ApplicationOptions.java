@@ -5,7 +5,10 @@ import java.beans.PropertyChangeSupport;
 import java.util.prefs.Preferences;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.browser.util.BrandingConfig;
 import org.openide.util.NbPreferences;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Application options stored in NetBeans preferences.
@@ -14,6 +17,8 @@ import org.openide.util.NbPreferences;
  */
 public class ApplicationOptions {
 
+    private static final Logger log = LoggerFactory.getLogger(ApplicationOptions.class);
+    
     private static ApplicationOptions instance;
 
     public static synchronized ApplicationOptions getInstance() {
@@ -22,9 +27,7 @@ public class ApplicationOptions {
         }
         return instance;
     }
-    
-    public static final String PROP_SHOW_START_PAGE_ON_STARTUP = "showOnStartup";
-    
+        
     private PropertyChangeSupport propSupport;
     
     private ApplicationOptions() {
@@ -39,15 +42,43 @@ public class ApplicationOptions {
         if (oldVal == show) {
             return;
         }
-        prefs().putBoolean(PROP_SHOW_START_PAGE_ON_STARTUP, show);
+        prefs().putBoolean(OptionConstants.SHOW_START_PAGE_ON_STARTUP, show);
+        log.info("Set show start page on startup = {}", show);
         if (null != propSupport)
-            propSupport.firePropertyChange(PROP_SHOW_START_PAGE_ON_STARTUP, oldVal, show);
+            propSupport.firePropertyChange(OptionConstants.SHOW_START_PAGE_ON_STARTUP, oldVal, show);
     }
 
     public boolean isShowStartPageOnStartup() {
-        return prefs().getBoolean(PROP_SHOW_START_PAGE_ON_STARTUP, true);
+        return prefs().getBoolean(OptionConstants.SHOW_START_PAGE_ON_STARTUP, true);
     }
 
+    public void setAutoDownloadUpdates(boolean autoDownload) {
+        boolean oldVal = isShowStartPageOnStartup();
+        if (oldVal == autoDownload) {
+            return;
+        }
+        
+        // Update branding configuration, and make sure that works
+        try {
+            boolean checkUpdates = !autoDownload;
+            BrandingConfig.getBrandingConfig().setCheckUpdates(checkUpdates);    
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleException(e);
+            return;
+        }
+        
+        prefs().putBoolean(OptionConstants.AUTO_DOWNLOAD_UPDATES, autoDownload);
+        log.info("Set auto download updates = {}", autoDownload);
+        
+        if (null != propSupport)
+            propSupport.firePropertyChange(OptionConstants.AUTO_DOWNLOAD_UPDATES, oldVal, autoDownload);
+    }
+
+    public boolean isAutoDownloadUpdates() {
+        return prefs().getBoolean(OptionConstants.AUTO_DOWNLOAD_UPDATES, true);
+    }
+    
     public boolean isShowReleaseNotes() {
         Boolean value = (Boolean) FrameworkImplProvider.getModelProperty(OptionConstants.SHOW_RELEASE_NOTES);
         return value==null || value;
@@ -56,6 +87,7 @@ public class ApplicationOptions {
     public void setShowReleaseNotes(boolean value) {
         Object oldVal = FrameworkImplProvider.getModelProperty(OptionConstants.SHOW_RELEASE_NOTES);  
         FrameworkImplProvider.setModelProperty(OptionConstants.SHOW_RELEASE_NOTES, value);  
+        log.info("Set show release notes = {}", value);
         if (null != propSupport)
             propSupport.firePropertyChange(OptionConstants.SHOW_RELEASE_NOTES, oldVal, value);
     }
@@ -68,6 +100,7 @@ public class ApplicationOptions {
     public void setUseRunAsUserPreferences(boolean value) {
         Object oldVal = FrameworkImplProvider.getModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES);  
         FrameworkImplProvider.setModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES, value); 
+        log.info("Set use run as user preferences = {}", value);
         if (null != propSupport)
             propSupport.firePropertyChange(OptionConstants.USE_RUN_AS_USER_PREFERENCES, oldVal, value); 
     }
