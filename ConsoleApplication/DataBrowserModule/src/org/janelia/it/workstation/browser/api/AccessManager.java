@@ -115,14 +115,14 @@ public final class AccessManager {
         Events.getInstance().postOnEventBus(new LoginEvent(authenticatedSubject));
         
         // Is there a run-as user? 
-        boolean sessionStarted = false;
+        boolean runningAs = false;
         LocalPreferenceMgr prefs = LocalPreferenceMgr.getInstance();
         String runAsUser = (String)prefs.getModelProperty(AccessManager.RUN_AS_USER);
         if (runAsUser!=null) {
             // If so, override the actual subject.
             try {
                 if (setRunAsUser(runAsUser)) {
-                    sessionStarted = true;
+                    runningAs = true;
                 }
             }
             catch (Exception e) {
@@ -131,7 +131,7 @@ public final class AccessManager {
             }
         }
         
-        if (!sessionStarted) {
+        if (!runningAs) {
             // Session was not started with a run-as user
             setActualSubject(authenticatedSubject);
         }

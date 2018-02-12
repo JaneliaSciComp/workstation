@@ -264,7 +264,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
     
     void readProperties(java.util.Properties p) {
-        if (p==null) return;
+        if (p==null) {
+            log.info("No properties to read");
+            return;
+        }
         String version = p.getProperty("version");
         final String expandedPathStr = p.getProperty("expandedPaths");
         if (TC_VERSION.equals(version) && expandedPathStr!=null) {
@@ -293,6 +296,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 log.error("Error reading state",e);
             }       
         }
+        else {
+            log.info("Properties are out of date (version {})", version);
+            
+        }
     }
     
     // Custom methods
@@ -319,10 +326,11 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     @Subscribe
     public void sessionStarted(SessionStartEvent event) {
+        log.info("Session started, loading initial state");
         loadInitialSession();
     }
     
-    private void loadInitialSession() {
+    private synchronized void loadInitialSession() {
         
         if (!loadInitialState) return;
         log.info("Loading previous session");
