@@ -161,7 +161,7 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
     }
 
     private boolean hasCompletedSuccessfully(String state) {
-        return "SUCCESSFUL".equals(state);
+        return "SUCCESSFUL".equals(state) || "ARCHIVED".equals(state);
     }
 
     private void throwException (String state) throws ServiceException {

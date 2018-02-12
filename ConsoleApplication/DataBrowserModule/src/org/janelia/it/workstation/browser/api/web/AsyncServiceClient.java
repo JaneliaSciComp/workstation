@@ -50,7 +50,7 @@ public class AsyncServiceClient extends RESTClientImpl {
                               String processingLocation,
                               Map<String, String> serviceResources) throws ServiceException {
         AsyncServiceData body = new AsyncServiceData();
-        body.setOwner(subject);
+        body.setOwnerKey(subject);
         if (serviceArgs != null) {
             body.args.addAll(serviceArgs);
         }
@@ -115,7 +115,7 @@ public class AsyncServiceClient extends RESTClientImpl {
         private String serviceId;
         private String processingLocation;
         private String state;
-        private String owner;
+        private String ownerKey;
         private List<String> args = new ArrayList<>();
         private Map<String, String> resources = new HashMap<>();
 
@@ -143,12 +143,12 @@ public class AsyncServiceClient extends RESTClientImpl {
             this.state = state;
         }
 
-        public String getOwner() {
-            return owner;
+        public String getOwnerKey() {
+            return ownerKey;
         }
 
-        public void setOwner(String owner) {
-            this.owner = owner;
+        public void setOwnerKey(String ownerKey) {
+            this.ownerKey = ownerKey;
         }
 
         public List<String> getArgs() {
