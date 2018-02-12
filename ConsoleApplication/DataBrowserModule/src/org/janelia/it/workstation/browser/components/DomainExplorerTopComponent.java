@@ -226,6 +226,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         result = getLookup().lookupResult(AbstractNode.class);
         result.addLookupListener(this);
         Events.getInstance().registerOnEventBus(this);
+        if (AccessManager.loggedIn()) {
+            // This method will only run once
+            loadInitialSession();
+        }
     }
 
     @Override
@@ -333,7 +337,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     private synchronized void loadInitialSession() {
         
         if (!loadInitialState) return;
-        log.info("Loading previous session");
+        log.info("Loading initial state");
         this.loadInitialState = false;
         
         showLoadingIndicator();
