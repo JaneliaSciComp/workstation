@@ -26,7 +26,6 @@ import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerConfiguration;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
-import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerState;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
