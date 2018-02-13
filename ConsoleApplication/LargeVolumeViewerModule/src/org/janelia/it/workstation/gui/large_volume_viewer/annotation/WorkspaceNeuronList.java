@@ -825,10 +825,23 @@ class NeuronTableModel extends AbstractTableModel {
     }
     
     public void deleteNeuron(TmNeuronMetadata neuron) {
-        neurons.remove(neuron);
-        matchedNeurons.remove(neuron);
-        unmatchedNeurons.remove(neuron);
-        fireTableDataChanged();
+        // can't assume the neuron object is the same; this is
+        //  inefficient, and I wish I'd stored the IDs with a
+        //  map to the objects instead, but not worth changing right now:
+        TmNeuronMetadata foundNeuron = null;
+        Long neuronID = neuron.getId();
+        for (TmNeuronMetadata testNeuron: neurons) {
+            if (testNeuron.getId().equals(neuronID)) {
+                foundNeuron = testNeuron;
+                break;
+            }
+        }
+        if (foundNeuron != null) {
+            neurons.remove(foundNeuron);
+            matchedNeurons.remove(foundNeuron);
+            unmatchedNeurons.remove(foundNeuron);
+            fireTableDataChanged();
+        }
     }
 
     public void updateNeuron(TmNeuronMetadata neuron) {
