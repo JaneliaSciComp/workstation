@@ -70,7 +70,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
     private static final String MANUAL_URL = ConsoleProperties.getInstance().getProperty("manual.color.depth.url"); 
     private static final ImageIcon DISK_USAGE_ICON = Icons.getIcon("database_400.png");
     private static final ImageIcon SAMPLE_ICON = Icons.getIcon("microscope_400.png");
-    private static final ImageIcon COLOR_DEPTH_ICON = Icons.getIcon("shapes_400.png");
+    private static final ImageIcon COLOR_DEPTH_ICON = Icons.getIcon("color_depth_brain.png");
     
     private static final int iconSize = 128;
     
@@ -108,7 +108,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         
         diskUsageIcon = getScaledIcon(DISK_USAGE_ICON, iconSize, iconSize);
         sampleIcon = getScaledIcon(SAMPLE_ICON, iconSize, iconSize);
-        colorDepthIcon = getScaledIcon(COLOR_DEPTH_ICON, iconSize, iconSize);
+        colorDepthIcon = COLOR_DEPTH_ICON;
         
         JLabel titleLabel = new JLabel("Welcome to the Janelia Workstation");
         //titleLabel.setForeground(UIManager.getColor("textInactiveText"));
@@ -237,7 +237,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 
         // Data Summary Panel
         colorDepthPanel = new SelectablePanel();
-        colorDepthPanel.setLayout(new MigLayout("gap 50, fillx, wrap 4", "[grow 10]5[grow 0]5[grow 0]5[grow 10]", "[]2[]4[]"));
+        colorDepthPanel.setLayout(new MigLayout("gap 50, fillx, wrap 4", "[grow 10]5[grow 0]5[grow 0]5[grow 10]", "[]2[]0[]"));
         
         
         // Main Panel
@@ -298,9 +298,9 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         colorDepthTitlePanel.add(getLargeLabel("Color Depth Mask Search"));
         colorDepthTitlePanel.add(getHighlightLabel("NEW"));
         
-        JButton userManual = new JButton("Learn more in the User Manual");
-        userManual.setFont(mediumFont);
-        userManual.addActionListener(new ActionListener() {
+        JButton userManualButton = new JButton("Learn more in the User Manual");
+        userManualButton.setFont(mediumFont);
+        userManualButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Utils.openUrlInBrowser(MANUAL_URL);
@@ -310,10 +310,10 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         colorDepthPanel.removeAll();
         colorDepthPanel.add(colorDepthTitlePanel, "spanx 4, gapbottom 10, al center");
         colorDepthPanel.add(Box.createHorizontalGlue(), "spany2");
-        colorDepthPanel.add(new JLabel(colorDepthIcon), "spany 2, al right top");
+        colorDepthPanel.add(new JLabel(colorDepthIcon), "spany 2, gapright 10, al right top");
         colorDepthPanel.add(new JLabel(colorDepthTxt), "al left top");
         colorDepthPanel.add(Box.createHorizontalGlue(), "spany2");
-        colorDepthPanel.add(userManual, "gapbottom 10, al center");
+        colorDepthPanel.add(userManualButton, "al left");
         
         
         mainPanel.updateUI();
