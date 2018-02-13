@@ -15,6 +15,7 @@ import org.janelia.it.workstation.browser.util.SystemInfo;
  * @author fosterl
  */
 public class MemoryCheckDialog {
+    
     private static final long GIGA = 1024*1024*1024;
     private static final String MEM_ALLOC_CHECK_ERR = "Failed to obtain memory allocation.";
 
@@ -30,11 +31,14 @@ public class MemoryCheckDialog {
         boolean sufficient = true;
         // Must warn about memory use.
         try {
-            int userSetMemoryGigs = SystemInfo.getMemoryAllocation();
-            long memoryGigs = userSetMemoryGigs;
+            Integer userSetMemoryGigs = SystemInfo.getMemoryAllocation();
+            Long memoryGigs = null;
             // Prefer the user setting over all else.  If not found,
             // as in development, look at maximum of all other possibilities.
-            if (memoryGigs < 0) {
+            if (userSetMemoryGigs != null) {
+                memoryGigs = userSetMemoryGigs.longValue();
+            }
+            else {
                 // Find the largest memory estimate, and use  for this purpose.
                 MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
                 memoryGigs = (memoryBean.getHeapMemoryUsage().getMax()
@@ -62,8 +66,10 @@ public class MemoryCheckDialog {
                 );
                 sufficient = false;
             }
+            
             return sufficient;
-        } catch (Exception ex) {
+        } 
+        catch (Exception ex) {
             throw new RuntimeException(MEM_ALLOC_CHECK_ERR);
         }
     }

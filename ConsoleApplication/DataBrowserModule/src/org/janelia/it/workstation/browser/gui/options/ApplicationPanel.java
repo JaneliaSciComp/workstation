@@ -7,6 +7,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -31,7 +32,9 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
+import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.panels.MemorySettingPanel;
+import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +46,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
     private final ApplicationOptionsPanelController controller;
 
     private final GroupedKeyValuePanel mainPanel;
-    private MemorySettingPanel pnlMemorySetting;
+    private MemorySettingPanel memoryPanel;
 
     private JCheckBox autoDownloadUpdates;
     private JCheckBox showReleaseNotesOnStartup;
@@ -54,12 +57,62 @@ final class ApplicationPanel extends javax.swing.JPanel {
     private JSpinner fileCacheSpinner;
     private JProgressBar fileCacheUsageBar;
     private JButton fileCacheClearButton;
+    private JLabel errorLabel;
     
     ApplicationPanel(final ApplicationOptionsPanelController controller) {
         this.controller = controller;
         initComponents();
         
         this.mainPanel = new GroupedKeyValuePanel();
+
+        // General options
+        
+        mainPanel.addSeparator("General");
+
+        autoDownloadUpdates = new JCheckBox("Download updates automatically");
+        autoDownloadUpdates.addActionListener((e) -> { controller.changed(); });
+        mainPanel.addItem(autoDownloadUpdates);
+        
+        showReleaseNotesOnStartup = new JCheckBox("Show release notes after update");
+        showReleaseNotesOnStartup.addActionListener((e) -> { controller.changed(); });
+        mainPanel.addItem(showReleaseNotesOnStartup);
+
+        showStartPageOnStartup = new JCheckBox("Show start page on startup");
+        showStartPageOnStartup.addActionListener((e) -> { controller.changed(); });
+        mainPanel.addItem(showStartPageOnStartup);
+        
+        useRunAsUserPreferences = new JCheckBox("Use preferences from Run As user");
+        useRunAsUserPreferences.addActionListener((e) -> { controller.changed(); });
+        if (AccessManager.getAccessManager().isAdmin()) {
+            mainPanel.addItem(useRunAsUserPreferences);
+        }
+
+        // Memory
+
+        mainPanel.addSeparator("Memory Management");
+
+        memoryPanel = new MemorySettingPanel();
+        memoryPanel.setSettingListener(
+            new MemorySettingPanel.SettingListener() {
+                @Override
+                public void settingChanged() {
+                    controller.changed();
+                }
+            }
+        );
+        mainPanel.addItem("Max Memory (GB)", memoryPanel);
+
+        // Cache
+
+        JPanel fileCachePanel = buildFileCachePanel();
+        mainPanel.addItem("Local Disk Cache", fileCachePanel);
+        
+        errorLabel = new JLabel();
+        errorLabel.setIcon(Icons.getIcon("error.png"));
+        errorLabel.setVisible(false);
+        errorLabel.setForeground(Color.red);
+        mainPanel.addItem(errorLabel, "gaptop 10");
+                
         add(mainPanel, BorderLayout.CENTER);
     }
 
@@ -75,62 +128,6 @@ final class ApplicationPanel extends javax.swing.JPanel {
         setLayout(new java.awt.BorderLayout());
     }// </editor-fold>//GEN-END:initComponents
 
-    void load() {
-        
-        log.info("Loading application settings...");
-        // TODO: This should just make selections, but some of our legacy 
-        // components don't currently support that kind of update, so we just 
-        // recreate the entire panel.
-        mainPanel.removeAll();
-
-        // General options
-        
-        mainPanel.addSeparator("General");
-
-        autoDownloadUpdates = new JCheckBox("Download updates automatically");
-        autoDownloadUpdates.addActionListener((e) -> { controller.changed(); });
-        autoDownloadUpdates.setSelected(ApplicationOptions.getInstance().isAutoDownloadUpdates());
-        mainPanel.addItem(autoDownloadUpdates);
-        
-        showReleaseNotesOnStartup = new JCheckBox("Show release notes after update");
-        showReleaseNotesOnStartup.addActionListener((e) -> { controller.changed(); });
-        showReleaseNotesOnStartup.setSelected(ApplicationOptions.getInstance().isShowReleaseNotes());
-        mainPanel.addItem(showReleaseNotesOnStartup);
-
-        showStartPageOnStartup = new JCheckBox("Show start page on startup");
-        showStartPageOnStartup.addActionListener((e) -> { controller.changed(); });
-        showStartPageOnStartup.setSelected(ApplicationOptions.getInstance().isShowStartPageOnStartup());
-        mainPanel.addItem(showStartPageOnStartup);
-        
-        useRunAsUserPreferences = new JCheckBox("Use preferences from Run As user");
-        useRunAsUserPreferences.addActionListener((e) -> { controller.changed(); });
-        useRunAsUserPreferences.setSelected(ApplicationOptions.getInstance().isUseRunAsUserPreferences());
-        if (AccessManager.getAccessManager().isAdmin()) {
-            mainPanel.addItem(useRunAsUserPreferences);
-        }
-        
-        // Memory
-
-        mainPanel.addSeparator("Memory Management");
-
-        pnlMemorySetting = new MemorySettingPanel();
-        pnlMemorySetting.setSettingListener(
-            new MemorySettingPanel.SettingListener() {
-                @Override
-                public void settingChanged() {
-                    controller.changed();
-                }
-            }
-        );
-        mainPanel.addItem("Max Memory (GB)", pnlMemorySetting);
-
-        // Cache
-
-        JPanel fileCachePanel = buildFileCachePanel();
-        mainPanel.addItem("Local Disk Cache", fileCachePanel);
-        
-    }
-
     private JPanel buildFileCachePanel() {
         
         JPanel fileCachePanel = new JPanel();
@@ -140,7 +137,10 @@ final class ApplicationPanel extends javax.swing.JPanel {
 
         // ---------------------
         fileCacheEnabledRadioButton = new JRadioButton("Enabled");
+        fileCacheEnabledRadioButton.addActionListener((e) -> { controller.changed(); });
+        
         fileCacheDisabledRadioButton = new JRadioButton("Disabled");
+        fileCacheDisabledRadioButton.addActionListener((e) -> { controller.changed(); });
 
         JPanel cacheRadioPanel = new JPanel();
         cacheRadioPanel.setLayout(new BoxLayout(cacheRadioPanel, BoxLayout.X_AXIS));
@@ -152,13 +152,6 @@ final class ApplicationPanel extends javax.swing.JPanel {
         cacheRadioPanel.add(Box.createHorizontalStrut(10));
         cacheRadioPanel.add(fileCacheDisabledRadioButton);
         cacheRadioPanel.add(Box.createHorizontalStrut(10));
-
-        fileCacheEnabledRadioButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                controller.changed();
-            }
-        });
         
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.NONE;
@@ -235,8 +228,6 @@ final class ApplicationPanel extends javax.swing.JPanel {
         c.anchor = GridBagConstraints.EAST;
         c.gridx = 2;
         fileCachePanel.add(fileCacheClearButton, c);
-
-        updateFileCacheComponents(false);
         
         return fileCachePanel;
     }
@@ -293,23 +284,58 @@ final class ApplicationPanel extends javax.swing.JPanel {
         }
     }
 
+    boolean valid() {
+        boolean valid = true;
+        String memError = memoryPanel.getError();
+        if (memError != null) {
+            valid = false;
+            errorLabel.setText(memError);
+        }
+        errorLabel.setVisible(!valid);
+        return valid;
+    }
+
+    void load() {
+        
+        log.info("Loading application settings...");
+        ApplicationOptions options = ApplicationOptions.getInstance();
+        autoDownloadUpdates.setSelected(options.isAutoDownloadUpdates());
+        showReleaseNotesOnStartup.setSelected(options.isShowReleaseNotes());
+        showStartPageOnStartup.setSelected(options.isShowStartPageOnStartup());
+        useRunAsUserPreferences.setSelected(options.isUseRunAsUserPreferences());
+        try {
+            memoryPanel.setMemorySetting(SystemInfo.getMemoryAllocation());
+        }
+        catch (IOException e) {
+            FrameworkImplProvider.handleException(e);
+        }
+        
+        updateFileCacheComponents(false);
+    }
+    
     void store() {
         
         log.info("Saving application settings...");
         
         // General
-        
-        ApplicationOptions.getInstance().setAutoDownloadUpdates(autoDownloadUpdates.isSelected());
-        ApplicationOptions.getInstance().setShowReleaseNotes(showReleaseNotesOnStartup.isSelected());
-        ApplicationOptions.getInstance().setShowStartPageOnStartup(showStartPageOnStartup.isSelected());
-        ApplicationOptions.getInstance().setUseRunAsUserPreferences(useRunAsUserPreferences.isSelected());
+
+        ApplicationOptions options = ApplicationOptions.getInstance();
+        options.setAutoDownloadUpdates(autoDownloadUpdates.isSelected());
+        options.setShowReleaseNotes(showReleaseNotesOnStartup.isSelected());
+        options.setShowStartPageOnStartup(showStartPageOnStartup.isSelected());
+        options.setUseRunAsUserPreferences(useRunAsUserPreferences.isSelected());
         
         // Memory
-        
-        if (pnlMemorySetting.isChanged()) {
-            pnlMemorySetting.saveSettings();
+        String error = memoryPanel.getError();
+        if (error == null) {
+            try {
+                SystemInfo.setMemoryAllocation(memoryPanel.getMemorySetting());
+            }
+            catch (IOException e) {
+                FrameworkImplProvider.handleException(e);
+            }
         }
-        
+       
         // Cache
         
         Boolean cacheDisabled = fileCacheDisabledRadioButton.isSelected();
@@ -332,11 +358,6 @@ final class ApplicationPanel extends javax.swing.JPanel {
         if (cacheDisabledChanged || cacheCapacityChanged) {
             updateFileCacheComponents(true);
         }
-    }
-
-    boolean valid() {
-        // TODO check whether form is consistent and complete
-        return true;
     }
 
     /**

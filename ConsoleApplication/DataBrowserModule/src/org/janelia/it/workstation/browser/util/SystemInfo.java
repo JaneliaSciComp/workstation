@@ -194,7 +194,7 @@ public class SystemInfo {
      *  
      * @return gigs being requested at launch.
      */
-    public static int getMemoryAllocation() throws IOException {
+    public static Integer getMemoryAllocation() throws IOException {
         return BrandingConfig.getBrandingConfig().getMemoryAllocationGB();
     }
 
@@ -202,7 +202,7 @@ public class SystemInfo {
      * Sets the ultimate -Xmx allocation setting.
      * @param memoryInGb how many gigs to use.
      */
-    public static void setMemoryAllocation( int memoryInGb ) throws IOException {
+    public static void setMemoryAllocation(Integer memoryInGb) throws IOException {
         BrandingConfig.getBrandingConfig().setMemoryAllocationGB(memoryInGb);
     }
 

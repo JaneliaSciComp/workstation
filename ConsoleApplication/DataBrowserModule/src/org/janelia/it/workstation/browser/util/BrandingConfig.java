@@ -288,37 +288,37 @@ public class BrandingConfig {
         String systemValue = systemSettings.get(DEFAULT_OPTIONS_PROP);
         String brandingValue = brandingSettings.get(DEFAULT_OPTIONS_PROP);
         String customDefaultOpts = systemValue;
-        log.info("customDefaultOpts="+customDefaultOpts);
+        log.info("Original systemValue="+systemValue);
         
         // What should the default options be?
         if (maxMemoryMB != null) {
-            int optStart = systemValue.indexOf(MEMORY_SETTING_PREFIX) + MEMORY_SETTING_PREFIX.length();
-            int optEnd = systemValue.indexOf(" ", optStart);
+            int optStart = customDefaultOpts.indexOf(MEMORY_SETTING_PREFIX) + MEMORY_SETTING_PREFIX.length();
+            int optEnd = customDefaultOpts.indexOf(" ", optStart);
             if (optEnd<0) {
-                optEnd = systemValue.indexOf("\"", optStart);
+                optEnd = customDefaultOpts.indexOf("\"", optStart);
                 if (optEnd<0) {
-                    optEnd = systemValue.length();
+                    optEnd = customDefaultOpts.length();
                 }
             }
-            customDefaultOpts = systemValue.substring(0, optStart) + maxMemoryMB + "m" + systemValue.substring(optEnd);
+            customDefaultOpts = customDefaultOpts.substring(0, optStart) + maxMemoryMB + "m" + customDefaultOpts.substring(optEnd);
             log.info("After applying maxMemoryMB, customDefaultOpts="+customDefaultOpts);
         }
         
         if (checkUpdates != null) {
-            int optStart = systemValue.indexOf(CHECK_UPDATES_PREFIX) + CHECK_UPDATES_PREFIX.length();
-            int optEnd = systemValue.indexOf(" ", optStart);
+            int optStart = customDefaultOpts.indexOf(CHECK_UPDATES_PREFIX) + CHECK_UPDATES_PREFIX.length();
+            int optEnd = customDefaultOpts.indexOf(" ", optStart);
             if (optEnd<0) {
-                optEnd = systemValue.indexOf("\"", optStart);
+                optEnd = customDefaultOpts.indexOf("\"", optStart);
                 if (optEnd<0) {
-                    optEnd = systemValue.length();
+                    optEnd = customDefaultOpts.length();
                 }
             }
-            customDefaultOpts = systemValue.substring(0, optStart) + checkUpdates + systemValue.substring(optEnd);
+            customDefaultOpts = customDefaultOpts.substring(0, optStart) + checkUpdates + customDefaultOpts.substring(optEnd);
             log.info("After applying checkUpdates, customDefaultOpts="+customDefaultOpts);
         }
         
         if (!StringUtils.areEqual(brandingValue, customDefaultOpts)) {
-            log.info("Updating branding config for {}={} to {}", DEFAULT_OPTIONS_PROP, brandingValue, customDefaultOpts);
+            log.info("Updating branding config for {}\nfrom {}\n  to {}", DEFAULT_OPTIONS_PROP, brandingValue, customDefaultOpts);
             brandingSettings.put(DEFAULT_OPTIONS_PROP, customDefaultOpts);
             // If the branding value has changed, we'll need to restart to pick it up.
             if (brandingValue!=null) {
@@ -332,15 +332,15 @@ public class BrandingConfig {
         }
     }
 
-    public int getMemoryAllocationGB() {
+    public Integer getMemoryAllocationGB() {
         // Stored as megabytes. Presented to user as gigabytes.
-        if (maxMemoryMB == null) return -1;
+        if (maxMemoryMB == null) return null;
         log.debug("Got memory allocation = {} MB", maxMemoryMB);
         return maxMemoryMB / 1024;
     }
     
-    public void setMemoryAllocationGB(int maxMemoryGB) throws IOException {
-        int maxMemoryMB  = maxMemoryGB * 1024;
+    public void setMemoryAllocationGB(Integer maxMemoryGB) throws IOException {
+        Integer maxMemoryMB = maxMemoryGB == null ? null : maxMemoryGB * 1024;
         if (fqBrandingConfig!=null) {
             if (syncDefaultOptions(maxMemoryMB, checkUpdates)) {
                 saveBrandingConfig();

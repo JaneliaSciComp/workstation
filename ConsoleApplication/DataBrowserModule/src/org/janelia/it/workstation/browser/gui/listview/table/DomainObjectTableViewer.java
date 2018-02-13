@@ -48,7 +48,6 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;

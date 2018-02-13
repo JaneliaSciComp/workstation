@@ -53,7 +53,7 @@ public class ApplicationOptions {
     }
 
     public void setAutoDownloadUpdates(boolean autoDownload) {
-        boolean oldVal = isShowStartPageOnStartup();
+        boolean oldVal = isAutoDownloadUpdates();
         if (oldVal == autoDownload) {
             return;
         }
@@ -85,9 +85,14 @@ public class ApplicationOptions {
     }
     
     public void setShowReleaseNotes(boolean value) {
-        Object oldVal = FrameworkImplProvider.getModelProperty(OptionConstants.SHOW_RELEASE_NOTES);  
+        boolean oldVal = isShowReleaseNotes();
+        if (oldVal == value) {
+            return;
+        }
+        
         FrameworkImplProvider.setModelProperty(OptionConstants.SHOW_RELEASE_NOTES, value);  
         log.info("Set show release notes = {}", value);
+        
         if (null != propSupport)
             propSupport.firePropertyChange(OptionConstants.SHOW_RELEASE_NOTES, oldVal, value);
     }
@@ -98,13 +103,18 @@ public class ApplicationOptions {
     }
     
     public void setUseRunAsUserPreferences(boolean value) {
-        Object oldVal = FrameworkImplProvider.getModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES);  
+        boolean oldVal = isUseRunAsUserPreferences();
+        if (oldVal == value) {
+            return;
+        }
+        
         FrameworkImplProvider.setModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES, value); 
         log.info("Set use run as user preferences = {}", value);
+        
         if (null != propSupport)
             propSupport.firePropertyChange(OptionConstants.USE_RUN_AS_USER_PREFERENCES, oldVal, value); 
     }
-    
+        
     public void addPropertyChangeListener(PropertyChangeListener l) {
         if (null == propSupport)
             propSupport = new PropertyChangeSupport(this);

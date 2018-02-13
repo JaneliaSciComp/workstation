@@ -49,7 +49,7 @@ public class ActivityLogHelper {
         String javaInfo = SystemInfo.getJavaInfo();
         String runtimeJavaInfo = SystemInfo.getRuntimeJavaInfo();
         String osInfo = SystemInfo.getOSInfo();
-        int ramAllocatedInfo = -1; 
+        Integer ramAllocatedInfo = null; 
         try {
             ramAllocatedInfo = SystemInfo.getMemoryAllocation();
         } catch (Exception ex) {
