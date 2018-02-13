@@ -178,7 +178,7 @@ public class BrandingConfig {
         if (javaMemoryOption==null) return;
         log.info("Found existing memory option: "+javaMemoryOption);
         final int numberEndPt = javaMemoryOption.length() - 1;
-        char rangeIndicator = javaMemoryOption.charAt( numberEndPt );
+        char rangeIndicator = javaMemoryOption.charAt(numberEndPt);
         final int numberStartPt = MEMORY_SETTING_PREFIX.length();
         if (rangeIndicator != 'm') {
             // Default of 8 GB 
@@ -194,9 +194,9 @@ public class BrandingConfig {
         String checkUpdatesOption = getCheckUpdatesOption();
         if (checkUpdatesOption==null) return;
         final int numberStartPt = CHECK_UPDATES_PREFIX.length();
-        final int numberEndPt = checkUpdatesOption.length() - 1;
-        this.checkUpdates = Boolean.parseBoolean(checkUpdatesOption.substring(numberStartPt, numberEndPt));
-        log.info("Loaded existing check updates setting: "+checkUpdates);
+        String value = checkUpdatesOption.substring(numberStartPt);
+        this.checkUpdates = Boolean.parseBoolean(value);
+        log.info("Loaded existing check updates setting: "+value);
     }
     
     public boolean isNeedsRestart() {
