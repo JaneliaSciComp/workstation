@@ -91,8 +91,10 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         String user = convertLongString((LongString) msgHeaders.get(HeaderConstants.USER));
         Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
         if (action==MessageType.ERROR_PROCESSING) {
-             byte[] msgBody = message.getBody();
-             handle (new String(msgBody));
+             if (user!=null && user.equals(AccessManager.getSubjectKey())) {
+                 byte[] msgBody = message.getBody();
+                 handle (new String(msgBody));
+             }
              return;
         }
         
