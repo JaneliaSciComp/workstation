@@ -188,8 +188,10 @@ public class AddMaskDialog extends ModalDialog {
             @Override
             protected void doStuff() throws Exception {
                 for(ColorDepthSearch search : DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(ColorDepthSearch.class)) {
-                    if (alignmentSpace==null || search.getAlignmentSpace().equals(alignmentSpace)) {
-                        searches.add(search);
+                    if (ClientDomainUtils.hasWriteAccess(search)) {
+                        if (alignmentSpace==null || search.getAlignmentSpace().equals(alignmentSpace)) {
+                            searches.add(search);
+                        }
                     }
                 }
             }
