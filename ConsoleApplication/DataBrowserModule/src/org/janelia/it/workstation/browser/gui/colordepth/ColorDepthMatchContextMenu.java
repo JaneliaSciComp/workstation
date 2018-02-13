@@ -194,7 +194,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 ActivityLogHelper.logUserAction("ColorDepthMatchContentMenu.showInLightbox", match);
-                Hud.getSingletonInstance().setFilepathAndToggleDialog(match.getFilepath(), false, false);
+                Hud.getSingletonInstance().setFilepathAndToggleDialog(match.getFilepath(), true, false);
             }
         });
 

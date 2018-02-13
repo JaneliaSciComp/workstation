@@ -23,6 +23,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
@@ -44,6 +45,7 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.sample.Sample;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -172,6 +174,8 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     public void loadSearchResults(ColorDepthSearch search, List<ColorDepthResult> resultList, ColorDepthMask mask, boolean isUserDriven) {
 
         log.info("loadSearchResults(resultList.size={}, mask={}, isUserDriven={})", resultList.size(), mask.getFilepath(), isUserDriven);
+        final StopWatch w = new StopWatch();
+        
         this.search = search;
         this.mask = mask;
         sampleMap.clear();
@@ -210,7 +214,8 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
                 else {
                     resultsPerLineField.setText(""+DEFAULT_RESULTS_PER_LINE);
                 }
-                
+
+                ActivityLogHelper.logElapsed("ColorDepthResultPanel.loadSearchResults", search, w);
                 showResults(isUserDriven);
             }
 

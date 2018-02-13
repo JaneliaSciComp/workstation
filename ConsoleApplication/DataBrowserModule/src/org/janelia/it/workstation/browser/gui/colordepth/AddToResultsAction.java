@@ -84,7 +84,7 @@ public class AddToResultsAction extends NodePresenterAction {
         createNewItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                ActivityLogHelper.logUserAction("AddToFolderAction.createNewFolder");
+                ActivityLogHelper.logUserAction("AddToResultsAction.createNewResultSet");
 
                 // Add button clicked
                 final String folderName = (String) JOptionPane.showInputDialog(mainFrame, "Result Set Name:\n",
@@ -139,7 +139,7 @@ public class AddToResultsAction extends NodePresenterAction {
         chooseItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                ActivityLogHelper.logUserAction("AddToFolderAction.chooseFolder");
+                ActivityLogHelper.logUserAction("AddToResultsAction.chooseResultSet");
 
                 TreeNodeChooser nodeChooser = new TreeNodeChooser(new UserViewRootNode(
                         UserViewConfiguration.create(TreeNode.class, GroupedFolder.class)), 
@@ -202,7 +202,7 @@ public class AddToResultsAction extends NodePresenterAction {
                 JMenuItem commonRootItem = new JMenuItem(folder.getName());
                 commonRootItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
-                        ActivityLogHelper.logUserAction("AddToFolderAction.recentFolder", folderId);
+                        ActivityLogHelper.logUserAction("AddToResultsAction.recentResultSet", folderId);
                         addUniqueItemsToFolder(finalFolder, idPath);
                     }
                 });

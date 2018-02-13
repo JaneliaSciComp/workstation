@@ -79,6 +79,8 @@ public class MaskContextMenu extends PopupContextMenu {
         JMenuItem removeItem = new JMenuItem("  Remove mask from this search");
         removeItem.addActionListener((ActionEvent actionEvent) -> {
 
+            ActivityLogHelper.logUserAction("MaskContextMenu.removeFromSearch", mask);
+            
             SimpleWorker worker = new SimpleWorker() {
                                     
                 @Override

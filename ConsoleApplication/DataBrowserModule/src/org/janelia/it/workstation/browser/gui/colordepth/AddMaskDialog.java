@@ -24,6 +24,7 @@ import javax.swing.JTextField;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -256,6 +257,8 @@ public class AddMaskDialog extends ModalDialog {
         
         maskNameField.setEditable(true);
         searchNameField.setText("Mask Search");
+
+        ActivityLogHelper.logUserAction("AddMaskDialog.showForMask", filepath);
         
         load();
         packAndShow();
@@ -342,6 +345,9 @@ public class AddMaskDialog extends ModalDialog {
             protected void hadSuccess() {
                 Utils.setDefaultCursor(AddMaskDialog.this);
                 setVisible(false);
+
+                ActivityLogHelper.logUserAction("AddMaskDialog.processAdd", mask.getId());
+                
                 if (colorDepthSearch==null) {
                     DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(masksFolder.getId());
                 }
