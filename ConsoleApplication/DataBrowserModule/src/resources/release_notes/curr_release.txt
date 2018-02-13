@@ -5,6 +5,7 @@ Workstation Browser
   create a new mask and add it to a search. Detailed documentation is available in the user manual.
 * Added "Export Folder Structure" as a right-click option in the Data Explorer
 * Sanitize data before export to Excel, removing newlines and tabs
+* Updates are now downloaded and applied automatically
 * Added button to set download folder from Download dialog
 * Fixed bug with converting files when downloading on Windows
 
