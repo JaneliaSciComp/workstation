@@ -39,7 +39,9 @@ public class ShowingHook implements Runnable {
         JFrame frame = WindowLocator.getMainFrame();
         
         // Set the title
-        frame.setTitle(ConsoleApp.getConsoleApp().getApplicationTitle());
+        String title = ConsoleApp.getConsoleApp().getApplicationTitle();
+        log.info("App title: {}", title);
+        frame.setTitle(title);
         
         // Inject special exception handling for uncaught exceptions on the EDT so that they are shown to the user 
         Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EDTExceptionInterceptor());
