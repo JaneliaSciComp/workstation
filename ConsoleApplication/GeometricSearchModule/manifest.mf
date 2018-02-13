@@ -1,4 +1,5 @@
 Manifest-Version: 1.0
+AutoUpdate-Show-In-Client: false
 OpenIDE-Module: org.janelia.it.workstation.gui.geometric_search/1
 OpenIDE-Module-Localizing-Bundle: org/janelia/it/workstation/gui/geometric_search/Bundle.properties
 OpenIDE-Module-Requires: org.openide.windows.WindowManager
