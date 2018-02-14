@@ -36,7 +36,6 @@ import org.janelia.it.workstation.browser.model.DomainObjectImageModel;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
@@ -116,7 +115,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 try {
                     preferenceSupport.setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, 
                             DescriptorUtils.serialize(resultDescriptor))
-                            .addListener(() -> refreshView());
+                            .addListener(() -> refreshView(null));
                 }
                 catch (Exception e) {
                     log.error("Error serializing sample result preference: "+resultDescriptor,e);
@@ -129,7 +128,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 log.info("Setting image type preference: "+fileType);
                 preferenceSupport.setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, 
                         fileType.name())
-                        .addListener(() -> refreshView());
+                        .addListener(() -> refreshView(null));
             }
         };
                 
@@ -361,14 +360,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         refreshObject(domainObject);
     }
 
-    public void refreshView() {
-        show(domainObjectList, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                Utils.setMainFrameCursorWaitStatus(false);
-                return null;
-            }
-        });
+    public void refreshView(Callable<Void> success) {
+        selectionModel.reset();
+        show(domainObjectList, success);
     }
     
     @Override
@@ -447,8 +441,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     protected void setMustHaveImage(boolean mustHaveImage) {
         try {
             FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, mustHaveImage);
-            refreshView();
-            if (listener!=null) listener.visibleObjectsChanged();
+            refreshView(() -> {
+                if (listener!=null) listener.visibleObjectsChanged();
+                return null;
+            });
+            
         }
         catch (Exception e) {
             FrameworkImplProvider.handleException(e);
