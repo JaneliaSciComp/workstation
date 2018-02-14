@@ -3,6 +3,7 @@ package org.janelia.it.workstation.browser.api.facade.impl.rest;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
@@ -16,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.http.HttpServiceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,9 +95,8 @@ public class RESTClientManager {
         ClientRequestFilter authFilter = new ClientRequestFilter() {
             @Override
             public void filter(ClientRequestContext requestContext) throws IOException {
-                String accessToken = AccessManager.getAccessManager().getToken();
-                if (accessToken!=null) {
-                    requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+                for (Entry<String, String> entry : HttpServiceUtils.getExtraHeaders().entrySet()) {
+                    requestContext.getHeaders().add(entry.getKey(), entry.getValue());
                 }
             }
         };

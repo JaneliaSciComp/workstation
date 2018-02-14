@@ -10,9 +10,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.workstation.browser.api.exceptions.ServiceException;
 import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientImpl;
@@ -20,6 +17,9 @@ import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * RESTful client for invoking an async service.
@@ -40,7 +40,7 @@ public class AsyncServiceClient extends RESTClientImpl {
     public AsyncServiceClient(String serverUrl) {
         super(log);
         log.info("Using server URL: {}",serverUrl);
-        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, false);
+        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);
         objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
     

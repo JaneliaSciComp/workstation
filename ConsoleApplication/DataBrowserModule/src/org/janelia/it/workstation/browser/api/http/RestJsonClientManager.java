@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.api.http;
 
 import java.io.IOException;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
@@ -8,11 +9,9 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.janelia.it.workstation.browser.api.AccessManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,9 +90,8 @@ public class RestJsonClientManager {
             ClientRequestFilter authFilter = new ClientRequestFilter() {
                 @Override
                 public void filter(ClientRequestContext requestContext) throws IOException {
-                    String accessToken = AccessManager.getAccessManager().getToken();
-                    if (accessToken!=null) {
-                        requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+                    for (Entry<String, String> entry : HttpServiceUtils.getExtraHeaders().entrySet()) {
+                        requestContext.getHeaders().add(entry.getKey(), entry.getValue());
                     }
                 }
             };
