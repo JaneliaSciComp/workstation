@@ -9,5 +9,10 @@ Workstation Browser
 * Fixed bug with converting files when downloading on Windows
 
 Large Volume Viewer
-* Added neuron ownership column to neuron list
+* Added neuron ownership system
+** Neurons can only be changed by their owner
+** When working in a shared workspace, progress from all tracers is automatically refreshed
+** Added neuron ownership column to neuron list
 * Added neuron visibility column to neuron list; click to toggle visibility
+* Transfer neurite dialog respects current neuron list filter
+* At high zoom, lines between annotations should be much less likely to disappear
