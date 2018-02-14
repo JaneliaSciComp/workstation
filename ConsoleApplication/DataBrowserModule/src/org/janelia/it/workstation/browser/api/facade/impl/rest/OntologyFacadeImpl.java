@@ -6,12 +6,16 @@ import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.shared.utils.DomainQuery;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.OntologyFacade;
+import org.janelia.it.workstation.browser.api.http.RESTClientBase;
+import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
@@ -20,21 +24,27 @@ import org.janelia.model.domain.ontology.OntologyTermReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade {
+public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade {
 
     private static final Logger log = LoggerFactory.getLogger(OntologyFacadeImpl.class);
     
+    private static final String REMOTE_API_URL = ConsoleApp.getConsoleApp().getRemoteRestUrl();
+    
+    private WebTarget service;
+    
     public OntologyFacadeImpl() {
-        super(log);
+        this(REMOTE_API_URL);
     }
 
-    public OntologyFacadeImpl(RESTClientManager manager) {
-        super(log, manager);
+    public OntologyFacadeImpl(String serverUrl) {
+        super(log);
+        log.debug("Using server URL: {}",serverUrl);
+        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);
     }
     
     @Override
     public Collection<Ontology> getOntologies() {
-        Response response = manager.getOntologyEndpoint()
+        Response response = service.path("data/ontology")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
@@ -49,7 +59,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(ontology);
-        Response response = manager.getOntologyEndpoint()
+        Response response = service.path("data/ontology")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createOntology from server")) {
@@ -60,7 +70,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
 
     @Override
     public void removeOntology(Long ontologyId) throws Exception {
-        Response response = manager.getOntologyEndpoint()
+        Response response = service.path("data/ontology")
                 .queryParam("ontologyId", ontologyId)
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
@@ -80,7 +90,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
         List<Integer> ordering = new ArrayList<>();
         ordering.add(index);
         query.setOrdering(ordering);
-        Response response = manager.getOntologyEndpoint()
+        Response response = service.path("data/ontology")
                 .path("terms")
                 .request("application/json")
                 .put(Entity.json(query));
@@ -92,7 +102,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
 
     @Override
     public Ontology removeTerm(Long ontologyId, Long parentTermId, Long termId) throws Exception {
-        Response response = manager.getOntologyEndpoint()
+        Response response = service.path("data/ontology")
                 .path("terms")
                 .queryParam("ontologyId", ontologyId)
                 .queryParam("parentTermId", parentTermId)
@@ -120,7 +130,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
             orderList.add(new Integer(order[i]));
         }
         query.setOrdering(orderList);
-        Response response = manager.getOntologyEndpoint()
+        Response response = service.path("data/ontology")
                 .path("terms")
                 .request("application/json")
                 .post(Entity.json(query));
@@ -136,7 +146,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setReferences(new ArrayList<>(references));
 
-        Response response = manager.getAnnotationEndpoint()
+        Response response = service.path("data/annotation")
                 .path("details")
                 .request("application/json")
                 .post(Entity.json(query));
@@ -157,7 +167,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(annotation);
-        Response response = manager.getAnnotationEndpoint()
+        Response response = service.path("data/annotation")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createAnnotation from server: " + annotation)) {
@@ -172,7 +182,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(annotation);
-        Response response = manager.getAnnotationEndpoint()
+        Response response = service.path("data/annotation")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request updateAnnotation from server: " + annotation)) {
@@ -183,7 +193,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
 
     @Override
     public void remove(Annotation annotation) throws Exception {
-        Response response = manager.getAnnotationEndpoint()
+        Response response = service.path("data/annotation")
                 .queryParam("annotationId", annotation.getId())
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")

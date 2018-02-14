@@ -6,12 +6,16 @@ import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.shared.utils.DomainQuery;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SampleFacade;
+import org.janelia.it.workstation.browser.api.http.RESTClientBase;
+import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.dto.SampleDispatchRequest;
 import org.janelia.model.domain.sample.DataSet;
@@ -20,21 +24,27 @@ import org.janelia.model.domain.sample.LineRelease;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
+public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
     private static final Logger log = LoggerFactory.getLogger(SampleFacadeImpl.class);
 
+    private static final String REMOTE_API_URL = ConsoleApp.getConsoleApp().getRemoteRestUrl();
+
+    private WebTarget service;
+    
     public SampleFacadeImpl() {
-        super(log);
+        this(REMOTE_API_URL);
     }
 
-    public SampleFacadeImpl(RESTClientManager manager) {
-        super(log, manager);
+    public SampleFacadeImpl(String serverUrl) {
+        super(log);
+        log.debug("Using server URL: {}",serverUrl);
+        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);
     }
     
     @Override
     public Collection<DataSet> getDataSets() throws Exception {
-        Response response = manager.getDataSetEndpoint()
+        Response response = service.path("data/dataset")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
@@ -49,7 +59,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(dataSet);
-        Response response = manager.getDataSetEndpoint()
+        Response response = service.path("data/dataset")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createDataSet from server")) {
@@ -63,7 +73,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(dataSet);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = manager.getDataSetEndpoint()
+        Response response = service.path("data/dataset")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request updateDataSet to server: " + dataSet)) {
@@ -74,7 +84,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
 
     @Override
     public void remove(DataSet dataSet) throws Exception {
-        Response response = manager.getDataSetEndpoint()
+        Response response = service.path("data/dataset")
                 .queryParam("dataSetId", dataSet.getId())
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
@@ -86,7 +96,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
 
     @Override
     public Collection<LSMImage> getLsmsForSample(Long sampleId) throws Exception {
-        Response response = manager.getSampleEndpoint()
+        Response response = service.path("data/sample")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("sampleId", sampleId)
                 .path("lsms")
@@ -100,7 +110,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
 
     @Override
     public List<LineRelease> getLineReleases() throws Exception {
-        Response response = manager.getReleaseEndpoint()
+        Response response = service.path("process/release")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
@@ -122,7 +132,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
 
         query.setDomainObject(release);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = manager.getReleaseEndpoint()
+        Response response = service.path("process/release")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createLineRelease to server: " + release)) {
@@ -136,7 +146,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(release);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = manager.getReleaseEndpoint()
+        Response response = service.path("process/release")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request updateLineRelease to server: " + release)) {
@@ -147,7 +157,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
 
     @Override
     public void remove(LineRelease release) throws Exception {
-        Response response = manager.getReleaseEndpoint()
+        Response response = service.path("process/release")
                 .queryParam("releaseId", release.getId())
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
@@ -163,7 +173,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         dispatchRequest.setProcessLabel(reprocessPurpose);
         dispatchRequest.setSampleReferences(sampleRefs);
         dispatchRequest.setReuse(reuse);
-        Response response = manager.getSampleProcessEndpoint()
+        Response response = service.path("process/sample")
                 .path("dispatch")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
@@ -176,7 +186,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
     
     @Override
     public Collection<DataSet> getColorDepthDataSets(String alignmentSpace) throws Exception {
-        Response response = manager.getDataSetEndpoint()
+        Response response = service.path("data/dataset")
                 .path("colordepth")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("alignmentSpace", alignmentSpace)

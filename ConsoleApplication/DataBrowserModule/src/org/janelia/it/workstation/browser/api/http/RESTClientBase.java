@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.api.facade.impl.rest;
+package org.janelia.it.workstation.browser.api.http;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.WebTarget;
@@ -6,18 +6,12 @@ import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 
-public class RESTClientImpl {
+public class RESTClientBase {
 
-    protected final RESTClientManager manager;
     protected final Logger log;
-
-    protected RESTClientImpl(Logger log) {
-        this(log, RESTClientManager.getInstance());
-    }
     
-    protected RESTClientImpl(Logger log, RESTClientManager manager) {
+    protected RESTClientBase(Logger log) {
         this.log = log;
-        this.manager = manager;
     }
 
     protected boolean checkBadResponse(Response response, String failureError) {

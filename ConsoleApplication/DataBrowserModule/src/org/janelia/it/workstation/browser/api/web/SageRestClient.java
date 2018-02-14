@@ -9,7 +9,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientImpl;
+import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
@@ -23,15 +23,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SageRestClient extends RESTClientImpl {
+public class SageRestClient extends RESTClientBase {
 
     private static final Logger log = LoggerFactory.getLogger(SageRestClient.class);
     private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("sageResponder.rest.url");
     private WebTarget service;    
-    
+
     public SageRestClient() {
+        this(REMOTE_API_URL);
+    }
+
+    public SageRestClient(String serverUrl) {
         super(log);
-        this.service = RestJsonClientManager.getInstance().getTarget(REMOTE_API_URL, true);
+        log.info("Using server URL: {}",serverUrl);
+        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);
     }
 
     public Collection<String> getPublishingNames(String lineName) throws Exception {

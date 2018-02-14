@@ -8,12 +8,16 @@ import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.shared.utils.DomainQuery;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.DomainFacade;
+import org.janelia.it.workstation.browser.api.http.RESTClientBase;
+import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ReverseReference;
@@ -22,16 +26,22 @@ import org.janelia.model.domain.report.DiskUsageSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
+public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
 
     private static final Logger log = LoggerFactory.getLogger(DomainFacadeImpl.class);
+    
+    private static final String REMOTE_API_URL = ConsoleApp.getConsoleApp().getRemoteRestUrl();
 
+    private WebTarget service;
+    
     public DomainFacadeImpl() {
-        super(log);
+        this(REMOTE_API_URL);
     }
 
-    public DomainFacadeImpl(RESTClientManager manager) {
-        super(log, manager);
+    public DomainFacadeImpl(String serverUrl) {
+        super(log);
+        log.info("Using server URL: {}",serverUrl);
+        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);
     }
     
     @Override
@@ -47,7 +57,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
 
     @Override
     public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) throws Exception {
-        Response response = manager.getDomainObjectEndpoint()
+        Response response = service.path("data/domainobject")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("name", name)
                 .queryParam("domainClass", domainClass.getName())
@@ -78,7 +88,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setReferences(refList);
-        Response response = manager.getDomainObjectEndpoint()
+        Response response = service.path("data/domainobject")
                 .path("details")
                 .request("application/json")
                 .post(Entity.json(query));
@@ -90,7 +100,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
     
     @Override
     public List<DomainObject> getDomainObjects(ReverseReference reference) throws Exception {
-        Response response = manager.getDomainObjectEndpoint()
+        Response response = service.path("data/domainobject")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("referenceId", reference.getReferenceId())
                 .queryParam("referenceAttr", reference.getReferenceAttr())
@@ -113,7 +123,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         query.setObjectType(className);
         query.setObjectIds(new ArrayList<>(ids));
 
-        Response response = manager.getDomainObjectEndpoint()
+        Response response = service.path("data/domainobject")
                 .path("details")
                 .request("application/json")
                 .post(Entity.json(query));
@@ -130,7 +140,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         query.setObjectType(className);
         query.setSubjectKey(AccessManager.getSubjectKey());
 
-        Response response = manager.getDomainObjectEndpoint()
+        Response response = service.path("data/domainobject")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("domainClass", className)
                 .path("class")
@@ -147,7 +157,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(domainObject);
 
-        Response response = manager.getDomainObjectEndpoint()
+        Response response = service.path("data/domainobject")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request to save domainObject on server: " + domainObject.getId())) {
@@ -170,7 +180,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         if (!(propValue instanceof String)) throw new UnsupportedOperationException("This method needs to be fixed to support non-strings");
         
         query.setPropertyValue(propValue.toString());
-        Response response = manager.getDomainObjectEndpoint()
+        Response response = service.path("data/domainobject")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request updateProperty from server: " + propName + "," + propValue)) {
@@ -178,7 +188,6 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         }
         return response.readEntity(DomainObject.class);
     }
-
 
     @Override
     public DomainObject setPermissions(DomainObject domainObject, String granteeKey, String rights) throws Exception {
@@ -188,7 +197,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         params.put("targetId", domainObject.getId());
         params.put("granteeKey", granteeKey);
         params.put("rights", rights);
-        Response response = manager.getUserEndpoint()
+        Response response = service.path("data/user")
                 .path("permissions")
                 .request("application/json")
                 .put(Entity.json(params));
@@ -203,7 +212,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setReferences(deleteObjectRefs);
-        Response response = manager.getDomainObjectEndpoint()
+        Response response = service.path("data/domainobject")
                 .path("remove")
                 .request("application/json")
                 .post(Entity.json(query));
@@ -214,7 +223,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
 
     @Override
     public DatabaseSummary getDatabaseSummary() throws Exception {
-        Response response = manager.getSummaryEndpoint().path("database")
+        Response response = service.path("data/summary/database")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
@@ -226,7 +235,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
     
     @Override
     public DiskUsageSummary getDiskUsageSummary() throws Exception {
-        Response response = manager.getSummaryEndpoint().path("disk")
+        Response response = service.path("data/summary/disk")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();

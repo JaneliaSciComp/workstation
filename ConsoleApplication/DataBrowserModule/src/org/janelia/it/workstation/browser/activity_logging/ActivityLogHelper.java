@@ -7,7 +7,6 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientManager;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasIdentifier;
@@ -25,7 +24,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ActivityLogHelper {
 
-    private static final Logger log = LoggerFactory.getLogger(RESTClientManager.class);
+    private static final Logger log = LoggerFactory.getLogger(ActivityLogHelper.class);
 
     private static final String ACTION_PART_DELIMITER = "\t";
     private static final ToolString TOOL_STRING = new ToolString("DomainBrowserCore");

@@ -12,7 +12,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.workstation.browser.api.exceptions.ServiceException;
-import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientImpl;
+import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * RESTful client for invoking an async service.
  */
-public class AsyncServiceClient extends RESTClientImpl {
+public class AsyncServiceClient extends RESTClientBase {
 
     private static final Logger log = LoggerFactory.getLogger(AsyncServiceClient.class);
 
