@@ -274,16 +274,15 @@ public class AddToResultsAction extends NodePresenterAction {
                             group = model.save(group);
                             model.addChild(groupedFolder, group);
                         }
-                        else {
-                            model.addChildren(group, domainObjects);
-                        }
+                        
+                        model.addChildren(group, domainObjects);
 
                         updateHistory(idPath);
                     }
 
                     @Override
                     protected void hadSuccess() {
-                        log.info("Added {} items to folder {}", numAdded, groupedFolder.getId());
+                        log.info("Added {} items to {} in {}", numAdded, group, groupedFolder);
                     }
 
                     @Override

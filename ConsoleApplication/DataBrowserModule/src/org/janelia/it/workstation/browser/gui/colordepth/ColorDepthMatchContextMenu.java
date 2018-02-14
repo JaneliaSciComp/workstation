@@ -204,7 +204,9 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     protected List<Sample> getSamples() {
         List<Sample> samples = new ArrayList<>();
         for(ColorDepthMatch match : matches) {
-            samples.add(sampleMap.get(match.getSample()));
+            if (match.getSample()!=null) {
+                samples.add(sampleMap.get(match.getSample()));
+            }
         }
         return samples;
     }
