@@ -150,7 +150,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                         } else {
                             tip = neuronMetadata.getName() + " (" + neuronMetadata.getSyncLevel() + " unsynced changes)";
                         }
-                    } else if (realColumnIndex == NeuronTableModel.COLUMN_OWNER) {
+                    } else if (realColumnIndex == NeuronTableModel.COLUMN_OWNER_ICON) {
                         tip = neuronMetadata.getOwnerName();
                     } else if (realColumnIndex == NeuronTableModel.COLUMN_COLOR) {
                         Color color = neuronMetadata.getColor();
@@ -185,8 +185,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         // fixed width, narrow columns:
         neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_COLOR).setPreferredWidth(NARROW_COLUNN_WIDTH);
         neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_COLOR).setMaxWidth(NARROW_COLUNN_WIDTH);
-        neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_OWNER).setPreferredWidth(NARROW_COLUNN_WIDTH);
-        neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_OWNER).setMaxWidth(NARROW_COLUNN_WIDTH);
+        neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_OWNER_ICON).setPreferredWidth(NARROW_COLUNN_WIDTH);
+        neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_OWNER_ICON).setMaxWidth(NARROW_COLUNN_WIDTH);
         neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_VISIBILITY).setPreferredWidth(NARROW_COLUNN_WIDTH);
         neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_VISIBILITY).setMaxWidth(NARROW_COLUNN_WIDTH);
 
@@ -194,6 +194,10 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
 
         // hide columns that we only maintain for sorting (eg, creation date)
+        // this is fragile; peeling the columns off from the right end works, but it failed
+        //  from the other direction; so always put the fake columns at the end and remove
+        //  from the end
+        neuronTable.removeColumn(neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_OWNER_NAME));
         neuronTable.removeColumn(neuronTable.getColumnModel().getColumn(NeuronTableModel.COLUMN_CREATION_DATE));
 
         // sort, but only programmatically
@@ -254,7 +258,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                     } else if (modelColumn == NeuronTableModel.COLUMN_VISIBILITY) {
                         // single click visibility = toggle visibility
                         annotationManager.setNeuronVisibility(selectedNeuron, !annotationManager.getNeuronVisibility(selectedNeuron));
-                    } else if (modelColumn == NeuronTableModel.COLUMN_OWNER) {
+                    } else if (modelColumn == NeuronTableModel.COLUMN_OWNER_ICON) {
                         String owner = selectedNeuron.getOwnerName();
                         String username = AccessManager.getAccessManager().getActualSubject().getName();
                         if (owner.equals(username) || owner.equals(COMMON_USER_KEY) || AccessManager.getAccessManager().isAdmin()) {
@@ -605,7 +609,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                     sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_NAME, SortOrder.ASCENDING)));
                     break;
                 case OWNER:
-                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_OWNER, SortOrder.ASCENDING)));
+                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_OWNER_NAME, SortOrder.ASCENDING)));
                     break;
                 case CREATIONDATE:
                     sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_CREATION_DATE, SortOrder.ASCENDING)));
@@ -636,6 +640,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         neuronTableModel.addNeurons(neuronList);
         restoreSelection();
         updateNeuronLabel();
+        updateFilteredNeuronList();
     }
 
     /**
@@ -653,8 +658,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         saveSelection();
         neuronTableModel.deleteNeuron(neuron);
         restoreSelection();
+        updateFilteredNeuronList();
     }
-    
+
     /**
      * update the table neuron with a new version of an
      * existing neuron (replaces in place)
@@ -663,6 +669,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         saveSelection();
         neuronTableModel.updateNeuron(neuron);
         restoreSelection();
+        updateFilteredNeuronList();
     }
 
     private void onNeuronDoubleClicked(TmNeuronMetadata neuron) {
@@ -747,16 +754,17 @@ class NeuronTableModel extends AbstractTableModel {
 
     public static int SYNC_WARN_LEVEL = 2;
 
-    // note: creation date column will be hidden
+    // note: creation date column and owner name column will be hidden
     // column names, tooltips, and associated methods should probably be static
-    private String[] columnNames = {"Name", "O", "C", "V", "Creation Date"};
-    private String[] columnTooltips = {"Name", "Owner", "Color", "Visibility", "Creation Date"};
+    private String[] columnNames = {"Name", "O", "C", "V", "Creation Date", "Owner Name"};
+    private String[] columnTooltips = {"Name", "Owner", "Color", "Visibility", "Creation Date", "Owner Name"};
 
     public static final int COLUMN_NAME = 0;
-    public static final int COLUMN_OWNER = 1;
+    public static final int COLUMN_OWNER_ICON = 1;
     public static final int COLUMN_COLOR = 2;
     public static final int COLUMN_VISIBILITY = 3;
     public static final int COLUMN_CREATION_DATE = 4;
+    public static final int COLUMN_OWNER_NAME = 5;
 
     // this is the username for neurons that don't belong to anyone
     private static final String COMMON_USER_KEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
@@ -954,7 +962,7 @@ class NeuronTableModel extends AbstractTableModel {
             case COLUMN_NAME:
                 // neuron
                 return TmNeuronMetadata.class;
-            case COLUMN_OWNER:
+            case COLUMN_OWNER_ICON:
                 // owner
                 // old: the string
                 // return String.class;
@@ -969,6 +977,9 @@ class NeuronTableModel extends AbstractTableModel {
             case COLUMN_CREATION_DATE:
                 // creation date
                 return Date.class;
+            case COLUMN_OWNER_NAME:
+                // OWNER NAME
+                return String.class;
             default:
                 throw new IllegalStateException("Table column is not configured: "+column);
         }
@@ -980,7 +991,7 @@ class NeuronTableModel extends AbstractTableModel {
             case COLUMN_NAME:
                 // neuron name
                 return targetNeuron.getName();
-            case COLUMN_OWNER:
+            case COLUMN_OWNER_ICON:
                 // owner
                 // old: string name
                 // return targetNeuron.getOwnerName();
@@ -1007,6 +1018,9 @@ class NeuronTableModel extends AbstractTableModel {
             case COLUMN_CREATION_DATE:
                 // creation date, hidden, but there for sorting
                 return targetNeuron.getCreationDate();
+            case COLUMN_OWNER_NAME:
+                // owner name, hidden, but there for sorting
+                return targetNeuron.getOwnerName();
             default:
                 throw new IllegalStateException("Table column is not configured: "+column);
         }
