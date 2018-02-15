@@ -89,6 +89,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 {
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
 
+    private static final String COMMON_USER_KEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
+
     // annotation model object
     private AnnotationModel annotationModel;
 
@@ -1330,29 +1332,30 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         // UI should have checked this, but let's allow for multiple entry points to this code
 
         Subject userSubject = AccessManager.getAccessManager().getActualSubject();
-        if (!neuron.getOwnerKey().equals(userSubject) && !isOwnershipAdmin()) {
+        String ownerKey = neuron.getOwnerKey();
+        if (ownerKey.equals(userSubject.getKey()) || ownerKey.equals(COMMON_USER_KEY) || isOwnershipAdmin()) {
+            SimpleWorker changer = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.changeNeuronOwner(neuron.getId(), newOwner);
+                }
+
+                @Override
+                protected void hadSuccess() {
+
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    presentError("Could not change neuron owner!", error);
+                }
+            };
+            changer.execute();
+        } else {
             // user doesn't have permission for this neuron
             presentError("You don't have permission to change the owner of neuron " + neuron.getName() +
                 "; current owner " + neuron.getOwnerName() + " must change ownership.", "Can't change ownership");
         }
-
-        SimpleWorker changer = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.changeNeuronOwner(neuron.getId(), newOwner);
-            }
-
-            @Override
-            protected void hadSuccess() {
-
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                presentError("Could not change neuron owner!", error);
-            }
-        };
-        changer.execute();
     }
 
     /**
