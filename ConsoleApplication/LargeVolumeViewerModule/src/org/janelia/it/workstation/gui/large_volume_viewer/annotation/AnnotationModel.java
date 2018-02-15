@@ -57,7 +57,9 @@ import com.google.common.base.Stopwatch;
 import Jama.Matrix;
 import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import javax.swing.JOptionPane;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -520,10 +522,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * @throws Exception
      */
     public synchronized TmNeuronMetadata createNeuron(String name) throws Exception {
+        CompletableFuture<TmNeuronMetadata> future = neuronManager.createTiledMicroscopeNeuron(currentWorkspace, name);
+        TmNeuronMetadata neuron = future.get(2, TimeUnit.SECONDS);
 
-        final TmNeuronMetadata neuron = neuronManager.createTiledMicroscopeNeuron(currentWorkspace, name);
-
-       /* // Update local workspace
+        // Update local workspace
         log.info("Neuron was created: "+neuron);
         setCurrentNeuron(neuron);
         
@@ -536,7 +538,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 activityLog.logCreateNeuron(workspace.getId(), neuron.getId());
             }
         });
-        */
+        
         return neuron;
     }
 
@@ -1785,7 +1787,17 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         parameters.put("file", swcFile);
         
         // Must create the neuron up front, because we need the id when adding the linked geometric annotations below.
-        neuronManager.createTiledMicroscopeNeuron(tmWorkspace, neuronName, callback, parameters);
+        CompletableFuture<TmNeuronMetadata> future = neuronManager.createTiledMicroscopeNeuron(tmWorkspace, neuronName);
+        if (future==null) 
+            return;
+        try {
+            TmNeuronMetadata updatedNeuron = future.get(2, TimeUnit.SECONDS);
+            parameters.put("neuron", updatedNeuron);
+            finishBulkSWCData(parameters);
+        } catch (Exception error) {
+            ConsoleApp.handleException(error);
+        }
+
     }
         
 

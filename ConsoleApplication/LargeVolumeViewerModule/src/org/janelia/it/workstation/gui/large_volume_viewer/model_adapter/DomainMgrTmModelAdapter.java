@@ -145,10 +145,11 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
     }
 
     @Override
-    public void asyncCreateNeuron(TmNeuronMetadata neuron) throws Exception {
+    public CompletableFuture<TmNeuronMetadata> asyncCreateNeuron(TmNeuronMetadata neuron) throws Exception {
         // make sure the neuron contains the current user's ownerKey;
         neuron.setOwnerKey(AccessManager.getSubjectKey());
         sendMessage (neuron, MessageType.NEURON_CREATE, null);
+        return new CompletableFuture<TmNeuronMetadata>();
     }
 
     @Override

@@ -116,7 +116,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         // if not this workspace, filter out message
         if (workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
             return;
-        }
+        }       
 
         if (action==MessageType.NEURON_OWNERSHIP_DECISION) {
              boolean decision = Boolean.parseBoolean(convertLongString((LongString) msgHeaders.get(HeaderConstants.DECISION)));  
@@ -128,6 +128,16 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
              }
              annotationModel.fireBackgroundNeuronOwnershipChanged(neuron);
              annotationModel.getNeuronManager().completeOwnershipRequest(decision);
+        } else if (action == MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
+            // complete the future outside of the swing thread, since the GUI thread is blocked
+            try {
+                TmProtobufExchanger exchanger = new TmProtobufExchanger();
+                byte[] msgBody = message.getBody();
+                exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+                annotationModel.getNeuronManager().completeCreateNeuron(neuron);
+            } catch (Exception e) {
+                handle(e.getMessage());
+            }
         } else if (action == MessageType.REQUEST_NEURON_OWNERSHIP) {
             // some other user is asking for ownership of this neuron... process accordingly
         } else {
@@ -146,14 +156,8 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                                 TmProtobufExchanger exchanger = new TmProtobufExchanger();
                                 byte[] msgBody = message.getBody();
                                 exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
-                                if (user.equals(AccessManager.getSubjectKey())) {
-                                    annotationModel.getNeuronManager().mergeCreatedNeuron(neuron);                                    
-                                    annotationModel.fireBackgroundNeuronCreated(neuron);                                    
-                                    annotationModel.selectNeuron(neuron);
-                                } else {
-                                    annotationModel.getNeuronManager().addNeuron(neuron);                                                                   
-                                    annotationModel.fireBackgroundNeuronCreated(neuron);   
-                                }
+                                annotationModel.getNeuronManager().addNeuron(neuron);                                                                   
+                                annotationModel.fireBackgroundNeuronCreated(neuron);                                   
                                 break;
                             case NEURON_SAVE_NEURONDATA:
                             case NEURON_SAVE_METADATA:
