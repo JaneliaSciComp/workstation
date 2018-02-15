@@ -261,7 +261,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                     } else if (modelColumn == NeuronTableModel.COLUMN_OWNER_ICON) {
                         String owner = selectedNeuron.getOwnerName();
                         String username = AccessManager.getAccessManager().getActualSubject().getName();
-                        if (owner.equals(username) || owner.equals(COMMON_USER_KEY) || AccessManager.getAccessManager().isAdmin()) {
+                        if (owner.equals(username) || owner.equals(COMMON_USER_KEY) || annotationManager.isOwnershipAdmin()) {
                             // (note that admins can change ownership on any neuron)
 
                             // pop up a dialog so the user can request to change the ownership

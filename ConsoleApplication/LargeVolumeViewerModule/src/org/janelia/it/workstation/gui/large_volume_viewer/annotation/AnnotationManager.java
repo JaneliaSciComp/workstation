@@ -1330,7 +1330,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         // UI should have checked this, but let's allow for multiple entry points to this code
 
         Subject userSubject = AccessManager.getAccessManager().getActualSubject();
-        if (!neuron.getOwnerKey().equals(userSubject) && !AccessManager.getAccessManager().isAdmin()) {
+        if (!neuron.getOwnerKey().equals(userSubject) && !isOwnershipAdmin()) {
             // user doesn't have permission for this neuron
             presentError("You don't have permission to change the owner of neuron " + neuron.getName() +
                 "; current owner " + neuron.getOwnerName() + " must change ownership.", "Can't change ownership");
@@ -1353,6 +1353,20 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
         };
         changer.execute();
+    }
+
+    /**
+     * returns true if the current authenticated user is allowed to change ownership
+     * for any user's neurons
+     */
+    public boolean isOwnershipAdmin() {
+        // short term: if the user is a workstation admin, they are admin for neuron ownership:
+        return AccessManager.getAccessManager().isAdmin();
+
+        // long term: we'll establish a specific mouse light admin group, and those people will
+        //  also be allowed to change ownership of any neuron
+        // be aware of the difference between AccessManager.getAccessManager().getAuthenticatedSubject()
+        //  and .getActualSubject() when you implement this!
     }
 
     /**
