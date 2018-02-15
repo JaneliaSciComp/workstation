@@ -640,6 +640,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         neuronTableModel.addNeurons(neuronList);
         restoreSelection();
         updateNeuronLabel();
+        updateFilteredNeuronList();
     }
 
     /**
@@ -657,8 +658,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         saveSelection();
         neuronTableModel.deleteNeuron(neuron);
         restoreSelection();
+        updateFilteredNeuronList();
     }
-    
+
     /**
      * update the table neuron with a new version of an
      * existing neuron (replaces in place)
@@ -667,6 +669,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         saveSelection();
         neuronTableModel.updateNeuron(neuron);
         restoreSelection();
+        updateFilteredNeuronList();
     }
 
     private void onNeuronDoubleClicked(TmNeuronMetadata neuron) {
