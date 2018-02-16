@@ -880,7 +880,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             mover.execute();
 
         } else {
-            // we're moving to an existing neuron; straightforward!
+            // we're moving to an existing neuron; not allowed if destination is owned by someone else;
+            //  otherwise, this is straightforward
+            if (!checkOwnership(destinationNeuron)) {
+                return;
+            }
+
             SimpleWorker mover = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
@@ -1364,7 +1369,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      */
     public boolean isOwnershipAdmin() {
         // short term: if the user is a workstation admin, they are admin for neuron ownership:
-        return AccessManager.getAccessManager().isAdmin();
+        // return AccessManager.getAccessManager().isAdmin();
+
+
+        // testing: no admins
+        return false;
 
         // long term: we'll establish a specific mouse light admin group, and those people will
         //  also be allowed to change ownership of any neuron
