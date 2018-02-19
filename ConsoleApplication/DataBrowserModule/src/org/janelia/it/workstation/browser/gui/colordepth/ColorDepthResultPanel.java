@@ -237,12 +237,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         log.info("Preparing matching results from {} results", resultList.size());
         
         results.clear();
-        for(ColorDepthResult result : resultList) {
-            List<ColorDepthMatch> matches = result.getMaskMatches(mask);
-            if (matches!=null && !matches.isEmpty()) {
-                results.add(result);
-            }
-        }
+        results.addAll(resultList);
 
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         
