@@ -55,7 +55,7 @@ public abstract class SingleSelectionButton<T> extends DropDownButton {
         if (values!=null) {
             
             for (final T value : values) {
-                boolean selected = selectedValue.equals(value);
+                boolean selected = selectedValue != null && selectedValue.equals(value);
                 if (isHidden(value) && !selected) {
                     // Skip anything that is not selected, and which doesn't have results. Clicking it would be futile.
                     continue;
