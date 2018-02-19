@@ -108,6 +108,9 @@ public class ColorDepthResultIconGridViewer
         
         @Override
         public List<ImageDecorator> getDecorators(ColorDepthMatch match) {
+            if (match.getSample()==null) {
+                return Arrays.asList(ImageDecorator.DISCONNECTED);
+            }
             return Collections.emptyList();
         }
 
@@ -117,11 +120,13 @@ public class ColorDepthResultIconGridViewer
         }
         
         private boolean hasAccess(ColorDepthMatch match) {
-            Sample sample = sampleMap.get(match.getSample());
-            if (match.getSample()!=null && sample==null) {
-                // The result maps to a sample, but the user has no access to see it
-                // TODO: check access to data set?
-                return false;
+            if (match.getSample()!=null) {
+                Sample sample = sampleMap.get(match.getSample());
+                if (sample == null) {
+                    // The result maps to a sample, but the user has no access to see it
+                    // TODO: check access to data set?
+                    return false;
+                }
             }
             return true;
         }
