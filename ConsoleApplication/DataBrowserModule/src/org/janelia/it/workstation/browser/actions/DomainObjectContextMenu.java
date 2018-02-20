@@ -44,6 +44,8 @@ import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
+import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.gui.colordepth.AddMaskDialog;
 import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
@@ -136,7 +138,11 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         else if (DomainExplorerTopComponent.isSupported(domainObject)) {
             // TODO: here we should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
             DomainExplorerTopComponent.getInstance().expandNodeById(contextObject.getId());
-            DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(domainObject.getId());
+            if (DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(domainObject.getId()) == null) {
+                // Node could not be found in tree. Try navigating directly.
+                log.info("Node not found in tree: {}", domainObject);
+                Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(domainObject), true, true, true));
+            }
         }
         else {
             if (domainObjectProviderHelper.isSupported(domainObject)) {
