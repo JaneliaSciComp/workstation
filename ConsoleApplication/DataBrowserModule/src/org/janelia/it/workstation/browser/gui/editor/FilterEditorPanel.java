@@ -109,6 +109,7 @@ public class FilterEditorPanel
     
     // Utilities
     private final Debouncer debouncer = new Debouncer();
+    private final Debouncer refreshDebouncer = new Debouncer();
     
     // UI Elements
     private final ConfigPanel configPanel;
@@ -345,8 +346,21 @@ public class FilterEditorPanel
             }
             configPanel.addTitleComponent(saveAsButton, false, true);
             configPanel.setExpanded(filter.getId()==null);
-
-            search();
+            
+            refreshSearchResults(isUserDriven, new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    searchBox.requestFocus();
+                    debouncer.success();
+                    return null;
+                }
+            },new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    debouncer.failure();
+                    return null;
+                }
+            });
         }
         catch (Exception e) {
             ConsoleApp.handleException(e);
@@ -356,17 +370,21 @@ public class FilterEditorPanel
     }
     
     private void refreshSearchResults(boolean isUserDriven) {
-        debouncer.queue();
+        refreshSearchResults(isUserDriven, null);
+    }
+    
+    private void refreshSearchResults(boolean isUserDriven, final Callable<Void> success) {
+        refreshDebouncer.queue(success);
         refreshSearchResults(isUserDriven, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                debouncer.success();
+                refreshDebouncer.success();
                 return null;
             }
         },new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                debouncer.failure();
+                refreshDebouncer.failure();
                 return null;
             }
         });
