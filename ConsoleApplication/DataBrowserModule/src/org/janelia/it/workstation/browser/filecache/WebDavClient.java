@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.FileNotFoundException;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -252,7 +253,7 @@ public class WebDavClient {
                 }
                 throw new WebDavException(responseCode + " response code returned for " + href, responseCode);
             } else if (responseCode == HttpStatus.SC_NOT_FOUND) {
-                throw new WebDavException("Resource " + href + "not found (" + responseCode + ")");
+                throw new FileNotFoundException("Resource " + href + "not found (" + responseCode + ")");
             } else {
                 throw new WebDavException(responseCode + " response code returned for " + href, responseCode);
             }
