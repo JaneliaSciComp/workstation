@@ -123,7 +123,7 @@ public final class DomainInspectorTopComponent extends TopComponent {
     
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
-        
+
         // We only care about single selections
         DomainObject domainObject = event.getObjectIfSingle();
         if (domainObject==null) {
