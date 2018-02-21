@@ -1,18 +1,25 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.CancelCallback;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 import com.rabbitmq.client.Delivery;
+import com.rabbitmq.client.LongString;
+import com.rabbitmq.client.impl.LongStringHelper;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
+import javax.swing.SwingUtilities;
 import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
 import org.janelia.messaging.client.ConnectionManager;
 import org.janelia.messaging.client.Receiver;
 import org.janelia.messaging.broker.sharedworkspace.MessageType;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,60 +66,147 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             msgReceiver.setupReceiver(this);
             log.info("Established connection to message server " + MESSAGESERVER_URL);
         } catch (Exception e) {
-            log.error("Problems initializing connection to message server " + MESSAGESERVER_URL +
-                    ", with credentials username/password: " + MESSAGESERVER_USERACCOUNT + "/" + MESSAGESERVER_PASSWORD);
+            AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+            String error = "Problems initializing connection to message server " + MESSAGESERVER_URL +
+                    ", with credentials username/password: " + MESSAGESERVER_USERACCOUNT + "/" + MESSAGESERVER_PASSWORD;
+            annotationMgr.presentError(error, "Problem connecting to Message Server");
             e.printStackTrace();
         }
+    }
+    
+    private String convertLongString (LongString data) {
+        return LongStringHelper.asLongString(data.getBytes()).toString();
     }
 
     /**
      * Successful refresh update received
      */
     @Override
-    public void handle(String string, Delivery dlvr) throws IOException {
-        // fire notice to AnnotationModel
-        /*Map<String,Object> metadata = dlvr.getProperties().getHeaders();
-        if (metadata==null) {
+    public void handle(String string, Delivery message) throws IOException {
+        Map<String, Object> msgHeaders = message.getProperties().getHeaders();
+        if (msgHeaders == null) {
             throw new IOException("Issue trying to process metadata from update");
         }
-        MessageType msgType = MessageType.valueOf((String)metadata.get(HeaderConstants.TYPE));
-        String[] neuronIds = ((String)metadata.get(HeaderConstants.NEURONIDS)).split(",");
-            log.info("Update received - " + msgType + ": Neuron Ids - " + neuronIds);    
-        // first filter out messages to current shared workspace
-        Long workspaceId = (Long)metadata.get("workspace");
-        Long currentWorkspaceId = annotationModel.getCurrentWorkspace().getId();
-        if (workspaceId!=currentWorkspaceId) 
-            return;
+        MessageType action = MessageType.valueOf(convertLongString((LongString) msgHeaders.get(HeaderConstants.TYPE)));
+        String user = convertLongString((LongString) msgHeaders.get(HeaderConstants.USER));
+        Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
+        if (action==MessageType.ERROR_PROCESSING) {
+             if (user!=null && user.equals(AccessManager.getSubjectKey())) {
+                 byte[] msgBody = message.getBody();
+                 handle (new String(msgBody));
+             }
+             return;
+        }
         
-        // filter out messages that we ourselves sent 
-        String user = (String)metadata.get("user");
-        if (user==AccessManager.getSubjectKey() && msgType) {
-            // if it's a save neuron for a create neuron, find the neuron with the same name and update
-//            annotationModel.getNeuronFromNeuronID(workspaceId)
-        } 
-            return;
+        String metadata = convertLongString((LongString) msgHeaders.get(HeaderConstants.METADATA));
+        ObjectMapper mapper = new ObjectMapper();
+        TmNeuronMetadata neuron = mapper.readValue(metadata, TmNeuronMetadata.class);
+        
+        if (neuron!=null) {
+            // note that sometimes the neuron doesn't exist locally, as when we've deleted it, so check for null
+            TmNeuronMetadata localNeuron = annotationModel.getNeuronManager().getNeuronById(neuron.getId());// decrease the sync level
+            if (localNeuron != null) {
+                localNeuron.decrementSyncLevel();
+                if (localNeuron.getSyncLevel() == 0) {
+                    localNeuron.setSynced(true);
+                }
+            }
+        }
 
-  //      log.info("Update received - " + msgType + ": Neuron Ids - " + neuronIds);
-        // hook into main GUI thread to update neuron models and fire events on AnnotationModel
-        // 
-*/
+        // if not this workspace, filter out message
+        if (workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
+            return;
+        }       
+
+        if (action==MessageType.NEURON_OWNERSHIP_DECISION) {
+             boolean decision = Boolean.parseBoolean(convertLongString((LongString) msgHeaders.get(HeaderConstants.DECISION)));  
+             if (decision) {
+                 TmNeuronMetadata origNeuron = annotationModel.getNeuronManager().getNeuronById(neuron.getId());
+                 origNeuron.setOwnerKey(neuron.getOwnerKey());
+                 origNeuron.setWriters(neuron.getWriters());
+                 origNeuron.setReaders(neuron.getReaders());
+             }
+             annotationModel.fireBackgroundNeuronOwnershipChanged(neuron);
+             annotationModel.getNeuronManager().completeOwnershipRequest(decision);
+        } else if (action == MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
+            // complete the future outside of the swing thread, since the GUI thread is blocked
+            try {
+                TmProtobufExchanger exchanger = new TmProtobufExchanger();
+                byte[] msgBody = message.getBody();
+                exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+                annotationModel.getNeuronManager().completeCreateNeuron(neuron);
+            } catch (Exception e) {
+                handle(e.getMessage());
+            }
+        } else if (action == MessageType.REQUEST_NEURON_OWNERSHIP) {
+            // some other user is asking for ownership of this neuron... process accordingly
+        } else {
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    try {
+                        // fire notice to AnnotationModel
+                        Map<String, Object> msgHeaders = message.getProperties().getHeaders();
+                        if (msgHeaders == null) {
+                            throw new IOException("Issue trying to process metadata from update");
+                        }
+
+                        // change relevant to this workspace and not executed on this client, so update model or process request
+                        switch (action) {
+                            case NEURON_CREATE:
+                                TmProtobufExchanger exchanger = new TmProtobufExchanger();
+                                byte[] msgBody = message.getBody();
+                                exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+                                annotationModel.getNeuronManager().addNeuron(neuron);                                                                   
+                                annotationModel.fireBackgroundNeuronCreated(neuron);                                   
+                                break;
+                            case NEURON_SAVE_NEURONDATA:
+                            case NEURON_SAVE_METADATA:
+                                if (!user.equals(AccessManager.getSubjectKey())) {
+                                    exchanger = new TmProtobufExchanger();
+                                    msgBody = message.getBody();
+                                    exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+                                    annotationModel.getNeuronManager().addNeuron(neuron);
+                                    annotationModel.fireBackgroundNeuronChanged(neuron);
+                                }
+                                break;
+                            case NEURON_DELETE:
+                                if (!user.equals(AccessManager.getSubjectKey())) {
+                                    exchanger = new TmProtobufExchanger();
+                                    msgBody = message.getBody();
+                                    exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+                                    annotationModel.fireBackgroundNeuronDeleted(neuron);
+                                }
+                                break;
+                        }
+                    } catch (Exception e) {
+                        handle (e.getMessage());
+                    }
+
+                }
+            });
+        }
     }
 
     /**
-     * problem receiving update from queue
+     * error callback receiving update from queue
      */
     @Override
-    public void handle(String string) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void handle(String errorMsg) {
+        String error = "Problems receiving message updates, " + errorMsg;
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+                annotationMgr.presentError(error, "Problem receiving message from Message Server");
+            }
+        });
+        log.error(error);
     }
 
     public AnnotationModel getAnnotationModel() {
         return annotationModel;
     }
 
-    /**
-     * @param annModel the annModel to set
-     */
     public void setAnnotationModel(AnnotationModel annotationModel) {
         this.annotationModel = annotationModel;
     }

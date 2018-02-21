@@ -35,6 +35,7 @@ public class PanelController {
     private PanelNotesUpdateListener notesListener;
     private PanelAnnotationListener annotationListener;
     private static final Logger log = LoggerFactory.getLogger(PanelController.class);
+    private PanelBackgroundAnnotationListener backgroundListener;
     
     
     public PanelController(
@@ -61,6 +62,10 @@ public class PanelController {
         
         globalListener = new PanelGlobalListener();
         annotationModel.addGlobalAnnotationListener(globalListener);
+        
+        backgroundListener = new PanelBackgroundAnnotationListener();
+        
+        annotationModel.addBackgroundAnnotationListener(backgroundListener);
         
         notesListener = new PanelNotesUpdateListener();
         annotationModel.setNotesUpdateListener(notesListener);
@@ -137,7 +142,20 @@ public class PanelController {
             filteredAnnotationList.loadNeuron(neuron);
             wsNeuronList.updateModel(neuron);
         }
-        
+
+        @Override
+        public void neuronsOwnerChanged(List<TmNeuronMetadata> neuronList) {
+            // I don't think this needs to be refreshed here (not sure why it
+            //  is after rename, above):
+            // filteredAnnotationList.loadNeuron(neuron);
+
+            // I don't think there's any overhead that makes the one-by-one
+            //  update a bad idea:
+            for (TmNeuronMetadata neuron: neuronList) {
+                wsNeuronList.updateModel(neuron);
+            }
+        }
+
         @Override
         public void neuronSelected(TmNeuronMetadata neuron) {
             filteredAnnotationList.loadNeuron(neuron);
@@ -255,5 +273,27 @@ public class PanelController {
             mgr.addEditNote(annotation.getNeuronId(), annotation.getId());
         }
         
+    }
+    
+    private class PanelBackgroundAnnotationListener implements BackgroundAnnotationListener {
+        @Override
+        public void neuronModelChanged(TmNeuronMetadata neuron) {
+            wsNeuronList.updateModel(neuron);
+        }
+
+        @Override
+        public void neuronModelCreated(TmNeuronMetadata neuron) {
+           wsNeuronList.addNeuronToModel(neuron);
+        }
+
+        @Override
+        public void neuronModelDeleted(TmNeuronMetadata neuron) {
+            wsNeuronList.deleteFromModel(neuron);
+        }
+
+        @Override
+        public void neuronOwnerChanged(TmNeuronMetadata neuron) {
+            wsNeuronList.updateModel(neuron);
+        }
     }
 }
