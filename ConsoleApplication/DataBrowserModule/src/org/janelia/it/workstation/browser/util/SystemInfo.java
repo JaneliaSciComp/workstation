@@ -135,15 +135,7 @@ public class SystemInfo {
         Path fileDownloadsPath;
         // Check for existence and clear out references to tmp
         if (fileDownloadsDir==null || fileDownloadsDir.startsWith("/tmp")) {
-
-            Path downloadDir;
-            String oldDownloadsDir = (String) FrameworkImplProvider.getModelProperty(OptionConstants.DOWNLOADS_DIR);
-            if (oldDownloadsDir != null) { 
-                downloadDir = Paths.get(oldDownloadsDir);
-            }
-            else {
-                downloadDir = Paths.get(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_DIR);
-            }
+            Path downloadDir = Paths.get(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_DIR);
             fileDownloadsPath = downloadDir.resolve(WORKSTATION_FILES_DIR);
         }
         else {

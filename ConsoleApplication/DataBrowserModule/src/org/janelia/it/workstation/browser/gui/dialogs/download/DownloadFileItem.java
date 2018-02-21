@@ -48,7 +48,7 @@ public class DownloadFileItem {
     public static final String ATTR_LABEL_EXTENSION = "Extension";
     public static final String ATTR_LABEL_GUID = "GUID";
     
-    private final Path workstationImagesDir = SystemInfo.getDownloadsDir().resolve("Workstation Images");
+    private final Path downloadsDir = SystemInfo.getDownloadsDir();
     private final List<String> itemPath;
     private final DomainObject domainObject;
     private HasFiles fileProvider;
@@ -139,10 +139,10 @@ public class DownloadFileItem {
                 if (pathBuilder.length()!=0) pathBuilder.append("/");
                 pathBuilder.append(item);
             }
-            itemDir = workstationImagesDir.resolve(pathBuilder.toString());
+            itemDir = downloadsDir.resolve(pathBuilder.toString());
         }
         else {
-            itemDir = workstationImagesDir;
+            itemDir = downloadsDir;
         }
 
         try {
@@ -321,7 +321,7 @@ public class DownloadFileItem {
     	if (targetLocalPath==null) {
     		return "Error getting file for "+domainObject.getName();
     	}
-        int cut = workstationImagesDir.toString().length()+1;
+        int cut = downloadsDir.toString().length()+1;
         return targetLocalPath.toString().substring(cut);
     }
 }

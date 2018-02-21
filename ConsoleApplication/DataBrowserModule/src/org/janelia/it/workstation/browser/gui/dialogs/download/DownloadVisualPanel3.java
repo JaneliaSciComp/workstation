@@ -157,21 +157,19 @@ public final class DownloadVisualPanel3 extends JPanel {
         chooseFileButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Path workstationImagesDir = SystemInfo.getDownloadsDir();
-                if (!Files.exists(workstationImagesDir)) {
-                    workstationImagesDir = null;
+                Path downloadsDir = SystemInfo.getDownloadsDir();
+                if (!Files.exists(downloadsDir)) {
+                    downloadsDir = null;
                 }
                 JFileChooser fileChooser = new JFileChooser() {
-
                     @Override
                     public void approveSelection() {
                         log.info("{}",getSelectedFile());
                         super.approveSelection();
                     }
-                    
                 };
                 fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                fileChooser.setCurrentDirectory(workstationImagesDir.toFile());
+                fileChooser.setCurrentDirectory(downloadsDir.toFile());
                 int returnVal = fileChooser.showOpenDialog(DownloadVisualPanel3.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     String downloadDirPath = fileChooser.getSelectedFile().getAbsolutePath();
