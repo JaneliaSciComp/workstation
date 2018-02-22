@@ -507,11 +507,15 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     else {
                         if (restoreState) {
                             log.info("Restoring expanded state");
-                            for (Long[] path : expanded) {
-                                log.info("pathToExpand: "+NodeUtils.createPathString(path));
+                            if (expanded!=null) {
+                                for (Long[] path : expanded) {
+                                    log.info("pathToExpand: "+NodeUtils.createPathString(path));
+                                }
+                                beanTreeView.expand(expanded);
                             }
-                            beanTreeView.expand(expanded);
-                            beanTreeView.selectPaths(selected);
+                            if (selected!=null) {
+                                beanTreeView.selectPaths(selected);
+                            }
                         }
                     }
                     
