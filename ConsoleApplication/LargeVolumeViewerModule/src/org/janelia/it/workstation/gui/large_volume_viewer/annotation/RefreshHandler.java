@@ -197,7 +197,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             @Override
             public void run() {
                 AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-                annotationMgr.presentError(error, "Problem receiving message from Message Server");
+                annotationMgr.presentError(errorMsg, new RuntimeException (error));
             }
         });
         log.error(error);
