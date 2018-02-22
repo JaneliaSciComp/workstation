@@ -145,6 +145,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     
     @Override
     public int getNumItemsHidden() {
+        if (domainObjectList==null || getObjects()==null) return 0;
         int totalItems = this.domainObjectList.getObjects().size();
         int totalVisibleItems = getObjects().size();
         return totalItems-totalVisibleItems;
