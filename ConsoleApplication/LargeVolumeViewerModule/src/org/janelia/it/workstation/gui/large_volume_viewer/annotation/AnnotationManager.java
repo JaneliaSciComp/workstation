@@ -1369,11 +1369,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      */
     public boolean isOwnershipAdmin() {
         // short term: if the user is a workstation admin, they are admin for neuron ownership:
-        // return AccessManager.getAccessManager().isAdmin();
-
-
-        // testing: no admins
-        return false;
+        return AccessManager.getAccessManager().isAdmin();
 
         // long term: we'll establish a specific mouse light admin group, and those people will
         //  also be allowed to change ownership of any neuron
