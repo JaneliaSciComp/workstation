@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.filecache;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -10,9 +11,6 @@ import java.nio.file.Paths;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.FileNotFoundException;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -25,8 +23,12 @@ import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.util.PathUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * {@link HttpClient} wrapper for submitting WebDAV requests.
@@ -223,10 +225,10 @@ public class WebDavClient {
         }
         String storageVirtualPath = jsonResponse.get("rootPrefix").asText();
         String storageRealPath = jsonResponse.get("rootLocation").asText();
-        String storageRelativePath = jsonResponse.get("nodeRelativePath").asText();
-
-        return new RemoteLocation(Paths.get(storageVirtualPath, storageRelativePath).toString(),
-                Paths.get(storageRealPath, storageRelativePath).toString(), location);
+        String storageRelativePath = jsonResponse.get("nodeRelativePath").asText();        
+        String virtualFilePath = PathUtil.getStandardPath(Paths.get(storageVirtualPath, storageRelativePath));
+        String realFilePath = PathUtil.getStandardPath(Paths.get(storageRealPath, storageRelativePath));
+        return new RemoteLocation(virtualFilePath, realFilePath, location);
     }
 
     private MultiStatusResponse[] getResponses(String href, int depth, int callCount)
