@@ -182,8 +182,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     public int getNumItemsHidden() {
+        if (domainObjectList==null || getObjects()==null) return 0;
         int totalItems = this.domainObjectList.getObjects().size();
         int totalVisibleItems = getObjects().size();
+        if (totalVisibleItems > totalItems) {
+            log.warn("Visible item count greater than total item count");
+            return 0;
+        }
         return totalItems-totalVisibleItems;
     }
     
