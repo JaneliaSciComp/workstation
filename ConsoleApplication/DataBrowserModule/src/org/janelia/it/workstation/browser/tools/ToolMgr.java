@@ -61,6 +61,7 @@ public class ToolMgr extends PreferenceManager {
     public static final String TOOL_FIJI    = "Fiji.app";
     public static final String TOOL_VAA3D   = "Vaa3d";
     public static final String TOOL_NA      = "Vaa3d - Neuron Annotator";
+    public static final String suffix = SystemInfo.isWindows ? " /na" : " -na";
 
     public static final String MODE_3D      = "3D View";
     public static String rootExecutablePath = ToolMgr.class.getProtectionDomain().getCodeSource().getLocation().getPath();
@@ -87,9 +88,14 @@ public class ToolMgr extends PreferenceManager {
 
         // Temporary code to clean up a NA deficiency
         ToolInfo tmpTool = toolTreeMap.get(TOOL_NA);
-        if (null!=tmpTool && !tmpTool.getPath().endsWith(" -na")) {
-            tmpTool.setPath(tmpTool.getPath()+" -na");
+        
+        // Add Neuron Annotator option to Vaa3d
+        if (tmpTool != null) {
+            if (!tmpTool.getPath().endsWith(suffix)) {
+                tmpTool.setPath(tmpTool.getPath()+suffix);
+            }
         }
+        
     }
 
     public void saveChanges() {
@@ -366,7 +372,7 @@ public class ToolMgr extends PreferenceManager {
             StringBuilder toolPathSb = new StringBuilder();
             List<String> toolArgs = new ArrayList<>();
             for(String pathComponent : path.split(" ")) {
-                if (!foundArg && !pathComponent.startsWith("-")) {
+                if (!foundArg && !pathComponent.startsWith("-") && !pathComponent.startsWith("/")) {
                     toolPathSb.append(" ").append(pathComponent);
                 }
                 else {
