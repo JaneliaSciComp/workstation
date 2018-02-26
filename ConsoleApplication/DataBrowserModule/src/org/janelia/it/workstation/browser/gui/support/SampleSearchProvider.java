@@ -33,15 +33,10 @@ public class SampleSearchProvider implements SearchProvider {
         }
         catch (Exception e) {
             FrameworkImplProvider.handleExceptionQuietly(e);
+            return;
         }
         
-        String title;
-        if (numResults!=null) {
-            title = String.format("Found %d Samples containing '%s'. Click here to view.", numResults, searchString);
-        }
-        else {
-            title = String.format("Click here to search for Samples containing '%s'.", searchString);
-        }
+        String title = String.format("Found %d Samples containing '%s'. Click here to view.", numResults, searchString);
 
         if (!response.addResult(new OpenNewFilter(searchString), title)) {
             return;
