@@ -1,3 +1,12 @@
+// 7.3
+
+Large Volume Viewer/Horta
+* Added neuron ownership system
+* Neurons can only be changed by their owner
+* When working in a shared workspace, progress from all tracers is automatically refreshed
+* Transfer neurite dialog respects current neuron list filter
+* At high zoom, lines between annotations should be much less likely to disappear
+
 // 7.2
 
 Workstation Browser
