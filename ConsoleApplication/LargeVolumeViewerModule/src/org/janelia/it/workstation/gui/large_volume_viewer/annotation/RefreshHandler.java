@@ -113,8 +113,9 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             }
         }
 
-        // if not this workspace, filter out message
-        if (workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
+        // if not this workspace or user isn't looking at a workspace right now or workspac enot relating to a workspace update, filter out message
+        if (workspace==null || annotationModel.getCurrentWorkspace()==null || 
+                workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
             return;
         }       
 
