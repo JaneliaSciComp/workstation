@@ -489,10 +489,10 @@ public class ToolMgr extends PreferenceManager {
                 String toolPath = tool.getPath().trim();
 
                 if (TOOL_VAA3D.equals(toolName)) {
-                    arguments.add("-i");
+                    arguments.add(SystemInfo.isWindows ? "/i" : "-i");
                     arguments.add(file.getAbsolutePath());
                     if (MODE_3D.equals(mode)) {
-                        arguments.add("-v");
+                        arguments.add(SystemInfo.isWindows ? "/v" : "-v");
                     }
                 }
                 else if (TOOL_FIJI.equals(toolName)) {
