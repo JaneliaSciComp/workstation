@@ -2053,7 +2053,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             }
         } 
         // populate user preferences, which for now only deal with user visibility
-         List<String> userTagPreferences = FrameworkImplProvider
+         // NOTE: For now, comment since user's don't want to restore their user preferences
+         /*List<String> userTagPreferences = FrameworkImplProvider
                  .getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_TAGS, 
                          this.getCurrentSample().getId().toString(), null);
          if (userTagPreferences!=null) {            
@@ -2064,7 +2065,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                  neuronList.add(neuron);                                  
              }
              LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, false);               
-         }                         
+         } */                        
     }
 
     public void saveUserPreferences() throws Exception {
@@ -2075,8 +2076,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     
     public void saveUserTags() throws Exception {
         // for now translate this into a set for much faster persistence        
-        FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_TAGS, 
-                this.getCurrentSample().getId().toString(), currentTagMap.getUserTags().keySet());       
+       // comment for now since users don't want to save their hide preferences between sessions
+       // FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_TAGS, 
+       //         this.getCurrentSample().getId().toString(), currentTagMap.getUserTags().keySet());       
     }
     
 
