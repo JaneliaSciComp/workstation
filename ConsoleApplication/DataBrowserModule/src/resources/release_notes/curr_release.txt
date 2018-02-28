@@ -1,6 +1,6 @@
 // 7.4
 
 Workstation Browser
-* Fixed color depth mask upload on Windows
-* Support Open in Neuron Annotator on Windows
+* Added support for Open in Neuron Annotator and Open in Vaa3d on Windows
+* Fixed color depth mask upload and download on Windows
 * Other minor bug fixes

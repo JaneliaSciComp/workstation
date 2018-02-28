@@ -49,6 +49,8 @@ public final class DownloadVisualPanel3 extends JPanel {
 
     public static final String FILE_PATTERN_PROP_NAME = "LAST_USER_FILE_PATTERN";
     
+    private static final int MAX_LOG_ITEMS = 50;
+    
     private static final String FILE_PATTERN_HELP =
             "<html><font color='#959595' size='-1'>The naming pattern can use any attribute on the items being downloaded.<br>"
             + "It may also use the following special attributes: {Sample Name}, {Result Name}, {File Name}, {Extension}<br>"
@@ -148,8 +150,9 @@ public final class DownloadVisualPanel3 extends JPanel {
         ImageIcon chooseFileIcon = null;
         try {
             chooseFileIcon = Utils.getClasspathImage("magnifier.png");
-        } catch (FileNotFoundException e) {
-            log.warn("failed to load button icon", e);
+        } 
+        catch (FileNotFoundException e) {
+            log.warn("Failed to load button icon", e);
             chooseFileText = "...";
         }
         
@@ -164,7 +167,7 @@ public final class DownloadVisualPanel3 extends JPanel {
                 JFileChooser fileChooser = new JFileChooser() {
                     @Override
                     public void approveSelection() {
-                        log.info("{}",getSelectedFile());
+                        log.info("User selected download directory: {}",getSelectedFile());
                         super.approveSelection();
                     }
                 };
@@ -175,6 +178,8 @@ public final class DownloadVisualPanel3 extends JPanel {
                     String downloadDirPath = fileChooser.getSelectedFile().getAbsolutePath();
                     SystemInfo.setDownloadsDir(downloadDirPath);
                     downloadDirLabel.setText(downloadDirPath);
+                    // Recalculate download paths
+                    populateDownloadItemList();
                 }
             }
         });
@@ -237,7 +242,16 @@ public final class DownloadVisualPanel3 extends JPanel {
                                 log.debug("      Adding item for file type '{}'", fileType);
                                 DownloadFileItem downloadItem = new DownloadFileItem(downloadObject.getFolderPath(), domainObject);
                                 downloadItem.init(artifactDescriptor, hasFiles, fileType, outputExtensions, splitChannels && fileType.is3dImage(), flattenStructure, filenamePattern);
+
+                                if (downloadFileItems.size() < MAX_LOG_ITEMS) {
+                                    log.info("Target path: {}", downloadItem.getTargetFile());
+                                }
+                                else if (downloadFileItems.size() == MAX_LOG_ITEMS) {
+                                    log.info("File list truncated after {} items", MAX_LOG_ITEMS);
+                                }
+                                
                                 downloadFileItems.add(downloadItem);
+                                
                             }
                         }
                     }
