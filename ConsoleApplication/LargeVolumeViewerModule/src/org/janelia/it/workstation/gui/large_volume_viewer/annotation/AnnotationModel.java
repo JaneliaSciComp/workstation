@@ -360,10 +360,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
         final TmWorkspace workspace = getCurrentWorkspace();
         // update workspace; update and select new neuron; this will draw points as well
-        fireWorkspaceLoaded(workspace);
-        if (neuron!=null) {
-            selectNeuron(neuron);
-        }
+        SwingUtilities.invokeLater(() -> {
+            fireWorkspaceLoaded(workspace);
+            if (neuron!=null) {
+                selectNeuron(neuron);
+            }
+        });
     }
 
     public void setSWCDataConverter(SWCDataConverter converter) {
