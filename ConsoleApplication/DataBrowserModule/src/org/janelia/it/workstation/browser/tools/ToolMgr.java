@@ -371,8 +371,10 @@ public class ToolMgr extends PreferenceManager {
             boolean foundArg = false;
             StringBuilder toolPathSb = new StringBuilder();
             List<String> toolArgs = new ArrayList<>();
+            // TODO: this is very brittle and needs to be re-thought entirely 
             for(String pathComponent : path.split(" ")) {
-                if (!foundArg && !pathComponent.startsWith("-") && !pathComponent.startsWith("/")) {
+                if (!foundArg && !pathComponent.startsWith("-") // On non-Windows systems, arguments usually start with a dash 
+                        && (!SystemInfo.isWindows || !pathComponent.startsWith("/"))) { // On Windows, arguments start with a forward slash
                     toolPathSb.append(" ").append(pathComponent);
                 }
                 else {
@@ -382,6 +384,9 @@ public class ToolMgr extends PreferenceManager {
             }
 
             String toolPath = toolPathSb.toString().trim();
+            log.info("Calculated tool path: {}", toolPath);
+            log.info("Calculated tool args: {}", toolArgs);
+            log.info("User specified arguments: {}", arguments);
             
             final File exeFile = new File(toolPath);
             if (!exeFile.exists()) {
