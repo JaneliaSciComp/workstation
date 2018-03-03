@@ -669,6 +669,8 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
     private void executeSearch() {
 
+        ActivityLogHelper.logUserAction("ColorDepthSearchEditorPanel.executeSearch", search);
+        
         Long serviceId = asyncServiceClient.invokeService("colorDepthObjectSearch",
                 ImmutableList.of("-searchId", search.getId().toString()),
                 FileMgr.getFileMgr().getSubjectKey(),
