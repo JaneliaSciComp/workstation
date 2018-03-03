@@ -761,7 +761,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
         values.put("Channel Number", match.getChannelNumber());
         values.put("Score (Pixels)", match.getScore());
-        values.put("Score (Percent)", match.getScorePercent());
+        values.put("Score (Percent)", MaskUtils.getFormattedScorePct(match));
         values.put("Data Set", dataSet);
         values.put("Owner", owner);
         

@@ -90,9 +90,9 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     protected ChildSelectionModel<T,S> selectionModel;
     protected PreferenceSupport preferenceSupport;
     protected SearchProvider searchProvider;
-    protected List<ListViewerType> validViewerTypes;
+    protected List<? extends ListViewerClassProvider> validViewerTypes;
 
-    public PaginatedResultsPanel(ChildSelectionModel<T,S> selectionModel, PreferenceSupport preferenceSupport, SearchProvider searchProvider, List<ListViewerType> validViewerTypes) {
+    public PaginatedResultsPanel(ChildSelectionModel<T,S> selectionModel, PreferenceSupport preferenceSupport, SearchProvider searchProvider, List<? extends ListViewerClassProvider> validViewerTypes) {
                
         this.selectionModel = selectionModel;
         this.preferenceSupport = preferenceSupport;
@@ -199,7 +199,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     }
 
     private void populateViewerPopupMenu(DropDownButton button) {
-        for(final ListViewerType type : validViewerTypes) {
+        for(final ListViewerClassProvider type : validViewerTypes) {
             JMenuItem viewItem = new JMenuItem(type.getName());
             viewItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
@@ -223,7 +223,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
         }
     }
     
-    public void setViewerType(final ListViewerType viewerType) {
+    public void setViewerType(final ListViewerClassProvider viewerType) {
         
         if (!validViewerTypes.contains(viewerType)) {
             throw new IllegalArgumentException("Viewer type is not in valid list: "+viewerType);

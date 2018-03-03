@@ -23,13 +23,13 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.editor.SingleSelectionButton;
-import org.janelia.it.workstation.browser.gui.listview.ListViewerType;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
@@ -56,7 +56,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private final static Logger log = LoggerFactory.getLogger(ColorDepthResultPanel.class);
 
     // Constants
-    private static final List<ListViewerType> viewerTypes = ImmutableList.of(ListViewerType.ColorDepthResultViewer);
+    private static final List<ColorDepthListViewerType> viewerTypes = ImmutableList.of(ColorDepthListViewerType.ColorDepthResultImageViewer, ColorDepthListViewerType.ColorDepthResultTableViewer);
     private static final String PREFERENCE_CATEGORY_CDS_RESULTS_PER_LINE = "CDSResultPerLine";
     private static final String PREFERENCE_CATEGORY_CDS_NEW_RESULTS = "CDSOnlyNewResults";
     private static final int DEFAULT_RESULTS_PER_LINE = 2;
@@ -90,6 +90,8 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             return match.getFilepath();
         }
     };
+
+    private ColorDepthSearchResults searchResults;
     
     public ColorDepthResultPanel() {
 
@@ -340,7 +342,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             }
         }
         
-        ColorDepthSearchResults searchResults = new ColorDepthSearchResults(orderedMatches);
+        searchResults = new ColorDepthSearchResults(orderedMatches);
         resultsPanel.showSearchResults(searchResults, isUserDriven, null);
     }
     
@@ -418,6 +420,12 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     
     @Override
     public void export() {
+        if (searchResults==null) return;
+        if (resultsPanel.getViewer() instanceof ColorDepthResultTableViewer) {
+            ColorDepthResultTableViewer viewer = (ColorDepthResultTableViewer)resultsPanel.getViewer();
+            ExportResultsAction<ColorDepthMatch, String> action = new ExportResultsAction<>(searchResults, viewer);
+            action.actionPerformed(null);
+        }   
     }
 
     public ChildSelectionModel<ColorDepthMatch, String> getSelectionModel() {

@@ -382,6 +382,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         return false;
     }
 
+    @Override
     public Object getValue(AnnotatedObjectList<DomainObject, Reference> domainObjectList, DomainObject object, String columnName) {
         if (COLUMN_KEY_ANNOTATIONS.equals(columnName)) {
             StringBuilder builder = new StringBuilder();

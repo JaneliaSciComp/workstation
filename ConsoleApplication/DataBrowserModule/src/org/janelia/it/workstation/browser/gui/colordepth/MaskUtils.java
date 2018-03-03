@@ -35,8 +35,6 @@ public class MaskUtils {
         return uploadPath;
     }
     
-    
-    
     public static String getFormattedScorePct(ColorDepthMatch match) {
         return String.format("%2.0f%%", match.getScorePercent()*100);
     }

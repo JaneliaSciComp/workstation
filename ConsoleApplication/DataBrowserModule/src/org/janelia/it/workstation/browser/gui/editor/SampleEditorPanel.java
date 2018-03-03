@@ -274,7 +274,7 @@ public class SampleEditorPanel
         if (lsmPanel.getViewer() instanceof DomainObjectTableViewer) {
             viewer = (DomainObjectTableViewer)lsmPanel.getViewer();
         }
-        ExportResultsAction<DomainObject> action = new ExportResultsAction<>(lsmSearchResults, viewer);
+        ExportResultsAction<DomainObject, Reference> action = new ExportResultsAction<>(lsmSearchResults, viewer);
         action.actionPerformed(null);
     }
 

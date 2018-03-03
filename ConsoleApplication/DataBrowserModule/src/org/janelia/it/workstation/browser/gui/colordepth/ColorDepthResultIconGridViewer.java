@@ -103,7 +103,7 @@ public class ColorDepthResultIconGridViewer
 
         @Override
         public String getImageSubtitle(ColorDepthMatch match) {
-            return String.format("Score: %d (%2.0f%%)", match.getScore(), match.getScorePercent()*100);
+            return String.format("Score: %d (%s)", match.getScore(), MaskUtils.getFormattedScorePct(match));
         }
         
         @Override

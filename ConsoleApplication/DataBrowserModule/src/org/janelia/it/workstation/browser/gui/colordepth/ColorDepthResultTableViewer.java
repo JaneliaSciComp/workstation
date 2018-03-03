@@ -23,16 +23,10 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.RowSorter;
-import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
-import javax.swing.table.TableModel;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
-import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
-import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
@@ -51,7 +45,6 @@ import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.model.ImageDecorator;
-import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainObjectAttribute;
@@ -63,7 +56,6 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,9 +72,10 @@ public class ColorDepthResultTableViewer
     
     // Configuration
     private TableViewerConfiguration config;
-    private final DomainObjectAttribute ATTR_SCORE = new DomainObjectAttribute("score","Score",null,null,true,null,null);
-    private final DomainObjectAttribute ATTR_SCORE_PCT = new DomainObjectAttribute("score_pct","Score %",null,null,true,null,null);
-    private final DomainObjectAttribute ATTR_CHANNEL = new DomainObjectAttribute("match_channel","Match Channel",null,null,true,null,null);
+    private final DomainObjectAttribute ATTR_SCORE = new DomainObjectAttribute("score","Score (Pixels)",null,null,true,null,null);
+    private final DomainObjectAttribute ATTR_SCORE_PCT = new DomainObjectAttribute("score_pct","Score (Percent)",null,null,true,null,null);
+    private final DomainObjectAttribute ATTR_CHANNEL = new DomainObjectAttribute("match_channel","Match Number",null,null,true,null,null);
+    private final DomainObjectAttribute ATTR_FILENAME = new DomainObjectAttribute("filename","Filename",null,null,true,null,null);
     
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
 
@@ -275,8 +268,9 @@ public class ColorDepthResultTableViewer
 
                 attrs = DomainUtils.getDisplayAttributes(samples);
                 attrs.add(0, ATTR_CHANNEL);
-                attrs.add(0, ATTR_SCORE);
+                attrs.add(0, ATTR_FILENAME);
                 attrs.add(0, ATTR_SCORE_PCT);
+                attrs.add(0, ATTR_SCORE);
                 
                 getDynamicTable().clearColumns();
                 for(DomainObjectAttribute attr : attrs) {
@@ -287,7 +281,6 @@ public class ColorDepthResultTableViewer
                 }
 
                 showObjects(matchObjects, success);
-                setSortCriteria(searchProvider.getSortField());
             }
 
             @Override
@@ -296,9 +289,7 @@ public class ColorDepthResultTableViewer
             }
         };
 
-        worker.execute();        
-        
-        
+        worker.execute();
     }
 
     @Override
@@ -306,6 +297,12 @@ public class ColorDepthResultTableViewer
         showObjects(matchList.getObjects(), null);
     }
 
+    @Override
+    public void refresh(ColorDepthMatch object) {
+        throw new UnsupportedOperationException();
+        
+    }
+    
     @Override
     protected ColorDepthMatchContextMenu getContextualPopupMenu() {
 
@@ -474,30 +471,35 @@ public class ColorDepthResultTableViewer
         return false;
     }
 
-    public Object getValue(AnnotatedObjectList<ColorDepthMatch, String> domainObjectList, ColorDepthMatch object, String columnName) {
-        if (ATTR_CHANNEL.getName().equals(columnName)) {
-            return ""+object.getChannelNumber();
-        }
-        else if (ATTR_SCORE.getName().equals(columnName)) {
-            return ""+object.getScore();
+    public Object getValue(AnnotatedObjectList<ColorDepthMatch, String> domainObjectList, ColorDepthMatch match, String columnName) {
+        if (ATTR_SCORE.getName().equals(columnName)) {
+            return match.getScore();
         }
         else if (ATTR_SCORE_PCT.getName().equals(columnName)) {
-            return ""+object.getScorePercent();
+            return MaskUtils.getFormattedScorePct(match);
+        }
+        else if (ATTR_FILENAME.getName().equals(columnName)) {
+            return match.getFile().getName();
+        }
+        if (ATTR_CHANNEL.getName().equals(columnName)) {
+            return match.getChannelNumber();
         }
         else {
             DomainObjectAttribute attr = attributeMap.get(columnName);
             if (attr==null) {
                 throw new IllegalStateException("No attribute found for column: "+columnName);
             }
-            DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(object);
-            return proxy.get(attr.getLabel());
+            
+            if (match.getSample()==null) {
+                return null;
+            }
+            else {
+                Sample sample = sampleMap.get(match.getSample());
+                if (sample == null) return null;
+                DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(sample);
+                return proxy.get(attr.getLabel());
+            }
         }
-    }
-
-    @Override
-    protected void updateTableModel() {
-        super.updateTableModel();
-        getTable().setRowSorter(new DomainObjectRowSorter());
     }
 
     @Override
@@ -546,119 +548,6 @@ public class ColorDepthResultTableViewer
         }
     }
 
-    private void setSortCriteria(String sortCriteria) {
-        if (org.apache.commons.lang3.StringUtils.isEmpty(sortCriteria)) {
-            setSortColumn(null, true);
-        }
-        else {
-            this.sortField = (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
-            this.ascending = !sortCriteria.startsWith("-");
-            log.info("Setting sort column: {}",sortCriteria);
-            setSortColumn(sortField, ascending);
-        }
-    }
-
-    protected class DomainObjectRowSorter extends RowSorter<TableModel> {
-
-        private List<SortKey> sortKeys = new ArrayList<>();
-
-        public DomainObjectRowSorter() {
-            List<DynamicColumn> columns = getDynamicTable().getDisplayedColumns();
-            for (int i = 0; i < columns.size(); i++) {
-                if (columns.get(i).getName().equals(sortField)) {
-                    sortKeys.add(new SortKey(i, ascending ? SortOrder.ASCENDING : SortOrder.DESCENDING));
-                    break;
-                }
-            }
-        }
-
-        @Override
-        public void toggleSortOrder(int columnNum) {
-            List<DynamicColumn> columns = getDynamicTable().getDisplayedColumns();
-            DynamicColumn column = columns.get(columnNum);
-            if (!column.isVisible() || !column.isSortable()) {
-                return;
-            }
-            SortOrder newOrder = SortOrder.ASCENDING;
-            if (!sortKeys.isEmpty()) {
-                SortKey currentSortKey = sortKeys.get(0);
-                if (currentSortKey.getColumn() == columnNum) {
-                    // Reverse the sort
-                    if (currentSortKey.getSortOrder() == SortOrder.ASCENDING) {
-                        newOrder = SortOrder.DESCENDING;
-                    }
-                }
-                sortKeys.clear();
-            }
-
-            sortKeys.add(new SortKey(columnNum, newOrder));
-            sortField = column.getName();
-            ascending = (newOrder != SortOrder.DESCENDING);
-            String prefix = ascending ? "+":"-";
-            getSearchProvider().setSortField(prefix + sortField);
-            getSearchProvider().search();
-        }
-
-        @Override
-        public void setSortKeys(List<? extends SortKey> sortKeys) {
-            this.sortKeys = new ArrayList<>(sortKeys);
-        }
-
-        @Override
-        public void rowsUpdated(int firstRow, int endRow, int column) {
-        }
-
-        @Override
-        public void rowsUpdated(int firstRow, int endRow) {
-        }
-
-        @Override
-        public void rowsInserted(int firstRow, int endRow) {
-        }
-
-        @Override
-        public void rowsDeleted(int firstRow, int endRow) {
-        }
-
-        @Override
-        public void modelStructureChanged() {
-        }
-
-        @Override
-        public int getViewRowCount() {
-            return getTable().getModel().getRowCount();
-        }
-
-        @Override
-        public List<? extends SortKey> getSortKeys() {
-            return sortKeys;
-        }
-
-        @Override
-        public int getModelRowCount() {
-            return getTable().getModel().getRowCount();
-        }
-
-        @Override
-        public TableModel getModel() {
-            return getDynamicTable().getTableModel();
-        }
-
-        @Override
-        public int convertRowIndexToView(int index) {
-            return index;
-        }
-
-        @Override
-        public int convertRowIndexToModel(int index) {
-            return index;
-        }
-
-        @Override
-        public void allRowsChanged() {
-        }
-    };
-
     @Override
     public void setSearchProvider(SearchProvider searchProvider) {
         this.searchProvider = searchProvider;
@@ -698,12 +587,6 @@ public class ColorDepthResultTableViewer
                }
            }
         );
-    }
-
-    @Override
-    public void refresh(ColorDepthMatch object) {
-        throw new UnsupportedOperationException();
-        
     }
 
 }

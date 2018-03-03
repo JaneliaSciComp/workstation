@@ -206,7 +206,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         }
     };
 
-    protected abstract Object getValue(AnnotatedObjectList<T,S> annotatedDomainObjectList, T object, String column);
+    public abstract Object getValue(AnnotatedObjectList<T,S> annotatedDomainObjectList, T object, String column);
 
     protected void enterKeyPressed() {
         T selectedObject = getLastSelectedObject();
