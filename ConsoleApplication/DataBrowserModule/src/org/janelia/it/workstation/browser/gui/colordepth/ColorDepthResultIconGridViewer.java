@@ -317,10 +317,10 @@ public class ColorDepthResultIconGridViewer
         return getPopupMenu(getSelectedObjects());
     }
     
-    private ColorDepthMatchContextMenu getPopupMenu(List<ColorDepthMatch> matches) {
-        log.info("Selected objects: "+matches);
+    private ColorDepthMatchContextMenu getPopupMenu(List<ColorDepthMatch> selected) {
+        log.info("Selected objects: "+selected);
         ColorDepthMatchContextMenu popupMenu = new ColorDepthMatchContextMenu(
-                (ColorDepthResult)selectionModel.getParentObject(), matches, sampleMap);
+                (ColorDepthResult)selectionModel.getParentObject(), selected, sampleMap);
         popupMenu.addMenuItems();
         return popupMenu;
     }

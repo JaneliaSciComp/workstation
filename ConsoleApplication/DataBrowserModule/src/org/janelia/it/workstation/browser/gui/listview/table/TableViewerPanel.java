@@ -79,7 +79,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
             @Override
             @SuppressWarnings("unchecked")
             public Object getValue(Object userObject, DynamicColumn column) {
-                return TableViewerPanel.this.getValue(getDomainObjectList(), (T)userObject, column.getName());
+                return TableViewerPanel.this.getValue(getObjectList(), (T)userObject, column.getName());
             }
 
             @Override
@@ -227,7 +227,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
     protected void updateHud(boolean toggle) {}
 
-    public abstract AnnotatedObjectList<T,S> getDomainObjectList();
+    public abstract AnnotatedObjectList<T,S> getObjectList();
 
     public void selectObjects(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
 

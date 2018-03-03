@@ -1,14 +1,19 @@
-package org.janelia.it.workstation.browser.gui.listview.table;
+package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.JLabel;
@@ -29,26 +34,35 @@ import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.dialogs.TableViewerConfigDialog;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.ListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
+import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
+import org.janelia.it.workstation.browser.gui.listview.table.TableViewerConfiguration;
+import org.janelia.it.workstation.browser.gui.listview.table.TableViewerPanel;
+import org.janelia.it.workstation.browser.gui.listview.table.TableViewerState;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
-import org.janelia.it.workstation.browser.model.DomainObjectImageModel;
+import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainObjectAttribute;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
+import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,21 +72,26 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Reference> implements ListViewer<DomainObject, Reference> {
+public class ColorDepthResultTableViewer 
+        extends TableViewerPanel<ColorDepthMatch,String> 
+        implements ListViewer<ColorDepthMatch, String> {
 
-    private static final Logger log = LoggerFactory.getLogger(DomainObjectTableViewer.class);
-
-    private static final String COLUMN_KEY_ANNOTATIONS = "annotations";
-
+    private static final Logger log = LoggerFactory.getLogger(ColorDepthResultTableViewer.class);
+    
     // Configuration
     private TableViewerConfiguration config;
-    private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,null,true,null,null);
+    private final DomainObjectAttribute ATTR_SCORE = new DomainObjectAttribute("score","Score",null,null,true,null,null);
+    private final DomainObjectAttribute ATTR_SCORE_PCT = new DomainObjectAttribute("score_pct","Score %",null,null,true,null,null);
+    private final DomainObjectAttribute ATTR_CHANNEL = new DomainObjectAttribute("match_channel","Match Channel",null,null,true,null,null);
+    
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
 
     // State
     private PreferenceSupport preferenceSupport;
-    private AnnotatedObjectList<DomainObject,Reference> domainObjectList;
-    private ChildSelectionModel<DomainObject, Reference> selectionModel;
+    private AnnotatedObjectList<ColorDepthMatch, String> matchList;
+    private Map<Reference, Sample> sampleMap = new HashMap<>();
+    private Map<String, ColorDepthMatch> matchMap = new HashMap<>();
+    private ChildSelectionModel<ColorDepthMatch, String> selectionModel;
     private SearchProvider searchProvider;
     private List<DomainObjectAttribute> attrs;
 
@@ -80,35 +99,74 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private String sortField;
     private boolean ascending = true;
 
-    private final DomainObjectImageModel imageModel = new DomainObjectImageModel() {
+    private final ImageModel<ColorDepthMatch, String> imageModel = new ImageModel<ColorDepthMatch, String>() {
 
         @Override
-        protected ArtifactDescriptor getArtifactDescriptor() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        protected String getImageTypeName() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        protected String getTitlePattern(Class<? extends DomainObject> clazz) {
-            throw new UnsupportedOperationException();
+        public String getImageUniqueId(ColorDepthMatch match) {
+            return match.getFilepath();
         }
         
         @Override
-        protected String getSubtitlePattern(Class<? extends DomainObject> clazz) {
-            throw new UnsupportedOperationException();
+        public String getImageFilepath(ColorDepthMatch match) {
+            if (!hasAccess(match)) return null;
+            return match.getFilepath();
+        }
+
+        @Override
+        public BufferedImage getStaticIcon(ColorDepthMatch match) {
+            // Assume anything without an image is locked
+            return Icons.getImage("file_lock.png");
+        }
+
+        @Override
+        public ColorDepthMatch getImageByUniqueId(String filepath) throws Exception {
+            return matchMap.get(filepath);
         }
         
         @Override
-        public List<Annotation> getAnnotations(DomainObject domainObject) {
-            return domainObjectList.getAnnotations(Reference.createFor(domainObject));
+        public String getImageTitle(ColorDepthMatch match) {
+            if (!hasAccess(match)) return "Access denied";
+            if (match.getSample()==null) {
+                return match.getFile().getName();
+            }
+            else {
+                return sampleMap.get(match.getSample()).getName();
+            }
         }
+
+        @Override
+        public String getImageSubtitle(ColorDepthMatch match) {
+            return String.format("Score: %d (%2.0f%%)", match.getScore(), match.getScorePercent()*100);
+        }
+        
+        @Override
+        public List<ImageDecorator> getDecorators(ColorDepthMatch match) {
+            if (match.getSample()==null) {
+                return Arrays.asList(ImageDecorator.DISCONNECTED);
+            }
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<Annotation> getAnnotations(ColorDepthMatch imageObject) {
+            return Collections.emptyList();
+        }
+        
+        private boolean hasAccess(ColorDepthMatch match) {
+            if (match.getSample()!=null) {
+                Sample sample = sampleMap.get(match.getSample());
+                if (sample == null) {
+                    // The result maps to a sample, but the user has no access to see it
+                    // TODO: check access to data set?
+                    return false;
+                }
+            }
+            return true;
+        }
+        
     };
     
-    public DomainObjectTableViewer() {
+    public ColorDepthResultTableViewer() {
         setImageModel(imageModel);
     }
 
@@ -123,13 +181,13 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public void setSelectionModel(ChildSelectionModel<DomainObject, Reference> selectionModel) {
+    public void setSelectionModel(ChildSelectionModel<ColorDepthMatch, String> selectionModel) {
         super.setSelectionModel(selectionModel);
         this.selectionModel = selectionModel;
     }
 
     @Override
-    public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+    public ChildSelectionModel<ColorDepthMatch, String> getSelectionModel() {
         return selectionModel;
     }
 
@@ -145,19 +203,21 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     
     @Override
     public int getNumItemsHidden() {
-        if (domainObjectList==null || getObjects()==null) return 0;
-        int totalItems = this.domainObjectList.getObjects().size();
+        int totalItems = this.matchList.getObjects().size();
         int totalVisibleItems = getObjects().size();
-        if (totalVisibleItems > totalItems) {
-            log.warn("Visible item count greater than total item count");
-            return 0;
-        }
         return totalItems-totalVisibleItems;
     }
         
     @Override
-    public void select(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
-        super.selectObjects(domainObjects, select, clearAll, isUserDriven, notifyModel);
+    public void select(List<ColorDepthMatch> objects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
+        log.info("selectDomainObjects(objects={},select={},clearAll={},isUserDriven={},notifyModel={})", 
+                DomainUtils.abbr(objects), select, clearAll, isUserDriven, notifyModel);
+
+        if (objects.isEmpty()) {
+            return;
+        }
+
+        selectObjects(objects, select, clearAll, isUserDriven, notifyModel);
     }
 
     @Override
@@ -168,7 +228,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public void show(final AnnotatedObjectList<DomainObject,Reference> domainObjectList, final Callable<Void> success) {
+    public void show(final AnnotatedObjectList<ColorDepthMatch, String> matchList, final Callable<Void> success) {
 
         try {
             this.config = TableViewerConfiguration.loadConfig();
@@ -176,41 +236,84 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             ConsoleApp.handleException(ex);
         }
 
-        this.domainObjectList = domainObjectList;
-        log.debug("showDomainObjects(domainObjectList={})",DomainUtils.abbr(domainObjectList.getObjects()));
+        this.matchList = matchList;
+        log.debug("show(matchList={})",DomainUtils.abbr(matchList.getObjects()));
 
+        sampleMap.clear();
+        matchMap.clear();
         attributeMap.clear();
 
-        attrs = DomainUtils.getDisplayAttributes(domainObjectList.getObjects());
-        attrs.add(0, annotationAttr);
+        SimpleWorker worker = new SimpleWorker() {
 
-        getDynamicTable().clearColumns();
-        for(DomainObjectAttribute attr : attrs) {
-            attributeMap.put(attr.getName(), attr);
-            boolean visible = config.isColumnVisible(attr.getName());
-            boolean sortable = !COLUMN_KEY_ANNOTATIONS.equals(attr.getName());
-            getDynamicTable().addColumn(attr.getName(), attr.getLabel(), visible, false, true, sortable);
-        }
+            DomainModel model = DomainMgr.getDomainMgr().getModel();
+            List<ColorDepthMatch> matchObjects;
+            List<DomainObject> samples = new ArrayList<>();
+            
+            @Override
+            protected void doStuff() throws Exception {
+                matchObjects = matchList.getObjects();
 
-        showObjects(domainObjectList.getObjects(), success);
-        setSortCriteria(searchProvider.getSortField());
+                // Populate maps
+                Set<Reference> sampleRefs = new HashSet<>();
+                for (ColorDepthMatch match : matchObjects) {
+                    if (!sampleMap.containsKey(match.getSample())) {
+                        log.trace("Will load {}", match.getSample());
+                        sampleRefs.add(match.getSample());
+                    }
+                    matchMap.put(match.getFilepath(), match);
+                }
+                
+                // This does the same thing as ColorDepthResultPanel, but it should pull samples out of the cache.
+                // This is not really the best thing to depend on, we should have a more direct way of communicating these
+                // objects from ColorDepthResultPanel to this child class. 
+                sampleMap.putAll(DomainUtils.getMapByReference(model.getDomainObjectsAs(Sample.class, new ArrayList<>(sampleRefs))));
+                samples.addAll(sampleMap.values());
+            }
+
+            @Override
+            protected void hadSuccess() {
+
+                attrs = DomainUtils.getDisplayAttributes(samples);
+                attrs.add(0, ATTR_CHANNEL);
+                attrs.add(0, ATTR_SCORE);
+                attrs.add(0, ATTR_SCORE_PCT);
+                
+                getDynamicTable().clearColumns();
+                for(DomainObjectAttribute attr : attrs) {
+                    attributeMap.put(attr.getName(), attr);
+                    boolean visible = config.isColumnVisible(attr.getName());
+                    boolean sortable = false;
+                    getDynamicTable().addColumn(attr.getName(), attr.getLabel(), visible, false, true, sortable);
+                }
+
+                showObjects(matchObjects, success);
+                setSortCriteria(searchProvider.getSortField());
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                ConsoleApp.handleException(error);
+            }
+        };
+
+        worker.execute();        
+        
+        
     }
 
     @Override
-    public void refresh(DomainObject domainObject) {        
-        domainObjectList.updateObject(domainObject);
-        show(domainObjectList, null);
+    public void refresh() {
+        showObjects(matchList.getObjects(), null);
     }
 
     @Override
-    protected DomainObjectContextMenu getContextualPopupMenu() {
+    protected ColorDepthMatchContextMenu getContextualPopupMenu() {
 
-        List<Reference> ids = selectionModel.getSelectedIds();
         try {
-            List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
-            // TODO: should this use the same result as the icon grid viewer?
-            DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject) selectionModel.getParentObject(), selected, ArtifactDescriptor.LATEST, null);
-
+            List<ColorDepthMatch> selected = getSelectedObjects();
+            ColorDepthMatchContextMenu popupMenu = new ColorDepthMatchContextMenu(
+                    (ColorDepthResult)selectionModel.getParentObject(), selected, sampleMap);
+            
             JTable table = getTable();
             ListSelectionModel lsm = table.getSelectionModel();
             if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) {
@@ -236,7 +339,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             popupMenu.addMenuItems();
 
             return popupMenu;
-        } catch (Exception ex) {
+        } 
+        catch (Exception ex) {
             ConsoleApp.handleException(ex);
             return null;
         }
@@ -266,7 +370,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    protected void objectDoubleClicked(DomainObject object) {
+    protected void objectDoubleClicked(ColorDepthMatch object) {
         try {
             getContextualPopupMenu().runDefaultAction();
         } catch (Exception ex) {
@@ -290,19 +394,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     protected void deleteKeyPressed() {
-        // TODO: this was copy and pasted from DomainObjectIconGridViewer and should be refactored someday
-        try {
-            Object parent = selectionModel.getParentObject();
-            if (parent instanceof Node) {
-                Node node = (Node) parent;
-                if (ClientDomainUtils.hasWriteAccess(node)) {
-                    RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(node, getSelectedObjects());
-                    action.actionPerformed(null);
-                }
-            }
-        } catch (Exception ex) {
-            ConsoleApp.handleException(ex);
-        }
+        // TODO: implement this?
     }
 
     @Override
@@ -330,44 +422,44 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     }
 
-    // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
-    public void setEditSelectionModel(ChildSelectionModel<DomainObject, Reference> editSelectionModel) {
-
-    }
-
-    // TODO: implement this so things like neuron fragments can be edited in table mode
-    @Override
-    public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
-        return null;
-    }
-
-    // TODO: implement this so things like neuron fragments can be edited in table mode
-    @Override
-    public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
-
+    public void setEditSelectionModel(ChildSelectionModel<ColorDepthMatch, String> editSelectionModel) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public AnnotatedObjectList<DomainObject, Reference> getObjectList() {
-        return domainObjectList;
+    public ChildSelectionModel<ColorDepthMatch, String> getEditSelectionModel() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean matches(ResultPage<DomainObject, Reference> resultPage, DomainObject domainObject, String text) {
-        log.debug("Searching {} for {}",domainObject.getName(),text);
+    public void selectEditObjects(List<ColorDepthMatch> objects, boolean select) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public AnnotatedObjectList<ColorDepthMatch, String> getObjectList() {
+        return matchList;
+    }
+   
+    @Override
+    public boolean matches(ResultPage<ColorDepthMatch, String> resultPage, ColorDepthMatch object, String text) {
+        
+        log.debug("Searching {} for {}",object.getFilepath(),text);
 
         String tupper = text.toUpperCase();
 
-        // Exact matches on id or name always work
-        if (domainObject.getId().toString().equals(text) || domainObject.getName().toUpperCase().equals(tupper)) {
+        String titleUpper = imageModel.getImageTitle(object).toUpperCase();
+        
+        // Exact matches on filename or title always work
+        if (object.getFilepath().toString().contains(text) || titleUpper.equals(tupper)) {
             return true;
         }
 
         for(DynamicColumn column : getColumns()) {
             if (column.isVisible()) {
                 log.trace("Searching column "+column.getLabel());
-                Object value = getValue(resultPage, domainObject, column.getName());
+                Object value = getValue(resultPage, object, column.getName());
                 if (value != null) {
                     if (value.toString().toUpperCase().contains(tupper)) {
                         log.trace("Found match in column {}: {}",column.getLabel(),value);
@@ -382,14 +474,15 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         return false;
     }
 
-    public Object getValue(AnnotatedObjectList<DomainObject, Reference> domainObjectList, DomainObject object, String columnName) {
-        if (COLUMN_KEY_ANNOTATIONS.equals(columnName)) {
-            StringBuilder builder = new StringBuilder();
-            for(Annotation annotation : domainObjectList.getAnnotations(Reference.createFor(object))) {
-                if (builder.length()>0) builder.append(", ");
-                builder.append(annotation.getName());
-            }
-            return builder.toString();
+    public Object getValue(AnnotatedObjectList<ColorDepthMatch, String> domainObjectList, ColorDepthMatch object, String columnName) {
+        if (ATTR_CHANNEL.getName().equals(columnName)) {
+            return ""+object.getChannelNumber();
+        }
+        else if (ATTR_SCORE.getName().equals(columnName)) {
+            return ""+object.getScore();
+        }
+        else if (ATTR_SCORE_PCT.getName().equals(columnName)) {
+            return ""+object.getScorePercent();
         }
         else {
             DomainObjectAttribute attr = attributeMap.get(columnName);
@@ -414,25 +507,43 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         
         Hud hud = Hud.getSingletonInstance();
         hud.setKeyListener(keyListener);
-        
-        try {
-            List<DomainObject> selected = getSelectedObjects();
 
+        try {
+            List<ColorDepthMatch> selected = getSelectedObjects();
+            
             if (selected.size() != 1) {
                 hud.hideDialog();
                 return;
             }
-
-            DomainObject domainObject = selected.get(0);
-            hud.setObjectAndToggleDialog(domainObject, null, null, toggle, toggle);
+            
+            ColorDepthMatch match = selected.get(0);
+            
+            String filepath = imageModel.getImageFilepath(match);
+            hud.setFilepathAndToggleDialog(filepath, toggle, false);
         } 
         catch (Exception ex) {
             ConsoleApp.handleException(ex);
         }
     }
-    
-    private List<DomainObject> getSelectedObjects() throws Exception {
-        return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+
+    private List<ColorDepthMatch> getSelectedObjects() {
+        try {
+            List<ColorDepthMatch> selected = new ArrayList<>();
+            for(String filepath : selectionModel.getSelectedIds()) {
+                ColorDepthMatch match = imageModel.getImageByUniqueId(filepath);
+                if (match==null) {
+                    throw new IllegalStateException("Image model has no object for unique id: "+filepath);
+                }
+                else {
+                    selected.add(match);
+                }
+            }
+            return selected;
+        }  
+        catch (Exception e) {
+            ConsoleApp.handleException(e);
+            return null;
+        }
     }
 
     private void setSortCriteria(String sortCriteria) {
@@ -587,6 +698,12 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                }
            }
         );
+    }
+
+    @Override
+    public void refresh(ColorDepthMatch object) {
+        throw new UnsupportedOperationException();
+        
     }
 
 }

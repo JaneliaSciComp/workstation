@@ -6,6 +6,7 @@ import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.filecache.RemoteLocation;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.util.TimebasedIdentifierGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,4 +34,12 @@ public class MaskUtils {
         
         return uploadPath;
     }
+    
+    
+    
+    public static String getFormattedScorePct(ColorDepthMatch match) {
+        return String.format("%2.0f%%", match.getScorePercent()*100);
+    }
+    
+    
 }
