@@ -1,10 +1,6 @@
-// 7.4
+// 7.5
 
 Workstation Browser
-* Added support for Open in Neuron Annotator and Open in Vaa3d on Windows
-* Fixed color depth mask upload and download on Windows
-* Other minor bug fixes
-
-
-Large Volume Viewer
-* Bug fixes for shared workspace release
+* You can now view color depth search results as a table and export them to Excel
+* When sharing a neuron fragment, the sample is also shared
+* Samples are searchable as soon as they are discovered 
