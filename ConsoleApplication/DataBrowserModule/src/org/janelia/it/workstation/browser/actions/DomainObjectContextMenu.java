@@ -47,6 +47,7 @@ import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.gui.colordepth.AddMaskDialog;
+import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromImageAction;
 import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog;
@@ -81,6 +82,7 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.sample.Image;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
@@ -198,7 +200,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         //add(getSetPublishingNameItem());
         add(getApplyPublishingNamesItem());
         add(getMergeItem());
-        add(getColorDepthSearchItem());
+        add(getCreateColorDepthMaskItem());
         add(getAddToColorDepthSearchItem());
         
         setNextAddRequiresSeparator(true);
@@ -642,22 +644,31 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return blockItem;
     }
 
-    protected JMenuItem getColorDepthSearchItem() {
+    protected JMenuItem getCreateColorDepthMaskItem() {
 
         if (multiple) return null;
         
         List<Sample> samples = new ArrayList<>();
+        List<Image> images = new ArrayList<>();
+        
         for(DomainObject domainObject : domainObjectList) {
             if (domainObject instanceof Sample) {
                 samples.add((Sample)domainObject);
             }
+            else if (domainObject instanceof Image) {
+                images.add((Image)domainObject);
+            }
         }
         
-        if (samples.size()!=domainObjectList.size()) return null;
-                
-        if (!resultDescriptor.isAligned()) return null;
+        if (samples.size()==domainObjectList.size()) {
+            if (!resultDescriptor.isAligned()) return null;
+            return getNamedActionItem(new CreateMaskFromSampleAction(samples.get(0), resultDescriptor, typeName));
+        }
+        else if (images.size()==domainObjectList.size()) {
+            return getNamedActionItem(new CreateMaskFromImageAction(images.get(0)));
+        }
         
-        return getNamedActionItem(new CreateMaskFromSampleAction(samples.get(0), resultDescriptor, typeName));
+        return null;
     }
 
     protected JMenuItem getAddToColorDepthSearchItem() {
