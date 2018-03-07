@@ -629,6 +629,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return false;
         }
 
+        // can't merge if target is hidden
+        // not
+        TmNeuronMetadata targetNeuron = annotationModel.getNeuronFromNeuronID(targetNeuronID);
+        if (!targetNeuron.isVisible()) {
+            log.warn("Can't merge annotation to hidden neuron");
+            return false;
+        }
+
         TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(neuronID, anchorID);
         TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(targetNeuronID, targetAnnotationID);
 

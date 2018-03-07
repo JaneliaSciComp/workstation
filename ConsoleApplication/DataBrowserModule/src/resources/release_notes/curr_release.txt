@@ -3,4 +3,8 @@
 Workstation Browser
 * You can now view color depth search results as a table and export them to Excel
 * When sharing a neuron fragment, the sample is also shared
-* Samples are searchable as soon as they are discovered 
+* Samples are searchable as soon as they are discovered
+
+Large Volume Viewer
+* Fixed errors when importing SWC files
+* Middle-click-drag in Horta shouldn't trigger ownership dialog
