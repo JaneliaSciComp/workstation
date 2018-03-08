@@ -36,6 +36,7 @@ import org.janelia.it.workstation.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.search.ResultIterator;
@@ -87,12 +88,14 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     
     // State
     protected ChildSelectionModel<T,S> selectionModel;
+    protected PreferenceSupport preferenceSupport;
     protected SearchProvider searchProvider;
-    protected List<ListViewerType> validViewerTypes;
+    protected List<? extends ListViewerClassProvider> validViewerTypes;
 
-    public PaginatedResultsPanel(ChildSelectionModel<T,S> selectionModel, SearchProvider searchProvider, List<ListViewerType> validViewerTypes) {
+    public PaginatedResultsPanel(ChildSelectionModel<T,S> selectionModel, PreferenceSupport preferenceSupport, SearchProvider searchProvider, List<? extends ListViewerClassProvider> validViewerTypes) {
                
         this.selectionModel = selectionModel;
+        this.preferenceSupport = preferenceSupport;
         this.searchProvider = searchProvider;
         this.validViewerTypes = validViewerTypes;
         
@@ -196,7 +199,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     }
 
     private void populateViewerPopupMenu(DropDownButton button) {
-        for(final ListViewerType type : validViewerTypes) {
+        for(final ListViewerClassProvider type : validViewerTypes) {
             JMenuItem viewItem = new JMenuItem(type.getName());
             viewItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
@@ -220,7 +223,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
         }
     }
     
-    public void setViewerType(final ListViewerType viewerType) {
+    public void setViewerType(final ListViewerClassProvider viewerType) {
         
         if (!validViewerTypes.contains(viewerType)) {
             throw new IllegalArgumentException("Viewer type is not in valid list: "+viewerType);
@@ -234,7 +237,6 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             else {
                 @SuppressWarnings("unchecked")
                 ListViewer<T,S> viewer = (ListViewer<T, S>) viewerType.getViewerClass().newInstance();
-                viewer.getPanel().addMouseListener(new MouseForwarder(this, "ListViewer->PaginatedResultsPanel"));
                 setViewer(viewer);
             }
         }
@@ -261,15 +263,19 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             Events.getInstance().unregisterOnEventBus(resultsView);
         }
         this.resultsView = viewer;
-        resultsView.setActionListener(new ListViewerActionListener() {
-            @Override
-            public void visibleObjectsChanged() {
-                updateStatusBar();
-            }
-        });
-        Events.getInstance().registerOnEventBus(resultsView);
-        resultsView.setSelectionModel(selectionModel);
-        resultsView.setSearchProvider(searchProvider);
+        if (resultsView != null) {
+            resultsView.getPanel().addMouseListener(new MouseForwarder(this, "ListViewer->PaginatedResultsPanel"));
+            resultsView.setActionListener(new ListViewerActionListener() {
+                @Override
+                public void visibleObjectsChanged() {
+                    updateStatusBar();
+                }
+            });
+            Events.getInstance().registerOnEventBus(resultsView);
+            resultsView.setSelectionModel(selectionModel);
+            resultsView.setPreferenceSupport(preferenceSupport);
+            resultsView.setSearchProvider(searchProvider);
+        }
     }
         
 

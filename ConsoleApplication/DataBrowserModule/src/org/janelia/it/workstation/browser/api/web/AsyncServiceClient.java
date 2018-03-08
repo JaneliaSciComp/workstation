@@ -10,21 +10,21 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.workstation.browser.api.exceptions.ServiceException;
-import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientImpl;
+import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * RESTful client for invoking an async service.
  */
-public class AsyncServiceClient extends RESTClientImpl {
+public class AsyncServiceClient extends RESTClientBase {
 
     private static final Logger log = LoggerFactory.getLogger(AsyncServiceClient.class);
 
@@ -40,17 +40,15 @@ public class AsyncServiceClient extends RESTClientImpl {
     public AsyncServiceClient(String serverUrl) {
         super(log);
         log.info("Using server URL: {}",serverUrl);
-        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, false);
+        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);
         objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
     
     public Long invokeService(String serviceName,
                               List<String> serviceArgs,
-                              String subject,
                               String processingLocation,
                               Map<String, String> serviceResources) throws ServiceException {
         AsyncServiceData body = new AsyncServiceData();
-        body.setOwner(subject);
         if (serviceArgs != null) {
             body.args.addAll(serviceArgs);
         }
@@ -63,7 +61,6 @@ public class AsyncServiceClient extends RESTClientImpl {
         WebTarget target = service.path("async-services").path(serviceName);
         Response response = target
                 .request("application/json")
-                .header("username", subject)
                 .post(Entity.json(body));
         if (response.getStatus() != 201) {
             throw new ServiceException("Service " + serviceName + " returned status "+response.getStatus());
@@ -88,11 +85,10 @@ public class AsyncServiceClient extends RESTClientImpl {
         }
     }
 
-    public String getServiceStatus(Long serviceId, String subjectKey) throws ServiceException {
+    public String getServiceStatus(Long serviceId) throws ServiceException {
         WebTarget target = service.path("services").path(serviceId.toString());
         Response response = target
                 .request("application/json")
-                .header("username", subjectKey)
                 .get();
         if (response.getStatus() != 200) {
             throw new ServiceException("Service " + serviceId + " returned status " + response.getStatus());
@@ -115,7 +111,7 @@ public class AsyncServiceClient extends RESTClientImpl {
         private String serviceId;
         private String processingLocation;
         private String state;
-        private String owner;
+        private String ownerKey;
         private List<String> args = new ArrayList<>();
         private Map<String, String> resources = new HashMap<>();
 
@@ -143,12 +139,12 @@ public class AsyncServiceClient extends RESTClientImpl {
             this.state = state;
         }
 
-        public String getOwner() {
-            return owner;
+        public String getOwnerKey() {
+            return ownerKey;
         }
 
-        public void setOwner(String owner) {
-            this.owner = owner;
+        public void setOwnerKey(String ownerKey) {
+            this.ownerKey = ownerKey;
         }
 
         public List<String> getArgs() {

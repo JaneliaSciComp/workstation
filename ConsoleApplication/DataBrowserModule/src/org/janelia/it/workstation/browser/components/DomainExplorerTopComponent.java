@@ -226,6 +226,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         result = getLookup().lookupResult(AbstractNode.class);
         result.addLookupListener(this);
         Events.getInstance().registerOnEventBus(this);
+        if (AccessManager.loggedIn()) {
+            // This method will only run once
+            loadInitialSession();
+        }
     }
 
     @Override
@@ -264,7 +268,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
     
     void readProperties(java.util.Properties p) {
-        if (p==null) return;
+        if (p==null) {
+            log.info("No properties to read");
+            return;
+        }
         String version = p.getProperty("version");
         final String expandedPathStr = p.getProperty("expandedPaths");
         if (TC_VERSION.equals(version) && expandedPathStr!=null) {
@@ -293,6 +300,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 log.error("Error reading state",e);
             }       
         }
+        else {
+            log.info("Properties are out of date (version {})", version);
+            
+        }
     }
     
     // Custom methods
@@ -319,13 +330,14 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     @Subscribe
     public void sessionStarted(SessionStartEvent event) {
+        log.info("Session started, loading initial state");
         loadInitialSession();
     }
     
-    private void loadInitialSession() {
+    private synchronized void loadInitialSession() {
         
         if (!loadInitialState) return;
-        log.info("Loading previous session");
+        log.info("Loading initial state");
         this.loadInitialState = false;
         
         showLoadingIndicator();
@@ -495,11 +507,15 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     else {
                         if (restoreState) {
                             log.info("Restoring expanded state");
-                            for (Long[] path : expanded) {
-                                log.info("pathToExpand: "+NodeUtils.createPathString(path));
+                            if (expanded!=null) {
+                                for (Long[] path : expanded) {
+                                    log.info("pathToExpand: "+NodeUtils.createPathString(path));
+                                }
+                                beanTreeView.expand(expanded);
                             }
-                            beanTreeView.expand(expanded);
-                            beanTreeView.selectPaths(selected);
+                            if (selected!=null) {
+                                beanTreeView.selectPaths(selected);
+                            }
                         }
                     }
                     
@@ -604,9 +620,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         if (node instanceof AbstractDomainObjectNode) {
             log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
             selectionModel.select((AbstractDomainObjectNode<?>)node, true, true);
-        }
-        else {
-            
         }
     }
 

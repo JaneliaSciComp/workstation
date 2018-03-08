@@ -326,7 +326,7 @@ public class DomainModel {
     }
 
     /**
-     * Load an object from the database. 
+     * Load an object from the database, ignoring the cache. 
      * @param ref
      * @return
      */
@@ -336,15 +336,12 @@ public class DomainModel {
     }
 
     /**
-     * Retrieve the given domain object, checking the cache first and then the database.
+     * Retrieve the given domain object from the database, ignoring the cache.
      * @param domainObject
      * @return canonical domain object instance
      */
     public <T extends DomainObject> T getDomainObject(T domainObject) throws Exception {
-        if (domainObject==null) throw new IllegalArgumentException("Domain object may not be null");
-        if (!isCacheable(domainObject)) {
-            return domainObject;
-        }
+        if (domainObject==null) return null;
         return getDomainObject(Reference.createFor(domainObject));
     }
 
@@ -860,6 +857,7 @@ public class DomainModel {
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(workspaceFacade.reorderChildren(node, order));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -880,6 +878,7 @@ public class DomainModel {
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(workspaceFacade.addChildren(node, DomainUtils.getReferences(domainObjects), index));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -892,6 +891,7 @@ public class DomainModel {
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(workspaceFacade.removeChildren(node, DomainUtils.getReferences(domainObjects)));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 

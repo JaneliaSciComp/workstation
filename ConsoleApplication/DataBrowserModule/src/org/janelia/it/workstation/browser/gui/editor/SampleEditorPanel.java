@@ -51,6 +51,7 @@ import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
@@ -71,9 +72,9 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.AlignmentScoreType;
 import org.janelia.model.domain.enums.ErrorType;
 import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.NeuronSeparation;
@@ -95,7 +96,9 @@ import com.google.common.eventbus.Subscribe;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Sample>, SearchProvider {
+public class SampleEditorPanel 
+        extends JPanel 
+        implements DomainObjectEditor<Sample>, SearchProvider, PreferenceSupport {
 
     private final static Logger log = LoggerFactory.getLogger(SampleEditorPanel.class);
 
@@ -152,7 +155,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         };
         configPanel.addTitleComponent(viewButton, true, true);
         
-        lsmPanel = new PaginatedDomainResultsPanel(selectionModel, this) {
+        lsmPanel = new PaginatedDomainResultsPanel(selectionModel, this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
@@ -271,7 +274,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         if (lsmPanel.getViewer() instanceof DomainObjectTableViewer) {
             viewer = (DomainObjectTableViewer)lsmPanel.getViewer();
         }
-        ExportResultsAction<DomainObject> action = new ExportResultsAction<>(lsmSearchResults, viewer);
+        ExportResultsAction<DomainObject, Reference> action = new ExportResultsAction<>(lsmSearchResults, viewer);
         action.actionPerformed(null);
     }
 
@@ -971,8 +974,13 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
         return values;
     }
-    
-    
-    
-    
+
+    @Override
+    public Long getCurrentContextId() {
+        Object parentObject = selectionModel.getParentObject();
+        if (parentObject instanceof HasIdentifier) {
+            return ((HasIdentifier)parentObject).getId();
+        }
+        throw new IllegalStateException("Parent object has no identifier: "+selectionModel.getParentObject());
+    }
 }

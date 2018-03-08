@@ -32,16 +32,16 @@ import org.slf4j.LoggerFactory;
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "AB2TopComponent",
+        preferredID = AB2TopComponent.TC_NAME,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.ab2.AB2TopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Alignment Board", position = 30)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AB2Action",
-        preferredID = "AB2TopComponent"
+        preferredID = AB2TopComponent.TC_NAME
 )
 @Messages({
     "CTL_AB2Action=AB2",

@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.filecache;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.httpclient.HttpClient;
+import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
@@ -39,7 +40,7 @@ public class WebDavClientTest {
     public void setUp() {
         httpClient = Mockito.mock(HttpClient.class);
         objectMapper = new ObjectMapper();
-        testWebDavClient = new WebDavClient(BASE_WEBDAV_URL, httpClient, objectMapper);
+        testWebDavClient = new WebDavClient(BASE_WEBDAV_URL, new HttpClientProxy(httpClient), objectMapper);
     }
 
     @Test

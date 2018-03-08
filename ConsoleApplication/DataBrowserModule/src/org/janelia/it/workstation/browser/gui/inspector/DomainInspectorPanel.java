@@ -388,7 +388,10 @@ public class DomainInspectorPanel extends JPanel {
     
     private void loadAttributes() {
 
+        if (domainObject==null) return;
+        
         log.debug("Loading properties for domain object {}", domainObject.getId());
+        
         showAttributesLoadingIndicator();
 
         List<DomainObjectAttribute> searchAttrs = DomainUtils.getDisplayAttributes(Arrays.asList(domainObject));
@@ -590,11 +593,13 @@ public class DomainInspectorPanel extends JPanel {
 
     public void refresh() {
         try {
-            if (domainObject==null) return;
-            this.domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(domainObject);
-            if (domainObject == null) {
-                showNothing();
-                return;
+            if (domainObject == null) return;
+
+            DomainObject refreshedObject = DomainMgr.getDomainMgr().getModel().getDomainObject(domainObject);
+            if (refreshedObject != null) {
+                // If refreshedObject is null, it means the object has either been deleted, or it's marked NotCacheable
+                // TODO: distinguish between those two states and only proceed if the object has not be deleted
+                domainObject = refreshedObject;
             }
             
             int selectedTab = tabbedPane.getSelectedIndex();

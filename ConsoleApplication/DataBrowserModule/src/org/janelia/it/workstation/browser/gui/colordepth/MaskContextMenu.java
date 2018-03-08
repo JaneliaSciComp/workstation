@@ -79,6 +79,8 @@ public class MaskContextMenu extends PopupContextMenu {
         JMenuItem removeItem = new JMenuItem("  Remove mask from this search");
         removeItem.addActionListener((ActionEvent actionEvent) -> {
 
+            ActivityLogHelper.logUserAction("MaskContextMenu.removeFromSearch", mask);
+            
             SimpleWorker worker = new SimpleWorker() {
                                     
                 @Override
@@ -128,7 +130,7 @@ public class MaskContextMenu extends PopupContextMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 ActivityLogHelper.logUserAction("MaskContextMenu.showInLightbox", mask);
-                Hud.getSingletonInstance().setFilepathAndToggleDialog(mask.getFilepath(), false, false);
+                Hud.getSingletonInstance().setFilepathAndToggleDialog(mask.getFilepath(), true, true);
             }
         });
 

@@ -7,7 +7,7 @@ import javax.ws.rs.core.Response;
 
 import org.janelia.it.workstation.browser.api.exceptions.AuthenticationException;
 import org.janelia.it.workstation.browser.api.exceptions.ServiceException;
-import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientImpl;
+import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AuthServiceClient extends RESTClientImpl {
+public class AuthServiceClient extends RESTClientBase {
 
     private static final Logger log = LoggerFactory.getLogger(AuthServiceClient.class);
     

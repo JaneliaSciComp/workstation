@@ -10,7 +10,7 @@ import java.util.Map;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.browser.actions.OpenWithDefaultAppAction;
@@ -23,7 +23,6 @@ import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
@@ -91,22 +90,17 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         add(getTitleItem());
         add(getCopyNameToClipboardItem());
 
-        if (sample != null) {
-            setNextAddRequiresSeparator(true);
-            add(getAddToMaskResultsItem());
-            add(getAddToFolderItem());
-            add(getColorDepthSearchItem());
-            
-            setNextAddRequiresSeparator(true);
-            add(getOpenInFinderItem());
-            add(getOpenWithAppItem());
-    
-            setNextAddRequiresSeparator(true);
-            add(getHudMenuItem());
-        }
-        else {
-            add(getRequestAccessItem());
-        }
+        setNextAddRequiresSeparator(true);
+        add(getAddToMaskResultsItem());
+        add(getAddToFolderItem());
+        add(getColorDepthSearchItem());
+        
+        setNextAddRequiresSeparator(true);
+        add(getOpenInFinderItem());
+        add(getOpenWithAppItem());
+
+        setNextAddRequiresSeparator(true);
+        add(getHudMenuItem());
     }
 
     protected JMenuItem getTitleItem() {
@@ -132,46 +126,40 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     }
    
     protected JMenuItem getAddToMaskResultsItem() {
-
-        String name = matches.size() > 1 ? "  Add " + matches.size() + " Samples to Mask Results" : "  Add Sample To Mask Results";
         
-        JMenuItem addToMaskItem = new JMenuItem(name);
-        addToMaskItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ActivityLogHelper.logUserAction("ColorDepthMatchContentMenu.getAddToMaskResultsItem", matches);
-                
-                SimpleWorker worker = new SimpleWorker() {
-                    
-                    DomainModel model = DomainMgr.getDomainMgr().getModel();
-                    
-                    @Override
-                    protected void doStuff() throws Exception {
-                        ColorDepthMask mask = model.getDomainObject(matches.get(0).getMaskRef());
-                        model.addChildren(mask, getSamples());
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        // TODO: reload data explorer?
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
-                    }
-                };
-                worker.execute();
-            }
-        });
+        List<Sample> samples = getSamples();
+        if (samples.isEmpty()) return null;
         
-        return addToMaskItem;
+        AddToResultsAction action = AddToResultsAction.get();
+        action.setDomainObjects(samples);
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        try {
+            // This should properly be done in a background thread, but as a shortcut we'll rely on the fact it's cached 
+            ColorDepthMask mask = model.getDomainObject(matches.get(0).getMaskRef());
+            action.setMask(mask);
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleExceptionQuietly(e);
+            return null;
+        }
+        
+        JMenuItem item = action.getPopupPresenter();
+        if (item!=null) {
+            // Override title to include the word "Sample" instead of generic "Item"
+            String title = samples.size() > 1 ? "Add " + samples.size() + " Samples To Result Set" : "Add Sample To Result Set";
+            item.setText("  " + title);
+        }
+        return item;
     }
     
     protected JMenuItem getAddToFolderItem() {
-        AddToFolderAction action = AddToFolderAction.get();
+        
         List<Sample> samples = getSamples();
+        if (samples.isEmpty()) return null;
+        
+        AddToFolderAction action = AddToFolderAction.get();
         action.setDomainObjects(samples);
+        
         JMenuItem item = action.getPopupPresenter();
         if (item!=null) {
             // Override title to include the word "Sample" instead of generic "Item"
@@ -206,29 +194,20 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 ActivityLogHelper.logUserAction("ColorDepthMatchContentMenu.showInLightbox", match);
-                Hud.getSingletonInstance().setFilepathAndToggleDialog(match.getFilepath(), false, false);
+                Hud.getSingletonInstance().setFilepathAndToggleDialog(match.getFilepath(), true, false);
             }
         });
 
         return toggleHudMI;
     }
-
-    
-    protected JMenuItem getRequestAccessItem() {
-        if (multiple) return null;
-        
-        // TODO: Implement this
-        
-        return null;
-    }
     
     protected List<Sample> getSamples() {
         List<Sample> samples = new ArrayList<>();
         for(ColorDepthMatch match : matches) {
-            samples.add(sampleMap.get(match.getSample()));
+            if (match.getSample()!=null) {
+                samples.add(sampleMap.get(match.getSample()));
+            }
         }
         return samples;
     }
-    
-    
 }

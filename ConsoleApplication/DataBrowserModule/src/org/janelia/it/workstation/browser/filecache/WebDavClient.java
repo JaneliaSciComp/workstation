@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.filecache;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -10,8 +11,6 @@ import java.nio.file.Paths;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -24,8 +23,13 @@ import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
+import org.janelia.it.workstation.browser.util.PathUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * {@link HttpClient} wrapper for submitting WebDAV requests.
@@ -37,7 +41,7 @@ public class WebDavClient {
     private static final Logger LOG = LoggerFactory.getLogger(WebDavClient.class);
 
     private final String baseUrl;
-    private final HttpClient httpClient;
+    private final HttpClientProxy httpClient;
     private final ObjectMapper objectMapper;
 
     /**
@@ -48,7 +52,7 @@ public class WebDavClient {
      * @throws IllegalArgumentException
      *   if the baseUrl cannot be parsed.
      */
-    public WebDavClient(String baseUrl, HttpClient httpClient, ObjectMapper objectMapper) {
+    public WebDavClient(String baseUrl, HttpClientProxy httpClient, ObjectMapper objectMapper) {
         this.baseUrl = validateUrl(baseUrl);
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
@@ -222,10 +226,10 @@ public class WebDavClient {
         }
         String storageVirtualPath = jsonResponse.get("rootPrefix").asText();
         String storageRealPath = jsonResponse.get("rootLocation").asText();
-        String storageRelativePath = jsonResponse.get("nodeRelativePath").asText();
-
-        return new RemoteLocation(Paths.get(storageVirtualPath, storageRelativePath).toString(),
-                Paths.get(storageRealPath, storageRelativePath).toString(), location);
+        String storageRelativePath = jsonResponse.get("nodeRelativePath").asText();        
+        String virtualFilePath = PathUtil.getStandardPath(Paths.get(storageVirtualPath, storageRelativePath));
+        String realFilePath = PathUtil.getStandardPath(Paths.get(storageRealPath, storageRelativePath));
+        return new RemoteLocation(virtualFilePath, realFilePath, location);
     }
 
     private MultiStatusResponse[] getResponses(String href, int depth, int callCount)
@@ -252,7 +256,7 @@ public class WebDavClient {
                 }
                 throw new WebDavException(responseCode + " response code returned for " + href, responseCode);
             } else if (responseCode == HttpStatus.SC_NOT_FOUND) {
-                throw new WebDavException("Resource " + href + "not found (" + responseCode + ")");
+                throw new FileNotFoundException("Resource " + href + "not found (" + responseCode + ")");
             } else {
                 throw new WebDavException(responseCode + " response code returned for " + href, responseCode);
             }
@@ -292,7 +296,8 @@ public class WebDavClient {
             LOG.trace("createDirectory: {} returned for MKCOL {}", resourceURI, responseCode);
 
             if (responseCode != HttpServletResponse.SC_CREATED) {
-                throw new WebDavException(responseCode + " returned for MKCOL " + resourceURI, responseCode);
+                String response = method.getResponseBodyAsString();
+                throw new WebDavException(responseCode + " returned for MKCOL " + resourceURI + ": " + response, responseCode);
             }
             final Header locationHeader = method.getResponseHeader("Location");
             if (locationHeader == null) {

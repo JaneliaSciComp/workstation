@@ -9,6 +9,7 @@ import java.io.File;
 import java.util.HashSet;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -72,6 +73,7 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
                                 
                 final JDialog inputDialog = new JDialog(mainFrame, true);
                 final JTextField pathTextField = new JTextField();
+                final JCheckBox systemOwnerCheckbox = new JCheckBox();
                 final JLabel errorLabel = new JLabel("   ");
                 errorLabel.setForeground(Color.red);
                 pathTextField.addKeyListener(new PathCorrectionKeyListener(pathTextField));
@@ -85,8 +87,10 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
                 inputDialog.setLayout(new GridLayout(6, 1));
                 inputDialog.add(workspaceNameLabel);
                 inputDialog.add(workspaceNameTextField);
-                inputDialog.add(new JLabel("Enter Full Path to Input Folder"));
+                inputDialog.add(new JLabel("Enter full path to input folder"));
                 inputDialog.add(pathTextField);
+                inputDialog.add(new JLabel("Assign all neurons to mouselight"));
+                inputDialog.add(systemOwnerCheckbox);
                 JPanel buttonPanel = new JPanel();
                 buttonPanel.setLayout(new BorderLayout());
                 JButton cancelButton = new JButton("Cancel");
@@ -145,6 +149,7 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
                 inputDialog.setVisible(true);
                 
                 workspaceName = workspaceNameTextField.getText().trim();
+                String systemOwner = new Boolean(systemOwnerCheckbox.isSelected()).toString();
 
                 log.info("Processing " + userInput);
                 
@@ -158,6 +163,7 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
                     taskParameters.add(new TaskParameter(SwcImportTask.PARAM_userName, ownerKey, null));
                     taskParameters.add(new TaskParameter(SwcImportTask.PARAM_workspaceName, workspaceName, null));
                     taskParameters.add(new TaskParameter(SwcImportTask.PARAM_topLevelFolderName, userInput, null));
+                    taskParameters.add(new TaskParameter(SwcImportTask.PARAM_systemOwner, systemOwner, null));
 
                     String taskName = new File(userInput).getName();
                     String displayName = taskName + " for 3D tiled microscope sample " + sampleId;

@@ -49,6 +49,8 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
@@ -90,6 +92,7 @@ import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
@@ -597,6 +600,9 @@ public class TracingInteractor extends MouseAdapter
             return; // not allowed to move that vertex
         if (! SwingUtilities.isLeftMouseButton(event))
             return; // left button drag only
+        if (!checkOwnership(defaultWorkspace.getNeuronForAnchor(cachedDragVertex))) {
+            return;
+        }
 
         // log.info("Dragging a vertex");       
         // Update display (only) of dragged vertex
@@ -660,6 +666,9 @@ public class TracingInteractor extends MouseAdapter
     
     private boolean moveAnchor(NeuronModel neuron, NeuronVertex anchor, ConstVector3 newLocation) 
     {
+        if (!checkOwnership(neuron)) {
+            return false;
+        }
         MoveNeuronAnchorCommand cmd = new MoveNeuronAnchorCommand(
                 neuron,
                 anchor,
@@ -973,6 +982,9 @@ public class TracingInteractor extends MouseAdapter
             long beginAppendTime = System.nanoTime();
             if (! canAppendVertex())
                 return false;
+            if (!checkOwnership(defaultWorkspace.getNeuronForAnchor(parentVertex))) {
+                return false;
+            }
             // OLD WAY, pre Undo: NeuronVertex addedVertex = neuron.appendVertex(parentVertex, templateVertex.getLocation(), templateVertex.getRadius());
             // First, store a link to upstream append command, to be able to handle serial undo/redo, and the resulting chain of replaced parent vertices
             // VertexAdder parentAppendCmd = appendCommandForVertex.get(vtxKey(parentVertex));
@@ -1040,6 +1052,9 @@ public class TracingInteractor extends MouseAdapter
         public void deleteNeuron() {
             if (! canDeleteNeuron())
                 return;
+            if (!checkOwnership(hoveredNeuron)) {
+                return;
+            }
             new DeleteNeuronAction(
                     volumeProjection.getMouseableComponent(),
                     defaultWorkspace,
@@ -1060,6 +1075,9 @@ public class TracingInteractor extends MouseAdapter
         public boolean splitNeurite() {
             if (!canSplitNeurite())
                 return false;
+            if (!checkOwnership(defaultWorkspace.getNeuronForAnchor(hoveredVertex))) {
+                return false;
+            }
 
             SplitNeuriteCommand cmd = new SplitNeuriteCommand(defaultWorkspace, hoveredVertex, parentVertex);
             if (cmd.execute()) {
@@ -1088,6 +1106,12 @@ public class TracingInteractor extends MouseAdapter
         public boolean mergeNeurites() {
             if (!canMergeNeurite())
                 return false;
+            if (!checkOwnership(defaultWorkspace.getNeuronForAnchor(hoveredVertex))) {
+                return false;
+            }       
+            if (!checkOwnership(defaultWorkspace.getNeuronForAnchor(parentVertex))) {
+                return false;
+            }   
             
             final boolean doConfirmMerge = false;
             if (doConfirmMerge) {
@@ -1137,6 +1161,9 @@ public class TracingInteractor extends MouseAdapter
         public void recolorNeuron() {
             if (! canRecolorNeuron())
                 return;
+            if (!checkOwnership(hoveredNeuron)) {
+                return;
+            }  
             new RecolorNeuronAction(
                     volumeProjection.getMouseableComponent(),
                     defaultWorkspace,
@@ -1164,7 +1191,9 @@ public class TracingInteractor extends MouseAdapter
             if (! canUpdateAnchorRadius()) {
                 return false;
             }
-            
+            if (!checkOwnership(hoveredNeuron)) {
+                return false;
+            }
             RadiusDialog radiusDialog = new RadiusDialog(hoveredNeuron, hoveredVertex);
             Object selectedValue = radiusDialog.getValue();
             int result = -1;
@@ -1196,6 +1225,39 @@ public class TracingInteractor extends MouseAdapter
         NeuronModel getHighlightedNeuron() {
             return hoveredNeuron;   
         }
+    }
+    
+     public boolean checkOwnership(NeuronModel neuron) {
+        // create a future to hopefully 
+        if (neuron.getOwnerKey().equals("group:mouselight")) {
+            CompletableFuture<Boolean> future = defaultWorkspace.changeNeuronOwnership(neuron.getNeuronId());
+            if (future==null) 
+                return false;
+            try {
+                Boolean ownershipDecision = future.get(2, TimeUnit.SECONDS);
+                return ownershipDecision.booleanValue();
+            } catch (Exception e) {
+                String errorMessage = "Problems handling roundtrip request for ownership of System-owned neuron";
+                log.error(errorMessage);
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(
+                        volumeProjection.getMouseableComponent(),
+                        errorMessage,
+                        "Failed to request neuron ownership",
+                        JOptionPane.WARNING_MESSAGE);
+            }
+            return false;
+        }
+        if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
+            JOptionPane.showMessageDialog(
+                    volumeProjection.getMouseableComponent(),
+                    "Neuron " + neuron.getName() + " is owned by " + neuron.getOwnerKey() +
+                            ". Ask them for ownership if you'd like to make changes.",
+                    "Neuron not owned",
+                    JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        return true;
     }
     
     class RadiusDialog extends JOptionPane 

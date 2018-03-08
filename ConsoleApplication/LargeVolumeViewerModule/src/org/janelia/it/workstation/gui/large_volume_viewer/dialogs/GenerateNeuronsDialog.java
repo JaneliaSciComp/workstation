@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -252,8 +254,8 @@ public class GenerateNeuronsDialog extends ModalDialog {
                     for(int i=0; i<neuronCount; i++) {
                         String neuronName = "Neuron "+index;
                         setStatus("Creating artificial "+neuronName);
-                        final TmNeuronMetadata neuron = annotationModel.getNeuronManager()
-                                .createTiledMicroscopeNeuron(currentWorkspace, neuronName);
+                        CompletableFuture<TmNeuronMetadata> future = annotationModel.getNeuronManager().createTiledMicroscopeNeuron(currentWorkspace, neuronName);
+                        TmNeuronMetadata neuron = future.get(2, TimeUnit.SECONDS);
                         generator.generateArtificialNeuronData(neuron);
                         annotationModel.getNeuronManager().saveNeuronData(neuron);
                         setProgress(index++, total);

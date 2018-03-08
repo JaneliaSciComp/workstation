@@ -59,6 +59,7 @@ public class BrandingConfig {
     
     private static final String NETBEANS_IDE_SETTING_NAME_PREFIX = "netbeans_";
     private static final String MEMORY_SETTING_PREFIX = "-J-Xmx";
+    private static final String CHECK_UPDATES_PREFIX = "-J-Dplugin.manager.check.updates=";
     private static final String DEFAULT_OPTIONS_PROP = "default_options";
     private static final String ETC_SUBPATH = "etc";
 
@@ -67,7 +68,8 @@ public class BrandingConfig {
     
     private final boolean devMode;
     private File fqBrandingConfig; 
-    private int maxMemoryMB = -1;
+    private Integer maxMemoryMB = null;
+    private Boolean checkUpdates = null;
     private boolean needsRestart = false;
     
     private BrandingConfig() {
@@ -163,6 +165,7 @@ public class BrandingConfig {
                 loadProperties(fqBrandingConfig, brandingSettings);
                 log.info("Loaded {} properties from {}", brandingSettings.size(), fqBrandingConfig);
                 loadBrandingMemorySetting();
+                loadBrandingCheckUpdatesSetting();
             }
         }
         catch (IOException e) {
@@ -175,7 +178,7 @@ public class BrandingConfig {
         if (javaMemoryOption==null) return;
         log.info("Found existing memory option: "+javaMemoryOption);
         final int numberEndPt = javaMemoryOption.length() - 1;
-        char rangeIndicator = javaMemoryOption.charAt( numberEndPt );
+        char rangeIndicator = javaMemoryOption.charAt(numberEndPt);
         final int numberStartPt = MEMORY_SETTING_PREFIX.length();
         if (rangeIndicator != 'm') {
             // Default of 8 GB 
@@ -187,6 +190,15 @@ public class BrandingConfig {
         log.info("Loaded existing branding memory setting: "+maxMemoryMB);
     }
 
+    private final void loadBrandingCheckUpdatesSetting() {
+        String checkUpdatesOption = getCheckUpdatesOption();
+        if (checkUpdatesOption==null) return;
+        final int numberStartPt = CHECK_UPDATES_PREFIX.length();
+        String value = checkUpdatesOption.substring(numberStartPt);
+        this.checkUpdates = Boolean.parseBoolean(value);
+        log.info("Loaded existing check updates setting: "+value);
+    }
+    
     public boolean isNeedsRestart() {
         return needsRestart;
     }
@@ -196,6 +208,17 @@ public class BrandingConfig {
         String[] defaultOptionsArr = defaultOptions == null ? new String[0] : defaultOptions.split(" ");
         for (String defaultOption : defaultOptionsArr) {
             if (defaultOption.startsWith(MEMORY_SETTING_PREFIX)) {
+                return defaultOption;
+            }
+        }
+        return null;
+    }
+
+    private final String getCheckUpdatesOption() {
+        String defaultOptions = brandingSettings.get(DEFAULT_OPTIONS_PROP);
+        String[] defaultOptionsArr = defaultOptions == null ? new String[0] : defaultOptions.split(" ");
+        for (String defaultOption : defaultOptionsArr) {
+            if (defaultOption.startsWith(CHECK_UPDATES_PREFIX)) {
                 return defaultOption;
             }
         }
@@ -227,10 +250,10 @@ public class BrandingConfig {
                 
                 if (DEFAULT_OPTIONS_PROP.equals(systemKey)) {
                     // Default options are treated differently than most. We take the system setting for everything except the 
-                    // max memory, which can be customized by the user. 
+                    // max memory and check updates, which can be customized by the user. 
                     // TODO: In the future, it would be nice to support customization of any property, but it requires rather 
                     // complicated command-line option parsing.
-                    if (syncDefaultOptions(maxMemoryMB)) {
+                    if (syncDefaultOptions(maxMemoryMB, checkUpdates)) {
                         dirty = true;
                     }
                 }
@@ -260,27 +283,42 @@ public class BrandingConfig {
         }
     }
 
-    private boolean syncDefaultOptions(int maxMemoryMB) {
+    private boolean syncDefaultOptions(Integer maxMemoryMB, Boolean checkUpdates) {
 
         String systemValue = systemSettings.get(DEFAULT_OPTIONS_PROP);
         String brandingValue = brandingSettings.get(DEFAULT_OPTIONS_PROP);
         String customDefaultOpts = systemValue;
+        log.info("Original systemValue="+systemValue);
         
         // What should the default options be?
-        if (maxMemoryMB > 0) {
-            int optStart = systemValue.indexOf(MEMORY_SETTING_PREFIX) + MEMORY_SETTING_PREFIX.length();
-            int optEnd = systemValue.indexOf(" ", optStart);
+        if (maxMemoryMB != null) {
+            int optStart = customDefaultOpts.indexOf(MEMORY_SETTING_PREFIX) + MEMORY_SETTING_PREFIX.length();
+            int optEnd = customDefaultOpts.indexOf(" ", optStart);
             if (optEnd<0) {
-                optEnd = systemValue.indexOf("\"", optStart);
+                optEnd = customDefaultOpts.indexOf("\"", optStart);
                 if (optEnd<0) {
-                    optEnd = systemValue.length();
+                    optEnd = customDefaultOpts.length();
                 }
             }
-            customDefaultOpts = systemValue.substring(0, optStart) + maxMemoryMB + "m" + systemValue.substring(optEnd);
+            customDefaultOpts = customDefaultOpts.substring(0, optStart) + maxMemoryMB + "m" + customDefaultOpts.substring(optEnd);
+            log.info("After applying maxMemoryMB, customDefaultOpts="+customDefaultOpts);
         }
-
+        
+        if (checkUpdates != null) {
+            int optStart = customDefaultOpts.indexOf(CHECK_UPDATES_PREFIX) + CHECK_UPDATES_PREFIX.length();
+            int optEnd = customDefaultOpts.indexOf(" ", optStart);
+            if (optEnd<0) {
+                optEnd = customDefaultOpts.indexOf("\"", optStart);
+                if (optEnd<0) {
+                    optEnd = customDefaultOpts.length();
+                }
+            }
+            customDefaultOpts = customDefaultOpts.substring(0, optStart) + checkUpdates + customDefaultOpts.substring(optEnd);
+            log.info("After applying checkUpdates, customDefaultOpts="+customDefaultOpts);
+        }
+        
         if (!StringUtils.areEqual(brandingValue, customDefaultOpts)) {
-            log.info("Updating branding config for {}={} to {}", DEFAULT_OPTIONS_PROP, brandingValue, customDefaultOpts);
+            log.info("Updating branding config for {}\nfrom {}\n  to {}", DEFAULT_OPTIONS_PROP, brandingValue, customDefaultOpts);
             brandingSettings.put(DEFAULT_OPTIONS_PROP, customDefaultOpts);
             // If the branding value has changed, we'll need to restart to pick it up.
             if (brandingValue!=null) {
@@ -289,27 +327,43 @@ public class BrandingConfig {
             return true;
         }
         else {
-            log.info("Branding config aready has correct default options");
+            log.info("Branding config already has correct default options");
             return false;
         }
     }
 
-    public int getMemoryAllocationGB() {
+    public Integer getMemoryAllocationGB() {
         // Stored as megabytes. Presented to user as gigabytes.
-        if (maxMemoryMB<0) return maxMemoryMB;
+        if (maxMemoryMB == null) return null;
         log.debug("Got memory allocation = {} MB", maxMemoryMB);
         return maxMemoryMB / 1024;
     }
     
-    public void setMemoryAllocationGB(int maxMemoryGB) throws IOException {
-        int maxMemoryMB  = maxMemoryGB * 1024;
+    public void setMemoryAllocationGB(Integer maxMemoryGB) throws IOException {
+        Integer maxMemoryMB = maxMemoryGB == null ? null : maxMemoryGB * 1024;
         if (fqBrandingConfig!=null) {
-            if (syncDefaultOptions(maxMemoryMB)) {
+            if (syncDefaultOptions(maxMemoryMB, checkUpdates)) {
                 saveBrandingConfig();
             }
         }
         this.maxMemoryMB = maxMemoryMB;
-        log.debug("Set memory allocation = {} MB", maxMemoryMB);
+        log.info("Set memory allocation = {} MB", maxMemoryMB);
+    }
+
+    //-J-Dplugin.manager.check.updates=false
+    public boolean getCheckUpdates() {
+        log.debug("Got check updates = {}", checkUpdates);
+        return checkUpdates;
+    }
+    
+    public void setCheckUpdates(boolean checkUpdates) throws IOException {
+        if (fqBrandingConfig!=null) {
+            if (syncDefaultOptions(maxMemoryMB, checkUpdates)) {
+                saveBrandingConfig();
+            }
+        }
+        this.checkUpdates = checkUpdates;
+        log.info("Set check updates = {}", checkUpdates);
     }
     
     private void saveBrandingConfig() throws IOException {

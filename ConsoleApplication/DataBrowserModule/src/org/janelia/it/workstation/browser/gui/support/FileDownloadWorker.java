@@ -45,7 +45,7 @@ public class FileDownloadWorker {
 
     private static final Logger log = LoggerFactory.getLogger(FileDownloadWorker.class);
     
-    private final Path workstationImagesDir = SystemInfo.getDownloadsDir().resolve("Workstation Images");
+    private final Path downloadsDir = SystemInfo.getDownloadsDir();
     private final Collection<DownloadFileItem> downloadItems;
     private final Lock copyFileLock;
     private Multiset<String> parentDirs = HashMultiset.create();
@@ -289,7 +289,7 @@ public class FileDownloadWorker {
                     DesktopApi.browse(new File(maxPath));
                 }
                 else {
-                    DesktopApi.browse(workstationImagesDir.toFile());
+                    DesktopApi.browse(downloadsDir.toFile());
                 }
                 return null;
             }

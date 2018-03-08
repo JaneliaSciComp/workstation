@@ -28,11 +28,11 @@ import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerCo
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
@@ -60,6 +60,7 @@ public class ColorDepthResultIconGridViewer
     private SearchProvider searchProvider;
     
     // State
+    private PreferenceSupport preferenceSupport;
     private AnnotatedObjectList<ColorDepthMatch, String> matchList;
     private Map<Reference, Sample> sampleMap = new HashMap<>();
     private Map<String, ColorDepthMatch> matchMap = new HashMap<>();
@@ -102,11 +103,14 @@ public class ColorDepthResultIconGridViewer
 
         @Override
         public String getImageSubtitle(ColorDepthMatch match) {
-            return String.format("Score: %d (%2.0f%%)", match.getScore(), match.getScorePercent()*100);
+            return String.format("Score: %d (%s)", match.getScore(), MaskUtils.getFormattedScorePct(match));
         }
         
         @Override
         public List<ImageDecorator> getDecorators(ColorDepthMatch match) {
+            if (match.getSample()==null) {
+                return Arrays.asList(ImageDecorator.DISCONNECTED);
+            }
             return Collections.emptyList();
         }
 
@@ -116,11 +120,13 @@ public class ColorDepthResultIconGridViewer
         }
         
         private boolean hasAccess(ColorDepthMatch match) {
-            Sample sample = sampleMap.get(match.getSample());
-            if (match.getSample()!=null && sample==null) {
-                // The result maps to a sample, but the user has no access to see it
-                // TODO: check access to data set?
-                return false;
+            if (match.getSample()!=null) {
+                Sample sample = sampleMap.get(match.getSample());
+                if (sample == null) {
+                    // The result maps to a sample, but the user has no access to see it
+                    // TODO: check access to data set?
+                    return false;
+                }
             }
             return true;
         }
@@ -134,50 +140,6 @@ public class ColorDepthResultIconGridViewer
         getToolbar().getConfigButton().setVisible(false);
         
     }
-    
-//    private void setPreferenceAsync(final String category, final Object value) {
-//
-//        Utils.setMainFrameCursorWaitStatus(true);
-//
-//        SimpleWorker worker = new SimpleWorker() {
-//
-//            @Override
-//            protected void doStuff() throws Exception {
-//                setPreference(category, value);
-//            }
-//
-//            @Override
-//            protected void hadSuccess() {
-//                refreshDomainObjects();
-//            }
-//
-//            @Override
-//            protected void hadError(Throwable error) {
-//                Utils.setMainFrameCursorWaitStatus(false);
-//                ConsoleApp.handleException(error);
-//            }
-//        };
-//
-//        worker.execute();
-//    }
-    
-//    private String getPreference(String category) {
-//        try {
-//            final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
-//            return FrameworkImplProvider.getRemotePreferenceValue(category, parentObject.getId().toString(), null);
-//        }
-//        catch (Exception e) {
-//            log.error("Error getting preference", e);
-//            return null;
-//        }
-//    }
-//    
-//    private void setPreference(final String category, final Object value) throws Exception {
-//        final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
-//        if (parentObject.getId()!=null) {
-//            FrameworkImplProvider.setRemotePreferenceValue(category, parentObject.getId().toString(), value);
-//        }
-//    }
     
     @Override
     public JPanel getPanel() {
@@ -204,6 +166,16 @@ public class ColorDepthResultIconGridViewer
         return selectionModel;
     }
 
+    @Override
+    public void setPreferenceSupport(PreferenceSupport preferenceSupport) {
+        this.preferenceSupport = preferenceSupport;
+    }
+    
+    @Override
+    public PreferenceSupport getPreferenceSupport() {
+        return preferenceSupport;
+    }
+    
     @Override
     public void activate() {
     }
@@ -340,25 +312,15 @@ public class ColorDepthResultIconGridViewer
         refreshObject(match);
     }
 
-    private void refreshView() {
-        show(matchList, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                Utils.setMainFrameCursorWaitStatus(false);
-                return null;
-            }
-        });
-    }
-
     @Override
     protected ColorDepthMatchContextMenu getContextualPopupMenu() {
         return getPopupMenu(getSelectedObjects());
     }
     
-    private ColorDepthMatchContextMenu getPopupMenu(List<ColorDepthMatch> matches) {
-        log.info("Selected objects: "+matches);
+    private ColorDepthMatchContextMenu getPopupMenu(List<ColorDepthMatch> selected) {
+        log.info("Selected objects: "+selected);
         ColorDepthMatchContextMenu popupMenu = new ColorDepthMatchContextMenu(
-                (ColorDepthResult)selectionModel.getParentObject(), matches, sampleMap);
+                (ColorDepthResult)selectionModel.getParentObject(), selected, sampleMap);
         popupMenu.addMenuItems();
         return popupMenu;
     }
@@ -373,12 +335,7 @@ public class ColorDepthResultIconGridViewer
 
     @Override
     protected void objectDoubleClick(ColorDepthMatch match) {
-//        if (domainObjectProviderHelper.isSupported(object)) {
-//            domainObjectProviderHelper.service(object);
-//        }
-//        else {
-            getPopupMenu(Arrays.asList(match)).runDefaultAction();            
-//        }
+        getPopupMenu(Arrays.asList(match)).runDefaultAction();
     }
     
     @Override
@@ -423,11 +380,30 @@ public class ColorDepthResultIconGridViewer
 
     @Override
     public ListViewerState saveState() {
-        return null;
+        int maxImageWidth = imagesPanel.getMaxImageWidth();
+        log.debug("Saving maxImageWidth={}",maxImageWidth);
+        ColorDepthResultIconGridViewerState state = new ColorDepthResultIconGridViewerState(maxImageWidth);
+        return state;
     }
 
     @Override
     public void restoreState(ListViewerState viewerState) {
+        final ColorDepthResultIconGridViewerState tableViewerState = (ColorDepthResultIconGridViewerState) viewerState;
+        SwingUtilities.invokeLater(new Runnable() {
+               public void run() {
+                   int maxImageWidth = tableViewerState.getMaxImageWidth();
+                   log.debug("Restoring maxImageWidth={}",maxImageWidth);
+                   getToolbar().getImageSizeSlider().setValue(maxImageWidth);
+                   // Wait until slider resizes images, then fix scroll:
+                   SwingUtilities.invokeLater(new Runnable() {
+                       @Override
+                       public void run() {
+                           scrollSelectedObjectsToCenter();
+                       }
+                   });
+               }
+           }
+        );
     }
 
     private List<ColorDepthMatch> getSelectedObjects() {

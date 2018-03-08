@@ -61,6 +61,7 @@ public class ToolMgr extends PreferenceManager {
     public static final String TOOL_FIJI    = "Fiji.app";
     public static final String TOOL_VAA3D   = "Vaa3d";
     public static final String TOOL_NA      = "Vaa3d - Neuron Annotator";
+    public static final String suffix = SystemInfo.isWindows ? " /na" : " -na";
 
     public static final String MODE_3D      = "3D View";
     public static String rootExecutablePath = ToolMgr.class.getProtectionDomain().getCodeSource().getLocation().getPath();
@@ -87,9 +88,14 @@ public class ToolMgr extends PreferenceManager {
 
         // Temporary code to clean up a NA deficiency
         ToolInfo tmpTool = toolTreeMap.get(TOOL_NA);
-        if (null!=tmpTool && !tmpTool.getPath().endsWith(" -na")) {
-            tmpTool.setPath(tmpTool.getPath()+" -na");
+        
+        // Add Neuron Annotator option to Vaa3d
+        if (tmpTool != null) {
+            if (!tmpTool.getPath().endsWith(suffix)) {
+                tmpTool.setPath(tmpTool.getPath()+suffix);
+            }
         }
+        
     }
 
     public void saveChanges() {
@@ -365,8 +371,10 @@ public class ToolMgr extends PreferenceManager {
             boolean foundArg = false;
             StringBuilder toolPathSb = new StringBuilder();
             List<String> toolArgs = new ArrayList<>();
+            // TODO: this is very brittle and needs to be re-thought entirely 
             for(String pathComponent : path.split(" ")) {
-                if (!foundArg && !pathComponent.startsWith("-")) {
+                if (!foundArg && !pathComponent.startsWith("-") // On non-Windows systems, arguments usually start with a dash 
+                        && (!SystemInfo.isWindows || !pathComponent.startsWith("/"))) { // On Windows, arguments start with a forward slash
                     toolPathSb.append(" ").append(pathComponent);
                 }
                 else {
@@ -376,6 +384,9 @@ public class ToolMgr extends PreferenceManager {
             }
 
             String toolPath = toolPathSb.toString().trim();
+            log.info("Calculated tool path: {}", toolPath);
+            log.info("Calculated tool args: {}", toolArgs);
+            log.info("User specified arguments: {}", arguments);
             
             final File exeFile = new File(toolPath);
             if (!exeFile.exists()) {
@@ -483,10 +494,10 @@ public class ToolMgr extends PreferenceManager {
                 String toolPath = tool.getPath().trim();
 
                 if (TOOL_VAA3D.equals(toolName)) {
-                    arguments.add("-i");
+                    arguments.add(SystemInfo.isWindows ? "/i" : "-i");
                     arguments.add(file.getAbsolutePath());
                     if (MODE_3D.equals(mode)) {
-                        arguments.add("-v");
+                        arguments.add(SystemInfo.isWindows ? "/v" : "-v");
                     }
                 }
                 else if (TOOL_FIJI.equals(toolName)) {

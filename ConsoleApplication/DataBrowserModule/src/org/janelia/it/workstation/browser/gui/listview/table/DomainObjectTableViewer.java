@@ -36,6 +36,7 @@ import org.janelia.it.workstation.browser.gui.listview.ListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
@@ -68,7 +69,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,null,true,null,null);
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
 
-    // These members deal with the context and entities within it
+    // State
+    private PreferenceSupport preferenceSupport;
     private AnnotatedObjectList<DomainObject,Reference> domainObjectList;
     private ChildSelectionModel<DomainObject, Reference> selectionModel;
     private SearchProvider searchProvider;
@@ -132,9 +134,24 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
+    public void setPreferenceSupport(PreferenceSupport preferenceSupport) {
+        this.preferenceSupport = preferenceSupport;
+    }
+
+    @Override
+    public PreferenceSupport getPreferenceSupport() {
+        return preferenceSupport;
+    }
+    
+    @Override
     public int getNumItemsHidden() {
+        if (domainObjectList==null || getObjects()==null) return 0;
         int totalItems = this.domainObjectList.getObjects().size();
         int totalVisibleItems = getObjects().size();
+        if (totalVisibleItems > totalItems) {
+            log.warn("Visible item count greater than total item count");
+            return 0;
+        }
         return totalItems-totalVisibleItems;
     }
         
@@ -332,7 +349,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public AnnotatedObjectList<DomainObject, Reference> getDomainObjectList() {
+    public AnnotatedObjectList<DomainObject, Reference> getObjectList() {
         return domainObjectList;
     }
 
@@ -365,6 +382,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         return false;
     }
 
+    @Override
     public Object getValue(AnnotatedObjectList<DomainObject, Reference> domainObjectList, DomainObject object, String columnName) {
         if (COLUMN_KEY_ANNOTATIONS.equals(columnName)) {
             StringBuilder builder = new StringBuilder();

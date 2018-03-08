@@ -24,6 +24,7 @@ import javax.swing.JTextField;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -188,8 +189,10 @@ public class AddMaskDialog extends ModalDialog {
             @Override
             protected void doStuff() throws Exception {
                 for(ColorDepthSearch search : DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(ColorDepthSearch.class)) {
-                    if (alignmentSpace==null || search.getAlignmentSpace().equals(alignmentSpace)) {
-                        searches.add(search);
+                    if (ClientDomainUtils.hasWriteAccess(search)) {
+                        if (alignmentSpace==null || search.getAlignmentSpace().equals(alignmentSpace)) {
+                            searches.add(search);
+                        }
                     }
                 }
             }
@@ -254,6 +257,8 @@ public class AddMaskDialog extends ModalDialog {
         
         maskNameField.setEditable(true);
         searchNameField.setText("Mask Search");
+
+        ActivityLogHelper.logUserAction("AddMaskDialog.showForMask", filepath);
         
         load();
         packAndShow();
@@ -313,10 +318,6 @@ public class AddMaskDialog extends ModalDialog {
 
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 
-                if (colorDepthSearch==null && newSearchRadioButton.isSelected()) {
-                    colorDepthSearch = model.createColorDepthSearch(searchNameField.getText(), alignmentSpace);
-                }
-                
                 if (mask==null) {
                     String maskName = maskNameStr;
                     if (colorDepthSearch != null && !maskName.matches("#\\d+$")) {
@@ -326,6 +327,10 @@ public class AddMaskDialog extends ModalDialog {
                     }
                     
                     mask = model.createColorDepthMask(maskName, alignmentSpace, filepath, maskThreshold, sample);
+                }
+
+                if (colorDepthSearch == null && newSearchRadioButton.isSelected()) {
+                    colorDepthSearch = model.createColorDepthSearch(searchNameField.getText(), alignmentSpace);
                 }
                 
                 if (colorDepthSearch == null) {
@@ -340,6 +345,9 @@ public class AddMaskDialog extends ModalDialog {
             protected void hadSuccess() {
                 Utils.setDefaultCursor(AddMaskDialog.this);
                 setVisible(false);
+
+                ActivityLogHelper.logUserAction("AddMaskDialog.processAdd", mask.getId());
+                
                 if (colorDepthSearch==null) {
                     DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(masksFolder.getId());
                 }

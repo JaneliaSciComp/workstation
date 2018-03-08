@@ -1,3 +1,39 @@
+// 7.4
+
+Workstation Browser
+* Added support for Open in Neuron Annotator and Open in Vaa3d on Windows
+* Fixed color depth mask upload and download on Windows
+* Other minor bug fixes
+
+
+Large Volume Viewer
+* Bug fixes for shared workspace release
+
+// 7.3
+
+Large Volume Viewer/Horta
+* Added neuron ownership system
+* Neurons can only be changed by their owner
+* When working in a shared workspace, progress from all tracers is automatically refreshed
+* Transfer neurite dialog respects current neuron list filter
+* At high zoom, lines between annotations should be much less likely to disappear
+
+// 7.2
+
+Workstation Browser
+* Added Color Depth Mask Search. Right-click any color depth MIP and choose "Create Color Depth Mask" to 
+  create a new mask and add it to a search. Detailed documentation is available in the user manual.
+* Added "Export Folder Structure" as a right-click option in the Data Explorer
+* Sanitize data before export to Excel, removing newlines and tabs
+* Updates are now downloaded when available and applied automatically the next time you start the program
+* Added button to set download folder from Download dialog
+* Fixed bug with converting files when downloading on Windows
+* It's now possible to directly open folders in search results by double-clicking them
+
+Large Volume Viewer
+* Added neuron ownership column to neuron list
+* Added neuron visibility column to neuron list; click to toggle visibility
+
 // 7.1
 
 Workstation Browser

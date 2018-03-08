@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -22,10 +23,12 @@ import org.openide.util.NbBundle.Messages;
 @ActionReference(path = "Menu/Help", position = 120)
 @Messages("CTL_UserGuideMenuAction=User Manual")
 public final class UserManualMenuAction extends AbstractAction {
+
+    private static final String MANUAL_URL = ConsoleProperties.getInstance().getProperty("manual.url"); 
     
     @Override
     public void actionPerformed(ActionEvent e) {
         ActivityLogHelper.logUserAction("UserManualMenuAction.actionPerformed");
-        Utils.openUrlInBrowser("http://wiki.int.janelia.org/wiki/display/JW/Introduction");
+        Utils.openUrlInBrowser(MANUAL_URL);
     }
 }

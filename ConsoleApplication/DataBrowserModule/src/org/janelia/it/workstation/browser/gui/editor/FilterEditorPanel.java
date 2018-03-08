@@ -50,6 +50,7 @@ import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SmartSearchBox;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
@@ -76,6 +77,7 @@ import org.janelia.model.domain.gui.search.criteria.Criteria;
 import org.janelia.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
+import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.Sample;
 import org.perf4j.StopWatch;
@@ -92,7 +94,9 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainObject,Reference> implements SearchProvider {
+public class FilterEditorPanel 
+        extends DomainObjectEditorPanel<Filtering,DomainObject,Reference> 
+        implements SearchProvider, PreferenceSupport {
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
 
@@ -105,6 +109,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainO
     
     // Utilities
     private final Debouncer debouncer = new Debouncer();
+    private final Debouncer refreshDebouncer = new Debouncer();
     
     // UI Elements
     private final ConfigPanel configPanel;
@@ -276,7 +281,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainO
         getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
         getActionMap().put("enterAction", mySearchAction);
         
-        this.resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this) {
+        this.resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
@@ -341,8 +346,21 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainO
             }
             configPanel.addTitleComponent(saveAsButton, false, true);
             configPanel.setExpanded(filter.getId()==null);
-
-            search();
+            
+            refreshSearchResults(isUserDriven, new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    searchBox.requestFocus();
+                    debouncer.success();
+                    return null;
+                }
+            },new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    debouncer.failure();
+                    return null;
+                }
+            });
         }
         catch (Exception e) {
             ConsoleApp.handleException(e);
@@ -352,17 +370,21 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainO
     }
     
     private void refreshSearchResults(boolean isUserDriven) {
-        debouncer.queue();
+        refreshSearchResults(isUserDriven, null);
+    }
+    
+    private void refreshSearchResults(boolean isUserDriven, final Callable<Void> success) {
+        refreshDebouncer.queue(success);
         refreshSearchResults(isUserDriven, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                debouncer.success();
+                refreshDebouncer.success();
                 return null;
             }
         },new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                debouncer.failure();
+                refreshDebouncer.failure();
                 return null;
             }
         });
@@ -925,7 +947,7 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainO
                 if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
                     viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
                 }
-                ExportResultsAction<DomainObject> action = new ExportResultsAction<>(exportSearchResults, viewer);
+                ExportResultsAction<DomainObject, Reference> action = new ExportResultsAction<>(exportSearchResults, viewer);
                 action.actionPerformed(null);
             }
 
@@ -942,5 +964,14 @@ public class FilterEditorPanel extends DomainObjectEditorPanel<Filtering,DomainO
     @Override
     public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
         return selectionModel;
+    }
+    
+    @Override
+    public Long getCurrentContextId() {
+        Object parentObject = getSelectionModel().getParentObject();
+        if (parentObject instanceof HasIdentifier) {
+            return ((HasIdentifier)parentObject).getId();
+        }
+        throw new IllegalStateException("Parent object has no identifier: "+getSelectionModel().getParentObject());
     }
 }

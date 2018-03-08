@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;

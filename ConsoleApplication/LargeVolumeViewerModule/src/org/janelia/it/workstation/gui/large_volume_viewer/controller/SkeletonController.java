@@ -343,6 +343,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void moveNeuriteRequested(Anchor anchor) {
         annoMgr.moveNeuriteRequested(anchor);
     }
+    
+    public boolean checkOwnership(Long neuronID) {
+        return annoMgr.checkOwnership(neuronID);
+    }
 
     public void smartMergeNeuriteRequested(Anchor clickedAnchor, Anchor currentParentAnchor) {
         annoMgr.smartMergeNeuriteRequested(clickedAnchor, currentParentAnchor);

@@ -6,6 +6,7 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.janelia.it.jacs.model.TestCategories;
+import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -92,12 +93,13 @@ public class LocalFileCacheTest {
 
         webDavClient = Mockito.mock(WebDavClient.class);
         httpClient = Mockito.mock(HttpClient.class);
+        HttpClientProxy httpClientProxy = new HttpClientProxy(httpClient);
 
         maxNumberOfCachedFiles = testRemoteFiles.size() - 1;
         // adding last file should force removal of first file
         final int cacheKilobytes =
                 (singleFileKilobytes + 1) * maxNumberOfCachedFiles;
-        PowerMockito.whenNew(WebDavClient.class).withArguments(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpClient.class), ArgumentMatchers.any(ObjectMapper.class)).thenReturn(webDavClient);
+        PowerMockito.whenNew(WebDavClient.class).withArguments(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpClientProxy.class), ArgumentMatchers.any(ObjectMapper.class)).thenReturn(webDavClient);
 
         Mockito.when(webDavClient.findStorage(ArgumentMatchers.anyString()))
                 .then(invocation -> {
@@ -128,7 +130,7 @@ public class LocalFileCacheTest {
         PowerMockito.whenNew(GetMethod.class).withAnyArguments().thenReturn(testGetMethod);
         Mockito.when(httpClient.executeMethod(ArgumentMatchers.any(HttpMethod.class))).thenReturn(200);
 
-        cache = new LocalFileCache(cacheRootParentDirectory, cacheKilobytes, null, httpClient, new WebDavClientMgr("http://basewebdav", httpClient));
+        cache = new LocalFileCache(cacheRootParentDirectory, cacheKilobytes, null, httpClientProxy, new WebDavClientMgr("http://basewebdav", httpClientProxy));
 
         filesToDeleteDuringTearDown = new ArrayList<>();
         filesToDeleteDuringTearDown.addAll(testRemoteFiles);

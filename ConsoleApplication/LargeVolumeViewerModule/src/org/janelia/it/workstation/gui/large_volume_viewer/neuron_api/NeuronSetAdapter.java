@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
@@ -53,6 +54,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.PredefinedNote;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -92,11 +94,14 @@ implements NeuronSet// , LookupListener
     private Jama.Matrix voxToMicronMatrix;
     private Jama.Matrix micronToVoxMatrix;
     private final NeuronVertexSpatialIndex spatialIndex = new NeuronVertexSpatialIndex();
+    private final NeuronSetBackgroundAnnotationListener backgroundAnnotationListener;
 
     private NeuronSetAdapter(NeuronList innerNeuronList) {
         super("LVV neurons", innerNeuronList);
         this.innerList = innerNeuronList;
         this.globalAnnotationListener = new MyGlobalAnnotationListener();
+        this.backgroundAnnotationListener = new NeuronSetBackgroundAnnotationListener();
+        backgroundAnnotationListener.setGlobal(globalAnnotationListener);
         this.annotationModListener = new MyTmGeoAnnotationModListener();
         this.hortaWorkspaceResult.addLookupListener(new NSALookupListener());
     }
@@ -108,6 +113,10 @@ implements NeuronSet// , LookupListener
     @Override
     public boolean isReadOnly() {
         return !annotationModel.editsAllowed();
+    }
+    
+    public void changeNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
+        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuron, visibility);
     }
     
     @Override
@@ -128,6 +137,17 @@ implements NeuronSet// , LookupListener
     @Override
     public void changeNeuronUserProperties (List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle) {
         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggle);
+    }
+    
+    @Override
+    public CompletableFuture<Boolean> changeNeuronOwnership (Long neuronId) {
+        try {
+            TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
+            return LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().getNeuronManager().requestOwnershipChange(neuron);
+        } catch (Exception error) {
+            ConsoleApp.handleException(error);
+        }
+        return null;
     }
     
     private void updateVoxToMicronMatrices(TmSample sample)
@@ -236,6 +256,7 @@ implements NeuronSet// , LookupListener
         }
         sanityCheckWorkspace();
         annotationModel.addGlobalAnnotationListener(globalAnnotationListener);
+        annotationModel.addBackgroundAnnotationListener(backgroundAnnotationListener);
         annotationModel.addTmGeoAnnotationModListener(annotationModListener);
         getMembershipChangeObservable().notifyObservers();
         log.info("Observing new Annotation Model {}", annotationModel);
@@ -540,6 +561,74 @@ implements NeuronSet// , LookupListener
         }
     }
 
+    private class NeuronSetBackgroundAnnotationListener implements BackgroundAnnotationListener {
+        GlobalAnnotationListener global;
+        
+        public void setGlobal(GlobalAnnotationListener global) {
+            this.global = global;
+        }
+        
+        @Override
+        public void neuronModelChanged(TmNeuronMetadata neuron) {
+            // Remove all the existing cached vertices for this neuron
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getCachedVertexes()) {
+                log.debug("Removing cached vertex: {}", neuronVertex);
+                spatialIndex.removeFromIndex(neuronVertex);
+            }
+            // merge in the latest vertices and update the geometry
+            neuronModel.mergeNeuronData(neuron);
+            
+            // Re-create all the vertices for the neuron, and re-add them to the spatial index
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                log.debug("Re-adding vertex: {}", neuronVertex);
+                spatialIndex.addToIndex(neuronVertex);
+            }
+            
+          //  repaintHorta(neuronModel);
+        }
+
+        @Override
+        public void neuronModelCreated(TmNeuronMetadata neuron) {
+           NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                log.debug("Adding vertex: {}", neuronVertex);
+                spatialIndex.addToIndex(neuronVertex);
+            }
+            neuronModel.getGeometryChangeObservable().setChanged();
+            getMembershipChangeObservable().setChanged();
+            getMembershipChangeObservable().notifyObservers(neuronModel);
+        }
+
+        @Override
+        public void neuronModelDeleted(TmNeuronMetadata neuron) {
+            log.info("Neuron deleted: {}", neuron);
+            Collection<NeuronVertex> deletedVertices = new ArrayList<>();
+            NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                log.debug("Removing vertex: {}", neuronVertex);
+                spatialIndex.removeFromIndex(neuronVertex);
+                deletedVertices.add(neuronVertex);
+            }
+            neuronModel.getVertexesRemovedObservable().setChanged();
+            neuronModel.getVertexesRemovedObservable().notifyObservers(
+                    new VertexCollectionWithNeuron(deletedVertices, neuronModel));
+            
+            neuronModel.getGeometryChangeObservable().setChanged();
+            innerList.removeFromCache(neuron.getId());
+            getMembershipChangeObservable().setChanged();
+            getMembershipChangeObservable().notifyObservers(neuronModel);
+        }
+
+        @Override
+        public void neuronOwnerChanged(TmNeuronMetadata neuron) {
+              NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+              neuronModel.setOwnerKey(neuron.getOwnerKey());
+              getMembershipChangeObservable().setChanged();
+              getMembershipChangeObservable().notifyObservers(neuronModel);
+        }
+        
+    }
 
     private class MyGlobalAnnotationListener implements GlobalAnnotationListener {
 
@@ -663,7 +752,11 @@ implements NeuronSet// , LookupListener
         @Override
         public void neuronRenamed(TmNeuronMetadata neuron) {
         }
-        
+
+        @Override
+        public void neuronsOwnerChanged(List<TmNeuronMetadata> neuronList) {
+        }
+
         @Override
         public void neuronSelected(TmNeuronMetadata neuron) {
         }
@@ -718,12 +811,12 @@ implements NeuronSet// , LookupListener
                 result = true;
             }
             
-            boolean vis = style.isVisible();
+            /*boolean vis = style.isVisible();
             if (vis != neuronModel.isVisible()) {
                 neuronModel.setVisible(vis);
                 neuronModel.getVisibilityChangeObservable().notifyObservers();
                 result = true;
-            }
+            }*/
              boolean userviz = style.isUserVisible();
             if (userviz != neuronModel.isUserVisible()) {
                 neuronModel.setUserVisible(userviz);

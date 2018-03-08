@@ -8,6 +8,7 @@ import com.google.common.cache.RemovalNotification;
 import com.google.common.cache.Weigher;
 import org.apache.commons.httpclient.HttpClient;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +76,7 @@ public class LocalFileCache {
     public LocalFileCache(File cacheParentDirectory,
                           long kilobyteCapacity,
                           CacheLoadEventListener cacheLoadEventListener,
-                          HttpClient httpClient,
+                          HttpClientProxy httpClient,
                           WebDavClientMgr webDavClientMgr)
             throws IllegalStateException {
 

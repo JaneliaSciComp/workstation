@@ -222,7 +222,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
 
             String email = AccessManager.getUserEmail();
             String version = ConsoleApp.getConsoleApp().getApplicationVersion();
-            String titleSuffix = " from "+AccessManager.getUsername()+" -- "+version+" -- "+firstLine;
+            String titleSuffix = " from "+AccessManager.getSubjectName()+" -- "+version+" -- "+firstLine;
             String subject = (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix;
              
             MailDialogueBox mailDialogueBox = MailDialogueBox.newDialog(ConsoleApp.getMainFrame(), email)

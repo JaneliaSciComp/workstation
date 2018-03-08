@@ -10,6 +10,7 @@ import org.janelia.it.workstation.browser.events.model.DomainObjectAnnotationCha
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
@@ -33,8 +34,11 @@ public abstract class PaginatedDomainResultsPanel extends PaginatedResultsPanel<
     
     private static final List<ListViewerType> viewerTypes = ImmutableList.of(ListViewerType.IconViewer, ListViewerType.TableViewer);
     
-    public PaginatedDomainResultsPanel(ChildSelectionModel<DomainObject, Reference> selectionModel, SearchProvider searchProvider) {
-        super(selectionModel, searchProvider, viewerTypes);
+    public PaginatedDomainResultsPanel(
+            ChildSelectionModel<DomainObject, Reference> selectionModel, 
+            PreferenceSupport preferenceSupport, 
+            SearchProvider searchProvider) {
+        super(selectionModel, preferenceSupport, searchProvider, viewerTypes);
     }
 
     @Subscribe

@@ -69,7 +69,8 @@ public class DomainObjectSelectionEvent {
 
     @Override
     public String toString() {
-        return "DomainObjectSelectionEvent [source=" + source.getClass().getSimpleName() + ", domainObjectNode=" + domainObjectNode + ", domainObjects=" + domainObjects
+        String s = source == null ? null : source.getClass().getSimpleName();
+        return "DomainObjectSelectionEvent [source=" + s + ", domainObjectNode=" + domainObjectNode + ", domainObjects=" + domainObjects
                 + ", select=" + select + ", clearAll=" + clearAll + ", isUserDriven=" + isUserDriven + "]";
     }
 }

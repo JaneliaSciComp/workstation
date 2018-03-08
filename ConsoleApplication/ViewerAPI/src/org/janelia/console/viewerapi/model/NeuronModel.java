@@ -47,6 +47,12 @@ extends Hideable, NonInteractable, UserVisible, UserToggleRadius
     
     Color getColor();
     void setColor(Color color);
+    
+    Long getNeuronId();
+    
+    String getOwnerKey();
+    void setOwnerKey(String ownerKey);
+    
     // Signals when the color of this neuron is toggled on or off
     ObservableInterface getColorChangeObservable();
     

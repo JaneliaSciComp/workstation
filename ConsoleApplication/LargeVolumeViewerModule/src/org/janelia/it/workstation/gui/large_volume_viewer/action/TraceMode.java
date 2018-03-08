@@ -153,7 +153,8 @@ implements MouseMode, KeyListener
 	public void mouseDragged(MouseEvent event) {
 		super.mouseDragged(event);
 		// We might be moving an anchor
-		if (dragAnchor != null) {
+		if (dragAnchor != null && controller.checkOwnership(dragAnchor.getNeuronID())) {
+                    
 			Vec3 loc = worldFromPixel(event.getPoint());
 			skeletonActor.getModel().lightweightPlaceAnchor(dragAnchor, loc);
 		}
@@ -556,6 +557,17 @@ implements MouseMode, KeyListener
 
                     result.add(null); // separator
                 }
+                
+                AbstractAction neuronHistoryAction = new AbstractAction("View neuron history...") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().showNeuronHistory();
+                    }
+                };
+                neuronHistoryAction.setEnabled(true);
+                result.add(new JMenuItem(neuronHistoryAction));                
+                
+                
                 if (parent != null) {
                     if (parent != hover) {
                         result.add(new JMenuItem(new AbstractAction("Center on current parent anchor") {

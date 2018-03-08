@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.model_adapter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +20,18 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import com.rabbitmq.client.Channel;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
+import org.janelia.messaging.broker.sharedworkspace.MessageType;
+import org.janelia.messaging.client.ConnectionManager;
+import org.janelia.messaging.client.Sender;
+import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
 
 /**
  * Implementation of the model adapter, which pulls/pushes data through
@@ -36,8 +49,15 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
 
     private static Logger log = LoggerFactory.getLogger(DomainMgrTmModelAdapter.class);
 
+    private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
+    private static final String MESSAGESERVER_USERACCOUNT = ConsoleProperties.getInstance().getProperty("domain.msgserver.useraccount").trim();
+    private static final String MESSAGESERVER_PASSWORD = ConsoleProperties.getInstance().getProperty("domain.msgserver.password").trim();
+    private static final String MESSAGESERVER_UPDATESEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.updates").trim();
+    private static final String MESSAGESERVER_ROUTINGKEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.routingkey.updates").trim();
+    
     private RequestProcessor loadProcessor = new RequestProcessor("Tm-Save-Queue", 1, true);
     private TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+    private Sender messageSender;
 
     @Override
     public List<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) throws Exception {
@@ -84,88 +104,80 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
 
         return neurons;
     }
-
-    private enum Action {
-        CREATE,
-        SAVE_METADATA,
-        SAVE,
-        REMOVE
+    
+    private Sender getSender() {
+        if (messageSender==null) {
+            ConnectionManager connManager = ConnectionManager.getInstance();
+            connManager.configureTarget(MESSAGESERVER_URL,  MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD);
+            messageSender = new Sender();
+            messageSender.init(connManager, MESSAGESERVER_UPDATESEXCHANGE, MESSAGESERVER_ROUTINGKEY);
+        } 
+        return messageSender;
     }
     
-    private static class NeuronAction implements Runnable {
-
-        private TmNeuronMetadata neuron;
-        private Action action;
-        private SettableFuture<TmNeuronMetadata> future;
-
-        public NeuronAction(TmNeuronMetadata neuron, Action action, SettableFuture<TmNeuronMetadata> future) {
-            this.neuron = neuron;
-            this.action = action;
-            this.future = future;
-        }
-
-        @Override
-        public void run() {
-            TiledMicroscopeDomainMgr domainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-            
-            ProgressHandle progress = ProgressHandleFactory.createHandle("Handling neuron " + neuron.getName() + " ...");
-            try {
-                progress.start();
-                progress.switchToIndeterminate();
-                StopWatch w = new StopWatch();
-
-                TmNeuronMetadata result = null;
-                if (action==Action.CREATE) {
-                    result = domainMgr.save(neuron);
-                }
-                else if (action==Action.SAVE_METADATA) {
-                    result = domainMgr.saveMetadata(neuron);
-                }
-                else if (action==Action.SAVE) {
-                    result = domainMgr.save(neuron);
-                }
-                else if (action==Action.REMOVE) {
-                    domainMgr.remove(neuron);
-                }
-                
-                log.debug("{} for {} took {} ms", action, neuron, w.getElapsedTime());
-                future.set(result);
-            }
-            catch (Exception ex) {
-                future.setException(ex);
-                FrameworkImplProvider.handleException("Error saving neuron",ex);
-            }
-            finally {
-                progress.finish();
+    private void sendMessage (TmNeuronMetadata neuron, MessageType type, Map<String,String> extraArguments) throws Exception {
+        // whatever the message is, unsync the object and increment the unsynced level counter
+        neuron.setSynced(false);
+        neuron.incrementSyncLevel();
+        
+        List<Long> neuronIds = new ArrayList<Long>();
+        neuronIds.add(neuron.getId());
+        
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String,Object> updateHeaders = new HashMap<String,Object> ();
+        updateHeaders.put(HeaderConstants.TYPE, type.toString());
+        updateHeaders.put(HeaderConstants.USER, AccessManager.getSubjectKey());
+        updateHeaders.put(HeaderConstants.WORKSPACE, neuron.getWorkspaceId().toString());
+        updateHeaders.put(HeaderConstants.METADATA, mapper.writeValueAsString(neuron));
+        updateHeaders.put(HeaderConstants.NEURONIDS, neuronIds.toString());
+        if (extraArguments!=null) {
+            Iterator<String> extraKeys = extraArguments.keySet().iterator();
+            while (extraKeys.hasNext()) {
+                String extraKey = extraKeys.next();            
+                updateHeaders.put(extraKey, extraArguments.get(extraKey));
             }
         }
+        
+        TmProtobufExchanger exchanger = new TmProtobufExchanger();
+        byte[] neuronData = exchanger.serializeNeuron(neuron);
+        
+        getSender().sendMessage(updateHeaders, neuronData);
     }
 
     @Override
-    public ListenableFuture<TmNeuronMetadata> asyncCreateNeuron(TmNeuronMetadata neuron) throws Exception {
-        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
-        loadProcessor.post(new NeuronAction(neuron, Action.CREATE, future), 0, Thread.NORM_PRIORITY);
-        return future;
+    public CompletableFuture<TmNeuronMetadata> asyncCreateNeuron(TmNeuronMetadata neuron) throws Exception {
+        // make sure the neuron contains the current user's ownerKey;
+        neuron.setOwnerKey(AccessManager.getSubjectKey());
+        sendMessage (neuron, MessageType.NEURON_CREATE, null);
+        return new CompletableFuture<TmNeuronMetadata>();
     }
 
     @Override
-    public ListenableFuture<TmNeuronMetadata> asyncSaveNeuron(TmNeuronMetadata neuron) throws Exception {
-        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
-        loadProcessor.post(new NeuronAction(neuron, Action.SAVE, future), 0, Thread.NORM_PRIORITY);
-        return future;
+    public void asyncSaveNeuron(TmNeuronMetadata neuron) throws Exception {
+        sendMessage (neuron, MessageType.NEURON_SAVE_NEURONDATA, null);
     }
 
     @Override
-    public ListenableFuture<TmNeuronMetadata> asyncSaveNeuronMetadata(TmNeuronMetadata neuron) throws Exception {
-        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
-        loadProcessor.post(new NeuronAction(neuron, Action.SAVE_METADATA, future), 0, Thread.NORM_PRIORITY);
-        return future;
+    public void asyncSaveNeuronMetadata(TmNeuronMetadata neuron) throws Exception {
+        sendMessage (neuron, MessageType.NEURON_SAVE_METADATA, null);
     }
 
     @Override
-    public ListenableFuture<TmNeuronMetadata> asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {
-        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
-        loadProcessor.post(new NeuronAction(neuron, Action.REMOVE, future), 0, Thread.NORM_PRIORITY);
-        return future;
+    public void asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {
+        sendMessage (neuron, MessageType.NEURON_DELETE, null);
+    }
+    
+    @Override
+    public CompletableFuture<Boolean> requestOwnership(TmNeuronMetadata neuron) throws Exception {
+        sendMessage (neuron, MessageType.REQUEST_NEURON_OWNERSHIP, null);
+        return new CompletableFuture<Boolean>();
+    }
+    
+    @Override
+    public CompletableFuture<Boolean> requestAssignment(TmNeuronMetadata neuron, String targetUser) throws Exception {
+        Map<String,String> extraArgs = new HashMap<>();
+        extraArgs.put(HeaderConstants.TARGET_USER, targetUser);        
+        sendMessage (neuron, MessageType.REQUEST_NEURON_ASSIGNMENT, extraArgs);
+        return new CompletableFuture<Boolean>();
     }
 }
