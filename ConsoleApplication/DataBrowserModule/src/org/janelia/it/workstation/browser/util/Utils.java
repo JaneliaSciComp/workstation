@@ -50,6 +50,7 @@ import org.apache.commons.io.IOUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.api.LocalPreferenceMgr;
+import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
@@ -138,7 +139,7 @@ public class Utils {
                 GetMethod get = null;
                 try {
                     if (path.startsWith("http://")) {
-                        HttpClient client = FileMgr.getFileMgr().getHttpClient();
+                        HttpClientProxy client = FileMgr.getFileMgr().getHttpClient();
                         get = new GetMethod(path);
                         int responseCode = client.executeMethod(get);
                         log.trace("readImage: GET " + responseCode + ", path=" + path);

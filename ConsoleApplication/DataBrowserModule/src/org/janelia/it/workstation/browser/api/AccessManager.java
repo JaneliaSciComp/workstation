@@ -285,7 +285,6 @@ public final class AccessManager {
         catch (Exception e) {
             throw new ServiceException("Error getting or creating user "+username, e);
         }
-        FileMgr.getFileMgr().setAuthToken(token);
         return authenticatedSubject;
     }
     
@@ -397,7 +396,7 @@ public final class AccessManager {
         if (actualSubject!=null) {
             Events.getInstance().postOnEventBus(new SessionStartEvent(actualSubject));
         }
-        FileMgr.getFileMgr().setSubjectProxy(subject);
+        FileMgr.getFileMgr().getHttpClient().setCurrentSubject(subject);
     }
     
     public static Subject getSubjectByNameOrKey(String key) {
