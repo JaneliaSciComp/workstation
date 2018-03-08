@@ -119,7 +119,7 @@ public class MailDialogueBox {
             logfile = null;
         }
         else {
-            filename = AccessManager.getUsername()+"_"+LOG_FILE_NAME;
+            filename = AccessManager.getSubjectName()+"_"+LOG_FILE_NAME;
         }
         
         log.info("Sending email from {} to {} with attachment {}",fromEmail,toEmail, logfile);

@@ -224,12 +224,4 @@ public class FileMgr {
                 : webDavClientMgr.getDownloadFileURL(standardPathName);
     }
 
-    public String getSubjectKey() {
-        return httpClient.getSubjectKey();
-    }
-
-    public String getSubjectName() {
-        return httpClient.getSubjectName();
-    }
-
 }

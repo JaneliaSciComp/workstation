@@ -42,6 +42,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -673,11 +674,10 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         
         Long serviceId = asyncServiceClient.invokeService("colorDepthObjectSearch",
                 ImmutableList.of("-searchId", search.getId().toString()),
-                FileMgr.getFileMgr().getSubjectKey(),
                 null,
                 ImmutableMap.of());
         
-        AsyncServiceMonitoringWorker executeWorker = new SearchMonitoringWorker(FileMgr.getFileMgr().getSubjectKey(), search, serviceId);
+        AsyncServiceMonitoringWorker executeWorker = new SearchMonitoringWorker(search, serviceId);
         setProcessing(true);
         setError(false);
         executeWorker.executeWithEvents();
@@ -687,8 +687,8 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         
         private ColorDepthSearch search;
 
-        public SearchMonitoringWorker(String subjectKey, ColorDepthSearch search, Long serviceId) {
-            super(subjectKey, serviceId);
+        public SearchMonitoringWorker(ColorDepthSearch search, Long serviceId) {
+            super(serviceId);
             this.search = search;
         }
 

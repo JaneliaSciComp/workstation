@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.browser.api;
 
-import java.net.Authenticator;
-import java.net.PasswordAuthentication;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -23,6 +21,7 @@ import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog.ErrorType;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.browser.util.SimpleJwtParser;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.model.domain.enums.SubjectRole;
 import org.janelia.model.security.Subject;
@@ -79,6 +78,7 @@ public final class AccessManager {
     private String username;
     private String password;
     private String token;
+    private Date tokenExpirationDate; 
     private Date tokenCreationDate; 
     private Subject authenticatedSubject; 
     private Subject actualSubject;
@@ -331,7 +331,7 @@ public final class AccessManager {
         return token;
     }
 
-    private synchronized void obtainToken() {
+    private void obtainToken() {
 
         if (!tokenRefreshDebouncer.queue()) {
             log.debug("Skipping token refresh, since there is one already in progress");
@@ -352,15 +352,37 @@ public final class AccessManager {
         log.debug("Attempting to obtain new auth token for {}", username);
         this.token = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
         this.tokenCreationDate = new Date();
+        
+        try {
+            this.tokenExpirationDate = null;
+            SimpleJwtParser parser = new SimpleJwtParser(token);
+            this.tokenExpirationDate = new Date(Long.parseLong(parser.getExp()) * 1000);
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleException(e);
+        }
+        
         log.info("Now using token: {}", token);
-    
     }
     
     private boolean tokenMustBeRenewed() {
+        log.trace("Checking if token should be renewed");
         if (token==null || tokenCreationDate==null) return true;
-        long tokenAgeSecs = Utils.getDateDiff(tokenCreationDate, new Date(), TimeUnit.SECONDS);
+        Date now = new Date();
+        
+        if (tokenExpirationDate != null && now.after(tokenExpirationDate)) {
+            // Token has already expired
+            return true;
+        }
+
+        long tokenAgeSecs = Utils.getDateDiff(tokenCreationDate, now, TimeUnit.SECONDS);
         log.debug("Token is now {} seconds old", tokenAgeSecs);
-        return (tokenAgeSecs > TOKEN_LIFESPAN_SECS);
+        if (tokenAgeSecs > TOKEN_LIFESPAN_SECS) {
+            // Token should be refreshed because we think it will expire soon
+            return true;
+        }
+        
+        return false;
     }
     
     /**
@@ -396,7 +418,6 @@ public final class AccessManager {
         if (actualSubject!=null) {
             Events.getInstance().postOnEventBus(new SessionStartEvent(actualSubject));
         }
-        FileMgr.getFileMgr().getHttpClient().setCurrentSubject(subject);
     }
     
     public static Subject getSubjectByNameOrKey(String key) {
@@ -476,8 +497,8 @@ public final class AccessManager {
         }
         return subject.getKey();
     }
-
-    public static String getUsername() {
+    
+    public static String getSubjectName() {
         Subject subject = getAccessManager().getActualSubject();
         if (subject == null) {
             throw new SystemError("Not logged in");

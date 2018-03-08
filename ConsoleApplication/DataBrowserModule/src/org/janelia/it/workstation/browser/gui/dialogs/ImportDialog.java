@@ -30,6 +30,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.FileMgr;
@@ -337,7 +338,7 @@ public class ImportDialog extends ModalDialog {
                            final String importFolderName,
                            final Long importFolderId) {
         try {
-            BackgroundWorker executeWorker = new AsyncServiceMonitoringWorker(FileMgr.getFileMgr().getSubjectKey()) {
+            BackgroundWorker executeWorker = new AsyncServiceMonitoringWorker() {
     
                 @Override
                 public String getName() {
@@ -443,7 +444,7 @@ public class ImportDialog extends ModalDialog {
         AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
 
         final WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
-        final String subjectName = FileMgr.getFileMgr().getSubjectName();
+        final String subjectName = AccessManager.getSubjectName();
         String uploadContext;
         if (StringUtils.isBlank(subjectName)) {
             uploadContext = "WorkstationFileUpload";
@@ -468,8 +469,7 @@ public class ImportDialog extends ModalDialog {
         serviceArgsBuilder.add("-storageLocation", uploadPath);
         return asyncServiceClient.invokeService("dataTreeLoad",
                 serviceArgsBuilder.build(),
-                FileMgr.getFileMgr().getSubjectKey(),
-                "LSF_DRMAA",
+                null,
                 ImmutableMap.of()
         );
     }

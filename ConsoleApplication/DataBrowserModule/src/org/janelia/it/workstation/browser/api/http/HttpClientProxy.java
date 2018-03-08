@@ -1,47 +1,46 @@
 package org.janelia.it.workstation.browser.api.http;
 
 import java.io.IOException;
+import java.util.Map.Entry;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.model.security.Subject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpClientProxy {
 
+    private static final Logger log = LoggerFactory.getLogger(HttpClientProxy.class);
+    
     private final HttpClient delegate;
-    private Subject currentSubject;
 
     public HttpClientProxy(HttpClient delegate) {
         this.delegate = delegate;
     }
 
     public int executeMethod(HttpMethod method) throws IOException {
-        addHeader(method, "JacsSubject", null, getSubjectKey());
-        addHeader(method, "username", null, getSubjectKey());
-        addHeader(method, "Authorization", "Bearer ", getAuthToken());
+
+        log.trace("{} {}", method.getName(), method.getURI());
+        
+        for (Entry<String, String> entry : HttpServiceUtils.getExtraHeaders().entrySet()) {
+            addHeader(method, entry.getKey(), entry.getValue());
+        }
+
+        Subject actualSubject = AccessManager.getAccessManager().getActualSubject();
+        if (actualSubject != null) {
+            String subjectKey = actualSubject.getKey();
+            // Backwards compatibility with older Jade versions
+            addHeader(method, "JacsSubject", subjectKey);
+        }
+        
         return delegate.executeMethod(method);
     }
 
-    private void addHeader(HttpMethod httpMethod, String headerAttribute, String headerValuePrefix, String headerValue) {
+    private void addHeader(HttpMethod httpMethod, String headerAttribute, String headerValue) {
         if (headerValue != null) {
-            httpMethod.addRequestHeader(headerAttribute, headerValuePrefix != null ? headerValuePrefix + headerValue : headerValue);
+            httpMethod.addRequestHeader(headerAttribute, headerValue);
         }
-    }
-
-    public void setCurrentSubject(Subject subject) {
-        this.currentSubject = subject;
-    }
-
-    public String getSubjectKey() {
-        return currentSubject == null ? null : currentSubject.getKey();
-    }
-
-    public String getSubjectName() {
-        return currentSubject == null ? null : currentSubject.getName();
-    }
-
-    private String getAuthToken() {
-        return AccessManager.getAccessManager().getToken();
     }
 }
