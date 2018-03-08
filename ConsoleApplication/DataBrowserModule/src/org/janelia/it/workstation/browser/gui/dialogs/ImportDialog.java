@@ -47,6 +47,7 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.util.TimebasedIdentifierGenerator;
 import org.jdesktop.swingx.VerticalLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -452,11 +453,16 @@ public class ImportDialog extends ModalDialog {
             uploadContext = subjectName + "/" + "WorkstationFileUpload";
         }
         String uploadPath;
+        
+        Long guid = TimebasedIdentifierGenerator.generateIdList(1).get(0);
+        String storageName = "UserFileImport_"+guid;
+        
         if (selectedChildren == null) {
-            RemoteLocation uploadedFile = uploader.uploadFile(importTopLevelFolderName, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, selectedFile);
+            RemoteLocation uploadedFile = uploader.uploadFile(storageName, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, selectedFile);
             uploadPath = uploadedFile.getStorageURL();
-        } else {
-            List<RemoteLocation> uploadedFiles = uploader.uploadFiles(importTopLevelFolderName, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, selectedChildren, selectedFile);
+        } 
+        else {
+            List<RemoteLocation> uploadedFiles = uploader.uploadFiles(storageName, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, selectedChildren, selectedFile);
             // all files should be uploaded to the same storage
             uploadPath = uploadedFiles.stream().findFirst().map(rl -> rl.getStorageURL()).orElseThrow(() -> new IllegalStateException("Invalid upload state " + uploadedFiles));
         }
