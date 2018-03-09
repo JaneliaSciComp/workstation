@@ -19,6 +19,7 @@ import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthResultIconGridViewerState;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.IconGridViewerConfigDialog;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
@@ -517,21 +518,26 @@ public class DomainObjectIconGridViewer
 
     @Override
     public void restoreState(ListViewerState viewerState) {
-        final IconGridViewerState tableViewerState = (IconGridViewerState) viewerState;
-        SwingUtilities.invokeLater(new Runnable() {
-               public void run() {
-                   int maxImageWidth = tableViewerState.getMaxImageWidth();
-                   log.debug("Restoring maxImageWidth={}",maxImageWidth);
-                   getToolbar().getImageSizeSlider().setValue(maxImageWidth);
-                   // Wait until slider resizes images, then fix scroll:
-                   SwingUtilities.invokeLater(new Runnable() {
-                       @Override
-                       public void run() {
-                           scrollSelectedObjectsToCenter();
-                       }
-                   });
+        if (viewerState instanceof IconGridViewerState) {
+            final IconGridViewerState tableViewerState = (IconGridViewerState) viewerState;
+            SwingUtilities.invokeLater(new Runnable() {
+                   public void run() {
+                       int maxImageWidth = tableViewerState.getMaxImageWidth();
+                       log.debug("Restoring maxImageWidth={}",maxImageWidth);
+                       getToolbar().getImageSizeSlider().setValue(maxImageWidth);
+                       // Wait until slider resizes images, then fix scroll:
+                       SwingUtilities.invokeLater(new Runnable() {
+                           @Override
+                           public void run() {
+                               scrollSelectedObjectsToCenter();
+                           }
+                       });
+                   }
                }
-           }
-        );
+            );
+        }
+        else {
+            log.warn("Cannot restore viewer state of type {}", viewerState.getClass());
+        }   
     }
 }
