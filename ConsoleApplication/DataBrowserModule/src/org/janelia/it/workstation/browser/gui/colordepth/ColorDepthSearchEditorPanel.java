@@ -42,11 +42,9 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
@@ -111,11 +109,11 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     private static final String PCT_PX_TOOLTIP = "Minimum percent pixel match to consider a match";
     private static final String PIX_FLUC_TOOLTIP = "Tolerance for how many z slices to search for each pixel in the mask";
     
-    private static final ZSliceRange defaultSliceRange = new ZSliceRange("1", 1);
+    private static final ZSliceRange defaultSliceRange = new ZSliceRange("3", 2);
     private static final List<ZSliceRange> rangeValues;
 
     static {
-        rangeValues = ImmutableList.of(defaultSliceRange, new ZSliceRange("3", 2), new ZSliceRange("5", 3));
+        rangeValues = ImmutableList.of(new ZSliceRange("1", 1), defaultSliceRange, new ZSliceRange("5", 3));
     }
     
     // Utilities
