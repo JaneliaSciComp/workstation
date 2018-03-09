@@ -1,14 +1,6 @@
-// 7.5
+// 7.5.1
 
 Workstation Browser
-* You can now view color depth search results as a table and export them to Excel
-* Added ability to create masks from imported images
-* When sharing a neuron fragment, the sample is also shared
-* Samples are now searchable as soon as they are discovered
-* Fixed bug where authorization token expired after the Workstation was open for two days
-* Fixed bug where a folder name could not be reused when uploading files
-* Fixed "Show in Lightbox" right-click option for masks
-
-Large Volume Viewer
-* Fixed errors when importing SWC files
-* Middle-click-drag in Horta shouldn't trigger ownership dialog
+* Eliminated warning message when opening unseparated data in Neuron Annotator
+* Changed color depth search default Z slice range from 1 to 3
+* Fixed bug with refreshing color depth results 
