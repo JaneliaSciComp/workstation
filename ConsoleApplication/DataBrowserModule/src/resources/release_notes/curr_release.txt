@@ -1,6 +1,5 @@
-// 7.5.1
+// 7.6
 
 Workstation Browser
-* Eliminated warning message when opening unseparated data in Neuron Annotator
-* Changed color depth search default Z slice range from 1 to 3
-* Fixed bug with refreshing color depth results 
+* Fixed lightbox update when selecting results in the Sample Editor
+ 
