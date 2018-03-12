@@ -492,7 +492,7 @@ public class DomainObjectIconGridViewer
             }
             
             DomainObject domainObject = selected.get(0);
-            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), toggle, toggle);
+            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), toggle, true);
         } 
         catch (Exception ex) {
             ConsoleApp.handleException(ex);
