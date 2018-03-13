@@ -2,4 +2,6 @@
 
 Workstation Browser
 * Fixed lightbox update when selecting results in the Sample Editor
+* Added alignment space attribute to images for mask creation
+
  
