@@ -87,9 +87,12 @@ public class CreateMaskFromImageAction extends AbstractAction {
     
     private void showMaskDialog(BufferedImage image, List<String> alignmentSpaces) {
 
+        // could be null, but that's okay, in that case the user has to pick
+        String imageAlignmentSpace = this.image.getAlignmentSpace(); 
+        
         try {
             MaskCreationDialog maskCreationDialog = new MaskCreationDialog(
-                    image, alignmentSpaces, null, true);
+                    image, alignmentSpaces, imageAlignmentSpace, true);
             if (!maskCreationDialog.showForMask()) {
                 return; // User cancelled the operation
             }
