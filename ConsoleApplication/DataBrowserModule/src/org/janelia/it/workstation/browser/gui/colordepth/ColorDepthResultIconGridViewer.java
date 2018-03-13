@@ -226,7 +226,7 @@ public class ColorDepthResultIconGridViewer
         add(new JLabel(Icons.getLoadingIcon()));
         updateUI();
     }
-
+    
     @Override
     public void show(AnnotatedObjectList<ColorDepthMatch, String> matchList, Callable<Void> success) {
         

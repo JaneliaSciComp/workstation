@@ -7,6 +7,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OpenInFinderAction;
@@ -61,7 +62,8 @@ public class MaskContextMenu extends PopupContextMenu {
     }
         
     protected JMenuItem getTitleItem() {
-        JMenuItem titleMenuItem = new JMenuItem(mask.getName());
+        String name = StringUtils.abbreviate(mask.getName(), 50);
+        JMenuItem titleMenuItem = new JMenuItem(name);
         titleMenuItem.setEnabled(false);
         return titleMenuItem;
     }

@@ -1,7 +1,7 @@
 // 7.6
 
 Workstation Browser
+* Major improvements to color depth search work flow
 * Fixed lightbox update when selecting results in the Sample Editor
 * Added alignment space attribute to images for mask creation
-
- 
+* Fixed issue with saving viewer state 

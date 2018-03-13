@@ -11,6 +11,7 @@ import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.browser.actions.OpenWithDefaultAppAction;
@@ -104,7 +105,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getTitleItem() {
-        String name = multiple ? "(Multiple selected)" : matchName;
+        String name = multiple ? "(Multiple selected)" : StringUtils.abbreviate(matchName, 50);
         JMenuItem titleMenuItem = new JMenuItem(name);
         titleMenuItem.setEnabled(false);
         return titleMenuItem;

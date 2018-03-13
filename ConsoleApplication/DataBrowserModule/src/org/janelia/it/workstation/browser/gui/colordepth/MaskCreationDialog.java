@@ -2,19 +2,32 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.BorderLayout;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.browser.gui.editor.SingleSelectionButton;
 import org.janelia.it.workstation.browser.gui.lasso.ImageMaskingPanel;
 import org.janelia.it.workstation.browser.gui.support.WrapLayout;
+import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
+import org.janelia.model.domain.sample.Sample;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Create a new mask for color depth searching. 
@@ -23,25 +36,44 @@ import org.janelia.it.workstation.browser.gui.support.WrapLayout;
  */
 public class MaskCreationDialog extends ModalDialog {
 
+    private static final Logger log = LoggerFactory.getLogger(MaskCreationDialog.class);
+    
     private static final String THRESHOLD_LABEL_PREFIX = "Mask Threshold:";
     private static final int DEFAULT_THRESHOLD_VALUE = 100;
 
     private JPanel optionsPanel;
-    private JSlider thresholdSlider;
-    private JLabel thresholdLabel;
+    private final JTextField maskNameField;
+    private final JSlider thresholdSlider;
+    private final JLabel thresholdLabel;
     private final JPanel thresholdPanel;
-    private SingleSelectionButton<String> alignmentSpaceButton;
-    private ImageMaskingPanel maskingPanel;
+    private final SingleSelectionButton<String> alignmentSpaceButton;
+    private final ImageMaskingPanel maskingPanel;
+    
+    private Sample sample;
+    private BufferedImage originalImage;
+    private String originalImagePath;
     private BufferedImage mask;
     private String alignmentSpace;
     private boolean isContinue = false;
     
-    public MaskCreationDialog(BufferedImage image, List<String> alignmentSpaces, String selectedAlignmentSpace, boolean allowMasking) {
+    public MaskCreationDialog(BufferedImage originalImage, String originalImagePath, List<String> alignmentSpaces, 
+            String selectedAlignmentSpace, String defaultMaskName, Sample sample, boolean allowMasking) {
 
+        this.originalImage = originalImage;
+        this.originalImagePath = originalImagePath;
         this.alignmentSpace = selectedAlignmentSpace;
+        this.sample = sample;
         
         this.optionsPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 15, 10));
 
+        this.maskNameField = new JTextField(40);
+        maskNameField.setText(defaultMaskName);
+        
+        JPanel maskNamePanel = new JPanel(new BorderLayout());
+        maskNamePanel.add(new JLabel("Mask name"), BorderLayout.NORTH);
+        maskNamePanel.add(maskNameField, BorderLayout.CENTER);
+        optionsPanel.add(maskNamePanel);
+        
         thresholdLabel = new JLabel();
         thresholdSlider = new JSlider(1, 255);
         thresholdSlider.putClientProperty("Slider.paintThumbArrowShape", Boolean.TRUE);
@@ -81,22 +113,11 @@ public class MaskCreationDialog extends ModalDialog {
             maskingPanel.getMaskButton().setVisible(false);
             maskingPanel.getResetButton().setVisible(false);
         }
-        maskingPanel.setImage(image);
+        maskingPanel.setImage(originalImage);
         maskingPanel.setOnContinue((BufferedImage mask) -> {
-            
-            if (mask==null) {
-                JOptionPane.showMessageDialog(MaskCreationDialog.this, "You need to mask an area first.");
-                return;
-            }
-            
-            if (alignmentSpace==null) {
-                JOptionPane.showMessageDialog(MaskCreationDialog.this, "You need to select an alignment space.");
-                return;
-            }
-            
             this.mask = mask;
+            upload();
             isContinue = true;
-            setVisible(false);
         });
         maskingPanel.setOnCancel((Void v) -> {
             setVisible(false);
@@ -110,17 +131,21 @@ public class MaskCreationDialog extends ModalDialog {
         packAndShow();
         return isContinue;
     }
+
+    private BufferedImage getMask() {
+        return mask;
+    }
     
-    public int getThreshold() {
+    private String getMaskName() {
+        return maskNameField.getText();
+    }
+    
+    private int getThreshold() {
         return thresholdSlider.getValue();
     }
 
-    public String getAlignmentSpace() {
+    private String getAlignmentSpace() {
         return alignmentSpace;
-    }
-
-    public BufferedImage getMask() {
-        return mask;
     }
 
     private void setThreshold(int threshold) {
@@ -128,5 +153,73 @@ public class MaskCreationDialog extends ModalDialog {
             thresholdSlider.setValue(threshold);
         }
         thresholdLabel.setText(String.format("%s %d", THRESHOLD_LABEL_PREFIX, threshold));
+    }
+    
+    private void upload() {
+
+        final BufferedImage mask = getMask();
+        final String maskName = getMaskName();
+        final String alignmentSpace = getAlignmentSpace();
+        final int threshold = getThreshold();
+        
+        if (mask==null) {
+            JOptionPane.showMessageDialog(MaskCreationDialog.this, "You need to mask an area first.");
+            return;
+        }
+        
+        if (StringUtils.isBlank(maskName)) {
+            JOptionPane.showMessageDialog(MaskCreationDialog.this, "You must specify a name for your mask");
+            return;
+        }
+        
+        if (alignmentSpace==null) {
+            JOptionPane.showMessageDialog(MaskCreationDialog.this, "You need to select an alignment space.");
+            return;
+        }
+        
+        SimpleWorker worker = new SimpleWorker()     {
+
+            private ColorDepthMask colorDepthMask;
+            
+            @Override
+            protected void doStuff() throws Exception {
+
+                String uploadPath;
+                if (!mask.equals(originalImage)) {
+                    // Write the mask to disk temporarily
+                    // TODO: in the future, the uploader should support byte stream input
+                    File tempFile = File.createTempFile("mask", ".png");
+                    tempFile.deleteOnExit();
+                    ImageIO.write(mask, "png", tempFile);
+                    log.info("Wrote mask to temporary file: "+tempFile);
+                    uploadPath = MaskUtils.uploadMask(tempFile);
+                }
+                else {
+                    if (StringUtils.isBlank(originalImagePath)) {
+                        throw new IllegalStateException("No mask and no image path");
+                    }
+                    uploadPath = originalImagePath;
+                }
+
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                colorDepthMask = model.createColorDepthMask(maskName, alignmentSpace, uploadPath, threshold, sample);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                setVisible(false);
+                ColorDepthSearchDialog dialog = new ColorDepthSearchDialog();
+                dialog.showForMask(colorDepthMask);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                ConsoleApp.handleException(error);
+            }
+        };
+
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Uploading mask", ""));
+        worker.execute();
+        
     }
 }
