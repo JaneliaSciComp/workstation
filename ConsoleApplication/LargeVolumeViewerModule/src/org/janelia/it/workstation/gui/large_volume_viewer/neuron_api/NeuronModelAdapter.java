@@ -507,17 +507,13 @@ public class NeuronModelAdapter implements NeuronModel
     @Override
     public boolean isVisible()
     {
-        return bIsVisible;
+        return this.isUserVisible();
         // return neuronStyle.isColumnVisible();
     }
 
     @Override
     public void setVisible(boolean visible)
-    {
-        if (bIsVisible == visible)
-            return; // no change
-        bIsVisible = visible;
-        
+    {       
         // Synchronize with TmNeuron Style
         NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
       //  Color color = cachedColor;
