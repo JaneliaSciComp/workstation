@@ -488,7 +488,6 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 if (worker.getError() != null) {
                     setError(true);
                 }
-                forceInvalidate();
             }
         }
     }
