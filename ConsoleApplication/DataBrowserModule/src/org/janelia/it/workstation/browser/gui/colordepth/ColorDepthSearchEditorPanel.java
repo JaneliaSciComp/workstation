@@ -699,8 +699,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             setBorder(BorderFactory.createEmptyBorder(b, b, b, b));
             setLayout(new BorderLayout());
             
+            // TODO: this is a crude temporary workaround to the fact that long names resize the 
+            // mask panel to be too wide. It should be solved with better layout.
+            String name = StringUtils.abbreviate(mask.getName(), 50);
+            
             JLabel label = new JLabel();
-            label.setText(mask.getName());
+            label.setText(name);
             label.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 4));
             add(label, BorderLayout.NORTH);
             
