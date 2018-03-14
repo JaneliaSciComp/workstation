@@ -10,14 +10,14 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "class")
 public class ListViewerState {
 
-    private ListViewerType type;
+    private ListViewerClassProvider type;
 
     @JsonCreator
-    public ListViewerState(@JsonProperty("type") ListViewerType type) {
+    public ListViewerState(@JsonProperty("type") ListViewerClassProvider type) {
         this.type = type;
     }
 
-    public ListViewerType getType() {
+    public ListViewerClassProvider getType() {
         return type;
     }
 }

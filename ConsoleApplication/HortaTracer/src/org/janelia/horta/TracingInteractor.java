@@ -596,13 +596,13 @@ public class TracingInteractor extends MouseAdapter
         // log.info("Tracing Dragging");
         if (cachedDragVertex == null)
             return; // no vertex to drag
-        if (!checkOwnership(defaultWorkspace.getNeuronForAnchor(cachedDragVertex))) {
-            return;
-        }
         if (defaultWorkspace.isReadOnly())
             return; // not allowed to move that vertex
         if (! SwingUtilities.isLeftMouseButton(event))
             return; // left button drag only
+        if (!checkOwnership(defaultWorkspace.getNeuronForAnchor(cachedDragVertex))) {
+            return;
+        }
 
         // log.info("Dragging a vertex");       
         // Update display (only) of dragged vertex

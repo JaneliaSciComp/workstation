@@ -24,6 +24,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 
 /**
  * {@link WebDavClient} manager.
@@ -36,7 +37,7 @@ public class WebDavClientMgr {
             .maximumSize(10)
             .build();
 
-    private final HttpClient httpClient;
+    private final HttpClientProxy httpClient;
     private final WebDavClient masterWebDavInstance;
     private final ObjectMapper objectMapper;
 
@@ -49,7 +50,7 @@ public class WebDavClientMgr {
      * @throws IllegalArgumentException
      *   if the baseUrl cannot be parsed.
      */
-    public WebDavClientMgr(String baseUrl, HttpClient httpClient) {
+    public WebDavClientMgr(String baseUrl, HttpClientProxy httpClient) {
         this.httpClient = httpClient;
         this.objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

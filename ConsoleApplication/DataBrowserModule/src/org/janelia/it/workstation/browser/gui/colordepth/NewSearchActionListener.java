@@ -76,7 +76,10 @@ public final class NewSearchActionListener implements ActionListener {
                     
                     @Override
                     protected void doStuff() throws Exception {
-                        colorDepthSearch = DomainMgr.getDomainMgr().getModel().createColorDepthSearch(name, alignmentSpace);
+                        colorDepthSearch = new ColorDepthSearch();
+                        colorDepthSearch.setName(name);
+                        colorDepthSearch.setAlignmentSpace(alignmentSpace);
+                        colorDepthSearch = DomainMgr.getDomainMgr().getModel().createColorDepthSearch(colorDepthSearch);
                     }
 
                     @Override

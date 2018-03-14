@@ -245,6 +245,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                 if (viewRow >= 0) {
                     int modelRow = neuronTable.convertRowIndexToModel(viewRow);
                     TmNeuronMetadata selectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
+                    System.out.println("clicked on " + (selectedNeuron == null ? "null" : selectedNeuron.getName()));
                     // which column?
                     int viewColumn = table.columnAtPoint(me.getPoint());
                     int modelColumn = neuronTable.convertColumnIndexToModel(viewColumn);

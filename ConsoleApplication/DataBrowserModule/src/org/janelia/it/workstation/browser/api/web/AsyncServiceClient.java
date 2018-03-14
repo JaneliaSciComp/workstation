@@ -46,11 +46,9 @@ public class AsyncServiceClient extends RESTClientBase {
     
     public Long invokeService(String serviceName,
                               List<String> serviceArgs,
-                              String subject,
                               String processingLocation,
                               Map<String, String> serviceResources) throws ServiceException {
         AsyncServiceData body = new AsyncServiceData();
-        body.setOwnerKey(subject);
         if (serviceArgs != null) {
             body.args.addAll(serviceArgs);
         }
@@ -63,7 +61,6 @@ public class AsyncServiceClient extends RESTClientBase {
         WebTarget target = service.path("async-services").path(serviceName);
         Response response = target
                 .request("application/json")
-                .header("username", subject)
                 .post(Entity.json(body));
         if (response.getStatus() != 201) {
             throw new ServiceException("Service " + serviceName + " returned status "+response.getStatus());
@@ -88,11 +85,10 @@ public class AsyncServiceClient extends RESTClientBase {
         }
     }
 
-    public String getServiceStatus(Long serviceId, String subjectKey) throws ServiceException {
+    public String getServiceStatus(Long serviceId) throws ServiceException {
         WebTarget target = service.path("services").path(serviceId.toString());
         Response response = target
                 .request("application/json")
-                .header("username", subjectKey)
                 .get();
         if (response.getStatus() != 200) {
             throw new ServiceException("Service " + serviceId + " returned status " + response.getStatus());

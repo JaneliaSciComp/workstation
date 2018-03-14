@@ -1,10 +1,4 @@
-// 7.4
+// 7.7
 
 Workstation Browser
-* Added support for Open in Neuron Annotator and Open in Vaa3d on Windows
-* Fixed color depth mask upload and download on Windows
-* Other minor bug fixes
-
-
-Large Volume Viewer
-* Bug fixes for shared workspace release
+* Fixed bug with Open ontology button allowing multiple selection

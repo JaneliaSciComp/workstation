@@ -29,6 +29,7 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
 import org.janelia.it.jacs.shared.utils.Constants;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.shared.utils.domain.DataReporter;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -46,7 +47,8 @@ import org.janelia.it.workstation.browser.components.SampleResultViewerTopCompon
 import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
-import org.janelia.it.workstation.browser.gui.colordepth.AddMaskDialog;
+import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthSearchDialog;
+import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromImageAction;
 import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
 import org.janelia.it.workstation.browser.gui.dialogs.CompressionDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
@@ -82,6 +84,7 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.sample.Image;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
@@ -199,7 +202,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         //add(getSetPublishingNameItem());
         add(getApplyPublishingNamesItem());
         add(getMergeItem());
-        add(getColorDepthSearchItem());
+        add(getCreateColorDepthMaskItem());
         add(getAddToColorDepthSearchItem());
         
         setNextAddRequiresSeparator(true);
@@ -222,7 +225,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getTitleItem() {
         String name = multiple ? "(Multiple selected)" : domainObject.getName();
-        JMenuItem titleMenuItem = new JMenuItem(name);
+        JMenuItem titleMenuItem = new JMenuItem(StringUtils.abbreviate(name, 50));
         titleMenuItem.setEnabled(false);
         return titleMenuItem;
     }
@@ -672,22 +675,52 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return blockItem;
     }
 
-    protected JMenuItem getColorDepthSearchItem() {
+    protected JMenuItem getCreateColorDepthMaskItem() {
 
         if (multiple) return null;
         
         List<Sample> samples = new ArrayList<>();
+        List<Image> images = new ArrayList<>();
+        
         for(DomainObject domainObject : domainObjectList) {
             if (domainObject instanceof Sample) {
                 samples.add((Sample)domainObject);
             }
+            else if (domainObject instanceof Image) {
+                images.add((Image)domainObject);
+            }
         }
         
-        if (samples.size()!=domainObjectList.size()) return null;
-                
-        if (!resultDescriptor.isAligned()) return null;
+        if (samples.size()==domainObjectList.size()) {
+            if (!resultDescriptor.isAligned()) return null;
+            
+            Sample sample = samples.get(0);            
+            JMenuItem menuItem = getNamedActionItem(new CreateMaskFromSampleAction(sample, resultDescriptor, typeName));
+
+            HasFiles fileProvider = DescriptorUtils.getResult(sample, resultDescriptor);
+            if (fileProvider==null) {
+                menuItem.setEnabled(false);
+            }
+            else {
+                FileType fileType = FileType.valueOf(typeName);
+                if (fileType==FileType.ColorDepthMip1 
+                        || fileType==FileType.ColorDepthMip2 
+                        || fileType==FileType.ColorDepthMip3 
+                        || fileType==FileType.ColorDepthMip4) {
+                    menuItem.setEnabled(true);
+                }
+                else {
+                    menuItem.setEnabled(false);
+                }
+            }
+            
+            return menuItem;
+        }
+        else if (images.size()==domainObjectList.size()) {
+            return getNamedActionItem(new CreateMaskFromImageAction(images.get(0)));
+        }
         
-        return getNamedActionItem(new CreateMaskFromSampleAction(samples.get(0), resultDescriptor, typeName));
+        return null;
     }
 
     protected JMenuItem getAddToColorDepthSearchItem() {
@@ -709,7 +742,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         menuItem = new JMenuItem("  Add Mask to Color Depth Search...");
         menuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                new AddMaskDialog().showForMask(colorDepthMask);
+                new ColorDepthSearchDialog().showForMask(colorDepthMask);
             }
         });
         return menuItem;

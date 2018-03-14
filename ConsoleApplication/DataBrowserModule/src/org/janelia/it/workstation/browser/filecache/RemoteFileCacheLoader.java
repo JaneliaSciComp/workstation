@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.common.cache.CacheLoader;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,11 +31,11 @@ public class RemoteFileCacheLoader extends CacheLoader<String, CachedFile> {
     // Most of the dynamic image files are around 1Mb.
     private static final int BUFFER_SIZE = 2 * 1024 * 1024; // 2Mb
 
-    private final HttpClient httpClient;
+    private final HttpClientProxy httpClient;
     private final WebDavClientMgr webDavClientMgr;
     private final LocalFileCache loadedCache;
 
-    public RemoteFileCacheLoader(HttpClient httpClient, WebDavClientMgr webDavClientMgr, LocalFileCache loadedCache) {
+    public RemoteFileCacheLoader(HttpClientProxy httpClient, WebDavClientMgr webDavClientMgr, LocalFileCache loadedCache) {
         this.httpClient = httpClient;
         this.webDavClientMgr = webDavClientMgr;
         this.loadedCache = loadedCache;

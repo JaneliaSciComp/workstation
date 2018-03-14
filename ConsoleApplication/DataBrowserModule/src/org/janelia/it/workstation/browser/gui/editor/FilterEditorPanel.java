@@ -947,7 +947,7 @@ public class FilterEditorPanel
                 if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
                     viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
                 }
-                ExportResultsAction<DomainObject> action = new ExportResultsAction<>(exportSearchResults, viewer);
+                ExportResultsAction<DomainObject, Reference> action = new ExportResultsAction<>(exportSearchResults, viewer);
                 action.actionPerformed(null);
             }
 

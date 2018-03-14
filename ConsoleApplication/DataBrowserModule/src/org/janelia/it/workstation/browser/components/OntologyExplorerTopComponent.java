@@ -15,11 +15,11 @@ import java.util.concurrent.Callable;
 
 import javax.swing.ActionMap;
 import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
@@ -36,6 +36,7 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.KeyBindings;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
@@ -81,7 +82,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 
 /**
  * Top component for the Ontology Editor, which lets users create ontologies
@@ -611,7 +611,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                         }
                         String owner = subject==null?ontology.getOwnerKey():subject.getFullName();
                         boolean checked = currOntologyId != null && ontology.getId().equals(currOntologyId);
-                        JMenuItem roleMenuItem = new JCheckBoxMenuItem(ontology.getName() + " (" + owner + ")", checked);
+                        JMenuItem roleMenuItem = new JRadioButtonMenuItem(ontology.getName() + " (" + owner + ")", checked);
                         String iconName = ClientDomainUtils.isOwner(ontology)?"folder.png":"folder_blue.png";
                         roleMenuItem.setIcon(Icons.getIcon(iconName));
                         roleMenuItem.addActionListener(new ActionListener() {

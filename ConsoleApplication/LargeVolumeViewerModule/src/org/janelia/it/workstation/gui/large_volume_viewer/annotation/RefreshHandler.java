@@ -93,7 +93,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         if (action==MessageType.ERROR_PROCESSING) {
              if (user!=null && user.equals(AccessManager.getSubjectKey())) {
                  byte[] msgBody = message.getBody();
-                 handle (new String(msgBody));
+                 logError (new String(msgBody));
              }
              return;
         }
@@ -137,7 +137,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                 exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
                 annotationModel.getNeuronManager().completeCreateNeuron(neuron);
             } catch (Exception e) {
-                handle(e.getMessage());
+                logError(e.getMessage());
             }
         } else if (action == MessageType.REQUEST_NEURON_OWNERSHIP) {
             // some other user is asking for ownership of this neuron... process accordingly
@@ -180,7 +180,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                                 break;
                         }
                     } catch (Exception e) {
-                        handle (e.getMessage());
+                        logError (e.getMessage());
                     }
 
                 }
@@ -188,11 +188,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         }
     }
 
-    /**
-     * error callback receiving update from queue
-     */
-    @Override
-    public void handle(String errorMsg) {
+    public void logError(String errorMsg) {
         String error = "Problems receiving message updates, " + errorMsg;
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -202,6 +198,14 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             }
         });
         log.error(error);
+    }
+    
+    
+    @Override
+    public void handle(String consumerTag) {
+        // this is a consumer cancel callback.... if this gets called with null, assume it is just a problem with rabbitmq
+        // initializing
+        log.info("Rabbitmq cancelling consumer");
     }
 
     public AnnotationModel getAnnotationModel() {

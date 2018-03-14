@@ -349,7 +349,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public AnnotatedObjectList<DomainObject, Reference> getDomainObjectList() {
+    public AnnotatedObjectList<DomainObject, Reference> getObjectList() {
         return domainObjectList;
     }
 
@@ -382,6 +382,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         return false;
     }
 
+    @Override
     public Object getValue(AnnotatedObjectList<DomainObject, Reference> domainObjectList, DomainObject object, String columnName) {
         if (COLUMN_KEY_ANNOTATIONS.equals(columnName)) {
             StringBuilder builder = new StringBuilder();
@@ -424,7 +425,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             }
 
             DomainObject domainObject = selected.get(0);
-            hud.setObjectAndToggleDialog(domainObject, null, null, toggle, toggle);
+            hud.setObjectAndToggleDialog(domainObject, null, null, toggle, true);
         } 
         catch (Exception ex) {
             ConsoleApp.handleException(ex);
@@ -572,21 +573,26 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     public void restoreState(ListViewerState viewerState) {
-        final JScrollPane scrollPane = getDynamicTable().getScrollPane();
-        final TableViewerState tableViewerState = (TableViewerState)viewerState;
-        SwingUtilities.invokeLater(new Runnable() {
-               public void run() {
-                   
-                   int horizontalScrollValue = tableViewerState.getHorizontalScrollValue();
-                   log.debug("Restoring horizontalScrollValue={}",horizontalScrollValue);
-                   scrollPane.getHorizontalScrollBar().setValue(horizontalScrollValue);
-                   
-                   int verticalScrollValue = tableViewerState.getVerticalScrollValue();
-                   log.debug("Restoring verticalScrollValue={}",verticalScrollValue);
-                   scrollPane.getVerticalScrollBar().setValue(verticalScrollValue);
+        if (viewerState instanceof TableViewerState) {
+            final JScrollPane scrollPane = getDynamicTable().getScrollPane();
+            final TableViewerState tableViewerState = (TableViewerState)viewerState;
+            SwingUtilities.invokeLater(new Runnable() {
+                   public void run() {
+                       
+                       int horizontalScrollValue = tableViewerState.getHorizontalScrollValue();
+                       log.debug("Restoring horizontalScrollValue={}",horizontalScrollValue);
+                       scrollPane.getHorizontalScrollBar().setValue(horizontalScrollValue);
+                       
+                       int verticalScrollValue = tableViewerState.getVerticalScrollValue();
+                       log.debug("Restoring verticalScrollValue={}",verticalScrollValue);
+                       scrollPane.getVerticalScrollBar().setValue(verticalScrollValue);
+                   }
                }
-           }
-        );
+            );
+        }
+        else {
+            log.warn("Cannot restore viewer state of type {}", viewerState.getClass());
+        }
     }
 
 }

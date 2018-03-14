@@ -23,6 +23,7 @@ import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.janelia.it.workstation.browser.util.PathUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ public class WebDavClient {
     private static final Logger LOG = LoggerFactory.getLogger(WebDavClient.class);
 
     private final String baseUrl;
-    private final HttpClient httpClient;
+    private final HttpClientProxy httpClient;
     private final ObjectMapper objectMapper;
 
     /**
@@ -51,7 +52,7 @@ public class WebDavClient {
      * @throws IllegalArgumentException
      *   if the baseUrl cannot be parsed.
      */
-    public WebDavClient(String baseUrl, HttpClient httpClient, ObjectMapper objectMapper) {
+    public WebDavClient(String baseUrl, HttpClientProxy httpClient, ObjectMapper objectMapper) {
         this.baseUrl = validateUrl(baseUrl);
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;

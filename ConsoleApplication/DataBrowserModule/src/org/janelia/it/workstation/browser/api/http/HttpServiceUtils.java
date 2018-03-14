@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.ws.rs.core.HttpHeaders;
 
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.model.security.Subject;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -16,19 +17,41 @@ import com.google.common.collect.ImmutableMap;
  */
 public class HttpServiceUtils {
 
-    private static final String APPICATION_ID_HEADER = "Application-Id";
-    private static final String APPICATION_ID_VALUE = "Workstation";
+    private static final String USERNAME_HEADER = "Username";
+    private static final String RUNASUSER_HEADER = "RunAsUser";
+    private static final String APPICATION_HEADER = "Application-Id";
+    private static final String APPICATION_VALUE = "Workstation";
     
     public static Map<String,String> getExtraHeaders() {
-
-        Map<String,String> headers = new HashMap<>();
         
-        String accessToken = AccessManager.getAccessManager().getToken();
+        AccessManager accessManager = AccessManager.getAccessManager();
+        Map<String,String> headers = new HashMap<>();
+
+        // Identify ourselves 
+        headers.put(APPICATION_HEADER, APPICATION_VALUE);
+
+        // Add the JWT for services behind the API Gateway, and file services like Jade
+        String accessToken = accessManager.getToken();
         if (accessToken!=null) {
             headers.put(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
         }
         
-        headers.put(APPICATION_ID_HEADER, APPICATION_ID_VALUE);
+        // Username/RunAsUser headers for using services directly without the API Gateway
+        Subject authSubject = accessManager.getAuthenticatedSubject();
+        if (authSubject != null) {
+
+            String authKey = authSubject.getKey();
+            headers.put(USERNAME_HEADER, authKey);
+            
+            Subject actualSubject = accessManager.getActualSubject();
+            if (actualSubject != null) {
+                String runAsKey = actualSubject.getKey();
+                if (!runAsKey.equals(authKey)) {
+                    headers.put(RUNASUSER_HEADER, runAsKey);
+                }
+            }
+        }
+        
         
         return ImmutableMap.copyOf(headers);
     }

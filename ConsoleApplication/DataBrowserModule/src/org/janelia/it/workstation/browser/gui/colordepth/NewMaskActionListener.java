@@ -5,6 +5,9 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -31,6 +34,8 @@ import org.slf4j.LoggerFactory;
 public final class NewMaskActionListener implements ActionListener {
 
     private static final Logger log = LoggerFactory.getLogger(NewMaskActionListener.class);
+
+    private final static DateFormat dateFormatter = new SimpleDateFormat("yyyy/MM/dd hh:mma");
     
     public NewMaskActionListener() {
     }
@@ -83,49 +88,11 @@ public final class NewMaskActionListener implements ActionListener {
 
                 @Override
                 protected void hadSuccess() {
-                    
-                    MaskCreationDialog maskCreationDialog = new MaskCreationDialog(image, alignmentSpaces, null, true);
-                    if (!maskCreationDialog.showForMask()) {
-                        return; // User cancelled operation
-                    }
-                     
-                    BufferedImage mask = maskCreationDialog.getMask();
-                    if (!mask.equals(image)) {
-
-                        SimpleWorker worker = new SimpleWorker()     {
-
-                            private String uploadPath;
-                            
-                            @Override
-                            protected void doStuff() throws Exception {
-                                File tempFile = File.createTempFile("mask", ".png");
-                                tempFile.deleteOnExit();
-                                ImageIO.write(mask, "png", tempFile);
-                                log.info("Wrote mask to temporary file: "+tempFile);
-                                uploadPath = MaskUtils.uploadMask(tempFile);
-                            }
-
-                            @Override
-                            protected void hadSuccess() {
-                                String alignmentSpace = maskCreationDialog.getAlignmentSpace();
-                                int maskThreshold = maskCreationDialog.getThreshold();
-                                new AddMaskDialog().showForMask(uploadPath, alignmentSpace, maskThreshold, null);
-                            }
-
-                            @Override
-                            protected void hadError(Throwable error) {
-                                ConsoleApp.handleException(error);
-                            }
-                        };
-
-                        worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Uploading mask", ""));
-                        worker.execute();
-                    }
-                    else {
-                        String alignmentSpace = maskCreationDialog.getAlignmentSpace();
-                        int maskThreshold = maskCreationDialog.getThreshold();
-                        new AddMaskDialog().showForMask(uploadPath, alignmentSpace, maskThreshold, null);
-                    }
+                    String now = dateFormatter.format(new Date());
+                    String maskName = "Mask uploaded on "+now;
+                    MaskCreationDialog maskCreationDialog = new MaskCreationDialog( 
+                            image, uploadPath, alignmentSpaces, null, maskName, null, true);
+                    maskCreationDialog.showForMask();
                 }
 
                 @Override

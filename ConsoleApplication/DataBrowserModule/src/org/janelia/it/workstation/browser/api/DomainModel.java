@@ -979,11 +979,8 @@ public class DomainModel {
     public String dispatchSamples(List<Reference> sampleRefs, String reprocessPurpose, boolean reuse) throws Exception {
         return sampleFacade.dispatchSamples(sampleRefs, reprocessPurpose, reuse);
     }
-    
-    public ColorDepthSearch createColorDepthSearch(String name, String alignmentSpace) throws Exception {
-        ColorDepthSearch search = new ColorDepthSearch();
-        search.setName(name);
-        search.setAlignmentSpace(alignmentSpace);
+
+    public ColorDepthSearch createColorDepthSearch(ColorDepthSearch search) throws Exception {
         search = save(search);        
 
         TreeNode searchesFolder = getDefaultWorkspaceFolder(DomainConstants.NAME_COLOR_DEPTH_SEARCHES, true);

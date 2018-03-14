@@ -458,7 +458,7 @@ public class NeuronSeparationEditorPanel
         if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
             viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
         }
-        ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
+        ExportResultsAction<DomainObject, Reference> action = new ExportResultsAction<>(searchResults, viewer);
         action.actionPerformed(null);
     }
 

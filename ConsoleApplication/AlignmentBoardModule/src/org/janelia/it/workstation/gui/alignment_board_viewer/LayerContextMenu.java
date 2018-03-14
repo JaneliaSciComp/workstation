@@ -67,7 +67,7 @@ public class LayerContextMenu extends JPopupMenu {
         add(getDropColorItem());
         add(getShowOverlapsItem());
         // This is a special debug item. It may also not be working as intended. LLF, 1/10/2014
-        if ( AccessManager.getUsername().equals( "fosterl" ) ) {
+        if ( AccessManager.getSubjectName().equals( "fosterl" ) ) {
             add(getRawRenderToggle());
         }
         add(getRenameItem());

@@ -2,9 +2,11 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.net.URL;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
@@ -12,64 +14,42 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.FileMgr;
-import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
-import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.interfaces.HasFiles;
-import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.sample.SampleAlignmentResult;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.sample.Image;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Allows the user to create a mask for color depth search from an existing color depth MIP on a sample.
+ * Allows the user to create a mask for color depth search from an existing image.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class CreateMaskFromSampleAction extends AbstractAction {
+public class CreateMaskFromImageAction extends AbstractAction {
 
-    private static final Logger log = LoggerFactory.getLogger(CreateMaskFromSampleAction.class);
+    private static final Logger log = LoggerFactory.getLogger(CreateMaskFromImageAction.class);
 
-    private Sample sample;
-    private ArtifactDescriptor resultDescriptor;
-    private String typeName;
-    private SampleAlignmentResult alignment;
+    private Image image;
     private String imagePath;
 
-    public CreateMaskFromSampleAction() {
+    public CreateMaskFromImageAction() {
         super("Create Mask for Color Depth Search...");
     }
     
-    public CreateMaskFromSampleAction(Sample sample, ArtifactDescriptor resultDescriptor, String typeName) {
+    public CreateMaskFromImageAction(Image image) {
         this();
-        this.sample = sample;
-        this.resultDescriptor = resultDescriptor;
-        this.typeName = typeName;
+        this.image = image;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        log.debug("sample: "+sample);
-        log.debug("resultDescriptor: "+resultDescriptor);
-        log.debug("typeName: "+typeName);
+        log.debug("image: "+image);
         
-        HasFiles fileProvider = DescriptorUtils.getResult(sample, resultDescriptor);
-        log.debug("fileProvider: "+fileProvider);
-        
-        if (!(fileProvider instanceof SampleAlignmentResult)) {
-            
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
-                    "Must select an aligned image", 
-                    "Image not aligned", JOptionPane.ERROR_MESSAGE);
-            
-            return;
-        }
-        
-        alignment = (SampleAlignmentResult)fileProvider;
-        imagePath = DomainUtils.getFilepath(alignment, typeName);
+        imagePath = DomainUtils.getFilepath(image, FileType.FirstAvailable2d);
         log.debug("imagePath: "+imagePath);
         
         if (imagePath==null) {
@@ -106,10 +86,14 @@ public class CreateMaskFromSampleAction extends AbstractAction {
     }
     
     private void showMaskDialog(BufferedImage image, List<String> alignmentSpaces) {
+
+        // could be null, but that's okay, in that case the user has to pick
+        String imageAlignmentSpace = this.image.getAlignmentSpace(); 
+        
         try {
-            String maskName = "Mask derived from "+sample.getLine();
+            String maskName = "Mask derived from "+this.image.getName();
             MaskCreationDialog maskCreationDialog = new MaskCreationDialog(
-                    image, null, alignmentSpaces, alignment.getAlignmentSpace(), maskName, sample, true);
+                    image, null, alignmentSpaces, imageAlignmentSpace, maskName, null, true);
             maskCreationDialog.showForMask();
         }
         catch (Exception e) {

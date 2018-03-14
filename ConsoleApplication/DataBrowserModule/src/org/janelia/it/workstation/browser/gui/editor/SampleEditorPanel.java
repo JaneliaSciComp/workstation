@@ -184,7 +184,7 @@ public class SampleEditorPanel
             protected void updateHud(SelectablePanel resultPanel, boolean toggle) {
                 if (resultPanel instanceof PipelineResultPanel) {
                     ArtifactDescriptor resultDescriptor = ((PipelineResultPanel)resultPanel).getResultDescriptor();
-                    Hud.getSingletonInstance().setObjectAndToggleDialog(sample, resultDescriptor, null, toggle, toggle);
+                    Hud.getSingletonInstance().setObjectAndToggleDialog(sample, resultDescriptor, null, toggle, true);
                 }
             }
             
@@ -274,7 +274,7 @@ public class SampleEditorPanel
         if (lsmPanel.getViewer() instanceof DomainObjectTableViewer) {
             viewer = (DomainObjectTableViewer)lsmPanel.getViewer();
         }
-        ExportResultsAction<DomainObject> action = new ExportResultsAction<>(lsmSearchResults, viewer);
+        ExportResultsAction<DomainObject, Reference> action = new ExportResultsAction<>(lsmSearchResults, viewer);
         action.actionPerformed(null);
     }
 
