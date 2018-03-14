@@ -1,8 +1,4 @@
-// 7.6
+// 7.7
 
 Workstation Browser
-* Major improvements to color depth search work flow
-* Clicking checkboxes no longer closes menus
-* Fixed lightbox update when selecting results in the Sample Editor
-* Added alignment space attribute to images for mask creation
-* Fixed bug which prevented saving viewer state on exit
+* Fixed bug with Open ontology button allowing multiple selection
