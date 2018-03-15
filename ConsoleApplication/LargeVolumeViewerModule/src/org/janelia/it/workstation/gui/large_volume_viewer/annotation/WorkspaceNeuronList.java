@@ -69,6 +69,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private CameraPanToListener panListener;
     private NeuronSelectedListener neuronSelectedListener;
 
+    // for preserving selection across operations
+    private int savedSelection;
+
     private int width;
     private static final int height = 2 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
 
@@ -245,7 +248,6 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                 if (viewRow >= 0) {
                     int modelRow = neuronTable.convertRowIndexToModel(viewRow);
                     TmNeuronMetadata selectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
-                    System.out.println("clicked on " + (selectedNeuron == null ? "null" : selectedNeuron.getName()));
                     // which column?
                     int viewColumn = table.columnAtPoint(me.getPoint());
                     int modelColumn = neuronTable.convertColumnIndexToModel(viewColumn);
@@ -256,9 +258,13 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                     }  else if (modelColumn == NeuronTableModel.COLUMN_COLOR) {
                         // single click color, edit style
                         annotationManager.chooseNeuronStyle(selectedNeuron);
+                        // the click might move the neuron selection, which we don't want
+                        syncSelection();
                     } else if (modelColumn == NeuronTableModel.COLUMN_VISIBILITY) {
                         // single click visibility = toggle visibility
                         annotationManager.setNeuronVisibility(selectedNeuron, !annotationManager.getNeuronVisibility(selectedNeuron));
+                        // the click might move the neuron selection, which we don't want
+                        syncSelection();
                     } else if (modelColumn == NeuronTableModel.COLUMN_OWNER_ICON) {
                         String owner = selectedNeuron.getOwnerName();
                         String ownerKey = selectedNeuron.getOwnerKey();
@@ -285,7 +291,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                                 owner + " owns this neuron. In the future, you'll be able to request ownership from this dialog, but for now, you will need to ask " +
                                 owner + " to give this neuron to you.");
                         }
-
+                        // the click might move the neuron selection, which we don't want
+                        syncSelection();
                     }
                 }
                 me.consume();
@@ -426,8 +433,6 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         return menu;
     }
 
-    private int savedSelection;
-    
     public void saveSelection() {
         this.savedSelection = neuronTable.getSelectedRow();
     }
@@ -437,7 +442,23 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
             neuronTable.setRowSelectionInterval(savedSelection, savedSelection);
         }
     }
-    
+
+    /**
+     * set the table selection to match the "current neuron" stored
+     * by the AnnModel
+     */
+    private void syncSelection() {
+        if (annotationModel.getCurrentNeuron() != null) {
+            int modelRow = neuronTableModel.getRowForNeuron(annotationModel.getCurrentNeuron());
+            if (modelRow >= 0) {
+                int viewRow = neuronTable.convertRowIndexToView(modelRow);
+                if (viewRow >= 0) {
+                    neuronTable.setRowSelectionInterval(viewRow, viewRow);
+                }
+            }
+        }
+    }
+
     /**
      * retrieve the current tags and update the drop-down menu
      */
