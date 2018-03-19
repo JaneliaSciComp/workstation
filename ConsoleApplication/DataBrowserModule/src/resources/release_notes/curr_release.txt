@@ -6,3 +6,4 @@ Workstation Browser
 Large Volume Viewer
 * Changing neuron color, ownership, or visibility doesn't affect neuron selection, and now the neuron list shows that properly
 * Fixed bug: you can't merge to hidden neurons
+* Users with mouselight admin role can now change ownership of any neuron

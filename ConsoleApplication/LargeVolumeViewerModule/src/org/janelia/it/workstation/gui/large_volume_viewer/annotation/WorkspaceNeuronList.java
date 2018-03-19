@@ -288,8 +288,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
                             // for now:
                             JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
-                                owner + " owns this neuron. In the future, you'll be able to request ownership from this dialog, but for now, you will need to ask " +
-                                owner + " to give this neuron to you.");
+                                owner + " owns this neuron. You need to ask them or an admin to give this neuron to you.");
                         }
                         // the click might move the neuron selection, which we don't want
                         syncSelection();
