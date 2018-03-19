@@ -17,16 +17,22 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
+import org.apache.commons.lang.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.StateMgr;
+import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.Sample;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -37,6 +43,8 @@ import net.miginfocom.swing.MigLayout;
  */
 public class CompressionDialog extends ModalDialog {
 
+    private final static Logger log = LoggerFactory.getLogger(CompressionDialog.class);
+    
     private final JPanel attrPanel;
 
     private JRadioButton stacksLLCheckbox;
@@ -45,6 +53,7 @@ public class CompressionDialog extends ModalDialog {
     private JRadioButton sepVLCheckbox;
     
     private Collection<Sample> samples;
+    private DataSet dataSet;
     
     public CompressionDialog() {
 
@@ -61,15 +70,21 @@ public class CompressionDialog extends ModalDialog {
         attrPanel.add(new JLabel(desc), "span 3, gapbottom 20");
         
         stacksLLCheckbox = new JRadioButton();
+        stacksLLCheckbox.setFocusable(false);
         stacksLLCheckbox.addActionListener((e) -> {
            updateDerivedState();
         });
+        
         stacksVLCheckbox = new JRadioButton();
+        stacksVLCheckbox.setFocusable(false);
         stacksVLCheckbox.addActionListener((e) -> {
             updateDerivedState();
          });
         sepLLCheckbox = new JRadioButton();
+        sepLLCheckbox.setFocusable(false);
+        
         sepVLCheckbox = new JRadioButton();
+        sepVLCheckbox.setFocusable(false);
 
         ButtonGroup stacksGroup = new ButtonGroup();
         stacksGroup.add(stacksLLCheckbox);
@@ -138,6 +153,7 @@ public class CompressionDialog extends ModalDialog {
     public void showForSamples(Collection<Sample> samples) {
 
         this.samples = samples;
+        this.dataSet = null;
         
         if (samples.size()>1) {
             setTitle("Change Sample Compression Strategy for "+samples.size()+" Selected Samples");
@@ -176,14 +192,14 @@ public class CompressionDialog extends ModalDialog {
         }
         
         if (sepvl == 0) {
-            sepLLCheckbox.setEnabled(true);
+            sepLLCheckbox.setSelected(true);
         }
         else if (sepll == 0) {
-            sepVLCheckbox.setEnabled(true);
+            sepVLCheckbox.setSelected(true);
         }
         else {
             // use default, if all samples don't agree
-            sepLLCheckbox.setEnabled(true);
+            sepLLCheckbox.setSelected(true);
         }
 
         updateDerivedState();
@@ -191,31 +207,84 @@ public class CompressionDialog extends ModalDialog {
         ActivityLogHelper.logUserAction("CompressionDialog.showForSample");
         packAndShow();
     }
+
+    public void showForDataSet(DataSet dataSet) {
+
+        this.samples = null;
+        this.dataSet = dataSet;
+        
+        setTitle("Change Default Sample Compression Strategy for "+dataSet.getName());
+        
+        if (DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J.equals(dataSet.getDefaultCompressionType())) {
+            stacksLLCheckbox.setSelected(true);
+        }
+        else {
+            stacksVLCheckbox.setSelected(true);
+        }
+        
+        if (DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS.equals(dataSet.getDefaultSeparationCompressionType())) {
+            sepVLCheckbox.setSelected(true);
+        }
+        else {
+            sepLLCheckbox.setSelected(true);
+        }
+
+        updateDerivedState();
+
+        ActivityLogHelper.logUserAction("CompressionDialog.showForDataSet");
+        packAndShow();
+    }
     
     private void saveAndClose() {
 
         ActivityLogHelper.logUserAction("CompressionDialog.saveAndClose");
 
+        if (samples != null) {
+            if (!saveSamples()) {
+                return;
+            }
+        }
+        else if (dataSet != null) {
+            if (!saveDataSet()) {
+                return;
+            }
+        }
+        else {
+            throw new IllegalStateException("Both samples and dataSet cannot be null");
+        }
+
+        setVisible(false);
+    }
+    
+    private boolean saveSamples() {
+
         final String samplesText = samples.size()>1?samples.size()+" Samples":"1 Sample";
         String targetSampleCompression =  stacksLLCheckbox.isSelected() ? DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J : DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
         String targetSeparationCompression =  sepLLCheckbox.isSelected() ? DomainConstants.VALUE_COMPRESSION_LOSSLESS : DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
 
-        if (DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J.equals(targetSampleCompression) && DomainConstants.VALUE_COMPRESSION_LOSSLESS.equals(targetSeparationCompression)) {
-            String message = "Are you sure you want to convert "+samplesText+" and separations to Visually Lossless (h5j) format?\n"
-                    + "This will immediately delete all Lossless v3dpbd files for these Samples and result in a large decrease in disk space usage.\n"
-                    + "Lossless files can be regenerated by reprocessing the Sample later.";
-            int result = JOptionPane.showConfirmDialog(this, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
-            if (result != 0) return;
+        boolean dirty = false;
+        
+        for(Sample sample : samples) {
+            
+            String currSampleCompression = sample.getCompressionType();
+            String currSepCompression = sample.getSeparationCompressionType();
+
+            if (StringUtils.isBlank(currSampleCompression)) {
+                currSampleCompression = DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
+            }
+            if (StringUtils.isBlank(currSepCompression)) {
+                currSepCompression = DomainConstants.VALUE_COMPRESSION_LOSSLESS;
+            }
+            
+            if (!targetSampleCompression.equals(currSampleCompression) || !targetSeparationCompression.equals(currSepCompression)) {
+                dirty = true;
+            }
         }
-        else if (DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS.equals(targetSampleCompression) && DomainConstants.VALUE_COMPRESSION_LOSSLESS.equals(targetSeparationCompression)) {
-            String message = "Are you sure you want to convert "+samplesText+" into Visually Lossless (h5j) format, with Lossless (v3dpbd) neuron separations?";
-            int result = JOptionPane.showConfirmDialog(this, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
-            if (result != 0) return;
-        }
-        else if (DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS.equals(targetSampleCompression) && DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS.equals(targetSeparationCompression)) {
-            String message = "Are you sure you want to convert "+samplesText+" into Lossless (v3dpbd) format?";
-            int result = JOptionPane.showConfirmDialog(this, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
-            if (result != 0) return;
+        
+        if (dirty) {
+            String message = "Are you sure you want to change the compression strategy for "+samplesText+"?";
+            int result = JOptionPane.showConfirmDialog(this, message,  "Change Sample Compression Strategy", JOptionPane.OK_CANCEL_OPTION);
+            if (result != 0) return false;
         }
         
         StringBuilder sampleIdBuf = new StringBuilder();
@@ -225,7 +294,7 @@ public class CompressionDialog extends ModalDialog {
             sampleIdBuf.append(sample.getId());
         }
         
-        if (sampleIdBuf.length()==0) return;
+        if (sampleIdBuf.length()==0) return false;
 
         SimpleWorker worker = new SimpleWorker() {
             
@@ -238,7 +307,7 @@ public class CompressionDialog extends ModalDialog {
                     taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
                     taskParameters.add(new TaskParameter("target sample compression", targetSampleCompression, null));
                     taskParameters.add(new TaskParameter("target separation compression", targetSeparationCompression, null));
-                    task = StateMgr.getStateMgr().submitJob("ConsoleChangeCompressionStrategy", "Console Change Compression Strategy", taskParameters);
+                    task = StateMgr.getStateMgr().submitJob("ConsoleSampleCompression", "Console Sample Compression", taskParameters);
                 }
                 catch (Exception e) {
                     ConsoleApp.handleException(e);
@@ -283,7 +352,36 @@ public class CompressionDialog extends ModalDialog {
         };
 
         worker.execute();
+        
+        return true;
+    }
+    
+    private boolean saveDataSet() {
 
-        setVisible(false);
+        String message = "<html>Apply compression strategy to all existing samples in data set, or only new samples added in the future?</html>";
+        
+        String[] buttons = { "All Existing and Future Samples", "Only Future Samples", "Cancel" };
+        int selectedOption = JOptionPane.showOptionDialog(this, message, 
+                "Apply changes", JOptionPane.INFORMATION_MESSAGE, 0, null, buttons, buttons[0]);
+
+        if (selectedOption == 0) {
+            log.info("User chose to apply changes to all existing and future samples");
+
+            message = "<html>Are you sure you want to process all samples in this data set? This operation may be compute intensive and costly.</html>";
+            int result = JOptionPane.showConfirmDialog(this, message,  "Change Sample Compression Strategy", JOptionPane.OK_CANCEL_OPTION);
+            if (result != 0) return false;
+        }
+        else if (selectedOption == 1) {
+            log.info("User chose to apply changes to future samples only");
+        }
+        else {
+            log.info("User chose to cancel save");
+            return false;
+        }
+        
+        // TODO: finish this later
+        throw new IllegalStateException("This operation is not yet implemented");
+        
+//        return true;
     }
 }

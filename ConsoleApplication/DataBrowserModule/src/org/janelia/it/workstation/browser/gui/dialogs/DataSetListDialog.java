@@ -37,6 +37,7 @@ import org.janelia.it.workstation.browser.util.Utils;
 import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.sample.DataSet;
+import org.janelia.model.domain.sample.Sample;
 
 /**
  * Dialog for viewing and editing Data Sets. 
@@ -50,11 +51,13 @@ public class DataSetListDialog extends ModalDialog {
     private final JPanel mainPanel;
     private final DynamicTable dynamicTable;
     private final DataSetDialog dataSetDialog;
-
+    private final DomainDetailsDialog detailsDialog;
+    
     public DataSetListDialog() {
         setTitle("Data Sets");
 
         dataSetDialog = new DataSetDialog(this);
+        detailsDialog = new DomainDetailsDialog(this);
 
         loadingLabel = new JLabel();
         loadingLabel.setOpaque(false);
@@ -109,21 +112,23 @@ public class DataSetListDialog extends ModalDialog {
                     final DataSet dataSet = (DataSet) getRows().get(table.getSelectedRow()).getUserObject();
 
                     JMenuItem editItem = new JMenuItem("  View Details");
-                    editItem.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            dataSetDialog.showForDataSet(dataSet);
-                        }
+                    editItem.addActionListener((e2) -> {
+                        dataSetDialog.showForDataSet(dataSet);
                     });
                     menu.add(editItem);
 
+//                    JMenuItem compItem = new JMenuItem("  Change Sample Compression Strategy");
+//                    compItem.addActionListener((e2) -> {
+//                        CompressionDialog dialog = new CompressionDialog();
+//                        dialog.showForDataSet(dataSet);
+//                    });
+//                    menu.add(compItem);
+                    
                     JMenuItem permItem = new JMenuItem("  Change Permissions");
-                    permItem.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            new DomainDetailsDialog().showForDomainObject(dataSet, DomainInspectorPanel.TAB_NAME_PERMISSIONS);
-                        }
+                    permItem.addActionListener((e2) -> {
+                        detailsDialog.showForDomainObject(dataSet, DomainInspectorPanel.TAB_NAME_PERMISSIONS);
                     });
+                    
                     menu.add(permItem);
 
                     JMenuItem deleteItem = new JMenuItem("  Delete");
@@ -131,7 +136,7 @@ public class DataSetListDialog extends ModalDialog {
                         @Override
                         public void actionPerformed(ActionEvent e) {
 
-                            int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), "Are you sure you want to delete data set '" + dataSet.getName()
+                            int result = JOptionPane.showConfirmDialog(DataSetListDialog.this, "Are you sure you want to delete data set '" + dataSet.getName()
                                             + "'? This will not delete the images associated with the data set.",
                                     "Delete Data Set", JOptionPane.OK_CANCEL_OPTION);
                             if (result != 0) {
@@ -169,6 +174,7 @@ public class DataSetListDialog extends ModalDialog {
                     if (!ClientDomainUtils.hasWriteAccess(dataSet)) {
                         permItem.setEnabled(false);
                         deleteItem.setEnabled(false);
+                        compItem.setEnabled(false);
                     }
                 }
 
@@ -201,7 +207,7 @@ public class DataSetListDialog extends ModalDialog {
                     final DataSet dataSet = (DataSet) dr.getUserObject();
                     
                     if (!ClientDomainUtils.hasWriteAccess(dataSet)) {
-                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                        JOptionPane.showMessageDialog(DataSetListDialog.this,
                                 "You do not have permission to change this data set",
                                 "Permission denied", JOptionPane.ERROR_MESSAGE);
                         return;

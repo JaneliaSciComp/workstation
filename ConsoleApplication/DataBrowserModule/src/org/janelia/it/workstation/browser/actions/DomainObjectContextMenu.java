@@ -429,7 +429,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         if (samples.isEmpty()) return null;
 
-        JMenuItem menuItem = new JMenuItem("  Change Sample Compression Strategy...");
+        JMenuItem menuItem = new JMenuItem("  Change Sample Compression Strategy");
 
         menuItem.addActionListener((e) -> {
             CompressionDialog dialog = new CompressionDialog();
