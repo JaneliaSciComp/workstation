@@ -8,6 +8,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.netbeans.api.autoupdate.InstallSupport;
 import org.netbeans.api.autoupdate.InstallSupport.Installer;
@@ -22,6 +23,8 @@ import org.netbeans.api.autoupdate.UpdateUnit;
 import org.netbeans.api.autoupdate.UpdateUnitProvider;
 import org.netbeans.api.autoupdate.UpdateUnitProviderFactory;
 import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.modules.autoupdate.ui.Utilities;
+import org.openide.modules.InstalledFileLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -189,7 +192,17 @@ public class AutoUpdater extends SimpleWorker {
 
     private Validator doDownload(OperationContainer<InstallSupport> container) throws OperationException {
         InstallSupport installSupport = container.getSupport();
-        return installSupport.doDownload(null, true, false);
+        
+        boolean global = Utilities.isGlobalInstallation();
+        boolean userDirAsFallback = true;
+        
+        if (SystemInfo.getInstallDir().startsWith("/misc/local/workstation")) {
+            // if using the shared Linux installation disallow user dir upgrades so that all users stay in sync
+            global = true;
+            userDirAsFallback = false;
+        }
+        
+        return installSupport.doDownload(null, global, userDirAsFallback);
     }
 
     private Restarter doInstall(InstallSupport support, Validator validator) throws OperationException {
