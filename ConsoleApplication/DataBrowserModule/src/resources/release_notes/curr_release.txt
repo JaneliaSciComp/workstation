@@ -8,5 +8,6 @@ Workstation Browser
 Large Volume Viewer
 * Changing neuron color, ownership, or visibility doesn't affect neuron selection, and now the neuron list shows that properly
 * Fixed bug: you can't merge to hidden neurons
+* Fixed bug: cascading errors when loading busy sharedworkspace 
 * Users with mouselight admin role can now change ownership of any neuron
 * Adjusted key generation for spatial index; this should solve many "can't select point" and "point not drawn" problems when duplicate points are present
