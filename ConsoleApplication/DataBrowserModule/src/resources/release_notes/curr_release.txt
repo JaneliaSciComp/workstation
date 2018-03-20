@@ -2,6 +2,8 @@
 
 Workstation Browser
 * Fixed bug with Open ontology button allowing multiple selection
+* Added a "color depth" mode for the Sample Editor, which shows all color depth images for the currently selected Sample
+* Re-enabled automated check for updates
 
 Large Volume Viewer
 * Changing neuron color, ownership, or visibility doesn't affect neuron selection, and now the neuron list shows that properly
