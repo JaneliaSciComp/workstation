@@ -165,10 +165,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 addTimer.report();
             }
         });
-        
-        // register with Message Server to receive async updates
-        RefreshHandler refreshHandler = RefreshHandler.getInstance();
-        refreshHandler.setAnnotationModel(this);
     }
 
     public boolean editsAllowed() {
@@ -347,6 +343,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 // load user preferences
         try {
             loadUserPreferences();
+            // register with Message Server to receive async updates
+            RefreshHandler refreshHandler = RefreshHandler.getInstance();
+            refreshHandler.setAnnotationModel(this);
         } catch (Exception error) {
             ConsoleApp.handleException(error);
         }

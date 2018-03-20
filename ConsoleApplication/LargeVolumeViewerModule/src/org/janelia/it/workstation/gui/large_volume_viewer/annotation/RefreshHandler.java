@@ -92,6 +92,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
         if (action==MessageType.ERROR_PROCESSING) {
              if (user!=null && user.equals(AccessManager.getSubjectKey())) {
+                 log.info("Error message received from server");
                  byte[] msgBody = message.getBody();
                  logError (new String(msgBody));
              }
@@ -112,12 +113,13 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                 }
             }
         }
-
+        
+         log.info("Processed headers for workspace Id {}", workspace);
         // if not this workspace or user isn't looking at a workspace right now or workspac enot relating to a workspace update, filter out message
         if (workspace==null || annotationModel.getCurrentWorkspace()==null || 
                 workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
             return;
-        }       
+        }      
 
         if (action==MessageType.NEURON_OWNERSHIP_DECISION) {
              boolean decision = Boolean.parseBoolean(convertLongString((LongString) msgHeaders.get(HeaderConstants.DECISION)));  
@@ -132,11 +134,13 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         } else if (action == MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
             // complete the future outside of the swing thread, since the GUI thread is blocked
             try {
+                log.info("Finishing processing create neuron ");
                 TmProtobufExchanger exchanger = new TmProtobufExchanger();
                 byte[] msgBody = message.getBody();
                 exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
                 annotationModel.getNeuronManager().completeCreateNeuron(neuron);
             } catch (Exception e) {
+                e.printStackTrace();
                 logError(e.getMessage());
             }
         } else if (action == MessageType.REQUEST_NEURON_OWNERSHIP) {
@@ -154,6 +158,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                         // change relevant to this workspace and not executed on this client, so update model or process request
                         switch (action) {
                             case NEURON_CREATE:
+                                log.info("processing create neuron " + neuron.getName());
                                 TmProtobufExchanger exchanger = new TmProtobufExchanger();
                                 byte[] msgBody = message.getBody();
                                 exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
@@ -163,6 +168,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                             case NEURON_SAVE_NEURONDATA:
                             case NEURON_SAVE_METADATA:
                                 if (!user.equals(AccessManager.getSubjectKey())) {
+                                log.info("processing save neuron " + neuron.getName());
                                     exchanger = new TmProtobufExchanger();
                                     msgBody = message.getBody();
                                     exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
@@ -170,7 +176,8 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                                     annotationModel.fireBackgroundNeuronChanged(neuron);
                                 }
                                 break;
-                            case NEURON_DELETE:
+                            case NEURON_DELETE:                                
+                                log.info("processing delete neuron" + neuron.getName());
                                 if (!user.equals(AccessManager.getSubjectKey())) {
                                     exchanger = new TmProtobufExchanger();
                                     msgBody = message.getBody();
@@ -180,6 +187,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                                 break;
                         }
                     } catch (Exception e) {
+                        log.error("Exception thrown in main GUI thread during message processing");
                         logError (e.getMessage());
                     }
 
