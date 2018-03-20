@@ -23,7 +23,6 @@ import org.netbeans.api.autoupdate.UpdateUnit;
 import org.netbeans.api.autoupdate.UpdateUnitProvider;
 import org.netbeans.api.autoupdate.UpdateUnitProviderFactory;
 import org.netbeans.api.progress.ProgressHandle;
-import org.netbeans.modules.autoupdate.ui.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -192,7 +191,11 @@ public class AutoUpdater extends SimpleWorker {
     private Validator doDownload(OperationContainer<InstallSupport> container) throws OperationException {
         InstallSupport installSupport = container.getSupport();
         
-        Boolean global = Utilities.isGlobalInstallation();
+        // The following is unfortunate. The autoupdate Utilities class, which is the only way to access the user's install dir preference, 
+        // is part of org.netbeans.modules.autoupdate.ui, which is not a public module API. We could use implementation version here, but it 
+        // can lead to a lot of problems with auto update. For now, we'll assume global installation, and let the user do a manual upgrade if
+        // things don't work.
+        Boolean global = true;//Utilities.isGlobalInstallation();
         boolean userDirAsFallback = true;
         
         try {
