@@ -24,7 +24,6 @@ import org.netbeans.api.autoupdate.UpdateUnitProvider;
 import org.netbeans.api.autoupdate.UpdateUnitProviderFactory;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.modules.autoupdate.ui.Utilities;
-import org.openide.modules.InstalledFileLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -193,15 +192,26 @@ public class AutoUpdater extends SimpleWorker {
     private Validator doDownload(OperationContainer<InstallSupport> container) throws OperationException {
         InstallSupport installSupport = container.getSupport();
         
-        boolean global = Utilities.isGlobalInstallation();
+        Boolean global = Utilities.isGlobalInstallation();
         boolean userDirAsFallback = true;
         
-        if (SystemInfo.getInstallDir().startsWith("/misc/local/workstation")) {
-            // if using the shared Linux installation disallow user dir upgrades so that all users stay in sync
-            global = true;
-            userDirAsFallback = false;
+        try {
+            String installDir = SystemInfo.getInstallDir();
+            log.info("Install directory: "+installDir);
+            
+            if (installDir.startsWith("/misc/local/workstation")) {
+                log.warn("Shared Linux installation detected. Forcing global installation.");
+                // if using the shared Linux installation disallow user dir upgrades so that all users stay in sync
+                global = true;
+                userDirAsFallback = false;
+            }
+        }
+        catch (RuntimeException e) {
+            // The above step isn't critical, so we handle any exceptions to allow install to continue. 
+            FrameworkImplProvider.handleException(e);
         }
         
+        log.info("Downloading updates with flags: global={}, userDirAsFallback={}", global, userDirAsFallback);
         return installSupport.doDownload(null, global, userDirAsFallback);
     }
 
