@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,6 +8,7 @@ import java.nio.file.Paths;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
+import org.openide.modules.InstalledFileLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,6 +126,21 @@ public class SystemInfo {
         return isMac && isLeopard() && !OS_VERSION_LC.startsWith("10.5");
     }
 
+    public static String getInstallDir() {
+
+        final String configFile = "config/app.conf";
+        File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, "org.janelia.it.workstation", false);
+        String cp = sysWideConfig.getAbsolutePath();
+        log.debug("Found system config at {}", sysWideConfig);
+        
+        if (SystemInfo.isMac) {
+            return cp.split("\\.app")[0]+".app";
+        }
+        
+        // Windows and Linux
+        return cp.substring(0,cp.indexOf("JaneliaWorkstation")+"JaneliaWorkstation".length());
+    }
+    
     public static void setDownloadsDir(String downloadsDir) {
         FrameworkImplProvider.setModelProperty(OptionConstants.FILE_DOWNLOADS_DIR, downloadsDir);
     }

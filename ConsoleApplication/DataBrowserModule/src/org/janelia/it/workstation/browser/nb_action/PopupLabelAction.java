@@ -23,9 +23,15 @@ public final class PopupLabelAction extends NodePresenterAction {
     @Override
     public String getName() {
         List<Node> selected = getSelectedNodes();
+
+        if (selected.isEmpty()) {
+            return "(Nothing selected)";
+        }
+        
         if (selected.size()>1) {
             return "(Multiple selected)";
         }
+        
         Node node = selected.get(0);
         return StringUtils.abbreviate(node.getDisplayName(), 50);
     }
