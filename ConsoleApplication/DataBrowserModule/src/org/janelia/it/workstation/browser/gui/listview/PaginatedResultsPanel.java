@@ -247,11 +247,17 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     }
 
     public void activate() {
-        resultsView.activate();
+        if (resultsView!=null) {
+            resultsView.activate();
+            Events.getInstance().registerOnEventBus(resultsView);
+        }
     }
 
     public void deactivate() {
-        resultsView.deactivate();
+        if (resultsView!=null) {
+            resultsView.deactivate();
+            Events.getInstance().unregisterOnEventBus(resultsView);
+        }
     }
     
     public ListViewer<T,S> getViewer() {
