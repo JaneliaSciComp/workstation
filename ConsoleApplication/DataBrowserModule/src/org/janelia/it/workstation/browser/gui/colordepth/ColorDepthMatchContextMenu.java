@@ -69,12 +69,15 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     public void runDefaultAction() {
         if (multiple) return;
         if (DomainViewerTopComponent.isSupported(match)) {
-            Sample sample = getSamples().get(0);
-            DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
-            if (viewer == null || !viewer.isCurrent(sample)) {
-                viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
-                viewer.requestActive();
-                viewer.loadDomainObject(sample, true);
+            List<Sample> samples = getSamples();
+            if (!samples.isEmpty()) {
+                Sample sample = getSamples().get(0);
+                DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
+                if (viewer == null || !viewer.isCurrent(sample)) {
+                    viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
+                    viewer.requestActive();
+                    viewer.loadDomainObject(sample, true);
+                }
             }
         }
     }
@@ -130,13 +133,14 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         
         List<Sample> samples = getSamples();
         if (samples.isEmpty()) return null;
+        if (match==null) return null;
         
         AddToResultsAction action = AddToResultsAction.get();
         action.setDomainObjects(samples);
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         try {
             // This should properly be done in a background thread, but as a shortcut we'll rely on the fact it's cached 
-            ColorDepthMask mask = model.getDomainObject(matches.get(0).getMaskRef());
+            ColorDepthMask mask = model.getDomainObject(match.getMaskRef());
             action.setMask(mask);
         }
         catch (Exception e) {
