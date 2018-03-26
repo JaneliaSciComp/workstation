@@ -12,6 +12,7 @@ import javax.swing.JMenuItem;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.browser.actions.OpenInNeuronAnnotatorAction;
+import org.janelia.it.workstation.browser.actions.OpenInNeuronAnnotatorLossyAction;
 import org.janelia.it.workstation.browser.actions.OpenInToolAction;
 import org.janelia.it.workstation.browser.actions.OpenWithDefaultAppAction;
 import org.janelia.it.workstation.browser.actions.ServiceAcceptorActionHelper;
@@ -70,6 +71,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         add(getOpenInFinderItem());
         add(getOpenWithAppItem());
         add(getNeuronAnnotatorItem());
+        add(getNeuronAnnotatorLossyItem());
         add(getVaa3dTriViewItem());
         add(getVaa3d3dViewItem());
         add(getFijiViewerItem());
@@ -186,7 +188,16 @@ public class SampleResultContextMenu extends PopupContextMenu {
         }
         return getNamedActionItem(new OpenInNeuronAnnotatorAction(separation));
     }
+
+    protected JMenuItem getNeuronAnnotatorLossyItem() {
+        final NeuronSeparation separation = result.getLatestSeparationResult();
+        if (separation==null) {
+            return getNamedActionItem(new OpenInNeuronAnnotatorLossyAction(result));
+        }
+        return getNamedActionItem(new OpenInNeuronAnnotatorLossyAction(separation));
+    }
         
+    
     protected JMenuItem getVaa3dTriViewItem() {
         String path = DomainUtils.getDefault3dImageFilePath(result);
         if (path==null) return null;

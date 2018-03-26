@@ -30,9 +30,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OpenInNeuronAnnotatorAction extends AbstractAction {
+public class OpenInNeuronAnnotatorLossyAction extends AbstractAction {
 
-    private final static Logger log = LoggerFactory.getLogger(OpenInNeuronAnnotatorAction.class);
+    private final static Logger log = LoggerFactory.getLogger(OpenInNeuronAnnotatorLossyAction.class);
 
     public static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
     
@@ -40,18 +40,18 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
     private NeuronSeparation separation;
     private PipelineResult result;
 
-    public OpenInNeuronAnnotatorAction(NeuronFragment fragment) {
-        super("View In Neuron Annotator");
+    public OpenInNeuronAnnotatorLossyAction(NeuronFragment fragment) {
+        super("View In Neuron Annotator (Lossy)");
         this.fragment = fragment;
     }
 
-    public OpenInNeuronAnnotatorAction(NeuronSeparation separation) {
-        super("View In Neuron Annotator");
+    public OpenInNeuronAnnotatorLossyAction(NeuronSeparation separation) {
+        super("View In Neuron Annotator (Lossy)");
         this.separation = separation;
     }
 
-    public OpenInNeuronAnnotatorAction(PipelineResult result) {
-        super("View In Neuron Annotator");
+    public OpenInNeuronAnnotatorLossyAction(PipelineResult result) {
+        super("View In Neuron Annotator (Lossy)");
         this.result = result;
     }
     
@@ -59,7 +59,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
     public void actionPerformed(ActionEvent event) {
 
         ActivityLogHelper.logUserAction("OpenInNeuronAnnotatorAction.doAction", fragment==null?separation:fragment.getSeparationId());
-        FileProxyService.setBlockLosslessNeuSep(false);
+        FileProxyService.setBlockLosslessNeuSep(true);
 
         if (separation!=null) {
             openSeparation();
