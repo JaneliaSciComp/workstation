@@ -174,7 +174,7 @@ public class DataSetListDialog extends ModalDialog {
                     if (!ClientDomainUtils.hasWriteAccess(dataSet)) {
                         permItem.setEnabled(false);
                         deleteItem.setEnabled(false);
-                        compItem.setEnabled(false);
+//                        compItem.setEnabled(false);
                     }
                 }
 
