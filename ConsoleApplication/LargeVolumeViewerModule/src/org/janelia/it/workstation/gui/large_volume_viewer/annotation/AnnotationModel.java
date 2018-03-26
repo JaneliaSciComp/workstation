@@ -165,10 +165,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 addTimer.report();
             }
         });
-        
-        // register with Message Server to receive async updates
-        RefreshHandler refreshHandler = RefreshHandler.getInstance();
-        refreshHandler.setAnnotationModel(this);
     }
 
     public boolean editsAllowed() {
@@ -347,6 +343,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 // load user preferences
         try {
             loadUserPreferences();
+            // register with Message Server to receive async updates
+            RefreshHandler refreshHandler = RefreshHandler.getInstance();
+            refreshHandler.setAnnotationModel(this);
         } catch (Exception error) {
             ConsoleApp.handleException(error);
         }
@@ -375,14 +374,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     // current neuron methods
     public TmNeuronMetadata getCurrentNeuron() {
         log.trace("getCurrentNeuron = {}",currentNeuron);
-        System.out.println("getCurrentNeuron = " + (currentNeuron == null ? "null" : currentNeuron.getName()));
         return currentNeuron;
     }
 
     // this method sets the current neuron but does not fire an event to update the UI
     private synchronized void setCurrentNeuron(TmNeuronMetadata neuron) {
         log.trace("setCurrentNeuron({})",neuron);
-        System.out.println("setCurrentNeuron to " + (neuron == null ? "null" : neuron.getName()));
         // be sure we're using the neuron object from the current workspace
         if (neuron != null) {
             this.currentNeuron = getNeuronFromNeuronID(neuron.getId());

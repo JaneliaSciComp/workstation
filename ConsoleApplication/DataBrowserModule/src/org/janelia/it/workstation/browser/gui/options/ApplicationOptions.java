@@ -56,17 +56,7 @@ public class ApplicationOptions {
         boolean oldVal = isAutoDownloadUpdates();
         if (oldVal == autoDownload) {
             return;
-        }
-        
-        // Update branding configuration, and make sure that works
-        try {
-            boolean checkUpdates = !autoDownload;
-            BrandingConfig.getBrandingConfig().setCheckUpdates(checkUpdates);    
-        }
-        catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
-            return;
-        }
+        }        
         
         prefs().putBoolean(OptionConstants.AUTO_DOWNLOAD_UPDATES, autoDownload);
         log.info("Set auto download updates = {}", autoDownload);

@@ -58,5 +58,7 @@ public class ModalDialog extends JDialog {
         pack();
         setLocationRelativeTo(getParent());
         setVisible(true);
+        // Avoid leaking memory from JNI references
+        dispose();
     }
 }

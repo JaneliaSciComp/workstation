@@ -1,4 +1,4 @@
-// 7.7
+// 7.8
 
 Workstation Browser
-* Fixed bug with Open ontology button allowing multiple selection
+* Fixed two memory leaks when opening many dialog boxes

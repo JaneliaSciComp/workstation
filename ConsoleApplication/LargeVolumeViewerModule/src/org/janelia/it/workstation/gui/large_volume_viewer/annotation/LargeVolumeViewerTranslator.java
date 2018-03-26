@@ -473,10 +473,14 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         // find some annotation in selected neuron and select it, too
         // let's select the first endpoint we find:
         TmGeoAnnotation firstRoot = neuron.getFirstRoot();
-        for (TmGeoAnnotation link: neuron.getSubTreeList(firstRoot)) {
-            if (link.getChildIds().size() == 0) {
-                fireNextParentEvent(link.getId());
-                return;
+
+        // not clear how it could happen, but we've seen a null here:
+        if (firstRoot != null) {
+            for (TmGeoAnnotation link : neuron.getSubTreeList(firstRoot)) {
+                if (link.getChildIds().size() == 0) {
+                    fireNextParentEvent(link.getId());
+                    return;
+                }
             }
         }
 

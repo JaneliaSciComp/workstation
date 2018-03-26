@@ -9,12 +9,14 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
@@ -106,7 +108,9 @@ public class SampleEditorPanel
     private final static String PREFERENCE_KEY = "SampleEditor";
     private final static String MODE_LSMS = "LSMs";
     private final static String MODE_RESULTS = "Results";
+    private final static String MODE_COLOR_DEPTH = "Color Depth";
     private final static String ALL_VALUE = "all";
+    private final static List<FileType> COLOR_DEPTH_TYPES = Arrays.asList(FileType.ColorDepthMip1, FileType.ColorDepthMip2, FileType.ColorDepthMip3, FileType.ColorDepthMip4);
 
     // Utilities
     private final Debouncer debouncer = new Debouncer();
@@ -116,6 +120,7 @@ public class SampleEditorPanel
     private final DropDownButton viewButton;
     private final DropDownButton objectiveButton;
     private final DropDownButton areaButton;
+    private final SingleSelectionButton<String> alignmentSpaceButton;
     private final Map<String,DropDownButton> historyButtonMap = new HashMap<>();
     private final SelectablePanelListPanel mainPanel;
     private final JScrollPane scrollPane;
@@ -131,10 +136,12 @@ public class SampleEditorPanel
     private Map<String,SamplePipelineRun> currRunMap = new HashMap<>();
     private List<LSMImage> lsms;
     private List<Annotation> lsmAnnotations;
+    private List<String> alignmentSpaces;
     private String sortCriteria;
     private String currMode = MODE_RESULTS;
     private String currObjective = ALL_VALUE;
     private String currArea = ALL_VALUE;
+    private String currAlignmentSpace;
     
     public SampleEditorPanel() {
 
@@ -146,7 +153,25 @@ public class SampleEditorPanel
         populateViewButton();
         objectiveButton = new DropDownButton("Objective: "+currObjective);
         areaButton = new DropDownButton("Area: "+currArea);
+        alignmentSpaceButton = new SingleSelectionButton<String>("Alignment Space") {
+            
+            @Override
+            public Collection<String> getValues() {
+                return alignmentSpaces;
+            }
 
+            @Override
+            public String getSelectedValue() {
+                return currAlignmentSpace;
+            }
+            
+            @Override
+            public void updateSelection(String value) {
+                setAlignmentSpace(value);
+            }
+        };
+        alignmentSpaceButton.update();
+        
         configPanel = new ConfigPanel(true) {
             @Override
             protected void titleClicked(MouseEvent e) {
@@ -169,6 +194,18 @@ public class SampleEditorPanel
         mainPanel = new SelectablePanelListPanel() {
 
             @Override
+            protected void updateHud(SelectablePanel resultPanel, boolean toggle) {
+                if (resultPanel instanceof PipelineResultPanel) {
+                    ArtifactDescriptor resultDescriptor = ((PipelineResultPanel)resultPanel).getResultDescriptor();
+                    Hud.getSingletonInstance().setObjectAndToggleDialog(sample, resultDescriptor, null, toggle, true);
+                }
+                else if (resultPanel instanceof ColorDepthPanel) {
+                    ArtifactDescriptor resultDescriptor = ((ColorDepthPanel)resultPanel).getResultDescriptor();
+                    Hud.getSingletonInstance().setObjectAndToggleDialog(sample, resultDescriptor, null, toggle, true);
+                }
+            }
+            
+            @Override
             protected void panelSelected(SelectablePanel resultPanel, boolean isUserDriven) {
                 if (resultPanel instanceof PipelineResultPanel) {
                     PipelineResultPanel resultPanel2 = (PipelineResultPanel)resultPanel;
@@ -177,14 +214,6 @@ public class SampleEditorPanel
                 else if (resultPanel instanceof PipelineErrorPanel) {
                     PipelineErrorPanel resultPanel2 = (PipelineErrorPanel)resultPanel;
                     Events.getInstance().postOnEventBus(new PipelineErrorSelectionEvent(this, resultPanel2.getError(), isUserDriven));
-                }
-            }
-            
-            @Override
-            protected void updateHud(SelectablePanel resultPanel, boolean toggle) {
-                if (resultPanel instanceof PipelineResultPanel) {
-                    ArtifactDescriptor resultDescriptor = ((PipelineResultPanel)resultPanel).getResultDescriptor();
-                    Hud.getSingletonInstance().setObjectAndToggleDialog(sample, resultDescriptor, null, toggle, true);
                 }
             }
             
@@ -200,6 +229,12 @@ public class SampleEditorPanel
                     popupMenu.addMenuItems();
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
+                else if (resultPanel instanceof ColorDepthPanel) {
+                    ColorDepthPanel resultPanel2 = (ColorDepthPanel)resultPanel;
+                    ColorDepthContextMenu popupMenu = new ColorDepthContextMenu(sample, resultPanel2.getResultDescriptor(), resultPanel2.getResult(), resultPanel2.getType());
+                    popupMenu.addMenuItems();
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
             }
             
             @Override
@@ -210,6 +245,11 @@ public class SampleEditorPanel
                 }
                 else if (resultPanel instanceof PipelineErrorPanel) {
                     SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
+                    popupMenu.runDefaultAction();
+                }
+                else if (resultPanel instanceof ColorDepthPanel) {
+                    ColorDepthPanel resultPanel2 = (ColorDepthPanel)resultPanel;
+                    ColorDepthContextMenu popupMenu = new ColorDepthContextMenu(sample, resultPanel2.getResultDescriptor(), resultPanel2.getResult(), resultPanel2.getType());
                     popupMenu.runDefaultAction();
                 }
             }
@@ -224,7 +264,12 @@ public class SampleEditorPanel
             @Override
             public void componentResized(ComponentEvent e) {
                 for(LoadedImagePanel image : lips) {
-                    rescaleImage(image);
+                    if (MODE_RESULTS.equals(currMode)) {
+                        rescaleImage(image, 0.5f);
+                    }
+                    else if (MODE_COLOR_DEPTH.equals(currMode)) {
+                        rescaleImage(image, 1f);
+                    }
                     image.invalidate();
                 }
             }
@@ -353,7 +398,7 @@ public class SampleEditorPanel
                     loadPreferences();
                     prepareLsmResults();
                 }
-                else if (MODE_RESULTS.equals(currMode))  {
+                else {
                     // Everything is already in memory
                 }
             }
@@ -362,11 +407,11 @@ public class SampleEditorPanel
             protected void hadSuccess() {
                 showResults(isUserDriven);
                 
-                if (MODE_RESULTS.equals(currMode))  {
-                    mainPanel.selectFirst(isUserDriven);
+                if (MODE_LSMS.equals(currMode))  {
+                    lsmPanel.getViewer().restoreState(viewerState);
                 }
                 else {
-                    lsmPanel.getViewer().restoreState(viewerState);
+                    mainPanel.selectFirst(isUserDriven);
                 }
                 
                 ConcurrentUtils.invokeAndHandleExceptions(success);
@@ -395,6 +440,9 @@ public class SampleEditorPanel
         }
         else if (MODE_RESULTS.equals(currMode)) {
             showResultView(isUserDriven);
+        }
+        else if (MODE_COLOR_DEPTH.equals(currMode)) {
+            showColorDepthView(isUserDriven);
         }
         updateUI();
     }
@@ -471,59 +519,7 @@ public class SampleEditorPanel
         configPanel.addConfigComponent(areaButton);
         
         if (sample!=null) {
-            Set<String> objectiveSet = new LinkedHashSet<>(sample.getObjectives());
-            Set<String> areaSet = new LinkedHashSet<>();
-            
-            // Populate currRunMap
-            for(String objective : objectiveSet) {
-                
-                ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
-                if (objectiveSample==null) continue;
-                
-                // Is there a run already selected?
-                SamplePipelineRun run = currRunMap.get(objective);
-                
-                if (run==null) {
-                	// If not, pick one as the default
-                    run = objectiveSample.getLatestRun();
-                	if (run!=null) {
-                		currRunMap.put(objective, run);
-                	}
-                }
-            }
-            
-            // Populate drop down buttons
-            for(String objective : objectiveSet) {
-                
-                ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
-                if (objectiveSample==null) continue;
-                SamplePipelineRun run = currRunMap.get(objective);
-                if (run==null || run.getResults()==null) continue;
-    
-                for(PipelineResult result : run.getResults()) {
-                    String area = null;
-                    if (result instanceof HasAnatomicalArea) {
-                        area = ((HasAnatomicalArea)result).getAnatomicalArea();
-                    }
-                    if (area==null) {
-                        area = "Unknown";
-                    }
-                	areaSet.add(area);
-                }
-                
-                DropDownButton historyButton = new DropDownButton(objective+": "+getLabel(run));
-                populateHistoryButton(historyButton, objectiveSample);
-                historyButtonMap.put(objective, historyButton);
-                configPanel.addConfigComponent(historyButton);
-            }
-    
-        	List<String> objectives = new ArrayList<>(objectiveSet);
-            objectives.add(0, ALL_VALUE);
-            populateObjectiveButton(objectives);
-            
-            List<String> areas = new ArrayList<>(areaSet);
-            areas.add(0, ALL_VALUE);
-            populateAreaButton(areas);
+            prepareSampleValues();
             
             for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
                 
@@ -537,15 +533,7 @@ public class SampleEditorPanel
                 
                 for(PipelineResult result : run.getResults()) {
     
-                    String area = null;
-                    if (result instanceof HasAnatomicalArea) {
-                        area = ((HasAnatomicalArea)result).getAnatomicalArea();
-                    }
-                    
-                    if (area==null) {
-                        area = "Unknown";
-                    }
-                    
+                    String area = getArea(result);
                     if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
                         continue;
                     }
@@ -564,7 +552,119 @@ public class SampleEditorPanel
         add(configPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
     }
+    
+    private String getArea(PipelineResult result) {
 
+        String area = null;
+        if (result instanceof HasAnatomicalArea) {
+            area = ((HasAnatomicalArea)result).getAnatomicalArea();
+        }
+        
+        if (area==null) {
+            area = "Unknown";
+        }
+        
+        return area;
+    }
+    
+    private void showColorDepthView(boolean isUserDriven) {
+
+        lips.clear();
+        mainPanel.clearPanels();
+        configPanel.removeAllConfigComponents();
+        configPanel.addConfigComponent(objectiveButton);
+        configPanel.addConfigComponent(areaButton);
+        
+        if (sample!=null) {
+            // Populate drop down buttons
+            prepareAlignmentSpaces();
+            configPanel.addConfigComponent(alignmentSpaceButton);
+            
+            if (currAlignmentSpace != null) {
+            
+                SEARCH: for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
+
+                    String objective = objectiveSample.getObjective();
+                    if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !StringUtils.areEqual(currObjective, objective)) {
+                        continue;
+                    }
+
+                    SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
+                    if (run != null) {
+                        
+                        for (SampleAlignmentResult sampleAlignmentResult : run.getAlignmentResults()) {
+                            if (StringUtils.areEqual(currAlignmentSpace, sampleAlignmentResult.getAlignmentSpace())) {
+                                for (FileType fileType : COLOR_DEPTH_TYPES) {
+                                    if (sampleAlignmentResult.getFiles().containsKey(fileType)) {
+                                        mainPanel.addPanel(new ColorDepthPanel(sampleAlignmentResult, fileType));
+                                    }
+                                }
+                                
+                                break SEARCH;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        removeAll();
+        add(configPanel, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+    }
+
+    
+    private void prepareSampleValues() {
+
+        Set<String> objectiveSet = new LinkedHashSet<>(sample.getObjectives());
+        Set<String> areaSet = new LinkedHashSet<>();
+        
+        // Populate currRunMap
+        for(String objective : objectiveSet) {
+            
+            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
+            if (objectiveSample==null) continue;
+            
+            // Is there a run already selected?
+            SamplePipelineRun run = currRunMap.get(objective);
+            
+            if (run==null) {
+                // If not, pick one as the default
+                run = objectiveSample.getLatestRun();
+                if (run!=null) {
+                    currRunMap.put(objective, run);
+                }
+            }
+        }
+        
+        // Populate drop down buttons
+        for(String objective : objectiveSet) {
+            
+            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
+            if (objectiveSample==null) continue;
+            SamplePipelineRun run = currRunMap.get(objective);
+            if (run==null || run.getResults()==null) continue;
+
+            for(PipelineResult result : run.getResults()) {
+                String area = getArea(result);
+                areaSet.add(area);
+            }
+            
+            DropDownButton historyButton = new DropDownButton(objective+": "+getLabel(run));
+            populateHistoryButton(historyButton, objectiveSample);
+            historyButtonMap.put(objective, historyButton);
+            configPanel.addConfigComponent(historyButton);
+        }
+
+        List<String> objectives = new ArrayList<>(objectiveSet);
+        objectives.add(0, ALL_VALUE);
+        populateObjectiveButton(objectives);
+        
+        List<String> areas = new ArrayList<>(areaSet);
+        areas.add(0, ALL_VALUE);
+        populateAreaButton(areas);
+    }
+    
     private void populateHistoryButton(DropDownButton button, final ObjectiveSample objectiveSample) {
     	final String objective = objectiveSample.getObjective();
     	button.removeAll();
@@ -591,7 +691,7 @@ public class SampleEditorPanel
         viewButton.setText(currMode);
         viewButton.removeAll();
         ButtonGroup group = new ButtonGroup();
-        for (final String mode : Arrays.asList(MODE_LSMS, MODE_RESULTS)) {
+        for (final String mode : Arrays.asList(MODE_LSMS, MODE_RESULTS, MODE_COLOR_DEPTH)) {
             JMenuItem menuItem = new JMenuItem(mode);
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
@@ -652,6 +752,44 @@ public class SampleEditorPanel
         loadDomainObject(sample, true, null);
     }
     
+    private void setAlignmentSpace(String alignmentSpace) {
+        this.currAlignmentSpace = alignmentSpace;
+        loadDomainObject(sample, true, null);
+    }
+
+    private void prepareAlignmentSpaces() {
+        
+        Set<String> alignmentSpaces = new TreeSet<>();
+        
+        for (ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
+
+            String objective = objectiveSample.getObjective();
+            if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !StringUtils.areEqual(currObjective, objective)) {
+                continue;
+            }
+
+            SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
+            if (run != null) {
+                for (SampleAlignmentResult result : run.getAlignmentResults()) {
+                    
+                    String area = getArea(result);
+                    if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
+                        continue;
+                    }
+                    
+                    alignmentSpaces.add(result.getAlignmentSpace());
+                }
+            }
+        }
+        
+        this.alignmentSpaces = new ArrayList<>(alignmentSpaces);
+        if (currAlignmentSpace==null || !alignmentSpaces.contains(currAlignmentSpace)) {
+            // select first alignment space as default
+            this.currAlignmentSpace = alignmentSpaces.isEmpty() ? null : alignmentSpaces.iterator().next();
+        }
+        alignmentSpaceButton.update();
+    }
+    
     private boolean areEqualOrEmpty(String value1, String value2) {
         if (value1==null || value1.equals("")) {
             return value2==null || value2.equals("");
@@ -662,7 +800,7 @@ public class SampleEditorPanel
         return value1.equals(value2);
     }
     
-    private void rescaleImage(LoadedImagePanel image) {
+    private void rescaleImage(LoadedImagePanel image, float factor) {
         double width = image.getParent()==null?0:image.getParent().getSize().getWidth();
         if (width==0) {
             width = scrollPane.getViewport().getSize().getWidth() - 20;
@@ -671,7 +809,7 @@ public class SampleEditorPanel
             log.warn("Could not get width from parent or viewport");
             return;
         }
-        image.scaleImage((int)Math.ceil(width/2));
+        image.scaleImage((int)Math.ceil(width * factor));
     }
 
     private class PipelineResultPanel extends SelectablePanel {
@@ -747,11 +885,11 @@ public class SampleEditorPanel
             LoadedImagePanel lip = new LoadedImagePanel(filepath, decorators) {
                 @Override
                 protected void doneLoading() {
-                    rescaleImage(this);
+                    rescaleImage(this, 0.5f);
                     invalidate();
                 }
             };
-            rescaleImage(lip);
+            rescaleImage(lip, 0.5f);
             lip.addMouseListener(new MouseForwarder(this, "LoadedImagePanel->PipelineResultPanel"));
             lips.add(lip);
             return lip;
@@ -820,6 +958,75 @@ public class SampleEditorPanel
         }
     }
 
+    private class ColorDepthPanel extends SelectablePanel {
+
+        private final ArtifactDescriptor resultDescriptor;
+        private final SampleAlignmentResult result;
+        private final FileType fileType;
+        private final JLabel label = new JLabel();
+        
+        private ColorDepthPanel(SampleAlignmentResult result, FileType fileType) {
+            
+            this.result = result;
+            this.fileType = fileType;
+            
+            int b = SelectablePanel.BORDER_WIDTH;
+            setBorder(BorderFactory.createEmptyBorder(b, b, b, b));
+            setLayout(new BorderLayout());
+            
+            JPanel imagePanel = new JPanel();
+            imagePanel.setLayout(new GridLayout(1, 2, 5, 0));
+
+            if (result!=null) {
+                this.resultDescriptor = new ResultArtifactDescriptor(result);
+                label.setText(resultDescriptor.toString());
+                
+                HasFiles files = result;
+                String colorDepthMip = DomainUtils.getFilepath(files, fileType);
+                if (colorDepthMip!=null) {
+                    imagePanel.add(getImagePanel(colorDepthMip, null));
+                }
+                
+                JPanel titlePanel = new JPanel(new BorderLayout());
+                titlePanel.add(label, BorderLayout.PAGE_START);
+                
+                add(titlePanel, BorderLayout.NORTH);
+                add(imagePanel, BorderLayout.CENTER);
+
+                setFocusTraversalKeysEnabled(false);
+            }
+            else {
+                this.resultDescriptor = null;
+            }
+        }
+
+        public SampleAlignmentResult getResult() {
+            return result;
+        }
+      
+        public FileType getType() {
+            return fileType;
+        }
+
+        public ArtifactDescriptor getResultDescriptor() {
+            return resultDescriptor;
+        }
+    
+        private JPanel getImagePanel(String filepath, List<ImageDecorator> decorators) {
+            LoadedImagePanel lip = new LoadedImagePanel(filepath, decorators) {
+                @Override
+                protected void doneLoading() {
+                    rescaleImage(this, 1f);
+                    invalidate();
+                }
+            };
+            rescaleImage(lip, 1f);
+            lip.addMouseListener(new MouseForwarder(this, "LoadedImagePanel->ColorDepthPanel"));
+            lips.add(lip);
+            return lip;
+        }
+    }
+    
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         try {

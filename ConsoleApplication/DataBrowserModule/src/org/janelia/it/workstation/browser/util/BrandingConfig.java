@@ -191,12 +191,14 @@ public class BrandingConfig {
     }
 
     private final void loadBrandingCheckUpdatesSetting() {
-        String checkUpdatesOption = getCheckUpdatesOption();
-        if (checkUpdatesOption==null) return;
-        final int numberStartPt = CHECK_UPDATES_PREFIX.length();
-        String value = checkUpdatesOption.substring(numberStartPt);
-        this.checkUpdates = Boolean.parseBoolean(value);
-        log.info("Loaded existing check updates setting: "+value);
+//        String checkUpdatesOption = getCheckUpdatesOption();
+//        if (checkUpdatesOption==null) return;
+//        final int numberStartPt = CHECK_UPDATES_PREFIX.length();
+//        String value = checkUpdatesOption.substring(numberStartPt);
+//        this.checkUpdates = Boolean.parseBoolean(value);
+//        log.info("Loaded existing check updates setting: "+value);
+        this.checkUpdates = true;
+        log.info("Forced check updates setting: "+checkUpdates);
     }
     
     public boolean isNeedsRestart() {

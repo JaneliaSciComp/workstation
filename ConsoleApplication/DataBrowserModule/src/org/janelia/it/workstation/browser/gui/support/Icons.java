@@ -1,12 +1,6 @@
 package org.janelia.it.workstation.browser.gui.support;
 
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
-import java.awt.image.FilteredImageSource;
-import java.awt.image.ImageFilter;
-import java.awt.image.RGBImageFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;

@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -36,7 +37,13 @@ public class NeuronVertexSpatialIndex {
 
     // Is the index currently in a valid, usable state?
     private AtomicBoolean valid = new AtomicBoolean(false);
-    
+
+    // used by key fuzzing routine
+    private Random generator = new Random();
+    private static final double XY_PIXEL_MICRONS = 0.4;
+    private double keyFuzzFactor = XY_PIXEL_MICRONS / 2.0 * 1.0e-3;
+
+
     public NeuronVertexSpatialIndex() {
         log.trace("Creating spatial index");
     }
@@ -130,7 +137,42 @@ public class NeuronVertexSpatialIndex {
         }
         else {
             float xyz[] = v.getLocation(); // Neuron API returns coordinates in micrometers
-            return new double[] { xyz[0], xyz[1], xyz[2] };
+
+            // we originally used the exact coords as the key; that caused
+            //  problems (collisions) when there were duplicate points, which
+            //  happens because (a) we're actually on a discrete pixel grid,
+            //  and (b) when tracers are comparing work, there's a high
+            //  likelihood that they have duplicate points; the problem
+            //  manifest as both inability to select visible points, and
+            //  as points not even being drawn
+
+            // old
+            // return new double[] { xyz[0], xyz[1], xyz[2] };
+
+            // new: add a random fuzz so the indices don't match; note that
+            //  they are all very close to each other, far closer than to any
+            //  other pixel, and that we return the original vertex, which has its
+            //  location data unchanged; it's only the internal key that is fuzzed
+            //  to prevent collisions
+
+            // I'm doing random fuzzing, but you could make a case for
+            //  generating an offset deterministically, based on some unique
+            //  ID, to prevent any possible collisions (again taking advantage
+            //  of the fact that all points are actually on a discrete grid)
+
+            // the usual pixel size is hard-coded as a constant above; we
+            //  could get it from the transform matrices, but they are loaded
+            //  async with the first spatial index build, so that's inconvenient
+            // for now, we'll use the static typical pixel size, and use a
+            //  fuzz factor that's three orders of magnitude less than the
+            //  pixel "radius"; this should behave well as long as the pixel
+            //  size doesn't drop by a couple orders of magnitude below
+            //  the hard-coded size
+
+            double dy = keyFuzzFactor * generator.nextDouble();
+            double dz = keyFuzzFactor * generator.nextDouble();
+            double dx = keyFuzzFactor * generator.nextDouble();
+            return new double[] { xyz[0] + dx, xyz[1] + dy, xyz[2] + dz };
         }
     }
 
