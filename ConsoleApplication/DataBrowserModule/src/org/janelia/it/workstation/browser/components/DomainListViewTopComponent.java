@@ -103,7 +103,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
     @Override
     public void componentOpened() {
-        log.info("componentOpened");
+        log.debug("componentOpened");
         // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
         Events.getInstance().registerOnEventBus(this);
@@ -114,7 +114,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     
     @Override
     public void componentClosed() {
-        log.info("componentClosed");
+        log.debug("componentClosed");
         Events.getInstance().unregisterOnEventBus(this);
         if (editor!=null) {
             editor.deactivate();
@@ -124,7 +124,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
     @Override
     protected void componentActivated() {
-        log.info("componentActivated");
+        log.debug("componentActivated");
         this.active = true;
         // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
@@ -143,7 +143,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     
     @Override
     protected void componentDeactivated() {
-        log.info("componentDeactivated");
+        log.debug("componentDeactivated");
         this.active = false;
         if (findContext!=null) {
             FindContextManager.getInstance().deactivateContext(findContext);
