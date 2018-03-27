@@ -35,6 +35,7 @@ import org.janelia.console.viewerapi.listener.NeuronCreationListener;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
@@ -298,8 +299,16 @@ public class NeuronEditDispatcher implements LookupListener
         
             Collection<NeuronModel> newModels = new ArrayList<>();
             if (arg!=null) {
-                newModels.add((NeuronModel)arg);
-                addNeuronModel((NeuronModel)arg);
+                if (arg instanceof List) {
+                    List neuronsToRefresh = (List)arg;
+                    for (int i=0; i<neuronsToRefresh.size(); i++) {
+                        newModels.add((NeuronModel)arg);
+                        addNeuronModel((NeuronModel)arg);
+                    }
+                } else {
+                    newModels.add((NeuronModel)arg);
+                    addNeuronModel((NeuronModel)arg);
+                } 
             } else {
                 for (NeuronModel model : neuronSet) {
                     if (currentNeuronModels.contains(model))
