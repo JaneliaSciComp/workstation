@@ -83,28 +83,36 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
      */
     @Override
     public void handle(String string, Delivery message) throws IOException {
-        Map<String, Object> msgHeaders = message.getProperties().getHeaders();
-        if (msgHeaders == null) {
-            throw new IOException("Issue trying to process metadata from update");
-        }
-        MessageType action = MessageType.valueOf(convertLongString((LongString) msgHeaders.get(HeaderConstants.TYPE)));
-        String user = convertLongString((LongString) msgHeaders.get(HeaderConstants.USER));
-        Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
-        if (action==MessageType.ERROR_PROCESSING) {
-             if (user!=null && user.equals(AccessManager.getSubjectKey())) {
-                 log.info("Error message received from server");
-                 byte[] msgBody = message.getBody();
-                 logError (new String(msgBody));
-             }
-             return;
-        }
+        try {
+            Map<String, Object> msgHeaders = message.getProperties().getHeaders();
         
-        String metadata = convertLongString((LongString) msgHeaders.get(HeaderConstants.METADATA));
-        ObjectMapper mapper = new ObjectMapper();
-        TmNeuronMetadata neuron = mapper.readValue(metadata, TmNeuronMetadata.class);
-        
-        if (neuron!=null) {
-            // note that sometimes the neuron doesn't exist locally, as when we've deleted it, so check for null
+            if (msgHeaders == null) {
+                log.error("Issue trying to process metadata from update");
+            }
+            log.info("message properties: TYPE={},USER={},WORKSPACE={},METADATA={}", msgHeaders.get(HeaderConstants.TYPE), msgHeaders.get(HeaderConstants.USER),
+                    msgHeaders.get(HeaderConstants.WORKSPACE), msgHeaders.get(HeaderConstants.METADATA));
+
+            MessageType action = MessageType.valueOf(convertLongString((LongString) msgHeaders.get(HeaderConstants.TYPE)));
+            String user = convertLongString((LongString) msgHeaders.get(HeaderConstants.USER));
+            Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
+            if (action == MessageType.ERROR_PROCESSING) {
+                if (user != null && user.equals(AccessManager.getSubjectKey())) {
+                    log.info("Error message received from server");
+                    byte[] msgBody = message.getBody();
+                    logError(new String(msgBody));
+                }
+                return;
+            }
+
+            if (!msgHeaders.containsKey(HeaderConstants.METADATA) || msgHeaders.get(HeaderConstants.METADATA)==null) {
+                log.info("Message includes no neuron information; rejecting processing");
+                return;
+            }
+                
+            String metadata = convertLongString((LongString) msgHeaders.get(HeaderConstants.METADATA));
+            ObjectMapper mapper = new ObjectMapper();
+            TmNeuronMetadata neuron = mapper.readValue(metadata, TmNeuronMetadata.class);
+
             TmNeuronMetadata localNeuron = annotationModel.getNeuronManager().getNeuronById(neuron.getId());// decrease the sync level
             if (localNeuron != null) {
                 localNeuron.decrementSyncLevel();
@@ -112,87 +120,85 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                     localNeuron.setSynced(true);
                 }
             }
-        }
-        
-         log.info("Processed headers for workspace Id {}", workspace);
-        // if not this workspace or user isn't looking at a workspace right now or workspac enot relating to a workspace update, filter out message
-        if (workspace==null || annotationModel.getCurrentWorkspace()==null || 
-                workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
-            return;
-        }      
 
-        if (action==MessageType.NEURON_OWNERSHIP_DECISION) {
-             boolean decision = Boolean.parseBoolean(convertLongString((LongString) msgHeaders.get(HeaderConstants.DECISION)));  
-             if (decision) {
-                 TmNeuronMetadata origNeuron = annotationModel.getNeuronManager().getNeuronById(neuron.getId());
-                 origNeuron.setOwnerKey(neuron.getOwnerKey());
-                 origNeuron.setWriters(neuron.getWriters());
-                 origNeuron.setReaders(neuron.getReaders());
-             }
-             annotationModel.fireBackgroundNeuronOwnershipChanged(neuron);
-             annotationModel.getNeuronManager().completeOwnershipRequest(decision);
-        } else if (action == MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
-            // complete the future outside of the swing thread, since the GUI thread is blocked
-            try {
+            log.info("Processed headers for workspace Id {}", workspace);
+            // if not this workspace or user isn't looking at a workspace right now or workspac enot relating to a workspace update, filter out message
+            if (workspace == null || annotationModel.getCurrentWorkspace() == null
+                    || workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
+                return;
+            }
+
+            if (action == MessageType.NEURON_OWNERSHIP_DECISION) {
+                boolean decision = Boolean.parseBoolean(convertLongString((LongString) msgHeaders.get(HeaderConstants.DECISION)));
+                if (decision) {
+                    TmNeuronMetadata origNeuron = annotationModel.getNeuronManager().getNeuronById(neuron.getId());
+                    origNeuron.setOwnerKey(neuron.getOwnerKey());
+                    origNeuron.setWriters(neuron.getWriters());
+                    origNeuron.setReaders(neuron.getReaders());
+                }
+                annotationModel.fireBackgroundNeuronOwnershipChanged(neuron);
+                annotationModel.getNeuronManager().completeOwnershipRequest(decision);
+            } else if (action == MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
+                // complete the future outside of the swing thread, since the GUI thread is blocked
                 log.info("Finishing processing create neuron ");
                 TmProtobufExchanger exchanger = new TmProtobufExchanger();
                 byte[] msgBody = message.getBody();
                 exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
                 annotationModel.getNeuronManager().completeCreateNeuron(neuron);
-            } catch (Exception e) {
-                e.printStackTrace();
-                logError(e.getMessage());
-            }
-        } else if (action == MessageType.REQUEST_NEURON_OWNERSHIP) {
-            // some other user is asking for ownership of this neuron... process accordingly
-        } else {
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                    try {
-                        // fire notice to AnnotationModel
-                        Map<String, Object> msgHeaders = message.getProperties().getHeaders();
-                        if (msgHeaders == null) {
-                            throw new IOException("Issue trying to process metadata from update");
-                        }
+            } else if (action == MessageType.REQUEST_NEURON_OWNERSHIP) {
+                // some other user is asking for ownership of this neuron... process accordingly
+            } else {
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        try {
+                            // fire notice to AnnotationModel
+                            Map<String, Object> msgHeaders = message.getProperties().getHeaders();
+                            if (msgHeaders == null) {
+                                throw new IOException("Issue trying to process metadata from update");
+                            }
 
-                        // change relevant to this workspace and not executed on this client, so update model or process request
-                        switch (action) {
-                            case NEURON_CREATE:
-                                log.info("processing create neuron " + neuron.getName());
-                                TmProtobufExchanger exchanger = new TmProtobufExchanger();
-                                byte[] msgBody = message.getBody();
-                                exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
-                                annotationModel.getNeuronManager().addNeuron(neuron);                                                                   
-                                annotationModel.fireBackgroundNeuronCreated(neuron);                                   
-                                break;
-                            case NEURON_SAVE_NEURONDATA:
-                            case NEURON_SAVE_METADATA:
-                                if (!user.equals(AccessManager.getSubjectKey())) {
-                                log.info("processing save neuron " + neuron.getName());
-                                    exchanger = new TmProtobufExchanger();
-                                    msgBody = message.getBody();
+                            // change relevant to this workspace and not executed on this client, so update model or process request
+                            switch (action) {
+                                case NEURON_CREATE:
+                                    log.info("processing create neuron " + neuron.getName());
+                                    TmProtobufExchanger exchanger = new TmProtobufExchanger();
+                                    byte[] msgBody = message.getBody();
                                     exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
                                     annotationModel.getNeuronManager().addNeuron(neuron);
-                                    annotationModel.fireBackgroundNeuronChanged(neuron);
-                                }
-                                break;
-                            case NEURON_DELETE:                                
-                                log.info("processing delete neuron" + neuron.getName());
-                                if (!user.equals(AccessManager.getSubjectKey())) {
-                                    exchanger = new TmProtobufExchanger();
-                                    msgBody = message.getBody();
-                                    exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
-                                    annotationModel.fireBackgroundNeuronDeleted(neuron);
-                                }
-                                break;
+                                    annotationModel.fireBackgroundNeuronCreated(neuron);
+                                    break;
+                                case NEURON_SAVE_NEURONDATA:
+                                case NEURON_SAVE_METADATA:
+                                    if (!user.equals(AccessManager.getSubjectKey())) {
+                                        log.info("processing save neuron " + neuron.getName());
+                                        exchanger = new TmProtobufExchanger();
+                                        msgBody = message.getBody();
+                                        exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+                                        annotationModel.getNeuronManager().addNeuron(neuron);
+                                        annotationModel.fireBackgroundNeuronChanged(neuron);
+                                    }
+                                    break;
+                                case NEURON_DELETE:
+                                    log.info("processing delete neuron" + neuron.getName());
+                                    if (!user.equals(AccessManager.getSubjectKey())) {
+                                        exchanger = new TmProtobufExchanger();
+                                        msgBody = message.getBody();
+                                        exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+                                        annotationModel.fireBackgroundNeuronDeleted(neuron);
+                                    }
+                                    break;
+                            }
+                        } catch (Exception e) {
+                            log.error("Exception thrown in main GUI thread during message processing");
+                            logError(e.getMessage());
                         }
-                    } catch (Exception e) {
-                        log.error("Exception thrown in main GUI thread during message processing");
-                        logError (e.getMessage());
-                    }
 
-                }
-            });
+                    }
+                });
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 
