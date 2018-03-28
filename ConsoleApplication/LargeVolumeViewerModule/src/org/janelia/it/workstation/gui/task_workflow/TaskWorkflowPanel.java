@@ -6,27 +6,20 @@ import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.basic.BasicComboBoxUI.KeyHandler;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableColumn;
@@ -46,7 +39,6 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronG
 import static org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog.PROPERTY_READONLY;
 import static org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog.PROPERTY_VISIBILITY;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
-import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +54,7 @@ public class TaskWorkflowPanel extends JPanel {
 
     private String[] reviewOptions;
     
-    List<ReviewPoint> pointList;
+    List<Vec3> pointList;
     private JTable pointTable;
     private PointTableModel pointModel = new PointTableModel();
 
@@ -72,20 +64,6 @@ public class TaskWorkflowPanel extends JPanel {
         this.dataSource = dataSource;
 
         setupUI();
-    }
-    
-    public void nextTask() {
-        int viewRow = pointTable.getSelectedRow();
-        if (viewRow < pointList.size() - 1) {
-            selectGoto(viewRow + 1);
-        }
-    }
-    
-    public void prevTask() {
-        int viewRow = pointTable.getSelectedRow();
-        if (viewRow > 0) {
-            selectGoto(viewRow - 1);
-        }
     }
 
     private void setupUI() {
@@ -106,17 +84,6 @@ public class TaskWorkflowPanel extends JPanel {
 
         // point table
         pointTable = new JTable(pointModel);
-        pointTable.addMouseWheelListener(new MouseWheelListener() {
-            @Override
-            public void mouseWheelMoved(MouseWheelEvent e) {
-                if (e.getPreciseWheelRotation()==1.0) {
-                    nextTask();
-                } else {
-                    prevTask();
-                }
-            }
-        
-        });
         pointTable.addMouseListener(new MouseHandler() {
             @Override
             protected void singleLeftClicked(MouseEvent me) {
@@ -131,7 +98,7 @@ public class TaskWorkflowPanel extends JPanel {
                     //  the point
                     int viewColumn = table.columnAtPoint(me.getPoint());
                     int modelColumn = pointTable.convertColumnIndexToModel(viewColumn);
-                    if (modelColumn != 4) {
+                    if (modelColumn != 3) {
                         selectGoto(viewRow);
                     }
                 }
@@ -140,7 +107,7 @@ public class TaskWorkflowPanel extends JPanel {
         });
         pointTable.setRowHeight(20);
         pointTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        TableColumn col = pointTable.getColumnModel().getColumn(4);
+        TableColumn col = pointTable.getColumnModel().getColumn(3);
         col.setCellEditor(new ReviewEditor()); 
 
         JScrollPane scrollPane = new JScrollPane(pointTable);
@@ -218,9 +185,9 @@ public class TaskWorkflowPanel extends JPanel {
     /**
      * given a list of points, start the workflow from scratch
      */
-    private void startWorkflow(List<ReviewPoint> pointList) {
+    private void startWorkflow(List<Vec3> pointList) {
         pointModel.clear();
-        for (ReviewPoint point: pointList) {
+        for (Vec3 point: pointList) {
             pointModel.addPoint(point);
         }
 
@@ -261,9 +228,9 @@ public class TaskWorkflowPanel extends JPanel {
                     String review = (String) pointTable.getModel().getValueAt(i, 3);
                     if (review != null) {
                         Map pointReview = new HashMap<String,String>();
-                        pointReview.put("x", pointList.get(i).getLocation().getX());
-                        pointReview.put("y", pointList.get(i).getLocation().getY());
-                        pointReview.put("z", pointList.get(i).getLocation().getZ());
+                        pointReview.put("x", pointList.get(i).getX());
+                        pointReview.put("y", pointList.get(i).getY());
+                        pointReview.put("z", pointList.get(i).getZ());
                         pointReview.put("reviewNote", review);
                         pointReviews.add(pointReview);
                     }                    
@@ -324,13 +291,15 @@ public class TaskWorkflowPanel extends JPanel {
         pointTable.getSelectionModel().setSelectionInterval(viewRow, viewRow);
 
         int modelRow = pointTable.convertRowIndexToModel(viewRow);
-        gotoPoint(pointList.get(viewRow));
+        gotoPoint((double) pointModel.getValueAt(modelRow, 0),
+                (double) pointModel.getValueAt(modelRow, 1),
+                (double) pointModel.getValueAt(modelRow, 2));
     }
 
     /**
      * move the camera to the indicated point in LVV and Horta
      */
-    private void gotoPoint(ReviewPoint point) {
+    private void gotoPoint(double x, double y, double z) {
 
         // this is possibly a bit hacky...I followed the example in FilteredAnnList;
         //  we use the LVV sample provider to get the sample location, then poke
@@ -343,12 +312,8 @@ public class TaskWorkflowPanel extends JPanel {
             SynchronizationHelper helper = new SynchronizationHelper();
             Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
             SampleLocation sampleLocation = originator.getSampleLocation();
-            sampleLocation.setFocusUm(point.getLocation().getX(), point.getLocation().getY(), point.getLocation().getZ());
-            sampleLocation.setMicrometersPerWindowHeight(point.getZoomLevel());
-            sampleLocation.setRotationAsQuaternion(point.getRotation());
-            sampleLocation.setInterpolate(point.getInterpolate());
-            
-            
+            sampleLocation.setFocusUm(x, y, z);
+
             // the order you do these determines which will be at front when you're done;
             //  do LVV first so it matches the behavior from FilteredAnnList
 
@@ -367,23 +332,6 @@ public class TaskWorkflowPanel extends JPanel {
             ConsoleApp.handleException(e);
         }
     }
-    
-    /**
-     * generates a point review list from a list of TmGeoAnnotations generated somewhere else
-     */
-    public void loadPointList (List<Vec3> points) {
-         pointList = new ArrayList<>();
-         reviewOptions = new String[]{"Problem", "Bad Signal", "Incorrect Neuron"};
-         for (Vec3 vecPoint: points) {
-             ReviewPoint point = new ReviewPoint();
-             point.setLocation(vecPoint);
-             point.setZoomLevel(100);
-             point.setRotation(new float[]{(float)-0.004922,(float)0.0025862362,(float)-0.4651227,(float)0.88522875});
-             point.setInterpolate(true);             
-             pointList.add(point);
-         }
-         startWorkflow(pointList);
-    }
 
     /**
      * pop a file chooser; load and parse a json list of points
@@ -394,9 +342,9 @@ public class TaskWorkflowPanel extends JPanel {
      * coord to clipboard" format) -- blank lines allowed -- comment lines start
      * with #
      */
-    private List<ReviewPoint> readPointFile() {
+    private List<Vec3> readPointFile() {
 
-        List<ReviewPoint> pointList = new ArrayList<>();
+        List<Vec3> pointList = new ArrayList<>();
 
         // dialog to get file
         JFileChooser chooser = new JFileChooser();
@@ -406,11 +354,10 @@ public class TaskWorkflowPanel extends JPanel {
         if (result == JFileChooser.APPROVE_OPTION) {
             File pointFile = chooser.getSelectedFile();
 
-             Map<String,Object> reviewData = null;
              Map<String,Object> pointData = null;
             try {
                 ObjectMapper mapper = new ObjectMapper();
-                reviewData = mapper.readValue(new FileInputStream(pointFile), new TypeReference<Map<String,Object>>(){});
+                pointData = mapper.readValue(new FileInputStream(pointFile), new TypeReference<Map<String,Object>>(){});
             } catch (IOException e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
@@ -420,64 +367,32 @@ public class TaskWorkflowPanel extends JPanel {
                 return pointList;
             }
             
-            if (reviewData!=null) {
-                List pointGroups = (List)reviewData.get("reviewGroups");
-                if (pointGroups != null && pointGroups.size() > 0) {
-                    for (int i=0; i<pointGroups.size(); i++) {
-                         LinkedHashMap pointWrapper = (LinkedHashMap)pointGroups.get(i);  
-                         List<Map<String, Object>> rawPoints = (List<Map<String, Object>>) pointWrapper.get("points");
-                         int nerrors = 0;
+            if (pointData!=null) {
+                List<Map<String,String>> rawPoints = (List<Map<String,String>>)pointData.get("points");
+                int nerrors = 0;
 
-                         boolean interpolate = false;
-                         if ((String)pointWrapper.get("interpolate")!=null)
-                             interpolate = true;
-                        for (Map<String, Object> pointMap : rawPoints) {
-                            try {
-                                ReviewPoint point = new ReviewPoint();
-                                Vec3 pointLocation = new Vec3(Double.parseDouble((String)pointMap.get("x")),
-                                        Double.parseDouble((String)pointMap.get("y")), Double.parseDouble((String)pointMap.get("z")));
-                                point.setLocation(pointLocation);
-                                
-                                // get quaternion rotation
-                                List rotation = (List)pointMap.get("quaternionRotation");
-                                if (rotation!=null && rotation.size()>0) {
-                                    float[] quaternion = new float[4];
-                                    quaternion[0] = Float.parseFloat((String)rotation.get(0));
-                                    quaternion[1] = Float.parseFloat((String)rotation.get(1));
-                                    quaternion[2] = Float.parseFloat((String)rotation.get(2));
-                                    quaternion[3] = Float.parseFloat((String)rotation.get(3));
-                                    point.setRotation(quaternion);
-                                }
-                                                                                               
-                                // get zoom level
-                                String zoomLevel = (String)pointMap.get("zoomLevel");
-                                if (zoomLevel!=null)
-                                    point.setZoomLevel(Float.parseFloat(zoomLevel));
-                                
-                                point.setInterpolate(interpolate);
-                                
-                                pointList.add(point);
-                            } catch (NumberFormatException e) {
-                                nerrors++;
-                                continue;
-                            }
-                        }
-
-                        if (nerrors > 0) {
-                            JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
-                                    "Not all lines in point file could be parsed; " + nerrors + " errors.",
-                                    "Errors parsing point file",
-                                    JOptionPane.ERROR_MESSAGE);
-                        }                      
-                    }
-                    
-                    // load review options
-                    List<String> reviewActions = (List<String>) reviewData.get("reviewOptions");
-                    if (reviewActions != null) {
-                        reviewOptions = reviewActions.toArray(new String[reviewActions.size()]);
+                for (Map<String,String> pointMap: rawPoints) {
+                     try {
+                        Vec3 point = new Vec3(Double.parseDouble(pointMap.get("x")),
+                                Double.parseDouble(pointMap.get("y")), Double.parseDouble(pointMap.get("z")));
+                        pointList.add(point);
+                    } catch (NumberFormatException e) {
+                        nerrors++;
+                        continue;
                     }
                 }
-
+                if (nerrors > 0) {
+                    JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                            "Not all lines in point file could be parsed; " + nerrors + " errors.",
+                            "Errors parsing point file",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                
+                // load review options
+                List<String> reviewActions = (List<String>)pointData.get("reviewOptions");
+                if (reviewActions!=null) {
+                    reviewOptions = reviewActions.toArray(new String[reviewActions.size()]);
+                }
             }
 
            
@@ -541,50 +456,11 @@ public class TaskWorkflowPanel extends JPanel {
     }
 }
 
-class ReviewPoint {
-    private Vec3 location;
-    private float[] rotation;
-    private float zoomLevel;
-    private boolean interpolate;
-
-    public Vec3 getLocation() {
-        return location;
-    }
-    
-    public void setLocation(Vec3 location) {
-        this.location = location;
-    }
-
-    public float[] getRotation() {
-        return rotation;
-    }
-
-    public void setRotation(float[] rotation) {
-        this.rotation = rotation;
-    }
-    
-    public float getZoomLevel() {
-        return zoomLevel;
-    }
-
-    public void setZoomLevel(float zoomLevel) {
-        this.zoomLevel = zoomLevel;
-    }
-    
-    public boolean getInterpolate() {
-        return interpolate;
-    }
-    
-    public void setInterpolate(boolean interpolate) {
-        this.interpolate = interpolate;
-    }
-}
-
 
 class PointTableModel extends AbstractTableModel {
-    private String[] columnNames = {"x (µm)", "y (µm)", "z (µm)", "Rotation", "Review Note"};
+    private String[] columnNames = {"x (µm)", "y (µm)", "z (µm)", "Review Note"};
 
-    private List<ReviewPoint> points = new ArrayList<>();
+    private List<Vec3> points = new ArrayList<>();
     private List<String> notes = new ArrayList<>();
 
     public void clear() {
@@ -592,7 +468,7 @@ class PointTableModel extends AbstractTableModel {
         notes.clear();
     }
 
-    public void addPoint(ReviewPoint point) {
+    public void addPoint(Vec3 point) {
         points.add(point);
         notes.add("");
     }
@@ -616,19 +492,12 @@ class PointTableModel extends AbstractTableModel {
     public Object getValueAt(int row, int column) {
         switch (column) {
             case 0:
-                return points.get(row).getLocation().getX();
+                return points.get(row).getX();
             case 1:
-                return points.get(row).getLocation().getY();
+                return points.get(row).getY();
             case 2:
-                return points.get(row).getLocation().getZ();
-            case 3:                
-                float[] rotation = points.get(row).getRotation();
-                if (rotation!=null) {
-                    return "[" + rotation[0] + "," +  rotation[1] + "," + 
-                            rotation[2] + "," + rotation[3] + "]";
-                } else 
-                    return "{)";
-            case 4:
+                return points.get(row).getZ();
+            case 3:
                 return notes.get(row);
             default:
                 return null;
@@ -636,7 +505,7 @@ class PointTableModel extends AbstractTableModel {
     }
 
     public boolean isReviewed(int row) {
-        String reviewed = (String)getValueAt(row, 4);
+        String reviewed = (String)getValueAt(row, 3);
         if (reviewed!=null && reviewed.length()>0) 
             return true;
         return false;
@@ -645,8 +514,14 @@ class PointTableModel extends AbstractTableModel {
     @Override
     public void setValueAt(Object value, int row, int column) {
         switch (column) {
-            case 4:
-                notes.get(row);
+            case 0:
+                points.get(row).setX((double) value);
+            case 1:
+                points.get(row).setY((double) value);
+            case 2:
+                points.get(row).setZ((double) value);
+            case 3:
+                notes.set(row, (String) value);
             default:
                 // nothing
         }
@@ -660,9 +535,7 @@ class PointTableModel extends AbstractTableModel {
             case 2:
                 return double.class;
             case 3:
-                return float[].class;
-            case 4:
-                return String.class;                
+                return String.class;
             default:
                 return Object.class;
         }
@@ -670,7 +543,7 @@ class PointTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return column == 4;
+        return column == 3;
     }
 
 }
