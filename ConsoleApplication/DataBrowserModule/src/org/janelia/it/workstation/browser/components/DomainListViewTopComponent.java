@@ -327,6 +327,11 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         @Override
         public Void call() throws Exception {
 
+            if (editor==null) {
+                log.warn("Editor is null");
+                return null;
+            }
+            
             DomainObjectEditorState<?,?,?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
