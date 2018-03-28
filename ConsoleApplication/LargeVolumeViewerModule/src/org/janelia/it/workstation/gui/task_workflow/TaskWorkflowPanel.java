@@ -1,20 +1,28 @@
 package org.janelia.it.workstation.gui.task_workflow;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableColumn;
 
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SynchronizationHelper;
@@ -22,8 +30,14 @@ import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.gui.keybind.ShortcutTextField;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
+import static org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog.PROPERTY_CROSSCHECK;
+import static org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog.PROPERTY_RADIUS;
+import static org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog.PROPERTY_READONLY;
+import static org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog.PROPERTY_VISIBILITY;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +52,9 @@ import org.slf4j.LoggerFactory;
 public class TaskWorkflowPanel extends JPanel {
     private final TaskDataSourceI dataSource;
 
+    private String[] reviewOptions;
+    
+    List<Vec3> pointList;
     private JTable pointTable;
     private PointTableModel pointModel = new PointTableModel();
 
@@ -88,8 +105,10 @@ public class TaskWorkflowPanel extends JPanel {
                 me.consume();
             }
         });
+        pointTable.setRowHeight(20);
         pointTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
+        TableColumn col = pointTable.getColumnModel().getColumn(3);
+        col.setCellEditor(new ReviewEditor()); 
 
         JScrollPane scrollPane = new JScrollPane(pointTable);
         pointTable.setFillsViewportHeight(true);
@@ -141,6 +160,11 @@ public class TaskWorkflowPanel extends JPanel {
         JButton loadButton = new JButton("Load point list...");
         loadButton.addActionListener(event -> onLoadButton());
         workflowButtonsPanel.add(loadButton);
+        
+        JButton saveButton = new JButton("Save reviewed list...");
+        saveButton.addActionListener(event -> onSaveButton());
+        workflowButtonsPanel.add(saveButton);
+       
 
         /*
         // not sure I need this: it'll push content up so it
@@ -182,10 +206,45 @@ public class TaskWorkflowPanel extends JPanel {
             return;
         }
 
-        List<Vec3> pointList = readPointFile();
+        pointList = readPointFile();
         startWorkflow(pointList);
 
         log.info("Loaded point file " + "my point file");
+    }
+    
+    private void onSaveButton() {
+                // dialog to get file
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Choose export file");
+        chooser.setMultiSelectionEnabled(false);
+        int result = chooser.showSaveDialog(FrameworkImplProvider.getMainFrame());
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File exportFile = chooser.getSelectedFile();
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                // get the review notes and output with point list
+                List<Map<String,String>> pointReviews = new ArrayList<>();
+                for (int i = 0; i < pointList.size(); i++) {
+                    String review = (String) pointTable.getModel().getValueAt(i, 3);
+                    if (review != null) {
+                        Map pointReview = new HashMap<String,String>();
+                        pointReview.put("x", pointList.get(i).getX());
+                        pointReview.put("y", pointList.get(i).getY());
+                        pointReview.put("z", pointList.get(i).getZ());
+                        pointReview.put("reviewNote", review);
+                        pointReviews.add(pointReview);
+                    }                    
+                }
+                mapper.writeValue(exportFile,pointReviews);
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+               JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                        "Could not write out reviewed points " + exportFile,
+                        "Error writing point reviews file",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     /**
@@ -275,13 +334,13 @@ public class TaskWorkflowPanel extends JPanel {
     }
 
     /**
-     * pop a file chooser; load and parse a point file; return list of points
+     * pop a file chooser; load and parse a json list of points
      *
      * file format:
-     *      -- one point per line = whitespace-delimited x, y, z (preferred)
-     *      -- one point per line = [x, y, z] (allowed, matches "copy coord to clipboard" format)
-     *      -- blank lines allowed
-     *      -- comment lines start with #
+     *      -- one point per line = whitespace-delimited x, y, z
+     * (preferred) -- one point per line = [x, y, z] (allowed, matches "copy
+     * coord to clipboard" format) -- blank lines allowed -- comment lines start
+     * with #
      */
     private List<Vec3> readPointFile() {
 
@@ -295,59 +354,48 @@ public class TaskWorkflowPanel extends JPanel {
         if (result == JFileChooser.APPROVE_OPTION) {
             File pointFile = chooser.getSelectedFile();
 
-            List<String> lines = null;
+             Map<String,Object> pointData = null;
             try {
-                lines = Files.readAllLines(pointFile.toPath(), Charset.defaultCharset());
-            }
-            catch (IOException e) {
+                ObjectMapper mapper = new ObjectMapper();
+                pointData = mapper.readValue(new FileInputStream(pointFile), new TypeReference<Map<String,Object>>(){});
+            } catch (IOException e) {
+                e.printStackTrace();
                 JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
-                    "Could not read file " + pointFile,
-                    "Error reading point file",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Could not read file " + pointFile,
+                        "Error reading point file",
+                        JOptionPane.ERROR_MESSAGE);
                 return pointList;
             }
+            
+            if (pointData!=null) {
+                List<Map<String,String>> rawPoints = (List<Map<String,String>>)pointData.get("points");
+                int nerrors = 0;
 
-            int nerrors = 0;
-            int npoints = 0;
-            for (String line: lines) {
-                line = line.trim();
-
-                if (line.length() == 0 || line.startsWith("#")) {
-                    // if blank or starts with #, do nothing
-                    continue;
-                } else {
-                    // to allow the [x, y, z] format from "copy coord to clipboard",
-                    //  we need only remove the [,] characters and it becomes whitespace delimited
-                    line = line.replace("[", "");
-                    line = line.replace(",", "");
-                    line = line.replace("]", "");
-
-                    String[] items = line.split("\\s+");
-                    if (items.length != 3) {
-                        nerrors++;
-                        continue;
-                    }
-
-                    try {
-                        Vec3 point = new Vec3(Double.parseDouble(items[0]),
-                            Double.parseDouble(items[1]), Double.parseDouble(items[2]));
+                for (Map<String,String> pointMap: rawPoints) {
+                     try {
+                        Vec3 point = new Vec3(Double.parseDouble(pointMap.get("x")),
+                                Double.parseDouble(pointMap.get("y")), Double.parseDouble(pointMap.get("z")));
                         pointList.add(point);
-                    }
-                    catch (NumberFormatException e) {
+                    } catch (NumberFormatException e) {
                         nerrors++;
                         continue;
                     }
-                    npoints++;
+                }
+                if (nerrors > 0) {
+                    JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                            "Not all lines in point file could be parsed; " + nerrors + " errors.",
+                            "Errors parsing point file",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                
+                // load review options
+                List<String> reviewActions = (List<String>)pointData.get("reviewOptions");
+                if (reviewActions!=null) {
+                    reviewOptions = reviewActions.toArray(new String[reviewActions.size()]);
                 }
             }
 
-            // if any errors, report number of errors and successes
-            if (nerrors > 0) {
-                JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
-                    "Not all lines in point file could be parsed; " + npoints + " points parsed with " + nerrors + " errors.",
-                    "Errors parsing point file",
-                    JOptionPane.ERROR_MESSAGE);
-            }
+           
         }
         return pointList;
     }
@@ -365,26 +413,64 @@ public class TaskWorkflowPanel extends JPanel {
     public void close() {
 
         // do clean up here, which I expect I will need
+    }
 
+    class ReviewEditor extends AbstractCellEditor implements TableCellEditor {
+        // This is the component that will handle the editing of the cell value
 
+        JComponent component;
+        int cellType;
+
+        // This method is called when a cell value is edited by the user.
+        public Component getTableCellEditorComponent(JTable table, Object value,
+                boolean isSelected, int rowIndex, int vColIndex) {
+            component = new JComboBox(reviewOptions);
+            for (int i = 0; i < reviewOptions.length; i++) {
+                if (value == reviewOptions[i]) {
+                    ((JComboBox) component).setSelectedIndex(i);
+                    break;
+                }
+            }
+            return ((JComboBox) component);
+        }
+
+        // This method is called when editing is completed.
+        // It must return the new value to be stored in the cell.
+        public Object getCellEditorValue() {
+            return ((JComboBox) component).getSelectedItem();
+        }
+
+        /**
+         * @return the reviewOptions
+         */
+        public String[] getReviewOptions() {
+            return reviewOptions;
+        }
+
+        /**
+         * @param reviewOptions the reviewOptions to set
+         */
+        public void setReviewOptions(String[] options) {
+            reviewOptions = options;
+        }
     }
 }
 
 
 class PointTableModel extends AbstractTableModel {
-    private String[] columnNames = {"x (µm)", "y (µm)", "z (µm)", "reviewed"};
+    private String[] columnNames = {"x (µm)", "y (µm)", "z (µm)", "Review Note"};
 
     private List<Vec3> points = new ArrayList<>();
-    private List<Boolean> status = new ArrayList<>();
+    private List<String> notes = new ArrayList<>();
 
     public void clear() {
         points.clear();
-        status.clear();
+        notes.clear();
     }
 
     public void addPoint(Vec3 point) {
         points.add(point);
-        status.add(false);
+        notes.add("");
     }
 
     @Override
@@ -412,14 +498,17 @@ class PointTableModel extends AbstractTableModel {
             case 2:
                 return points.get(row).getZ();
             case 3:
-                return status.get(row);
+                return notes.get(row);
             default:
                 return null;
         }
     }
 
     public boolean isReviewed(int row) {
-        return (boolean) getValueAt(row, 3);
+        String reviewed = (String)getValueAt(row, 3);
+        if (reviewed!=null && reviewed.length()>0) 
+            return true;
+        return false;
     }
 
     @Override
@@ -432,7 +521,7 @@ class PointTableModel extends AbstractTableModel {
             case 2:
                 points.get(row).setZ((double) value);
             case 3:
-                status.set(row, (Boolean) value);
+                notes.set(row, (String) value);
             default:
                 // nothing
         }
@@ -446,7 +535,7 @@ class PointTableModel extends AbstractTableModel {
             case 2:
                 return double.class;
             case 3:
-                return Boolean.class;
+                return String.class;
             default:
                 return Object.class;
         }
