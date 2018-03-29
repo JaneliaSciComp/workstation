@@ -19,6 +19,8 @@ import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Export a table to TAB or CSV format.
@@ -27,6 +29,8 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
  */
 public class ExportResultsAction<T,S> extends AbstractAction {
 
+    private static final Logger log = LoggerFactory.getLogger(ExportResultsAction.class);
+    
     /**
      * Default directory for exports
      */
@@ -115,50 +119,55 @@ public class ExportResultsAction<T,S> extends AbstractAction {
 
         long numFound = searchResults.getNumTotalResults();
 
-        FileWriter writer = new FileWriter(destFile);
-
-        StringBuffer buf = new StringBuffer();
-        for (DynamicColumn column : tableViewer.getColumns()) {
-            if (buf.length() > 0) {
-                buf.append("\t");
-            }
-            buf.append(column.getLabel());
-        }
-        buf.append("\n");
-        writer.write(buf.toString());
-
-
-        long numProcessed = 0;
-        int page = 0;
-        while (true) {
-            ResultPage<T, S> resultPage = searchResults.getPage(page);
-
-            for (T object : resultPage.getObjects()) {
-
-                buf = new StringBuffer();
-                int i = 0;
-                for (DynamicColumn column : tableViewer.getColumns()) {
-                    Object value = tableViewer.getValue(resultPage, object, column.getName());
-                    if (i++ > 0) {
-                        buf.append("\t");
-                    }
-                    if (value != null) {
-                        buf.append(sanitize(value.toString()));
-                    }
-
+        try (FileWriter writer = new FileWriter(destFile)) {
+    
+            StringBuffer buf = new StringBuffer();
+            for (DynamicColumn column : tableViewer.getColumns()) {
+                if (buf.length() > 0) {
+                    buf.append("\t");
                 }
-                buf.append("\n");
-                writer.write(buf.toString());
-                numProcessed++;
-                progress.setProgress((int) numProcessed, (int) numFound);
+                buf.append(column.getLabel());
             }
-
-            if (numProcessed >= numFound) {
-                break;
+            buf.append("\n");
+            writer.write(buf.toString());
+    
+    
+            long numProcessed = 0;
+            int page = 0;
+            while (true) {
+                ResultPage<T, S> resultPage = searchResults.getPage(page);
+    
+                if (resultPage==null) {
+                    log.warn("Could not retrieve result page {}. Ending export.", page);
+                    break;
+                }
+                
+                for (T object : resultPage.getObjects()) {
+    
+                    buf = new StringBuffer();
+                    int i = 0;
+                    for (DynamicColumn column : tableViewer.getColumns()) {
+                        Object value = tableViewer.getValue(resultPage, object, column.getName());
+                        if (i++ > 0) {
+                            buf.append("\t");
+                        }
+                        if (value != null) {
+                            buf.append(sanitize(value.toString()));
+                        }
+    
+                    }
+                    buf.append("\n");
+                    writer.write(buf.toString());
+                    numProcessed++;
+                    progress.setProgress((int) numProcessed, (int) numFound);
+                }
+    
+                if (numProcessed >= numFound) {
+                    break;
+                }
+                page++;
             }
-            page++;
         }
-        writer.close();
     }
     
     /**
