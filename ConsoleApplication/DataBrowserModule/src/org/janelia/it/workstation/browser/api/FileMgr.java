@@ -189,16 +189,16 @@ public class FileMgr {
         if (isFileCacheAvailable()) {
             try {
                 file = localFileCache.getFile(standardPath, forceRefresh);
-            } catch (FileNotFoundException e) {
+            } 
+            catch (FileNotFoundException e) {
                 log.warn("File does not exist: " + standardPath, e);
-            } catch (IOException e) {
+            } 
+            catch (Exception e) {
                 if ("No space left on device".equals(e.getMessage())) {
-                    FrameworkImplProvider.handleExceptionQuietly("No space left on disk", e);
+                    FrameworkImplProvider.handleException("No space left on disk", e);
                 } else {
                     log.error("Failed to retrieve " + standardPath + " from local cache", e);
                 }
-            } catch (Exception e) {
-                log.error("Failed to retrieve " + standardPath + " from local cache", e);
             }
         } else {
             log.warn("Local file cache is not available");

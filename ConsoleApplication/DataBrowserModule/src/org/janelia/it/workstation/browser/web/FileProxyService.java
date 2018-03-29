@@ -27,8 +27,15 @@ public class FileProxyService extends AbstractHandler {
 
     private static final Logger log = LoggerFactory.getLogger(FileProxyService.class);
     
-    private static final int BUFFER_SIZE = 1024; 
+    private static final int BUFFER_SIZE = 1024;
     
+    // A little hack to let Aljoscha preview how lossy neuron separation will look
+    private static boolean blockLosslessNeuSep = false;
+    public static void setBlockLosslessNeuSep(boolean blockLosslessNeuSep) {
+        FileProxyService.blockLosslessNeuSep = blockLosslessNeuSep;
+        log.info("FileProxyService.blockLosslessNeuSep={}", FileProxyService.blockLosslessNeuSep);
+    }
+
     public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
 
@@ -50,6 +57,7 @@ public class FileProxyService extends AbstractHandler {
             stream(request.getMethod(), response, standardPath);
         }
         else {
+            log.warn("Client requested bad proxy type: "+proxyType);
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.setContentType("text/plain");
             response.getWriter().print("Invalid proxy type: '"+proxyType+"'\nValid proxy types include: ['webdav']\n");
@@ -59,25 +67,37 @@ public class FileProxyService extends AbstractHandler {
     private void stream(String method, HttpServletResponse response, String standardPath) throws IOException {
 
         if (standardPath==null) {
+            log.warn("Client requested null path");
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
         
         WorkstationFile wfile = null;
         OutputStream output = null;
+                
+        if (blockLosslessNeuSep) {
+            if (standardPath.endsWith("ConsolidatedSignal.v3dpbd") || standardPath.endsWith("Reference.v3dpbd")) {
+                log.warn("Blocking access to "+standardPath);
+                response.setContentType("text/plain");
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                response.getWriter().print("File not found\n");
+                return;
+            }
+        }
         
         try {
             wfile = new WorkstationFile(standardPath);
             
             // Read from WebDav
             wfile.get("HEAD".equals(method));
-            log.info("Proxying {} for: {}",method,wfile.getEffectiveURL());
             if (wfile.getStatusCode()!=null) {
                 response.setStatus(wfile.getStatusCode());
             }
             else {
                 response.setStatus(500);
             }
+            
+            log.info("Proxying {} ({}) for: {}",method,response.getStatus(),wfile.getEffectiveURL());
             
             if (wfile.getContentType()!=null) {
                 response.setContentType(wfile.getContentType());

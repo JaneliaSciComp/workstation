@@ -50,6 +50,7 @@ import org.janelia.it.workstation.browser.events.selection.DomainObjectSelection
 import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthSearchDialog;
 import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromImageAction;
 import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
+import org.janelia.it.workstation.browser.gui.dialogs.CompressionDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SpecialAnnotationChooserDialog;
@@ -184,6 +185,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getOpenInFinderItem());
         add(getOpenWithAppItem());
         add(getNeuronAnnotatorItem());
+        add(getNeuronAnnotatorLossyItem());
         add(getVaa3dTriViewItem());
         add(getVaa3d3dViewItem());
         add(getFijiViewerItem());
@@ -195,7 +197,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         setNextAddRequiresSeparator(true);
         add(getReportProblemItem());
         add(getRerunSamplesAction());
-        add(getSampleCompressionTypeItem());
+        add(getSampleCompressionItem());
         add(getProcessingBlockItem());
         add(getPartialSecondaryDataDeletiontItem());
         //add(getSetPublishingNameItem());
@@ -416,6 +418,35 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         return errorMenu;
     }
+    
+    protected JMenuItem getSampleCompressionItem() {
+
+        final List<Sample> samples = new ArrayList<>();
+        for (DomainObject re : domainObjectList) {
+            if (re instanceof Sample) {
+                samples.add((Sample)re);
+            }
+        }
+
+        if (samples.isEmpty()) return null;
+
+        JMenuItem menuItem = new JMenuItem("  Change Sample Compression Strategy");
+
+        menuItem.addActionListener((e) -> {
+            CompressionDialog dialog = new CompressionDialog();
+            dialog.showForSamples(samples);
+        });
+        
+        for(Sample sample : samples) {
+            if (!ClientDomainUtils.hasWriteAccess(sample)) {
+                menuItem.setEnabled(false);
+                break;
+            }
+        }
+        
+        return menuItem;
+    }
+    
     protected JMenuItem getSampleCompressionTypeItem() {
 
         final List<Sample> samples = new ArrayList<>();
@@ -914,6 +945,14 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (multiple) return null;
         if (domainObject instanceof NeuronFragment) {
             return getNamedActionItem(new OpenInNeuronAnnotatorAction((NeuronFragment)domainObject));
+        }
+        return null;
+    }
+
+    protected JMenuItem getNeuronAnnotatorLossyItem() {
+        if (multiple) return null;
+        if (domainObject instanceof NeuronFragment) {
+            return getNamedActionItem(new OpenInNeuronAnnotatorLossyAction((NeuronFragment)domainObject));
         }
         return null;
     }
