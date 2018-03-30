@@ -10,6 +10,7 @@ import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.browser.model.MappingType;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.util.PathUtil;
 import org.janelia.it.workstation.browser.util.SystemInfo;
@@ -211,9 +212,9 @@ public class DownloadFileItem {
             log.debug("  {}: {}", ATTR_LABEL_RESULT_NAME, resultName);
         }
         else if (domainObject instanceof LSMImage) {
-            List<Sample> mapped = DomainModelViewUtils.map(domainObject, Sample.class);
+            List<DomainObject> mapped = DomainModelViewUtils.map(domainObject, MappingType.Sample);
             if (!mapped.isEmpty()) {
-                Sample sample = mapped.get(0);
+                Sample sample = (Sample)mapped.get(0);
                 keyValues.addMap(new DynamicDomainObjectProxy(sample));
                 log.debug("  sample: {}", domainObject);
                 keyValues.put(ATTR_LABEL_SAMPLE_NAME, sample.getName());
@@ -222,9 +223,9 @@ public class DownloadFileItem {
         }
         else if (domainObject instanceof NeuronFragment) {
             NeuronFragment neuron = (NeuronFragment)domainObject;
-            List<Sample> mapped = DomainModelViewUtils.map(neuron, Sample.class);
+            List<DomainObject> mapped = DomainModelViewUtils.map(neuron, MappingType.Sample);
             if (!mapped.isEmpty()) {
-                Sample sample = mapped.get(0);
+                Sample sample = (Sample)mapped.get(0);
                 keyValues.addMap(new DynamicDomainObjectProxy(sample));
                 log.debug("  sample: {}", domainObject);
                 keyValues.put(ATTR_LABEL_SAMPLE_NAME, sample.getName());
