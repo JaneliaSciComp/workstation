@@ -10,7 +10,6 @@ import org.janelia.it.jacs.integration.framework.nodes.NodeProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.model.DomainObjectComparator;
 import org.janelia.model.domain.workspace.Workspace;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
@@ -49,7 +48,6 @@ public class RootNodeChildFactory extends ChildFactory<NodeGenerator> {
             
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             List<Workspace> workspaces = new ArrayList<>(model.getWorkspaces());
-            Collections.sort(workspaces, new DomainObjectComparator());
             
             for(Workspace workspace : workspaces) {
                 log.info("Adding workspace node generator: {} ({})", workspace.getName(), workspace.getOwnerKey());
