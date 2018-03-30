@@ -148,7 +148,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 super.mouseReleased(e);
                 if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
                     Node[] selectedNodes = beanTreeView.getSelectedNodes();
-                    if (selectedNodes.length>0) {
+                    if (selectedNodes.length==1) {
                         final Node node = selectedNodes[selectedNodes.length-1];
                         navigateNode(node);
                     }
