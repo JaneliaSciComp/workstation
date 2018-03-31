@@ -540,6 +540,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     @Override
     public void resultChanged(LookupEvent lookupEvent) {
         Collection<? extends AbstractNode> allNodes = result.allInstances();
+        log.trace("resultChanged(allNodes.size={})", allNodes.size());
         if (allNodes.isEmpty()) {
             return;
         }
@@ -567,10 +568,12 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     public void expand(Long[] idPath) {
+        log.info("expand({})", idPath[idPath.length-1]);
         beanTreeView.expand(idPath);
     }
 
     public void expandNodeById(Long id) {
+        log.info("expandNodeById({})", id);
         for(Node node : DomainObjectNodeTracker.getInstance().getNodesById(id)) {
             expand(NodeUtils.createIdPath(node));
             break;
@@ -583,6 +586,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
     
     public Node selectNodeByPath(Long[] idPath) {
+        log.info("selectAndNavigateNodeByPath({})", idPath[idPath.length-1]);
         if (root==null) return null;
         Node node = NodeUtils.findNodeWithPath(root, idPath);
         if (node!=null) {
@@ -593,14 +597,36 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     public Node selectAndNavigateNodeByPath(Long[] idPath) {
+        log.info("selectAndNavigateNodeByPath({})", idPath[idPath.length-1]);
         Node selectedNode = selectNodeByPath(idPath);
         if (selectedNode!=null) {
             navigateNode(selectedNode);
         }
         return selectedNode;
     }
+    
+    private Node getSelectedNode(Long id) {
+
+        Node[] selectedNodes = beanTreeView.getSelectedNodes();
+        if (selectedNodes.length==1) {
+            Node node = selectedNodes[0];
+            if (node instanceof AbstractDomainObjectNode) {
+                Long selectedId = ((AbstractDomainObjectNode<?>)node).getId();
+                if (selectedId != null && selectedId.equals(id)) {
+                    return node;
+                }
+            }
+        }
+        
+        return null;
+    }
 
     public Node selectNodeById(Long id) {
+        log.info("selectNodeById({})", id);
+        
+        Node n = getSelectedNode(id);
+        if (n!=null) return n;
+        
         for(Node node : DomainObjectNodeTracker.getInstance().getNodesById(id)) {
             selectNode(node);
             return node;
@@ -609,10 +635,17 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     public Node selectAndNavigateNodeById(Long id) {
-        Node selectedNode = selectNodeById(id);
+        log.info("selectAndNavigateNodeById({})", id);
+
+        Node selectedNode = getSelectedNode(id);
+        if (selectedNode==null) {
+            selectedNode = selectNodeById(id);
+        }
+        
         if (selectedNode!=null) {
             navigateNode(selectedNode);
         }
+        
         return selectedNode;
     }
 
