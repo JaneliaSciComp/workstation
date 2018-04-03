@@ -54,7 +54,7 @@ public class ChangeNeuronOwnerDialog extends JDialog {
 
     private boolean success = false;
 
-    public ChangeNeuronOwnerDialog(Frame parent, TmNeuronMetadata neuron) {
+    public ChangeNeuronOwnerDialog(Frame parent) {
         super(parent,"Change neuron owner", true);
 
         setLayout(new GridBagLayout());
@@ -68,7 +68,7 @@ public class ChangeNeuronOwnerDialog extends JDialog {
         // not sure how to get the group-only list; have to show everyone for now
         constraints.gridx = 0;
         constraints.gridy = 0;
-        add(new JLabel("Choose new owner for neuron " + neuron.getName() + ":"), constraints);
+        add(new JLabel("Choose new owner for neuron:"), constraints);
 
         constraints.gridy = GridBagConstraints.RELATIVE;
         subjectCombobox = new JComboBox();

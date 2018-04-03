@@ -27,6 +27,7 @@ import javax.swing.JSeparator;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronColorAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronOwnerAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronCreateAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronDeleteAction;
@@ -101,6 +102,7 @@ public class AnnotationPanel extends JPanel
     private AbstractAction hideOtherNeuronsAction;
     private AbstractAction bulkChangeNeuronStyleAction;
     private AbstractAction bulkNeuronTagAction;
+    private AbstractAction bulkNeuronOwnerAction;
     
 
     private JMenu sortSubmenu;
@@ -144,6 +146,7 @@ public class AnnotationPanel extends JPanel
         saveColorModelAction.setEnabled(enabled);
         bulkNeuronTagAction.setEnabled(enabled);
         bulkChangeNeuronStyleAction.setEnabled(enabled);
+        bulkNeuronOwnerAction.setEnabled(enabled);
         showAllNeuronsAction.setEnabled(enabled);
         hideAllNeuronsAction.setEnabled(enabled);
         sortSubmenu.setEnabled(enabled);
@@ -323,7 +326,10 @@ public class AnnotationPanel extends JPanel
         
         bulkNeuronTagAction = new BulkNeuronTagAction(annotationModel, workspaceNeuronList);
         neuronToolMenu.add(bulkNeuronTagAction);
-                
+
+        bulkNeuronOwnerAction = new BulkChangeNeuronOwnerAction(annotationMgr, annotationModel, workspaceNeuronList);
+        neuronToolMenu.add(bulkNeuronOwnerAction);
+
         neuronToolMenu.add(new JSeparator());
                         
         sortSubmenu = new JMenu("Sort");
