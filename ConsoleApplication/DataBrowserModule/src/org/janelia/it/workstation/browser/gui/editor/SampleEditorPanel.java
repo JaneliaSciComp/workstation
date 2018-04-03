@@ -777,7 +777,9 @@ public class SampleEditorPanel
                         continue;
                     }
                     
-                    alignmentSpaces.add(result.getAlignmentSpace());
+                    if (result.getAlignmentSpace()!=null) {
+                        alignmentSpaces.add(result.getAlignmentSpace());
+                    }
                 }
             }
         }
