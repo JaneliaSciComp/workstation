@@ -1,12 +1,4 @@
-// 7.8
+// 7.9
 
 Workstation Browser
-* The "Add Related Items to Folder" option now allows mapping from unaligned neuron fragments 
-  to aligned neuron fragments and vice versa.
-* "Change Sample Compression Strategy" now supports visually lossless neuron separations. 
-  All neuron separations are currently lossless. Converting them to visually lossless format can 
-  reduce disk space usage by up to 70%. 
-* Added "Open Neuron Separation (Lossy)" option, which can be used to simulate a lossy neuron 
-  separation before changing compression strategy. 
-* Fixed two memory leaks when opening many dialog boxes
-* Other minor bug fixes
+* Minor bug fixes
