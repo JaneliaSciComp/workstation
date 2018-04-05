@@ -308,6 +308,9 @@ public class CompressionDialog extends ModalDialog {
                     taskParameters.add(new TaskParameter("target sample compression", targetSampleCompression, null));
                     taskParameters.add(new TaskParameter("target separation compression", targetSeparationCompression, null));
                     task = StateMgr.getStateMgr().submitJob("ConsoleSampleCompression", "Console Sample Compression", taskParameters);
+                    if (task==null) {
+                        throw new IllegalStateException("Task could not be submitted");
+                    }
                 }
                 catch (Exception e) {
                     ConsoleApp.handleException(e);
