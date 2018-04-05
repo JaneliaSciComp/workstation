@@ -1,4 +1,5 @@
 // 7.9
 
 Workstation Browser
-* Minor bug fixes
+* Corrected attribute sorting in "Add Criteria" button and other places
+* Other minor bug fixes
