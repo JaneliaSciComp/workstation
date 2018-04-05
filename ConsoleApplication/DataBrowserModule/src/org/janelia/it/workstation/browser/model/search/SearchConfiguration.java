@@ -30,7 +30,6 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.search.Filter;
-import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;
 import org.janelia.model.domain.gui.search.criteria.AttributeValueCriteria;
 import org.janelia.model.domain.gui.search.criteria.Criteria;
@@ -326,9 +325,12 @@ public class SearchConfiguration {
         this.displayQueryString = qs.toString();
         
         this.query = builder.getQuery();
+        log.debug("Searching for: ", query);
+        
         DomainObjectResultPage firstPage = performSearch(0);
         SolrSearchResults searchResults = new SolrSearchResults(this, firstPage);
         log.debug("Got {} results", firstPage.getNumPageResults());
+        
         return searchResults;
     }
     

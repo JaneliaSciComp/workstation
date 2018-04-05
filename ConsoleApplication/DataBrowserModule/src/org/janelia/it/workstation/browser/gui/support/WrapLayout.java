@@ -133,7 +133,7 @@ public class WrapLayout extends FlowLayout {
                 //  has not yet been calculated so lets ask for the maximum.
                 targetWidth = target.getParent().getSize().width;
                 if (targetWidth == 0) {
-                    log.warn("Warning, using max value for target width");
+                    log.debug("Warning, using max value for target width");
                     targetWidth = Integer.MAX_VALUE;
                 }
             }
