@@ -14,35 +14,38 @@ import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
+import org.janelia.it.workstation.browser.gui.listview.table.TableViewerPanel;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
-import org.janelia.it.workstation.browser.model.search.DomainObjectResultPage;
-import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
+import org.janelia.it.workstation.browser.model.search.ResultPage;
+import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.model.domain.DomainObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Export a table to TAB or CSV format.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ExportResultsAction<T> extends AbstractAction {
+public class ExportResultsAction<T,S> extends AbstractAction {
 
+    private static final Logger log = LoggerFactory.getLogger(ExportResultsAction.class);
+    
     /**
      * Default directory for exports
      */
     protected static final String DEFAULT_EXPORT_DIR = System.getProperty("user.home");
     
-    private DomainObjectSearchResults searchResults;
-    private DomainObjectTableViewer domainObjectTableViewer;
+    private SearchResults<T,S> searchResults;
+    private TableViewerPanel<T,S> tableViewer;
 
-    public ExportResultsAction(DomainObjectSearchResults searchResults, DomainObjectTableViewer domainObjectTableViewer) {
+    public ExportResultsAction(SearchResults<T,S> searchResults, TableViewerPanel<T,S> tableViewer) {
         super("Export table");
         this.searchResults = searchResults;
-        this.domainObjectTableViewer = domainObjectTableViewer;
-        // TODO: what to do if domainObjectTableViewer is null? 
+        this.tableViewer = tableViewer;
+        // TODO: what to do if tableViewer is null? 
         // We could still export all the attributes on each object.
-        if (domainObjectTableViewer==null) {
+        if (tableViewer==null) {
             throw new IllegalStateException("Export is currently only allowed from table view");
         }
     }
@@ -116,50 +119,55 @@ public class ExportResultsAction<T> extends AbstractAction {
 
         long numFound = searchResults.getNumTotalResults();
 
-        FileWriter writer = new FileWriter(destFile);
-
-        StringBuffer buf = new StringBuffer();
-        for (DynamicColumn column : domainObjectTableViewer.getColumns()) {
-            if (buf.length() > 0) {
-                buf.append("\t");
-            }
-            buf.append(column.getLabel());
-        }
-        buf.append("\n");
-        writer.write(buf.toString());
-
-
-        long numProcessed = 0;
-        int page = 0;
-        while (true) {
-            DomainObjectResultPage resultPage = searchResults.getPage(page);
-
-            for (DomainObject domainObject : resultPage.getObjects()) {
-
-                buf = new StringBuffer();
-                int i = 0;
-                for (DynamicColumn column : domainObjectTableViewer.getColumns()) {
-                    Object value = domainObjectTableViewer.getValue(resultPage, domainObject, column.getName());
-                    if (i++ > 0) {
-                        buf.append("\t");
-                    }
-                    if (value != null) {
-                        buf.append(sanitize(value.toString()));
-                    }
-
+        try (FileWriter writer = new FileWriter(destFile)) {
+    
+            StringBuffer buf = new StringBuffer();
+            for (DynamicColumn column : tableViewer.getColumns()) {
+                if (buf.length() > 0) {
+                    buf.append("\t");
                 }
-                buf.append("\n");
-                writer.write(buf.toString());
-                numProcessed++;
-                progress.setProgress((int) numProcessed, (int) numFound);
+                buf.append(column.getLabel());
             }
-
-            if (numProcessed >= numFound) {
-                break;
+            buf.append("\n");
+            writer.write(buf.toString());
+    
+    
+            long numProcessed = 0;
+            int page = 0;
+            while (true) {
+                ResultPage<T, S> resultPage = searchResults.getPage(page);
+    
+                if (resultPage==null) {
+                    log.warn("Could not retrieve result page {}. Ending export.", page);
+                    break;
+                }
+                
+                for (T object : resultPage.getObjects()) {
+    
+                    buf = new StringBuffer();
+                    int i = 0;
+                    for (DynamicColumn column : tableViewer.getColumns()) {
+                        Object value = tableViewer.getValue(resultPage, object, column.getName());
+                        if (i++ > 0) {
+                            buf.append("\t");
+                        }
+                        if (value != null) {
+                            buf.append(sanitize(value.toString()));
+                        }
+    
+                    }
+                    buf.append("\n");
+                    writer.write(buf.toString());
+                    numProcessed++;
+                    progress.setProgress((int) numProcessed, (int) numFound);
+                }
+    
+                if (numProcessed >= numFound) {
+                    break;
+                }
+                page++;
             }
-            page++;
         }
-        writer.close();
     }
     
     /**

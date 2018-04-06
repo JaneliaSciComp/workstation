@@ -222,6 +222,7 @@
         </folder>
         <folder name="Team_hidden"/>
         <folder name="Tools">
+            <file name="CloudManagerAction3.shadow_hidden"/>
             <file name="Separator1.instance_hidden"/>
             <file name="Separator2.instance_hidden"/>
             <file name="Separator3.instance_hidden"/>

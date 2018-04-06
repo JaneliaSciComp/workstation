@@ -5,11 +5,10 @@ import java.util.Arrays;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.nodes.FilterNode;
+import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
+import org.janelia.it.workstation.browser.gui.editor.TreeNodeEditorPanel;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.gui.search.Filter;
-import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
@@ -33,63 +32,33 @@ public class TreeNodeObjectHelper implements DomainObjectHelper {
         if (TreeNode.class.isAssignableFrom(clazz)) {
             return true;
         }
-        else if (Filtering.class.isAssignableFrom(clazz)) {
-            return true;
-        }
         return false;
     }
 
     @Override
     public Node getNode(DomainObject domainObject, ChildFactory parentChildFactory) throws Exception {
-        if (TreeNode.class.isAssignableFrom(domainObject.getClass())) {
-            return new TreeNodeNode(parentChildFactory, (TreeNode)domainObject);
-        }
-        else if (Filtering.class.isAssignableFrom(domainObject.getClass())) {
-            return new FilterNode(parentChildFactory, (Filtering)domainObject);
-        }
-        else {
-            throw new IllegalArgumentException("Domain class not supported: "+domainObject);
-        }    
+        return new TreeNodeNode(parentChildFactory, (TreeNode)domainObject);    
+    }
+
+    @Override
+    public Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
+        return TreeNodeEditorPanel.class;
     }
     
-    @Override
+    @Override   
     public String getLargeIcon(DomainObject domainObject) {
-        if (domainObject instanceof TreeNode) {
-            return "folder_large.png";
-        }
-        else if (domainObject instanceof Filtering) {
-            return "search_large.png";
-        }
-        else {
-            throw new IllegalArgumentException("Domain class not supported: "+domainObject);
-        }
+        return "folder_large.png";
     }
 
     @Override
     public boolean supportsRemoval(DomainObject domainObject) {
-        if (TreeNode.class.isAssignableFrom(domainObject.getClass())) {
-            return true;
-        }
-        else if (Filter.class.isAssignableFrom(domainObject.getClass())) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return true;
     }
     
     @Override
     public void remove(DomainObject domainObject) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        if (TreeNode.class.isAssignableFrom(domainObject.getClass())) {
-            model.remove(Arrays.asList((TreeNode)domainObject));
-        }
-        else if (Filter.class.isAssignableFrom(domainObject.getClass())) {
-            model.remove(Arrays.asList(((Filter)domainObject)));
-        }
-        else {
-            throw new IllegalArgumentException("Domain class not supported: "+domainObject);
-        }
+        model.remove(Arrays.asList((TreeNode)domainObject));
     }
 
 }

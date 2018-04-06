@@ -47,6 +47,9 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
         if (node==null) {
             return domainObjects.size() > 1 ? "Delete " + domainObjects.size() + " Items" : "Delete This Item";
         }
+        if (node.getName()==null) {
+            return domainObjects.size() > 1 ? "Remove " + domainObjects.size() + " Items From Folder" : "Remove This Item From Folder";    
+        }
         return domainObjects.size() > 1 ? "Remove " + domainObjects.size() + " Items From Folder '"+node.getName()+"'" : "Remove This Item From Folder '"+node.getName()+"'";
     }
 
@@ -82,7 +85,7 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
             }
 
             if (node!=null) {
-                log.info("Will removing {} from {}", domainObject, node);
+                log.info("Will remove {} from {}", domainObject, node);
                 removeFromFolders.put(node,domainObject);
             }
         }
@@ -107,7 +110,7 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
                     for(DomainObject domainObject : listToDelete) {
                         DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
                         if (provider!=null) {
-                            log.info("Using DomainObjectHelper {} to delete object {}", provider, domainObject);
+                            log.info("Using {} to delete object {}", provider.getClass().getName(), domainObject);
                             provider.remove(domainObject);
                         }
                         else {

@@ -39,7 +39,9 @@ public class ShowingHook implements Runnable {
         JFrame frame = WindowLocator.getMainFrame();
         
         // Set the title
-        frame.setTitle(ConsoleApp.getConsoleApp().getApplicationTitle());
+        String title = ConsoleApp.getConsoleApp().getApplicationTitle();
+        log.info("App title: {}", title);
+        frame.setTitle(title);
         
         // Inject special exception handling for uncaught exceptions on the EDT so that they are shown to the user 
         Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EDTExceptionInterceptor());
@@ -113,15 +115,6 @@ public class ShowingHook implements Runnable {
                         null
                 );
             }
-            else if (BrandingConfig.getBrandingConfig().isNeedsRestart()) {
-                JOptionPane.showMessageDialog(
-                        WindowLocator.getMainFrame(),
-                        "Configuration has been updated. Please restart the application.",
-                        "Configuration updated",
-                        JOptionPane.WARNING_MESSAGE,
-                        null
-                );
-            }
         }
         catch (Throwable e) {
             FrameworkImplProvider.handleExceptionQuietly(e);
@@ -165,6 +158,36 @@ public class ShowingHook implements Runnable {
 //                
 //            }
 //        }
+
+        if (ApplicationOptions.getInstance().isAutoDownloadUpdates()) {
+            AutoUpdater updater = new AutoUpdater() {
+                @Override
+                protected void hadSuccess() {
+                    super.hadSuccess();
+                    if (!isRestarting()) {
+                        // If we're not already restarting for an updated, check to 
+                        // see if we need to restart for branding config changes
+                        restartIfBrandingChanged();
+                    }
+                }  
+            };
+            updater.execute();
+        }
+        else {
+            restartIfBrandingChanged();
+        }
+    }
+    
+    private void restartIfBrandingChanged() {
+        if (BrandingConfig.getBrandingConfig().isNeedsRestart()) {
+            JOptionPane.showMessageDialog(
+                    WindowLocator.getMainFrame(),
+                    "Configuration has been updated. Please restart the application.",
+                    "Configuration updated",
+                    JOptionPane.WARNING_MESSAGE,
+                    null
+            );
+        }
     }
 
     private void resetWindows() {
@@ -172,4 +195,5 @@ public class ShowingHook implements Runnable {
         Action action = FileUtil.getConfigObject("Actions/Window/org-netbeans-core-windows-actions-ResetWindowsAction.instance", Action.class);
         action.actionPerformed(null);
     }
+    
 }

@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
@@ -16,7 +18,6 @@ import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -29,6 +30,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.MultiPartMediaTypes;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.http.HttpServiceUtils;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
@@ -47,7 +49,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import java.util.Map;
 
 /**
  * A web client providing access to the Tiled Microscope REST Service.
@@ -82,9 +83,8 @@ public class TiledMicroscopeRestClient {
         ClientRequestFilter authFilter = new ClientRequestFilter() {
             @Override
             public void filter(ClientRequestContext requestContext) throws IOException {
-                String accessToken = AccessManager.getAccessManager().getToken();
-                if (accessToken!=null) {
-                    requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+                for (Entry<String, String> entry : HttpServiceUtils.getExtraHeaders().entrySet()) {
+                    requestContext.getHeaders().add(entry.getKey(), entry.getValue());
                 }
             }
         };

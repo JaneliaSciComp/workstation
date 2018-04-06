@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -98,6 +99,19 @@ public class AddToFolderAction extends NodePresenterAction {
 
         JMenuItem createNewItem = new JMenuItem("Create New Folder...");
         
+        Consumer<Long[]> success = new Consumer<Long[]>() {
+            @Override
+            public void accept(Long[] idPath) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        explorer.expand(idPath);
+                        explorer.selectNodeByPath(idPath);
+                    }
+                });
+            }
+        };
+        
         createNewItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
@@ -120,22 +134,16 @@ public class AddToFolderAction extends NodePresenterAction {
                         folder = new TreeNode();
                         folder.setName(folderName);
                         folder = model.create(folder);
+                        log.info("Created new folder: {}", folder);
                         Workspace workspace = model.getDefaultWorkspace();
                         idPath = NodeUtils.createIdPath(workspace, folder);
-                        model.addChild(workspace, folder);
-                        addUniqueItemsToFolder(folder, idPath);
+                        workspace = model.addChild(workspace, folder);
+                        log.info("Added new folder to {}", workspace);
+                        addUniqueItemsToFolder(folder, idPath, success);
                     }
 
                     @Override
                     protected void hadSuccess() {
-                        log.debug("Added selected items to folder {}",folder.getId());
-                        SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                explorer.expand(idPath);
-                                explorer.selectNodeByPath(idPath);
-                            }
-                        });
                     }
 
                     @Override
@@ -167,7 +175,7 @@ public class AddToFolderAction extends NodePresenterAction {
                 final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
                 final TreeNode folder = selectedNode.getTreeNode();
                 
-                addUniqueItemsToFolder(folder, NodeUtils.createIdPath(selectedNode));
+                addUniqueItemsToFolder(folder, NodeUtils.createIdPath(selectedNode), success);
             }
         });
 
@@ -207,7 +215,7 @@ public class AddToFolderAction extends NodePresenterAction {
                 commonRootItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
                         ActivityLogHelper.logUserAction("AddToFolderAction.recentFolder", folderId);
-                        addUniqueItemsToFolder(finalFolder, idPath);
+                        addUniqueItemsToFolder(finalFolder, idPath, success);
                     }
                 });
 
@@ -219,7 +227,7 @@ public class AddToFolderAction extends NodePresenterAction {
         return newFolderMenu;
     }
 
-    private void addUniqueItemsToFolder(final TreeNode treeNode, final Long[] idPath) {
+    private void addUniqueItemsToFolder(TreeNode treeNode, Long[] idPath, Consumer<Long[]> success) {
 
         int existing = 0;
         for(DomainObject domainObject : domainObjects) {
@@ -236,10 +244,14 @@ public class AddToFolderAction extends NodePresenterAction {
             else {
                 message = existing + " items are already in the target folder. "+(domainObjects.size()-existing)+" item(s) will be added.";
             }
-            JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), message, "Items already present", JOptionPane.OK_OPTION);
+            int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), 
+                    message, "Items already present", JOptionPane.OK_CANCEL_OPTION);
+            if (result != 0) {
+                return;
+            }
         }
 
-        final int numAdded = domainObjects.size()-existing;
+        int numAdded = domainObjects.size()-existing;
 
         SimpleWorker worker = new SimpleWorker() {
             @Override
@@ -250,6 +262,14 @@ public class AddToFolderAction extends NodePresenterAction {
             @Override
             protected void hadSuccess() {
                 log.info("Added {} items to folder {}", numAdded, treeNode.getId());
+                if (success!=null) {
+                    try {
+                        success.accept(idPath);
+                    }
+                    catch (Exception e) {
+                        ConsoleApp.handleException(e);
+                    }
+                }
             }
 
             @Override

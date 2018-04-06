@@ -5,8 +5,12 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 
@@ -18,6 +22,8 @@ import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Prompts the user to select a file on local disk, uploads it, and then creates 
@@ -27,6 +33,10 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
  */
 public final class NewMaskActionListener implements ActionListener {
 
+    private static final Logger log = LoggerFactory.getLogger(NewMaskActionListener.class);
+
+    private final static DateFormat dateFormatter = new SimpleDateFormat("yyyy/MM/dd hh:mma");
+    
     public NewMaskActionListener() {
     }
     
@@ -78,15 +88,11 @@ public final class NewMaskActionListener implements ActionListener {
 
                 @Override
                 protected void hadSuccess() {
-                    
-                    MaskCreationDialog maskCreationDialog = new MaskCreationDialog(image, alignmentSpaces, null, false);
-                    if (!maskCreationDialog.showForMask()) {
-                        return; // User cancelled operation
-                    }
-                        
-                    String alignmentSpace = maskCreationDialog.getAlignmentSpace();
-                    int maskThreshold = maskCreationDialog.getThreshold();
-                    new AddMaskDialog().showForMask(uploadPath, alignmentSpace, maskThreshold, null);
+                    String now = dateFormatter.format(new Date());
+                    String maskName = "Mask uploaded on "+now;
+                    MaskCreationDialog maskCreationDialog = new MaskCreationDialog( 
+                            image, uploadPath, alignmentSpaces, null, maskName, null, true);
+                    maskCreationDialog.showForMask();
                 }
 
                 @Override

@@ -1,47 +1,14 @@
 package org.janelia.it.workstation.browser.nodes;
 
-import java.awt.Image;
-
-import org.openide.nodes.AbstractNode;
-import org.openide.nodes.Children;
+import org.janelia.model.domain.interfaces.HasIdentifier;
 
 /**
- * The root node of the Data Explorer, containing all the Workspace nodes
- * that the user can read, and other special nodes.
- * 
- * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ * Marker interface for root nodes.
  */
-public class RootNode extends AbstractNode {
+public interface RootNode extends HasIdentifier {
 
-    private final RootNodeChildFactory childFactory;
-    
-    public RootNode() {
-        this(new RootNodeChildFactory());
-    }
-    
-    private RootNode(RootNodeChildFactory childFactory) {
-        super(Children.create(childFactory, false));
-        this.childFactory = childFactory;
-    }
-       
     @Override
-    public String getDisplayName() {
-        // This node should never be displayed
-        return "ROOT";
+    default Long getId() {
+        return 0L;
     }
-    
-    @Override
-    public Image getIcon(int type) {
-        // This node should never be displayed
-        return null;
-    }
-    
-    @Override
-    public boolean canDestroy() {
-        return false;
-    }
-    
-    public void refreshChildren() {
-        childFactory.refresh();
-    }   
 }

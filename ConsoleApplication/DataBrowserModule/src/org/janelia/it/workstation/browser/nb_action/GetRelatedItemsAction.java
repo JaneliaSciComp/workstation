@@ -14,6 +14,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -22,7 +23,8 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.gui.support.TreeNodeChooser;
-import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.browser.model.DomainObjectMapper;
+import org.janelia.it.workstation.browser.model.MappingType;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.UserViewConfiguration;
@@ -30,8 +32,11 @@ import org.janelia.it.workstation.browser.nodes.UserViewRootNode;
 import org.janelia.it.workstation.browser.nodes.UserViewTreeNodeNode;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.sample.ObjectiveSample;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SampleAlignmentResult;
+import org.janelia.model.domain.sample.SamplePipelineRun;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
 import org.openide.nodes.Node;
@@ -47,6 +52,8 @@ public class GetRelatedItemsAction extends NodePresenterAction {
 
     private final static Logger log = LoggerFactory.getLogger(GetRelatedItemsAction.class);
 
+    private final static String LATEST = "Latest";
+    
     protected final Component mainFrame = ConsoleApp.getMainFrame();
 
     private final static GetRelatedItemsAction singleton = new GetRelatedItemsAction();
@@ -93,180 +100,198 @@ public class GetRelatedItemsAction extends NodePresenterAction {
 
     @Override
     public JMenuItem getPopupPresenter() {
-        
-        final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
-        final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
         String name = "Add Related Items To Folder";
         JMenu getRelatedMenu = new JMenu(name);
         
-        Set<Class<? extends DomainObject>> mappableTypes = getMappableTypes(domainObjects);
+        DomainObjectMapper mapper = new DomainObjectMapper(domainObjects);
+        Collection<MappingType> mappableTypes = mapper.getMappableTypes();
         if (mappableTypes.isEmpty()) {
             return null;
         }
         
-        for (final Class<? extends DomainObject> targetClass : mappableTypes) {
-            
-            String typeName = DomainUtils.getTypeName(targetClass);
-            JMenu classMenu = new JMenu(typeName);
-            getRelatedMenu.add(classMenu);
-    
-            JMenuItem createNewItem = new JMenuItem("Create New Folder...");
-            
-            createNewItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-    
-                    ActivityLogHelper.logUserAction("AddToFolderAction.createNewFolder");
-    
-                    // Add button clicked
-                    final String folderName = (String) JOptionPane.showInputDialog(mainFrame, "Folder Name:\n",
-                            "Create new folder in workspace", JOptionPane.PLAIN_MESSAGE, null, null, null);
-                    if ((folderName == null) || (folderName.length() <= 0)) {
-                        return;
-                    }
-    
-                    SimpleWorker worker = new SimpleWorker() {
-                        
-                        private TreeNode folder;
-                        private Long[] idPath;
-    
-                        @Override
-                        protected void doStuff() throws Exception {
-                            folder = new TreeNode();
-                            folder.setName(folderName);
-                            folder = model.create(folder);
-                            Workspace workspace = model.getDefaultWorkspace();
-                            idPath = NodeUtils.createIdPath(workspace, folder);
-                            model.addChild(workspace, folder);
-                            addUniqueItemsToFolder(folder, idPath, targetClass);
-                        }
-    
-                        @Override
-                        protected void hadSuccess() {
-                            log.debug("Added selected items to folder {}",folder.getId());
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    explorer.expand(idPath);
-                                    explorer.selectNodeByPath(idPath);
-                                }
-                            });
-                        }
-    
-                        @Override
-                        protected void hadError(Throwable error) {
-                            ConsoleApp.handleException(error);
-                        }
-                    };
-                    
-                    worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating folder...", ""));
-                    worker.execute();
-                }
-            });
-    
-            classMenu.add(createNewItem);
-    
-            JMenuItem chooseItem = new JMenuItem("Choose Folder...");
-    
-            chooseItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-    
-                    ActivityLogHelper.logUserAction("AddToFolderAction.chooseFolder");
-    
-                    TreeNodeChooser nodeChooser = new TreeNodeChooser(new UserViewRootNode(UserViewConfiguration.create(TreeNode.class)), "Choose folder to add to", true);
-                    nodeChooser.setRootVisible(false);
-                    
-                    int returnVal = nodeChooser.showDialog(explorer);
-                    if (returnVal != TreeNodeChooser.CHOOSE_OPTION) return;
-                    if (nodeChooser.getChosenElements().isEmpty()) return;
-                    final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
-                    final TreeNode folder = selectedNode.getTreeNode();
-                    
-                    addUniqueItemsToFolder(folder, NodeUtils.createIdPath(selectedNode), targetClass);
-                }
-            });
-    
-            classMenu.add(chooseItem);
-            classMenu.addSeparator();
-    
-            List<String> addHistory = StateMgr.getStateMgr().getAddToFolderHistory();
-            if (addHistory!=null && !addHistory.isEmpty()) {
-    
-                JMenuItem item = new JMenuItem("Recent:");
-                item.setEnabled(false);
-                classMenu.add(item);
-    
-                for (String path : addHistory) {
-    
-                    if (path.contains("#")) {
-                        log.warn("Ignoring reference in add history: "+path);
-                        continue;
-                    }
-                    
-                    final Long[] idPath = NodeUtils.createIdPath(path);
-                    final Long folderId = idPath[idPath.length-1];
-                    
-                    TreeNode folder;
-                    try {
-                        folder = model.getDomainObject(TreeNode.class, folderId);
-                        if (folder == null) continue;
-                    }
-                    catch (Exception e) {
-                        log.error("Error getting recent folder with id "+folderId,e);
-                        continue;
-                    }
-    
-                    final TreeNode finalFolder = folder;
-    
-                    JMenuItem commonRootItem = new JMenuItem(folder.getName());
-                    commonRootItem.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent actionEvent) {
-                            ActivityLogHelper.logUserAction("AddToFolderAction.recentFolder", folderId);
-                            addUniqueItemsToFolder(finalFolder, idPath, targetClass);
-                        }
-                    });
-    
-                    commonRootItem.setEnabled(ClientDomainUtils.hasWriteAccess(finalFolder));
-                    classMenu.add(commonRootItem);
-                }
-            }
+        for (final MappingType targetType : mappableTypes) {
+            getRelatedMenu.add(createClassMenu(targetType));
         }
         
         return getRelatedMenu;
     }
-
-    private <T extends DomainObject> void addUniqueItemsToFolder(final TreeNode treeNode, final Long[] idPath, final Class<T> targetClass) {
-
-        List<DomainObject> objects = new ArrayList<>(domainObjects);
+    
+    private JMenu createClassMenu(MappingType targetType) {
         
-        int existing = 0;
-        for(DomainObject domainObject : objects) {
-            if (treeNode.hasChild(domainObject)) {
-                existing++;
+        final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
+        final DomainModel model = DomainMgr.getDomainMgr().getModel();
+        
+        JMenu classMenu = new JMenu(targetType.getLabel());
+
+        JMenuItem createNewItem = new JMenuItem("Create New Folder...");
+        
+        createNewItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+
+                ActivityLogHelper.logUserAction("AddToFolderAction.createNewFolder");
+
+                // Add button clicked
+                final String folderName = (String) JOptionPane.showInputDialog(mainFrame, "Folder Name:\n",
+                        "Create new folder in workspace", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                if ((folderName == null) || (folderName.length() <= 0)) {
+                    return;
+                }
+
+                SimpleWorker worker = new SimpleWorker() {
+                    
+                    private TreeNode folder;
+                    private Long[] idPath;
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        folder = new TreeNode();
+                        folder.setName(folderName);
+                        folder = model.create(folder);
+                        Workspace workspace = model.getDefaultWorkspace();
+                        idPath = NodeUtils.createIdPath(workspace, folder);
+                        model.addChild(workspace, folder);
+                        addUniqueItemsToFolder(folder, idPath, targetType);
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        log.debug("Added selected items to folder {}",folder.getId());
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                explorer.expand(idPath);
+                                explorer.selectNodeByPath(idPath);
+                            }
+                        });
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        ConsoleApp.handleException(error);
+                    }
+                };
+                
+                worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating folder...", ""));
+                worker.execute();
+            }
+        });
+
+        classMenu.add(createNewItem);
+
+        JMenuItem chooseItem = new JMenuItem("Choose Folder...");
+
+        chooseItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+
+                ActivityLogHelper.logUserAction("AddToFolderAction.chooseFolder");
+
+                TreeNodeChooser nodeChooser = new TreeNodeChooser(new UserViewRootNode(UserViewConfiguration.create(TreeNode.class)), "Choose folder to add to", true);
+                nodeChooser.setRootVisible(false);
+                
+                int returnVal = nodeChooser.showDialog(explorer);
+                if (returnVal != TreeNodeChooser.CHOOSE_OPTION) return;
+                if (nodeChooser.getChosenElements().isEmpty()) return;
+                final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
+                final TreeNode folder = selectedNode.getTreeNode();
+                
+                addUniqueItemsToFolder(folder, NodeUtils.createIdPath(selectedNode), targetType);
+            }
+        });
+
+        classMenu.add(chooseItem);
+        classMenu.addSeparator();
+
+        List<String> addHistory = StateMgr.getStateMgr().getAddToFolderHistory();
+        if (addHistory!=null && !addHistory.isEmpty()) {
+
+            JMenuItem item = new JMenuItem("Recent:");
+            item.setEnabled(false);
+            classMenu.add(item);
+
+            for (String path : addHistory) {
+
+                if (path.contains("#")) {
+                    log.warn("Ignoring reference in add history: "+path);
+                    continue;
+                }
+                
+                final Long[] idPath = NodeUtils.createIdPath(path);
+                final Long folderId = idPath[idPath.length-1];
+                
+                TreeNode folder;
+                try {
+                    folder = model.getDomainObject(TreeNode.class, folderId);
+                    if (folder == null) continue;
+                }
+                catch (Exception e) {
+                    log.error("Error getting recent folder with id "+folderId,e);
+                    continue;
+                }
+
+                final TreeNode finalFolder = folder;
+
+                JMenuItem commonRootItem = new JMenuItem(folder.getName());
+                commonRootItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        ActivityLogHelper.logUserAction("AddToFolderAction.recentFolder", folderId);
+                        addUniqueItemsToFolder(finalFolder, idPath, targetType);
+                    }
+                });
+
+                commonRootItem.setEnabled(ClientDomainUtils.hasWriteAccess(finalFolder));
+                classMenu.add(commonRootItem);
             }
         }
+        
+        return classMenu;
+    }
 
-        if (existing>0) {
-            String message;
-            if (existing==objects.size()) {
-                message = "All items are already in the target folder, no items will be added.";
-            }
-            else {
-                message = existing + " items are already in the target folder. "+(domainObjects.size()-existing)+" item(s) will be added.";
-            }
-            JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), message, "Items already present", JOptionPane.OK_OPTION);
-        }
+    private <T extends DomainObject> void addUniqueItemsToFolder(final TreeNode treeNode, final Long[] idPath, final MappingType targetType) {
 
-        final int numAdded = objects.size()-existing;
+        final DomainObjectMapper mapper = new DomainObjectMapper(domainObjects);
 
         SimpleWorker worker = new SimpleWorker() {
+
+            private int existing;
+            private int numAdded;
+
             @Override
             protected void doStuff() throws Exception {
-                addItemsToFolder(treeNode, idPath, targetClass, objects);
+                
+                // Map the items first
+                List<DomainObject> mapped = mapper.map(targetType, DomainObject.class);
+                
+                existing = 0;
+                for(DomainObject domainObject : mapped) {
+                    if (treeNode.hasChild(domainObject)) {
+                        existing++;
+                    }
+                }
+
+                addItemsToFolder(treeNode, idPath, targetType, mapped);
+                numAdded = mapped.size()-existing;
             }
 
             @Override
             protected void hadSuccess() {
+
+                if (existing>0) {
+                    String message;
+                    if (existing==domainObjects.size()) {
+                        message = "All items are already in the target folder, no items will be added.";
+                    }
+                    else {
+                        message = existing + " items are already in the target folder. "+(domainObjects.size()-existing)+" item(s) will be added.";
+                    }
+
+                    int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), 
+                            message, "Items already present", JOptionPane.OK_CANCEL_OPTION);
+                    if (result != 0) {
+                        return;
+                    }
+                }
+                
                 log.info("Added {} items to folder {}", numAdded, treeNode.getId());
             }
 
@@ -276,31 +301,78 @@ public class GetRelatedItemsAction extends NodePresenterAction {
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));
-        worker.execute();
+        
+        if (targetType==MappingType.AlignedNeuronFragment) {
+            
+            // We need to first ask the user which alignment space to use
+
+            SimpleWorker worker2 = new SimpleWorker() {
+
+                private String alignmentSpace;
+
+                @Override
+                protected void doStuff() throws Exception {
+                    
+                    // Map the fragments to samples first
+                    List<Sample> samples = mapper.map(MappingType.Sample, Sample.class);
+                    
+                    Set<String> alignmentSpaces = new HashSet<>();
+                    
+                    for (Sample sample : samples) {
+                        for (ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
+                            for (SamplePipelineRun samplePipelineRun : objectiveSample.getPipelineRuns()) {
+                                for (SampleAlignmentResult sampleAlignmentResult : samplePipelineRun.getAlignmentResults()) {
+                                    alignmentSpaces.add(sampleAlignmentResult.getAlignmentSpace());
+                                }
+                            }
+                        }
+                    }
+                    
+                    List<String> alignmentSpacesList = new ArrayList<>();
+                    alignmentSpacesList.add(LATEST);
+                    alignmentSpacesList.addAll(alignmentSpaces);
+                    String[] values = alignmentSpacesList.toArray(new String[alignmentSpacesList.size()]);
+                    
+                    alignmentSpace = (String)JOptionPane.showInputDialog(
+                            FrameworkImplProvider.getMainFrame(),
+                            "Choose an alignment space",
+                            "Choose alignment space", 
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            values, values[0]);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    if (alignmentSpace==null) return;
+                    if (!LATEST.equals(alignmentSpace)) {
+                        mapper.setAlignmentSpace(alignmentSpace);
+                    }
+                    worker.execute();
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    ConsoleApp.handleException(error);
+                }
+            };
+
+            worker2.execute();
+        }
+        else {
+            worker.execute();
+        }
     }
 
-    protected <T extends DomainObject> void addItemsToFolder(final TreeNode treeNode, final Long[] idPath, Class<T> targetClass, List<DomainObject> objects) throws Exception {
+    protected <T extends DomainObject> void addItemsToFolder(final TreeNode treeNode, final Long[] idPath, MappingType targetType, List<? extends DomainObject> objects) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-
-        // Map the items first
-        List<T> mapped = DomainModelViewUtils.map(objects, targetClass);
         
         // Add them to the given folder
-        model.addChildren(treeNode, mapped);
+        model.addChildren(treeNode, objects);
 
         // Update history
         String pathString = NodeUtils.createPathString(idPath);
         StateMgr.getStateMgr().updateAddToFolderHistory(pathString);
     }
-    
-    private Set<Class<? extends DomainObject>> getMappableTypes(Collection<DomainObject> domainObjects) {
         
-        Set<Class<? extends DomainObject>> types = new HashSet<>();
-        for (DomainObject domainObject : domainObjects) {
-            types.addAll(DomainModelViewUtils.getMappableTypes(domainObject));
-        }
-        
-        return types;
-    }
-    
 }

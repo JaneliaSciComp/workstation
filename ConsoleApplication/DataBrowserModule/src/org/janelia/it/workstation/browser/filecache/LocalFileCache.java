@@ -8,6 +8,7 @@ import com.google.common.cache.RemovalNotification;
 import com.google.common.cache.Weigher;
 import org.apache.commons.httpclient.HttpClient;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +76,7 @@ public class LocalFileCache {
     public LocalFileCache(File cacheParentDirectory,
                           long kilobyteCapacity,
                           CacheLoadEventListener cacheLoadEventListener,
-                          HttpClient httpClient,
+                          HttpClientProxy httpClient,
                           WebDavClientMgr webDavClientMgr)
             throws IllegalStateException {
 
@@ -281,17 +282,22 @@ public class LocalFileCache {
 
         if (localFile == null) {
             if (cacheAsync) {
-                asyncLoadService.submit(new Callable<File>() {
-                    @Override
-                    public File call() throws Exception {
-                        try {
-                            return getFile(remoteFileRefName, false);
-                        } catch (FileNotCacheableException e) {
-                            LOG.warn("Problem encountered caching file asynchronously",e);
-                            throw e;
+                if (remoteFileRefName.endsWith("/")) {
+                    LOG.trace("Cannot cache directory: "+remoteFileRefName);
+                }
+                else {   
+                    asyncLoadService.submit(new Callable<File>() {
+                        @Override
+                        public File call() throws Exception {
+                            try {
+                                return getFile(remoteFileRefName, false);
+                            } catch (FileNotCacheableException e) {
+                                LOG.warn("Problem encountered caching file asynchronously",e);
+                                throw e;
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
             return webDavClientMgr.getDownloadFileURL(remoteFileRefName);
         } else  {

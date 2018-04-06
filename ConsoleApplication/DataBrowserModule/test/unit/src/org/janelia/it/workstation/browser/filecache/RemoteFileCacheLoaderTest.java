@@ -10,6 +10,7 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.janelia.it.jacs.model.TestCategories;
+import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,9 +56,10 @@ public class RemoteFileCacheLoaderTest {
         testRemoteDirectory = createDirectory(parentDirectory, rootName + "-remote");
         testRemoteFile = TestFileUtils.createFile(testRemoteDirectory, 1);
         httpClient = Mockito.mock(HttpClient.class);
+        HttpClientProxy httpClientProxy = new HttpClientProxy(httpClient);
         webDavClientMgr = Mockito.mock(WebDavClientMgr.class);
-        testCache = new LocalFileCache(testCacheRootDirectory, 100, null, httpClient, webDavClientMgr);
-        remoteFileCacheLoader = new RemoteFileCacheLoader(httpClient, webDavClientMgr, testCache);
+        testCache = new LocalFileCache(testCacheRootDirectory, 100, null, httpClientProxy, webDavClientMgr);
+        remoteFileCacheLoader = new RemoteFileCacheLoader(httpClientProxy, webDavClientMgr, testCache);
     }
 
     @After

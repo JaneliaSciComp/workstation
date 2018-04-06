@@ -77,6 +77,7 @@ public class KeyBindings {
         if (action == null) {
             return false;
         }
+        log.info("Executing ontology key binding for "+shortcut);
         action.doAction();
         return true;
     }

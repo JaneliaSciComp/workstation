@@ -753,7 +753,6 @@ public class SkeletonActorModel {
                     };
             
             // Find all relevant anchors which are inside the viewport
-            
             Map<Long,TmGeoAnnotation> annotations = new LinkedHashMap<>();
             List<NeuronVertex> vertexList = neuronSet.getAnchorsInMicronArea(wp1, wp2);
             if (vertexList != null) {
@@ -778,11 +777,34 @@ public class SkeletonActorModel {
                     }
                 }
             }
-            
+
+            // when zoom is high, the viewport could be so small (especially in z) that we don't
+            //  catch points we care about; so add some nearby points on the theory that if you're
+            //  zoomed so far in that this is a problem, it's likely that the nearby points
+            //  are the ones you care about; choosing 3 such points arbitrarily
+            Point pcenter = new Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+            Vec3 wpcenterv = pointComputer.worldFromPixel(pcenter);
+            double[] wpcenter = {
+                    wpcenterv.getX(),
+                    wpcenterv.getY(),
+                    wpcenterv.getZ()-thickness/2
+            };
+
+            vertexList = neuronSet.getAnchorClosestToMicronLocation(wpcenter, 3);
+            if (vertexList != null) {
+                for (NeuronVertex vertex : vertexList) {
+                    if (vertex instanceof NeuronVertexAdapter) {
+                        TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
+                        if (!annotations.containsKey(annotation.getId())) {
+                            annotations.put(annotation.getId(), annotation);
+                        }
+                    }
+                }
+            }
+
+
             // Add all parent and child anchors, so that lines are draw even if the linked anchor is outside the viewport
-
             for (Long annotationId : getRelevantAnchorIds(neuronSetAdapter, annotations.values())) {
-
                 Anchor anchor = skeleton.getAnchorByID(annotationId);
                 if (anchor != null) {
                     anchors.add(anchor);
@@ -800,6 +822,7 @@ public class SkeletonActorModel {
         }
 
         log.debug("Found {} anchors in viewport",anchors.size());
+
         return anchors;
     }
     

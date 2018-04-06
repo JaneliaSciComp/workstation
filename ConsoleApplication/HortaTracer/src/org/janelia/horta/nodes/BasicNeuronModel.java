@@ -379,5 +379,20 @@ public class BasicNeuronModel implements NeuronModel
     public void setUserToggleRadius(boolean toggleRadius) {
         this.userToggleRadius = toggleRadius;
     }
+
+    @Override
+    public String getOwnerKey() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setOwnerKey(String ownerKey) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Long getNeuronId() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }

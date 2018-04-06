@@ -107,7 +107,6 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
         if (this.result == null) {
             showNothing();
-            debouncer.success();
         }
         else {
             showResult(result, isUserDriven, success);

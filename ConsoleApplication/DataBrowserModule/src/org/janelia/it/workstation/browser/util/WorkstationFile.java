@@ -11,6 +11,7 @@ import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.HeadMethod;
 import org.janelia.it.workstation.browser.api.FileMgr;
+import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +60,7 @@ public class WorkstationFile {
             getFile(new File(effectiveURL.getPath()));
         }
         else {
-            HttpClient client = FileMgr.getFileMgr().getHttpClient();
+            HttpClientProxy client = FileMgr.getFileMgr().getHttpClient();
             if (headOnly) {
                 HeadMethod head = new HeadMethod(effectiveURL.toString());  
                 int responseCode = client.executeMethod(head);

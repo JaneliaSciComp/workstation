@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import Jama.Matrix;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
 
 
 /**
@@ -57,7 +58,7 @@ import Jama.Matrix;
  * somewhat interchangeably, which can be confusing
  */
 public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener,
-        GlobalAnnotationListener {
+        GlobalAnnotationListener, BackgroundAnnotationListener {
 
     private Logger logger = LoggerFactory.getLogger(LargeVolumeViewerTranslator.class);
 
@@ -131,6 +132,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
     private void setupSignals() {
         annModel.addGlobalAnnotationListener(this);
+        annModel.addBackgroundAnnotationListener(this);
         annModel.addTmGeoAnnotationModListener(this);
         annModel.addTmAnchoredPathListener(this);
     }
@@ -442,6 +444,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         // We don't care about neuron names
     }
     
+    @Override
+    public void neuronsOwnerChanged(List<TmNeuronMetadata> neuronList) {
+        // We don't care about neuron owners
+    }
+
     /**
      * called when the model changes the current neuron
      */
@@ -466,10 +473,14 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         // find some annotation in selected neuron and select it, too
         // let's select the first endpoint we find:
         TmGeoAnnotation firstRoot = neuron.getFirstRoot();
-        for (TmGeoAnnotation link: neuron.getSubTreeList(firstRoot)) {
-            if (link.getChildIds().size() == 0) {
-                fireNextParentEvent(link.getId());
-                return;
+
+        // not clear how it could happen, but we've seen a null here:
+        if (firstRoot != null) {
+            for (TmGeoAnnotation link : neuron.getSubTreeList(firstRoot)) {
+                if (link.getChildIds().size() == 0) {
+                    fireNextParentEvent(link.getId());
+                    return;
+                }
             }
         }
 
@@ -646,6 +657,26 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             return null;
         }
         return largeVolumeViewer.getTileServer().getLoadAdapter().getTileFormat();
+    }
+
+    @Override
+    public void neuronModelChanged(TmNeuronMetadata neuron) {
+        neuronChanged(neuron);
+    }
+
+    @Override
+    public void neuronModelCreated(TmNeuronMetadata neuron) {
+        neuronCreated(neuron);
+    }
+
+    @Override
+    public void neuronModelDeleted(TmNeuronMetadata neuron) {
+        neuronDeleted(neuron);
+    }
+
+    @Override
+    public void neuronOwnerChanged(TmNeuronMetadata neuron) {
+       
     }
 
 }

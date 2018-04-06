@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.gui.dialogs;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,11 +29,16 @@ import com.google.common.eventbus.Subscribe;
  */
 public class DomainDetailsDialog extends ModalDialog {
 
-    private final DomainInspectorPanel detailsPanel;
+    private DomainInspectorPanel detailsPanel;
     private DomainObject domainObject;
-    
-    public DomainDetailsDialog() {
 
+    public DomainDetailsDialog() {
+        this(null);
+    }
+    
+    public DomainDetailsDialog(Dialog parent) {
+        super(parent);
+        
         setModalityType(ModalityType.APPLICATION_MODAL);
 
         this.detailsPanel = new DomainInspectorPanel();

@@ -10,7 +10,9 @@ import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.browser.model.MappingType;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.util.PathUtil;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.DynamicDomainObjectProxy;
@@ -48,7 +50,7 @@ public class DownloadFileItem {
     public static final String ATTR_LABEL_EXTENSION = "Extension";
     public static final String ATTR_LABEL_GUID = "GUID";
     
-    private final Path workstationImagesDir = SystemInfo.getDownloadsDir().resolve("Workstation Images");
+    private final Path downloadsDir = SystemInfo.getDownloadsDir();
     private final List<String> itemPath;
     private final DomainObject domainObject;
     private HasFiles fileProvider;
@@ -58,6 +60,7 @@ public class DownloadFileItem {
     private String errorMessage;
     private String resultName;
     private String sourceFile;
+    private String targetRelativePath;
     private Path targetLocalPath;
     private String sourceExtension;
     private String targetExtension;
@@ -139,14 +142,15 @@ public class DownloadFileItem {
                 if (pathBuilder.length()!=0) pathBuilder.append("/");
                 pathBuilder.append(item);
             }
-            itemDir = workstationImagesDir.resolve(pathBuilder.toString());
+            itemDir = downloadsDir.resolve(pathBuilder.toString());
         }
         else {
-            itemDir = workstationImagesDir;
+            itemDir = downloadsDir;
         }
 
         try {
-            targetLocalPath = itemDir.resolve(constructFilePath(filenamePattern));
+            targetRelativePath = constructFilePath(filenamePattern);
+            targetLocalPath = itemDir.resolve(targetRelativePath);
             log.debug("Target path: {}", targetLocalPath.toString());
             log.debug("Target extension: {}", this.targetExtension);
         }
@@ -158,16 +162,12 @@ public class DownloadFileItem {
     private String getStaticPath(HasFilepath hasFilePath, FileType fileType) {
         if (hasFilePath.getFilepath()==null) return null;
         switch (fileType) {
-            case NeuronAnnotatorLabel: return ensureUnixPath(Paths.get(hasFilePath.getFilepath(),"ConsolidatedLabel.v3dpbd").toString());
-            case NeuronAnnotatorSignal: return ensureUnixPath(Paths.get(hasFilePath.getFilepath(),"ConsolidatedSignal.v3dpbd").toString());
-            case NeuronAnnotatorReference: return ensureUnixPath(Paths.get(hasFilePath.getFilepath(),"Reference.v3dpbd").toString());
+            case NeuronAnnotatorLabel: return PathUtil.getStandardPath(Paths.get(hasFilePath.getFilepath(),"ConsolidatedLabel.v3dpbd"));
+            case NeuronAnnotatorSignal: return PathUtil.getStandardPath(Paths.get(hasFilePath.getFilepath(),"ConsolidatedSignal.v3dpbd"));
+            case NeuronAnnotatorReference: return PathUtil.getStandardPath(Paths.get(hasFilePath.getFilepath(),"Reference.v3dpbd"));
             default: break;
         }
         return null;
-    }
-
-    private String ensureUnixPath(String path) {
-        return path.replaceAll("\\\\", "/").replaceFirst("^[A-Z]:", "");
     }
     
     private String constructFilePath(String filePattern) throws Exception {
@@ -212,9 +212,9 @@ public class DownloadFileItem {
             log.debug("  {}: {}", ATTR_LABEL_RESULT_NAME, resultName);
         }
         else if (domainObject instanceof LSMImage) {
-            List<Sample> mapped = DomainModelViewUtils.map(domainObject, Sample.class);
+            List<DomainObject> mapped = DomainModelViewUtils.map(domainObject, MappingType.Sample);
             if (!mapped.isEmpty()) {
-                Sample sample = mapped.get(0);
+                Sample sample = (Sample)mapped.get(0);
                 keyValues.addMap(new DynamicDomainObjectProxy(sample));
                 log.debug("  sample: {}", domainObject);
                 keyValues.put(ATTR_LABEL_SAMPLE_NAME, sample.getName());
@@ -223,9 +223,9 @@ public class DownloadFileItem {
         }
         else if (domainObject instanceof NeuronFragment) {
             NeuronFragment neuron = (NeuronFragment)domainObject;
-            List<Sample> mapped = DomainModelViewUtils.map(neuron, Sample.class);
+            List<DomainObject> mapped = DomainModelViewUtils.map(neuron, MappingType.Sample);
             if (!mapped.isEmpty()) {
-                Sample sample = mapped.get(0);
+                Sample sample = (Sample)mapped.get(0);
                 keyValues.addMap(new DynamicDomainObjectProxy(sample));
                 log.debug("  sample: {}", domainObject);
                 keyValues.put(ATTR_LABEL_SAMPLE_NAME, sample.getName());
@@ -256,7 +256,8 @@ public class DownloadFileItem {
         log.debug("Filepath pattern: {}", filePattern);
         String filepath = StringUtils.replaceVariablePattern(filePattern, keyValues);
         log.debug("Interpolated filepath: {}", filepath);
-        filepath = filepath.replaceAll("[^\\w\\.\\(\\)\\- /]", "_");
+        filepath = filepath.replaceAll("[^\\w\\.\\(\\)\\- /]", "_"); // Remove special characters
+        filepath = filepath.replaceAll("^/+", ""); // Remove leading slashes which happen if path variables are not interpolated
         log.debug("Corrected filepath: {}", filepath);
         
         StringBuilder sb = new StringBuilder(filepath);
@@ -318,10 +319,9 @@ public class DownloadFileItem {
     	if (errorMessage!=null) {
 			return errorMessage;
 		}
-    	if (targetLocalPath==null) {
+    	if (targetRelativePath == null) {
     		return "Error getting file for "+domainObject.getName();
     	}
-        int cut = workstationImagesDir.toString().length()+1;
-        return targetLocalPath.toString().substring(cut);
+    	return targetRelativePath;
     }
 }

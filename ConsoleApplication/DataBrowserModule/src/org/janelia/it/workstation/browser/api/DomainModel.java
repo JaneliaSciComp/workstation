@@ -27,7 +27,6 @@ import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
-import org.janelia.it.workstation.browser.model.DomainObjectComparator;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
@@ -326,7 +325,7 @@ public class DomainModel {
     }
 
     /**
-     * Load an object from the database. 
+     * Load an object from the database, ignoring the cache. 
      * @param ref
      * @return
      */
@@ -336,15 +335,12 @@ public class DomainModel {
     }
 
     /**
-     * Retrieve the given domain object, checking the cache first and then the database.
+     * Retrieve the given domain object from the database, ignoring the cache.
      * @param domainObject
      * @return canonical domain object instance
      */
     public <T extends DomainObject> T getDomainObject(T domainObject) throws Exception {
-        if (domainObject==null) throw new IllegalArgumentException("Domain object may not be null");
-        if (!isCacheable(domainObject)) {
-            return domainObject;
-        }
+        if (domainObject==null) return null;
         return getDomainObject(Reference.createFor(domainObject));
     }
 
@@ -543,7 +539,6 @@ public class DomainModel {
                 StopWatch w = TIMER ? new LoggingStopWatch() : null;
                 Collection<Workspace> workspaces = workspaceFacade.getWorkspaces();
                 List<Workspace> canonicalObjects = putOrUpdate(workspaces, false);
-                Collections.sort(canonicalObjects, new DomainObjectComparator());
                 for (Workspace workspace : canonicalObjects) {
                     log.info("Caching workspace: {} ({})", workspace.getName(), workspace.getOwnerKey());
                     workspaceCache.put(Reference.createFor(workspace), workspace);
@@ -584,7 +579,6 @@ public class DomainModel {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         List<DataSet> dataSets = new ArrayList<>(sampleFacade.getDataSets());
         List<DataSet> canonicalDataSets = putOrUpdate(dataSets, false);
-        Collections.sort(canonicalDataSets, new DomainObjectComparator());
         if (TIMER) w.stop("getDataSets");
         return canonicalDataSets;
     }
@@ -593,7 +587,6 @@ public class DomainModel {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         List<DataSet> dataSets = new ArrayList<>(sampleFacade.getColorDepthDataSets(alignmentSpace));
         List<DataSet> canonicalDataSets = putOrUpdate(dataSets, false);
-        Collections.sort(canonicalDataSets, new DomainObjectComparator());
         if (TIMER) w.stop("getColorDepthDataSets");
         return canonicalDataSets;
     }
@@ -654,7 +647,6 @@ public class DomainModel {
                 StopWatch w = TIMER ? new LoggingStopWatch() : null;
                 Collection<Ontology> ontologies = ontologyFacade.getOntologies();
                 List<Ontology> canonicalObjects = putOrUpdate(ontologies, false);
-                Collections.sort(canonicalObjects, new DomainObjectComparator());
                 for (Ontology ontology : canonicalObjects) {
                     ontologyCache.put(Reference.createFor(ontology), ontology);
                 }
@@ -860,6 +852,7 @@ public class DomainModel {
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(workspaceFacade.reorderChildren(node, order));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -880,6 +873,7 @@ public class DomainModel {
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(workspaceFacade.addChildren(node, DomainUtils.getReferences(domainObjects), index));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -892,6 +886,7 @@ public class DomainModel {
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(workspaceFacade.removeChildren(node, DomainUtils.getReferences(domainObjects)));
         }
+        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -907,7 +902,6 @@ public class DomainModel {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         List<LineRelease> releases = sampleFacade.getLineReleases();
         List<LineRelease> canonicalReleases = putOrUpdate(releases, false);
-        Collections.sort(canonicalReleases, new DomainObjectComparator());
         if (TIMER) w.stop("getLineReleases");
         return canonicalReleases;
     }
@@ -979,11 +973,8 @@ public class DomainModel {
     public String dispatchSamples(List<Reference> sampleRefs, String reprocessPurpose, boolean reuse) throws Exception {
         return sampleFacade.dispatchSamples(sampleRefs, reprocessPurpose, reuse);
     }
-    
-    public ColorDepthSearch createColorDepthSearch(String name, String alignmentSpace) throws Exception {
-        ColorDepthSearch search = new ColorDepthSearch();
-        search.setName(name);
-        search.setAlignmentSpace(alignmentSpace);
+
+    public ColorDepthSearch createColorDepthSearch(ColorDepthSearch search) throws Exception {
         search = save(search);        
 
         TreeNode searchesFolder = getDefaultWorkspaceFolder(DomainConstants.NAME_COLOR_DEPTH_SEARCHES, true);

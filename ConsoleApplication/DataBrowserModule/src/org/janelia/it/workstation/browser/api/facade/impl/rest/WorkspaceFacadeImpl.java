@@ -6,14 +6,18 @@ import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
 import org.janelia.it.jacs.shared.solr.SolrParams;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.WorkspaceFacade;
+import org.janelia.it.workstation.browser.api.http.RESTClientBase;
+import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.search.Filter;
@@ -23,16 +27,22 @@ import org.janelia.model.domain.workspace.Workspace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFacade {
+public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFacade {
 
     private static final Logger log = LoggerFactory.getLogger(WorkspaceFacadeImpl.class);
+
+    private static final String REMOTE_API_URL = ConsoleApp.getConsoleApp().getRemoteRestUrl();
+
+    private WebTarget service;
     
     public WorkspaceFacadeImpl() {
-        super(log);
+        this(REMOTE_API_URL);
     }
 
-    public WorkspaceFacadeImpl(RESTClientManager manager) {
-        super(log, manager);
+    public WorkspaceFacadeImpl(String serverUrl) {
+        super(log);
+        log.debug("Using server URL: {}",serverUrl);
+        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);
     }
     
     /**
@@ -43,7 +53,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
      */
     @Override
     public SolrJsonResults performSearch(SolrParams query) throws Exception {
-        Response response = manager.getSearchEndpoint()
+        Response response = service.path("data/search")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making search request to the server: " + query)) {
@@ -54,7 +64,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
 
     @Override
     public Workspace getDefaultWorkspace() throws Exception {
-        Response response = manager.getWorkspaceEndpoint()
+        Response response = service.path("data/workspace")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
@@ -66,7 +76,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
 
     @Override
     public Collection<Workspace> getWorkspaces() throws Exception {
-        Response response = manager.getWorkspacesEndpoint()
+        Response response = service.path("data/workspaces")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
@@ -81,7 +91,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
         DomainQuery query = new DomainQuery();
         query.setDomainObject(treeNode);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = manager.getTreeNodeEndpoint()
+        Response response = service.path("data/treenode")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createTreeNode to server: " + treeNode)) {
@@ -95,7 +105,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
         DomainQuery query = new DomainQuery();
         query.setDomainObject(filter);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = manager.getFilterEndpoint()
+        Response response = service.path("data/filter")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createFilter to server: " + filter)) {
@@ -109,7 +119,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
         DomainQuery query = new DomainQuery();
         query.setDomainObject(filter);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = manager.getFilterEndpoint()
+        Response response = service.path("data/filter")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request updateFilter to server: " + filter)) {
@@ -118,13 +128,14 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
         return response.readEntity(Filter.class);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T extends Node> T addChildren(T node, Collection<Reference> references, Integer index) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(node);
         query.setReferences(new ArrayList<>(references));
-        Response response = manager.getNodeEndpoint()
+        Response response = service.path("data/node")
                 .path("children")
                 .request("application/json")
                 .put(Entity.json(query));
@@ -134,13 +145,14 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
         return (T)response.readEntity(node.getClass());
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T extends Node> T removeChildren(T node, Collection<Reference> references) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(node);
         query.setReferences(new ArrayList<>(references));
-        Response response = manager.getNodeEndpoint()
+        Response response = service.path("data/node")
                 .path("children")
                 .request("application/json")
                 .post(Entity.json(query));
@@ -150,6 +162,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
         return (T)response.readEntity(node.getClass());
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T extends Node> T reorderChildren(T node, int[] order) throws Exception {
         DomainQuery query = new DomainQuery();
@@ -160,7 +173,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
             orderList.add(new Integer(order[i]));
         }
         query.setOrdering(orderList);
-        Response response = manager.getNodeEndpoint()
+        Response response = service.path("data/node")
                 .path("reorder")
                 .request("application/json")
                 .post(Entity.json(query));
@@ -175,7 +188,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(object);
-        Response response = manager.getDomainObjectEndpoint()
+        Response response = service.path("data/domainobject")
                 .path("references")
                 .request("application/json")
                 .post(Entity.json(query));

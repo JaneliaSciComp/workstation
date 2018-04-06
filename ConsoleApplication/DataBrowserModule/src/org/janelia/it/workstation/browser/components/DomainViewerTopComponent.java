@@ -256,9 +256,7 @@ public final class DomainViewerTopComponent extends TopComponent {
             
             final Class<? extends DomainObjectEditor<?>> editorClass = getEditorClass(domainObject);
             if (editorClass == null) {
-                // TODO: comment this exception back in after initial development is complete
-                //throw new IllegalStateException("No viewer defined for domain object of type "+domainObject.getClass().getName());
-                log.info("No viewer defined for domain object of type {}", domainObject.getClass().getName());
+                log.debug("No viewer defined for domain object of type {}", domainObject.getClass().getName());
                 return;
             }
 

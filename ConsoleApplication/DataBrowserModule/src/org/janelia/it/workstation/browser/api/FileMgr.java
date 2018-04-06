@@ -4,16 +4,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableList;
-import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.janelia.it.workstation.browser.filecache.LocalFileCache;
 import org.janelia.it.workstation.browser.filecache.WebDavClientMgr;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
@@ -52,10 +48,9 @@ public class FileMgr {
     public static final int DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY = 50;
     public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
 
-    private final HttpClient httpClient;
+    private final HttpClientProxy httpClient;
     private final WebDavClientMgr webDavClientMgr;
     private LocalFileCache localFileCache;
-    private Subject currentSubject;
 
     private FileMgr() {
         
@@ -67,7 +62,7 @@ public class FileMgr {
         HttpConnectionManagerParams managerParams = mgr.getParams();
         managerParams.setDefaultMaxConnectionsPerHost(WEBDAV_MAX_CONNS_PER_HOST);
         managerParams.setMaxTotalConnections(WEBDAV_MAX_TOTAL_CONNECTIONS);
-        httpClient = new HttpClient(mgr);
+        httpClient = new HttpClientProxy(new HttpClient(mgr));
         webDavClientMgr = new WebDavClientMgr(WEBDAV_BASE_URL, httpClient);
 
         setFileCacheGigabyteCapacity((Integer)
@@ -76,7 +71,7 @@ public class FileMgr {
                 LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));
     }
 
-    public HttpClient getHttpClient() {
+    public HttpClientProxy getHttpClient() {
         return httpClient;
     }
 
@@ -194,16 +189,16 @@ public class FileMgr {
         if (isFileCacheAvailable()) {
             try {
                 file = localFileCache.getFile(standardPath, forceRefresh);
-            } catch (FileNotFoundException e) {
+            } 
+            catch (FileNotFoundException e) {
                 log.warn("File does not exist: " + standardPath, e);
-            } catch (IOException e) {
+            } 
+            catch (Exception e) {
                 if ("No space left on device".equals(e.getMessage())) {
-                    FrameworkImplProvider.handleExceptionQuietly("No space left on disk", e);
+                    FrameworkImplProvider.handleException("No space left on disk", e);
                 } else {
                     log.error("Failed to retrieve " + standardPath + " from local cache", e);
                 }
-            } catch (Exception e) {
-                log.error("Failed to retrieve " + standardPath + " from local cache", e);
             }
         } else {
             log.warn("Local file cache is not available");
@@ -229,35 +224,4 @@ public class FileMgr {
                 : webDavClientMgr.getDownloadFileURL(standardPathName);
     }
 
-    public String getSubjectKey() {
-        return currentSubject == null ? null : currentSubject.getKey();
-    }
-
-    public String getSubjectName() {
-        return currentSubject == null ? null : currentSubject.getName();
-    }
-
-    void setSubjectProxy(Subject proxy) {
-        currentSubject = proxy;
-        addDefaultHeader("JacsSubject", getSubjectKey());
-        addDefaultHeader("username", getSubjectKey());
-    }
-
-    void setAuthToken(String authToken) {
-        // I prefer this method to the AuthState approach because it's more convenient
-        // with the AuthState I have to set authentication required for every HttpMethod instance that requires authentication
-        // and I also have to set the scheme
-        addDefaultHeader("Authorization", StringUtils.isBlank(authToken) ? null : "Bearer " + authToken);
-    }
-
-    private void addDefaultHeader(String headerName, String headerValue) {
-        List<Header> defaultHeaders = (List<Header>) httpClient.getParams().getDefaults().getParameter("http.default-headers");
-        ImmutableList.Builder<Header> defaultHeadersBuilder = ImmutableList.builder();
-        if (defaultHeaders != null) {
-            defaultHeadersBuilder.addAll(defaultHeaders.stream().filter(h -> !h.getName().equalsIgnoreCase(headerName)).collect(Collectors.toList()));
-        }
-        if (headerValue != null) defaultHeadersBuilder.add(new Header(headerName, headerValue));
-        defaultHeaders = defaultHeadersBuilder.build();
-        httpClient.getParams().getDefaults().setParameter("http.default-headers", defaultHeaders);
-    }
 }

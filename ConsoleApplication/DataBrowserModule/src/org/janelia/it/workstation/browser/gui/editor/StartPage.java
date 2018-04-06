@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.gui.editor;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
@@ -29,13 +30,18 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.gui.listview.ViewerToolbar;
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
+import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.browser.nb_action.NewFilterActionListener;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.util.HelpTextUtils;
+import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.report.DatabaseSummary;
 import org.janelia.model.domain.report.DiskUsageSummary;
@@ -50,7 +56,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 
 import net.miginfocom.swing.MigLayout;
-import org.janelia.it.workstation.browser.api.AccessManager;
 
 /**
  * Start Page which is automatically shown to the user on every startup (unless disabled by user preference) 
@@ -61,9 +66,11 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 public class StartPage extends JPanel implements PropertyChangeListener {
 
     private static final Logger log = LoggerFactory.getLogger(StartPage.class);
-    
+
+    private static final String MANUAL_URL = ConsoleProperties.getInstance().getProperty("manual.color.depth.url"); 
     private static final ImageIcon DISK_USAGE_ICON = Icons.getIcon("database_400.png");
     private static final ImageIcon SAMPLE_ICON = Icons.getIcon("microscope_400.png");
+    private static final ImageIcon COLOR_DEPTH_ICON = Icons.getIcon("color_depth_brain.png");
     
     private static final int iconSize = 128;
     
@@ -72,6 +79,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
     private final JPanel searchPanel;
     private final JPanel diskSpacePanel;
     private final JPanel dataSummaryPanel;
+    private final JPanel colorDepthPanel;
     private final JPanel lowerPanel = new JPanel();
     private final JCheckBox openOnStartupCheckbox = new JCheckBox("Show On Startup");
     private final JTextField searchField;
@@ -94,11 +102,13 @@ public class StartPage extends JPanel implements PropertyChangeListener {
     private DatabaseSummary dataSummary;
     private ImageIcon diskUsageIcon;
     private ImageIcon sampleIcon;
+    private ImageIcon colorDepthIcon;
     
     public StartPage() {
         
         diskUsageIcon = getScaledIcon(DISK_USAGE_ICON, iconSize, iconSize);
         sampleIcon = getScaledIcon(SAMPLE_ICON, iconSize, iconSize);
+        colorDepthIcon = COLOR_DEPTH_ICON;
         
         JLabel titleLabel = new JLabel("Welcome to the Janelia Workstation");
         //titleLabel.setForeground(UIManager.getColor("textInactiveText"));
@@ -224,6 +234,10 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         // Data Summary Panel
         dataSummaryPanel = new SelectablePanel();
         dataSummaryPanel.setLayout(new MigLayout("gap 50, fillx, wrap 3", "[grow 10]5[grow 0]5[grow 10]", "[]2[]5[]5[]5[]5[]"));
+
+        // Data Summary Panel
+        colorDepthPanel = new SelectablePanel();
+        colorDepthPanel.setLayout(new MigLayout("gap 50, fillx, wrap 4", "[grow 10]5[grow 0]5[grow 0]5[grow 10]", "[]2[]0[]"));
         
         
         // Main Panel
@@ -233,6 +247,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         mainPanel.add(searchPanel, "span 2, al center top");
         mainPanel.add(diskSpacePanel, "al center top, width 50%");
         mainPanel.add(dataSummaryPanel, "al center top, width 50%");
+        mainPanel.add(colorDepthPanel, "span 2, al center top, width 100%");
         
         // Lower panel
         
@@ -272,6 +287,34 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         dataSummaryPanel.add(getLargeLabel("Confocal Data Summary"), "spanx 3, gapbottom 10, al center");
         dataSummaryPanel.add(new JLabel(sampleIcon), "al right top, w 50%");
         dataSummaryPanel.add(new JLabel(Icons.getLoadingIcon()), "spanx 2, al center center");
+
+        String colorDepthTxt = "<html>To search the color depth projections, you first need to create a search mask.<br>"
+                + "To begin, right-click any Color Depth Projection and select "+HelpTextUtils.getBoldedLabel("Create Mask for Color Depth Search")+".<br>"
+                + "You can also upload a custom mask using the "+HelpTextUtils.getMenuItemLabel("File","Upload","Color Depth Mask")+"  menu option.<br>";
+        
+        JPanel colorDepthTitlePanel = new JPanel();
+        colorDepthTitlePanel.setLayout(new BoxLayout(colorDepthTitlePanel, BoxLayout.LINE_AXIS));
+                
+        colorDepthTitlePanel.add(getLargeLabel("Color Depth Mask Search"));
+        colorDepthTitlePanel.add(getHighlightLabel("NEW"));
+        
+        JButton userManualButton = new JButton("Learn more in the User Manual");
+        userManualButton.setFont(mediumFont);
+        userManualButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Utils.openUrlInBrowser(MANUAL_URL);
+            }
+        });
+        
+        colorDepthPanel.removeAll();
+        colorDepthPanel.add(colorDepthTitlePanel, "spanx 4, gapbottom 10, al center");
+        colorDepthPanel.add(Box.createHorizontalGlue(), "spany2");
+        colorDepthPanel.add(new JLabel(colorDepthIcon), "spany 2, gapright 10, al right top");
+        colorDepthPanel.add(new JLabel(colorDepthTxt), "al left top");
+        colorDepthPanel.add(Box.createHorizontalGlue(), "spany2");
+        colorDepthPanel.add(userManualButton, "al left");
+        
         
         mainPanel.updateUI();
 
@@ -429,6 +472,14 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         return label;
     }
 
+    private JLabel getHighlightLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(largeFont.deriveFont(10));
+        label.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 0));
+        label.setForeground(Color.red);
+        return label;
+    }
+    
     private JLabel getMediumLabel(String text) {
         JLabel label = new JLabel(text);
         label.setFont(mediumFont);
@@ -454,7 +505,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
     
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getPropertyName().equals(ApplicationOptions.PROP_SHOW_START_PAGE_ON_STARTUP)) {
+        if (evt.getPropertyName().equals(OptionConstants.SHOW_START_PAGE_ON_STARTUP)) {
             openOnStartupCheckbox.setSelected(ApplicationOptions.getInstance().isShowStartPageOnStartup());
         }
     }

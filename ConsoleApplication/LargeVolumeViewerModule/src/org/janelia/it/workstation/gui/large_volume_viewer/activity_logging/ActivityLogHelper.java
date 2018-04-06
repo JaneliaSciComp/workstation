@@ -60,6 +60,7 @@ public class ActivityLogHelper {
     private static final CategoryString LVV_SELECT_NEURON_CATEGORY_STRING       = new CategoryString("selectNeuron");
     private static final CategoryString LVV_CREATE_NEURON_CATEGORY_STRING       = new CategoryString("createNeuron");
     private static final CategoryString LVV_RENAME_NEURON_CATEGORY_STRING       = new CategoryString("renameNeuron");
+    private static final CategoryString LVV_CHANGE_NEURON_OWNER_CATEGORY_STRING = new CategoryString("changeNeuronOwner");
     private static final CategoryString LVV_DELETE_NEURON_CATEGORY_STRING       = new CategoryString("deleteNeuron");
     private static final CategoryString LVV_CREATE_WORKSPACE_CATEGORY_STRING    = new CategoryString("createWorkspace");
     private static final CategoryString LVV_ADD_ANCHORED_PATH_CATEGORY_STRING   = new CategoryString("addAnchoredPath");
@@ -330,6 +331,14 @@ public class ActivityLogHelper {
         SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,
                 LVV_RENAME_NEURON_CATEGORY_STRING,
+                new ActionString(workspaceID.toString() + ":" + neuronID.toString())
+        );
+    }
+
+    public void logChangeNeuronOwner(Long workspaceID, Long neuronID) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_CHANGE_NEURON_OWNER_CATEGORY_STRING,
                 new ActionString(workspaceID.toString() + ":" + neuronID.toString())
         );
     }

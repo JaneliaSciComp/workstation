@@ -43,17 +43,14 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
     }
 
     private Long serviceId;
-    private String subjectKey;
     private String serviceName;
     private ProgressHandle handle;
 
 
-    public AsyncServiceMonitoringWorker(String subjectKey) {
-        this.subjectKey = subjectKey;
+    public AsyncServiceMonitoringWorker() {
     }
 
-    public AsyncServiceMonitoringWorker(String subjectKey, Long serviceId) {
-        this.subjectKey = subjectKey;
+    public AsyncServiceMonitoringWorker(Long serviceId) {
         this.serviceId = serviceId;
     }
     
@@ -65,7 +62,7 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
                 throw new ServiceException("There was no service invocation - serviceId is still empty");
             }
             while (true) {
-                String serviceStatus = asyncServiceClient.getServiceStatus(serviceId, subjectKey);
+                String serviceStatus = asyncServiceClient.getServiceStatus(serviceId);
                 setStatus(serviceStatus);
 
                 if (handle==null) {
@@ -86,10 +83,13 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
                 Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
 
                 if (hasCompletedUnsuccessfully(serviceStatus)) {
+                    completed();
                     handle.finish();
                     // handle errors
                     throwException(serviceStatus);
-                } else if (hasCompletedSuccessfully(serviceStatus)) {
+                } 
+                else if (hasCompletedSuccessfully(serviceStatus)) {
+                    completed();
                     handle.finish();
                     return;
                 }
@@ -108,6 +108,10 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
             }
             throw e;
         }
+    }
+    
+    protected void completed() {
+        
     }
 
     @Override
@@ -161,7 +165,7 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
     }
 
     private boolean hasCompletedSuccessfully(String state) {
-        return "SUCCESSFUL".equals(state);
+        return "SUCCESSFUL".equals(state) || "ARCHIVED".equals(state);
     }
 
     private void throwException (String state) throws ServiceException {

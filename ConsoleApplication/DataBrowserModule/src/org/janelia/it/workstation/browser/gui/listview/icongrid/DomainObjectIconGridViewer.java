@@ -18,9 +18,7 @@ import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.components.DomainObjectProviderHelper;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.IconGridViewerConfigDialog;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
@@ -38,7 +36,6 @@ import org.janelia.it.workstation.browser.model.DomainObjectImageModel;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
@@ -55,7 +52,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,Reference> implements ListViewer<DomainObject, Reference>, PreferenceSupport {
+public class DomainObjectIconGridViewer 
+        extends IconGridViewerPanel<DomainObject,Reference> 
+        implements ListViewer<DomainObject, Reference> {
     
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
 
@@ -69,6 +68,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private SearchProvider searchProvider;
     
     // State
+    private PreferenceSupport preferenceSupport;
     private AnnotatedObjectList<DomainObject,Reference> domainObjectList;
     private ChildSelectionModel<DomainObject,Reference> selectionModel;
     private ChildSelectionModel<DomainObject,Reference> editSelectionModel;
@@ -107,34 +107,35 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     public DomainObjectIconGridViewer() {
         setImageModel(imageModel);
+        
         this.config = IconGridViewerConfiguration.loadConfig();
-        resultButton = new ResultSelectionButton(true) {
+        
+        this.resultButton = new ResultSelectionButton(true) {
             @Override
             protected void resultChanged(ArtifactDescriptor resultDescriptor) {
                 log.info("Setting result preference: "+resultDescriptor.toString());
                 try {
-                    setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, DescriptorUtils.serialize(resultDescriptor));
+                    preferenceSupport.setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, 
+                            DescriptorUtils.serialize(resultDescriptor))
+                            .addListener(() -> refreshView(null));
                 }
                 catch (Exception e) {
                     log.error("Error serializing sample result preference: "+resultDescriptor,e);
                 }
             }
         };
-        typeButton = new ImageTypeSelectionButton(true, true) {
+        this.typeButton = new ImageTypeSelectionButton(true, true) {
             @Override
             protected void imageTypeChanged(FileType fileType) {
                 log.info("Setting image type preference: "+fileType);
-                setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, fileType.name());
+                preferenceSupport.setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, 
+                        fileType.name())
+                        .addListener(() -> refreshView(null));
             }
         };
                 
         getToolbar().addCustomComponent(resultButton);
         getToolbar().addCustomComponent(typeButton);
-    }
-    
-    public Long getCurrentParentId() {
-        final DomainObject parentObject = (DomainObject)getSelectionModel().getParentObject();
-        return parentObject.getId();
     }
     
     @Override
@@ -164,6 +165,16 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
+    public void setPreferenceSupport(PreferenceSupport preferenceSupport) {
+        this.preferenceSupport = preferenceSupport;
+    }
+    
+    @Override
+    public PreferenceSupport getPreferenceSupport() {
+        return preferenceSupport;
+    }
+
+    @Override
     public void activate() {
     }
 
@@ -173,8 +184,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     public int getNumItemsHidden() {
+        if (domainObjectList==null || getObjects()==null) return 0;
         int totalItems = this.domainObjectList.getObjects().size();
         int totalVisibleItems = getObjects().size();
+        if (totalVisibleItems > totalItems) {
+            log.warn("Visible item count greater than total item count");
+            return 0;
+        }
         return totalItems-totalVisibleItems;
     }
     
@@ -241,7 +257,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject!=null && parentObject.getId()!=null) {
                     
-                    String preference = getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT);
+                    String preference = preferenceSupport.getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT);
                     log.info("Got result preference: "+preference);
                     if (preference!=null) {
                         try {
@@ -250,14 +266,14 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                         }
                         catch (Exception e) {
                             log.error("Error deserializing preference {}. Clearing it.", preference, e);
-                            setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, null);
+                            preferenceSupport.setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, null);
                         }
                     }
                     else {
                         resultButton.reset();
                     }
                     
-                    String preference2 = getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE);
+                    String preference2 = preferenceSupport.getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE);
                     log.info("Got image type preference: "+preference2);
                     if (preference2!=null) {
                         typeButton.setImageTypeName(preference2);
@@ -351,15 +367,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         refreshObject(domainObject);
     }
 
-    @Override
-    public void refreshView() {
-        show(domainObjectList, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                Utils.setMainFrameCursorWaitStatus(false);
-                return null;
-            }
-        });
+    public void refreshView(Callable<Void> success) {
+        selectionModel.reset();
+        show(domainObjectList, success);
     }
     
     @Override
@@ -438,8 +448,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     protected void setMustHaveImage(boolean mustHaveImage) {
         try {
             FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, mustHaveImage);
-            refreshView();
-            if (listener!=null) listener.visibleObjectsChanged();
+            refreshView(() -> {
+                if (listener!=null) listener.visibleObjectsChanged();
+                return null;
+            });
+            
         }
         catch (Exception e) {
             FrameworkImplProvider.handleException(e);
@@ -472,13 +485,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         try {
             List<DomainObject> selected = getSelectedObjects();
             
-            if (selected.size() != 1) {
+            if (selected==null || selected.size() != 1) {
                 hud.hideDialog();
                 return;
             }
             
             DomainObject domainObject = selected.get(0);
-            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), toggle, toggle);
+            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), toggle, true);
         } 
         catch (Exception ex) {
             ConsoleApp.handleException(ex);
@@ -504,23 +517,26 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public void restoreState(ListViewerState viewerState) {
-        final IconGridViewerState tableViewerState = (IconGridViewerState) viewerState;
-        SwingUtilities.invokeLater(new Runnable() {
-               public void run() {
-                   int maxImageWidth = tableViewerState.getMaxImageWidth();
-                   log.debug("Restoring maxImageWidth={}",maxImageWidth);
-                   getToolbar().getImageSizeSlider().setValue(maxImageWidth);
-                   // Wait until slider resizes images, then fix scroll:
-                   SwingUtilities.invokeLater(new Runnable() {
-                       @Override
-                       public void run() {
-                           scrollSelectedObjectsToCenter();
-                       }
-                   });
+        if (viewerState instanceof IconGridViewerState) {
+            final IconGridViewerState tableViewerState = (IconGridViewerState) viewerState;
+            SwingUtilities.invokeLater(new Runnable() {
+                   public void run() {
+                       int maxImageWidth = tableViewerState.getMaxImageWidth();
+                       log.debug("Restoring maxImageWidth={}",maxImageWidth);
+                       getToolbar().getImageSizeSlider().setValue(maxImageWidth);
+                       // Wait until slider resizes images, then fix scroll:
+                       SwingUtilities.invokeLater(new Runnable() {
+                           @Override
+                           public void run() {
+                               scrollSelectedObjectsToCenter();
+                           }
+                       });
+                   }
                }
-           }
-        );
+            );
+        }
+        else {
+            log.warn("Cannot restore viewer state of type {}", viewerState.getClass());
+        }   
     }
-
-    
 }

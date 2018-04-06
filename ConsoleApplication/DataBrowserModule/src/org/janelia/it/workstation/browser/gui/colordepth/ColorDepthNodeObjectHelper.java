@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
@@ -47,6 +48,14 @@ public class ColorDepthNodeObjectHelper implements DomainObjectHelper {
         else {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);
         }    
+    }
+
+    @Override
+    public Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
+        if (ColorDepthSearch.class.isAssignableFrom(domainObject.getClass())) {
+            return ColorDepthSearchEditorPanel.class;
+        }
+        return null;
     }
     
     @Override

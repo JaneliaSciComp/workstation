@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,6 +8,7 @@ import java.nio.file.Paths;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
+import org.openide.modules.InstalledFileLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,6 +126,21 @@ public class SystemInfo {
         return isMac && isLeopard() && !OS_VERSION_LC.startsWith("10.5");
     }
 
+    public static String getInstallDir() {
+
+        final String configFile = "config/app.conf";
+        File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, "org.janelia.it.workstation", false);
+        String cp = sysWideConfig.getAbsolutePath();
+        log.debug("Found system config at {}", sysWideConfig);
+        
+        if (SystemInfo.isMac) {
+            return cp.split("\\.app")[0]+".app";
+        }
+        
+        // Windows and Linux
+        return cp.substring(0,cp.indexOf("JaneliaWorkstation")+"JaneliaWorkstation".length());
+    }
+    
     public static void setDownloadsDir(String downloadsDir) {
         FrameworkImplProvider.setModelProperty(OptionConstants.FILE_DOWNLOADS_DIR, downloadsDir);
     }
@@ -135,15 +152,7 @@ public class SystemInfo {
         Path fileDownloadsPath;
         // Check for existence and clear out references to tmp
         if (fileDownloadsDir==null || fileDownloadsDir.startsWith("/tmp")) {
-
-            Path downloadDir;
-            String oldDownloadsDir = (String) FrameworkImplProvider.getModelProperty(OptionConstants.DOWNLOADS_DIR);
-            if (oldDownloadsDir != null) { 
-                downloadDir = Paths.get(oldDownloadsDir);
-            }
-            else {
-                downloadDir = Paths.get(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_DIR);
-            }
+            Path downloadDir = Paths.get(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_DIR);
             fileDownloadsPath = downloadDir.resolve(WORKSTATION_FILES_DIR);
         }
         else {
@@ -194,7 +203,7 @@ public class SystemInfo {
      *  
      * @return gigs being requested at launch.
      */
-    public static int getMemoryAllocation() throws IOException {
+    public static Integer getMemoryAllocation() throws IOException {
         return BrandingConfig.getBrandingConfig().getMemoryAllocationGB();
     }
 
@@ -202,7 +211,7 @@ public class SystemInfo {
      * Sets the ultimate -Xmx allocation setting.
      * @param memoryInGb how many gigs to use.
      */
-    public static void setMemoryAllocation( int memoryInGb ) throws IOException {
+    public static void setMemoryAllocation(Integer memoryInGb) throws IOException {
         BrandingConfig.getBrandingConfig().setMemoryAllocationGB(memoryInGb);
     }
 

@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.nb_action;
 
 import java.util.List;
 
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.openide.nodes.Node;
 
 /**
@@ -22,8 +23,17 @@ public final class PopupLabelAction extends NodePresenterAction {
     @Override
     public String getName() {
         List<Node> selected = getSelectedNodes();
+
+        if (selected.isEmpty()) {
+            return "(Nothing selected)";
+        }
+        
+        if (selected.size()>1) {
+            return "(Multiple selected)";
+        }
+        
         Node node = selected.get(0);
-        return selected.size()>1 ? "(Multiple selected)" : node.getDisplayName();
+        return StringUtils.abbreviate(node.getDisplayName(), 50);
     }
     
     @Override

@@ -91,6 +91,7 @@ public class NeuronModelAdapter implements NeuronModel
     private boolean nonInteractable; 
     private boolean userVisible;
     private boolean userToggleRadius; 
+    private String ownerKey;
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
     // private TmWorkspace workspace;
@@ -108,6 +109,7 @@ public class NeuronModelAdapter implements NeuronModel
         bIsVisible = true; // TODO: 
         nonInteractable = false; // TODO: 
         userVisible = true;
+        ownerKey = neuron.getOwnerKey();
         vertexes = new VertexList(neuron.getGeoAnnotationMap(), neuronSet);
         edges = new EdgeList(vertexes);
         // this.workspace = workspace;
@@ -174,6 +176,11 @@ public class NeuronModelAdapter implements NeuronModel
         } catch (Exception ex) {
         }
         return result;
+    }
+    
+    public void mergeNeuronData (TmNeuronMetadata newNeuron) {
+        vertexes.updateWrapping (newNeuron.getGeoAnnotationMap());
+        edges.updateGeometry();
     }
     
     @Override
@@ -500,34 +507,30 @@ public class NeuronModelAdapter implements NeuronModel
     @Override
     public boolean isVisible()
     {
-        return bIsVisible;
+        return this.isUserVisible();
         // return neuronStyle.isColumnVisible();
     }
 
     @Override
     public void setVisible(boolean visible)
-    {
-        if (bIsVisible == visible)
-            return; // no change
-        bIsVisible = visible;
-        
+    {       
         // Synchronize with TmNeuron Style
         NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
-        Color color = cachedColor;
+      //  Color color = cachedColor;
 
-        boolean deepVisibility = ! visible;
-        if (style != null) {
-            color = style.getColor();
-            deepVisibility = style.isVisible();
-        }
+      //  boolean deepVisibility = ! visible;
+     //   if (style != null) {
+     //       color = style.getColor();
+     //       deepVisibility = style.isVisible();
+     //   }
         // Don't keep updating visibility, if it's already set correctly
-        if (visible != deepVisibility) {
+       // if (visible != deepVisibility) {
             try {
-                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, visible, isNonInteractable(), isUserVisible()));
+                neuronSet.changeNeuronVisibility(neuron, visible);
             } catch (Exception ex) {
                 logger.error("Error setting neuron style", ex);
             }
-        }
+      //  }
         
         getVisibilityChangeObservable().setChanged();
     }
@@ -585,6 +588,27 @@ public class NeuronModelAdapter implements NeuronModel
     @Override
     public void setUserToggleRadius(boolean userToggleRadius) {
         this.userToggleRadius = userToggleRadius;
+    }
+    
+    /**
+     * @return the ownerKey
+     */
+    @Override
+    public String getOwnerKey() {
+        return ownerKey;
+    }
+
+    /**
+     * @param ownerKey the ownerKey to set
+     */
+    @Override
+    public void setOwnerKey(String ownerKey) {
+        this.ownerKey = ownerKey;
+    }
+
+    @Override
+    public Long getNeuronId() {
+        return neuronId;
     }
 
     // TODO: - implement Edges correctly

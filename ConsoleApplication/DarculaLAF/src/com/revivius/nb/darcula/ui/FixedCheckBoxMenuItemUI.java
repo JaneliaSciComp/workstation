@@ -8,6 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 
 import javax.swing.JComponent;
+import javax.swing.MenuSelectionManager;
 import javax.swing.plaf.ComponentUI;
 
 import com.bulenkov.iconloader.util.GraphicsConfig;
@@ -29,6 +30,12 @@ public class FixedCheckBoxMenuItemUI extends FixedMenuItemUIBase {
       return "CheckBoxMenuItem";
   }
 
+  // Stay open after click
+  @Override
+  protected void doClick(MenuSelectionManager msm) {
+     menuItem.doClick(0);
+  }
+  
   @Override
   protected void paintCheckIcon(Graphics g2, MenuItemLayoutHelper lh, MenuItemLayoutHelper.LayoutResult lr, Color holdc, Color foreground) {
     Graphics2D g = (Graphics2D) g2;

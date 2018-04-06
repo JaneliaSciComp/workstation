@@ -1,6 +1,13 @@
 package org.janelia.it.workstation.browser.nodes;
 
 
+import java.awt.Image;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -8,19 +15,13 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.workspace.GroupedFolder;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.awt.*;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * A tree node (i.e. Folder) in the data graph.
@@ -98,6 +99,9 @@ public class UserViewTreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                 else if (reference.getTargetClassName().equals("Filter")) {
                     return true;
                 }
+                else if (reference.getTargetClassName().equals("GroupedFolder")) {
+                    return true;
+                }
             }
             return false;
         }
@@ -130,6 +134,9 @@ public class UserViewTreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                             if (config.getVisibleClasses().contains(TreeNode.class) && TreeNode.class.isAssignableFrom(obj.getClass())) {
                                 temp.add(obj);
                             }
+                            if (config.getVisibleClasses().contains(GroupedFolder.class) && GroupedFolder.class.isAssignableFrom(obj.getClass())) {
+                                temp.add(obj);
+                            }
                         }
                     }
                 }
@@ -150,6 +157,10 @@ public class UserViewTreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                 // TODO: would be nice to do this dynamically, or at least with some sort of annotation
                 if (config.getVisibleClasses().contains(TreeNode.class) && TreeNode.class.isAssignableFrom(key.getClass())) {
                     return new UserViewTreeNodeNode((TreeNode)key, config);
+                }
+                if (config.getVisibleClasses().contains(GroupedFolder.class) && GroupedFolder.class.isAssignableFrom(key.getClass())) {
+                    // Should use TreeNodeObjectHelper to generate these
+                    return new GroupedFolderNode(this, (GroupedFolder)key);
                 }
                 else {
                     return null;

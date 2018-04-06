@@ -7,17 +7,16 @@ import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
-import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthSearchEditorPanel;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
-import org.janelia.it.workstation.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
-import org.janelia.it.workstation.browser.gui.editor.TreeNodeEditorPanel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
@@ -25,9 +24,6 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
-import org.janelia.model.domain.gui.search.Filtering;
-import org.janelia.model.domain.workspace.Node;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -107,19 +103,28 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
     @Override
     public void componentOpened() {
+        log.debug("componentOpened");
+        // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
         Events.getInstance().registerOnEventBus(this);
+        if (editor!=null) {
+            editor.activate();
+        }
     }
     
     @Override
     public void componentClosed() {
-        clearEditor();
+        log.debug("componentClosed");
         Events.getInstance().unregisterOnEventBus(this);
+        if (editor!=null) {
+            editor.deactivate();
+        }
+        clearEditor();
     }
 
     @Override
     protected void componentActivated() {
-        log.info("Activating domain browser");
+        log.debug("componentActivated");
         this.active = true;
         // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
@@ -134,19 +139,14 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (DomainExplorerTopComponent.getInstance()!=null && domainObject!=null) {
             DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
         }
-        if (editor!=null) {
-            editor.activate();
-        }
     }
     
     @Override
     protected void componentDeactivated() {
+        log.debug("componentDeactivated");
         this.active = false;
         if (findContext!=null) {
             FindContextManager.getInstance().deactivateContext(findContext);
-        }
-        if (editor!=null) {
-            editor.deactivate();
         }
     }
 
@@ -268,7 +268,9 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (editor!=null) {
             remove((JComponent)editor);
             Events.getInstance().unregisterOnEventBus(editor);
-            Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
+            if (editor.getEventBusListener() != editor) {
+                Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
+            }
         }
         this.editor = null;
     }
@@ -277,7 +279,9 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         try {
             clearEditor();
             editor = editorClass.newInstance();
-            Events.getInstance().registerOnEventBus(editor.getEventBusListener());
+            if (editor.getEventBusListener() != editor) {
+                Events.getInstance().registerOnEventBus(editor.getEventBusListener());
+            }
             Events.getInstance().registerOnEventBus(editor);
             
             JComponent editorComponent = (JComponent)editor;
@@ -323,6 +327,11 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         @Override
         public Void call() throws Exception {
 
+            if (editor==null) {
+                log.warn("Editor is null");
+                return null;
+            }
+            
             DomainObjectEditorState<?,?,?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
@@ -389,15 +398,12 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         setName(editor.getName());
     }
 
+    @SuppressWarnings("unchecked")
     private static Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
-        if (Node.class.isAssignableFrom(domainObject.getClass())) {
-            return TreeNodeEditorPanel.class;
-        }
-        else if (Filtering.class.isAssignableFrom(domainObject.getClass())) {
-            return FilterEditorPanel.class;
-        }
-        else if (ColorDepthSearch.class.isAssignableFrom(domainObject.getClass())) {
-            return ColorDepthSearchEditorPanel.class;
+        DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
+        if (provider!=null) {
+            return (Class<? extends ParentNodeSelectionEditor<? extends DomainObject, ?, ?>>) 
+                    provider.getEditorClass(domainObject);
         }
         return null;
     }

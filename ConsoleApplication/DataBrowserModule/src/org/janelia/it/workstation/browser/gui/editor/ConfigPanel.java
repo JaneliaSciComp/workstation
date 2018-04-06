@@ -44,15 +44,17 @@ public class ConfigPanel extends JPanel {
     
     private List<JComponent> collapsedComponents = new ArrayList<>();
     private List<JComponent> expandedComponents = new ArrayList<>();
-    
+
+    private boolean includeTitle;
     private boolean configExpanded;
 
     public ConfigPanel(boolean expandedByDefault) {
-        this(expandedByDefault, 2, 3);
+        this(true, expandedByDefault, 2, 3);
     }
     
-	public ConfigPanel(boolean expandedByDefault, int hgap, int vgap) {
+	public ConfigPanel(boolean includeTitle, boolean expandedByDefault, int hgap, int vgap) {
 		
+	    this.includeTitle = includeTitle;
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		
 		this.configExpanded = !expandedByDefault; // We'll toggle it later
@@ -94,6 +96,7 @@ public class ConfigPanel extends JPanel {
         addDefaultTitleComponents();
         
         this.configPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, hgap, vgap));
+        configPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         configPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 8, 2));
         
         toggleCriteriaPanelState();
@@ -156,26 +159,31 @@ public class ConfigPanel extends JPanel {
     	refillTitleComponents();
         removeAll();
         
-        titlePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        add(titlePanel, "");
-        
-        if (configExpanded) {
-        	showConfigPanelButton.setIcon(COLLAPSE_ICON);
+        if (includeTitle) {
+            titlePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            add(titlePanel, "");
 
-            JSeparator sep1 = new JSeparator(JSeparator.HORIZONTAL);
-            sep1.setAlignmentX(Component.LEFT_ALIGNMENT);
-            add(sep1);
+            if (configExpanded) {
+                showConfigPanelButton.setIcon(COLLAPSE_ICON);
+
+                JSeparator sep1 = new JSeparator(JSeparator.HORIZONTAL);
+                sep1.setAlignmentX(Component.LEFT_ALIGNMENT);
+                add(sep1);
+                
+                add(configPanel);
+            }
+            else {
+                showConfigPanelButton.setIcon(EXPAND_ICON);
+            }
             
-            configPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            add(configPanel);
+            JSeparator sep2 = new JSeparator(JSeparator.HORIZONTAL);
+            sep2.setAlignmentX(Component.LEFT_ALIGNMENT);
+            add(sep2);
         }
         else {
-        	showConfigPanelButton.setIcon(EXPAND_ICON);
+            // if the title is not included, we don't need any of the separators either
+            add(configPanel);
         }
-        
-        JSeparator sep2 = new JSeparator(JSeparator.HORIZONTAL);
-        sep2.setAlignmentX(Component.LEFT_ALIGNMENT);
-        add(sep2);
         
         updateUI();
     }
