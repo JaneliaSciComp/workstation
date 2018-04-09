@@ -263,7 +263,7 @@ public class TextLabelActor extends GLAbstractActor {
 //        int w=labelLength*UBUNTU_FONT_UNIT_WIDTH + wPad*2;
 //        int h=UBUNTU_FONT_UNIT_HEIGHT + hPad*2;
 
-        int w=labelLength*(UBUNTU_FONT_UNIT_WIDTH+1);
+        int w=(labelLength+1)*UBUNTU_FONT_UNIT_WIDTH;
         int h=UBUNTU_FONT_UNIT_HEIGHT + UBUNTU_FONT_UNIT_HEIGHT/2;
 
         byte labelPixels[]=new byte[w*h*4];
