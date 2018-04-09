@@ -68,7 +68,9 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,6 +92,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
 
     private static final String COMMON_USER_KEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
+    private static final String MOUSELIGHT_GROUP_KEY = "group:mouselight";
 
     // annotation model object
     private AnnotationModel annotationModel;
@@ -630,9 +633,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
 
         // can't merge if target is hidden
-        // not
         TmNeuronMetadata targetNeuron = annotationModel.getNeuronFromNeuronID(targetNeuronID);
-        if (!targetNeuron.isVisible()) {
+        if (!getNeuronVisibility(targetNeuron)) {
             log.warn("Can't merge annotation to hidden neuron");
             return false;
         }
@@ -1376,13 +1378,21 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * for any user's neurons
      */
     public boolean isOwnershipAdmin() {
-        // short term: if the user is a workstation admin, they are admin for neuron ownership:
-        return AccessManager.getAccessManager().isAdmin();
+        // workstation admins always qualify
+        if (AccessManager.getAccessManager().isAdmin()) {
+            return true;
+        }
 
-        // long term: we'll establish a specific mouse light admin group, and those people will
-        //  also be allowed to change ownership of any neuron
-        // be aware of the difference between AccessManager.getAccessManager().getAuthenticatedSubject()
-        //  and .getActualSubject() when you implement this!
+        // check if user has admin role in mouselight group:
+        Subject subject = AccessManager.getAccessManager().getAuthenticatedSubject();
+        if (subject==null) {
+            return false;
+        }
+        if (subject instanceof User) {
+            User user = (User)subject;
+            return user.getUserGroupRole(MOUSELIGHT_GROUP_KEY).equals(GroupRole.Admin);
+        }
+        return false;
     }
 
     /**

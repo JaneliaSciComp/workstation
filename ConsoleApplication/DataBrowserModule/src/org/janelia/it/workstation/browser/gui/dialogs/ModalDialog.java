@@ -25,21 +25,21 @@ public class ModalDialog extends JDialog {
     }
     
     public ModalDialog(Dialog parent) {
-        super(parent);
+        super(parent == null ? ConsoleApp.getMainFrame() : parent);
         init();
     }
     
     public ModalDialog(Window parent) {
-        super(parent);
+        super(parent == null ? ConsoleApp.getMainFrame() : parent);
         init();
     }
     
     public ModalDialog(Frame parent) {
-        super(parent);
+        super(parent == null ? ConsoleApp.getMainFrame() : parent);
         init();
     }
     
-    private void init() {
+    private final void init() {
         
         setModalityType(ModalityType.APPLICATION_MODAL);
         getContentPane().setLayout(new BorderLayout());
@@ -58,5 +58,7 @@ public class ModalDialog extends JDialog {
         pack();
         setLocationRelativeTo(getParent());
         setVisible(true);
+        // Avoid leaking memory from JNI references
+        dispose();
     }
 }

@@ -491,7 +491,7 @@ public class DomainObjectIconGridViewer
             }
             
             DomainObject domainObject = selected.get(0);
-            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), toggle, toggle);
+            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), toggle, true);
         } 
         catch (Exception ex) {
             ConsoleApp.handleException(ex);
@@ -517,21 +517,26 @@ public class DomainObjectIconGridViewer
 
     @Override
     public void restoreState(ListViewerState viewerState) {
-        final IconGridViewerState tableViewerState = (IconGridViewerState) viewerState;
-        SwingUtilities.invokeLater(new Runnable() {
-               public void run() {
-                   int maxImageWidth = tableViewerState.getMaxImageWidth();
-                   log.debug("Restoring maxImageWidth={}",maxImageWidth);
-                   getToolbar().getImageSizeSlider().setValue(maxImageWidth);
-                   // Wait until slider resizes images, then fix scroll:
-                   SwingUtilities.invokeLater(new Runnable() {
-                       @Override
-                       public void run() {
-                           scrollSelectedObjectsToCenter();
-                       }
-                   });
+        if (viewerState instanceof IconGridViewerState) {
+            final IconGridViewerState tableViewerState = (IconGridViewerState) viewerState;
+            SwingUtilities.invokeLater(new Runnable() {
+                   public void run() {
+                       int maxImageWidth = tableViewerState.getMaxImageWidth();
+                       log.debug("Restoring maxImageWidth={}",maxImageWidth);
+                       getToolbar().getImageSizeSlider().setValue(maxImageWidth);
+                       // Wait until slider resizes images, then fix scroll:
+                       SwingUtilities.invokeLater(new Runnable() {
+                           @Override
+                           public void run() {
+                               scrollSelectedObjectsToCenter();
+                           }
+                       });
+                   }
                }
-           }
-        );
+            );
+        }
+        else {
+            log.warn("Cannot restore viewer state of type {}", viewerState.getClass());
+        }   
     }
 }

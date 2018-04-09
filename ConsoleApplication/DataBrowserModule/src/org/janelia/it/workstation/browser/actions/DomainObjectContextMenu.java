@@ -29,13 +29,13 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
 import org.janelia.it.jacs.shared.utils.Constants;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.shared.utils.domain.DataReporter;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.components.DomainObjectProviderHelper;
@@ -46,9 +46,10 @@ import org.janelia.it.workstation.browser.components.SampleResultViewerTopCompon
 import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
-import org.janelia.it.workstation.browser.gui.colordepth.AddMaskDialog;
+import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthSearchDialog;
 import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromImageAction;
 import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
+import org.janelia.it.workstation.browser.gui.dialogs.CompressionDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SpecialAnnotationChooserDialog;
@@ -74,7 +75,6 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.SampleUtils;
-import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
@@ -183,6 +183,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getOpenInFinderItem());
         add(getOpenWithAppItem());
         add(getNeuronAnnotatorItem());
+        add(getNeuronAnnotatorLossyItem());
         add(getVaa3dTriViewItem());
         add(getVaa3d3dViewItem());
         add(getFijiViewerItem());
@@ -194,7 +195,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         setNextAddRequiresSeparator(true);
         add(getReportProblemItem());
         add(getRerunSamplesAction());
-        add(getSampleCompressionTypeItem());
+        add(getSampleCompressionItem());
         add(getProcessingBlockItem());
         add(getPartialSecondaryDataDeletiontItem());
         //add(getSetPublishingNameItem());
@@ -223,7 +224,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getTitleItem() {
         String name = multiple ? "(Multiple selected)" : domainObject.getName();
-        JMenuItem titleMenuItem = new JMenuItem(name);
+        JMenuItem titleMenuItem = new JMenuItem(StringUtils.abbreviate(name, 50));
         titleMenuItem.setEnabled(false);
         return titleMenuItem;
     }
@@ -415,7 +416,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         return errorMenu;
     }
-    protected JMenuItem getSampleCompressionTypeItem() {
+    
+    protected JMenuItem getSampleCompressionItem() {
 
         final List<Sample> samples = new ArrayList<>();
         for (DomainObject re : domainObjectList) {
@@ -426,149 +428,23 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         if (samples.isEmpty()) return null;
 
-        final String samplesText = multiple?samples.size()+" Samples":"1 Sample";
-        JMenu submenu = new JMenu("  Change Sample Compression Strategy");
+        JMenuItem menuItem = new JMenuItem("  Change Sample Compression Strategy");
 
-        final DomainModel model = DomainMgr.getDomainMgr().getModel();
-
-        JMenuItem vllMenuItem = new JMenuItem("Visually Lossless (h5j)");
-        vllMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-
-                ActivityLogHelper.logUserAction("DomainObjectContentMenu.changeSampleCompressionStrategyToVisuallyLossless", domainObject);
-
-                final String targetCompression = DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
-                String message = "Are you sure you want to convert "+samplesText+" to Visually Lossless (h5j) format?\n"
-                        + "This will immediately delete all Lossless v3dpbd files for these Samples and result in a large decrease in disk space usage.\n"
-                        + "Lossless files can be regenerated by reprocessing the Sample later.";
-                int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
-
-                if (result != 0) return;
-
-                SimpleWorker worker = new SimpleWorker() {
-
-                    StringBuilder sampleIdBuf = new StringBuilder();
-
-                    @Override
-                    protected void doStuff() throws Exception {
-                        for(final Sample sample : samples) {
-                            model.updateProperty(sample, "compressionType", targetCompression);
-                            // Target is Visually Lossless, just run the compression service
-                            if (sampleIdBuf.length()>0) sampleIdBuf.append(",");
-                            sampleIdBuf.append(sample.getId());
-                        }
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        if (sampleIdBuf.length()==0) return;
-
-                        Task task;
-                        try {
-                            HashSet<TaskParameter> taskParameters = new HashSet<>();
-                            taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
-                            task = StateMgr.getStateMgr().submitJob("ConsoleSampleCompression", "Console Sample Compression", taskParameters);
-                        }
-                        catch (Exception e) {
-                            ConsoleApp.handleException(e);
-                            return;
-                        }
-
-                        TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
-
-                            @Override
-                            public String getName() {
-                                return "Compressing "+samples.size()+" samples";
-                            }
-
-                            @Override
-                            protected void doStuff() throws Exception {
-                                setStatus("Executing");
-                                super.doStuff();
-                                model.invalidate(samples);
-                            }
-
-                            @Override
-                            public Callable<Void> getSuccessCallback() {
-                                return new Callable<Void>() {
-                                    @Override
-                                    public Void call() throws Exception {
-                                    	DomainExplorerTopComponent.getInstance().refresh();
-                                        return null;
-                                    }
-                                };
-                            }
-                        };
-
-                        taskWorker.executeWithEvents();
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
-                    }
-                };
-
-                worker.execute();
-            }
+        menuItem.addActionListener((e) -> {
+            CompressionDialog dialog = new CompressionDialog();
+            dialog.showForSamples(samples);
         });
-
-        submenu.add(vllMenuItem);
-
-        JMenuItem llMenuItem = new JMenuItem("Lossless (v3dpbd)");
-        llMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-
-                ActivityLogHelper.logUserAction("DomainObjectContentMenu.changeSampleCompressionStrategyToLossless", domainObject);
-
-                final String targetCompression = DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J;
-                String message = "Are you sure you want to reprocess "+samplesText+" into Lossless (v3dpbd) format?";
-                int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
-
-                if (result != 0) return;
-
-                SimpleWorker worker = new SimpleWorker()     {
-
-                    @Override
-                    protected void doStuff() throws Exception {
-                        for(Sample sample : samples) {
-                            model.updateProperty(sample, "compressionType", targetCompression);
-                        }
-                        DomainModel model = DomainMgr.getDomainMgr().getModel(); 
-                        model.dispatchSamples(DomainUtils.getReferences(samples), "User Requested Lossless Results", false);
-
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                         JOptionPane.showMessageDialog(mainFrame, 
-                                 "Samples have been dispatched for reprocessing to Lossless (v3dpbd) format. "
-                                         + "Results will be available once the pipeline is run.",
-                                 "Marked Samples", JOptionPane.INFORMATION_MESSAGE);
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
-                    }
-                };
-
-                worker.execute();
-            }
-        });
-
-        submenu.add(llMenuItem);
-
+        
         for(Sample sample : samples) {
             if (!ClientDomainUtils.hasWriteAccess(sample)) {
-                submenu.setEnabled(false);
+                menuItem.setEnabled(false);
                 break;
             }
         }
-
-        return submenu;
+        
+        return menuItem;
     }
-
+    
     protected JMenuItem getProcessingBlockItem() {
 
         final List<Sample> samples = new ArrayList<>();
@@ -662,7 +538,28 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         
         if (samples.size()==domainObjectList.size()) {
             if (!resultDescriptor.isAligned()) return null;
-            return getNamedActionItem(new CreateMaskFromSampleAction(samples.get(0), resultDescriptor, typeName));
+            
+            Sample sample = samples.get(0);            
+            JMenuItem menuItem = getNamedActionItem(new CreateMaskFromSampleAction(sample, resultDescriptor, typeName));
+
+            HasFiles fileProvider = DescriptorUtils.getResult(sample, resultDescriptor);
+            if (fileProvider==null) {
+                menuItem.setEnabled(false);
+            }
+            else {
+                FileType fileType = FileType.valueOf(typeName);
+                if (fileType==FileType.ColorDepthMip1 
+                        || fileType==FileType.ColorDepthMip2 
+                        || fileType==FileType.ColorDepthMip3 
+                        || fileType==FileType.ColorDepthMip4) {
+                    menuItem.setEnabled(true);
+                }
+                else {
+                    menuItem.setEnabled(false);
+                }
+            }
+            
+            return menuItem;
         }
         else if (images.size()==domainObjectList.size()) {
             return getNamedActionItem(new CreateMaskFromImageAction(images.get(0)));
@@ -690,7 +587,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         menuItem = new JMenuItem("  Add Mask to Color Depth Search...");
         menuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                new AddMaskDialog().showForMask(colorDepthMask);
+                new ColorDepthSearchDialog().showForMask(colorDepthMask);
             }
         });
         return menuItem;
@@ -892,6 +789,14 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (multiple) return null;
         if (domainObject instanceof NeuronFragment) {
             return getNamedActionItem(new OpenInNeuronAnnotatorAction((NeuronFragment)domainObject));
+        }
+        return null;
+    }
+
+    protected JMenuItem getNeuronAnnotatorLossyItem() {
+        if (multiple) return null;
+        if (domainObject instanceof NeuronFragment) {
+            return getNamedActionItem(new OpenInNeuronAnnotatorLossyAction((NeuronFragment)domainObject));
         }
         return null;
     }

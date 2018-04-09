@@ -60,13 +60,25 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private static final String PREFERENCE_CATEGORY_CDS_RESULTS_PER_LINE = "CDSResultPerLine";
     private static final String PREFERENCE_CATEGORY_CDS_NEW_RESULTS = "CDSOnlyNewResults";
     private static final int DEFAULT_RESULTS_PER_LINE = 2;
+
+    private static final String NO_RUN_TEXT = "<html>"
+            + "This mask does not have results in the selected search run.<br>"
+            + "Execute the search to get results for this mask."
+            + "</html>";
+    
+    private static final String NO_MATCHES_TEXT = "<html>"
+            + "No matching lines were found for this mask.<br>"
+            + "Try altering your search parameters, or recreating your mask."
+            + "</html>";
     
     // UI Components
-    private JPanel topPanel;
-    private SingleSelectionButton<ColorDepthResult> historyButton;
-    private JCheckBox newOnlyCheckbox;
-    private JTextField resultsPerLineField;
+    private final JPanel topPanel;
+    private final SingleSelectionButton<ColorDepthResult> historyButton;
+    private final JCheckBox newOnlyCheckbox;
+    private final JTextField resultsPerLineField;
     private final PaginatedResultsPanel<ColorDepthMatch, String> resultsPanel;
+    private final JLabel noRunLabel;
+    private final JLabel noMatchesLabel;
 
     // State
     private ColorDepthSearch search;
@@ -77,6 +89,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private Map<Reference, Sample> sampleMap = new HashMap<>();
     private Map<String, ColorDepthMatch> matchMap = new HashMap<>();
     private String sortCriteria;
+    private ColorDepthSearchResults searchResults;
     
     private final ChildSelectionModel<ColorDepthMatch,String> selectionModel = new ChildSelectionModel<ColorDepthMatch,String>() {
 
@@ -90,11 +103,15 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             return match.getFilepath();
         }
     };
-
-    private ColorDepthSearchResults searchResults;
     
     public ColorDepthResultPanel() {
 
+        noRunLabel = new JLabel(NO_RUN_TEXT);
+        noRunLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        noMatchesLabel = new JLabel(NO_MATCHES_TEXT);
+        noMatchesLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        
         historyButton = new SingleSelectionButton<ColorDepthResult>("Search Results") {
 
             @Override
@@ -169,8 +186,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         };
         
         setLayout(new BorderLayout());
-        add(topPanel, BorderLayout.NORTH);
-        add(resultsPanel, BorderLayout.CENTER);
     }
     
     public void loadSearchResults(ColorDepthSearch search, List<ColorDepthResult> resultList, ColorDepthMask mask, boolean isUserDriven) {
@@ -223,7 +238,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
 
             @Override
             protected void hadError(Throwable error) {
-                resultsPanel.showNothing();
+                showNothing();
                 ConsoleApp.handleException(error);
             }
         };
@@ -262,26 +277,33 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     }
     
     private void showResults(boolean isUserDriven) {
+        log.info("showResults(isUserDriven={})", isUserDriven);
         if (!results.isEmpty()) {
             currResult = results.get(results.size()-1);
             historyButton.update();
-            topPanel.setVisible(true);
             showCurrSearchResult(isUserDriven);
         }
         else {
-            log.debug("No results for mask");
             showNothing();
         }
     }
     
     public void showCurrSearchResult(boolean isUserDriven) {
 
-        if (results.isEmpty()) return;
+        if (results.isEmpty()) {
+            showNothing();
+            return;
+        }
         
         log.debug("showCurrSearchResult(isUserDriven={})",isUserDriven);
 
         if (currResult==null) {
             throw new IllegalStateException("No current result to show");
+        }
+        
+        if (!currResult.getParameters().getMasks().contains(Reference.createFor(mask))) {
+            showNoRun();
+            return;
         }
         
         int currResultIndex = results.indexOf(currResult);
@@ -314,6 +336,12 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             maskMatches = filteredMatches;
         }
         
+        if (maskMatches.isEmpty()) {
+            // No matches for this mask
+            showNoMatches();
+            return;
+        }
+        
         Integer resultsPerLine = null;
         try {
             resultsPerLine = new Integer(resultsPerLineField.getText());
@@ -344,6 +372,34 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         
         searchResults = new ColorDepthSearchResults(orderedMatches);
         resultsPanel.showSearchResults(searchResults, isUserDriven, null);
+        
+        showMatches();
+    }
+
+    public void showNothing() {
+        removeAll();
+        updateUI();
+    }
+
+    public void showNoRun() {
+        removeAll();
+        add(topPanel, BorderLayout.NORTH);
+        add(noRunLabel, BorderLayout.CENTER);
+        updateUI();
+    }
+
+    public void showNoMatches() {
+        removeAll();
+        add(topPanel, BorderLayout.NORTH);
+        add(noMatchesLabel, BorderLayout.CENTER);
+        updateUI();
+    }
+    
+    public void showMatches() {
+        removeAll();
+        add(topPanel, BorderLayout.NORTH);
+        add(resultsPanel, BorderLayout.CENTER);
+        updateUI();
     }
     
     private boolean showMatch(ColorDepthMatch match) {
@@ -450,12 +506,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     public PaginatedResultsPanel<ColorDepthMatch, String> getResultPanel() {
         return resultsPanel;
     }
-
-    public void showNothing() {
-        topPanel.setVisible(false);
-        resultsPanel.showNothing();
-    }
-
+    
     public void refreshView() {
         showCurrSearchResult(true);
     }

@@ -70,12 +70,14 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
         super(children, new AbstractLookup(lookupContents));
         this.parentChildFactory = parentChildFactory;
         this.lookupContents = lookupContents;
+        if (domainObject==null) throw new IllegalStateException("Cannot create node with null object");
         lookupContents.add(domainObject);
         DomainObjectNodeTracker.getInstance().registerNode(this);
     }
     
     @Override
     public void update(T domainObject) {
+        if (domainObject==null) throw new IllegalStateException("Cannot update with null object");
         String oldName = getName();
         String oldDisplayName = getDisplayName();
         log.debug("Updating node with: {}",domainObject.getName());

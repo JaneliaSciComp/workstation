@@ -38,7 +38,6 @@ import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.listview.table.TableViewerConfiguration;
 import org.janelia.it.workstation.browser.gui.listview.table.TableViewerPanel;
-import org.janelia.it.workstation.browser.gui.listview.table.TableViewerState;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
@@ -567,26 +566,31 @@ public class ColorDepthResultTableViewer
         int verticalScrollValue = scrollPane.getVerticalScrollBar().getModel().getValue();
         log.debug("Saving verticalScrollValue={}",verticalScrollValue);
         
-        return new TableViewerState(horizontalScrollValue, verticalScrollValue);
+        return new ColorDepthResultTableViewerState(horizontalScrollValue, verticalScrollValue);
     }
 
     @Override
     public void restoreState(ListViewerState viewerState) {
-        final JScrollPane scrollPane = getDynamicTable().getScrollPane();
-        final TableViewerState tableViewerState = (TableViewerState)viewerState;
-        SwingUtilities.invokeLater(new Runnable() {
-               public void run() {
-                   
-                   int horizontalScrollValue = tableViewerState.getHorizontalScrollValue();
-                   log.debug("Restoring horizontalScrollValue={}",horizontalScrollValue);
-                   scrollPane.getHorizontalScrollBar().setValue(horizontalScrollValue);
-                   
-                   int verticalScrollValue = tableViewerState.getVerticalScrollValue();
-                   log.debug("Restoring verticalScrollValue={}",verticalScrollValue);
-                   scrollPane.getVerticalScrollBar().setValue(verticalScrollValue);
+        if (viewerState instanceof ColorDepthResultTableViewerState) {
+            final ColorDepthResultTableViewerState tableViewerState = (ColorDepthResultTableViewerState)viewerState;
+            final JScrollPane scrollPane = getDynamicTable().getScrollPane();
+            SwingUtilities.invokeLater(new Runnable() {
+                   public void run() {
+                       
+                       int horizontalScrollValue = tableViewerState.getHorizontalScrollValue();
+                       log.debug("Restoring horizontalScrollValue={}",horizontalScrollValue);
+                       scrollPane.getHorizontalScrollBar().setValue(horizontalScrollValue);
+                       
+                       int verticalScrollValue = tableViewerState.getVerticalScrollValue();
+                       log.debug("Restoring verticalScrollValue={}",verticalScrollValue);
+                       scrollPane.getVerticalScrollBar().setValue(verticalScrollValue);
+                   }
                }
-           }
-        );
+            );
+        }
+        else {
+            log.warn("Cannot restore viewer state of type {}", viewerState.getClass());
+        }
     }
 
 }

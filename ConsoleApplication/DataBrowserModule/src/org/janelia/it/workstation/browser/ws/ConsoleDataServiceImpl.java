@@ -108,7 +108,6 @@ public class ConsoleDataServiceImpl {
     }
 
     public Entity[] getAnnotationsForEntities(Long[] entityIds) throws Exception {
-        log.info("Get annotations for {} entities", entityIds.length);
         List<Entity> annotations = new ArrayList<>(); 
         for(Long entityId : entityIds) {
             // Only support annotations for neuron fragments

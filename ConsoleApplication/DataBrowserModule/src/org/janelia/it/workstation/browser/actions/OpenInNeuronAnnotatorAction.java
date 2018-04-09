@@ -11,6 +11,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
+import org.janelia.it.workstation.browser.web.FileProxyService;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.ws.ExternalClient;
 import org.janelia.it.workstation.browser.ws.ExternalClientMgr;
@@ -58,6 +59,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
     public void actionPerformed(ActionEvent event) {
 
         ActivityLogHelper.logUserAction("OpenInNeuronAnnotatorAction.doAction", fragment==null?separation:fragment.getSeparationId());
+        FileProxyService.setBlockLosslessNeuSep(false);
 
         if (separation!=null) {
             openSeparation();
@@ -123,12 +125,6 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
     }
 
     private void openStack() {
-
-        int option = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), "This result is not neuron separated. Continue load?",  "Unseparated data", JOptionPane.OK_CANCEL_OPTION);
-        if (option==JOptionPane.CANCEL_OPTION) {
-            return;
-        }
-        
         try {
             ensureNAIsRunning();
             

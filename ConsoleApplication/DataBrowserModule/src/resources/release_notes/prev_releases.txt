@@ -1,10 +1,66 @@
+// 7.8
+
+Workstation Browser
+* The "Add Related Items to Folder" option now allows mapping from unaligned neuron fragments to aligned neuron fragments.
+* "Change Sample Compression Strategy" now supports visually lossless neuron separations. All neuron separations are 
+  currently lossless. Converting them to visually lossless format can reduce disk space usage by up to 70%. 
+* Added "Open Neuron Separation (Lossy)" option, which can be used to simulate a lossy neuron separation before changing 
+  compression strategy. 
+* Fixed two memory leaks when opening many dialog boxes
+* Other minor bug fixes
+
+// 7.7
+
+Workstation Browser
+* Fixed bug with Open ontology button allowing multiple selection
+* Added a "color depth" mode for the Sample Editor, which shows all color depth images for the currently selected Sample
+* Re-enabled automated check for updates
+
+Large Volume Viewer
+* Changing neuron color, ownership, or visibility doesn't affect neuron selection, and now the neuron list shows that properly
+* Fixed bug: you can't merge to hidden neurons
+* Fixed bug: cascading errors when loading a busy shared workspace 
+* Users with mouselight admin role can now change ownership of any neuron
+* Adjusted key generation for spatial index; this should solve many "can't select point" and "point not drawn" problems 
+  when duplicate points are present
+
+// 7.6
+
+Workstation Browser
+* Major improvements to color depth search work flow
+* Clicking checkboxes no longer closes menus
+* Fixed lightbox update when selecting results in the Sample Editor
+* Added alignment space attribute to images for mask creation
+* Fixed bug which prevented saving viewer state on exit
+
+// 7.5.1
+
+Workstation Browser
+* Eliminated warning message when opening unseparated data in Neuron Annotator
+* Changed color depth search default Z slice range from 1 to 3
+* Fixed bug with refreshing color depth results 
+
+// 7.5
+
+Workstation Browser
+* You can now view color depth search results as a table and export them to Excel
+* Added ability to create masks from imported images
+* When sharing a neuron fragment, the sample is also shared
+* Samples are now searchable as soon as they are discovered
+* Fixed bug where authorization token expired after the Workstation was open for two days
+* Fixed bug where a folder name could not be reused when uploading files
+* Fixed "Show in Lightbox" right-click option for masks
+
+Large Volume Viewer
+* Fixed errors when importing SWC files
+* Middle-click-drag in Horta shouldn't trigger ownership dialog
+
 // 7.4
 
 Workstation Browser
 * Added support for Open in Neuron Annotator and Open in Vaa3d on Windows
 * Fixed color depth mask upload and download on Windows
 * Other minor bug fixes
-
 
 Large Volume Viewer
 * Bug fixes for shared workspace release

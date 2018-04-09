@@ -3,7 +3,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.Box;
@@ -56,23 +58,22 @@ public class LVVDevPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
         add(Box.createRigidArea(new Dimension(0, 10)));
-        add(new JLabel("Debug functions", JLabel.CENTER));
+        add(new JLabel("Debug functions", JLabel.LEADING));
 
         JPanel buttons = new JPanel();
         add(buttons);
 
         buttons.setLayout(new BoxLayout(buttons, BoxLayout.LINE_AXIS));
 
-        // for testing detection/repair of root ann not in ann map
+        // for testing if a neuron's roots are self-consistent
         JButton testButton1 = new JButton("Test 1");
-        testButton1.setAction(new AbstractAction("Lose a root") {
+        testButton1.setAction(new AbstractAction("Check roots of selected neuron") {
             @Override
             public void actionPerformed(ActionEvent e) {
 
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        // remove the first root of the selected neurite from the annotation map
                         TmNeuronMetadata tmNeuronMetadata = annotationModel.getCurrentNeuron();
                         if (tmNeuronMetadata == null) {
                             System.out.println("no selected neuron");
@@ -83,20 +84,41 @@ public class LVVDevPanel extends JPanel {
                             return;
                         }
 
-                        tmNeuronMetadata.getGeoAnnotationMap().remove(tmNeuronMetadata.getRootAnnotations().get(0).getId());
-                        // at this point, the data should be internally INconsistent,
-                        //  which is what we want
-                        neuronManager.saveNeuronData(tmNeuronMetadata);
+                        // roots in the root list we maintain
+                        Set<Long> listedRoots = new HashSet<Long>();
+                        // annotations whose parent ID = neuron ID
+                        Set<Long> parentRoots = new HashSet<Long>();
+
+                        for (TmGeoAnnotation ann: tmNeuronMetadata.getRootAnnotations()) {
+                            listedRoots.add(ann.getId());
+                        }
+                        Long neuronID = tmNeuronMetadata.getId();
+                        for (TmGeoAnnotation ann: tmNeuronMetadata.getGeoAnnotationMap().values()) {
+                            if (ann.getId().equals(neuronID)) {
+                                System.out.println("annotation found with same ID as neuron!");
+                            }
+                            if (ann.getParentId().equals(neuronID)) {
+                                parentRoots.add(ann.getId());
+                            }
+                        }
+
+                        if (!listedRoots.containsAll(parentRoots)) {
+                            System.out.println("some roots missing from root list");
+                        }
+                        if (!parentRoots.containsAll(listedRoots)) {
+                            System.out.println("some listed roots don't have neuron parent");
+                        }
+
                     }
 
                     @Override
                     protected void hadSuccess() {
-                        System.out.println("lose a root had no exceptions");
+                        System.out.println("check roots had no exceptions");
                     }
 
                     @Override
                     protected void hadError(Throwable error) {
-                        System.out.println("lose a root reported exception");
+                        System.out.println("check roots reported exception");
                         error.printStackTrace();
                     }
                 };
@@ -104,7 +126,7 @@ public class LVVDevPanel extends JPanel {
 
             }
         });
-        // buttons.add(testButton1);
+        buttons.add(testButton1);
 
 
         // for testing how anchored paths are drawn; for the given

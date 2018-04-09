@@ -22,7 +22,7 @@ public class ColorDepthResultIconGridViewerState extends ListViewerState {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("IconGridViewerState[maxImageWidth=");
+        builder.append("ColorDepthResultIconGridViewerState[maxImageWidth=");
         builder.append(maxImageWidth);
         builder.append("]");
         return builder.toString();

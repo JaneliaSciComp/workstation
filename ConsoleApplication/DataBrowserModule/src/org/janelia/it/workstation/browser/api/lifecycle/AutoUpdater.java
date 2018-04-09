@@ -8,6 +8,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.netbeans.api.autoupdate.InstallSupport;
 import org.netbeans.api.autoupdate.InstallSupport.Installer;
@@ -189,7 +190,32 @@ public class AutoUpdater extends SimpleWorker {
 
     private Validator doDownload(OperationContainer<InstallSupport> container) throws OperationException {
         InstallSupport installSupport = container.getSupport();
-        return installSupport.doDownload(null, true, false);
+        
+        // The following is unfortunate. The autoupdate Utilities class, which is the only way to access the user's install dir preference, 
+        // is part of org.netbeans.modules.autoupdate.ui, which is not a public module API. We could use implementation version here, but it 
+        // can lead to a lot of problems with auto update. For now, we'll assume global installation, and let the user do a manual upgrade if
+        // things don't work.
+        Boolean global = true;//Utilities.isGlobalInstallation();
+        boolean userDirAsFallback = true;
+        
+        try {
+            String installDir = SystemInfo.getInstallDir();
+            log.info("Install directory: "+installDir);
+            
+            if (installDir.startsWith("/misc/local/workstation")) {
+                log.warn("Shared Linux installation detected. Forcing global installation.");
+                // if using the shared Linux installation disallow user dir upgrades so that all users stay in sync
+                global = true;
+                userDirAsFallback = false;
+            }
+        }
+        catch (RuntimeException e) {
+            // The above step isn't critical, so we handle any exceptions to allow install to continue. 
+            FrameworkImplProvider.handleException(e);
+        }
+        
+        log.info("Downloading updates with flags: global={}, userDirAsFallback={}", global, userDirAsFallback);
+        return installSupport.doDownload(null, global, userDirAsFallback);
     }
 
     private Restarter doInstall(InstallSupport support, Validator validator) throws OperationException {

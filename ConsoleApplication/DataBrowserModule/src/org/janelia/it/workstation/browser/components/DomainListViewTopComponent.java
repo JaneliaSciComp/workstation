@@ -103,19 +103,28 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
     @Override
     public void componentOpened() {
+        log.debug("componentOpened");
+        // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
         Events.getInstance().registerOnEventBus(this);
+        if (editor!=null) {
+            editor.activate();
+        }
     }
     
     @Override
     public void componentClosed() {
-        clearEditor();
+        log.debug("componentClosed");
         Events.getInstance().unregisterOnEventBus(this);
+        if (editor!=null) {
+            editor.deactivate();
+        }
+        clearEditor();
     }
 
     @Override
     protected void componentActivated() {
-        log.info("Activating domain browser");
+        log.debug("componentActivated");
         this.active = true;
         // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
@@ -130,19 +139,14 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (DomainExplorerTopComponent.getInstance()!=null && domainObject!=null) {
             DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
         }
-        if (editor!=null) {
-            editor.activate();
-        }
     }
     
     @Override
     protected void componentDeactivated() {
+        log.debug("componentDeactivated");
         this.active = false;
         if (findContext!=null) {
             FindContextManager.getInstance().deactivateContext(findContext);
-        }
-        if (editor!=null) {
-            editor.deactivate();
         }
     }
 
@@ -323,6 +327,11 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         @Override
         public Void call() throws Exception {
 
+            if (editor==null) {
+                log.warn("Editor is null");
+                return null;
+            }
+            
             DomainObjectEditorState<?,?,?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);

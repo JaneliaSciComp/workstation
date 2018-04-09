@@ -36,7 +36,7 @@ public class CreateMaskFromImageAction extends AbstractAction {
     private String imagePath;
 
     public CreateMaskFromImageAction() {
-        super("Create Color Depth Search Mask...");
+        super("Create Mask for Color Depth Search...");
     }
     
     public CreateMaskFromImageAction(Image image) {
@@ -87,47 +87,14 @@ public class CreateMaskFromImageAction extends AbstractAction {
     
     private void showMaskDialog(BufferedImage image, List<String> alignmentSpaces) {
 
+        // could be null, but that's okay, in that case the user has to pick
+        String imageAlignmentSpace = this.image.getAlignmentSpace(); 
+        
         try {
+            String maskName = "Mask derived from "+this.image.getName();
             MaskCreationDialog maskCreationDialog = new MaskCreationDialog(
-                    image, alignmentSpaces, null, true);
-            if (!maskCreationDialog.showForMask()) {
-                return; // User cancelled the operation
-            }
-
-            BufferedImage mask = maskCreationDialog.getMask();
-            int threshold = maskCreationDialog.getThreshold();
-            String alignmentSpace = maskCreationDialog.getAlignmentSpace();
-            
-            SimpleWorker worker = new SimpleWorker()     {
-
-                private String uploadPath;
-                
-                @Override
-                protected void doStuff() throws Exception {
-
-                    // Write the mask to disk temporarily
-                    // TODO: in the future, the uploader should support byte stream input
-                    File tempFile = File.createTempFile("mask", ".png");
-                    tempFile.deleteOnExit();
-                    ImageIO.write(mask, "png", tempFile);
-                    log.info("Wrote mask to temporary file: "+tempFile);
-                    
-                    uploadPath = MaskUtils.uploadMask(tempFile);
-                }
-
-                @Override
-                protected void hadSuccess() {
-                    new AddMaskDialog().showForMask(uploadPath, alignmentSpace, threshold, null);
-                }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    ConsoleApp.handleException(error);
-                }
-            };
-
-            worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Uploading mask", ""));
-            worker.execute();
+                    image, null, alignmentSpaces, imageAlignmentSpace, maskName, null, true);
+            maskCreationDialog.showForMask();
         }
         catch (Exception e) {
             FrameworkImplProvider.handleException(e);

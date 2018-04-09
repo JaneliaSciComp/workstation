@@ -4,5 +4,5 @@ OpenIDE-Module: org.janelia.it.workstation.darcula/1
 OpenIDE-Module-Layer: com/revivius/nb/darcula/layer.xml
 OpenIDE-Module-Localizing-Bundle: com/revivius/nb/darcula/Bundle.properties
 OpenIDE-Module-Install: com/revivius/nb/darcula/Installer.class
-OpenIDE-Module-Specification-Version: 1.68
+OpenIDE-Module-Specification-Version: 1.69
 

@@ -83,10 +83,13 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
                 Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
 
                 if (hasCompletedUnsuccessfully(serviceStatus)) {
+                    completed();
                     handle.finish();
                     // handle errors
                     throwException(serviceStatus);
-                } else if (hasCompletedSuccessfully(serviceStatus)) {
+                } 
+                else if (hasCompletedSuccessfully(serviceStatus)) {
+                    completed();
                     handle.finish();
                     return;
                 }
@@ -105,6 +108,10 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
             }
             throw e;
         }
+    }
+    
+    protected void completed() {
+        
     }
 
     @Override

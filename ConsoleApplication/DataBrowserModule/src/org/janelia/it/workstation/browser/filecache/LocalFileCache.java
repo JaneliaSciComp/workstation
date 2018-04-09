@@ -282,17 +282,22 @@ public class LocalFileCache {
 
         if (localFile == null) {
             if (cacheAsync) {
-                asyncLoadService.submit(new Callable<File>() {
-                    @Override
-                    public File call() throws Exception {
-                        try {
-                            return getFile(remoteFileRefName, false);
-                        } catch (FileNotCacheableException e) {
-                            LOG.warn("Problem encountered caching file asynchronously",e);
-                            throw e;
+                if (remoteFileRefName.endsWith("/")) {
+                    LOG.trace("Cannot cache directory: "+remoteFileRefName);
+                }
+                else {   
+                    asyncLoadService.submit(new Callable<File>() {
+                        @Override
+                        public File call() throws Exception {
+                            try {
+                                return getFile(remoteFileRefName, false);
+                            } catch (FileNotCacheableException e) {
+                                LOG.warn("Problem encountered caching file asynchronously",e);
+                                throw e;
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
             return webDavClientMgr.getDownloadFileURL(remoteFileRefName);
         } else  {
