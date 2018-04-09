@@ -349,7 +349,8 @@ public class TextLabelActor extends GLAbstractActor {
         checkGlError(gl, "d7 glVertexAttribPointer()");
         gl.glEnableVertexAttribArray(1);
         checkGlError(gl, "d8 glEnableVertexAttribArray()");
-        gl.glDrawArrays(GL4.GL_TRIANGLES, 0, vertexFb.capacity()/2);
+//        gl.glDrawArrays(GL4.GL_TRIANGLES, 0, vertexFb.capacity()/2);
+        gl.glDrawArrays(GL4.GL_TRIANGLES, 0, 6); // Not sure this works, but other experiments suggest this should be 6 for each label
         checkGlError(gl, "d9 glDrawArrays()");
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
         checkGlError(gl, "d10 glBindBuffer()");
