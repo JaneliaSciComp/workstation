@@ -8,9 +8,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.JDialog;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.util.Utils;
 
 /**
  * Base class for dialogs holds common functionality for dialog boxes.
@@ -36,6 +38,12 @@ public class ModalDialog extends JDialog {
     
     public ModalDialog(Frame parent) {
         super(parent == null ? ConsoleApp.getMainFrame() : parent);
+        init();
+    }
+
+    public ModalDialog(JPanel panel) {
+        // TODO: this only works with JPanels within a Dialog
+        super(Utils.getAncestorWithType(panel, Dialog.class));
         init();
     }
     

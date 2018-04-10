@@ -52,6 +52,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
     public DomainObjectPermissionDialog(DomainInspectorPanel parent) {
 
+        super(parent);
         this.parent = parent;
 
         setTitle("Add permission");
