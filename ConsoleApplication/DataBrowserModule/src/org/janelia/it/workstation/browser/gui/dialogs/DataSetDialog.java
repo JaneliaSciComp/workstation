@@ -37,6 +37,7 @@ import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.sample.DataSet;
 
 import net.miginfocom.swing.MigLayout;
@@ -64,6 +65,8 @@ public class DataSetDialog extends ModalDialog {
     private JTextField sageGrammarPathInput;
     private JCheckBox sageSyncCheckbox;
     private JCheckBox neuronSeparationCheckbox;
+    private JTextField stackCompressionInput;
+    private JTextField separationCompressionInput;
     private HashMap<String, JRadioButton> processCheckboxes = new LinkedHashMap<>();
 
     private DataSet dataSet;
@@ -179,10 +182,25 @@ public class DataSetDialog extends ModalDialog {
         attrPanel.add(sageGrammarPathLabel, "gap para");
         attrPanel.add(sageGrammarPathInput);
 
+
+        final JLabel stackCompressionLabel = new JLabel("Default Stack Compression: ");
+        stackCompressionInput = new JTextField(40);
+        stackCompressionInput.setEditable(false);
+        stackCompressionLabel.setLabelFor(stackCompressionInput);
+        attrPanel.add(stackCompressionLabel, "gap para");
+        attrPanel.add(stackCompressionInput);
+
+        final JLabel separationCompressionLabel = new JLabel("Default Separation Compression: ");
+        separationCompressionInput = new JTextField(40);
+        separationCompressionInput.setEditable(false);
+        separationCompressionLabel.setLabelFor(separationCompressionInput);
+        attrPanel.add(separationCompressionLabel, "gap para");
+        attrPanel.add(separationCompressionInput);
+        
+        
         sageSyncCheckbox = new JCheckBox("Synchronize images from SAGE");
         attrPanel.add(sageSyncCheckbox, "gap para");
 
-        /* Removing this feature until such time as this level of flexibility has user demand. */
         neuronSeparationCheckbox = new JCheckBox("Support Neuron Separation");
         neuronSeparationCheckbox.setToolTipText("If pipeline does Neuron Separation by default, unchecking avoids it");
         neuronSeparationCheckbox.setEnabled(SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI);
@@ -208,6 +226,19 @@ public class DataSetDialog extends ModalDialog {
             sageConfigPathInput.setText(dataSet.getSageConfigPath());
             sageGrammarPathInput.setText(dataSet.getSageGrammarPath());
 
+            String currSampleCompression = dataSet.getDefaultCompressionType();
+            String currSepCompression = dataSet.getDefaultSeparationCompressionType();
+
+            if (StringUtils.isBlank(currSampleCompression)) {
+                currSampleCompression = DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
+            }
+            if (StringUtils.isBlank(currSepCompression)) {
+                currSepCompression = DomainConstants.VALUE_COMPRESSION_LOSSLESS;
+            }
+            
+            stackCompressionInput.setText(currSampleCompression);
+            separationCompressionInput.setText(currSepCompression);
+            
             sageSyncCheckbox.setSelected(dataSet.isSageSync());
             neuronSeparationCheckbox.setSelected(dataSet.isNeuronSeparationSupported());
             if (dataSet.getPipelineProcesses()!=null && !dataSet.getPipelineProcesses().isEmpty()) {
@@ -272,7 +303,6 @@ public class DataSetDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
-                parentDialog.refresh();
                 Utils.setDefaultCursor(DataSetDialog.this);
                 setVisible(false);
             }

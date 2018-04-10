@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.gui.dialogs;
 
 import java.awt.BorderLayout;
+import java.awt.Dialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
@@ -22,10 +23,11 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.model.domain.DomainConstants;
@@ -45,7 +47,7 @@ public class CompressionDialog extends ModalDialog {
 
     private final static Logger log = LoggerFactory.getLogger(CompressionDialog.class);
     
-    private final JPanel attrPanel;
+    private JPanel attrPanel;
 
     private JRadioButton stacksLLCheckbox;
     private JRadioButton stacksVLCheckbox;
@@ -54,9 +56,17 @@ public class CompressionDialog extends ModalDialog {
     
     private Collection<Sample> samples;
     private DataSet dataSet;
-    
-    public CompressionDialog() {
 
+    public CompressionDialog() {
+        init();
+    }
+     
+    public CompressionDialog(Dialog parent) {
+        super(parent);
+        init();
+    }
+     
+    private final void init() {
         setTitle("Change Sample Compression Strategy");
 
         String desc = "<html>Lossless files are expensive to store in the long term.<br>"
@@ -329,18 +339,20 @@ public class CompressionDialog extends ModalDialog {
 
                     @Override
                     public Callable<Void> getSuccessCallback() {
-                        return new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                
+                        return () -> {
+
+                            DomainExplorerTopComponent.getInstance().refresh(true, true, () -> {
+
                                 JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), 
-                                        "Sample compression strategy has been updated for "+samples.size()+" samples. "
-                                            + "Any samples needed reprocessing have been dispatched. "
-                                            + "Results will be available once the pipeline has completed.",
+                                        "<html>Sample compression strategy has been updated for "+samples.size()+" samples.<br>"
+                                            + "Any samples needing reprocessing have been scheduled.<br> "
+                                            + "Results will be available once the pipeline has completed.</html>",
                                         "Samples updated successfully", JOptionPane.INFORMATION_MESSAGE);
                                 
                                 return null;
-                            }
+                            });
+                            
+                            return null;
                         };
                     }
                 };
@@ -361,30 +373,110 @@ public class CompressionDialog extends ModalDialog {
     
     private boolean saveDataSet() {
 
-        String message = "<html>Apply compression strategy to all existing samples in data set, or only new samples added in the future?</html>";
+        String targetSampleCompression =  stacksLLCheckbox.isSelected() ? DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J : DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
+        String targetSeparationCompression =  sepLLCheckbox.isSelected() ? DomainConstants.VALUE_COMPRESSION_LOSSLESS : DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
+        
+        String message = "<html>Do you want to apply the new compression strategy to all existing samples in data set, or only new samples added in the future?</html>";
         
         String[] buttons = { "All Existing and Future Samples", "Only Future Samples", "Cancel" };
         int selectedOption = JOptionPane.showOptionDialog(this, message, 
                 "Apply changes", JOptionPane.INFORMATION_MESSAGE, 0, null, buttons, buttons[0]);
 
+        boolean applyToExisting;
+        
         if (selectedOption == 0) {
             log.info("User chose to apply changes to all existing and future samples");
-
+            applyToExisting = true;
             message = "<html>Are you sure you want to process all samples in this data set? This operation may be compute intensive and costly.</html>";
             int result = JOptionPane.showConfirmDialog(this, message,  "Change Sample Compression Strategy", JOptionPane.OK_CANCEL_OPTION);
             if (result != 0) return false;
         }
         else if (selectedOption == 1) {
             log.info("User chose to apply changes to future samples only");
+            applyToExisting = false;
         }
         else {
-            log.info("User chose to cancel save");
+            log.info("User chose to cancel");
             return false;
         }
+
+        SimpleWorker worker = new SimpleWorker() {
+            
+            Task task;
+
+            @Override
+            protected void doStuff() throws Exception {
+                try {
+                    DomainModel model = DomainMgr.getDomainMgr().getModel();
+                    model.updateProperty(dataSet, "defaultCompressionType", targetSampleCompression);
+                    model.updateProperty(dataSet, "defaultSeparationCompressionType", targetSeparationCompression);
+                    
+                    if (applyToExisting) {
+                        HashSet<TaskParameter> taskParameters = new HashSet<>();
+                        taskParameters.add(new TaskParameter("data set identifier", dataSet.getIdentifier(), null));
+                        taskParameters.add(new TaskParameter("target sample compression", targetSampleCompression, null));
+                        taskParameters.add(new TaskParameter("target separation compression", targetSeparationCompression, null));
+                        task = StateMgr.getStateMgr().submitJob("ConsoleDataSetCompression", "Console Data Set Compression", taskParameters);
+                        if (task==null) {
+                            throw new IllegalStateException("Task could not be submitted");
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    ConsoleApp.handleException(e);
+                    return;
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+                if (task==null) return;
+                TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
+
+                    @Override
+                    public String getName() {
+                        return "Changing Compression Strategy for "+dataSet.getIdentifier();
+                    }
+
+                    @Override
+                    public Callable<Void> getSuccessCallback() {
+                        return () -> {
+
+                            DomainExplorerTopComponent.getInstance().refresh(true, true, () -> {
+
+                                if (applyToExisting) {
+                                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), 
+                                            "<html>Sample compression strategy has been updated for "+dataSet.getIdentifier()
+                                                + ".<br> Any samples needing reprocessing have been scheduled.<br> "
+                                                + "Results will be available once the pipeline has completed.</html>",
+                                            "Data set updated successfully", JOptionPane.INFORMATION_MESSAGE);
+                                }
+                                else {
+                                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), 
+                                            "<html>Sample compression strategy has been updated for "+dataSet.getIdentifier()
+                                                +".<br> Future samples will be processed to the given compression.</html>",
+                                            "Data set updated successfully", JOptionPane.INFORMATION_MESSAGE);
+                                }
+                                
+                                return null;
+                            });
+                            
+                            return null;
+                        };
+                    }
+                };
+
+                taskWorker.executeWithEvents();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                ConsoleApp.handleException(error);
+            }
+        };
+
+        worker.execute();
         
-        // TODO: finish this later
-        throw new IllegalStateException("This operation is not yet implemented");
-        
-//        return true;
+        return true;
     }
 }
