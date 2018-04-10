@@ -112,6 +112,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private static final String COLOR_FORMAT = "# COLOR %f,%f,%f";
     private static final String NAME_FORMAT = "# NAME %s";
 
+    private static final String NEURON_TAG_VISIBILITY = "hidden";
+
     private final TiledMicroscopeDomainMgr tmDomainMgr;
 
     private SWCDataConverter swcDataConverter;
@@ -1594,13 +1596,44 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         });
     }
 
-    public void setNeuronVisibility(final Collection<TmNeuronMetadata> neuronList, final boolean visibility) throws Exception {
-        BulkNeuronStyleUpdate bulkNeuronStyleUpdate = new BulkNeuronStyleUpdate();
-        bulkNeuronStyleUpdate.setNeuronIds(DomainUtils.getIds(neuronList));
-        bulkNeuronStyleUpdate.setVisible(visibility);
-        tmDomainMgr.updateNeuronStyles(bulkNeuronStyleUpdate);
+    public boolean getNeuronVisibility(TmNeuronMetadata neuron) {
+        Set<String> neuronTags = getUserNeuronTags(neuron);
+        if (neuronTags!=null) {
+            if (neuronTags.contains(NEURON_TAG_VISIBILITY)) {
+                return false;
+            }
+        }
+        return true;
     }
-    
+
+    public void setNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
+        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<>();
+        NeuronStyle style = getNeuronStyle(neuron);
+        style.setUserVisible(visibility);
+        styleUpdater.put(neuron, style);
+        if (visibility) {
+            removeUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
+        } else {
+            addUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
+        }
+        fireNeuronStylesChanged(styleUpdater);
+    }
+
+    public void setNeuronVisibility(Collection<TmNeuronMetadata> bulkNeurons, boolean visibility) {
+        Map<TmNeuronMetadata, NeuronStyle> styleUpdater = new HashMap<>();
+        for (TmNeuronMetadata neuron : bulkNeurons) {
+            NeuronStyle style = getNeuronStyle(neuron);
+            style.setUserVisible(visibility);
+            styleUpdater.put(neuron, style);
+            if (visibility) {
+                getAllTagMeta().removeUserTag(NEURON_TAG_VISIBILITY, neuron);
+            } else {
+                getAllTagMeta().addUserTag(NEURON_TAG_VISIBILITY, neuron);
+            }
+        }
+        fireNeuronStylesChanged(styleUpdater);
+    }
+
     /**
      * change the style for a neuron; synchronized because it could be
      * called from multiple threads, and the update is not atomic
