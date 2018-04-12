@@ -64,7 +64,7 @@ public class RestJsonClientManager {
     
     private Client buildClient(boolean auth) {
 
-        client = ClientBuilder.newClient();
+        Client client = ClientBuilder.newClient();
         client.register(MultiPartFeature.class);
         
         JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
