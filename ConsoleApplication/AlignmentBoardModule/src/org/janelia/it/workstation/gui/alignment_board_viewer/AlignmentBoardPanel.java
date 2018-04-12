@@ -75,7 +75,8 @@ import com.google.common.eventbus.Subscribe;
  *
  * Shows alignment board relevant entities in 3D.
  */
-@ServiceProvider(service = AlignmentBoardCtrlPnlSvc.class)
+//Disabled as per JW-32938
+//@ServiceProvider(service = AlignmentBoardCtrlPnlSvc.class)
 public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControllable, AlignmentBoardCtrlPnlSvc {
 
     /* Starting on V2 - Sean Murphy */

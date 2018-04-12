@@ -20,7 +20,8 @@ import org.slf4j.LoggerFactory;
  * 
  * @author fosterl
  */
-@ServiceProvider(service = ObjectOpenAcceptor.class, path=ObjectOpenAcceptor.LOOKUP_PATH)
+// Disabled as per JW-32938
+//@ServiceProvider(service = ObjectOpenAcceptor.class, path=ObjectOpenAcceptor.LOOKUP_PATH)
 public class Launcher implements ObjectOpenAcceptor  {
     
     private static final Logger log = LoggerFactory.getLogger(Launcher.class);

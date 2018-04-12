@@ -30,7 +30,8 @@ import org.slf4j.LoggerFactory;
  * 
  * @author fosterl
  */
-@ServiceProvider(service=DomainObjectCreator.class,path=DomainObjectCreator.LOOKUP_PATH)
+//Disabled as per JW-32938
+//@ServiceProvider(service=DomainObjectCreator.class,path=DomainObjectCreator.LOOKUP_PATH)
 public class AlignmentBoardCreator implements DomainObjectCreator {
     
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardCreator.class);
