@@ -65,6 +65,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -88,11 +90,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputAdapter;
 import javax.swing.event.MouseInputListener;
 import javax.swing.text.Keymap;
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.GenericObservable;
+import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.OsFilePathRemapper;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
@@ -152,12 +156,17 @@ import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
+import org.janelia.geometry3d.MeshGeometry;
+import org.janelia.geometry3d.WavefrontObjLoader;
+import org.janelia.gltools.MeshActor;
+import org.janelia.gltools.material.TransparentEnvelope;
 import org.janelia.horta.actions.ResetHortaRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
@@ -484,6 +493,9 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         loadStartupPreferences();
 
+        // load all meshes from the workspace
+        loadMeshActors();
+        
         metaWorkspace.notifyObservers();
 
     }
@@ -918,6 +930,34 @@ public final class NeuronTracerTopComponent extends TopComponent
                 prefs.getBoolean("bCacheHortaTiles", doesUpdateVolumeCache()));
         setPreferKtx(prefs.getBoolean("bPreferKtxTiles", isPreferKtx()));
     }
+    
+    private void loadMeshActors () {
+        Collection<TmObjectMesh> meshActorList = metaWorkspace.getMeshActors();        
+        for (TmObjectMesh mesh : meshActorList) {
+            MeshGeometry meshGeometry;
+            try {
+                meshGeometry = WavefrontObjLoader.load(Files.newInputStream(Paths.get(mesh.getPathToObjFile())));
+                TransparentEnvelope material = new TransparentEnvelope();
+                Color color = meshGeometry.getDefaultColor();
+                if (color != null) {
+                    material.setDiffuseColor(color);
+                }
+                final MeshActor meshActor = new MeshActor(
+                        meshGeometry,
+                        material,
+                        null
+                );
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        addMeshActor(meshActor);
+                    }
+                });
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
+    } 
     
     private void saveStartupPreferences() {
         Preferences prefs = NbPreferences.forModule(getClass());
@@ -2024,6 +2064,13 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     // API for use by external HortaMovieSource class
+    public List<MeshActor> getMeshActors() {
+        return neuronMPRenderer.getMeshActors();
+    }
+    
+    public ObservableInterface getMeshObserver () {
+        return neuronMPRenderer.getMeshObserver();
+    }
     
     public boolean setVisibleActors(Collection<String> visibleActorNames)
     {
@@ -2087,8 +2134,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         return image;
     }
 
-    public void addMeshActor(GL3Actor meshActor) {
+    public void addMeshActor(MeshActor meshActor) {
         neuronMPRenderer.addMeshActor(meshActor);
+    }
+    
+    public void saveObjectMesh (String filename, String meshName) {
+        TmObjectMesh newObjMesh = new TmObjectMesh(filename, meshName);
+        activeNeuronSet.addObjectMesh(newObjMesh);
     }
 
     public BlockTileSource getKtxSource() {

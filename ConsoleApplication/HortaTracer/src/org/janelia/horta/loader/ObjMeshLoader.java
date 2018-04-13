@@ -78,7 +78,7 @@ public class ObjMeshLoader implements FileTypeLoader
                     Color color = meshGeometry.getDefaultColor();
                     if (color != null)
                         material.setDiffuseColor(color);
-                    final GL3Actor meshActor = new MeshActor(
+                    final MeshActor meshActor = new MeshActor(
                             meshGeometry,
                             material,
                             null
@@ -87,6 +87,7 @@ public class ObjMeshLoader implements FileTypeLoader
                         @Override
                         public void run() {
                             horta.addMeshActor(meshActor);
+                            horta.saveObjectMesh(source.getFileName(), meshActor.getMeshName());
                         }
                     });
                 } catch (IOException ex) {

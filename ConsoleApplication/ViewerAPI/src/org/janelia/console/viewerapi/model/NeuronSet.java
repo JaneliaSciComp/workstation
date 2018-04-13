@@ -36,6 +36,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.openide.awt.UndoRedo;
 
 /**
@@ -73,4 +74,5 @@ public interface NeuronSet extends Collection<NeuronModel>
     void changeNeuronUserToggleRadius (List<TmNeuronMetadata> neuronList, boolean userToggleRadius);
     void changeNeuronUserProperties (List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle);
     CompletableFuture<Boolean> changeNeuronOwnership (Long neuronId);
+    void addObjectMesh(TmObjectMesh mesh);
 }

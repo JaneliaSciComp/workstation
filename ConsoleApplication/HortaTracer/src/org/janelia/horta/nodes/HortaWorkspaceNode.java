@@ -40,9 +40,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.VantageInterface;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
+import org.janelia.gltools.GL3Actor;
+import org.janelia.gltools.MeshActor;
 import org.janelia.horta.loader.DroppedFileHandler;
 import org.janelia.horta.loader.GZIPFileLoader;
 import org.janelia.horta.loader.SwcLoader;
@@ -70,8 +73,8 @@ public class HortaWorkspaceNode extends AbstractNode
     private final HortaMetaWorkspace workspace;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public HortaWorkspaceNode(HortaMetaWorkspace workspace) {
-        super(Children.create(new HortaWorkspaceChildFactory(workspace), true), Lookups.singleton(workspace));
+    public HortaWorkspaceNode(HortaMetaWorkspace workspace, List<MeshActor> meshActors, ObservableInterface meshObserver) {
+        super(Children.create(new HortaWorkspaceChildFactory(workspace, meshActors, meshObserver), true), Lookups.singleton(workspace));
         this.workspace = workspace;
         updateDisplayName();
         // The factory is already listening on behalf of the children, 

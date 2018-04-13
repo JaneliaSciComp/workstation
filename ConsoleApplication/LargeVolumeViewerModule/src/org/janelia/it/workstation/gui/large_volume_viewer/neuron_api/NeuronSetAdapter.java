@@ -61,6 +61,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.MatrixUtilities;
@@ -310,6 +311,15 @@ implements NeuronSet// , LookupListener
         updateVoxToMicronMatrices(sample);
         NeuronList nl = (NeuronList) neurons;
         nl.wrap(this);
+        
+        // load mesh objects
+        List<TmObjectMesh> meshList = workspace.getObjectMeshList();
+        if (meshList!=null) {
+            for (TmObjectMesh mesh: meshList) {
+                this.metaWorkspace.addMeshActors(mesh);
+            }   
+        }
+        
         getMembershipChangeObservable().setChanged();
         return true;
     }
@@ -352,6 +362,16 @@ implements NeuronSet// , LookupListener
         Long neuronId = annotation.getNeuronId();
         TmNeuronMetadata neuronMetadata = annotationModel.getNeuronFromNeuronID(neuronId);
         return innerList.neuronModelForTmNeuron(neuronMetadata);
+    }
+
+    @Override
+    public void addObjectMesh(TmObjectMesh mesh) {
+        try {
+            annotationModel.getCurrentWorkspace().addObjectMesh(mesh);
+            annotationModel.saveCurrentWorkspace();
+        } catch (Exception error) {
+            ConsoleApp.handleException(error);
+        }
     }
 
     private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener

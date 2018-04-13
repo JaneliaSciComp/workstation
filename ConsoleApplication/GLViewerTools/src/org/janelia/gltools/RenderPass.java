@@ -33,8 +33,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Observer;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.media.opengl.GL3;
+import org.janelia.console.viewerapi.ComposableObservable;
+import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.geometry3d.AbstractCamera;
 
 /**
@@ -52,7 +55,8 @@ implements GL3Resource
     protected final List<RenderTarget> renderTargets = new ArrayList<>();
     protected final Framebuffer framebuffer;
     // Using synchronizedList to avoid ConcurrentModificationException in renderScene() JW-27392
-    private final List<GL3Actor> actors = Collections.synchronizedList(new ArrayList<GL3Actor>());
+    protected final List<GL3Actor> actors = Collections.synchronizedList(new ArrayList<GL3Actor>());
+    private final ComposableObservable actorChangeObservable = new ComposableObservable();
 
     // Queue old resources for deletion
     private final List<GL3Resource> obsoleteResources = new ArrayList<>();
@@ -151,6 +155,8 @@ implements GL3Resource
     public void addActor(GL3Actor actor)
     {
         actors.add(actor);
+        actorChangeObservable.setChanged();
+        actorChangeObservable.notifyObservers();
     }
     
     public boolean containsActor(GL3Actor actor) {
@@ -158,8 +164,11 @@ implements GL3Resource
     }
     
     public void removeActor(GL3Actor actor) {
-        if (actors.remove(actor))
+        if (actors.remove(actor)) {
             obsoleteResources.add(actor);
+            actorChangeObservable.setChanged();  
+            actorChangeObservable.notifyObservers();
+        }
     }
     
     public void clearActors() {
@@ -168,6 +177,8 @@ implements GL3Resource
             obsoleteResources.add(oldActor);
         }
         actors.clear();
+        actorChangeObservable.setChanged();
+        actorChangeObservable.notifyObservers();
     }
 
     @Override
@@ -193,9 +204,11 @@ implements GL3Resource
             actor.init(gl);
     }
 
-    public Iterable<GL3Actor> getActors()
-    {
+    public Iterable<GL3Actor> getActors() {
         return actors;
     }
     
+    public ObservableInterface getActorChangeObservable() {
+        return actorChangeObservable;
+    }
 }

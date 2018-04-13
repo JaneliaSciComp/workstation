@@ -34,6 +34,7 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -45,6 +46,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
+import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.geometry3d.AbstractCamera;
 // import org.janelia.geometry3d.ChannelBrightnessModel;
@@ -69,6 +71,7 @@ import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.GL3Resource;
+import org.janelia.gltools.MeshActor;
 import org.janelia.horta.neuronvbo.NeuronVboActor;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
@@ -175,7 +178,7 @@ extends MultipassRenderer
         return imageColorModel;
     }
     
-    public void addMeshActor(GL3Actor meshActor) {
+    public void addMeshActor(MeshActor meshActor) {
         opaqueRenderPass.addActor(meshActor);
         setOpaqueBufferDirty();
     }
@@ -412,6 +415,21 @@ extends MultipassRenderer
     public Iterable<GL3Actor> getVolumeActors()
     {
         return volumeRenderPass.getActors();
+    }
+    
+    public List<MeshActor> getMeshActors()
+    {
+        List<MeshActor> collection = new ArrayList<>();
+        Iterable<GL3Actor> actors = opaqueRenderPass.getActors();
+        for (GL3Actor actor: actors) {
+            if (actor instanceof MeshActor)
+                collection.add ((MeshActor)actor);
+        };
+        return collection;
+    }
+    
+    public ObservableInterface getMeshObserver () {
+        return opaqueRenderPass.getActorChangeObservable();
     }
     
     public void setBackgroundColor(Color topColor, Color bottomColor) {

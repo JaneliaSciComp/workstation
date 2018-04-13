@@ -31,6 +31,7 @@
 package org.janelia.horta.nodes;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -42,6 +43,7 @@ import org.janelia.console.viewerapi.model.VantageInterface;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 
 /**
  * @author Christopher Bruns
@@ -52,6 +54,7 @@ public class BasicHortaWorkspace implements HortaMetaWorkspace
     private final ComposableObservable changeObservable = new ComposableObservable();
     private Color backgroundColor = new Color(0.1f, 0.1f, 0.1f, 1f);
     private final Collection<NeuronSet> neuronLists = new HashSet<>();
+    private final Collection<TmObjectMesh> meshActors = new ArrayList<>();
     private TmNeuronTagMap tagMeta = null;
     private TmSample sample;
 
@@ -147,5 +150,13 @@ public class BasicHortaWorkspace implements HortaMetaWorkspace
     @Override
     public void setSample(TmSample sample) {
         this.sample = sample;
+    }
+    
+    public Collection<TmObjectMesh> getMeshActors() {
+        return meshActors;
+    }
+    
+    public void addMeshActors(TmObjectMesh actor) {
+        meshActors.add(actor);
     }
 }
