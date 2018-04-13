@@ -1,5 +1,12 @@
 // 7.9
 
 Workstation Browser
+* Added default compression strategy for data sets
+* Improved performance when changing compression strategy on hundreds of samples
+* Removed Alignment Board module
 * Corrected attribute sorting in "Add Criteria" button and other places
+* The view now gets refreshed after marking samples for reprocessing
+* Ontology explorer now remembers which nodes were expanded in the previous session
+* Fixed some rendering issues in the ontology explorer
+* Fixed some problems with token refresh 
 * Other minor bug fixes
