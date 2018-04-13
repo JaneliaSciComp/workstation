@@ -170,7 +170,7 @@ public class NeuronStyle {
 
     @Override
     public String toString() {
-        return "NeuronStyle(" + color + ", visibility: " + visible + ", userVisibility: " + nonInteractable + ", visibility: " + visible + ")";
+        return "NeuronStyle(" + color + ", visibility: " + visible + ", nonInteractable: " + nonInteractable + ", userVisibility: " + userVisible + ")";
     }
 
     /**

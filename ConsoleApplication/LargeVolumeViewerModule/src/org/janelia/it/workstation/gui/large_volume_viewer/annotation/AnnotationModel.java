@@ -1639,15 +1639,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * called from multiple threads, and the update is not atomic
      */
     public synchronized void setNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) throws Exception {
-      //  if (neuron.getVisibility() != style.isVisible() || neuron.getColor().getRGB() != style.getColor().getRGB()) {
-            ModelTranslation.updateNeuronStyle(style, neuron);
-            neuronManager.saveNeuronMetadata(neuron);
-            // fire change to listeners
-            fireNeuronStyleChanged(neuron, style);
-            activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
-     //   } else {
-      //      fireNeuronStyleChanged(neuron, style);
-      //  }
+        neuron.setColor(style.getColor());
+        setNeuronVisibility(neuron, style.isVisible());
+        neuronManager.saveNeuronMetadata(neuron);
+        fireNeuronStyleChanged(neuron, style);
+        activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
     }
 
     public synchronized void setNeuronColors(List<TmNeuronMetadata> neuronList, Color color) throws Exception {
@@ -1660,7 +1656,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
         for (TmNeuronMetadata neuron : neuronList) {
             neuron.setColor(color);
-            updateMap.put(neuron, ModelTranslation.translateNeuronStyle(neuron));
+            updateMap.put(neuron, getNeuronStyle(neuron));
         }
         
         fireNeuronStylesChanged(updateMap);
@@ -1670,7 +1666,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * retrieve a neuron style for a neuron, whether stored or default
      */
     public NeuronStyle getNeuronStyle(TmNeuronMetadata neuron) {
-        return ModelTranslation.translateNeuronStyle(neuron);
+        boolean visibility = getNeuronVisibility(neuron);
+        if (neuron.getColor() == null) {
+            return NeuronStyle.getStyleForNeuron(neuron.getId(), visibility, false, true);
+        }
+        else {
+            return new NeuronStyle(neuron.getColor(), visibility, false, true);
+        }
     }
 
     public boolean automatedRefinementEnabled() {
