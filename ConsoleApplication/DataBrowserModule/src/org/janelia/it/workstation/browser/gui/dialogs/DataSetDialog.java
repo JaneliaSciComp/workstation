@@ -37,6 +37,7 @@ import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.sample.DataSet;
 
@@ -65,7 +66,8 @@ public class DataSetDialog extends ModalDialog {
     private JTextField sageGrammarPathInput;
     private JCheckBox sageSyncCheckbox;
     private JCheckBox neuronSeparationCheckbox;
-    private JTextField stackCompressionInput;
+    private JTextField unalignedCompressionInput;
+    private JTextField alignedCompressionInput;
     private JTextField separationCompressionInput;
     private HashMap<String, JRadioButton> processCheckboxes = new LinkedHashMap<>();
 
@@ -183,13 +185,20 @@ public class DataSetDialog extends ModalDialog {
         attrPanel.add(sageGrammarPathInput);
 
 
-        final JLabel stackCompressionLabel = new JLabel("Default Stack Compression: ");
-        stackCompressionInput = new JTextField(40);
-        stackCompressionInput.setEditable(false);
-        stackCompressionLabel.setLabelFor(stackCompressionInput);
-        attrPanel.add(stackCompressionLabel, "gap para");
-        attrPanel.add(stackCompressionInput);
+        final JLabel unalignedCompressionLabel = new JLabel("Default Unaligned Compression: ");
+        unalignedCompressionInput = new JTextField(40);
+        unalignedCompressionInput.setEditable(false);
+        unalignedCompressionLabel.setLabelFor(unalignedCompressionInput);
+        attrPanel.add(unalignedCompressionLabel, "gap para");
+        attrPanel.add(unalignedCompressionInput);
 
+        final JLabel alignedCompressionLabel = new JLabel("Default Aligned Compression: ");
+        alignedCompressionInput = new JTextField(40);
+        alignedCompressionInput.setEditable(false);
+        alignedCompressionLabel.setLabelFor(alignedCompressionInput);
+        attrPanel.add(alignedCompressionLabel, "gap para");
+        attrPanel.add(alignedCompressionInput);
+        
         final JLabel separationCompressionLabel = new JLabel("Default Separation Compression: ");
         separationCompressionInput = new JTextField(40);
         separationCompressionInput.setEditable(false);
@@ -226,17 +235,12 @@ public class DataSetDialog extends ModalDialog {
             sageConfigPathInput.setText(dataSet.getSageConfigPath());
             sageGrammarPathInput.setText(dataSet.getSageGrammarPath());
 
-            String currSampleCompression = dataSet.getDefaultCompressionType();
-            String currSepCompression = dataSet.getDefaultSeparationCompressionType();
+            String currUnalignedCompression = SampleUtils.getUnalignedCompression(dataSet, null);
+            String currAlignedCompression = SampleUtils.getAlignedCompression(dataSet, null);
+            String currSepCompression = SampleUtils.getSeparationCompression(dataSet, null);
 
-            if (StringUtils.isBlank(currSampleCompression)) {
-                currSampleCompression = DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
-            }
-            if (StringUtils.isBlank(currSepCompression)) {
-                currSepCompression = DomainConstants.VALUE_COMPRESSION_LOSSLESS;
-            }
-            
-            stackCompressionInput.setText(currSampleCompression);
+            unalignedCompressionInput.setText(currUnalignedCompression);
+            alignedCompressionInput.setText(currAlignedCompression);
             separationCompressionInput.setText(currSepCompression);
             
             sageSyncCheckbox.setSelected(dataSet.isSageSync());
@@ -298,6 +302,7 @@ public class DataSetDialog extends ModalDialog {
                 dataSet.setNeuronSeparationSupported(new Boolean(neuronSeparationCheckbox.isSelected()));
                 dataSet.setSageConfigPath(sageConfigPath);
                 dataSet.setSageGrammarPath(sageGrammarPath);
+                
                 DomainMgr.getDomainMgr().getModel().save(dataSet);
             }
 
