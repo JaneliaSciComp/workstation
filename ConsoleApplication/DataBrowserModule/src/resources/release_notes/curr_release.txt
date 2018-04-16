@@ -1,6 +1,8 @@
 // 7.9
 
 Workstation Browser
+* Renamed "Filter" to "Search" and added a new Search option under Services
+* Improved search icons and other minor usability improvements  
 * Added default compression strategy for data sets
 * Improved performance when changing compression strategy on hundreds of samples
 * Removed Alignment Board module
