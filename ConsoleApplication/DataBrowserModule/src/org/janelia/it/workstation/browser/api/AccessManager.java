@@ -24,6 +24,7 @@ import org.janelia.it.workstation.browser.util.SimpleJwtParser;
 import org.janelia.model.domain.enums.SubjectRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
+import org.janelia.model.security.util.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -433,26 +434,12 @@ public final class AccessManager {
 
     public static Set<String> getReaderSet() {
         Subject subject = getAccessManager().getActualSubject();
-        Set<String> set = new HashSet<>();
-        if (subject==null) return set;
-        set.add(subject.getKey());
-        if (subject instanceof User) {
-            User user = (User)subject;
-            set.addAll(user.getReadGroups());
-        }
-        return set;
+        return SubjectUtils.getReaderSet(subject);
     }
     
     public static Set<String> getWriterSet() {
         Subject subject = getAccessManager().getActualSubject();
-        Set<String> set = new HashSet<>();
-        if (subject==null) return set;
-        set.add(subject.getKey());
-        if (subject instanceof User) {
-            User user = (User)subject;
-            set.addAll(user.getWriteGroups());
-        }
-        return set;
+        return SubjectUtils.getWriterSet(subject);
     }
 
     /**
