@@ -9,28 +9,24 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.util.actions.CallableSystemAction;
 
 /**
- * Allows the user to create new filters, either in their default workspace, 
- * or underneath another existing tree node. Once the filter is created, 
- * it is opened in the filter editor.
+ * Yet another way to create a new search.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "File",
-        id = "org.janelia.it.workstation.browser.nb_action.NewFilterAction"
+        category = "Services",
+        id = "org.janelia.it.workstation.browser.nb_action.SearchAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_NewFilterAction"
+        displayName = "#CTL_SearchAction"
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/File/New", position = 1),
-        @ActionReference(path = "Toolbars/Navigation", position = 1),
-        @ActionReference(path = "Shortcuts", name = "D-S")
+        @ActionReference(path = "Menu/Services", position = 10)
 })
-@Messages("CTL_NewFilterAction=Filter")
-public final class NewFilterAction extends CallableSystemAction {
+@Messages("CTL_SearchAction=Search")
+public final class SearchAction extends CallableSystemAction {
 
-    public NewFilterAction() {
+    public SearchAction() {
     }
 
     @Override

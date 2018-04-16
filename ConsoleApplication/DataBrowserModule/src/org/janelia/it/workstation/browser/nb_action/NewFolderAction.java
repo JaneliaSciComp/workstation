@@ -26,8 +26,8 @@ import org.openide.util.actions.CallableSystemAction;
         displayName = "#CTL_NewFolderAction"
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/File/New", position = 1),
-        @ActionReference(path = "Toolbars/Navigation", position = 1)
+        @ActionReference(path = "Menu/File/New", position = 2),
+        @ActionReference(path = "Toolbars/Navigation", position = 2)
 })
 @Messages("CTL_NewFolderAction=Folder")
 public final class NewFolderAction extends CallableSystemAction {
