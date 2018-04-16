@@ -14,14 +14,15 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.creation.AlignmentB
  * 
  * @author fosterl
  */
-@ActionID(
-        category = "File/New",
-        id = "org.janelia.it.workstation.gui.alignment_board.action.CreateAlignmentBoardAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_CreateAlignmentBoardAction"
-)
-@ActionReference(path = "Menu/File/New", position = 1200)
+//Disabled as per JW-32938
+//@ActionID(
+//        category = "File/New",
+//        id = "org.janelia.it.workstation.gui.alignment_board.action.CreateAlignmentBoardAction"
+//)
+//@ActionRegistration(
+//        displayName = "#CTL_CreateAlignmentBoardAction"
+//)
+//@ActionReference(path = "Menu/File/New", position = 1200)
 @Messages("CTL_CreateAlignmentBoardAction=Alignment Board")
 public final class CreateAlignmentBoardAction implements ActionListener {
 
