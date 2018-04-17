@@ -11,8 +11,9 @@ Workstation Browser
 * The view now gets refreshed after marking samples for reprocessing
 * Ontology explorer now remembers which nodes were expanded in the previous session
 * Fixed rendering issues in the ontology explorer
-* Fixed bug with access token refresh
+* Fixed bug with access token refresh 
 * Removed Alignment Board module 
+* Other minor bug fixes
 
 Horta Tracer
 * Added OBJ Mesh support to Movie Maker and Scene Viewer
