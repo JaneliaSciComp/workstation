@@ -86,8 +86,12 @@ public class ObjMeshLoader implements FileTypeLoader
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
+                            int meshNum = horta.getMeshActors().size()+1;
+                            meshActor.setMeshName("Object Mesh #" + meshNum);
                             horta.addMeshActor(meshActor);
-                            horta.saveObjectMesh(source.getFileName(), meshActor.getMeshName());
+                            if (source instanceof FileDataSource) {                                
+                                horta.saveObjectMesh(meshActor.getMeshName(), ((FileDataSource)source).getFile().getAbsolutePath());
+                            }
                         }
                     });
                 } catch (IOException ex) {

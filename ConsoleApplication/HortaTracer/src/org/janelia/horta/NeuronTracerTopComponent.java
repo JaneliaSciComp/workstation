@@ -70,6 +70,7 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -478,6 +479,10 @@ public final class NeuronTracerTopComponent extends TopComponent
                 
                 // Update background color
                 setBackgroundColor( metaWorkspace.getBackgroundColor() );
+               
+                // load all meshes from the workspace
+                loadMeshActors();
+                
                 redrawNow();
             }
         });
@@ -492,9 +497,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         setCubifyVoxels(true);
         
         loadStartupPreferences();
-
-        // load all meshes from the workspace
-        loadMeshActors();
         
         metaWorkspace.notifyObservers();
 
@@ -932,8 +934,15 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
     
     private void loadMeshActors () {
-        Collection<TmObjectMesh> meshActorList = metaWorkspace.getMeshActors();        
-        for (TmObjectMesh mesh : meshActorList) {
+        Collection<TmObjectMesh> meshActorList = metaWorkspace.getMeshActors(); 
+        HashMap<String,TmObjectMesh> meshMap = new HashMap<>();
+        for (TmObjectMesh meshActor: meshActorList) {
+            meshMap.put(meshActor.getName(), meshActor);
+        }
+        for (MeshActor meshActor: getMeshActors()) {
+            meshMap.remove(meshActor.getMeshName());
+        }
+        for (TmObjectMesh mesh : meshMap.values()) {                
             MeshGeometry meshGeometry;
             try {
                 meshGeometry = WavefrontObjLoader.load(Files.newInputStream(Paths.get(mesh.getPathToObjFile())));
@@ -947,6 +956,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         material,
                         null
                 );
+                meshActor.setMeshName(mesh.getName());
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
@@ -2090,6 +2100,20 @@ public final class NeuronTracerTopComponent extends TopComponent
         return false;
     }
     
+    public void setVisibleMeshes(Collection<String> visibleMeshes)
+    {
+        // TODO: This is just neurons for now...
+        for (MeshActor meshActor: this.getMeshActors()) {
+             String meshName = meshActor.getMeshName();
+             boolean bWas = meshActor.isVisible();
+             boolean bIs = visibleMeshes.contains(meshName);
+             if (bWas == bIs)
+                 continue;
+             meshActor.setVisible(bIs);
+             neuronMPRenderer.setOpaqueBufferDirty();
+        }
+    }
+    
     public Collection<String> getVisibleActorNames() {
         Collection<String> result = new HashSet<>();
 
@@ -2099,6 +2123,18 @@ public final class NeuronTracerTopComponent extends TopComponent
                 if (neuron.isVisible())
                     result.add(neuron.getName());
             }
+        }
+        
+        return result;
+    }
+        
+    public Collection<String> getVisibleMeshes() {
+        Collection<String> result = new HashSet<>();
+
+        // TODO: This is just neurons for now...
+        for (MeshActor meshActor : getMeshActors()) {
+             if (meshActor.isVisible())
+                 result.add(meshActor.getMeshName());
         }
         
         return result;
@@ -2138,8 +2174,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         neuronMPRenderer.addMeshActor(meshActor);
     }
     
-    public void saveObjectMesh (String filename, String meshName) {
-        TmObjectMesh newObjMesh = new TmObjectMesh(filename, meshName);
+    public void saveObjectMesh (String meshName, String filename) {
+        TmObjectMesh newObjMesh = new TmObjectMesh(meshName, filename);
         activeNeuronSet.addObjectMesh(newObjMesh);
     }
 

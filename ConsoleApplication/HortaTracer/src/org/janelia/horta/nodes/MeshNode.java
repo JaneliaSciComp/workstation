@@ -34,6 +34,7 @@ import java.awt.Image;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.MeshActor;
+import org.janelia.horta.NeuronTracerTopComponent;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
@@ -57,7 +58,7 @@ public class MeshNode extends AbstractNode
     public MeshNode(final MeshActor meshActor) {
         super(Children.create(new MeshChildFactory(), true), Lookups.singleton(meshActor));
         this.meshActor = meshActor;
-        String name = meshActor.getName();
+        String name = meshActor.getMeshName();
         setDisplayName(name);
     }
     
@@ -88,6 +89,8 @@ public class MeshNode extends AbstractNode
     
     public void setName(String name) {
         meshActor.setMeshName(name);
+        NeuronTracerTopComponent hortaTracer = NeuronTracerTopComponent.getInstance();
+        hortaTracer.saveObjectMesh(name, name);
         setDisplayName(name);
     }
     

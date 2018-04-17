@@ -54,7 +54,7 @@ public class BasicHortaWorkspace implements HortaMetaWorkspace
     private final ComposableObservable changeObservable = new ComposableObservable();
     private Color backgroundColor = new Color(0.1f, 0.1f, 0.1f, 1f);
     private final Collection<NeuronSet> neuronLists = new HashSet<>();
-    private final Collection<TmObjectMesh> meshActors = new ArrayList<>();
+    private final Collection<TmObjectMesh> meshActors = new HashSet<>();
     private TmNeuronTagMap tagMeta = null;
     private TmSample sample;
 

@@ -78,6 +78,7 @@ public class HortaMovieSource implements MovieSource
         vantage.setSceneUnitsPerViewportHeight( // zoom
             state.getCameraSceneUnitsPerViewportHeight());
         horta.setVisibleActors(state.getVisibleActorNames());
+        horta.setVisibleMeshes(state.getVisibleMeshes());
         
         vantage.notifyObservers();
         horta.redrawNow();
@@ -138,12 +139,14 @@ public class HortaMovieSource implements MovieSource
         private final Quaternion cameraRotation;
         private final float cameraZoom;
         private final Collection<String> visibleActors = new ArrayList<>();
+        private final Collection<String> visibleMeshes = new ArrayList<>();
         
         public HortaViewerState(
                 float cameraFocusX, float cameraFocusY, float cameraFocusZ,
                 Quaternion cameraRotation,
                 float cameraSceneUnitsPerViewportHeight,
-                Collection<String> visibleActorNames) 
+                Collection<String> visibleActorNames,
+                Collection<String> visibleMeshes) 
         {
             this.cameraFocusX = cameraFocusX;
             this.cameraFocusY = cameraFocusY;
@@ -151,6 +154,7 @@ public class HortaMovieSource implements MovieSource
             this.cameraRotation = cameraRotation;
             this.cameraZoom = cameraSceneUnitsPerViewportHeight;
             this.visibleActors.addAll(visibleActorNames);
+            this.visibleMeshes.addAll(visibleMeshes);
         }
         
         public HortaViewerState(NeuronTracerTopComponent horta) 
@@ -163,6 +167,7 @@ public class HortaMovieSource implements MovieSource
             cameraRotation = vantage.getRotationInGround().convertRotationToQuaternion();
             cameraZoom = vantage.getSceneUnitsPerViewportHeight();
             this.visibleActors.addAll(horta.getVisibleActorNames());
+            this.visibleMeshes.addAll(horta.getVisibleMeshes());
         }        
         
         public float[] getCameraFocus() {
@@ -179,6 +184,10 @@ public class HortaMovieSource implements MovieSource
         
         public Collection<String> getVisibleActorNames() {
             return visibleActors;
+        }      
+        
+        public Collection<String> getVisibleMeshes() {
+            return visibleMeshes;
         }
 
         @Override
@@ -212,6 +221,11 @@ public class HortaMovieSource implements MovieSource
                 actorNames.add(new JsonPrimitive(actorName));
             }
             result.add("visibleActors", actorNames);
+            JsonArray meshNames = new JsonArray();
+            for (String meshName : visibleMeshes) {
+                meshNames.add(new JsonPrimitive(meshName));
+            }
+            result.add("visibleMeshes", meshNames);
 
             return result;
         }
@@ -239,11 +253,18 @@ public class HortaMovieSource implements MovieSource
                     String actorName = visibleActors.get(i).getAsString();
                     v.add(actorName);
                 }
+                Collection<String> m = new ArrayList<>();
+                JsonArray visibleMeshes = frame.getAsJsonArray("visibleMeshes");
+                for (int i = 0; i < visibleMeshes.size(); ++i) {
+                    String meshName = visibleMeshes.get(i).getAsString();
+                    m.add(meshName);
+                }
                 HortaViewerState state = new HortaViewerState(
                         f[0], f[1], f[2],
                         q,
                         zoom,
-                        v
+                        v,
+                        m
                 );
                 return state;
             }   
@@ -311,12 +332,29 @@ public class HortaMovieSource implements MovieSource
                     if (bShowActor)
                         visibleActors.add(actorName);
                 }
+                Collection<String> allMeshes = new HashSet<>();
+                for (HortaViewerState kf : new HortaViewerState[] {p0, p1, p2, p3}) {
+                    for (String meshName : kf.getVisibleMeshes()) {
+                        allMeshes.add(meshName);
+                    }
+                }
+                Collection<String> visibleMeshes = new ArrayList<>();
+                for (String meshName : allMeshes) {
+                    boolean b0 = p0.getVisibleMeshes().contains(meshName);
+                    boolean b1 = p1.getVisibleMeshes().contains(meshName);
+                    boolean b2 = p2.getVisibleMeshes().contains(meshName);
+                    boolean b3 = p3.getVisibleMeshes().contains(meshName);
+                    boolean bShowActor = primitiveInterpolator.interpolate_equidistant(ofTheWay, b0, b1, b2, b3);
+                    if (bShowActor)
+                        visibleActors.add(meshName);
+                }
                 
                 HortaViewerState result = new HortaViewerState(
                         focus.getX(), focus.getY(), focus.getZ(),
                         rotation,
                         zoom,
-                        visibleActors
+                        visibleActors,
+                        visibleMeshes
                 );
 
                 return result;
@@ -376,6 +414,25 @@ public class HortaMovieSource implements MovieSource
                     if (bShowActor)
                         visibleActors.add(actorName);
                 }
+                Collection<String> allMeshes = new HashSet<>();
+                for (HortaViewerState kf : new HortaViewerState[] {p0, p1, p2, p3}) {
+                    for (String meshName : kf.getVisibleMeshes()) {
+                        allMeshes.add(meshName);
+                    }
+                }
+                Collection<String> visibleMeshes = new ArrayList<>();
+                for (String meshName : allMeshes) {
+                    boolean b0 = p0.getVisibleMeshes().contains(meshName);
+                    boolean b1 = p1.getVisibleMeshes().contains(meshName);
+                    boolean b2 = p2.getVisibleMeshes().contains(meshName);
+                    boolean b3 = p3.getVisibleMeshes().contains(meshName);
+                    boolean bShowMesh = primitiveInterpolator.interpolate(
+                            ofTheWay, 
+                            b0, b1, b2, b3,
+                            t0, t1, t2, t3);
+                    if (bShowMesh)
+                        visibleMeshes.add(meshName);
+                }
                 // logger.info("ofTheWay = "+ofTheWay);
                 // logger.info("zoom = "+zoom);
 
@@ -383,7 +440,8 @@ public class HortaMovieSource implements MovieSource
                         focus.getX(), focus.getY(), focus.getZ(),
                         rotation,
                         zoom,
-                        visibleActors
+                        visibleActors,
+                        visibleMeshes
                 );
 
                 return result;

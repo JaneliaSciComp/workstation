@@ -312,14 +312,6 @@ implements NeuronSet// , LookupListener
         NeuronList nl = (NeuronList) neurons;
         nl.wrap(this);
         
-        // load mesh objects
-        List<TmObjectMesh> meshList = workspace.getObjectMeshList();
-        if (meshList!=null) {
-            for (TmObjectMesh mesh: meshList) {
-                this.metaWorkspace.addMeshActors(mesh);
-            }   
-        }
-        
         getMembershipChangeObservable().setChanged();
         return true;
     }
@@ -330,8 +322,20 @@ implements NeuronSet// , LookupListener
         this.metaWorkspace = metaWorkspace;
         this.metaWorkspace.setSample(annotationModel.getCurrentSample());
         this.metaWorkspace.setTagMetadata(annotationModel.getAllTagMeta());
+       
         getMetaWorkspace().setChanged();
         getMetaWorkspace().notifyObservers();  
+        
+        // load mesh objects
+        if (workspace!=null) {
+            List<TmObjectMesh> meshList = workspace.getObjectMeshList();
+
+            if (meshList != null) {
+                for (TmObjectMesh mesh : meshList) {
+                    this.metaWorkspace.addMeshActors(mesh);
+                }
+            }
+        }
     }
     
     public HortaMetaWorkspace getMetaWorkspace() {
