@@ -75,4 +75,5 @@ public interface NeuronSet extends Collection<NeuronModel>
     void changeNeuronUserProperties (List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle);
     CompletableFuture<Boolean> changeNeuronOwnership (Long neuronId);
     void addObjectMesh(TmObjectMesh mesh);
+    void updateObjectMeshName(String oldName, String updatedName);
 }

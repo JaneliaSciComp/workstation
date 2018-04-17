@@ -378,6 +378,22 @@ implements NeuronSet// , LookupListener
         }
     }
 
+    @Override
+    public void updateObjectMeshName(String oldName, String updatedName) {
+        try {
+            List<TmObjectMesh> objectMeshes = annotationModel.getCurrentWorkspace().getObjectMeshList();
+            for (TmObjectMesh objectMesh : objectMeshes) {
+                if (objectMesh.getName().equals(oldName)) {
+                    objectMesh.setName(updatedName);
+                    annotationModel.saveCurrentWorkspace();
+                    break;
+                }
+            }
+        } catch (Exception error) {
+            ConsoleApp.handleException(error);
+        }
+    }
+
     private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener
     {
         

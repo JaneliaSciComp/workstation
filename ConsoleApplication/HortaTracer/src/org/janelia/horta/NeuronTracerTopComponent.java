@@ -2178,6 +2178,10 @@ public final class NeuronTracerTopComponent extends TopComponent
         TmObjectMesh newObjMesh = new TmObjectMesh(meshName, filename);
         activeNeuronSet.addObjectMesh(newObjMesh);
     }
+    
+    public void updateObjectMeshName (String oldName, String updatedName) {
+        activeNeuronSet.updateObjectMeshName(oldName, updatedName);
+    }
 
     public BlockTileSource getKtxSource() {
         return ktxSource;

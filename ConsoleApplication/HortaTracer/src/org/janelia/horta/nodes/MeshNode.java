@@ -88,9 +88,9 @@ public class MeshNode extends AbstractNode
     }
     
     public void setName(String name) {
-        meshActor.setMeshName(name);
         NeuronTracerTopComponent hortaTracer = NeuronTracerTopComponent.getInstance();
-        hortaTracer.saveObjectMesh(name, name);
+        hortaTracer.updateObjectMeshName(meshActor.getMeshName(), name);        
+        meshActor.setMeshName(name);
         setDisplayName(name);
     }
     

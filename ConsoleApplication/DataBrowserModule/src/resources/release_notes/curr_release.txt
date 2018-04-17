@@ -13,3 +13,7 @@ Workstation Browser
 * Fixed rendering issues in the ontology explorer
 * Fixed bug with access token refresh
 * Removed Alignment Board module 
+
+Horta Tracer
+* Added OBJ Mesh support to Movie Maker and Scene Viewer
+* Fixed issues associated with concurrent messaging modifications
