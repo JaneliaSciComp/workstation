@@ -46,6 +46,7 @@ import org.janelia.it.workstation.browser.model.search.SolrSearchResults;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
@@ -270,8 +271,11 @@ public final class DownloadWizardAction implements ActionListener {
                     log.trace("  Source has separation: {}",separation);
                     Set<FileType> typeNames = new HashSet<>();
                     typeNames.add(FileType.NeuronAnnotatorLabel);
-                    typeNames.add(FileType.NeuronAnnotatorSignal);
-                    typeNames.add(FileType.NeuronAnnotatorReference);
+                    Sample sample = result.getParentRun().getParent().getParent();
+                    if (!DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS.equals(sample.getSeparationCompressionType())) {
+                        typeNames.add(FileType.NeuronAnnotatorSignal);
+                        typeNames.add(FileType.NeuronAnnotatorReference);
+                    }
                     log.trace("    Adding type names: {}",typeNames);
                     countedTypeNames.addAll(typeNames);
                 }
@@ -286,8 +290,10 @@ public final class DownloadWizardAction implements ActionListener {
                         log.trace("  Source has separation: {}",separation);
                         Set<FileType> typeNames = new HashSet<>();
                         typeNames.add(FileType.NeuronAnnotatorLabel);
-                        typeNames.add(FileType.NeuronAnnotatorSignal);
-                        typeNames.add(FileType.NeuronAnnotatorReference);
+                        if (!DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS.equals(sample.getSeparationCompressionType())) {
+                            typeNames.add(FileType.NeuronAnnotatorSignal);
+                            typeNames.add(FileType.NeuronAnnotatorReference);
+                        }
                         log.trace("    Adding type names: {}",typeNames);
                         countedTypeNames.addAll(typeNames);
                     }
