@@ -100,9 +100,10 @@ public class RestJsonClientManager {
             client.register(authFilter);
         }
         
+        //client.register(CustomLoggingFilter.class);
         return client;
     }
-
+    
     public WebTarget getTarget(String serverUrl, boolean auth) {
         return auth ? authClient.target(serverUrl) : client.target(serverUrl);
     }
