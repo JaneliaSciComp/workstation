@@ -81,6 +81,8 @@ public class RestJsonClientManager {
                     log.error("Failed to deserialize property which does not exist in model: {}",key);
                     failureCache.put(key, true);
                 }
+                // JW-33050: We must skip the content here, or further processing may be broken.
+                jp.skipChildren();
                 return true;
             }
         });
