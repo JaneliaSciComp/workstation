@@ -2275,6 +2275,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             l.workspaceLoaded(workspace);
         }
     }
+    
+    void fireWorkspaceChanged(List<TmNeuronMetadata> neuronList) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.neuronTagsChanged(neuronList);
+        }
+    }
 
     public void fireSpatialIndexReady(TmWorkspace workspace) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {

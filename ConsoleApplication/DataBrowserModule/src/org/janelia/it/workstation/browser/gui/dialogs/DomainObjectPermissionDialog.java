@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -13,12 +14,14 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
@@ -27,8 +30,11 @@ import org.janelia.it.workstation.browser.model.DomainObjectPermission;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.security.Subject;
+import org.janelia.model.security.util.SubjectUtils;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -52,6 +58,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
     public DomainObjectPermissionDialog(DomainInspectorPanel parent) {
 
+        super(parent);
         this.parent = parent;
 
         setTitle("Add permission");
@@ -159,11 +166,13 @@ public class DomainObjectPermissionDialog extends ModalDialog {
         Utils.setWaitingCursor(parent);
 
         final Subject subject = (Subject) subjectCombobox.getSelectedItem();
-
+        final Set<String> granteeSet = SubjectUtils.getReaderSet(subject);
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
         
         SimpleWorker worker = new SimpleWorker() {
 
+            int unwriteable = 0;
+            
             @Override
             protected void doStuff() throws Exception {
                 if (dop == null) {
@@ -172,11 +181,49 @@ public class DomainObjectPermissionDialog extends ModalDialog {
                 dop.setRead(readCheckbox.isSelected());
                 dop.setWrite(writeCheckbox.isSelected());
                 model.changePermissions(domainObject, dop.getSubjectKey(), dop.getPermissions());
+                
+                // TODO: parallelize this with the changePermission call
+                if (domainObject instanceof Node) {
+                    Node treeNode = (Node)domainObject;
+                    unwriteable += getNumUnwriteable(treeNode);
+                }
+            }
+
+            private int getNumUnwriteable(Node treeNode) throws Exception {
+                
+                int unwriteable = 0;
+
+                for(DomainObject child : model.getDomainObjects(treeNode.getChildren())) {
+                    
+                    boolean satisfyRead = !dop.isRead() || DomainUtils.hasReadAccess(child, granteeSet);
+                    boolean satisfyWrite = !dop.isWrite() || DomainUtils.hasWriteAccess(child, granteeSet);
+                    
+                    if (!ClientDomainUtils.hasWriteAccess(child) && (!satisfyRead || !satisfyWrite)) {
+                        // If we don't have write access to the child, and the grantee's access isn't satisfied, then we have a problem.
+                        unwriteable++;
+                    }
+                    else {
+                        // In theory we can grant access to this child
+                        if (child instanceof Node) {
+                            unwriteable += getNumUnwriteable((Node)child);
+                        }
+                    }
+                }
+                
+                return unwriteable;
             }
 
             @Override
             protected void hadSuccess() {
                 parent.refresh();
+                
+                if (unwriteable>0) {
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                            "<html>Some of the items contained in this folder could not be shared because <br>"
+                            + "you don't have write access to them. Please contact the item owners for write access, <br>"
+                            + "or ask them to share the data on your behalf.</html>", unwriteable+" items could not be shared", JOptionPane.WARNING_MESSAGE); 
+                }
+                
                 Utils.setDefaultCursor(parent);
             }
 

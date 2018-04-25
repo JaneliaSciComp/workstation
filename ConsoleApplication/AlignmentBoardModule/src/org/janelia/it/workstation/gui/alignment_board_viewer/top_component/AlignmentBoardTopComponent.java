@@ -26,22 +26,23 @@ import org.slf4j.LoggerFactory;
 /**
  * Top component which displays something.
  */
-@ConvertAsProperties(
-        dtd = "-//org.janelia.it.workstation.gui.alignment_board_viewer.top_component//AlignmentBoard//EN",
-        autostore = false
-)
-@TopComponent.Description(
-        preferredID = AlignmentBoardTopComponent.PREFERRED_ID,
-        //iconBase="SET/PATH/TO/ICON/HERE", 
-        persistenceType = TopComponent.PERSISTENCE_ALWAYS
-)
-@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 200)
-@ActionID(category = "Window", id = "AlignmentBoardTopComponent")
-@ActionReference(path = "Menu/Window/Alignment Board", position = 50)
-@TopComponent.OpenActionRegistration(
-        displayName = "#CTL_AlignmentBoardAction",
-        preferredID = AlignmentBoardTopComponent.PREFERRED_ID
-)
+// Disabled as per JW-32938
+//@ConvertAsProperties(
+//        dtd = "-//org.janelia.it.workstation.gui.alignment_board_viewer.top_component//AlignmentBoard//EN",
+//        autostore = false
+//)
+//@TopComponent.Description(
+//        preferredID = AlignmentBoardTopComponent.PREFERRED_ID,
+//        //iconBase="SET/PATH/TO/ICON/HERE", 
+//        persistenceType = TopComponent.PERSISTENCE_ALWAYS
+//)
+//@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 200)
+//@ActionID(category = "Window", id = "AlignmentBoardTopComponent")
+//@ActionReference(path = "Menu/Window/Alignment Board", position = 50)
+//@TopComponent.OpenActionRegistration(
+//        displayName = "#CTL_AlignmentBoardAction",
+//        preferredID = AlignmentBoardTopComponent.PREFERRED_ID
+//)
 @Messages({
     "CTL_AlignmentBoardAction=Alignment Board",
     "CTL_AlignmentBoardTopComponent=Alignment Board",

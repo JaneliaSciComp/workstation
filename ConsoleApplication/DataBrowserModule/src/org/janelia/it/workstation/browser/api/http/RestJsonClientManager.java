@@ -64,7 +64,7 @@ public class RestJsonClientManager {
     
     private Client buildClient(boolean auth) {
 
-        client = ClientBuilder.newClient();
+        Client client = ClientBuilder.newClient();
         client.register(MultiPartFeature.class);
         
         JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
@@ -81,6 +81,8 @@ public class RestJsonClientManager {
                     log.error("Failed to deserialize property which does not exist in model: {}",key);
                     failureCache.put(key, true);
                 }
+                // JW-33050: We must skip the content here, or further processing may be broken.
+                jp.skipChildren();
                 return true;
             }
         });
@@ -98,9 +100,10 @@ public class RestJsonClientManager {
             client.register(authFilter);
         }
         
+        //client.register(CustomLoggingFilter.class);
         return client;
     }
-
+    
     public WebTarget getTarget(String serverUrl, boolean auth) {
         return auth ? authClient.target(serverUrl) : client.target(serverUrl);
     }

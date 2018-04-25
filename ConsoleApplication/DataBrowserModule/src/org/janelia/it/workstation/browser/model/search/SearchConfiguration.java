@@ -7,10 +7,10 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import javax.swing.SwingUtilities;
 
@@ -30,7 +30,6 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.search.Filter;
-import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;
 import org.janelia.model.domain.gui.search.criteria.AttributeValueCriteria;
 import org.janelia.model.domain.gui.search.criteria.Criteria;
@@ -66,7 +65,7 @@ public class SearchConfiguration {
     
     // Derived from source state
     private Class<? extends DomainObject> searchClass;
-    private final Map<String,DomainObjectAttribute> searchAttrs = new TreeMap<>();
+    private final Map<String,DomainObjectAttribute> searchAttrs = new LinkedHashMap<>();
     private final List<String> facets = new ArrayList<>();
     private final Map<String,List<FacetValue>> facetValues = new HashMap<>();
 
@@ -105,7 +104,16 @@ public class SearchConfiguration {
 
         filter.setSearchClass(searchClass.getName());
  
-        for(DomainObjectAttribute attr : DomainUtils.getSearchAttributes(searchClass)) {
+        // Order alphabetically by label
+        List<DomainObjectAttribute> searchAttributes = DomainUtils.getSearchAttributes(searchClass);
+        Collections.sort(searchAttributes, new Comparator<DomainObjectAttribute>() {
+            @Override
+            public int compare(DomainObjectAttribute o1, DomainObjectAttribute o2) {
+                return o1.getLabel().compareTo(o2.getLabel());
+            }
+        });
+        
+        for(DomainObjectAttribute attr : searchAttributes) {
             if (attr.isDisplay()) {
                 String facetKey = attr.getFacetKey();
                 if (facetKey!=null) {
@@ -326,9 +334,12 @@ public class SearchConfiguration {
         this.displayQueryString = qs.toString();
         
         this.query = builder.getQuery();
+        log.debug("Searching for: ", query);
+        
         DomainObjectResultPage firstPage = performSearch(0);
         SolrSearchResults searchResults = new SolrSearchResults(this, firstPage);
         log.debug("Got {} results", firstPage.getNumPageResults());
+        
         return searchResults;
     }
     

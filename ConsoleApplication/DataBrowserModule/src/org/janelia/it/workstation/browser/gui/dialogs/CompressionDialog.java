@@ -1,10 +1,13 @@
 package org.janelia.it.workstation.browser.gui.dialogs;
 
 import java.awt.BorderLayout;
+import java.awt.Dialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
@@ -17,17 +20,18 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
-import org.apache.commons.lang.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
+import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.Sample;
@@ -45,18 +49,28 @@ public class CompressionDialog extends ModalDialog {
 
     private final static Logger log = LoggerFactory.getLogger(CompressionDialog.class);
     
-    private final JPanel attrPanel;
+    private JPanel attrPanel;
 
-    private JRadioButton stacksLLCheckbox;
-    private JRadioButton stacksVLCheckbox;
+    private JRadioButton unalignedLLCheckbox;
+    private JRadioButton unalignedVLCheckbox;
+    private JRadioButton alignedLLCheckbox;
+    private JRadioButton alignedVLCheckbox;
     private JRadioButton sepLLCheckbox;
     private JRadioButton sepVLCheckbox;
     
     private Collection<Sample> samples;
     private DataSet dataSet;
-    
-    public CompressionDialog() {
 
+    public CompressionDialog() {
+        init();
+    }
+     
+    public CompressionDialog(Dialog parent) {
+        super(parent);
+        init();
+    }
+     
+    private final void init() {
         setTitle("Change Sample Compression Strategy");
 
         String desc = "<html>Lossless files are expensive to store in the long term.<br>"
@@ -69,17 +83,18 @@ public class CompressionDialog extends ModalDialog {
 
         attrPanel.add(new JLabel(desc), "span 3, gapbottom 20");
         
-        stacksLLCheckbox = new JRadioButton();
-        stacksLLCheckbox.setFocusable(false);
-        stacksLLCheckbox.addActionListener((e) -> {
-           updateDerivedState();
-        });
+        unalignedLLCheckbox = new JRadioButton();
+        unalignedLLCheckbox.setFocusable(false);
         
-        stacksVLCheckbox = new JRadioButton();
-        stacksVLCheckbox.setFocusable(false);
-        stacksVLCheckbox.addActionListener((e) -> {
-            updateDerivedState();
-         });
+        unalignedVLCheckbox = new JRadioButton();
+        unalignedVLCheckbox.setFocusable(false);
+
+        alignedLLCheckbox = new JRadioButton();
+        alignedLLCheckbox.setFocusable(false);
+        
+        alignedVLCheckbox = new JRadioButton();
+        alignedVLCheckbox.setFocusable(false);
+        
         sepLLCheckbox = new JRadioButton();
         sepLLCheckbox.setFocusable(false);
         
@@ -87,9 +102,13 @@ public class CompressionDialog extends ModalDialog {
         sepVLCheckbox.setFocusable(false);
 
         ButtonGroup stacksGroup = new ButtonGroup();
-        stacksGroup.add(stacksLLCheckbox);
-        stacksGroup.add(stacksVLCheckbox);
+        stacksGroup.add(unalignedLLCheckbox);
+        stacksGroup.add(unalignedVLCheckbox);
 
+        ButtonGroup alignedGroup = new ButtonGroup();
+        alignedGroup.add(alignedLLCheckbox);
+        alignedGroup.add(alignedVLCheckbox);
+        
         ButtonGroup sepGroup = new ButtonGroup();
         sepGroup.add(sepLLCheckbox);
         sepGroup.add(sepVLCheckbox);
@@ -98,10 +117,14 @@ public class CompressionDialog extends ModalDialog {
         attrPanel.add(new JLabel("Lossless (PBD format)"), "");
         attrPanel.add(new JLabel("Visually Lossless (H5J format)"), "");
 
-        attrPanel.add(new JLabel("Image Stacks"), "");
-        attrPanel.add(stacksLLCheckbox, "");
-        attrPanel.add(stacksVLCheckbox, "");
+        attrPanel.add(new JLabel("Unaligned 3d Stacks"), "");
+        attrPanel.add(unalignedLLCheckbox, "");
+        attrPanel.add(unalignedVLCheckbox, "");
 
+        attrPanel.add(new JLabel("Aligned 3d Stacks"), "");
+        attrPanel.add(alignedLLCheckbox, "");
+        attrPanel.add(alignedVLCheckbox, "");
+        
         attrPanel.add(new JLabel("Neuron Separations"), "");
         attrPanel.add(sepLLCheckbox, "");
         attrPanel.add(sepVLCheckbox, "");
@@ -137,18 +160,6 @@ public class CompressionDialog extends ModalDialog {
 
         add(buttonPane, BorderLayout.SOUTH);
     }
-    
-    private void updateDerivedState() {
-        if  (stacksLLCheckbox.isSelected() || !stacksVLCheckbox.isSelected()) {
-            sepLLCheckbox.setSelected(true);
-            sepLLCheckbox.setEnabled(false);
-            sepVLCheckbox.setEnabled(false);
-        }
-        else {
-            sepLLCheckbox.setEnabled(true);
-            sepVLCheckbox.setEnabled(true);
-        }   
-    }
 
     public void showForSamples(Collection<Sample> samples) {
 
@@ -159,50 +170,58 @@ public class CompressionDialog extends ModalDialog {
             setTitle("Change Sample Compression Strategy for "+samples.size()+" Selected Samples");
         }
         
-        int stackll = 0;
-        int stackvl = 0;
+        int unalignedll = 0;
+        int unalignedvl = 0;
+        int alignedll = 0;
+        int alignedvl = 0;
         int sepll = 0;
         int sepvl = 0;
         
         for(Sample sample : samples) {
-            if (DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J.equals(sample.getCompressionType())) {
-                stackll++;
+            
+            if (DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J.equals(sample.getUnalignedCompressionType())) {
+                unalignedll++;
             }
-            else if (DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS.equals(sample.getCompressionType())) {
-                stackvl++;
+            else if (DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS.equals(sample.getUnalignedCompressionType())) {
+                unalignedvl++;
             }
 
+            if (DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J.equals(sample.getAlignedCompressionType())) {
+                alignedll++;
+            }
+            else if (DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS.equals(sample.getAlignedCompressionType())) {
+                alignedvl++;
+            }
+            
             if (DomainConstants.VALUE_COMPRESSION_LOSSLESS.equals(sample.getSeparationCompressionType())) {
                 sepll++;
             }
             else if (DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS.equals(sample.getSeparationCompressionType())) {
                 sepvl++;
             }
+            
         }
         
-        if (stackvl == 0) {
-            stacksLLCheckbox.setSelected(true);
+        if (unalignedll > 0 && unalignedvl == 0) {
+            unalignedLLCheckbox.setSelected(true);
         }
-        else if (stackll == 0) {
-            stacksVLCheckbox.setSelected(true);
-        }
-        else {
-            // use default, if all samples don't agree
-            stacksVLCheckbox.setSelected(true);
-        }
-        
-        if (sepvl == 0) {
-            sepLLCheckbox.setSelected(true);
-        }
-        else if (sepll == 0) {
-            sepVLCheckbox.setSelected(true);
-        }
-        else {
-            // use default, if all samples don't agree
-            sepLLCheckbox.setSelected(true);
+        else if (unalignedvl > 0 && unalignedll == 0) {
+            unalignedVLCheckbox.setSelected(true);
         }
 
-        updateDerivedState();
+        if (alignedll > 0 && alignedvl == 0) {
+            alignedLLCheckbox.setSelected(true);
+        }
+        else if (alignedvl > 0 && alignedll == 0) {
+            alignedVLCheckbox.setSelected(true);
+        }
+        
+        if (sepll > 0 && sepvl == 0) {
+            sepLLCheckbox.setSelected(true);
+        }
+        else if (sepvl > 0 && sepll == 0) {
+            sepVLCheckbox.setSelected(true);
+        }
 
         ActivityLogHelper.logUserAction("CompressionDialog.showForSample");
         packAndShow();
@@ -215,21 +234,26 @@ public class CompressionDialog extends ModalDialog {
         
         setTitle("Change Default Sample Compression Strategy for "+dataSet.getName());
         
-        if (DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J.equals(dataSet.getDefaultCompressionType())) {
-            stacksLLCheckbox.setSelected(true);
+        if (DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J.equals(dataSet.getUnalignedCompressionType())) {
+            unalignedLLCheckbox.setSelected(true);
         }
         else {
-            stacksVLCheckbox.setSelected(true);
+            unalignedVLCheckbox.setSelected(true);
+        }
+
+        if (DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J.equals(dataSet.getAlignedCompressionType())) {
+            alignedLLCheckbox.setSelected(true);
+        }
+        else {
+            alignedVLCheckbox.setSelected(true);
         }
         
-        if (DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS.equals(dataSet.getDefaultSeparationCompressionType())) {
+        if (DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS.equals(dataSet.getSeparationCompressionType())) {
             sepVLCheckbox.setSelected(true);
         }
         else {
             sepLLCheckbox.setSelected(true);
         }
-
-        updateDerivedState();
 
         ActivityLogHelper.logUserAction("CompressionDialog.showForDataSet");
         packAndShow();
@@ -258,38 +282,36 @@ public class CompressionDialog extends ModalDialog {
     
     private boolean saveSamples() {
 
-        final String samplesText = samples.size()>1?samples.size()+" Samples":"1 Sample";
-        String targetSampleCompression =  stacksLLCheckbox.isSelected() ? DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J : DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
+        String targetUnalignedCompression =  unalignedLLCheckbox.isSelected() ? DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J : DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
+        String targetAlignedCompression =  alignedLLCheckbox.isSelected() ? DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J : DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
         String targetSeparationCompression =  sepLLCheckbox.isSelected() ? DomainConstants.VALUE_COMPRESSION_LOSSLESS : DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
 
-        boolean dirty = false;
+        List<Sample> dirtySamples = new ArrayList<>();
         
         for(Sample sample : samples) {
             
-            String currSampleCompression = sample.getCompressionType();
-            String currSepCompression = sample.getSeparationCompressionType();
+            String currUnalignedCompression = SampleUtils.getUnalignedCompression(dataSet, sample);
+            String currAlignedCompression = SampleUtils.getAlignedCompression(dataSet, sample);
+            String currSepCompression = SampleUtils.getSeparationCompression(dataSet, sample);
 
-            if (StringUtils.isBlank(currSampleCompression)) {
-                currSampleCompression = DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
-            }
-            if (StringUtils.isBlank(currSepCompression)) {
-                currSepCompression = DomainConstants.VALUE_COMPRESSION_LOSSLESS;
-            }
-            
-            if (!targetSampleCompression.equals(currSampleCompression) || !targetSeparationCompression.equals(currSepCompression)) {
-                dirty = true;
+            if (!targetUnalignedCompression.equals(currUnalignedCompression) || !targetAlignedCompression.equals(currAlignedCompression)  || !targetSeparationCompression.equals(currSepCompression)) {
+                dirtySamples.add(sample);
             }
         }
         
-        if (dirty) {
+        if (dirtySamples.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "All the selected samples already have the selected compression strategy",  "Change Sample Compression Strategy", JOptionPane.INFORMATION_MESSAGE);
+            return false;
+        }
+        else {
+            final String samplesText = dirtySamples.size()>1?dirtySamples.size()+" Samples":"1 Sample";
             String message = "Are you sure you want to change the compression strategy for "+samplesText+"?";
             int result = JOptionPane.showConfirmDialog(this, message,  "Change Sample Compression Strategy", JOptionPane.OK_CANCEL_OPTION);
             if (result != 0) return false;
         }
         
         StringBuilder sampleIdBuf = new StringBuilder();
-        for(final Sample sample : samples) {
-            // Target is Visually Lossless, just run the compression service
+        for(final Sample sample : dirtySamples) {
             if (sampleIdBuf.length()>0) sampleIdBuf.append(",");
             sampleIdBuf.append(sample.getId());
         }
@@ -305,9 +327,13 @@ public class CompressionDialog extends ModalDialog {
                 try {
                     HashSet<TaskParameter> taskParameters = new HashSet<>();
                     taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
-                    taskParameters.add(new TaskParameter("target sample compression", targetSampleCompression, null));
+                    taskParameters.add(new TaskParameter("target unaligned compression", targetUnalignedCompression, null));
+                    taskParameters.add(new TaskParameter("target aligned compression", targetAlignedCompression, null));
                     taskParameters.add(new TaskParameter("target separation compression", targetSeparationCompression, null));
                     task = StateMgr.getStateMgr().submitJob("ConsoleSampleCompression", "Console Sample Compression", taskParameters);
+                    if (task==null) {
+                        throw new IllegalStateException("Task could not be submitted");
+                    }
                 }
                 catch (Exception e) {
                     ConsoleApp.handleException(e);
@@ -321,23 +347,25 @@ public class CompressionDialog extends ModalDialog {
 
                     @Override
                     public String getName() {
-                        return "Changing Compression Strategy for "+samples.size()+" Samples";
+                        return "Changing Compression Strategy for "+dirtySamples.size()+" Samples";
                     }
 
                     @Override
                     public Callable<Void> getSuccessCallback() {
-                        return new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                
+                        return () -> {
+
+                            DomainExplorerTopComponent.getInstance().refresh(true, true, () -> {
+
                                 JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), 
-                                        "Sample compression strategy has been updated for "+samples.size()+" samples. "
-                                            + "Any samples needed reprocessing have been dispatched. "
-                                            + "Results will be available once the pipeline has completed.",
+                                        "<html>Sample compression strategy has been updated for "+dirtySamples.size()+" samples.<br>"
+                                            + "Any samples needing reprocessing have been scheduled.<br> "
+                                            + "Results will be available once the pipeline has completed.</html>",
                                         "Samples updated successfully", JOptionPane.INFORMATION_MESSAGE);
                                 
                                 return null;
-                            }
+                            });
+                            
+                            return null;
                         };
                     }
                 };
@@ -358,30 +386,114 @@ public class CompressionDialog extends ModalDialog {
     
     private boolean saveDataSet() {
 
-        String message = "<html>Apply compression strategy to all existing samples in data set, or only new samples added in the future?</html>";
+        String targetUnalignedCompression =  unalignedLLCheckbox.isSelected() ? DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J : DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
+        String targetAlignedCompression =  alignedLLCheckbox.isSelected() ? DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J : DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
+        String targetSeparationCompression =  sepLLCheckbox.isSelected() ? DomainConstants.VALUE_COMPRESSION_LOSSLESS : DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
+        
+        String message = "<html>Do you want to apply the new compression strategy to all existing samples in data set, or only new samples added in the future?</html>";
         
         String[] buttons = { "All Existing and Future Samples", "Only Future Samples", "Cancel" };
         int selectedOption = JOptionPane.showOptionDialog(this, message, 
                 "Apply changes", JOptionPane.INFORMATION_MESSAGE, 0, null, buttons, buttons[0]);
 
+        boolean applyToExisting;
+        
         if (selectedOption == 0) {
             log.info("User chose to apply changes to all existing and future samples");
-
+            applyToExisting = true;
             message = "<html>Are you sure you want to process all samples in this data set? This operation may be compute intensive and costly.</html>";
             int result = JOptionPane.showConfirmDialog(this, message,  "Change Sample Compression Strategy", JOptionPane.OK_CANCEL_OPTION);
             if (result != 0) return false;
         }
         else if (selectedOption == 1) {
             log.info("User chose to apply changes to future samples only");
+            applyToExisting = false;
         }
         else {
-            log.info("User chose to cancel save");
+            log.info("User chose to cancel");
             return false;
         }
+
+        SimpleWorker worker = new SimpleWorker() {
+            
+            Task task;
+
+            @Override
+            protected void doStuff() throws Exception {
+                try {
+                    DomainModel model = DomainMgr.getDomainMgr().getModel();
+                    dataSet.setUnalignedCompressionType(targetUnalignedCompression);
+                    dataSet.setAlignedCompressionType(targetAlignedCompression);
+                    dataSet.setSeparationCompressionType(targetSeparationCompression);
+                    model.save(dataSet);
+                    
+                    if (applyToExisting) {
+                        HashSet<TaskParameter> taskParameters = new HashSet<>();
+                        taskParameters.add(new TaskParameter("data set identifier", dataSet.getIdentifier(), null));
+                        taskParameters.add(new TaskParameter("target unaligned compression", targetUnalignedCompression, null));
+                        taskParameters.add(new TaskParameter("target aligned compression", targetAlignedCompression, null));
+                        taskParameters.add(new TaskParameter("target separation compression", targetSeparationCompression, null));
+                        task = StateMgr.getStateMgr().submitJob("ConsoleDataSetCompression", "Console Data Set Compression", taskParameters);
+                        if (task==null) {
+                            throw new IllegalStateException("Task could not be submitted");
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    ConsoleApp.handleException(e);
+                    return;
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+                if (task==null) return;
+                TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
+
+                    @Override
+                    public String getName() {
+                        return "Changing Compression Strategy for "+dataSet.getIdentifier();
+                    }
+
+                    @Override
+                    public Callable<Void> getSuccessCallback() {
+                        return () -> {
+
+                            DomainExplorerTopComponent.getInstance().refresh(true, true, () -> {
+
+                                if (applyToExisting) {
+                                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), 
+                                            "<html>Sample compression strategy has been updated for "+dataSet.getIdentifier()
+                                                + ".<br> Any samples needing reprocessing have been scheduled.<br> "
+                                                + "Results will be available once the pipeline has completed.</html>",
+                                            "Data set updated successfully", JOptionPane.INFORMATION_MESSAGE);
+                                }
+                                else {
+                                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), 
+                                            "<html>Sample compression strategy has been updated for "+dataSet.getIdentifier()
+                                                +".<br> Future samples will be processed to the given compression.</html>",
+                                            "Data set updated successfully", JOptionPane.INFORMATION_MESSAGE);
+                                }
+                                
+                                return null;
+                            });
+                            
+                            return null;
+                        };
+                    }
+                };
+
+                taskWorker.executeWithEvents();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                ConsoleApp.handleException(error);
+            }
+        };
+
+        worker.execute();
         
-        // TODO: finish this later
-        throw new IllegalStateException("This operation is not yet implemented");
-        
-//        return true;
+        return true;
     }
 }

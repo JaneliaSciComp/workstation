@@ -3,7 +3,7 @@ package org.janelia.it.workstation.browser.api;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.SwingUtilities;
 
@@ -20,16 +20,13 @@ import org.janelia.it.workstation.browser.events.lifecycle.SessionEndEvent;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog.ErrorType;
-import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.util.SimpleJwtParser;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.model.domain.enums.SubjectRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
+import org.janelia.model.security.util.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.util.concurrent.RateLimiter;
 
 /**
  * Manages the access credentials and current privileges. Takes care of logging in users during start-up, and 
@@ -52,10 +49,6 @@ public final class AccessManager {
     
     private static final Logger log = LoggerFactory.getLogger(AccessManager.class);
 
-    // How long is the token expected to last? This should be set to something less than the actual token life span. 
-    // The value used here is 12 hours, which is significantly less than the 48 hour life span of the actual token. 
-    private static final int TOKEN_LIFESPAN_SECS = 60 * 60 * 12;
-    
     public static String RUN_AS_USER = "RunAs";
     public static String USER_NAME = "console.serverLogin";
     public static String USER_PASSWORD = "console.serverPassword";
@@ -73,8 +66,7 @@ public final class AccessManager {
     private ErrorType loginIssue;
     
     // Running state
-    private final Debouncer tokenRefreshDebouncer = new Debouncer();
-    private final RateLimiter tokenRefreshRateLimiter = RateLimiter.create(1); // one token refresh is allowed every second
+    private final ReentrantLock tokenRefreshLock = new ReentrantLock();
     private String username;
     private String password;
     private String token;
@@ -309,76 +301,66 @@ public final class AccessManager {
      * @return JWS token 
      */
     public String getToken() {
-        if (tokenRefreshRateLimiter.tryAcquire(0, TimeUnit.SECONDS)) {
-            try {
-                obtainToken();
-            }
-            catch (AuthenticationException e) {
-                // These exceptions are swallowed here because we don't need the user to know about them. 
-                // There may be intermittent issues with fetching tokens, but that shouldn't affect the 
-                // user experience. If we actually get to the point where the current token is no longer 
-                // valid, then the ConsoleErrorHandler will ask the user for a new password.
-                log.warn("Could not refresh token", e);
-            }
-            catch (ServiceException e) {
-                log.warn("Could not refresh token", e);
-            }
-        }
-        else {
-            log.trace("Throttling token refresh");
-        }
+        renewTokenIfNeeded();
         log.trace("Returning token: {}", token);
         return token;
     }
 
-    private void obtainToken() {
+    private void renewToken() {
 
-        if (!tokenRefreshDebouncer.queue()) {
-            log.debug("Skipping token refresh, since there is one already in progress");
-            return;
+        tokenRefreshLock.lock();
+        
+        try {
+            log.debug("Attempting to obtain new auth token for {}", username);
+            this.token = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
+            this.tokenCreationDate = new Date();
+            
+            try {
+                this.tokenExpirationDate = null;
+                SimpleJwtParser parser = new SimpleJwtParser(token);
+                this.tokenExpirationDate = new Date(Long.parseLong(parser.getExp()) * 1000);
+            }
+            catch (Exception e) {
+                FrameworkImplProvider.handleException(e);
+            }
+            
+            log.info("Now using token {}", token);
+            log.info("Token will expire {}", tokenExpirationDate);
+            
+        } 
+        finally {
+            tokenRefreshLock.unlock();
         }
+    }
+
+    private boolean renewTokenIfNeeded() {
+
+        tokenRefreshLock.lock();
         
         try {
             if (tokenMustBeRenewed()) {
                 renewToken();
+                return true;
             }
-        }
+            else {
+                return false;
+            }
+        } 
         finally {
-            tokenRefreshDebouncer.success();
-        }   
+            tokenRefreshLock.unlock();
+        }
+        
     }
 
-    private synchronized void renewToken() {
-        log.debug("Attempting to obtain new auth token for {}", username);
-        this.token = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
-        this.tokenCreationDate = new Date();
-        
-        try {
-            this.tokenExpirationDate = null;
-            SimpleJwtParser parser = new SimpleJwtParser(token);
-            this.tokenExpirationDate = new Date(Long.parseLong(parser.getExp()) * 1000);
-        }
-        catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
-        }
-        
-        log.info("Now using token: {}", token);
-    }
-    
     private boolean tokenMustBeRenewed() {
-        log.trace("Checking if token should be renewed");
+        
+        log.trace("Checking if token must be renewed");
         if (token==null || tokenCreationDate==null) return true;
         Date now = new Date();
         
         if (tokenExpirationDate != null && now.after(tokenExpirationDate)) {
             // Token has already expired
-            return true;
-        }
-
-        long tokenAgeSecs = Utils.getDateDiff(tokenCreationDate, now, TimeUnit.SECONDS);
-        log.debug("Token is now {} seconds old", tokenAgeSecs);
-        if (tokenAgeSecs > TOKEN_LIFESPAN_SECS) {
-            // Token should be refreshed because we think it will expire soon
+            log.trace("Token is expired");
             return true;
         }
         
@@ -452,26 +434,12 @@ public final class AccessManager {
 
     public static Set<String> getReaderSet() {
         Subject subject = getAccessManager().getActualSubject();
-        Set<String> set = new HashSet<>();
-        if (subject==null) return set;
-        set.add(subject.getKey());
-        if (subject instanceof User) {
-            User user = (User)subject;
-            set.addAll(user.getReadGroups());
-        }
-        return set;
+        return SubjectUtils.getReaderSet(subject);
     }
     
     public static Set<String> getWriterSet() {
         Subject subject = getAccessManager().getActualSubject();
-        Set<String> set = new HashSet<>();
-        if (subject==null) return set;
-        set.add(subject.getKey());
-        if (subject instanceof User) {
-            User user = (User)subject;
-            set.addAll(user.getWriteGroups());
-        }
-        return set;
+        return SubjectUtils.getWriterSet(subject);
     }
 
     /**

@@ -28,30 +28,25 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.loader;
+package org.janelia.horta.nodes;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.util.List;
+import org.openide.nodes.ChildFactory;
 
 /**
  *
  * @author Christopher Bruns
  */
-public class FileDataSource extends BasicDataSource implements DataSource {
-    private File file;
-    
-    public FileDataSource(File file) throws FileNotFoundException {
-        super(new BufferedInputStream(new FileInputStream(file)), file.getName());
-        this.file = file;
-    }
-    
-    public File getFile() {
-        return file;
+class MeshChildFactory extends ChildFactory
+{
+
+    public MeshChildFactory()
+    {
     }
 
-    public void setFile(File file) {
-        this.file = file;
+    @Override
+    protected boolean createKeys(List list) {
+       return true;
     }
- }
+    
+}

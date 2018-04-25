@@ -122,7 +122,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     }
 
     public OntologyTerm getObject() {
-        return (OntologyTerm)getLookup().lookup(OntologyTerm.class);
+        return getLookup().lookup(OntologyTerm.class);
     }
     
     public OntologyNode getOntologyNode() {
@@ -137,7 +137,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     }
     
     public Ontology getOntology() {
-        return (Ontology) getLookup().lookup(Ontology.class);
+        return getLookup().lookup(Ontology.class);
     }
     
     public OntologyTerm getOntologyTerm() {

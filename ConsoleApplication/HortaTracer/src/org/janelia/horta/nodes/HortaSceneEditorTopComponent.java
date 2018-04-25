@@ -32,7 +32,12 @@ package org.janelia.horta.nodes;
 
 import java.awt.BorderLayout;
 import java.util.Collection;
+import java.util.List;
+import java.util.Observable;
+import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
+import org.janelia.gltools.GL3Actor;
+import org.janelia.horta.NeuronTracerTopComponent;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
@@ -162,14 +167,16 @@ implements ExplorerManager.Provider,  LookupListener
         }
         HortaMetaWorkspace workspace = allWorkspaces.iterator().next();
         if (workspace != cachedWorkspace) {
+            // lookup the mesh renderer for initialization of the workspace
+            NeuronTracerTopComponent hortaTracer = NeuronTracerTopComponent.getInstance();
+            
             logger.info("Creating new scene root");
             cachedWorkspace = workspace;
-            mgr.setRootContext( new HortaWorkspaceNode(workspace) );
+            mgr.setRootContext( new HortaWorkspaceNode(workspace, hortaTracer.getMeshActors(), hortaTracer.getMeshObserver()) );
             
             // try to set column widths to better defaults...
             // http://markmail.org/message/t3igjgr53dnibfr7
             // treeView.getOutline().setModel(treeView.getOutline().getModel());
         }
     }
-
 }

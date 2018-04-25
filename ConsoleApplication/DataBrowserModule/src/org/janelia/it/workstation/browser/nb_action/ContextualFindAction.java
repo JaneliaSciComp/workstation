@@ -16,7 +16,8 @@ import org.openide.util.NbBundle.Messages;
         id = "ContextualFindAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_ContextualFindAction"
+        displayName = "#CTL_ContextualFindAction",
+        iconBase = "images/search-yellow-icon.png"
 )
 @ActionReferences({
     @ActionReference(path = "Menu/Edit", position = 3300),

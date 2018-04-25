@@ -9,7 +9,6 @@ import org.janelia.it.jacs.integration.framework.nodes.NodeGenerator;
 import org.janelia.it.jacs.integration.framework.nodes.NodeProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.model.domain.workspace.Workspace;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
@@ -22,9 +21,9 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class RootNodeChildFactory extends ChildFactory<NodeGenerator> {
+public class ExplorerRootNodeChildFactory extends ChildFactory<NodeGenerator> {
 
-    private static final Logger log = LoggerFactory.getLogger(RootNodeChildFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(ExplorerRootNodeChildFactory.class);
     
     @Override
     protected boolean createKeys(List<NodeGenerator> list) {
@@ -46,10 +45,7 @@ public class RootNodeChildFactory extends ChildFactory<NodeGenerator> {
             
             list.addAll(allGenerators);
             
-            DomainModel model = DomainMgr.getDomainMgr().getModel();
-            List<Workspace> workspaces = new ArrayList<>(model.getWorkspaces());
-            
-            for(Workspace workspace : workspaces) {
+            for(Workspace workspace : DomainMgr.getDomainMgr().getModel().getWorkspaces()) {
                 log.info("Adding workspace node generator: {} ({})", workspace.getName(), workspace.getOwnerKey());
                 list.add(new NodeGenerator() {
                     

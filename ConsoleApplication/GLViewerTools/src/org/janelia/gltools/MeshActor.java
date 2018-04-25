@@ -61,6 +61,7 @@ public class MeshActor extends BasicGL3Actor
 {
     protected final MeshGeometry geometry;
     protected final Material material;
+    private String name;
     
     protected MeshFloatVbo vertexBufferObject = null;
     
@@ -83,6 +84,8 @@ public class MeshActor extends BasicGL3Actor
     private boolean geometryIsDirty = true;
     private boolean particleIndicesAreDirty = true;
     private boolean edgeIndicesAreDirty = true;
+    
+    private boolean visible = true;
     
     public MeshActor(MeshGeometry geometry, Material material, CompositeObject3d parent) {
         super(parent);
@@ -408,6 +411,8 @@ public class MeshActor extends BasicGL3Actor
     @Override
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) 
     {
+        if (!visible)
+            return;
         super.display(gl, camera, parentModelViewMatrix); // display child objects
         
         if (geometry.size() < 1)
@@ -609,6 +614,22 @@ public class MeshActor extends BasicGL3Actor
             return edges.get(k).getOtherVertex(a, b, c);
         }
 
+    }
+
+    public boolean getIsVisible() {
+        return visible;
+    }
+
+    public void setIsVisible(boolean visible) {
+        this.visible = visible;
+    }
+    
+    public String getMeshName() {
+        return name;
+    }
+
+    public void setMeshName(String name) {
+        this.name = name;
     }
 
 }

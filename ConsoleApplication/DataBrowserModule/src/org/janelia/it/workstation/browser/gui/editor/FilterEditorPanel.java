@@ -103,7 +103,7 @@ public class FilterEditorPanel
     public static final int EXPORT_PAGE_SIZE = 1000;
     
     // UI Settings
-    public static final String DEFAULT_FILTER_NAME = "Unsaved Filter";
+    public static final String DEFAULT_FILTER_NAME = "Unsaved Search";
     public static final Class<?> DEFAULT_SEARCH_CLASS = Sample.class;
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
     
@@ -186,7 +186,7 @@ public class FilterEditorPanel
                 String newName = null;
                 while (StringUtils.isEmpty(newName)) {
                     newName = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(),
-                            "Filter Name:\n", "Save Filter", JOptionPane.PLAIN_MESSAGE, null, null, name);
+                            "Search Name:\n", "Save Search", JOptionPane.PLAIN_MESSAGE, null, null, name);
                     log.info("newName:" + newName);
                     if (newName == null) {
                         // User chose "Cancel"
@@ -834,7 +834,7 @@ public class FilterEditorPanel
         if (DEFAULT_FILTER_NAME.equals(filter.getName())) {
             return filter.getName();
         }
-        return "Filter: "+StringUtils.abbreviate(filter.getName(), 15);
+        return "Search: "+StringUtils.abbreviate(filter.getName(), 15);
     }
 
     @Override

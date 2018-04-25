@@ -1,4 +1,20 @@
 // 7.9
 
 Workstation Browser
-* Minor bug fixes
+* Renamed "Filter" to "Search" and added a new Search option under Services
+* Improved search icons and other minor usability improvements  
+* Added warning when sharing fails due to lack of write access
+* Added additional compression strategy options for unaligned vs aligned files
+* Added default compression strategy for data sets
+* Improved performance when changing compression strategy on hundreds of samples
+* Corrected attribute sorting in "Add Criteria" button and other places
+* The view now gets refreshed after marking samples for reprocessing
+* Ontology explorer now remembers which nodes were expanded in the previous session
+* Fixed rendering issues in the ontology explorer
+* Fixed bug with access token refresh 
+* Removed Alignment Board module 
+* Other minor bug fixes
+
+Horta Tracer
+* Added OBJ Mesh support to Movie Maker and Scene Viewer
+* Fixed issues associated with concurrent messaging modifications

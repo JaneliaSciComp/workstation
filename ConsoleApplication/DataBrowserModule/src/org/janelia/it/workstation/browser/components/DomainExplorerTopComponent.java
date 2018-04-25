@@ -8,7 +8,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -51,7 +50,7 @@ import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.DomainObjectNodeTracker;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.RecentOpenedItemsNode;
-import org.janelia.it.workstation.browser.nodes.RootNode;
+import org.janelia.it.workstation.browser.nodes.ExplorerRootNode;
 import org.janelia.it.workstation.browser.nodes.WorkspaceNode;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -61,11 +60,8 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
-import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Node;
 import org.openide.util.Lookup;
-import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
@@ -104,7 +100,7 @@ import com.google.common.eventbus.Subscribe;
     "CTL_DomainExplorerAction=Data Explorer",
     "CTL_DomainExplorerTopComponent=Data Explorer"
 })
-public final class DomainExplorerTopComponent extends TopComponent implements ExplorerManager.Provider, LookupListener, FindContext {
+public final class DomainExplorerTopComponent extends TopComponent implements ExplorerManager.Provider, FindContext {
 
     private static final Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
 
@@ -115,17 +111,19 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         return (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
     }
 
+    // UI Elements
     private final CustomTreeToolbar toolbar;
     private final JPanel treePanel;
     private final CustomTreeView beanTreeView;
     private final FindToolbar findToolbar;
-    
+
+    // Utilities
     private final ExplorerManager mgr = new ExplorerManager();
     private final IdentifiableNodeSelectionModel selectionModel = new IdentifiableNodeSelectionModel();
     private final Debouncer debouncer = new Debouncer();
 
-    private Lookup.Result<AbstractNode> result = null;
-    private RootNode root;
+    // State
+    private ExplorerRootNode root;
     private List<Long[]> pathsToExpand;
     private boolean loadInitialState = true;
 
@@ -223,18 +221,15 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     
     @Override
     public void componentOpened() {
-        result = getLookup().lookupResult(AbstractNode.class);
-        result.addLookupListener(this);
         Events.getInstance().registerOnEventBus(this);
         if (AccessManager.loggedIn()) {
             // This method will only run once
-            loadInitialSession();
+            loadInitialState();
         }
     }
 
     @Override
     public void componentClosed() {
-        result.removeLookupListener(this);
         Events.getInstance().unregisterOnEventBus(this);
     }
     
@@ -287,7 +282,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                             pathsToExpand = expandedState.getExpandedArrayPaths();
                             log.info("saving pathsToExpand.size= "+pathsToExpand.size());
                             if (AccessManager.loggedIn()) {
-                                loadInitialSession();
+                                loadInitialState();
                             }
                             else {
                                 // Not logged in yet, wait for a SessionStartEvent
@@ -330,11 +325,11 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     @Subscribe
     public void sessionStarted(SessionStartEvent event) {
-        log.info("Session started, loading initial state");
-        loadInitialSession();
+        log.debug("Session started, loading initial state");
+        loadInitialState();
     }
     
-    private synchronized void loadInitialSession() {
+    private synchronized void loadInitialState() {
         
         if (!loadInitialState) return;
         log.info("Loading initial state");
@@ -492,7 +487,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             @Override
             protected void hadSuccess() {
                 try {
-                    root = new RootNode();
+                    root = new ExplorerRootNode();
                     mgr.setRootContext(root);
                     showTree();
                     
@@ -535,17 +530,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         };
         
         worker.execute();
-    }
-
-    @Override
-    public void resultChanged(LookupEvent lookupEvent) {
-        Collection<? extends AbstractNode> allNodes = result.allInstances();
-        log.trace("resultChanged(allNodes.size={})", allNodes.size());
-        if (allNodes.isEmpty()) {
-            return;
-        }
-        final Node selectedNode = allNodes.iterator().next();
-        ActivityLogHelper.logUserAction("DomainExplorerTopComponent.resultChanged", selectedNode.getDisplayName());
     }
 
     public WorkspaceNode getWorkspaceNode() {
