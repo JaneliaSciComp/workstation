@@ -213,7 +213,7 @@ public class SkeletonActorModel {
 
                 NeuronStyle neuronStyle=neuronStyles.get(neuronID);
                 
-                if (neuronStyle != null && (!neuronStyle.isVisible() || !neuronStyle.isUserVisible())) {
+                if (neuronStyle != null && (!neuronStyle.isVisible())) {
                     continue;
                 }
 
@@ -305,7 +305,7 @@ public class SkeletonActorModel {
 
             for (Long neuronID : neuronVertices.keySet()) {
                 NeuronStyle neuronStyle=neuronStyles.get(neuronID);
-                if (neuronStyle != null && !neuronStyle.isVisible() && !neuronStyle.isUserVisible()) {
+                if (neuronStyle != null && !neuronStyle.isVisible()) {
                     continue;
                 }
                 neuronOrderList.add(neuronID);
@@ -683,7 +683,7 @@ public class SkeletonActorModel {
             return false;
         } else {
             NeuronStyle style = neuronStyles.get(anchor.getNeuronID());
-            return style.isVisible() && style.isUserVisible();
+            return style.isVisible();
         }
     }
     

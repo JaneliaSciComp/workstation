@@ -1712,7 +1712,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         Color color = askForNeuronColor(getNeuronStyle(neuron));
         if (color != null) {
-            NeuronStyle style = new NeuronStyle(color, neuron.isVisible(), false, true);
+            NeuronStyle style = new NeuronStyle(color, getNeuronVisibility(neuron), false);
             setNeuronStyle(neuron, style);
         }
     }
@@ -1788,7 +1788,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         } 
         else {
             TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
-            setNeuronVisibility(currentNeuron, !currentNeuron.isVisible());
+            setNeuronVisibility(currentNeuron, !getNeuronVisibility(currentNeuron));
         }
     }
     
@@ -1850,16 +1850,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
              for (String property: properties) {
                  style.setProperty(property, toggle);
              }
-             styleUpdater.put(neuronList.get(i), style);
-        }
-        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
-    }
-    
-    public void setNeuronUserVisible(List<TmNeuronMetadata> neuronList, boolean userVisible) {
-        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
-        for (int i=0; i<neuronList.size(); i++) {
-             NeuronStyle style = getNeuronStyle(neuronList.get(i));
-             style.setUserVisible(userVisible);
              styleUpdater.put(neuronList.get(i), style);
         }
         this.annotationModel.fireNeuronStylesChanged(styleUpdater);

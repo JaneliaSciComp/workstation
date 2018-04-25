@@ -87,9 +87,8 @@ public class NeuronModelAdapter implements NeuronModel
     // private NeuronStyle neuronStyle;
     // TODO: Stop using locally cached color and visibility, in favor of proper syncing with underlying Style
     // private AnnotationModel annotationModel;
-    private boolean bIsVisible; // TODO: sync visibility with LVV eventually. For now, we want fast toggle from Horta.
-    private boolean nonInteractable; 
-    private boolean userVisible;
+    private boolean nonInteractable;
+    private boolean visible;
     private boolean userToggleRadius; 
     private String ownerKey;
     private Color defaultColor = Color.GRAY;
@@ -105,10 +104,8 @@ public class NeuronModelAdapter implements NeuronModel
         this.neuron = neuron;
         this.neuronId = neuron.getId();
         this.neuronSet = workspace;
-        // this.annotationModel = annotationModel;
-        bIsVisible = true; // TODO: 
-        nonInteractable = false; // TODO: 
-        userVisible = true;
+        nonInteractable = false; // TODO:
+        visible = true;
         ownerKey = neuron.getOwnerKey();
         vertexes = new VertexList(neuron.getGeoAnnotationMap(), neuronSet);
         edges = new EdgeList(vertexes);
@@ -443,7 +440,7 @@ public class NeuronModelAdapter implements NeuronModel
         // Avoid multiple style setting calls
         if (! color.equals(deepColor)) {
             try {
-                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, vis, isNonInteractable(), isUserVisible()));
+                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, vis, isNonInteractable()));
             } catch (Exception ex) {
                 logger.error("Error setting neuron style", ex);
             }
@@ -507,31 +504,25 @@ public class NeuronModelAdapter implements NeuronModel
     @Override
     public boolean isVisible()
     {
-        return this.isUserVisible();
-        // return neuronStyle.isColumnVisible();
+        return visible;
     }
 
     @Override
     public void setVisible(boolean visible)
     {       
-        // Synchronize with TmNeuron Style
         NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
-      //  Color color = cachedColor;
 
-      //  boolean deepVisibility = ! visible;
-     //   if (style != null) {
-     //       color = style.getColor();
-     //       deepVisibility = style.isVisible();
-     //   }
-        // Don't keep updating visibility, if it's already set correctly
-       // if (visible != deepVisibility) {
-            try {
-                neuronSet.changeNeuronVisibility(neuron, visible);
-            } catch (Exception ex) {
-                logger.error("Error setting neuron style", ex);
-            }
-      //  }
-        
+        if (style != null && style.isVisible() == visible) {
+            // no change
+            return;
+        }
+
+        try {
+            neuronSet.changeNeuronVisibility(neuron, visible);
+        } catch (Exception ex) {
+            logger.error("Error setting neuron style", ex);
+        }
+
         getVisibilityChangeObservable().setChanged();
     }
 
@@ -738,21 +729,6 @@ public class NeuronModelAdapter implements NeuronModel
 
     }
     
-        /**
-     * @return the userVisible
-     */
-    public boolean isUserVisible() {
-        return userVisible;
-    }
-
-    /**
-     * @param userVisible the userVisible to set
-     */
-    public void setUserVisible(boolean userVisible) {
-        this.userVisible = userVisible;
-    }
-
-
     // Adapter to make a Map<Long, TmGeoAnnotation> look like a Collection<NeuronVertex>
     private static class VertexList implements Collection<NeuronVertex> 
     {

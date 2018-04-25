@@ -114,14 +114,16 @@ implements NeuronSet// , LookupListener
     public boolean isReadOnly() {
         return !annotationModel.editsAllowed();
     }
-    
+
+    // see note in loadUserPreferences() re: calling back into annmgr for this stuff!
+
     public void changeNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
-        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuron, visibility);
+        annotationModel.setNeuronVisibility(neuron, visibility);
     }
     
     @Override
-    public void changeNeuronUserVisible(List<TmNeuronMetadata> neuronList, boolean userVisible) {
-        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, userVisible);
+    public void changeNeuronVisibility(List<TmNeuronMetadata> neuronList, boolean visible) {
+        annotationModel.setNeuronVisibility(neuronList, visible);
     }
     
     @Override
@@ -811,17 +813,13 @@ implements NeuronSet// , LookupListener
                 result = true;
             }
             
-            /*boolean vis = style.isVisible();
+            boolean vis = style.isVisible();
             if (vis != neuronModel.isVisible()) {
                 neuronModel.setVisible(vis);
-                neuronModel.getVisibilityChangeObservable().notifyObservers();
+                notifyVisibilityChange(neuronModel);
+                // neuronModel.getVisibilityChangeObservable().notifyObservers();
                 result = true;
-            }*/
-             boolean userviz = style.isUserVisible();
-            if (userviz != neuronModel.isUserVisible()) {
-                neuronModel.setUserVisible(userviz);
-                return notifyVisibilityChange(neuronModel);
-            }             
+            }
             boolean nonInteractable = style.isNonInteractable();
             if (nonInteractable != neuronModel.isNonInteractable()) {
                 neuronModel.setNonInteractable(nonInteractable);

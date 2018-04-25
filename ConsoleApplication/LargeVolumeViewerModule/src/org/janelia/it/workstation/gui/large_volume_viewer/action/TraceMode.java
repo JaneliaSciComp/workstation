@@ -699,7 +699,7 @@ implements MouseMode, KeyListener
                                     LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, toggled);
                                     LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
                                 } else if (property.equals(NeuronGroupsDialog.PROPERTY_VISIBILITY)) {
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, !toggled);                                        
+                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuronList, !toggled);
                                     LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
                                 } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
                                     LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, toggled);

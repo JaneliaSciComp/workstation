@@ -500,8 +500,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 boolean notItself = !annotation.getId().equals(excludedAnnotationID);
                 NeuronStyle style = getNeuronStyle(getNeuronFromNeuronID(annotation.getNeuronId()));
                 boolean visible = style.isVisible();
-                boolean userVisible = style.isUserVisible();
-                return notItself && visible && userVisible;
+                return notItself && visible;
             }
         });
         
@@ -1609,7 +1608,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public void setNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
         Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<>();
         NeuronStyle style = getNeuronStyle(neuron);
-        style.setUserVisible(visibility);
+        style.setVisible(visibility);
         styleUpdater.put(neuron, style);
         if (visibility) {
             removeUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
@@ -1623,7 +1622,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         Map<TmNeuronMetadata, NeuronStyle> styleUpdater = new HashMap<>();
         for (TmNeuronMetadata neuron : bulkNeurons) {
             NeuronStyle style = getNeuronStyle(neuron);
-            style.setUserVisible(visibility);
+            style.setVisible(visibility);
             styleUpdater.put(neuron, style);
             if (visibility) {
                 getAllTagMeta().removeUserTag(NEURON_TAG_VISIBILITY, neuron);
@@ -1668,10 +1667,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public NeuronStyle getNeuronStyle(TmNeuronMetadata neuron) {
         boolean visibility = getNeuronVisibility(neuron);
         if (neuron.getColor() == null) {
-            return NeuronStyle.getStyleForNeuron(neuron.getId(), visibility, false, true);
+            return NeuronStyle.getStyleForNeuron(neuron.getId(), visibility, false);
         }
         else {
-            return new NeuronStyle(neuron.getColor(), visibility, false, true);
+            return new NeuronStyle(neuron.getColor(), visibility, false);
         }
     }
 
@@ -2077,11 +2076,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
                 Map<String,Object> groupMapping = currentTagMap.geTagGroupMapping(groupKey);
                 if (groupMapping!=null && groupMapping.get("toggled")!=null && ((Boolean)groupMapping.get("toggled"))) {
-                    String property = (String)groupMapping.get("toggleprop");                
+                    String property = (String)groupMapping.get("toggleprop");
+                    // these two prop changes ought to be in annmodel, not annmgr, and annmgr should call into model;
+                    //  fixed for visiblity, but not for others yet
                     if (property.equals(NeuronGroupsDialog.PROPERTY_RADIUS)) {
                         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, true);                               
                     } else if (property.equals(NeuronGroupsDialog.PROPERTY_VISIBILITY)) {
-                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, false);                                        
+                        setNeuronVisibility(neuronList, false);
                     } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
                         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, true);                                 
                     }
@@ -2089,7 +2090,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             }
         } 
         // populate user preferences, which for now only deal with user visibility
-         // NOTE: For now, comment since user's don't want to restore their user preferences
+         // NOTE: For now, comment since users don't want to restore their user preferences, and that
+         // was the only thing in the prefs
+         // NOTE: the following code probably no longer works correctly!
          /*List<String> userTagPreferences = FrameworkImplProvider
                  .getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_TAGS, 
                          this.getCurrentSample().getId().toString(), null);
