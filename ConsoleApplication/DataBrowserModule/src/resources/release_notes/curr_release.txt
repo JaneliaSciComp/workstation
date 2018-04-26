@@ -7,3 +7,4 @@ Workstation Browser
 Large Volume Viewer
 * Fixed issues with hiding and showing neurons
 * Added bulk neuron owner change to neuron gear menu
+* Fixed bug: annotation list should now update after set anchor as root

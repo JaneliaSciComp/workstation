@@ -1353,6 +1353,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 if (notesChangedFinal) {
                     fireNotesUpdated(newRoot);
                 }
+                fireNeuronChanged(neuron);
                 activityLog.logEndOfOperation(getWsId(), newRoot);
             }
         });
