@@ -682,6 +682,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         neuronTableModel.deleteNeuron(neuron);
         restoreSelection();
         updateFilteredNeuronList();
+        updateNeuronLabel();
     }
 
     /**
