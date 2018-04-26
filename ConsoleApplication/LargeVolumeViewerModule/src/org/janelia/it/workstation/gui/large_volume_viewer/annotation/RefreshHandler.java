@@ -136,8 +136,8 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                     origNeuron.setWriters(neuron.getWriters());
                     origNeuron.setReaders(neuron.getReaders());
                 }
-                annotationModel.fireBackgroundNeuronOwnershipChanged(neuron);
                 annotationModel.getNeuronManager().completeOwnershipRequest(decision);
+                SwingUtilities.invokeLater(() -> annotationModel.fireBackgroundNeuronOwnershipChanged(neuron));
             } else if (action == MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
                 // complete the future outside of the swing thread, since the GUI thread is blocked
                 log.info("Finishing processing create neuron ");
