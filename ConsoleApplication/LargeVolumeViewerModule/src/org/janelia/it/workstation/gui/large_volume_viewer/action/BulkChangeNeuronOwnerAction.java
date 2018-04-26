@@ -90,10 +90,28 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
             return;
         }
 
+        // quick timing test suggests it takes ~0.4s per neuron; estimate the time for
+        //  the user and warn them!
+        double seconds = 0.4 * neurons.size();
+        String message;
+        if (seconds < 5.0) {
+            message = String.format("You are about to change the owner for %d neurons. This action cannot be undone. Continue?",
+                    neurons.size());
+        } else {
+            message = String.format("You are about to change the owner for %d neurons. This action cannot be undone.",
+                    neurons.size());
+            if (seconds < 60.0) {
+                message += String.format("\n\nThis operation is estimated to take about %d seconds. Continue?", Math.round(seconds));
+            } else if (seconds < 3600.0) {
+                message += String.format("\n\nThis operation is estimated to take about %.1f minutes. Continue?", seconds / 60.0);
+            } else {
+                message += String.format("\n\nThis operation is estimated to take about %.1f hours. Continue?", seconds / 3600.0);
+            }
+        }
+
         int ans = JOptionPane.showConfirmDialog(
             null,
-            String.format("You are about to change the owner for %d neurons. This action cannot be undone. Continue?",
-                    neurons.size()),
+            message,
             "Change owner?",
             JOptionPane.OK_CANCEL_OPTION
         );
@@ -101,19 +119,14 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
             SimpleWorker changer = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-
-
                     // we really need to do a bulk change operation here; this could be
                     //  slow, because every neuron owner change does its own completable future
-                    //  and waits for it to finish
-
-
+                    //  and waits for it to finish; for now, rely on the time warning
+                    //  in the dialog above
                     Subject newOwner = dialog.getNewOwnerKey();
                     for (TmNeuronMetadata neuron: neurons) {
                         annMgr.changeNeuronOwner(neuron, newOwner);
                     }
-
-
                 }
 
                 @Override
