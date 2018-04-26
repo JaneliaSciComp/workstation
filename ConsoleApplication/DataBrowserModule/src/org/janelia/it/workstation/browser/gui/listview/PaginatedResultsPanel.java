@@ -338,7 +338,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
         endPageButton.setEnabled(numPages>0 && currPage != numPages - 1);
     }
     
-    protected void updateStatusBar() {
+    public void updateStatusBar() {
         if (resultPage==null || resultsView==null) {
             statusLabel.setText("");
             selectionButtonContainer.setVisible(false);

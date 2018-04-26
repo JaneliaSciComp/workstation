@@ -352,7 +352,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                 // (we used to retrieve global color here; replaced by styles)
                 // set styles for our neurons; if a neuron isn't in the saved map,
                 //  use a default style
-                NeuronStyle style = ModelTranslation.translateNeuronStyle(neuron);
+                NeuronStyle style = annModel.getNeuronStyle(neuron);
                 updateNeuronStyleMap.put(neuron, style);
                 
                 // note that we must add annotations in parent-child sequence
@@ -394,7 +394,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
         List<TmAnchoredPath> annList = new ArrayList<>();
         
-        NeuronStyle style = ModelTranslation.translateNeuronStyle(neuron);
+        NeuronStyle style = annModel.getNeuronStyle(neuron);
         updateNeuronStyleMap.put(neuron, style);
         
         for (TmGeoAnnotation root: neuron.getRootAnnotations()) {

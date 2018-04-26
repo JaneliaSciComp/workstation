@@ -34,6 +34,7 @@ import java.awt.Color;
 import java.util.Collection;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 
 /**
@@ -49,5 +50,7 @@ public interface HortaMetaWorkspace extends ObservableInterface
     TmSample getSample();
     void setSample(TmSample sample);
     Color getBackgroundColor();
-    void setBackgroundColor(Color color);
+    void setBackgroundColor(Color color);   
+    Collection<TmObjectMesh> getMeshActors();
+    void addMeshActors(TmObjectMesh actor);
 }

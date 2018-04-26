@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.browser.gui.dialogs;
 
+import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -22,11 +24,15 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
@@ -34,10 +40,12 @@ import org.janelia.it.workstation.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.browser.model.DomainModelViewConstants;
 import org.janelia.it.workstation.browser.util.Utils;
-import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.sample.DataSet;
-import org.janelia.model.domain.sample.Sample;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Dialog for viewing and editing Data Sets. 
@@ -47,18 +55,22 @@ import org.janelia.model.domain.sample.Sample;
  */
 public class DataSetListDialog extends ModalDialog {
 
+    private static final Logger log = LoggerFactory.getLogger(DataSetListDialog.class);
+    
     private final JLabel loadingLabel;
     private final JPanel mainPanel;
     private final DynamicTable dynamicTable;
     private final DataSetDialog dataSetDialog;
     private final DomainDetailsDialog detailsDialog;
+    private final CompressionDialog compressionDialog;
     
     public DataSetListDialog() {
         setTitle("Data Sets");
 
         dataSetDialog = new DataSetDialog(this);
         detailsDialog = new DomainDetailsDialog(this);
-
+        compressionDialog = new CompressionDialog(this);
+        
         loadingLabel = new JLabel();
         loadingLabel.setOpaque(false);
         loadingLabel.setIcon(Icons.getLoadingIcon());
@@ -117,13 +129,6 @@ public class DataSetListDialog extends ModalDialog {
                     });
                     menu.add(editItem);
 
-//                    JMenuItem compItem = new JMenuItem("  Change Sample Compression Strategy");
-//                    compItem.addActionListener((e2) -> {
-//                        CompressionDialog dialog = new CompressionDialog();
-//                        dialog.showForDataSet(dataSet);
-//                    });
-//                    menu.add(compItem);
-                    
                     JMenuItem permItem = new JMenuItem("  Change Permissions");
                     permItem.addActionListener((e2) -> {
                         detailsDialog.showForDomainObject(dataSet, DomainInspectorPanel.TAB_NAME_PERMISSIONS);
@@ -131,6 +136,12 @@ public class DataSetListDialog extends ModalDialog {
                     
                     menu.add(permItem);
 
+                    JMenuItem compItem = new JMenuItem("  Change Default Compression Strategy");
+                    compItem.addActionListener((e2) -> {
+                        compressionDialog.showForDataSet(dataSet);
+                    });
+                    menu.add(compItem);
+                    
                     JMenuItem deleteItem = new JMenuItem("  Delete");
                     deleteItem.addActionListener(new ActionListener() {
                         @Override
@@ -174,7 +185,7 @@ public class DataSetListDialog extends ModalDialog {
                     if (!ClientDomainUtils.hasWriteAccess(dataSet)) {
                         permItem.setEnabled(false);
                         deleteItem.setEnabled(false);
-//                        compItem.setEnabled(false);
+                        compItem.setEnabled(false);
                     }
                 }
 
@@ -213,30 +224,22 @@ public class DataSetListDialog extends ModalDialog {
                         return;
                     }
                     
-                    SimpleWorker worker = new SimpleWorker() {
-
-                        @Override
-                        protected void doStuff() throws Exception {
+                    SimpleWorker.runInBackground(() -> {
+                        DomainModel model = DomainMgr.getDomainMgr().getModel();
+                        try {
                             if (dc.getName().equals(DomainModelViewConstants.DATASET_SAGE_SYNC)) {
                                 dataSet.setSageSync(selected);
-                                DomainMgr.getDomainMgr().getModel().save(dataSet);
+                                model.save(dataSet);
                             }
                             if (dc.getName().equals(DomainModelViewConstants.DATASET_NEURON_SEPARATION)) {
                                 dataSet.setNeuronSeparationSupported(selected);
-                                DomainMgr.getDomainMgr().getModel().save(dataSet);
+                                model.save(dataSet);
                             }
                         }
-
-                        @Override
-                        protected void hadSuccess() {
+                        catch (Exception e) {
+                            FrameworkImplProvider.handleException(e);
                         }
-
-                        @Override
-                        protected void hadError(Throwable error) {
-                            ConsoleApp.handleException(error);
-                        }
-                    };
-                    worker.execute();
+                    });
                 }
             }
         };
@@ -245,9 +248,9 @@ public class DataSetListDialog extends ModalDialog {
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_NAME);
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_PIPELINE_PROCESS);
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAMPLE_NAME);
-        dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAGE_SYNC).setEditable(true);
-        DynamicColumn neuSepCol = dynamicTable.addColumn(DomainModelViewConstants.DATASET_NEURON_SEPARATION);
-        neuSepCol.setEditable(SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI);
+        // Disable editable columns because it's too easy to make a mistake, and there is no undo or cancel
+        dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAGE_SYNC);//.setEditable(true);
+        dynamicTable.addColumn(DomainModelViewConstants.DATASET_NEURON_SEPARATION);//.setEditable(SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI);
 
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new data set definition");
@@ -286,11 +289,14 @@ public class DataSetListDialog extends ModalDialog {
         ActivityLogHelper.logUserAction("DataSetListDialog.showDialog");
 
         // Show dialog and wait
+        Events.getInstance().registerOnEventBus(this);
         packAndShow();
+        Events.getInstance().unregisterOnEventBus(this);
     }
 
     private void loadDataSets() {
 
+        log.info("loadDataSets");
         mainPanel.removeAll();
         mainPanel.add(loadingLabel, BorderLayout.CENTER);
 
@@ -337,5 +343,11 @@ public class DataSetListDialog extends ModalDialog {
 
     public void totalRefresh() {
         throw new UnsupportedOperationException();
+    }
+
+    @Subscribe
+    public void objectChanged(DomainObjectChangeEvent event) {
+        // This happens if the child dialog changes anything about the selected data set
+        loadDataSets();
     }
 }

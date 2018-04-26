@@ -20,7 +20,8 @@ import org.openide.util.lookup.ServiceProvider;
  * 
  * @author fosterl
  */
-@ServiceProvider(service=DropAcceptor.class, path=DropAcceptor.LOOKUP_PATH)
+//Disabled as per JW-32938
+//@ServiceProvider(service=DropAcceptor.class, path=DropAcceptor.LOOKUP_PATH)
 public class AlignmentBoardPopulator implements DropAcceptor {
 
     private final DomainHelper domainHelper = new DomainHelper();

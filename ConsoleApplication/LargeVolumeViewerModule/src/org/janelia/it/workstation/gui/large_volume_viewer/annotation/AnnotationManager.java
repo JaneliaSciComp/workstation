@@ -14,7 +14,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -122,7 +121,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     //  until the distance threshold seemed right
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
     private static final String SYSTEM_OWNER = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
-    private static final String NEURON_TAG_VISIBILITY = "hidden";
 
     public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi,
         LargeVolumeViewerTranslator lvvTranslator, TileServer tileServer) {
@@ -1714,7 +1712,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         Color color = askForNeuronColor(getNeuronStyle(neuron));
         if (color != null) {
-            NeuronStyle style = new NeuronStyle(color, neuron.isVisible(), false, true);
+            NeuronStyle style = new NeuronStyle(color, getNeuronVisibility(neuron), false);
             setNeuronStyle(neuron, style);
         }
     }
@@ -1790,7 +1788,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         } 
         else {
             TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
-            setNeuronVisibility(currentNeuron, !currentNeuron.isVisible());
+            setNeuronVisibility(currentNeuron, !getNeuronVisibility(currentNeuron));
         }
     }
     
@@ -1809,13 +1807,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
     
     public boolean getNeuronVisibility(TmNeuronMetadata neuron) {
-       Set<String> neuronTags = this.annotationModel.getUserNeuronTags(neuron);
-       if (neuronTags!=null) {
-           if (neuronTags.contains(NEURON_TAG_VISIBILITY)) {
-               return false;
-           }
-       }
-       return true;
+        return annotationModel.getNeuronVisibility(neuron);
     }
 
     public void setNeuronVisibility(Anchor anchor, boolean visibility) {
@@ -1824,37 +1816,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
     
     public void setNeuronVisibility(Collection<TmNeuronMetadata> bulkNeurons, boolean visibility) {
-         Map<TmNeuronMetadata, NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
-         for (TmNeuronMetadata neuron : bulkNeurons) {
-           NeuronStyle style = getNeuronStyle(neuron);
-            style.setUserVisible(visibility);
-            styleUpdater.put(neuron, style);
-            if (visibility) {
-                this.annotationModel.getAllTagMeta().removeUserTag(NEURON_TAG_VISIBILITY, neuron);
-            } else {
-                this.annotationModel.getAllTagMeta().addUserTag(NEURON_TAG_VISIBILITY, neuron);
-            }
-        }
-        try {
-            this.annotationModel.saveUserTags();
-        } catch (Exception e) {
-            ConsoleApp.handleException(e);
-        }        
-        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
+        annotationModel.setNeuronVisibility(bulkNeurons, visibility);
     }
     
     public void setNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
-        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
-        NeuronStyle style = getNeuronStyle(neuron);
-        style.setUserVisible(visibility);
-        styleUpdater.put(neuron, style);
-        if (visibility) {
-            this.annotationModel.removeUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
-        } else {
-            this.annotationModel.addUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
-        }
-        
-        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
+        annotationModel.setNeuronVisibility(neuron, visibility);
     }
     
     public void setNeuronNonInteractable(List<TmNeuronMetadata> neuronList, boolean nonInteractable) {
@@ -1884,16 +1850,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
              for (String property: properties) {
                  style.setProperty(property, toggle);
              }
-             styleUpdater.put(neuronList.get(i), style);
-        }
-        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
-    }
-    
-    public void setNeuronUserVisible(List<TmNeuronMetadata> neuronList, boolean userVisible) {
-        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
-        for (int i=0; i<neuronList.size(); i++) {
-             NeuronStyle style = getNeuronStyle(neuronList.get(i));
-             style.setUserVisible(userVisible);
              styleUpdater.put(neuronList.get(i), style);
         }
         this.annotationModel.fireNeuronStylesChanged(styleUpdater);

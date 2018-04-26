@@ -1,4 +1,8 @@
-// 7.8
+// 7.10
 
 Workstation Browser
-* Fixed two memory leaks when opening many dialog boxes
+
+
+
+Large Volume Viewer
+* Fixed issues with hiding and showing neurons

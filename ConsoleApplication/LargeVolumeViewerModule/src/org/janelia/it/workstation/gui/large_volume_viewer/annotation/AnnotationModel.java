@@ -112,6 +112,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private static final String COLOR_FORMAT = "# COLOR %f,%f,%f";
     private static final String NAME_FORMAT = "# NAME %s";
 
+    private static final String NEURON_TAG_VISIBILITY = "hidden";
+
     private final TiledMicroscopeDomainMgr tmDomainMgr;
 
     private SWCDataConverter swcDataConverter;
@@ -498,8 +500,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 boolean notItself = !annotation.getId().equals(excludedAnnotationID);
                 NeuronStyle style = getNeuronStyle(getNeuronFromNeuronID(annotation.getNeuronId()));
                 boolean visible = style.isVisible();
-                boolean userVisible = style.isUserVisible();
-                return notItself && visible && userVisible;
+                return notItself && visible;
             }
         });
         
@@ -1594,27 +1595,54 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         });
     }
 
-    public void setNeuronVisibility(final Collection<TmNeuronMetadata> neuronList, final boolean visibility) throws Exception {
-        BulkNeuronStyleUpdate bulkNeuronStyleUpdate = new BulkNeuronStyleUpdate();
-        bulkNeuronStyleUpdate.setNeuronIds(DomainUtils.getIds(neuronList));
-        bulkNeuronStyleUpdate.setVisible(visibility);
-        tmDomainMgr.updateNeuronStyles(bulkNeuronStyleUpdate);
+    public boolean getNeuronVisibility(TmNeuronMetadata neuron) {
+        Set<String> neuronTags = getUserNeuronTags(neuron);
+        if (neuronTags!=null) {
+            if (neuronTags.contains(NEURON_TAG_VISIBILITY)) {
+                return false;
+            }
+        }
+        return true;
     }
-    
+
+    public void setNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
+        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<>();
+        NeuronStyle style = getNeuronStyle(neuron);
+        style.setVisible(visibility);
+        styleUpdater.put(neuron, style);
+        if (visibility) {
+            removeUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
+        } else {
+            addUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
+        }
+        fireNeuronStylesChanged(styleUpdater);
+    }
+
+    public void setNeuronVisibility(Collection<TmNeuronMetadata> bulkNeurons, boolean visibility) {
+        Map<TmNeuronMetadata, NeuronStyle> styleUpdater = new HashMap<>();
+        for (TmNeuronMetadata neuron : bulkNeurons) {
+            NeuronStyle style = getNeuronStyle(neuron);
+            style.setVisible(visibility);
+            styleUpdater.put(neuron, style);
+            if (visibility) {
+                getAllTagMeta().removeUserTag(NEURON_TAG_VISIBILITY, neuron);
+            } else {
+                getAllTagMeta().addUserTag(NEURON_TAG_VISIBILITY, neuron);
+            }
+        }
+        fireNeuronStylesChanged(styleUpdater);
+    }
+
     /**
      * change the style for a neuron; synchronized because it could be
      * called from multiple threads, and the update is not atomic
      */
     public synchronized void setNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) throws Exception {
-      //  if (neuron.getVisibility() != style.isVisible() || neuron.getColor().getRGB() != style.getColor().getRGB()) {
-            ModelTranslation.updateNeuronStyle(style, neuron);
-            neuronManager.saveNeuronMetadata(neuron);
-            // fire change to listeners
-            fireNeuronStyleChanged(neuron, style);
-            activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
-     //   } else {
-      //      fireNeuronStyleChanged(neuron, style);
-      //  }
+        neuron.setColor(style.getColor());
+        setNeuronVisibility(neuron, style.isVisible());
+        neuronManager.saveNeuronMetadata(neuron);
+        fireNeuronStyleChanged(neuron, style);
+        activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
     }
 
     public synchronized void setNeuronColors(List<TmNeuronMetadata> neuronList, Color color) throws Exception {
@@ -1627,7 +1655,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
         for (TmNeuronMetadata neuron : neuronList) {
             neuron.setColor(color);
-            updateMap.put(neuron, ModelTranslation.translateNeuronStyle(neuron));
+            updateMap.put(neuron, getNeuronStyle(neuron));
         }
         
         fireNeuronStylesChanged(updateMap);
@@ -1637,7 +1665,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * retrieve a neuron style for a neuron, whether stored or default
      */
     public NeuronStyle getNeuronStyle(TmNeuronMetadata neuron) {
-        return ModelTranslation.translateNeuronStyle(neuron);
+        boolean visibility = getNeuronVisibility(neuron);
+        if (neuron.getColor() == null) {
+            return NeuronStyle.getStyleForNeuron(neuron.getId(), visibility, false);
+        }
+        else {
+            return new NeuronStyle(neuron.getColor(), visibility, false);
+        }
     }
 
     public boolean automatedRefinementEnabled() {
@@ -2042,11 +2076,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
                 Map<String,Object> groupMapping = currentTagMap.geTagGroupMapping(groupKey);
                 if (groupMapping!=null && groupMapping.get("toggled")!=null && ((Boolean)groupMapping.get("toggled"))) {
-                    String property = (String)groupMapping.get("toggleprop");                
+                    String property = (String)groupMapping.get("toggleprop");
+                    // these two prop changes ought to be in annmodel, not annmgr, and annmgr should call into model;
+                    //  fixed for visiblity, but not for others yet
                     if (property.equals(NeuronGroupsDialog.PROPERTY_RADIUS)) {
                         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, true);                               
                     } else if (property.equals(NeuronGroupsDialog.PROPERTY_VISIBILITY)) {
-                        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, false);                                        
+                        setNeuronVisibility(neuronList, false);
                     } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
                         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, true);                                 
                     }
@@ -2054,7 +2090,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             }
         } 
         // populate user preferences, which for now only deal with user visibility
-         // NOTE: For now, comment since user's don't want to restore their user preferences
+         // NOTE: For now, comment since users don't want to restore their user preferences, and that
+         // was the only thing in the prefs
+         // NOTE: the following code probably no longer works correctly!
          /*List<String> userTagPreferences = FrameworkImplProvider
                  .getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_TAGS, 
                          this.getCurrentSample().getId().toString(), null);
@@ -2235,6 +2273,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     void fireWorkspaceLoaded(TmWorkspace workspace) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.workspaceLoaded(workspace);
+        }
+    }
+    
+    void fireWorkspaceChanged(List<TmNeuronMetadata> neuronList) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.neuronTagsChanged(neuronList);
         }
     }
 

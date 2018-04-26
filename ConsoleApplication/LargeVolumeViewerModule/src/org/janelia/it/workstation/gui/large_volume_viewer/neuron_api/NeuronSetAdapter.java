@@ -61,6 +61,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.MatrixUtilities;
@@ -114,14 +115,16 @@ implements NeuronSet// , LookupListener
     public boolean isReadOnly() {
         return !annotationModel.editsAllowed();
     }
-    
+
+    // see note in loadUserPreferences() re: calling back into annmgr for this stuff!
+
     public void changeNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
-        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuron, visibility);
+        annotationModel.setNeuronVisibility(neuron, visibility);
     }
     
     @Override
-    public void changeNeuronUserVisible(List<TmNeuronMetadata> neuronList, boolean userVisible) {
-        LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, userVisible);
+    public void changeNeuronVisibility(List<TmNeuronMetadata> neuronList, boolean visible) {
+        annotationModel.setNeuronVisibility(neuronList, visible);
     }
     
     @Override
@@ -310,6 +313,7 @@ implements NeuronSet// , LookupListener
         updateVoxToMicronMatrices(sample);
         NeuronList nl = (NeuronList) neurons;
         nl.wrap(this);
+        
         getMembershipChangeObservable().setChanged();
         return true;
     }
@@ -320,8 +324,20 @@ implements NeuronSet// , LookupListener
         this.metaWorkspace = metaWorkspace;
         this.metaWorkspace.setSample(annotationModel.getCurrentSample());
         this.metaWorkspace.setTagMetadata(annotationModel.getAllTagMeta());
+       
         getMetaWorkspace().setChanged();
         getMetaWorkspace().notifyObservers();  
+        
+        // load mesh objects
+        if (workspace!=null) {
+            List<TmObjectMesh> meshList = workspace.getObjectMeshList();
+
+            if (meshList != null) {
+                for (TmObjectMesh mesh : meshList) {
+                    this.metaWorkspace.addMeshActors(mesh);
+                }
+            }
+        }
     }
     
     public HortaMetaWorkspace getMetaWorkspace() {
@@ -352,6 +368,32 @@ implements NeuronSet// , LookupListener
         Long neuronId = annotation.getNeuronId();
         TmNeuronMetadata neuronMetadata = annotationModel.getNeuronFromNeuronID(neuronId);
         return innerList.neuronModelForTmNeuron(neuronMetadata);
+    }
+
+    @Override
+    public void addObjectMesh(TmObjectMesh mesh) {
+        try {
+            annotationModel.getCurrentWorkspace().addObjectMesh(mesh);
+            annotationModel.saveCurrentWorkspace();
+        } catch (Exception error) {
+            ConsoleApp.handleException(error);
+        }
+    }
+
+    @Override
+    public void updateObjectMeshName(String oldName, String updatedName) {
+        try {
+            List<TmObjectMesh> objectMeshes = annotationModel.getCurrentWorkspace().getObjectMeshList();
+            for (TmObjectMesh objectMesh : objectMeshes) {
+                if (objectMesh.getName().equals(oldName)) {
+                    objectMesh.setName(updatedName);
+                    annotationModel.saveCurrentWorkspace();
+                    break;
+                }
+            }
+        } catch (Exception error) {
+            ConsoleApp.handleException(error);
+        }
     }
 
     private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener
@@ -811,17 +853,13 @@ implements NeuronSet// , LookupListener
                 result = true;
             }
             
-            /*boolean vis = style.isVisible();
+            boolean vis = style.isVisible();
             if (vis != neuronModel.isVisible()) {
                 neuronModel.setVisible(vis);
-                neuronModel.getVisibilityChangeObservable().notifyObservers();
+                notifyVisibilityChange(neuronModel);
+                // neuronModel.getVisibilityChangeObservable().notifyObservers();
                 result = true;
-            }*/
-             boolean userviz = style.isUserVisible();
-            if (userviz != neuronModel.isUserVisible()) {
-                neuronModel.setUserVisible(userviz);
-                return notifyVisibilityChange(neuronModel);
-            }             
+            }
             boolean nonInteractable = style.isNonInteractable();
             if (nonInteractable != neuronModel.isNonInteractable()) {
                 neuronModel.setNonInteractable(nonInteractable);

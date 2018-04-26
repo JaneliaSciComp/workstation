@@ -1,3 +1,35 @@
+// 7.9
+
+Workstation Browser
+* Renamed "Filter" to "Search" and added a new Search option under Services
+* Improved search icons and other minor usability improvements
+* Added warning when sharing fails due to lack of write access
+* Added additional compression strategy options for unaligned vs aligned files
+* Added default compression strategy for data sets
+* Improved performance when changing compression strategy on hundreds of samples
+* Corrected attribute sorting in "Add Criteria" button and other places
+* The view now gets refreshed after marking samples for reprocessing
+* Ontology explorer now remembers which nodes were expanded in the previous session
+* Fixed rendering issues in the ontology explorer
+* Fixed bug with access token refresh
+* Removed Alignment Board module
+* Other minor bug fixes
+
+Horta Tracer
+* Added OBJ Mesh support to Movie Maker and Scene Viewer
+* Fixed issues associated with concurrent messaging modifications
+
+// 7.8
+
+Workstation Browser
+* The "Add Related Items to Folder" option now allows mapping from unaligned neuron fragments to aligned neuron fragments.
+* "Change Sample Compression Strategy" now supports visually lossless neuron separations. All neuron separations are 
+  currently lossless. Converting them to visually lossless format can reduce disk space usage by up to 70%. 
+* Added "Open Neuron Separation (Lossy)" option, which can be used to simulate a lossy neuron separation before changing 
+  compression strategy. 
+* Fixed two memory leaks when opening many dialog boxes
+* Other minor bug fixes
+
 // 7.7
 
 Workstation Browser
@@ -8,9 +40,10 @@ Workstation Browser
 Large Volume Viewer
 * Changing neuron color, ownership, or visibility doesn't affect neuron selection, and now the neuron list shows that properly
 * Fixed bug: you can't merge to hidden neurons
-* Fixed bug: cascading errors when loading busy sharedworkspace 
+* Fixed bug: cascading errors when loading a busy shared workspace 
 * Users with mouselight admin role can now change ownership of any neuron
-* Adjusted key generation for spatial index; this should solve many "can't select point" and "point not drawn" problems when duplicate points are present
+* Adjusted key generation for spatial index; this should solve many "can't select point" and "point not drawn" problems 
+  when duplicate points are present
 
 // 7.6
 

@@ -14,11 +14,10 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.model.DomainObjectComparator;
+import org.janelia.model.access.domain.DomainObjectComparator;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
-import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
@@ -135,7 +134,8 @@ public class TiledMicroscopeDomainMgr {
     public List<TmWorkspace> getWorkspaces(Long sampleId) throws Exception {
         Collection<TmWorkspace> workspaces = client.getTmWorkspacesForSample(sampleId);
         List<TmWorkspace> canonicalObjects = DomainMgr.getDomainMgr().getModel().putOrUpdate(workspaces, false);
-        Collections.sort(canonicalObjects, new DomainObjectComparator());
+        // TODO: sort these on the server side
+        Collections.sort(canonicalObjects, new DomainObjectComparator(AccessManager.getSubjectKey()));
         return canonicalObjects;
     }
 

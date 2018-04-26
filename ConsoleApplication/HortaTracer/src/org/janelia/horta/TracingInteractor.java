@@ -74,7 +74,6 @@ import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
-import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -219,7 +218,6 @@ public class TracingInteractor extends MouseAdapter
                     // set toggle state
                     String property = (String) fooMap.get("toggleprop");
                     if (property != null) {
-                        Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
                         Iterator<NeuronSet> lvvSetIter = metaWorkspace.getNeuronSets().iterator();
                         NeuronSet lvvSet = null;
                         while (lvvSetIter.hasNext()) {
@@ -233,7 +231,7 @@ public class TracingInteractor extends MouseAdapter
                             if (property.equals("Radius")) {
                                 lvvSet.changeNeuronUserToggleRadius(neuronList, toggled);
                             } else if (property.equals("Visibility")) {
-                                lvvSet.changeNeuronUserVisible(neuronList, !toggled);
+                                lvvSet.changeNeuronVisibility(neuronList, !toggled);
                             } else if (property.equals("Background")) {
                                 lvvSet.changeNeuronNonInteractable(neuronList, toggled);
                             } else if (property.equals("Crosscheck")) {
@@ -739,7 +737,7 @@ public class TracingInteractor extends MouseAdapter
                             NeuronModel neuron = defaultWorkspace.getNeuronForAnchor(v);
                             if (neuron == null) 
                                 continue;
-                            if (!neuron.isVisible() || !neuron.isUserVisible() || neuron.isNonInteractable()) {
+                            if (!neuron.isVisible() || neuron.isNonInteractable()) {
                                 // log.info("skipping invisible neuron");
                                 continue;
                             }

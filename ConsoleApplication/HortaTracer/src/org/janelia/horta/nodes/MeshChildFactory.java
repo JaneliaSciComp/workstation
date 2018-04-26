@@ -28,14 +28,25 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.console.viewerapi.model;
+package org.janelia.horta.nodes;
+
+import java.util.List;
+import org.openide.nodes.ChildFactory;
 
 /**
  *
- * @author David Schauder
+ * @author Christopher Bruns
  */
-public interface UserVisible
+class MeshChildFactory extends ChildFactory
 {
-    boolean isUserVisible();
-    void setUserVisible(boolean userVisible);
+
+    public MeshChildFactory()
+    {
+    }
+
+    @Override
+    protected boolean createKeys(List list) {
+       return true;
+    }
+    
 }

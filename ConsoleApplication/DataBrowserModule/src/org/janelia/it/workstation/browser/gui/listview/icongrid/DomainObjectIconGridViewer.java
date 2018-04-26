@@ -91,11 +91,13 @@ public class DomainObjectIconGridViewer
 
         @Override
         protected String getTitlePattern(Class<? extends DomainObject> clazz) {
+            if (config==null) throw new IllegalStateException("Config is null");
             return config.getDomainClassTitle(clazz.getSimpleName());
         }
         
         @Override
         protected String getSubtitlePattern(Class<? extends DomainObject> clazz) {
+            if (config==null) throw new IllegalStateException("Config is null");
             return config.getDomainClassSubtitle(clazz.getSimpleName());
         }
         
@@ -107,8 +109,6 @@ public class DomainObjectIconGridViewer
 
     public DomainObjectIconGridViewer() {
         setImageModel(imageModel);
-        
-        this.config = IconGridViewerConfiguration.loadConfig();
         
         this.resultButton = new ResultSelectionButton(true) {
             @Override
@@ -253,6 +253,9 @@ public class DomainObjectIconGridViewer
                 // Update toolbar
                 boolean mustHaveImage = isMustHaveImage();
                 getToolbar().getMustHaveImageMenuItem().setSelected(mustHaveImage);
+
+                // Reload the config
+                config = IconGridViewerConfiguration.loadConfig();
                 
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject!=null && parentObject.getId()!=null) {

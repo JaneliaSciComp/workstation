@@ -83,7 +83,6 @@ public class ViewerUtils {
         return tc;
     }
     
-    @SuppressWarnings("unchecked")
     public static <T extends TopComponent> T provisionViewer(ViewerManager<T> manager, final String modeName) {
 
         log.info("Provisioning viewer: {}",manager.getViewerName());
@@ -110,7 +109,7 @@ public class ViewerUtils {
             }
             if (!tc.isVisible()) {
                 log.info("Viewer is not visible, requesting active.");
-                tc.requestActive();
+                tc.requestVisible();
             }
         }
 

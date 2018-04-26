@@ -271,7 +271,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
             return false; // we are going to redo everything anyway, so skip the surgical update
         int sv = neuron.getVertexes().size();
         int se = neuron.getEdges().size();
-        boolean bIsVisible = neuron.isVisible() && neuron.isUserVisible();
+        boolean bIsVisible = neuron.isVisible();
         float visFloat = bIsVisible ? 1.0f : 0.0f;
         boolean bChanged = false;
         // log.info("Updating neuron visibility to '{}'", bIsVisible);
@@ -331,7 +331,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
             neuronOffsets.put(neuron, vertexCount);
             neuronVertexCounts.put(neuron, neuron.getVertexes().size());
             neuronEdgeCounts.put(neuron, neuron.getEdges().size());
-            float visibility = (neuron.isVisible() && neuron.isUserVisible()) ? 1 : 0;
+            float visibility = neuron.isVisible() ? 1 : 0;
             Color color = neuron.getColor();
             color.getColorComponents(rgb);
             Map<NeuronVertex, Integer> vertexIndices = new HashMap<>();

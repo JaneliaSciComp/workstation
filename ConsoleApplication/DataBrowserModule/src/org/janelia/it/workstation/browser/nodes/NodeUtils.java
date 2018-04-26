@@ -103,10 +103,7 @@ public class NodeUtils {
         
         LinkedList<Long> ar = new LinkedList<>();
         
-        if (node instanceof RootNode) {
-            return new Long[0];
-        }
-        else if (node instanceof HasIdentifier) {
+        if (node instanceof HasIdentifier) {
             while ((node != null) && (node instanceof HasIdentifier)) {
                 ar.addFirst(((HasIdentifier)node).getId());
                 node = node.getParentNode();

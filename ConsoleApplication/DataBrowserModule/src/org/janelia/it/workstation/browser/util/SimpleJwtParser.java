@@ -37,14 +37,28 @@ public class SimpleJwtParser {
         ObjectMapper mapper = new ObjectMapper();
         
         JsonNode headerNode = mapper.readTree(headerJson);
-        this.typ = headerNode.get("typ").asText();
-        this.alg = headerNode.get("alg").asText();
+        this.typ = getText(headerNode, "typ");
+        this.alg = getText(headerNode, "alg");
         
         JsonNode payloadNode = mapper.readTree(payload);
-        this.exp = payloadNode.get("exp").asText();
-        this.username = payloadNode.get("user_name").asText();
-        this.fullname = payloadNode.get("full_name").asText();
-        this.mail = payloadNode.get("mail").asText();
+        this.exp = getText(payloadNode, "exp");
+
+        if (exp==null) {
+            throw new IllegalStateException("JWT does not contain expiration date");
+        }
+        
+        this.username = getText(payloadNode, "user_name");
+        this.fullname = getText(payloadNode, "full_name");
+        this.mail = getText(payloadNode, "mail");
+        
+    }
+    
+    private final String getText(JsonNode node, String name) {
+        JsonNode mailNode = node.get(name);
+        if (mailNode != null) {
+            return mailNode.asText();
+        }
+        return null;
     }
 
     public String getToken() {

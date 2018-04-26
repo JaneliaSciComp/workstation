@@ -99,6 +99,11 @@ public class DomainListViewManager implements ViewerManager<DomainListViewTopCom
                 log.info("Loading domain object node {} into {}",Reference.createFor(domainObject), targetViewer);
                 targetViewer.loadDomainObjectNode(node, false);
             }
+            
+            // This isn't done in provisionViewer, because when a component becomes active it selects its currently loaded 
+            // object in the Domain Explorer. We need to wait until the current object is updated above. 
+            // Only now is it safe to activate the component.
+            targetViewer.requestActive();
         }
         else {
             log.trace("Event source is not domain explorer or context menu: {}",event);

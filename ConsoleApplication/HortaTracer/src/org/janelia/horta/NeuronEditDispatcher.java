@@ -301,9 +301,14 @@ public class NeuronEditDispatcher implements LookupListener
             if (arg!=null) {
                 if (arg instanceof List) {
                     List neuronsToRefresh = (List)arg;
-                    for (int i=0; i<neuronsToRefresh.size(); i++) {
-                        newModels.add((NeuronModel)arg);
-                        addNeuronModel((NeuronModel)arg);
+                    for (int i = 0; i < neuronsToRefresh.size(); i++) {
+                        if (((List) arg).get(i) instanceof NeuronModel) {
+                            NeuronModel neuronModel = (NeuronModel) ((List) arg).get(i);
+                            newModels.add(neuronModel);
+                            addNeuronModel(neuronModel);
+                        } else {
+                            throw new RuntimeException("Problem with unknown object type: " + arg.getClass());
+                        }
                     }
                 } else {
                     newModels.add((NeuronModel)arg);

@@ -77,7 +77,7 @@ import loci.formats.in.TiffReader;
 public class Utils {
 
     // Semi, poor-man's feature toggle.
-    public static final boolean SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI = false;
+    public static final boolean SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI = true;
     public static final String EXTENSION_LSM = "lsm";
     public static final String EXTENSION_BZ2 = "bz2";
     public static final String EXTENSION_LSM_BZ2 = EXTENSION_LSM + '.' + EXTENSION_BZ2;

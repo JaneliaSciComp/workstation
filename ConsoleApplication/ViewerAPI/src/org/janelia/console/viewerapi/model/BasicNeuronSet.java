@@ -38,6 +38,7 @@ import java.util.concurrent.CompletableFuture;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.openide.awt.UndoRedo;
 
 /**
@@ -251,7 +252,7 @@ implements NeuronSet
     }
 
     @Override
-    public void changeNeuronUserVisible(List<TmNeuronMetadata> neuron, boolean userVisible) {
+    public void changeNeuronVisibility(List<TmNeuronMetadata> neuron, boolean visible) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -274,4 +275,16 @@ implements NeuronSet
     public CompletableFuture<Boolean> changeNeuronOwnership(Long neuronId) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public void addObjectMesh(TmObjectMesh mesh) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void updateObjectMeshName(String oldName, String updatedName) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+
 }

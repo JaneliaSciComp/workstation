@@ -50,6 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.eventbus.Subscribe;
 
 public class ColorDepthResultPanel extends JPanel implements SearchProvider, PreferenceSupport {
 
@@ -187,6 +188,11 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         
         setLayout(new BorderLayout());
     }
+
+    @Subscribe
+    public void colorDepthMatchSelected(ColorDepthMatchSelectionEvent event) {
+        resultsPanel.updateStatusBar();
+    }
     
     public void loadSearchResults(ColorDepthSearch search, List<ColorDepthResult> resultList, ColorDepthMask mask, boolean isUserDriven) {
 
@@ -309,10 +315,15 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         int currResultIndex = results.indexOf(currResult);
         selectionModel.setParentObject(currResult);
         
-        List<ColorDepthMatch> maskMatches = currResult.getMaskMatches(mask).stream()
+        List<ColorDepthMatch> maskMatches = currResult.getMaskMatches(mask);
+        log.info("Found {} matches for {}", maskMatches.size(), mask);
+        
+        maskMatches = maskMatches.stream()
                 .filter(match -> showMatch(match))
                 .sorted(Comparator.comparing(ColorDepthMatch::getScore).reversed())
                 .collect(Collectors.toList());
+        
+        log.info("Filtered to {} matches which can be displayed", maskMatches.size());
         
         if (newOnlyCheckbox.isSelected()) {
             
@@ -334,6 +345,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             }
             
             maskMatches = filteredMatches;
+            log.info("Filtered to {} new matches", maskMatches.size());
         }
         
         if (maskMatches.isEmpty()) {
@@ -369,6 +381,8 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
                 orderedMatches.add(match);
             }
         }
+
+        log.info("Filtered to {} matches, allowing {} results per line, and no duplicate samples", orderedMatches.size(), resultsPerLine);
         
         searchResults = new ColorDepthSearchResults(orderedMatches);
         resultsPanel.showSearchResults(searchResults, isUserDriven, null);

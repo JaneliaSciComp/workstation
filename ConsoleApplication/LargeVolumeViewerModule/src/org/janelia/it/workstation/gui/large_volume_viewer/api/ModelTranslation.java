@@ -71,20 +71,6 @@ public class ModelTranslation {
         }
     }
 
-    public static NeuronStyle translateNeuronStyle(TmNeuronMetadata tmNeuronMetadata) {
-        if (tmNeuronMetadata.getColor()==null) {
-            return NeuronStyle.getStyleForNeuron(tmNeuronMetadata.getId(), tmNeuronMetadata.isVisible(), false, true);
-        }
-        else {
-            return new NeuronStyle(tmNeuronMetadata.getColor(), tmNeuronMetadata.isVisible(), false, true);
-        }
-    }
-
-    public static void updateNeuronStyle(NeuronStyle style, TmNeuronMetadata tmNeuronMetadata) {
-        tmNeuronMetadata.setColor(style.getColor());
-        tmNeuronMetadata.setVisible(style.isVisible());
-    }
-
     public static String getColorHex(Color color) {
         return color==null?null:ColorUtils.toHex(color);
     }

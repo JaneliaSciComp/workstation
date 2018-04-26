@@ -201,7 +201,8 @@ public class SampleEditorPanel
                 }
                 else if (resultPanel instanceof ColorDepthPanel) {
                     ArtifactDescriptor resultDescriptor = ((ColorDepthPanel)resultPanel).getResultDescriptor();
-                    Hud.getSingletonInstance().setObjectAndToggleDialog(sample, resultDescriptor, null, toggle, true);
+                    FileType fileType = ((ColorDepthPanel)resultPanel).getType();
+                    Hud.getSingletonInstance().setObjectAndToggleDialog(sample, resultDescriptor, fileType.toString(), toggle, true);
                 }
             }
             
@@ -777,7 +778,9 @@ public class SampleEditorPanel
                         continue;
                     }
                     
-                    alignmentSpaces.add(result.getAlignmentSpace());
+                    if (result.getAlignmentSpace()!=null) {
+                        alignmentSpaces.add(result.getAlignmentSpace());
+                    }
                 }
             }
         }

@@ -29,7 +29,8 @@ import org.slf4j.LoggerFactory;
  * 
  * @author fosterl
  */
-@ServiceProvider(service=DomainObjectAppender.class,path=DomainObjectAppender.LOOKUP_PATH)
+//Disabled as per JW-32938
+//@ServiceProvider(service=DomainObjectAppender.class,path=DomainObjectAppender.LOOKUP_PATH)
 public class AlignmentBoardAppender implements DomainObjectAppender {
     
 	private static final String INCOMPATIBLE_MSG = "Sample is not aligned to a compatible alignment space";
