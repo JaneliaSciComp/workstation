@@ -1772,6 +1772,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 }
 
                 i++;
+                // for reasons that are not clear but may involve modification of the workspace
+                //  while a long export is happening (particularly now in the shared workspace era),
+                //  the number of items processed can occasionally exceed the total, causing an
+                //  error in the progress widget; adjust for that
+                if (2 * i + 1 >= total) {
+                    total = 2 * i + 1;
+                }
             }
         }
 
