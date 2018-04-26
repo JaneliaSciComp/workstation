@@ -101,11 +101,11 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
             message = String.format("You are about to change the owner for %d neurons. This action cannot be undone.",
                     neurons.size());
             if (seconds < 60.0) {
-                message += String.format("\n\nThis operation is estimated to take about %d seconds. Continue?", Math.round(seconds));
+                message += String.format("\n\nThis operation is estimated to take about %d seconds. The UI will not be responsive during\nthis time. IMPORTANT: This will also affect anyone using the same workspace!\n\nUpdate ownership?", Math.round(seconds));
             } else if (seconds < 3600.0) {
-                message += String.format("\n\nThis operation is estimated to take about %.1f minutes. Continue?", seconds / 60.0);
+                message += String.format("\n\nThis operation is estimated to take about %.1f minutes. The UI will not be responsive during\nthis time. IMPORTANT: This will also affect anyone using the same workspace!\n\nUpdate ownership?", seconds / 60.0);
             } else {
-                message += String.format("\n\nThis operation is estimated to take about %.1f hours. Continue?", seconds / 3600.0);
+                message += String.format("\n\nThis operation is estimated to take about %.1f hours. The UI will not be responsive during\nthis time. IMPORTANT: This will also affect anyone using the same workspace!\n\nUpdate ownership?", seconds / 3600.0);
             }
         }
 
@@ -116,6 +116,13 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
             JOptionPane.OK_CANCEL_OPTION
         );
         if (ans == JOptionPane.OK_OPTION) {
+            // implementation note: I tried using a BackgroundWorker instead of a SimpleWorker,
+            //  but since the UI updates happen for each neuron, even though the actual
+            //  operation happened in a different thread, all the UI update effectively
+            //  locked the UI anyway, making it irrelevant to user the BG Worker;
+            //  if we do a real bulk update, we should switch this to a BG Worker, though
+
+
             SimpleWorker changer = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
