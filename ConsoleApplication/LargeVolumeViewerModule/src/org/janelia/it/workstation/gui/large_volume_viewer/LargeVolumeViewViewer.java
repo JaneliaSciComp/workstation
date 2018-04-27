@@ -1,8 +1,9 @@
- package org.janelia.it.workstation.gui.large_volume_viewer;
+package org.janelia.it.workstation.gui.large_volume_viewer;
 
- import java.awt.BorderLayout;
+import java.awt.BorderLayout;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -123,12 +124,15 @@ public class LargeVolumeViewViewer extends JPanel {
                 progress.setDisplayName("Loading image data");
                 progress.switchToIndeterminate();
 
+                // track whether volume load succeeded; see note later
+                AtomicBoolean volumeLoaded = new AtomicBoolean(false);
                 SimpleWorker volumeLoader = new SimpleWorker() {
                     boolean success = false;
-                    
+
                     @Override
                     protected void doStuff() throws Exception {
                         success = viewUI.loadFile(sliceSample);
+                        volumeLoaded.set(success);
                     }
 
                     @Override
@@ -206,9 +210,24 @@ public class LargeVolumeViewViewer extends JPanel {
                 ListenableFuture<List<Void>> combinedFuture = Futures.allAsList(Arrays.asList(future1, future2));
                 Futures.addCallback(combinedFuture, new FutureCallback<List<Void>>() {
                     public void onSuccess(List<Void> result) {
-                        // If both loads succeeded
-                        logger.info("Loading completed");
-                        annotationModel.loadComplete();
+                        // check if the volume actually loaded; we handle exceptions, so
+                        //  not all failures end up in onFailure()!
+                        if (volumeLoaded.get()) {
+                            logger.info("Loading completed");
+                            annotationModel.loadComplete();
+                        } else {
+                            // same as onFailure() (code copied):
+                            logger.error("LVVV load failed");
+                            try {
+                                if (annotationModel != null) {
+                                    annotationModel.clear();
+                                    annotationModel.loadComplete();
+                                }
+                            }
+                            catch (Exception e) {
+                                logger.error("Error loading empty workspace after failed workspace load",e);
+                            }
+                        }
                     }
                     public void onFailure(Throwable t) {
                         // If either load failed
@@ -220,11 +239,10 @@ public class LargeVolumeViewViewer extends JPanel {
                             }
                         }
                         catch (Exception e) {
-                            logger.error("Error loading empty workspace",e);
+                            logger.error("Error loading empty workspace after failed workspace load",e);
                         }
                     }
                 });
-                
             }
 
             @Override
