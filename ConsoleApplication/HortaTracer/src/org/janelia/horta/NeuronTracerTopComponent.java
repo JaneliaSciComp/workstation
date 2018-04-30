@@ -2053,8 +2053,15 @@ public final class NeuronTracerTopComponent extends TopComponent
         // logger.info("Horta closed");
         // saveStartupPreferences(); // not called at application close...
         neuronEditDispatcher.onClosed();
-        // clear out SWCbuffers
-        neuronMPRenderer.clearNeuronReconstructions();
+        // clear out SWCbuffers; exceptions should not be allowed to
+        //  escape, and in the past, they have
+        try {
+            neuronMPRenderer.clearNeuronReconstructions();
+        }
+        catch (Exception e) {
+            logger.warn("exception suppressed when closing Horta top component");
+            e.printStackTrace();
+        }
     }
 
     @Override
