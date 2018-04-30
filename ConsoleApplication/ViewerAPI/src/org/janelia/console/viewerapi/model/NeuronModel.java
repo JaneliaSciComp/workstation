@@ -40,7 +40,7 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
  * @author Christopher Bruns
  */
 public interface NeuronModel 
-extends Hideable, NonInteractable, UserVisible, UserToggleRadius
+extends Hideable, NonInteractable, UserToggleRadius
 {
     String getName();
     void setName(String name);

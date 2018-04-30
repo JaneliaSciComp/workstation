@@ -7,8 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.awt.*;
 
-import org.janelia.model.util.ColorUtils;
-
 /**
  * This class encapsulates the visual draw style for a particular neuron;
  * we'll start with color and visibility, and perhaps later add other
@@ -17,7 +15,6 @@ import org.janelia.model.util.ColorUtils;
 public class NeuronStyle {
     private Color color;
     private boolean visible = true;
-    private boolean userVisible = true;
     private boolean nonInteractable = false;
     private boolean userToggleRadius = false;
     float[] cachedColorArray=new float[3]; // needed for performance
@@ -26,7 +23,6 @@ public class NeuronStyle {
     private static final String COLOR_KEY = "color";
     private static final String VISIBILITY_KEY = "visibility";
     private static final String NONINTERACTABLE_KEY = "readonly";
-    private static final String USER_VISIBILITY_KEY = "user_visibility";
 
     // default colors; we index into this list with neuron ID;
     //  note that our neuron IDs are all of the form 8*n+4,
@@ -53,11 +49,11 @@ public class NeuronStyle {
      * get a default style for a neuron
      */
     public static NeuronStyle getStyleForNeuron(Long neuronID) {
-        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true, false, true);
+        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true, false);
     }
 
-    public static NeuronStyle getStyleForNeuron(Long neuronID, boolean visible, boolean noninteractable, boolean userVisible) {
-        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], visible, noninteractable, userVisible);
+    public static NeuronStyle getStyleForNeuron(Long neuronID, boolean visible, boolean noninteractable) {
+        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], visible, noninteractable);
     }
 
     /**
@@ -88,15 +84,8 @@ public class NeuronStyle {
               return null;
         }
         boolean  nonInteractable = nonInteractableNode.asBoolean();
-        
-        JsonNode userVisibilityNode = rootNode.path(USER_VISIBILITY_KEY);
-        if (userVisibilityNode.isMissingNode() || !userVisibilityNode.isBoolean()) {
-             return null;
-        }
-        
-        boolean userVisible =userVisibilityNode.asBoolean();
 
-        return new NeuronStyle(color, visibility, nonInteractable, userVisible);
+        return new NeuronStyle(color, visibility, nonInteractable);
     }
 
     public NeuronStyle() {
@@ -104,11 +93,10 @@ public class NeuronStyle {
         this.visible = true;
     }
 
-    public NeuronStyle(Color color, boolean visible, boolean nonInteractable, boolean userVisible) {
+    public NeuronStyle(Color color, boolean visible, boolean nonInteractable) {
         setColor(color);
         this.visible = visible;
         this.nonInteractable = nonInteractable;
-        this.userVisible = userVisible;
     }
 
     public float getRedAsFloat() {
@@ -163,14 +151,13 @@ public class NeuronStyle {
 
         rootNode.put(VISIBILITY_KEY, isVisible());
         rootNode.put(NONINTERACTABLE_KEY, isNonInteractable());
-        rootNode.put(USER_VISIBILITY_KEY, isUserVisible());
 
         return rootNode;
     }
 
     @Override
     public String toString() {
-        return "NeuronStyle(" + color + ", visibility: " + visible + ", userVisibility: " + nonInteractable + ", visibility: " + visible + ")";
+        return "NeuronStyle(" + color + ", visibility: " + visible + ", nonInteractable: " + nonInteractable + ")";
     }
 
     /**
@@ -187,20 +174,6 @@ public class NeuronStyle {
         this.nonInteractable = nonInteractable;
     }
 
-    /**
-     * @return the userVisible
-     */
-    public boolean isUserVisible() {
-        return userVisible;
-    }
-
-    /**
-     * @param userVisible the userVisible to set
-     */
-    public void setUserVisible(boolean userVisible) {
-        this.userVisible = userVisible;
-    }
-    
     /**
      * @return the userToggleRadius
      */
@@ -224,7 +197,7 @@ public class NeuronStyle {
                 this.nonInteractable = toggle;
                 break;
             case "Visibility":
-                this.userVisible = toggle;
+                this.visible = toggle;
                 break;
         }
     }

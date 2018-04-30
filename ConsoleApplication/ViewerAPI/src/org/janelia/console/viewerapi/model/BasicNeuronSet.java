@@ -252,7 +252,7 @@ implements NeuronSet
     }
 
     @Override
-    public void changeNeuronUserVisible(List<TmNeuronMetadata> neuron, boolean userVisible) {
+    public void changeNeuronVisibility(List<TmNeuronMetadata> neuron, boolean visible) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

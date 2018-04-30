@@ -276,8 +276,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
                             // pop up a dialog so the user can request to change the ownership
                             //  of the neuron
-                            ChangeNeuronOwnerDialog dialog = new ChangeNeuronOwnerDialog((Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
-                                selectedNeuron);
+                            ChangeNeuronOwnerDialog dialog = new ChangeNeuronOwnerDialog((Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()));
                             dialog.setVisible(true);
                             if (dialog.isSuccess()) {
                                 annotationManager.changeNeuronOwner(selectedNeuron, dialog.getNewOwnerKey());
@@ -683,6 +682,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         neuronTableModel.deleteNeuron(neuron);
         restoreSelection();
         updateFilteredNeuronList();
+        updateNeuronLabel();
     }
 
     /**

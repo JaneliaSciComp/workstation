@@ -69,7 +69,7 @@ public interface NeuronSet extends Collection<NeuronModel>
     NeuronModel getNeuronByGuid(Long guid);
     void addEditNote(NeuronVertex anchor);
     void addTraceEndNote(NeuronVertex anchor);
-    void changeNeuronUserVisible (List<TmNeuronMetadata> neuron, boolean userVisible);
+    void changeNeuronVisibility(List<TmNeuronMetadata> neuron, boolean visibility);
     void changeNeuronNonInteractable (List<TmNeuronMetadata> neuron, boolean interactable);
     void changeNeuronUserToggleRadius (List<TmNeuronMetadata> neuronList, boolean userToggleRadius);
     void changeNeuronUserProperties (List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle);
