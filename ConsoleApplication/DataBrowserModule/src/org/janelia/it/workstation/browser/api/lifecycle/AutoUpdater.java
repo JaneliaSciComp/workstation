@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.api.lifecycle;
 
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +38,11 @@ import org.slf4j.LoggerFactory;
 public class AutoUpdater extends SimpleWorker {
 
     private static final Logger log = LoggerFactory.getLogger(AutoUpdater.class);
+
+    private static final String UPDATE_CENTER_NAME = "org_janelia_it_workstation_nb_action_update_center";
+    private static final String UPDATE_CENTER_LABEL = "Janelia Workstation Update Center";
+    private static final String OLD_UPDATE_CENTER_URL = "http://jacs-webdav.int.janelia.org/workstation6/updates.xml";
+    private static final String NEW_UPDATE_CENTER_URL = "http://jacs-webdav.int.janelia.org/workstation6/updates.xml";
     
     private OperationContainer<InstallSupport> containerForUpdate;
     private Restarter restarter;
@@ -44,6 +50,9 @@ public class AutoUpdater extends SimpleWorker {
 
     @Override
     protected void doStuff() throws Exception {
+        
+        upgradeToNewUpdateCenter();
+        
         ProgressHandle handle = ProgressHandle.createHandle("Checking for updates...");
         
         try {
@@ -71,6 +80,24 @@ public class AutoUpdater extends SimpleWorker {
         }
         finally {
             handle.finish();
+        }
+    }
+
+    private void upgradeToNewUpdateCenter() {
+
+        try {
+            List<UpdateUnitProvider> updateUnitProviders = UpdateUnitProviderFactory.getDefault().getUpdateUnitProviders(true);
+            for (UpdateUnitProvider provider : updateUnitProviders) {
+                if (UPDATE_CENTER_LABEL.equals(provider.getDisplayName()) && OLD_UPDATE_CENTER_URL.equals(provider.getProviderURL())) {
+                    log.warn("Removing legacy update center {} ({})", provider.getName(), provider.getProviderURL());
+                    UpdateUnitProviderFactory.getDefault().remove(provider);
+                    UpdateUnitProvider newProvider = UpdateUnitProviderFactory.getDefault().create(UPDATE_CENTER_NAME, UPDATE_CENTER_LABEL, new URL(NEW_UPDATE_CENTER_URL));
+                    log.warn("Created update center {} ({})", newProvider.getName(), newProvider.getProviderURL());
+                }
+            }
+        }
+        catch (Exception ex) {
+            log.error("Error updating to new update center", ex);
         }
     }
 

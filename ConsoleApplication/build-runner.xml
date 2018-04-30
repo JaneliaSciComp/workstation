@@ -30,17 +30,6 @@ of adapter.
         </ant>
     </target>
 
-    <target name="deploy-ng-nbms">
-        <antcall target="deploy-nbms-env" >
-            <param name="tmp.env" value="workstation_ng"/>
-            <param name="tmp.destination" value="jacs@jacs-webdav1"/>
-        </antcall>
-        <antcall target="deploy-nbms-env" >
-            <param name="tmp.env" value="workstation_ng"/>
-            <param name="tmp.destination" value="jacs@jacs-webdav2"/>
-        </antcall>
-    </target>
-
     <target name="deploy-nbms-staging">
         <antcall target="deploy-nbms-env" >
             <param name="tmp.env" value="staging"/>
@@ -49,6 +38,10 @@ of adapter.
         <antcall target="deploy-nbms-env" >
             <param name="tmp.env" value="staging"/>
             <param name="tmp.destination" value="jacs@jacs-webdav2"/>
+        </antcall>
+        <antcall target="deploy-nbms-env2" >
+            <param name="tmp.env" value="staging"/>
+            <param name="tmp.destination" value="jacs@workstation"/>
         </antcall>
     </target>
 
@@ -60,6 +53,10 @@ of adapter.
         <antcall target="deploy-nbms-env" >
             <param name="tmp.env" value="workstation6"/>
             <param name="tmp.destination" value="jacs@jacs-webdav2"/>
+        </antcall>
+        <antcall target="deploy-nbms-env2" >
+            <param name="tmp.env" value="workstation"/>
+            <param name="tmp.destination" value="jacs@workstation"/>
         </antcall>
     </target>
 
@@ -86,6 +83,42 @@ of adapter.
         <exec executable="bash" description="Copying new modules to ${tmpEnv}">
             <arg line="-c '${scp} -r ${basedir}/build/updates/* ${ssh.common.params}:/var/www/html/${tmpEnv}/.'"/>
         </exec>
+        <echo message="Done : ${exec.output}"  />
+        <echo message="Done : ${exec.error}"  />
+    </target>
+
+    <target name="deploy-nbms-env2">
+        
+        <property name="tmpEnv" value="${tmp.env}"/>
+        <property name="ssh.common.params" value="${tmp.destination}"/>
+        <property name="scp.common.params" value=""/>
+        <property name="destdir" value="/var/www/${tmpEnv}"/>
+        <property name="backupdir" value="/var/www/${tmpEnv}.previous"/>
+        
+        <echo message="Testing connection" />
+        <echo message="SSH command: ${ssh} ${ssh.common.params}"/>
+        <exec executable="${ssh}" outputproperty="exec.output" failonerror="true">
+            <arg line="${ssh.common.params} ls -ld /tmp"/>
+        </exec>
+
+        <!--clean out old backup -->
+        <echo message="Removing remote ${tmpEnv} modules" />
+        <exec executable="${ssh}">
+            <arg line="${ssh.common.params} rm -rf ${backupdir}/*"/>
+        </exec>
+
+        <!-- create backup of current modules --> 
+        <echo message="Creating backup for ${tmpEnv} modules" />
+        <exec executable="${ssh}">
+            <arg line="${ssh.common.params} mv ${destdir}/* ${backupdir}/"/>
+        </exec>
+
+        <!--copy new modules -->
+        <echo message="Copying new modules to ${tmpEnv}" />
+        <exec executable="bash">
+            <arg line="-c '${scp} -r ${basedir}/build/updates/* ${ssh.common.params}:${destdir}/.'"/>
+        </exec>
+
         <echo message="Done : ${exec.output}"  />
         <echo message="Done : ${exec.error}"  />
     </target>
