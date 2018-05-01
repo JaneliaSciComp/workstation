@@ -122,7 +122,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             }
 
             log.info("Processed headers for workspace Id {}", workspace);
-            // if not this workspace or user isn't looking at a workspace right now or workspac enot relating to a workspace update, filter out message
+            // if not this workspace or user isn't looking at a workspace right now or workspace not relating to a workspace update, filter out message
             if (workspace == null || annotationModel.getCurrentWorkspace() == null
                     || workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
                 return;
@@ -189,7 +189,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                                     break;
                             }
                         } catch (Exception e) {
-                            log.error("Exception thrown in main GUI thread during message processing");
+                            log.error("Exception thrown in main GUI thread during message processing", e);
                             logError(e.getMessage());
                         }
 
