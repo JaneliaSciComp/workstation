@@ -1,8 +1,9 @@
 // 7.10
 
 Workstation Browser
-
-
+* Moved update center to new URL
+* Fixed "error reading entity" when using older clients
+* Other minor bug fixes
 
 Large Volume Viewer
 * Fixed issues with hiding and showing neurons

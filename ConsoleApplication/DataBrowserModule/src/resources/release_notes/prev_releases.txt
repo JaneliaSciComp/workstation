@@ -15,7 +15,7 @@ Workstation Browser
 * Removed Alignment Board module
 * Other minor bug fixes
 
-Horta Tracer
+Horta
 * Added OBJ Mesh support to Movie Maker and Scene Viewer
 * Fixed issues associated with concurrent messaging modifications
 
