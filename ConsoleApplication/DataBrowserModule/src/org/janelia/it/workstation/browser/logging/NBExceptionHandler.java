@@ -263,7 +263,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
     private String getSummary(String st) {
         String[] s = st.split("\n");
         String summary = s[0];
-        if (!summary.contains(" ")) {
+        if (!summary.contains(" ") && s.length > 1) {
             // No message available, add the second line for context
             summary += " "+s[1];
         }
