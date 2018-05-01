@@ -186,6 +186,7 @@ public class ColorDepthResultIconGridViewer
     
     @Override
     public int getNumItemsHidden() {
+        if (this.matchList==null || this.matchList.getObjects()==null) return 0;
         int totalItems = this.matchList.getObjects().size();
         List<ColorDepthMatch> objects = getObjects();
         int totalVisibleItems = objects==null ? 0 : getObjects().size();
