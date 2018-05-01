@@ -601,7 +601,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             @Override
             protected void doStuff() throws Exception {
                 System.currentTimeMillis();
-                T startObject;
+                T startObject = null;
                 S lastSelectedRef = selectionModel.getLastSelectedId();
                 log.info("lastSelectedId={}", lastSelectedRef);
                 if (lastSelectedRef!=null) {
@@ -610,8 +610,10 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                 else {
                     // This is generally unexpected, because the viewer should
                     // select the first item automatically, and there is no way to deselect everything.
-                    log.warn("No 'last selected object' in selection model! Defaulting to first object...");
-                    startObject = resultPage.getObjects().get(0);
+                    if (resultPage.getObjects()!=null && !resultPage.getObjects().isEmpty()) {
+                        log.warn("No 'last selected object' in selection model! Defaulting to first object...");
+                        startObject = resultPage.getObjects().get(0);
+                    }
                 }
 
                 int index = 0;
