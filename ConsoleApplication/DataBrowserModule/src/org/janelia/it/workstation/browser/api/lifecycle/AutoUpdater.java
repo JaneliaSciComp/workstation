@@ -5,9 +5,12 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import javax.swing.JOptionPane;
 
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.util.SystemInfo;
@@ -39,17 +42,36 @@ import org.slf4j.LoggerFactory;
 public class AutoUpdater extends SimpleWorker {
 
     private static final Logger log = LoggerFactory.getLogger(AutoUpdater.class);
-
-    private static final String UPDATE_CENTER_LABEL = "Janelia Workstation Update Center";
-    private static final String OLD_UPDATE_CENTER_URL = "http://jacs-webdav.int.janelia.org/workstation6/updates.xml";
-    private static final String NEW_UPDATE_CENTER_URL = "http://workstation.int.janelia.org/staging/updates.xml";
+    
+    private static final ResourceBundle rb = ResourceBundle.getBundle("org.janelia.it.workstation.gui.browser.Bundle");
+    private static final String UPDATE_CENTER_KEY = "org_janelia_it_workstation_nb_action_update_center";
+    private String updateCenterLabel;
+    private String updateCenterUrl;
     
     private OperationContainer<InstallSupport> containerForUpdate;
     private Restarter restarter;
     private boolean restarting = false;
-
     private ProgressHandle handle;
 
+    public AutoUpdater() {
+        
+        try {
+            updateCenterLabel = rb.getString("Services/AutoupdateType/"+UPDATE_CENTER_KEY+".instance");
+            log.info("Update center name: {}", updateCenterLabel);
+        }
+        catch (MissingResourceException e) {
+            log.error("Missing update center label property in browser bundle!");
+        }
+        
+        try {
+            updateCenterUrl = rb.getString(UPDATE_CENTER_KEY);
+            log.info("Update center URL: {}", updateCenterUrl);
+        }
+        catch (MissingResourceException e) {
+            log.warn("Missing update center label property. Running in dev?");
+        }
+    }
+    
     @Override
     protected void doStuff() throws Exception {
         
@@ -88,7 +110,17 @@ public class AutoUpdater extends SimpleWorker {
 
     private void upgradeToNewUpdateCenter() {
 
-        log.info("upgradeToNewUpdateCenter");
+        log.info("Verifying update center providers");
+        
+        if (StringUtils.isBlank(updateCenterLabel)) {
+            log.trace("Empty update center label, aborting update center check");
+            return;
+        }
+
+        if (StringUtils.isBlank(updateCenterUrl)) {
+            log.trace("Empty update center URL, aborting update center check");
+            return;
+        }
         
         try {
             List<UpdateUnitProvider> updateUnitProviders = UpdateUnitProviderFactory.getDefault().getUpdateUnitProviders(true);
@@ -106,10 +138,10 @@ public class AutoUpdater extends SimpleWorker {
                     }
                     
                     log.info("Verifying {} (displayName={}) (url={})", provider.getName(), provider.getDisplayName(), provider.getProviderURL());
-                    if (UPDATE_CENTER_LABEL.equals(provider.getName()) || UPDATE_CENTER_LABEL.equals(provider.getDisplayName())) {
+                    if (updateCenterLabel.equals(provider.getName()) || updateCenterLabel.equals(provider.getDisplayName())) {
                         
-                        if (!provider.getProviderURL().toString().equals(NEW_UPDATE_CENTER_URL)) {
-                            provider.setProviderURL(new URL(NEW_UPDATE_CENTER_URL));
+                        if (!provider.getProviderURL().toString().equals(updateCenterUrl)) {
+                            provider.setProviderURL(new URL(updateCenterUrl));
                             log.warn("Updated URL for {}", provider.getName(), provider.getProviderURL());
                             break;
                         }
@@ -124,7 +156,7 @@ public class AutoUpdater extends SimpleWorker {
     }
         
     private void createUpdateCenter() throws MalformedURLException {
-        UpdateUnitProvider newProvider = UpdateUnitProviderFactory.getDefault().create(UPDATE_CENTER_LABEL, UPDATE_CENTER_LABEL, new URL(NEW_UPDATE_CENTER_URL));
+        UpdateUnitProvider newProvider = UpdateUnitProviderFactory.getDefault().create(updateCenterLabel, updateCenterLabel, new URL(updateCenterUrl));
         newProvider.setEnable(true);
         log.warn("Created update center {} ({})", newProvider.getName(), newProvider.getProviderURL());
     }
@@ -169,7 +201,7 @@ public class AutoUpdater extends SimpleWorker {
         for (UpdateUnitProvider provider : updateUnitProviders) {
             try {
                 // the second parameter forces update from server when true
-                log.info("Checking provider '{}'", provider.getDisplayName());
+                log.info("Checking provider {}", provider.getDisplayName());
                 handle.progress("Checking "+ provider.getDisplayName());
                 provider.refresh(handle, true);
             }
