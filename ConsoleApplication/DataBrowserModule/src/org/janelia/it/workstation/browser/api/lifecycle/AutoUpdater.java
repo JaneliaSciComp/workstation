@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.api.lifecycle;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
@@ -39,24 +40,26 @@ public class AutoUpdater extends SimpleWorker {
 
     private static final Logger log = LoggerFactory.getLogger(AutoUpdater.class);
 
-    private static final String UPDATE_CENTER_NAME = "org_janelia_it_workstation_nb_action_update_center";
     private static final String UPDATE_CENTER_LABEL = "Janelia Workstation Update Center";
     private static final String OLD_UPDATE_CENTER_URL = "http://jacs-webdav.int.janelia.org/workstation6/updates.xml";
-    private static final String NEW_UPDATE_CENTER_URL = "http://jacs-webdav.int.janelia.org/workstation6/updates.xml";
+    private static final String NEW_UPDATE_CENTER_URL = "http://workstation.int.janelia.org/staging/updates.xml";
     
     private OperationContainer<InstallSupport> containerForUpdate;
     private Restarter restarter;
     private boolean restarting = false;
 
+    private ProgressHandle handle;
+
     @Override
     protected void doStuff() throws Exception {
         
-        upgradeToNewUpdateCenter();
-        
-        ProgressHandle handle = ProgressHandle.createHandle("Checking for updates...");
+        handle = ProgressHandle.createHandle("Checking for updates...");
         
         try {
             handle.start();
+
+            upgradeToNewUpdateCenter();
+            
             this.containerForUpdate = getContainerForUpdate(doRealCheck(handle));
 
             if (containerForUpdate.getSupport()==null) {
@@ -85,20 +88,45 @@ public class AutoUpdater extends SimpleWorker {
 
     private void upgradeToNewUpdateCenter() {
 
+        log.info("upgradeToNewUpdateCenter");
+        
         try {
             List<UpdateUnitProvider> updateUnitProviders = UpdateUnitProviderFactory.getDefault().getUpdateUnitProviders(true);
-            for (UpdateUnitProvider provider : updateUnitProviders) {
-                if (UPDATE_CENTER_LABEL.equals(provider.getDisplayName()) && OLD_UPDATE_CENTER_URL.equals(provider.getProviderURL())) {
-                    log.warn("Removing legacy update center {} ({})", provider.getName(), provider.getProviderURL());
-                    UpdateUnitProviderFactory.getDefault().remove(provider);
-                    UpdateUnitProvider newProvider = UpdateUnitProviderFactory.getDefault().create(UPDATE_CENTER_NAME, UPDATE_CENTER_LABEL, new URL(NEW_UPDATE_CENTER_URL));
-                    log.warn("Created update center {} ({})", newProvider.getName(), newProvider.getProviderURL());
+            
+            if (updateUnitProviders.isEmpty()) {
+                log.warn("No providers found");
+                createUpdateCenter();
+            }
+            else {
+                log.info("Verifying {} providers", updateUnitProviders.size());
+                for (UpdateUnitProvider provider : updateUnitProviders) {
+                    
+                    if (provider == null || provider.getProviderURL() == null) {
+                        continue; 
+                    }
+                    
+                    log.info("Verifying {} (displayName={}) (url={})", provider.getName(), provider.getDisplayName(), provider.getProviderURL());
+                    if (UPDATE_CENTER_LABEL.equals(provider.getName()) || UPDATE_CENTER_LABEL.equals(provider.getDisplayName())) {
+                        
+                        if (!provider.getProviderURL().toString().equals(NEW_UPDATE_CENTER_URL)) {
+                            provider.setProviderURL(new URL(NEW_UPDATE_CENTER_URL));
+                            log.warn("Updated URL for {}", provider.getName(), provider.getProviderURL());
+                            break;
+                        }
+                        
+                    }
                 }
             }
         }
         catch (Exception ex) {
             log.error("Error updating to new update center", ex);
         }
+    }
+        
+    private void createUpdateCenter() throws MalformedURLException {
+        UpdateUnitProvider newProvider = UpdateUnitProviderFactory.getDefault().create(UPDATE_CENTER_LABEL, UPDATE_CENTER_LABEL, new URL(NEW_UPDATE_CENTER_URL));
+        newProvider.setEnable(true);
+        log.warn("Created update center {} ({})", newProvider.getName(), newProvider.getProviderURL());
     }
 
     @Override
