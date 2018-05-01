@@ -1,6 +1,7 @@
 // 7.10
 
 Workstation Browser
+* Added probe sets for FISH data
 * Moved update center to new URL
 * Fixed "error reading entity" when using older clients
 * Other minor bug fixes
