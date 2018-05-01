@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.browser.gui.dialogs;
 
-import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -32,7 +30,7 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
-import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
@@ -345,6 +343,12 @@ public class DataSetListDialog extends ModalDialog {
         throw new UnsupportedOperationException();
     }
 
+    @Subscribe
+    public void objectChanged(DomainObjectCreateEvent event) {
+        // This happens if a new data set is created
+        loadDataSets();
+    }
+    
     @Subscribe
     public void objectChanged(DomainObjectChangeEvent event) {
         // This happens if the child dialog changes anything about the selected data set
