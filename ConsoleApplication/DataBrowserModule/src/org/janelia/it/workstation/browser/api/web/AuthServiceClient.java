@@ -7,6 +7,7 @@ import javax.ws.rs.core.Response;
 
 import org.janelia.it.workstation.browser.api.exceptions.AuthenticationException;
 import org.janelia.it.workstation.browser.api.exceptions.ServiceException;
+import org.janelia.it.workstation.browser.api.http.HttpServiceUtils;
 import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
@@ -45,6 +46,7 @@ public class AuthServiceClient extends RESTClientBase {
         WebTarget target = service.path("authenticate");
         Response response = target
                 .request("application/json")
+                .header(HttpServiceUtils.USERNAME_HEADER, username)
                 .post(Entity.json(body));
         
         if (response.getStatus()==401) {
