@@ -165,6 +165,11 @@ import org.janelia.horta.actions.ResetHortaRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
+import org.janelia.horta.camera.Interpolator;
+import org.janelia.horta.camera.InterpolatorKernel;
+import org.janelia.horta.camera.LinearInterpolatorKernel;
+import org.janelia.horta.camera.PrimitiveInterpolator;
+import org.janelia.horta.camera.Vector3Interpolator;
 import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
@@ -552,15 +557,26 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void setSampleLocation(SampleLocation sampleLocation) {
         try {
             leverageCompressedFiles = sampleLocation.isCompressed();
+            Quaternion q = new Quaternion();
+            float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
+            if (quaternionRotation!=null) 
+                q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
             ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                    currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
+                currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
             );
-            acceptor.acceptLocation(sampleLocation);
+            
+            if (sampleLocation.getInterpolate()) {
+               animateToLocationWithRotation(acceptor, q, sampleLocation, 40);                                
+            } else {
+                acceptor.acceptLocation(sampleLocation);
+                Vantage vantage = sceneWindow.getVantage();
+                vantage.setRotationInGround(new Rotation().setFromQuaternion(q));
+            }
+            activityLogger.logHortaLaunch(sampleLocation);
             currentSource = sampleLocation.getSampleUrl().toString();
             defaultColorChannel = sampleLocation.getDefaultColorChannel();
             volumeCache.setColorChannel(defaultColorChannel);
-            activityLogger.logHortaLaunch(sampleLocation);
-
+            
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
             throw new RuntimeException(
@@ -820,6 +836,35 @@ public final class NeuronTracerTopComponent extends TopComponent
         if (didMove) {
             vantage.notifyObservers();
             redrawNow();
+        }
+    }
+    
+    private void animateToLocationWithRotation(ViewerLocationAcceptor acceptor, Quaternion endRotation, SampleLocation endLocation, int steps) throws Exception {
+        Vantage vantage = sceneWindow.getVantage();
+        InterpolatorKernel linearKernel = new LinearInterpolatorKernel();
+        Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(linearKernel);
+        Interpolator<Quaternion> rotationInterpolator = new PrimitiveInterpolator(linearKernel);
+        double stepSize = 1.0/(float)steps;
+        
+        Vector3 startFocus = new Vector3(sceneWindow.getVantage().getFocusPosition().getX(),sceneWindow.getVantage().getFocusPosition().getY(),
+            sceneWindow.getVantage().getFocusPosition().getZ());
+        sceneWindow.getVantage().getFocusPosition().copy(startFocus);        
+        Quaternion startRotation = sceneWindow.getVantage().getRotationInGround().convertRotationToQuaternion();
+        
+        Vector3 endFocus = new Vector3((float)endLocation.getFocusXUm(), (float)endLocation.getFocusYUm(), 
+                (float)endLocation.getFocusZUm());
+        double currWay = 0;
+        for (int i=0; i<steps; i++) { 
+            SampleLocation sampleLocation = new BasicSampleLocation();
+            currWay += stepSize;
+            Vector3 iFocus = vec3Interpolator.interpolate_equidistant(currWay, 
+                    startFocus, startFocus, endFocus, endFocus);
+            Quaternion iRotate = rotationInterpolator.interpolate_equidistant(currWay, 
+                    startRotation, startRotation, endRotation, endRotation);
+            vantage.setFocus(iFocus.getX(), iFocus.getY(), iFocus.getZ());
+            vantage.setRotationInGround(new Rotation().setFromQuaternion(iRotate));
+            vantage.notifyObservers();
+            sceneWindow.redrawImmediately();
         }
     }
 

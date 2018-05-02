@@ -52,6 +52,8 @@ public class BasicSampleLocation implements SampleLocation
     private Long workspaceId = null;  // Optional
     private Long sampleId = null;     // Optional
     private TmSample sample = null;     // Optional
+    private float[] rotation;
+    private boolean interpolate = false;
 
     public BasicSampleLocation()
     {
@@ -180,5 +182,25 @@ public class BasicSampleLocation implements SampleLocation
     
     public void setSample(TmSample sample) {
         this.sample = sample;
+    }
+    
+    @Override
+    public float[] getRotationAsQuaternion() {
+        return rotation;
+    }
+
+    @Override
+    public void setRotationAsQuaternion(float[] rotation) {
+        this.rotation = rotation;
+    }
+
+    @Override
+    public void setInterpolate(boolean interpolate) {
+        this.interpolate = interpolate;
+    }
+
+    @Override
+    public boolean getInterpolate() {
+        return interpolate;
     }
 }

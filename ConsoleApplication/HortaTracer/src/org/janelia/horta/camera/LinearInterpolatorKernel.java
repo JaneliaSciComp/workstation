@@ -28,8 +28,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.movie;
+package org.janelia.horta.camera;
 
+import org.janelia.horta.camera.InterpolatorKernel;
 import org.janelia.geometry3d.Quaternion;
 
 /**
