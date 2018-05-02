@@ -10,11 +10,13 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +56,7 @@ public class TaskWorkflowPanel extends JPanel {
 
     private String[] reviewOptions;
     
-    List<Vec3> pointList;
+    List<ReviewPoint> pointList;
     private JTable pointTable;
     private PointTableModel pointModel = new PointTableModel();
 
@@ -98,7 +100,7 @@ public class TaskWorkflowPanel extends JPanel {
                     //  the point
                     int viewColumn = table.columnAtPoint(me.getPoint());
                     int modelColumn = pointTable.convertColumnIndexToModel(viewColumn);
-                    if (modelColumn != 3) {
+                    if (modelColumn != 4) {
                         selectGoto(viewRow);
                     }
                 }
@@ -107,7 +109,7 @@ public class TaskWorkflowPanel extends JPanel {
         });
         pointTable.setRowHeight(20);
         pointTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        TableColumn col = pointTable.getColumnModel().getColumn(3);
+        TableColumn col = pointTable.getColumnModel().getColumn(4);
         col.setCellEditor(new ReviewEditor()); 
 
         JScrollPane scrollPane = new JScrollPane(pointTable);
@@ -185,9 +187,9 @@ public class TaskWorkflowPanel extends JPanel {
     /**
      * given a list of points, start the workflow from scratch
      */
-    private void startWorkflow(List<Vec3> pointList) {
+    private void startWorkflow(List<ReviewPoint> pointList) {
         pointModel.clear();
-        for (Vec3 point: pointList) {
+        for (ReviewPoint point: pointList) {
             pointModel.addPoint(point);
         }
 
@@ -228,9 +230,9 @@ public class TaskWorkflowPanel extends JPanel {
                     String review = (String) pointTable.getModel().getValueAt(i, 3);
                     if (review != null) {
                         Map pointReview = new HashMap<String,String>();
-                        pointReview.put("x", pointList.get(i).getX());
-                        pointReview.put("y", pointList.get(i).getY());
-                        pointReview.put("z", pointList.get(i).getZ());
+                        pointReview.put("x", pointList.get(i).getLocation().getX());
+                        pointReview.put("y", pointList.get(i).getLocation().getY());
+                        pointReview.put("z", pointList.get(i).getLocation().getZ());
                         pointReview.put("reviewNote", review);
                         pointReviews.add(pointReview);
                     }                    
@@ -291,15 +293,13 @@ public class TaskWorkflowPanel extends JPanel {
         pointTable.getSelectionModel().setSelectionInterval(viewRow, viewRow);
 
         int modelRow = pointTable.convertRowIndexToModel(viewRow);
-        gotoPoint((double) pointModel.getValueAt(modelRow, 0),
-                (double) pointModel.getValueAt(modelRow, 1),
-                (double) pointModel.getValueAt(modelRow, 2));
+        gotoPoint(pointList.get(viewRow));
     }
 
     /**
      * move the camera to the indicated point in LVV and Horta
      */
-    private void gotoPoint(double x, double y, double z) {
+    private void gotoPoint(ReviewPoint point) {
 
         // this is possibly a bit hacky...I followed the example in FilteredAnnList;
         //  we use the LVV sample provider to get the sample location, then poke
@@ -312,8 +312,12 @@ public class TaskWorkflowPanel extends JPanel {
             SynchronizationHelper helper = new SynchronizationHelper();
             Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
             SampleLocation sampleLocation = originator.getSampleLocation();
-            sampleLocation.setFocusUm(x, y, z);
-
+            sampleLocation.setFocusUm(point.getLocation().getX(), point.getLocation().getY(), point.getLocation().getZ());
+            sampleLocation.setMicrometersPerWindowHeight(point.getZoomLevel());
+            sampleLocation.setRotationAsQuaternion(point.getRotation());
+            sampleLocation.setInterpolate(point.getInterpolate());
+            
+            
             // the order you do these determines which will be at front when you're done;
             //  do LVV first so it matches the behavior from FilteredAnnList
 
@@ -342,9 +346,9 @@ public class TaskWorkflowPanel extends JPanel {
      * coord to clipboard" format) -- blank lines allowed -- comment lines start
      * with #
      */
-    private List<Vec3> readPointFile() {
+    private List<ReviewPoint> readPointFile() {
 
-        List<Vec3> pointList = new ArrayList<>();
+        List<ReviewPoint> pointList = new ArrayList<>();
 
         // dialog to get file
         JFileChooser chooser = new JFileChooser();
@@ -354,10 +358,11 @@ public class TaskWorkflowPanel extends JPanel {
         if (result == JFileChooser.APPROVE_OPTION) {
             File pointFile = chooser.getSelectedFile();
 
+             Map<String,Object> reviewData = null;
              Map<String,Object> pointData = null;
             try {
                 ObjectMapper mapper = new ObjectMapper();
-                pointData = mapper.readValue(new FileInputStream(pointFile), new TypeReference<Map<String,Object>>(){});
+                reviewData = mapper.readValue(new FileInputStream(pointFile), new TypeReference<Map<String,Object>>(){});
             } catch (IOException e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
@@ -367,32 +372,64 @@ public class TaskWorkflowPanel extends JPanel {
                 return pointList;
             }
             
-            if (pointData!=null) {
-                List<Map<String,String>> rawPoints = (List<Map<String,String>>)pointData.get("points");
-                int nerrors = 0;
+            if (reviewData!=null) {
+                List pointGroups = (List)reviewData.get("reviewGroups");
+                if (pointGroups != null && pointGroups.size() > 0) {
+                    for (int i=0; i<pointGroups.size(); i++) {
+                         LinkedHashMap pointWrapper = (LinkedHashMap)pointGroups.get(i);  
+                         List<Map<String, Object>> rawPoints = (List<Map<String, Object>>) pointWrapper.get("points");
+                         int nerrors = 0;
 
-                for (Map<String,String> pointMap: rawPoints) {
-                     try {
-                        Vec3 point = new Vec3(Double.parseDouble(pointMap.get("x")),
-                                Double.parseDouble(pointMap.get("y")), Double.parseDouble(pointMap.get("z")));
-                        pointList.add(point);
-                    } catch (NumberFormatException e) {
-                        nerrors++;
-                        continue;
+                         boolean interpolate = false;
+                         if ((String)pointWrapper.get("interpolate")!=null)
+                             interpolate = true;
+                        for (Map<String, Object> pointMap : rawPoints) {
+                            try {
+                                ReviewPoint point = new ReviewPoint();
+                                Vec3 pointLocation = new Vec3(Double.parseDouble((String)pointMap.get("x")),
+                                        Double.parseDouble((String)pointMap.get("y")), Double.parseDouble((String)pointMap.get("z")));
+                                point.setLocation(pointLocation);
+                                
+                                // get quaternion rotation
+                                List rotation = (List)pointMap.get("quaternionRotation");
+                                if (rotation!=null && rotation.size()>0) {
+                                    float[] quaternion = new float[4];
+                                    quaternion[0] = Float.parseFloat((String)rotation.get(0));
+                                    quaternion[1] = Float.parseFloat((String)rotation.get(1));
+                                    quaternion[2] = Float.parseFloat((String)rotation.get(2));
+                                    quaternion[3] = Float.parseFloat((String)rotation.get(3));
+                                    point.setRotation(quaternion);
+                                }
+                                                                                               
+                                // get zoom level
+                                String zoomLevel = (String)pointMap.get("zoomLevel");
+                                if (zoomLevel!=null)
+                                    point.setZoomLevel(Float.parseFloat(zoomLevel));
+                                
+                                point.setInterpolate(interpolate);
+                                
+                                pointList.add(point);
+                            } catch (NumberFormatException e) {
+                                nerrors++;
+                                continue;
+                            }
+                        }
+
+                        if (nerrors > 0) {
+                            JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                                    "Not all lines in point file could be parsed; " + nerrors + " errors.",
+                                    "Errors parsing point file",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }                      
+                    }
+                    
+                    // load review options
+                    List<String> reviewActions = (List<String>) reviewData.get("reviewOptions");
+                    if (reviewActions != null) {
+                        reviewOptions = reviewActions.toArray(new String[reviewActions.size()]);
                     }
                 }
-                if (nerrors > 0) {
-                    JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
-                            "Not all lines in point file could be parsed; " + nerrors + " errors.",
-                            "Errors parsing point file",
-                            JOptionPane.ERROR_MESSAGE);
-                }
-                
-                // load review options
-                List<String> reviewActions = (List<String>)pointData.get("reviewOptions");
-                if (reviewActions!=null) {
-                    reviewOptions = reviewActions.toArray(new String[reviewActions.size()]);
-                }
+
             }
 
            
@@ -456,11 +493,50 @@ public class TaskWorkflowPanel extends JPanel {
     }
 }
 
+class ReviewPoint {
+    private Vec3 location;
+    private float[] rotation;
+    private float zoomLevel;
+    private boolean interpolate;
+
+    public Vec3 getLocation() {
+        return location;
+    }
+    
+    public void setLocation(Vec3 location) {
+        this.location = location;
+    }
+
+    public float[] getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(float[] rotation) {
+        this.rotation = rotation;
+    }
+    
+    public float getZoomLevel() {
+        return zoomLevel;
+    }
+
+    public void setZoomLevel(float zoomLevel) {
+        this.zoomLevel = zoomLevel;
+    }
+    
+    public boolean getInterpolate() {
+        return interpolate;
+    }
+    
+    public void setInterpolate(boolean interpolate) {
+        this.interpolate = interpolate;
+    }
+}
+
 
 class PointTableModel extends AbstractTableModel {
-    private String[] columnNames = {"x (µm)", "y (µm)", "z (µm)", "Review Note"};
+    private String[] columnNames = {"x (µm)", "y (µm)", "z (µm)", "Rotation", "Review Note"};
 
-    private List<Vec3> points = new ArrayList<>();
+    private List<ReviewPoint> points = new ArrayList<>();
     private List<String> notes = new ArrayList<>();
 
     public void clear() {
@@ -468,7 +544,7 @@ class PointTableModel extends AbstractTableModel {
         notes.clear();
     }
 
-    public void addPoint(Vec3 point) {
+    public void addPoint(ReviewPoint point) {
         points.add(point);
         notes.add("");
     }
@@ -492,12 +568,16 @@ class PointTableModel extends AbstractTableModel {
     public Object getValueAt(int row, int column) {
         switch (column) {
             case 0:
-                return points.get(row).getX();
+                return points.get(row).getLocation().getX();
             case 1:
-                return points.get(row).getY();
+                return points.get(row).getLocation().getY();
             case 2:
-                return points.get(row).getZ();
+                return points.get(row).getLocation().getZ();
             case 3:
+                float[] rotation = points.get(row).getRotation();
+                return "[" + rotation[0] + "," +  rotation[1] + "," + 
+                        rotation[2] + "," + rotation[3] + "]";
+            case 4:
                 return notes.get(row);
             default:
                 return null;
@@ -505,7 +585,7 @@ class PointTableModel extends AbstractTableModel {
     }
 
     public boolean isReviewed(int row) {
-        String reviewed = (String)getValueAt(row, 3);
+        String reviewed = (String)getValueAt(row, 4);
         if (reviewed!=null && reviewed.length()>0) 
             return true;
         return false;
@@ -514,14 +594,8 @@ class PointTableModel extends AbstractTableModel {
     @Override
     public void setValueAt(Object value, int row, int column) {
         switch (column) {
-            case 0:
-                points.get(row).setX((double) value);
-            case 1:
-                points.get(row).setY((double) value);
-            case 2:
-                points.get(row).setZ((double) value);
-            case 3:
-                notes.set(row, (String) value);
+            case 4:
+                notes.get(row);
             default:
                 // nothing
         }
@@ -535,7 +609,9 @@ class PointTableModel extends AbstractTableModel {
             case 2:
                 return double.class;
             case 3:
-                return String.class;
+                return float[].class;
+            case 4:
+                return String.class;                
             default:
                 return Object.class;
         }
@@ -543,7 +619,7 @@ class PointTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return column == 3;
+        return column == 4;
     }
 
 }

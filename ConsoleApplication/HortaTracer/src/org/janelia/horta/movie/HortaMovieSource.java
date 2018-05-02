@@ -30,6 +30,12 @@
 
 package org.janelia.horta.movie;
 
+import org.janelia.horta.camera.Interpolator;
+import org.janelia.horta.camera.Vector3Interpolator;
+import org.janelia.horta.camera.PrimitiveInterpolator;
+import org.janelia.horta.camera.CatmullRomSplineKernel;
+import org.janelia.horta.camera.LinearInterpolatorKernel;
+import org.janelia.horta.camera.InterpolatorKernel;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;

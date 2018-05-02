@@ -30,6 +30,7 @@
 
 package org.janelia.horta.movie;
 
+import org.janelia.horta.camera.Interpolator;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;

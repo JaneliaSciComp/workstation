@@ -31,7 +31,6 @@
 package org.janelia.console.viewerapi;
 
 import java.net.URL;
-
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 
 /**
@@ -45,8 +44,14 @@ public interface SampleLocation
 
     double getFocusXUm();
     double getFocusYUm();
-    double getFocusZUm();
+    double getFocusZUm();    
     void setFocusUm(double x, double y, double z);
+        
+    float[] getRotationAsQuaternion();
+    void setRotationAsQuaternion(float[] rotation);
+    
+    void setInterpolate(boolean interpolate);
+    boolean getInterpolate();
     
     double getMicrometersPerWindowHeight();
     void setMicrometersPerWindowHeight(double zoom);
