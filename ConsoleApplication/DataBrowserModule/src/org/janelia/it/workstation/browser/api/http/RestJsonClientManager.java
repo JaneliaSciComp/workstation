@@ -87,18 +87,16 @@ public class RestJsonClientManager {
             }
         });
 
-        if (auth) {
-            // Add access token to every request
-            ClientRequestFilter authFilter = new ClientRequestFilter() {
-                @Override
-                public void filter(ClientRequestContext requestContext) throws IOException {
-                    for (Entry<String, String> entry : HttpServiceUtils.getExtraHeaders().entrySet()) {
-                        requestContext.getHeaders().add(entry.getKey(), entry.getValue());
-                    }
+        // Add application id to every request, and for authed requests, add the JWT token
+        ClientRequestFilter headerFilter = new ClientRequestFilter() {
+            @Override
+            public void filter(ClientRequestContext requestContext) throws IOException {
+                for (Entry<String, String> entry : HttpServiceUtils.getExtraHeaders(auth).entrySet()) {
+                    requestContext.getHeaders().add(entry.getKey(), entry.getValue());
                 }
-            };
-            client.register(authFilter);
-        }
+            }
+        };
+        client.register(headerFilter);
         
         //client.register(CustomLoggingFilter.class);
         return client;

@@ -24,7 +24,7 @@ public class HttpClientProxy {
 
         log.trace("{} {}", method.getName(), method.getURI());
         
-        for (Entry<String, String> entry : HttpServiceUtils.getExtraHeaders().entrySet()) {
+        for (Entry<String, String> entry : HttpServiceUtils.getExtraHeaders(true).entrySet()) {
             addHeader(method, entry.getKey(), entry.getValue());
         }
 

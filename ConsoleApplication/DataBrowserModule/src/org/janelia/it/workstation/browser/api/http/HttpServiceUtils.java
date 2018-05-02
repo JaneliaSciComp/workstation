@@ -22,7 +22,7 @@ public class HttpServiceUtils {
     private static final String APPICATION_HEADER = "Application-Id";
     private static final String APPICATION_VALUE = "Workstation";
     
-    public static Map<String,String> getExtraHeaders() {
+    public static Map<String,String> getExtraHeaders(boolean auth) {
         
         AccessManager accessManager = AccessManager.getAccessManager();
         Map<String,String> headers = new HashMap<>();
@@ -30,28 +30,29 @@ public class HttpServiceUtils {
         // Identify ourselves 
         headers.put(APPICATION_HEADER, APPICATION_VALUE);
 
-        // Add the JWT for services behind the API Gateway, and file services like Jade
-        String accessToken = accessManager.getToken();
-        if (accessToken!=null) {
-            headers.put(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-        }
-        
-        // Username/RunAsUser headers for using services directly without the API Gateway
-        Subject authSubject = accessManager.getAuthenticatedSubject();
-        if (authSubject != null) {
-
-            String authKey = authSubject.getKey();
-            headers.put(USERNAME_HEADER, authKey);
+        if (auth) {
+            // Add the JWT for services behind the API Gateway, and file services like Jade
+            String accessToken = accessManager.getToken();
+            if (accessToken!=null) {
+                headers.put(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+            }
             
-            Subject actualSubject = accessManager.getActualSubject();
-            if (actualSubject != null) {
-                String runAsKey = actualSubject.getKey();
-                if (!runAsKey.equals(authKey)) {
-                    headers.put(RUNASUSER_HEADER, runAsKey);
+            // Username/RunAsUser headers for using services directly without the API Gateway
+            Subject authSubject = accessManager.getAuthenticatedSubject();
+            if (authSubject != null) {
+    
+                String authKey = authSubject.getKey();
+                headers.put(USERNAME_HEADER, authKey);
+                
+                Subject actualSubject = accessManager.getActualSubject();
+                if (actualSubject != null) {
+                    String runAsKey = actualSubject.getKey();
+                    if (!runAsKey.equals(authKey)) {
+                        headers.put(RUNASUSER_HEADER, runAsKey);
+                    }
                 }
             }
         }
-        
         
         return ImmutableMap.copyOf(headers);
     }
