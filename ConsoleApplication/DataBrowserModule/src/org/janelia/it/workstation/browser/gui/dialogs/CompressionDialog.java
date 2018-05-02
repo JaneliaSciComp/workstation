@@ -286,18 +286,18 @@ public class CompressionDialog extends ModalDialog {
         String targetAlignedCompression =  alignedLLCheckbox.isSelected() ? DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J : DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
         String targetSeparationCompression =  sepLLCheckbox.isSelected() ? DomainConstants.VALUE_COMPRESSION_LOSSLESS : DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
 
-        List<Sample> dirtySamples = new ArrayList<>();
+        Collection<Sample> dirtySamples = samples;
         
-        for(Sample sample : samples) {
-            
-            String currUnalignedCompression = SampleUtils.getUnalignedCompression(dataSet, sample);
-            String currAlignedCompression = SampleUtils.getAlignedCompression(dataSet, sample);
-            String currSepCompression = SampleUtils.getSeparationCompression(dataSet, sample);
-
-            if (!targetUnalignedCompression.equals(currUnalignedCompression) || !targetAlignedCompression.equals(currAlignedCompression)  || !targetSeparationCompression.equals(currSepCompression)) {
-                dirtySamples.add(sample);
-            }
-        }
+//        for(Sample sample : samples) {
+//            
+//            String currUnalignedCompression = SampleUtils.getUnalignedCompression(dataSet, sample);
+//            String currAlignedCompression = SampleUtils.getAlignedCompression(dataSet, sample);
+//            String currSepCompression = SampleUtils.getSeparationCompression(dataSet, sample);
+//
+//            if (!targetUnalignedCompression.equals(currUnalignedCompression) || !targetAlignedCompression.equals(currAlignedCompression)  || !targetSeparationCompression.equals(currSepCompression)) {
+//                dirtySamples.add(sample);
+//            }
+//        }
         
         if (dirtySamples.isEmpty()) {
             JOptionPane.showMessageDialog(this, "All the selected samples already have the selected compression strategy",  "Change Sample Compression Strategy", JOptionPane.INFORMATION_MESSAGE);
