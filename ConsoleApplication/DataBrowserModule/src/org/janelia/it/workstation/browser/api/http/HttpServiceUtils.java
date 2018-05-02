@@ -17,10 +17,10 @@ import com.google.common.collect.ImmutableMap;
  */
 public class HttpServiceUtils {
 
-    private static final String USERNAME_HEADER = "Username";
-    private static final String RUNASUSER_HEADER = "RunAsUser";
-    private static final String APPICATION_HEADER = "Application-Id";
-    private static final String APPICATION_VALUE = "Workstation";
+    public static final String USERNAME_HEADER = "Username";
+    public static final String RUNASUSER_HEADER = "RunAsUser";
+    public static final String APPICATION_HEADER = "Application-Id";
+    public static final String APPICATION_VALUE = "Workstation";
     
     public static Map<String,String> getExtraHeaders(boolean auth) {
         
