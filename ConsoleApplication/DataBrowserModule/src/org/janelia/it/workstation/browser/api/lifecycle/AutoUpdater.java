@@ -163,7 +163,14 @@ public class AutoUpdater extends SimpleWorker {
 
     @Override
     protected void hadSuccess() {
-        if (containerForUpdate==null || restarter==null) return;
+        
+        log.info("Finished");
+        
+        if (containerForUpdate==null || restarter==null) {
+            log.info("No updates were installed");
+            return;
+        }
+        
         InstallSupport support = containerForUpdate.getSupport();
         
         try {
@@ -180,7 +187,7 @@ public class AutoUpdater extends SimpleWorker {
                 support.doRestart(restarter, null);
                 this.restarting = true;
             }
-            else if (selectedOption == 1) {
+            else {
                 log.info("Will install updates the next time the application is started.");
                 support.doRestartLater(restarter);
             }
