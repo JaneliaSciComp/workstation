@@ -69,7 +69,7 @@ public class DownloadWizardPanel3 implements WizardDescriptor.ValidatingPanel<Wi
         }
         if (!pathsUnique) {
             isValid = false;
-            throw new WizardValidationException(null, "Some output paths are duplicated. Try adding a unique identifier like {GUID} to your file naming template.", null);
+            throw new WizardValidationException(null, "Some output paths are duplicated. Try adding a unique identifier like {GUID} or {Index} to your file naming template.", null);
         }
         // Check if there are any files to download
         if (uniquePaths.isEmpty()) {

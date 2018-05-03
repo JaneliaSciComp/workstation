@@ -173,6 +173,8 @@ public final class DownloadVisualPanel2 extends JPanel {
             
             @Override
             protected void doStuff() throws Exception {
+
+                int index = 0;
                 
                 for(DownloadObject downloadObject : downloadObjects) {
                     DomainObject domainObject = downloadObject.getDomainObject();
@@ -187,7 +189,7 @@ public final class DownloadVisualPanel2 extends JPanel {
                                 log.debug("      Adding item for file type '{}'", fileType);
                                 
                                 if (fileType.is3dImage()) {
-                                    DownloadFileItem downloadItem = new DownloadFileItem(downloadObject.getFolderPath(), domainObject);
+                                    DownloadFileItem downloadItem = new DownloadFileItem(downloadObject.getFolderPath(), domainObject, index++);
                                     downloadItem.init(artifactDescriptor, hasFiles, fileType, null, false, false, "{GUID}_{File Name}");
                                     String sourceExtension = downloadItem.getSourceExtension();
                                     if (sourceExtension!=null) {
