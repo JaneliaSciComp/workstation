@@ -105,7 +105,7 @@ public class NeuronModelAdapter implements NeuronModel
         this.neuronId = neuron.getId();
         this.neuronSet = workspace;
         nonInteractable = false; // TODO:
-        visible = true;
+        visible = neuronSet.annotationModel.getNeuronVisibility(neuron);
         ownerKey = neuron.getOwnerKey();
         vertexes = new VertexList(neuron.getGeoAnnotationMap(), neuronSet);
         edges = new EdgeList(vertexes);
@@ -510,14 +510,14 @@ public class NeuronModelAdapter implements NeuronModel
     @Override
     public void setVisible(boolean visible)
     {       
-        NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
-
-        if (style != null && style.isVisible() == visible) {
-            // no change
+        if (visible == this.visible) {
+            // we're up to date
             return;
         }
-
+        
         try {
+            // change local first so it prevents reexecution on the callback 
+            this.visible = visible;
             neuronSet.changeNeuronVisibility(neuron, visible);
         } catch (Exception ex) {
             logger.error("Error setting neuron style", ex);
