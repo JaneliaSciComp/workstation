@@ -18,6 +18,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.MailDialogueBox;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,6 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
     private static final int COOLDOWN_TIME_SEC = 300; // Allow one auto exception report every 5 minutes
     private static final int MAX_STACKTRACE_CACHE_SIZE = 1000; // Keep track of a max number of unique stacktraces
     private static final boolean AUTO_SEND_EXCEPTIONS = ConsoleProperties.getBoolean("console.AutoSendExceptions", false);
-    private static final String APP_VERSION = ConsoleApp.getConsoleApp().getApplicationVersion();
 
     private final HashFunction hf = Hashing.md5();
     
@@ -89,7 +89,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
      */
     private synchronized void autoSendNovelExceptions() {
 
-        if ("DEV".equals(APP_VERSION)) {
+        if (SystemInfo.isDev) {
             return;
         }
         

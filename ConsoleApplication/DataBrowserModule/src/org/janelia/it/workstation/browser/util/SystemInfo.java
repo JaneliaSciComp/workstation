@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.openide.modules.InstalledFileLocator;
 import org.slf4j.Logger;
@@ -73,6 +74,8 @@ public class SystemInfo {
     public static final String nativeFileManagerName = isMac ? "Finder" : isGnome ? "Nautilus" : isKDE ? "Konqueror" : "Explorer";
 
     public static final String optionsMenuName = isMac ? "Preferences" : "Tools->Options";
+    
+    public static final boolean isDev = "DEV".equals(ConsoleApp.getConsoleApp().getApplicationVersion());
     
     /**
      * Whether IDEA is running under MacOS X version 10.4 or later.
