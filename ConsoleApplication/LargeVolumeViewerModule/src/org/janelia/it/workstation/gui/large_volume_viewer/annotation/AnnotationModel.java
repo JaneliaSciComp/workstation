@@ -1607,31 +1607,37 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     public void setNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
-        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<>();
         NeuronStyle style = getNeuronStyle(neuron);
-        style.setVisible(visibility);
-        styleUpdater.put(neuron, style);
-        if (visibility) {
-            removeUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
-        } else {
-            addUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
+        if (style.isVisible() != visibility) {
+            Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<>();
+            style.setVisible(visibility);
+            styleUpdater.put(neuron, style);
+            if (visibility) {
+                removeUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
+            } else {
+                addUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
+            }
+            fireNeuronStylesChanged(styleUpdater);
         }
-        fireNeuronStylesChanged(styleUpdater);
     }
 
     public void setNeuronVisibility(Collection<TmNeuronMetadata> bulkNeurons, boolean visibility) {
         Map<TmNeuronMetadata, NeuronStyle> styleUpdater = new HashMap<>();
         for (TmNeuronMetadata neuron : bulkNeurons) {
             NeuronStyle style = getNeuronStyle(neuron);
-            style.setVisible(visibility);
-            styleUpdater.put(neuron, style);
-            if (visibility) {
-                getAllTagMeta().removeUserTag(NEURON_TAG_VISIBILITY, neuron);
-            } else {
-                getAllTagMeta().addUserTag(NEURON_TAG_VISIBILITY, neuron);
+            if (style.isVisible() != visibility) {
+                style.setVisible(visibility);
+                styleUpdater.put(neuron, style);
+                if (visibility) {
+                    getAllTagMeta().removeUserTag(NEURON_TAG_VISIBILITY, neuron);
+                } else {
+                    getAllTagMeta().addUserTag(NEURON_TAG_VISIBILITY, neuron);
+                }
             }
         }
-        fireNeuronStylesChanged(styleUpdater);
+        if (styleUpdater.size() > 0) {
+            fireNeuronStylesChanged(styleUpdater);
+        }
     }
 
     /**
