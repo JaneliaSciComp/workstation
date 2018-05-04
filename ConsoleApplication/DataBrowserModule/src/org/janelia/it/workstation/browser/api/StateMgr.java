@@ -218,8 +218,10 @@ public class StateMgr {
         List<Preference> prefs = DomainMgr.getDomainMgr().getPreferences(category);
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(AccessManager.getSubjectKey(), ontologyId);
         for (Preference pref : prefs) {
-            log.debug("Found preference: {}", pref);
-            ontologyKeyBindings.addBinding(pref.getKey(), Long.parseLong((String)pref.getValue()));
+            if (pref.getValue()!=null) {
+                log.debug("Found preference: {}", pref);
+                ontologyKeyBindings.addBinding(pref.getKey(), Long.parseLong((String)pref.getValue()));
+            }
         }
         log.debug("Loaded {} key bindings for ontology {}", ontologyKeyBindings.getKeybinds().size(), ontologyKeyBindings.getOntologyId());
         return ontologyKeyBindings;
@@ -227,36 +229,38 @@ public class StateMgr {
 
     public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
         String category = DomainConstants.PREFERENCE_CATEGORY_KEYBINDS_ONTOLOGY + ontologyKeyBindings.getOntologyId();
-        boolean changed = false;
         Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
-        log.debug("Saving {} key bindings for ontology {}", keybinds.size(), ontologyKeyBindings.getOntologyId());
+        log.info("Saving {} key bindings for ontology {}", keybinds.size(), ontologyKeyBindings.getOntologyId());
+        
+        List<Preference> preferences = DomainMgr.getDomainMgr().getPreferences(category);
+        
         for (OntologyKeyBind bind : keybinds) {
             Preference pref = DomainMgr.getDomainMgr().getPreference(category, bind.getKey());
+            if (pref!=null) {
+                preferences.remove(pref);
+            }
             String value = bind.getOntologyTermId().toString();
             if (pref==null) {
                 // Create
                 pref = new Preference(DomainMgr.getPreferenceSubject(), category, bind.getKey(), value);
-                log.debug("Creating new preference: {}", pref);
+                log.info("Creating new preference: {}", pref);
                 DomainMgr.getDomainMgr().savePreference(pref);
-                changed = true;
             }
             else if (!StringUtils.areEqual(pref.getValue(), value)) {
                 // Update
-                log.debug("Updating value for preference {}: {}={}", pref.getId(), pref.getKey(), value);
+                log.info("Updating value for preference {}: {}={}", pref.getId(), pref.getKey(), value);
                 pref.setValue(value);
                 DomainMgr.getDomainMgr().savePreference(pref);
-                changed = true;
             }
             else {
-                log.debug("Preference already exists: {}", pref);
+                log.info("Preference already exists: {}", pref);
             }
         }
-
-        if (changed) {
-            Ontology ontology = DomainMgr.getDomainMgr().getModel().getDomainObject(Ontology.class, ontologyKeyBindings.getOntologyId());
-            if (ontology!=null) {
-                Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(ontology));
-            }
+        // Null out the rest of the preferences 
+        // TODO: it would be better to delete them, but we would need that implemented in the API 
+        for (Preference preference : preferences) {
+            preference.setValue(null);
+            DomainMgr.getDomainMgr().savePreference(preference);
         }
     }
 

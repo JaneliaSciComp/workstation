@@ -122,27 +122,30 @@ public class NodeUtils {
     public static Node findNodeWithPath(Node start, Long[] ids) {
 
         if (log.isTraceEnabled()) {
-            log.trace("findNodeWithPath({},{})",start.getDisplayName(),NodeUtils.createPathString(ids));
+            log.trace("findNodeWithPath(start={},{})",start.getDisplayName(),NodeUtils.createPathString(ids));
         }
         
         if (ids==null || ids.length==0) {
             return start;
         }
         
-        Enumeration<Long> enumeration = Enumerations.array(ids);
+        Enumeration<Long> path = Enumerations.array(ids);
         
         if (start instanceof HasIdentifier) {
             HasIdentifier hasId = (HasIdentifier)start;
             if (ids[0].equals(hasId.getId())) { 
                 // skip the first node, because its this one
-                enumeration.nextElement();
+                Long first = path.nextElement();
+                log.trace("Skipping first path element: {}",first);
             }
         }
         
-        while (enumeration.hasMoreElements()) {
-            Long id = enumeration.nextElement();
+        while (path.hasMoreElements()) {
+            Long id = path.nextElement();
+            log.trace("Looking in {} for next path element: {}",start.getName(),id);
             Node next = findChild(start, id);
             if (next == null) {
+                log.trace("Could not find child with id: {}",id);
                 return null;
             }
             else {
@@ -156,20 +159,18 @@ public class NodeUtils {
     public static Node findChild(Node node, Long id) {
         
         if (id==null) return null;
-        
-        log.info("findChild({},{})",node.getDisplayName(),id);
+        log.trace("  findChild(parent={},childId={})",node.getDisplayName(),id);
         
         Node[] list = node.getChildren().getNodes();
-
         if (list.length == 0) {
             return null;
         }
 
         for (int i = 0; i < list.length; i++) {
             Node child = list[i];
-            log.info("findChild - checking {}",child.getDisplayName());
             if (child instanceof HasIdentifier) {
                 HasIdentifier hasId = (HasIdentifier)list[i];
+                log.trace("    findChild checking {} ({})",hasId.getId(),child.getDisplayName());
                 if (hasId!=null && id.equals(hasId.getId())) { 
                     return list[i];
                 }

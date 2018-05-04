@@ -7,7 +7,7 @@ import java.io.IOException;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.openide.nodes.AbstractNode;
+import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.util.datatransfer.ExTransferable;
@@ -17,10 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * An internal tree node which is not based on a domain object, but has an identifier.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class InternalNode<T> extends AbstractNode {
+public class InternalNode<T extends HasIdentifier> extends IdentifiableNode<T> {
         
     private final static Logger log = LoggerFactory.getLogger(InternalNode.class);
     
@@ -36,6 +37,12 @@ public class InternalNode<T> extends AbstractNode {
         this.parentChildFactory = parentChildFactory;
         this.lookupContents = lookupContents;
         lookupContents.add(object);
+        NodeTracker.getInstance().registerNode(this);
+    }
+
+    @Override
+    public void destroy() throws IOException {
+        NodeTracker.getInstance().deregisterNode(this);
     }
     
     protected InstanceContent getLookupContents() {
@@ -50,6 +57,11 @@ public class InternalNode<T> extends AbstractNode {
     public T getObject() {
         return (T)getLookup().lookup(Object.class);
     }
+
+    @Override
+    public Long getId() {
+        return getObject().getId();
+    }
     
     public String getPrimaryLabel() {
         return getObject().toString();
@@ -61,6 +73,20 @@ public class InternalNode<T> extends AbstractNode {
     
     public String getExtraLabel() {
         return null;
+    }
+
+    @Override
+    public void update(T refreshed) {
+        if (refreshed==null) throw new IllegalStateException("Cannot update with null object");
+        String oldName = getName();
+        String oldDisplayName = getDisplayName();
+        log.debug("Updating node with: {}",refreshed);
+        lookupContents.remove(getObject());
+        lookupContents.add(refreshed);
+        fireCookieChange();
+        fireNameChange(oldName, getName());
+        log.debug("Display name changed {} -> {}",oldDisplayName, getDisplayName());
+        fireDisplayNameChange(oldDisplayName, getDisplayName());
     }
     
     @Override

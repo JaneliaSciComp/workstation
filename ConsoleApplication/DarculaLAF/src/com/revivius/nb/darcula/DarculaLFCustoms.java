@@ -257,6 +257,7 @@ public class DarculaLFCustoms extends LFCustoms {
             "List.font", controlFont,
             "List.focusCellHighlightBorder", new TransparentBorder(),
             
+            "TreeUI", "com.revivius.nb.darcula.ui.IndentAwareTreeUI",
             TREEFONT, controlFont,
             "Tree.font", controlFont,
             "Tree.closedIcon", new ImageIcon(DarculaLFCustoms.class.getResource("open.png")),

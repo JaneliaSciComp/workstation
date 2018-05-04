@@ -40,9 +40,10 @@ public class CustomTreeView extends BeanTreeView {
     public CustomTreeView(ExplorerManager.Provider explorerManagerProvider) {
         this.explorerManagerProvider = explorerManagerProvider;
         setQuickSearchAllowed(false);
+        
         tree.setScrollsOnExpand(false);
     }
-
+        
     public Provider getExplorerManagerProvider() {
         return explorerManagerProvider;
     }
@@ -243,6 +244,10 @@ public class CustomTreeView extends BeanTreeView {
         
         TreeNode[] tns = treeNodes.toArray(new TreeNode[treeNodes.size()]);
         return new TreePath(tns);
+    }
+    
+    public void addTreeKeyListener(KeyListener newListener) {
+        tree.addKeyListener(newListener);
     }
     
     public void replaceKeyListeners(KeyListener newListener) {

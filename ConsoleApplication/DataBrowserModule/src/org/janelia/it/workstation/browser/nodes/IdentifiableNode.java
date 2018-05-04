@@ -5,7 +5,12 @@ import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 import org.openide.util.Lookup;
 
-public abstract class IdentifiableNode extends AbstractNode implements HasIdentifier {
+/**
+ * A node which has an identifier.
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
+public abstract class IdentifiableNode<T> extends AbstractNode implements HasIdentifier {
 
     public IdentifiableNode(Children children) {
         super(children);
@@ -16,5 +21,7 @@ public abstract class IdentifiableNode extends AbstractNode implements HasIdenti
     }
 
     public abstract Long getId();
+
+    public abstract void update(T refreshed);
     
 }

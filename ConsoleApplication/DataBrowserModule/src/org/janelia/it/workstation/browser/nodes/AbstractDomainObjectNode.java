@@ -35,7 +35,6 @@ import org.janelia.it.workstation.browser.nb_action.RenameAction;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasFiles;
-import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.PropertySupport;
@@ -54,7 +53,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class AbstractDomainObjectNode<T extends DomainObject> 
-        extends AbstractNode 
+        extends IdentifiableNode<T>
         implements DomainObjectNode<T>, Has2dRepresentation  {
 
     private final static Logger log = LoggerFactory.getLogger(AbstractDomainObjectNode.class);
@@ -72,7 +71,12 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
         this.lookupContents = lookupContents;
         if (domainObject==null) throw new IllegalStateException("Cannot create node with null object");
         lookupContents.add(domainObject);
-        DomainObjectNodeTracker.getInstance().registerNode(this);
+        NodeTracker.getInstance().registerNode(this);
+    }
+
+    @Override
+    public void destroy() throws IOException {
+        NodeTracker.getInstance().deregisterNode(this);
     }
     
     @Override
@@ -325,11 +329,6 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
         }
     }
 
-    @Override
-    public void destroy() throws IOException {
-        DomainObjectNodeTracker.getInstance().deregisterNode(AbstractDomainObjectNode.this);
-    }
-    
     @Override
     public Transferable clipboardCopy() throws IOException {
         log.debug("Copy to clipboard: {}",getDomainObject());

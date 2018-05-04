@@ -250,7 +250,9 @@ public class DomainMgr {
         List<Preference> titlePreferences = DomainMgr.getDomainMgr().getPreferences(category);
         Map<String,String> map = new HashMap<>();
         for(Preference preference : titlePreferences) {
-            map.put(preference.getKey(), (String)preference.getValue());
+            if (preference.getValue()!=null) {
+                map.put(preference.getKey(), (String)preference.getValue());
+            }
         }
         return map;
     }

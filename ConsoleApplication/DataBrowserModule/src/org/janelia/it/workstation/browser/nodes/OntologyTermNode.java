@@ -16,6 +16,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
+import org.janelia.it.workstation.browser.actions.OntologyElementAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -166,8 +167,8 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     
     @Override
     public String getExtraLabel() {
-        OntologyNode ontologyNode = getOntologyNode();
-        org.janelia.it.workstation.browser.actions.Action action = ontologyNode.getActionForNode(this);
+        OntologyExplorerTopComponent explorer = OntologyExplorerTopComponent.getInstance();
+        OntologyElementAction action = explorer.getActionForTerm(getOntologyTerm());
         if (action != null) {
             KeyboardShortcut bind = KeyBindings.getKeyBindings().getBinding(action);
             if (bind != null) {
@@ -175,6 +176,10 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
             }
         }
         return null;
+    }
+    
+    public void fireShortcutChanged() {
+        fireDisplayNameChange(null, getDisplayName());
     }
     
     @Override
@@ -263,10 +268,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            OntologyNode ontologyNode = getOntologyNode();
-            org.janelia.it.workstation.browser.actions.Action action = ontologyNode.getActionForNode(OntologyTermNode.this);
-            OntologyExplorerTopComponent explorer = OntologyExplorerTopComponent.getInstance();
-            explorer.getKeyBindDialog().showForAction(action);            
+            OntologyExplorerTopComponent.getInstance().showKeyBindDialog(OntologyTermNode.this);
         }
     }
     
