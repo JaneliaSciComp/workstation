@@ -166,6 +166,11 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         if (stacktrace.contains("No space left on device")) {
             return true;
         }
+
+        // Ignore memory issues, these do not represent bugs.
+        if (stacktrace.contains("java.lang.OutOfMemoryError") || stacktrace.contains("Java heap space")) {
+            return true;
+        }
         
         // Ignore all broken pipes, because these are usually caused by user initiated cancellation or network issues.
         if (stacktrace.contains("Caused by: java.io.IOException: Broken pipe")) {
