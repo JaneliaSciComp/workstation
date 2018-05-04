@@ -157,9 +157,7 @@ public class NodeUtils {
         
         if (id==null) return null;
         
-        if (log.isTraceEnabled()) {
-            log.trace("findChild({},{})",node.getDisplayName(),id);
-        }
+        log.info("findChild({},{})",node.getDisplayName(),id);
         
         Node[] list = node.getChildren().getNodes();
 
@@ -169,9 +167,7 @@ public class NodeUtils {
 
         for (int i = 0; i < list.length; i++) {
             Node child = list[i];
-            if (log.isTraceEnabled()) {
-                log.trace("findChild - checking {}",child.getDisplayName());
-            }
+            log.info("findChild - checking {}",child.getDisplayName());
             if (child instanceof HasIdentifier) {
                 HasIdentifier hasId = (HasIdentifier)list[i];
                 if (hasId!=null && id.equals(hasId.getId())) { 

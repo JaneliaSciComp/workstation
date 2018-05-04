@@ -25,8 +25,7 @@ public class RunNodeDefaultAction extends OntologyElementAction {
         OntologyExplorerTopComponent explorer = OntologyExplorerTopComponent.getInstance();
         OntologyTermNode node = explorer.select(path);
         if (node==null) {
-            log.error("Problem finding ontology term with path {}", NodeUtils.createPathString(path));
-            throw new IllegalStateException("Could not find ontology term");
+            throw new IllegalStateException("Could not find ontology term with path: "+NodeUtils.createPathString(path));
         }
         
         Action a = node.getPreferredAction();
