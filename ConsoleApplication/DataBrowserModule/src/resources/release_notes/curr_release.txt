@@ -1,4 +1,5 @@
-// 7.10.1
+// 7.11
 
-Horta
-* Fixed hide/show issue
+Workstation Browser
+* Fixed error when setting key binds for annotations
+* Added {Index} template attribute for downloading duplicate files

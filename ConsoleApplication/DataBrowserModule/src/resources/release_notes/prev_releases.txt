@@ -1,3 +1,8 @@
+// 7.10.1
+
+Horta
+* Fixed hide/show issue
+
 // 7.10
 
 Workstation Browser
