@@ -37,6 +37,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.it.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -525,6 +526,15 @@ implements MouseMode, KeyListener
                     };
                     setNeuronGroupsAction.setEnabled(controller.editsAllowed());
                     result.add(new JMenuItem(setNeuronGroupsAction));
+                    
+                    AbstractAction generateReviewPointList = new AbstractAction("Generate point review list...") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().generateReviewPointList(hover);
+                        }
+                    };
+                    generateReviewPointList.setEnabled(controller.editsAllowed());
+                    result.add(new JMenuItem(generateReviewPointList));
 
                     AbstractAction setNeuronRadiusAction = new AbstractAction("Set neuron radius...") {
                         @Override
@@ -603,7 +613,7 @@ implements MouseMode, KeyListener
 	}
 
 	@Override
-	public void keyPressed(KeyEvent event) {
+	public void keyPressed(KeyEvent event) {          
 		checkShiftPlusCursor(event);
 		int keyCode = event.getKeyCode();
 		Anchor historyAnchor = null;
@@ -669,6 +679,12 @@ implements MouseMode, KeyListener
 				skeleton.addEditNoteRequest(nextParent);
 			}
 			break;
+                case KeyEvent.VK_PLUS:
+			TaskWorkflowViewTopComponent.getInstance().getTaskWorkflowPanel().nextTask();
+			break;
+                case KeyEvent.VK_MINUS:
+			TaskWorkflowViewTopComponent.getInstance().getTaskWorkflowPanel().prevTask();
+			break;               
 		}
                 
                 // if not normal key event, check our group toggle events

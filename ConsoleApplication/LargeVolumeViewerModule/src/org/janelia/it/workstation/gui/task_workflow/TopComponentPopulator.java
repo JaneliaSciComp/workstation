@@ -37,6 +37,10 @@ public class TopComponentPopulator {
         }
     }
     
+    public TaskWorkflowPanel getTaskWorkflowPanel() {
+        return taskPanel;
+    }
+    
     private static class TaskDataSource implements TaskDataSourceI {
 
         private AnnotationModel annotationModel;

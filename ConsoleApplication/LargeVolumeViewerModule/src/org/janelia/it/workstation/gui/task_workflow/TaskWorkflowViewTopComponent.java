@@ -7,6 +7,7 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.WindowManager;
 
 /**
  * Top component which displays something.
@@ -47,6 +48,10 @@ public final class TaskWorkflowViewTopComponent extends TopComponent {
         setName(Bundle.CTL_TaskWorkflowViewTopComponentTopComponent());
         setToolTipText(Bundle.HINT_TaskWorkflowViewTopComponentTopComponent());
 
+    }
+    
+    public static final TaskWorkflowViewTopComponent getInstance() {
+        return (TaskWorkflowViewTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
     }
 
     /**
@@ -93,5 +98,9 @@ public final class TaskWorkflowViewTopComponent extends TopComponent {
 
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
+    }
+    
+    public TaskWorkflowPanel getTaskWorkflowPanel() {
+        return populator.getTaskWorkflowPanel();
     }
 }
