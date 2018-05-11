@@ -55,6 +55,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.Anch
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.it.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.janelia.it.workstation.tracing.PathTraceToParentWorker;
@@ -241,6 +242,25 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void editNeuronGroups() {
         NeuronGroupsDialog ngDialog = new NeuronGroupsDialog();
         ngDialog.showDialog();
+    }
+    
+    public void generateReviewPointList(Anchor anchor) {
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(anchor.getNeuronID());
+        List<TmGeoAnnotation> rootNodes = neuron.getRootAnnotations();
+        TmGeoAnnotation rootNode = null;
+        if (rootNodes.size()>0) {
+            rootNode = rootNodes.get(0);
+        }
+        if (rootNode!=null) {
+            List<TmGeoAnnotation> annotationList = neuron.getSubTreeList(rootNode);
+            List<Vec3> pointList = new ArrayList<>();
+            for (TmGeoAnnotation annotation: annotationList) {
+                Vec3 tempLocation = getTileFormat().micronVec3ForVoxelVec3Centered(
+                    new Vec3(annotation.getX(), annotation.getY(),annotation.getZ()));
+                pointList.add(tempLocation);
+            }
+            TaskWorkflowViewTopComponent.getInstance().getTaskWorkflowPanel().loadPointList(pointList);
+        }
     }
     
     public void showNeuronHistory() {

@@ -6,7 +6,11 @@ import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -22,6 +26,7 @@ import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.basic.BasicComboBoxUI.KeyHandler;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableColumn;
@@ -41,6 +46,7 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronG
 import static org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog.PROPERTY_READONLY;
 import static org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog.PROPERTY_VISIBILITY;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +73,20 @@ public class TaskWorkflowPanel extends JPanel {
 
         setupUI();
     }
+    
+    public void nextTask() {
+        int viewRow = pointTable.getSelectedRow();
+        if (viewRow < pointList.size() - 1) {
+            selectGoto(viewRow + 1);
+        }
+    }
+    
+    public void prevTask() {
+        int viewRow = pointTable.getSelectedRow();
+        if (viewRow > 0) {
+            selectGoto(viewRow - 1);
+        }
+    }
 
     private void setupUI() {
 
@@ -86,6 +106,17 @@ public class TaskWorkflowPanel extends JPanel {
 
         // point table
         pointTable = new JTable(pointModel);
+        pointTable.addMouseWheelListener(new MouseWheelListener() {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                if (e.getPreciseWheelRotation()==1.0) {
+                    nextTask();
+                } else {
+                    prevTask();
+                }
+            }
+        
+        });
         pointTable.addMouseListener(new MouseHandler() {
             @Override
             protected void singleLeftClicked(MouseEvent me) {
@@ -336,6 +367,23 @@ public class TaskWorkflowPanel extends JPanel {
             ConsoleApp.handleException(e);
         }
     }
+    
+    /**
+     * generates a point review list from a list of TmGeoAnnotations generated somewhere else
+     */
+    public void loadPointList (List<Vec3> points) {
+         pointList = new ArrayList<>();
+         reviewOptions = new String[]{"Problem", "Bad Signal", "Incorrect Neuron"};
+         for (Vec3 vecPoint: points) {
+             ReviewPoint point = new ReviewPoint();
+             point.setLocation(vecPoint);
+             point.setZoomLevel(100);
+             point.setRotation(new float[]{(float)-0.004922,(float)0.0025862362,(float)-0.4651227,(float)0.88522875});
+             point.setInterpolate(true);             
+             pointList.add(point);
+         }
+         startWorkflow(pointList);
+    }
 
     /**
      * pop a file chooser; load and parse a json list of points
@@ -573,10 +621,13 @@ class PointTableModel extends AbstractTableModel {
                 return points.get(row).getLocation().getY();
             case 2:
                 return points.get(row).getLocation().getZ();
-            case 3:
+            case 3:                
                 float[] rotation = points.get(row).getRotation();
-                return "[" + rotation[0] + "," +  rotation[1] + "," + 
-                        rotation[2] + "," + rotation[3] + "]";
+                if (rotation!=null) {
+                    return "[" + rotation[0] + "," +  rotation[1] + "," + 
+                            rotation[2] + "," + rotation[3] + "]";
+                } else 
+                    return "{)";
             case 4:
                 return notes.get(row);
             default:

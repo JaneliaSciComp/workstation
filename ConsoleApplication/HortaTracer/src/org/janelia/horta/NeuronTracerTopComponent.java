@@ -846,6 +846,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         Interpolator<Quaternion> rotationInterpolator = new PrimitiveInterpolator(linearKernel);
         double stepSize = 1.0/(float)steps;
         
+        double zoom = endLocation.getMicrometersPerWindowHeight();
+        if (zoom > 0) {
+            vantage.setSceneUnitsPerViewportHeight((float)zoom);
+            vantage.setDefaultSceneUnitsPerViewportHeight((float)zoom);
+        }
+
+        
         Vector3 startFocus = new Vector3(sceneWindow.getVantage().getFocusPosition().getX(),sceneWindow.getVantage().getFocusPosition().getY(),
             sceneWindow.getVantage().getFocusPosition().getZ());
         sceneWindow.getVantage().getFocusPosition().copy(startFocus);        
