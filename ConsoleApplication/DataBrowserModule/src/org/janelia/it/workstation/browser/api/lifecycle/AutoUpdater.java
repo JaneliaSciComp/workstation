@@ -75,8 +75,8 @@ public class AutoUpdater extends SimpleWorker {
     @Override
     protected void doStuff() throws Exception {
 
-        if (SystemInfo.isDev) {
-            log.info("Skipping updates on dev build");
+        if (SystemInfo.isDev || SystemInfo.isTest) {
+            log.info("Skipping updates on non-production build");
             return;
         }
         

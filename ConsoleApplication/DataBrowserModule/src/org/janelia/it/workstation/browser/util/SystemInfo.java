@@ -75,7 +75,10 @@ public class SystemInfo {
 
     public static final String optionsMenuName = isMac ? "Preferences" : "Tools->Options";
     
-    public static final boolean isDev = "DEV".equals(ConsoleApp.getConsoleApp().getApplicationVersion());
+    public static final String appVersion = ConsoleApp.getConsoleApp().getApplicationVersion();
+    public static final boolean isDev = "DEV".equals(appVersion);
+    public static final boolean isTest = "TEST".equals(appVersion);
+    
     
     /**
      * Whether IDEA is running under MacOS X version 10.4 or later.
