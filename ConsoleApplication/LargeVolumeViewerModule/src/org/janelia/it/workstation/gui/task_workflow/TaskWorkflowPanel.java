@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.task_workflow;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -49,6 +50,9 @@ import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVol
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.openide.explorer.ExplorerManager;
+import org.openide.explorer.ExplorerUtils;
+import org.openide.explorer.view.OutlineView;
 
 /**
  * This panel contains the UI for a task workflow similar to what I implemented
@@ -63,6 +67,9 @@ public class TaskWorkflowPanel extends JPanel {
     private String[] reviewOptions;
     
     List<ReviewPoint> pointList;
+    List<ReviewGroup> groupList;
+    private final ExplorerManager reviewManager = new ExplorerManager();
+     private final OutlineView treeView = new OutlineView("Scene Items"); 
     private JTable pointTable;
     private PointTableModel pointModel = new PointTableModel();
 
@@ -89,7 +96,17 @@ public class TaskWorkflowPanel extends JPanel {
     }
 
     private void setupUI() {
-
+        treeView.addPropertyColumn("point_x", "x (µm)");
+        treeView.addPropertyColumn("point_y", "y (µm)");
+        treeView.addPropertyColumn("point_z", "z (µm)");
+        treeView.addPropertyColumn("rotation", "Rotation");
+        treeView.addPropertyColumn("review_notes", "Notes");
+        
+        setLayout(new BorderLayout());
+        add(
+               treeView, 
+               BorderLayout.CENTER);
+/*
         setLayout(new GridBagLayout());
         setBorder(new EmptyBorder(5, 5, 5, 5));
 
@@ -157,7 +174,7 @@ public class TaskWorkflowPanel extends JPanel {
         add(scrollPane, cTable);
 
 
-
+*/
 
         // I want most of the components to stack vertically;
         //  components should fill or align left as appropriate
@@ -175,7 +192,7 @@ public class TaskWorkflowPanel extends JPanel {
         JPanel taskButtonsPanel = new JPanel();
         taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
         taskButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        add(taskButtonsPanel, cVert);
+        add(taskButtonsPanel, BorderLayout.NORTH);
 
         JButton nextButton = new JButton("Next unreviewed");
         nextButton.addActionListener(event -> onNextButton());
@@ -186,7 +203,7 @@ public class TaskWorkflowPanel extends JPanel {
         JPanel workflowButtonsPanel = new JPanel();
         workflowButtonsPanel.setLayout(new BoxLayout(workflowButtonsPanel, BoxLayout.LINE_AXIS));
         workflowButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        add(workflowButtonsPanel, cVert);
+        add(workflowButtonsPanel, BorderLayout.SOUTH);
 
         workflowButtonsPanel.add(Box.createHorizontalGlue());
 
@@ -218,14 +235,15 @@ public class TaskWorkflowPanel extends JPanel {
     /**
      * given a list of points, start the workflow from scratch
      */
-    private void startWorkflow(List<ReviewPoint> pointList) {
-        pointModel.clear();
+    private void startWorkflow(String neuronName) {
+        reviewManager.setRootContext( new ReviewListNode(neuronName, groupList));
+       /* pointModel.clear();
         for (ReviewPoint point: pointList) {
             pointModel.addPoint(point);
         }
 
         // this shouldn't be needed, but Windows doesn't redraw without it:
-        pointModel.fireTableDataChanged();
+        pointModel.fireTableDataChanged();*/
     }
 
     private void onLoadButton() {
@@ -239,8 +257,8 @@ public class TaskWorkflowPanel extends JPanel {
             return;
         }
 
-        pointList = readPointFile();
-        startWorkflow(pointList);
+        readPointFile();
+        startWorkflow("From File");
 
         log.info("Loaded point file " + "my point file");
     }
@@ -371,18 +389,28 @@ public class TaskWorkflowPanel extends JPanel {
     /**
      * generates a point review list from a list of TmGeoAnnotations generated somewhere else
      */
-    public void loadPointList (List<Vec3> points) {
-         pointList = new ArrayList<>();
+    public void loadPointList (String name, List<List<Vec3>> branchList, boolean neuron) {
          reviewOptions = new String[]{"Problem", "Bad Signal", "Incorrect Neuron"};
-         for (Vec3 vecPoint: points) {
-             ReviewPoint point = new ReviewPoint();
-             point.setLocation(vecPoint);
-             point.setZoomLevel(100);
-             point.setRotation(new float[]{(float)-0.004922,(float)0.0025862362,(float)-0.4651227,(float)0.88522875});
-             point.setInterpolate(true);             
-             pointList.add(point);
+         groupList = new ArrayList<>();
+         
+         for (List<Vec3> branch: branchList) {
+             pointList = new ArrayList<>();
+   
+             for (Vec3 vecPoint : branch) {
+                 ReviewPoint point = new ReviewPoint();
+                 point.setLocation(vecPoint);
+                 point.setZoomLevel(100);
+                 point.setRotation(new float[]{(float) -0.004922, (float) 0.0025862362, (float) -0.4651227, (float) 0.88522875});
+                 point.setInterpolate(true);
+                 pointList.add(point);
+             }
+             
+             ReviewGroup group = new ReviewGroup();
+             group.setPointList(pointList);
+             groupList.add(group);
          }
-         startWorkflow(pointList);
+         startWorkflow(name);
+         
     }
 
     /**
@@ -394,9 +422,8 @@ public class TaskWorkflowPanel extends JPanel {
      * coord to clipboard" format) -- blank lines allowed -- comment lines start
      * with #
      */
-    private List<ReviewPoint> readPointFile() {
-
-        List<ReviewPoint> pointList = new ArrayList<>();
+    private void readPointFile() {
+        groupList = new ArrayList<>();
 
         // dialog to get file
         JFileChooser chooser = new JFileChooser();
@@ -416,14 +443,14 @@ public class TaskWorkflowPanel extends JPanel {
                 JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
                         "Could not read file " + pointFile,
                         "Error reading point file",
-                        JOptionPane.ERROR_MESSAGE);
-                return pointList;
+                        JOptionPane.ERROR_MESSAGE);               
             }
             
             if (reviewData!=null) {
                 List pointGroups = (List)reviewData.get("reviewGroups");
                 if (pointGroups != null && pointGroups.size() > 0) {
                     for (int i=0; i<pointGroups.size(); i++) {
+                         List<ReviewPoint> pointList = new ArrayList<>();
                          LinkedHashMap pointWrapper = (LinkedHashMap)pointGroups.get(i);  
                          List<Map<String, Object>> rawPoints = (List<Map<String, Object>>) pointWrapper.get("points");
                          int nerrors = 0;
@@ -431,7 +458,7 @@ public class TaskWorkflowPanel extends JPanel {
                          boolean interpolate = false;
                          if ((String)pointWrapper.get("interpolate")!=null)
                              interpolate = true;
-                        for (Map<String, Object> pointMap : rawPoints) {
+                         for (Map<String, Object> pointMap : rawPoints) {
                             try {
                                 ReviewPoint point = new ReviewPoint();
                                 Vec3 pointLocation = new Vec3(Double.parseDouble((String)pointMap.get("x")),
@@ -462,6 +489,9 @@ public class TaskWorkflowPanel extends JPanel {
                                 continue;
                             }
                         }
+                        ReviewGroup group = new ReviewGroup();
+                        group.setPointList(pointList);
+                        groupList.add(group);
 
                         if (nerrors > 0) {
                             JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
@@ -482,7 +512,6 @@ public class TaskWorkflowPanel extends JPanel {
 
            
         }
-        return pointList;
     }
 
     /**
@@ -540,46 +569,6 @@ public class TaskWorkflowPanel extends JPanel {
         }
     }
 }
-
-class ReviewPoint {
-    private Vec3 location;
-    private float[] rotation;
-    private float zoomLevel;
-    private boolean interpolate;
-
-    public Vec3 getLocation() {
-        return location;
-    }
-    
-    public void setLocation(Vec3 location) {
-        this.location = location;
-    }
-
-    public float[] getRotation() {
-        return rotation;
-    }
-
-    public void setRotation(float[] rotation) {
-        this.rotation = rotation;
-    }
-    
-    public float getZoomLevel() {
-        return zoomLevel;
-    }
-
-    public void setZoomLevel(float zoomLevel) {
-        this.zoomLevel = zoomLevel;
-    }
-    
-    public boolean getInterpolate() {
-        return interpolate;
-    }
-    
-    public void setInterpolate(boolean interpolate) {
-        this.interpolate = interpolate;
-    }
-}
-
 
 class PointTableModel extends AbstractTableModel {
     private String[] columnNames = {"x (µm)", "y (µm)", "z (µm)", "Rotation", "Review Note"};

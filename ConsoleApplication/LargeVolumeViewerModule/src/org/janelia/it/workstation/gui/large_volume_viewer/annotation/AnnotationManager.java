@@ -233,22 +233,35 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         ngDialog.showDialog();
     }
     
-    public void generateReviewPointList(Anchor anchor) {
-        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(anchor.getNeuronID());
-        List<TmGeoAnnotation> rootNodes = neuron.getRootAnnotations();
-        TmGeoAnnotation rootNode = null;
-        if (rootNodes.size()>0) {
-            rootNode = rootNodes.get(0);
-        }
-        if (rootNode!=null) {
-            List<TmGeoAnnotation> annotationList = neuron.getSubTreeList(rootNode);
+    /**
+     * recursive function to generate all the branch points for a neuron
+     **/
+    void generateNeuronBranches (List<List<Vec3>> branchList, TmNeuronMetadata neuron, TmGeoAnnotation neuronVertex) {
+        List<TmGeoAnnotation> branchChildren = neuron.getChildrenOf(neuronVertex);
+        
+        if (branchChildren.size()>0) {
             List<Vec3> pointList = new ArrayList<>();
-            for (TmGeoAnnotation annotation: annotationList) {
+            for (TmGeoAnnotation annotation: branchChildren) {
                 Vec3 tempLocation = getTileFormat().micronVec3ForVoxelVec3Centered(
                     new Vec3(annotation.getX(), annotation.getY(),annotation.getZ()));
                 pointList.add(tempLocation);
             }
-            TaskWorkflowViewTopComponent.getInstance().getTaskWorkflowPanel().loadPointList(pointList);
+            branchList.add(pointList);
+            
+            for (TmGeoAnnotation childNode : branchChildren) {
+                generateNeuronBranches(branchList, neuron, childNode);
+            }
+        }
+        
+    }
+    
+    public void generateReviewPointList(Anchor anchor) {
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(anchor.getNeuronID());
+        TmGeoAnnotation rootNode = neuron.getFirstRoot();
+        if (rootNode!=null) {
+            List<List<Vec3>> branchList = new ArrayList<>();
+            generateNeuronBranches (branchList, neuron, rootNode);                      
+            TaskWorkflowViewTopComponent.getInstance().getTaskWorkflowPanel().loadPointList(neuron.getName(), branchList, true);
         }
     }
     
