@@ -680,10 +680,10 @@ implements MouseMode, KeyListener
 			}
 			break;
                 case KeyEvent.VK_PLUS:
-			TaskWorkflowViewTopComponent.getInstance().getTaskWorkflowPanel().nextTask();
+			TaskWorkflowViewTopComponent.getInstance().nextTask();
 			break;
                 case KeyEvent.VK_MINUS:
-			TaskWorkflowViewTopComponent.getInstance().getTaskWorkflowPanel().prevTask();
+			TaskWorkflowViewTopComponent.getInstance().prevTask();
 			break;               
 		}
                 
