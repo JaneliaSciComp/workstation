@@ -243,25 +243,38 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         NeuronGroupsDialog ngDialog = new NeuronGroupsDialog();
         ngDialog.showDialog();
     }
+
+    void addBranchAnnotation(List<Vec3> branch, TmGeoAnnotation annotation) {
+        Vec3 tempLocation = getTileFormat().micronVec3ForVoxelVec3Centered(
+                new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
+        branch.add(tempLocation);
+    }
     
     /**
      * recursive function to generate all the branch points for a neuron
      **/
-    void generateNeuronBranches (List<List<Vec3>> branchList, TmNeuronMetadata neuron, TmGeoAnnotation neuronVertex) {
+    void exploreNeuronBranches (List<List<Vec3>> branchList, List<Vec3> currentBranch, TmNeuronMetadata neuron, TmGeoAnnotation neuronVertex) {
         List<TmGeoAnnotation> branchChildren = neuron.getChildrenOf(neuronVertex);
-        
-        if (branchChildren.size()>0) {
-            List<Vec3> pointList = new ArrayList<>();
-            for (TmGeoAnnotation annotation: branchChildren) {
-                Vec3 tempLocation = getTileFormat().micronVec3ForVoxelVec3Centered(
-                    new Vec3(annotation.getX(), annotation.getY(),annotation.getZ()));
-                pointList.add(tempLocation);
+
+        if (branchChildren.size()>1) {
+            // pick ordered to find and trace out the main branch
+            List<TmGeoAnnotation> ordered = neuron.getChildrenOfOrdered(neuronVertex);
+            addBranchAnnotation(currentBranch, ordered.get(0));
+            exploreNeuronBranches(branchList, currentBranch, neuron, ordered.get(0));
+
+            // now start new branches for each of the other children
+            for (int i=1; i<ordered.size(); i++) {
+                List<Vec3> newBranch = new ArrayList<>();
+                addBranchAnnotation(newBranch, ordered.get(i));
+                exploreNeuronBranches(branchList, newBranch, neuron, ordered.get(i));
             }
-            branchList.add(pointList);
-            
-            for (TmGeoAnnotation childNode : branchChildren) {
-                generateNeuronBranches(branchList, neuron, childNode);
-            }
+        } else if (branchChildren.size()==1) {
+            // continue branch
+            addBranchAnnotation(currentBranch, branchChildren.get(0));
+            exploreNeuronBranches(branchList, currentBranch, neuron, branchChildren.get(0));
+        } else {
+            // tip node; add branch to branchlist
+            branchList.add(currentBranch);
         }
         
     }
@@ -271,8 +284,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         TmGeoAnnotation rootNode = neuron.getFirstRoot();
         if (rootNode!=null) {
             List<List<Vec3>> branchList = new ArrayList<>();
-            generateNeuronBranches (branchList, neuron, rootNode);                      
-            TaskWorkflowViewTopComponent.getInstance().getTaskWorkflowPanel().loadPointList(neuron.getName(), branchList, true);
+            List<Vec3> currentBranch = new ArrayList<Vec3>();
+            addBranchAnnotation(currentBranch, rootNode);
+            exploreNeuronBranches(branchList, currentBranch, neuron, rootNode);
+            System.out.println("sdfsdf" + rootNode.getChildIds());
+            TaskWorkflowViewTopComponent.getInstance().loadPointList(neuron.getName(), branchList, true);
         }
     }
     

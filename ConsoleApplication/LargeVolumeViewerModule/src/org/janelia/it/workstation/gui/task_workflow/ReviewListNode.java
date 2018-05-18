@@ -43,6 +43,7 @@ public class ReviewListNode extends AbstractNode
     
     public ReviewListNode(String name, List<ReviewGroup> groupList) {
         super(Children.create(new ReviewListChildNodeFactory(groupList), true), Lookups.singleton(groupList));
+        logger.info("NASNANSDFNASDFASDF {}", name);
         updateDisplayName(name);
        
     }
@@ -56,12 +57,14 @@ public class ReviewListNode extends AbstractNode
         private List<ReviewGroup> groupList;
         
         public ReviewListChildNodeFactory(List<ReviewGroup> group) {
+            System.out.println ("AAAADDDDDDDD" + group);
             this.groupList = group;
         }
 
         @Override
-        protected boolean createKeys(List<ReviewGroup> toPopulate)
+        protected boolean createKeys(List toPopulate)
         {
+            System.out.println ("AAAADDDDDDDD");
             toPopulate.addAll(groupList);
             return true;
         }
