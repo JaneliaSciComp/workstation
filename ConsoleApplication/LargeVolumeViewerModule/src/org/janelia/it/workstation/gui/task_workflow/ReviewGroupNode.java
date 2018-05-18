@@ -40,15 +40,17 @@ import org.slf4j.LoggerFactory;
 public class ReviewGroupNode extends AbstractNode
 {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private ReviewGroup group;
     
     public ReviewGroupNode(ReviewGroup reviewGroup) {
         super(Children.create(new ReviewGroupNodeFactory(reviewGroup), true), Lookups.singleton(reviewGroup));
+        group = reviewGroup;
         updateDisplayName();
        
     }
     
     private void updateDisplayName() {
-        setDisplayName("Scene"); //  (" + workspace.getNeuronSets().size() + " neurons)");
+        setDisplayName("Branch"); //  (" + workspace.getNeuronSets().size() + " neurons)");
     }
     
      private static class ReviewGroupNodeFactory extends ChildFactory<ReviewPoint>
@@ -74,7 +76,7 @@ public class ReviewGroupNode extends AbstractNode
     
     @Override
     public Image getIcon(int type) {
-        return ImageUtilities.loadImage("org/janelia/horta/images/brain-icon2.png");
+        return ImageUtilities.loadImage("org/janelia/horta/images/VertexBranch2.png");
     }
     
     @Override
@@ -82,18 +84,22 @@ public class ReviewGroupNode extends AbstractNode
         return getIcon(i);
     }
     
-    public Integer getSize() {return 1;}
+    public boolean getNotes() {
+        return group.isReviewed();
+    }
+    
+    public void setNotes(boolean reviewed) {
+        group.setReviewed(reviewed);
+    }
     
     @Override 
     protected Sheet createSheet() { 
         Sheet sheet = Sheet.createDefault(); 
         Sheet.Set set = Sheet.createPropertiesSet(); 
         try { 
-            Property prop;
-            // size
-            prop = new PropertySupport.Reflection(this, String.class, "notes", null); 
-            prop.setName("notes"); 
-            set.put(prop); 
+            PropertySupport.Reflection reviewProp = new PropertySupport.Reflection(this, boolean.class, "notes"); 
+            reviewProp.setPropertyEditorClass(ReviewGroupPropertyEditor.class);            
+            set.put(reviewProp);
         } 
         catch (NoSuchMethodException ex) {
             ErrorManager.getDefault(); 

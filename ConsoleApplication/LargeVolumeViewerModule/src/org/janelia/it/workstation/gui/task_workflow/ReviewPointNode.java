@@ -1,15 +1,18 @@
 package org.janelia.it.workstation.gui.task_workflow;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.beans.PropertyEditorSupport;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import javax.swing.JComboBox;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.VantageInterface;
@@ -43,7 +46,7 @@ public class ReviewPointNode extends AbstractNode
     }
     
     private void updateDisplayName() {
-        setDisplayName("Point"); 
+        setDisplayName("Vertex"); 
     }
     
   private static class ReviewPointChildFactory extends ChildFactory
@@ -63,12 +66,38 @@ public class ReviewPointNode extends AbstractNode
     
     @Override
     public Image getIcon(int type) {
-        return ImageUtilities.loadImage("org/janelia/horta/images/brain-icon2.png");
+        return ImageUtilities.loadImage("org/janelia/horta/images/VertexTip2.png");
     }
     
     @Override
     public Image getOpenedIcon(int i) {
         return getIcon(i);
+    }
+    
+    public double getX() {
+        return point.getLocation().getX();
+    }
+    
+    public double getY() {
+        return point.getLocation().getY();
+    }
+        
+    public double getZ() {
+        return point.getLocation().getZ();
+    }
+     
+    public String getRotation() {
+        float[] quat = point.getRotation();
+        return "[" + quat[0] + "," + quat[1] + "," + quat[2] + "," + quat[3] + "]";
+    }
+    
+    public String getNotes() {
+        return point.getNote();
+    }
+    
+    public void setNotes(String note) {
+        System.out.println ("DFSFSD----" + note);
+        point.setNote(note);
     }
     
     @Override 
@@ -88,13 +117,13 @@ public class ReviewPointNode extends AbstractNode
             prop.setName("z");
             set.put(prop); 
             // rotation
-            prop = new PropertySupport.Reflection(this, float[].class, "getRotation", null); 
+            prop = new PropertySupport.Reflection(this, String.class, "getRotation", null); 
             prop.setName("rotation"); 
             set.put(prop); 
             // review notes
-            prop = new PropertySupport.Reflection(this, float[].class, "notes", null); 
-            prop.setName("notes"); 
-            set.put(prop);
+            PropertySupport.Reflection reviewProp = new PropertySupport.Reflection(this, String.class, "notes"); 
+            reviewProp.setPropertyEditorClass(ReviewPointPropertyEditor.class);            
+            set.put(reviewProp);
         } 
         catch (NoSuchMethodException ex) {
             ErrorManager.getDefault(); 

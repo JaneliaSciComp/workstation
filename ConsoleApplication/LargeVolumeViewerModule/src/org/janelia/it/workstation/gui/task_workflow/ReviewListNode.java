@@ -77,7 +77,7 @@ public class ReviewListNode extends AbstractNode
     
     @Override
     public Image getIcon(int type) {
-        return ImageUtilities.loadImage("org/janelia/horta/images/brain-icon2.png");
+        return ImageUtilities.loadImage("org/janelia/horta/images/neuron1.png");
     }
     
     @Override
