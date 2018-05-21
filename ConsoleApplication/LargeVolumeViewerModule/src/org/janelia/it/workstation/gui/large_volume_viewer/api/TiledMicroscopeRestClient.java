@@ -83,7 +83,7 @@ public class TiledMicroscopeRestClient {
         ClientRequestFilter authFilter = new ClientRequestFilter() {
             @Override
             public void filter(ClientRequestContext requestContext) throws IOException {
-                for (Entry<String, String> entry : HttpServiceUtils.getExtraHeaders().entrySet()) {
+                for (Entry<String, String> entry : HttpServiceUtils.getExtraHeaders(true).entrySet()) {
                     requestContext.getHeaders().add(entry.getKey(), entry.getValue());
                 }
             }

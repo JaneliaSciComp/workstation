@@ -47,10 +47,11 @@ import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNodeTracker;
+import org.janelia.it.workstation.browser.nodes.ExplorerRootNode;
+import org.janelia.it.workstation.browser.nodes.IdentifiableNode;
+import org.janelia.it.workstation.browser.nodes.NodeTracker;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.RecentOpenedItemsNode;
-import org.janelia.it.workstation.browser.nodes.ExplorerRootNode;
 import org.janelia.it.workstation.browser.nodes.WorkspaceNode;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -373,7 +374,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     }
                 }
             }
-            
         }
         else if (event.getKey().equals(SHOW_RECENTLY_OPENED_ITEMS)) {
             // Recreate the root node so that it picks up the new preferences
@@ -387,10 +387,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         final List<Long[]> expanded = beanTreeView.getExpandedPaths();
         DomainObject domainObject = event.getDomainObject();
         
-        Set<AbstractDomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
+        Set<IdentifiableNode<DomainObject>> nodes = NodeTracker.getInstance().getNodesByObject(domainObject);
         if (!nodes.isEmpty()) {
             log.info("Updating removed object: {}",domainObject.getName());
-            for(AbstractDomainObjectNode<DomainObject> node : nodes) {
+            for(IdentifiableNode<?> node : nodes) {
                 try {
                     log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
                     node.destroy();
@@ -419,10 +419,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             final List<Long[]> expanded = beanTreeView.getExpandedPaths();
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             for(DomainObject domainObject : event.getDomainObjects()) {
-                Set<AbstractDomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
+                Set<IdentifiableNode<DomainObject>> nodes = NodeTracker.getInstance().getNodesByObject(domainObject);
                 if (!nodes.isEmpty()) {
                     log.debug("Updating invalidated object: {}",domainObject.getName());
-                    for(AbstractDomainObjectNode<DomainObject> node : nodes) {
+                    for(IdentifiableNode<DomainObject> node : nodes) {
                         try {
                             DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
                             if (refreshed==null) {
@@ -558,7 +558,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     public void expandNodeById(Long id) {
         log.info("expandNodeById({})", id);
-        for(Node node : DomainObjectNodeTracker.getInstance().getNodesById(id)) {
+        for(Node node : NodeTracker.getInstance().getNodesById(id)) {
             expand(NodeUtils.createIdPath(node));
             break;
         }
@@ -611,7 +611,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         Node n = getSelectedNode(id);
         if (n!=null) return n;
         
-        for(Node node : DomainObjectNodeTracker.getInstance().getNodesById(id)) {
+        for(Node node : NodeTracker.getInstance().getNodesById(id)) {
             selectNode(node);
             return node;
         }

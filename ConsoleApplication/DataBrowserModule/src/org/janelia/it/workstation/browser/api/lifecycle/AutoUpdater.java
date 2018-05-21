@@ -74,6 +74,11 @@ public class AutoUpdater extends SimpleWorker {
     
     @Override
     protected void doStuff() throws Exception {
+
+        if (SystemInfo.isDev || SystemInfo.isTest) {
+            log.info("Skipping updates on non-production build");
+            return;
+        }
         
         handle = ProgressHandle.createHandle("Checking for updates...");
         

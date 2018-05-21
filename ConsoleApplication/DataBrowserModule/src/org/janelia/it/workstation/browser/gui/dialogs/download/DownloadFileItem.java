@@ -49,12 +49,14 @@ public class DownloadFileItem {
     public static final String ATTR_LABEL_SAMPLE_NAME = "Sample Name";
     public static final String ATTR_LABEL_EXTENSION = "Extension";
     public static final String ATTR_LABEL_GUID = "GUID";
+    public static final String ATTR_LABEL_INDEX = "Index";
     
     private final Path downloadsDir = SystemInfo.getDownloadsDir();
     private final List<String> itemPath;
     private final DomainObject domainObject;
     private HasFiles fileProvider;
     private boolean splitChannels = false;
+    private int index;
     
     // Derived state
     private String errorMessage;
@@ -66,9 +68,10 @@ public class DownloadFileItem {
     private String targetExtension;
     private boolean is3d;
     
-    public DownloadFileItem(List<String> itemPath, DomainObject domainObject) {
+    public DownloadFileItem(List<String> itemPath, DomainObject domainObject, int index) {
         this.itemPath = itemPath;
         this.domainObject = domainObject;
+        this.index = index;
     }
     
     public void init(ArtifactDescriptor artifactDescriptor, HasFiles fileProvider, FileType fileType, Map<String,String> outputExtensions, boolean splitChannels, boolean flattenStructure, String filenamePattern) {
@@ -252,6 +255,8 @@ public class DownloadFileItem {
                 }       
             }
         }
+        
+        keyValues.put(ATTR_LABEL_INDEX, index);
         
         log.debug("Filepath pattern: {}", filePattern);
         String filepath = StringUtils.replaceVariablePattern(filePattern, keyValues);

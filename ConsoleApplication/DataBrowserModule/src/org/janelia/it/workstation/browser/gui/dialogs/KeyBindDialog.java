@@ -20,10 +20,8 @@ import javax.swing.KeyStroke;
 import org.janelia.it.workstation.browser.actions.Action;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.KeyBindings;
-import org.janelia.it.workstation.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.browser.gui.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.browser.gui.keybind.ShortcutTextField;
-import org.janelia.it.workstation.browser.nodes.OntologyNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,8 +90,6 @@ public class KeyBindDialog extends ModalDialog {
 
                 KeyboardShortcut keyboardShortcut = getKeyboardShortcut();
                 KeyBindings.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
-                OntologyNode ontologyNode = OntologyExplorerTopComponent.getInstance().getOntologyNode();
-                KeyBindings.getKeyBindings().saveOntologyKeybinds(ontologyNode.getId());
                 log.info("Assigned key bind {} to action {}", keyboardShortcut, actionToBind.getName());
                 setVisible(false);
             }

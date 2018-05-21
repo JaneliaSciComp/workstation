@@ -11,6 +11,7 @@ import org.janelia.model.domain.interfaces.HasIdentifier;
 public interface DomainObjectNode<T extends DomainObject> extends HasIdentifier {
     
     public T getDomainObject();
-    
+
     public void update(T domainObject);
+    
 }

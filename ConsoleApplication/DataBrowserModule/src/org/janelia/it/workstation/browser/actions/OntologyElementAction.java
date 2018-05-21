@@ -1,58 +1,56 @@
 package org.janelia.it.workstation.browser.actions;
 
-import org.janelia.it.workstation.browser.nodes.NodeUtils;
+import org.janelia.it.workstation.browser.components.OntologyExplorerTopComponent;
+import org.janelia.model.domain.ontology.OntologyTerm;
 
 /**
- * An abstract base class for actions dealing with ontology elements.
+ * The default action for executing the binding on an ontology element.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class OntologyElementAction implements Action {
+public class OntologyElementAction implements Action {
 
-    private Long[] path;
-    private String uniqueId;
+    private final OntologyTerm ontologyTerm;
     
-    public void init(Long[] path) {
-        this.path = path;
-        this.uniqueId = NodeUtils.createPathString(path);
-    }
-
-    public Long[] getPath() {
-        return path;
-    }
-    
-    public String getUniqueId() {
-        return uniqueId;
-    }
-
-    public Long getElementId() {
-        return path[path.length-1];
+    public OntologyElementAction(OntologyTerm ontologyTerm) {
+        this.ontologyTerm = ontologyTerm;
     }
 
     @Override
     public String getName() {
-        return uniqueId;
+        return ontologyTerm.getName();
     }
 
+    public OntologyTerm getOntologyTerm() {
+        return ontologyTerm;
+    }
+
+    public Long getOntologyTermId() {
+        return ontologyTerm.getId();
+    }
+    
     @Override
-    public abstract void doAction();
+    public void doAction() {
+        OntologyExplorerTopComponent explorer = OntologyExplorerTopComponent.getInstance();
+        explorer.executeBinding(ontologyTerm.getId());
+    }
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof OntologyElementAction) {
             OntologyElementAction other = (OntologyElementAction)o;
-            return uniqueId.equals(other.getUniqueId());
+            return getOntologyTermId().equals(other.getOntologyTermId());
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return uniqueId.hashCode();
+        return ontologyTerm.getId().hashCode();
     }
 
     @Override
     public String toString() {
-        return "OntologyElementAction{" + uniqueId + '}';
+        return "OntologyElementAction[" + ontologyTerm.getId() + ']';
     }
 }

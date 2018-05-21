@@ -3,18 +3,13 @@ package org.janelia.it.workstation.browser.nodes;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
-import org.janelia.it.workstation.browser.actions.OntologyElementAction;
-import org.janelia.it.workstation.browser.actions.RunNodeDefaultAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -29,11 +24,8 @@ import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RenameAction;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.ontology.Ontology;
-import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.MapMaker;
 
 /**
  * Root node of an ontology. Manages all the nodes in the ontology, including
@@ -45,12 +37,8 @@ public class OntologyNode extends OntologyTermNode implements DomainObjectNode<O
     
     private final static Logger log = LoggerFactory.getLogger(OntologyNode.class);
     
-    private final ConcurrentMap<Long, OntologyTermNode> nodeById = new MapMaker().weakValues().makeMap();
-    private final Map<String, org.janelia.it.workstation.browser.actions.Action> ontologyActionMap = new HashMap<>();
-    
     public OntologyNode(Ontology ontology) {
         super(null, ontology, ontology);
-        populateMaps(this);
     }
     
     @Override
@@ -69,46 +57,8 @@ public class OntologyNode extends OntologyTermNode implements DomainObjectNode<O
         fireNameChange(oldName, getName());
         log.debug("Display name changed {} -> {}",oldDisplayName, getDisplayName());
         fireDisplayNameChange(oldDisplayName, getDisplayName());
-        
     }
 
-    private void populateMaps(OntologyTermNode node) {
-        log.trace("populateMaps({})",node.getDisplayName());
-        populateLookupMap(node);
-        populateActionMap(node);
-        for(Node childNode : node.getChildren().getNodes()) {
-            if (childNode instanceof OntologyTermNode) {
-                OntologyTermNode termNode = (OntologyTermNode)childNode;
-                populateMaps(termNode);
-            }
-            else {
-                log.warn("Encountered unsupported node type while traversing ontology: "+node.getClass().getName());
-            }
-        }
-    }
-    
-    private void populateLookupMap(OntologyTermNode node) {
-        if (node.getId()!=null) {
-            nodeById.put(node.getId(), node);
-        }
-    }
-    private void populateActionMap(OntologyTermNode node) {
-        OntologyElementAction action = new RunNodeDefaultAction();
-        Long[] path = NodeUtils.createIdPath(node);
-        action.init(path);
-        String pathStr = NodeUtils.createPathString(path);
-        log.trace("path string: {}",pathStr);
-        ontologyActionMap.put(pathStr, action);
-    }
-    
-    public org.janelia.it.workstation.browser.actions.Action getActionForNode(OntologyTermNode node) {
-        return ontologyActionMap.get(NodeUtils.createPathString(node));
-    }
-    
-    public OntologyTermNode getNodeById(Long id) {
-        return nodeById.get(id);
-    }
-    
     @Override
     public Image getIcon(int type) {
         return Icons.getIcon("folder.png").getImage();    
@@ -170,10 +120,6 @@ public class OntologyNode extends OntologyTermNode implements DomainObjectNode<O
             }
         };
         worker.execute();
-    }
-
-    public Map<String, org.janelia.it.workstation.browser.actions.Action> getOntologyActionMap() {
-        return ontologyActionMap;
     }
     
     protected final class ViewDetailsAction extends AbstractAction {

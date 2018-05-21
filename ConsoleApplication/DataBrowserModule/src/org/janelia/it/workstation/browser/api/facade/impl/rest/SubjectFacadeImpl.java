@@ -57,7 +57,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
                 .queryParam("subjectKey", key)
                 .request("application/json")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request getSubjectByKey to server")) {
+        if (checkBadResponse(response.getStatus(), "problem making request getSubjectByNameOrKey to server")) {
             throw new WebApplicationException(response);
         }
         return response.readEntity(Subject.class);
@@ -69,7 +69,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
                 .queryParam("subjectKey", "user:"+username)
                 .request("application/json")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making user request against the server")) {
+        if (checkBadResponse(response.getStatus(), "problem making getOrCreateUser request against the server")) {
             throw new WebApplicationException(response);
         }
         return response.readEntity(User.class);
@@ -97,7 +97,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
                 .path("preferences")
                 .request("application/json")
                 .put(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making saving request savePreferences to server: " + preference)) {
+        if (checkBadResponse(response.getStatus(), "problem making request savePreferences to server: " + preference)) {
             throw new WebApplicationException(response);
         }
         return response.readEntity(Preference.class);

@@ -945,6 +945,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         for (TmObjectMesh mesh : meshMap.values()) {                
             MeshGeometry meshGeometry;
             try {
+                // when users share workspaces, sometimes object meshes 
+                //  can't be loaded by everyone who sees the workspace;
+                //  that's ok, but log it
+                if (!Paths.get(mesh.getPathToObjFile()).toFile().exists()) {
+                    logger.warn("unable to load mesh " + mesh.getName());
+                    continue;
+                }
                 meshGeometry = WavefrontObjLoader.load(Files.newInputStream(Paths.get(mesh.getPathToObjFile())));
                 TransparentEnvelope material = new TransparentEnvelope();
                 Color color = meshGeometry.getDefaultColor();

@@ -1,3 +1,22 @@
+// 7.10.1
+
+Horta
+* Fixed hide/show issue
+
+// 7.10
+
+Workstation Browser
+* Added probe sets for FISH data
+* Moved update center to new URL
+* Fixed "error reading entity" when using older clients
+* Other minor bug fixes
+
+Large Volume Viewer
+* Fixed issues with hiding and showing neurons
+* Added bulk neuron owner change to neuron gear menu
+* Fixed bug: annotation list should now update after set anchor as root
+* Fixed bug: neuron count updates correctly after neuron deletion
+
 // 7.9
 
 Workstation Browser

@@ -20,6 +20,7 @@ import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,6 +85,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
     @Override
     public void handle(String string, Delivery message) throws IOException {
         try {
+            StopWatch stopWatch = new StopWatch();
             Map<String, Object> msgHeaders = message.getProperties().getHeaders();
         
             if (msgHeaders == null) {
@@ -137,20 +139,29 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                     origNeuron.setReaders(neuron.getReaders());
                 }
                 annotationModel.getNeuronManager().completeOwnershipRequest(decision);
-                SwingUtilities.invokeLater(() -> annotationModel.fireBackgroundNeuronOwnershipChanged(neuron));
+                SwingUtilities.invokeLater(() -> {
+                    StopWatch stopWatch2 = new StopWatch();
+                    annotationModel.fireBackgroundNeuronOwnershipChanged(neuron);
+                    stopWatch2.stop();
+                    log.info("RefreshHandler.invokeLater: handled ownership decision update in {} ms", stopWatch2.getElapsedTime());
+                });
             } else if (action == MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
                 // complete the future outside of the swing thread, since the GUI thread is blocked
+                StopWatch stopWatch2 = new StopWatch();
                 log.info("Finishing processing create neuron ");
                 TmProtobufExchanger exchanger = new TmProtobufExchanger();
                 byte[] msgBody = message.getBody();
                 exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
                 annotationModel.getNeuronManager().completeCreateNeuron(neuron);
+                stopWatch2.stop();
+                log.info("RefreshHandler: handled own neuron creation update in {} ms", stopWatch2.getElapsedTime());
             } else if (action == MessageType.REQUEST_NEURON_OWNERSHIP) {
                 // some other user is asking for ownership of this neuron... process accordingly
             } else {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
                         try {
+                            StopWatch stopWatch2 = new StopWatch();
                             // fire notice to AnnotationModel
                             Map<String, Object> msgHeaders = message.getProperties().getHeaders();
                             if (msgHeaders == null) {
@@ -188,6 +199,8 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                                     }
                                     break;
                             }
+                            stopWatch2.stop();
+                            log.info("RefreshHandler.invokeLater: handled update in {} ms", stopWatch2.getElapsedTime());
                         } catch (Exception e) {
                             log.error("Exception thrown in main GUI thread during message processing", e);
                             logError(e.getMessage());
@@ -196,6 +209,8 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                     }
                 });
             }
+            stopWatch.stop();
+            log.info("RefreshHandler: handled message in {} ms", stopWatch.getElapsedTime());
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
