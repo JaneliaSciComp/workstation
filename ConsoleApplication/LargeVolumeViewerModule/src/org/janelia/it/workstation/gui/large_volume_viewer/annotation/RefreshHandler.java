@@ -9,6 +9,7 @@ import com.rabbitmq.client.LongString;
 import com.rabbitmq.client.impl.LongStringHelper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.Map;
 import javax.swing.SwingUtilities;
 import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
@@ -60,6 +61,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         try {
             ConnectionManager connManager = ConnectionManager.getInstance();
             connManager.configureTarget(MESSAGESERVER_URL,  MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD);
+            connManager.setThreadPoolSize(20);
             msgChannel = connManager.getConnection();
         
             msgReceiver = new Receiver();
@@ -91,6 +93,10 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             if (msgHeaders == null) {
                 log.error("Issue trying to process metadata from update");
             }
+            // thead logging
+            log.info ("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
+            log.info ("Heap Size: {}", Runtime.getRuntime().totalMemory());
+            
             log.info("message properties: TYPE={},USER={},WORKSPACE={},METADATA={}", msgHeaders.get(HeaderConstants.TYPE), msgHeaders.get(HeaderConstants.USER),
                     msgHeaders.get(HeaderConstants.WORKSPACE), msgHeaders.get(HeaderConstants.METADATA));
 
