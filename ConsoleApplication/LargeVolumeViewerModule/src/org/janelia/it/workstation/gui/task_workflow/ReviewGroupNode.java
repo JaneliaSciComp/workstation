@@ -84,11 +84,11 @@ public class ReviewGroupNode extends AbstractNode
         return getIcon(i);
     }
     
-    public boolean getNotes() {
+    public boolean getReviewed() {
         return group.isReviewed();
     }
-    
-    public void setNotes(boolean reviewed) {
+     
+    public void setReviewed(boolean reviewed) {
         group.setReviewed(reviewed);
     }
     
@@ -97,7 +97,7 @@ public class ReviewGroupNode extends AbstractNode
         Sheet sheet = Sheet.createDefault(); 
         Sheet.Set set = Sheet.createPropertiesSet(); 
         try { 
-            PropertySupport.Reflection reviewProp = new PropertySupport.Reflection(this, boolean.class, "notes"); 
+            PropertySupport.Reflection reviewProp = new PropertySupport.Reflection(this, boolean.class, "reviewed");
             reviewProp.setPropertyEditorClass(ReviewGroupPropertyEditor.class);            
             set.put(reviewProp);
         } 
