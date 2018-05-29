@@ -29,6 +29,8 @@ import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.shared.geom.Quaternion;
+import org.janelia.it.jacs.shared.geom.UnitVec3;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
@@ -218,7 +220,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         treeView.addPropertyColumn("y", "y (µm)");
         treeView.addPropertyColumn("z", "z (µm)");
         treeView.addPropertyColumn("rotation", "Rotation");
-        treeView.addPropertyColumn("notes", "Notes");
+        treeView.addPropertyColumn("reviewed", "Review");
         associateLookup(ExplorerUtils.createLookup(reviewManager, getActionMap()));
 
         setLayout(new BorderLayout());
@@ -270,6 +272,24 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 } else {
                     prevTask();
                 }
+            }
+
+        });
+         addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                log.info("BBBBBBBBBBBBBB");
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+               
+                log.info("CCCCCCCCCCC");
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                log.info("DDDDDDDDDDDD");
             }
 
         });
@@ -462,6 +482,10 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             ConsoleApp.handleException(e);
         }
     }
+    
+    public double vectorLen (Vec3 vector) {
+        return Math.sqrt(vector.getX()*vector.getX() + vector.getY()*vector.getY() + vector.getZ()*vector.getZ());
+    }
 
     /**
      * generates a point review list from a list of TmGeoAnnotations generated somewhere else
@@ -472,11 +496,25 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
 
         for (List<Vec3> branch: branchList) {
             pointList = new ArrayList<>();
-            for (Vec3 vecPoint : branch) {
+            for (int i=0; i<branch.size(); i++) {
+                Vec3 vecPoint = branch.get(i);                
                 ReviewPoint point = new ReviewPoint();
                 point.setLocation(vecPoint);
-                point.setZoomLevel(100);
-                point.setRotation(new float[]{(float) -0.004922, (float) 0.0025862362, (float) -0.4651227, (float) 0.88522875});
+                point.setZoomLevel(70);
+                // calculate quicky normal
+                
+                if (i > 1 && i < branch.size() - 2) {
+                    Vec3 diff1 = branch.get(i-1).minus(vecPoint);
+                    Vec3 diff2 = branch.get(i+1).minus(vecPoint);
+                    Vec3 normal = diff1.cross(diff2);
+                    double qw = 1.0f + diff1.dot(diff2);
+                    log.info ("normal {}", normal.toString());
+                    Quaternion q = new Quaternion(normal.getX(), normal.getY(), normal.getZ(), qw, false);
+                    point.setRotation(new float[]{(float)0, (float)1, (float)0, (float)0});
+                } else {
+
+                }
+               
                 point.setInterpolate(true);
                 pointList.add(point);
             }

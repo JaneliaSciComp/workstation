@@ -96,7 +96,6 @@ public class ReviewPointNode extends AbstractNode
     }
     
     public void setNotes(String note) {
-        System.out.println ("DFSFSD----" + note);
         point.setNote(note);
     }
     
@@ -121,7 +120,7 @@ public class ReviewPointNode extends AbstractNode
             prop.setName("rotation"); 
             set.put(prop); 
             // review notes
-            PropertySupport.Reflection reviewProp = new PropertySupport.Reflection(this, String.class, "notes"); 
+            PropertySupport.Reflection reviewProp = new PropertySupport.Reflection(this, String.class, "reviewed"); 
             reviewProp.setPropertyEditorClass(ReviewPointPropertyEditor.class);            
             set.put(reviewProp);
         } 

@@ -679,10 +679,10 @@ implements MouseMode, KeyListener
 				skeleton.addEditNoteRequest(nextParent);
 			}
 			break;
-                case KeyEvent.VK_PLUS:
+                case KeyEvent.VK_P:
 			TaskWorkflowViewTopComponent.getInstance().nextTask();
 			break;
-                case KeyEvent.VK_MINUS:
+                case KeyEvent.VK_O:
 			TaskWorkflowViewTopComponent.getInstance().prevTask();
 			break;               
 		}

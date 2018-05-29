@@ -566,7 +566,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             );
             
             if (sampleLocation.getInterpolate()) {
-               animateToLocationWithRotation(acceptor, q, sampleLocation, 40);                                
+               animateToLocationWithRotation(acceptor, q, sampleLocation, 1);                                
             } else {
                 acceptor.acceptLocation(sampleLocation);
                 Vantage vantage = sceneWindow.getVantage();
