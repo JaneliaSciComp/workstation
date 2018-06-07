@@ -110,7 +110,7 @@ public class HortaWorkspaceNode extends AbstractNode
             @Override
             public Transferable paste() throws IOException
             {
-                System.out.println("Dropping neuron...");
+                logger.info("Dropping neuron...");
                 try {
                     List<File> fileList = (List) transferable.getTransferData(DataFlavor.javaFileListFlavor);
                     for (File f : fileList) {
@@ -130,6 +130,10 @@ public class HortaWorkspaceNode extends AbstractNode
                     }
                     });
                 } catch (UnsupportedFlavorException ex) {
+                    logger.error("unsupported flavor during drag and drop; data has flavors:");
+                    for (DataFlavor f: transferable.getTransferDataFlavors()){
+                        logger.error(f.getHumanPresentableName());
+                    }
                     Exceptions.printStackTrace(ex);
                 }
                 return null;
